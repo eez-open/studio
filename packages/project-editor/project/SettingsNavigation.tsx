@@ -12,12 +12,12 @@ import {
     getParent
 } from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
-import { DocumentStore, NavigationStore } from "project-editor/core/store";
 
 import { confirm } from "project-editor/core/util";
 import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
 
-import { ProjectStore, BuildFile } from "project-editor/project/project";
+import { BuildFile } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { TreeNavigationPanel } from "project-editor/components/TreeNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
@@ -32,9 +32,12 @@ class ProjectFeature extends React.Component<
     },
     {}
 > {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     onAdd() {
         let newFeatureObject = loadObject(
-            ProjectStore.project,
+            this.context.project,
             this.props.extension.eezStudioExtension.implementation.projectFeature.create(),
             this.props.extension.eezStudioExtension.implementation.projectFeature.typeClass,
             this.props.extension.eezStudioExtension.implementation.projectFeature.key
@@ -45,13 +48,13 @@ class ProjectFeature extends React.Component<
                 .key]: newFeatureObject
         };
 
-        DocumentStore.updateObject(ProjectStore.project, changes);
+        this.context.updateObject(this.context.project, changes);
     }
 
     onRemove() {
         confirm("Are you sure you want to remove this feature?", undefined, () => {
-            if (ProjectStore.project) {
-                DocumentStore.updateObject(ProjectStore.project, {
+            if (this.context.project) {
+                this.context.updateObject(this.context.project, {
                     [this.props.extension.eezStudioExtension.implementation.projectFeature
                         .key]: undefined
                 });
@@ -63,7 +66,7 @@ class ProjectFeature extends React.Component<
         let button: JSX.Element | undefined;
         if (
             getProperty(
-                ProjectStore.project,
+                this.context.project,
                 this.props.extension.eezStudioExtension.implementation.projectFeature.key
             )
         ) {
@@ -143,9 +146,12 @@ const SettingsEditorDiv = styled.div`
 
 @observer
 export class SettingsEditor extends React.Component<{ object: IEezObject | undefined }, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     render() {
-        const object = this.props.object || ProjectStore.project.settings.general;
-        if (object === ProjectStore.project.settings.general) {
+        const object = this.props.object || this.context.project.settings.general;
+        if (object === this.context.project.settings.general) {
             let projectFeatures = getExtensionsByCategory("project-feature").map(extension => (
                 <ProjectFeature key={extension.name} extension={extension} />
             ));
@@ -165,7 +171,7 @@ export class SettingsEditor extends React.Component<{ object: IEezObject | undef
                     body={<PropertyGrid objects={object ? [object] : []} />}
                 />
             );
-            if (getParent(object) === ProjectStore.project.settings.build.files) {
+            if (getParent(object) === this.context.project.settings.build.files) {
                 return (
                     <Splitter
                         type="horizontal"
@@ -186,12 +192,15 @@ export class SettingsEditor extends React.Component<{ object: IEezObject | undef
 
 @observer
 export class SettingsNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (this.context.NavigationStore.selectedPanel) {
+            return this.context.NavigationStore.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return this.context.NavigationStore.selectedObject;
     }
 
     render() {

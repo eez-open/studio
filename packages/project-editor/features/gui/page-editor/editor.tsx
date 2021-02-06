@@ -17,7 +17,10 @@ import {
 import { ITransform } from "project-editor/features/gui/page-editor/transform";
 import { DesignerContext } from "project-editor/features/gui/page-editor/context";
 import { Canvas } from "project-editor/features/gui/page-editor/canvas";
-import { selectToolHandler, SnapLines } from "project-editor/features/gui/page-editor/select-tool";
+import {
+    selectToolHandler,
+    SnapLines
+} from "project-editor/features/gui/page-editor/select-tool";
 import {
     getObjectIdFromPoint,
     getObjectIdsInsideRect
@@ -33,27 +36,30 @@ import {
     getId
 } from "project-editor/core/object";
 import {
-    DocumentStore,
-    NavigationStore,
     deleteItems,
-    UndoManager,
-    UIStateStore,
     IPanel
 } from "project-editor/core/store";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
+import { getProjectStore } from "project-editor/project/project";
 import { Page } from "project-editor/features/gui/page";
 import { Widget } from "project-editor/features/gui/widget";
 import { WidgetComponent } from "project-editor/features/gui/page-editor/render";
-import { dataContext } from "project-editor/features/data/data";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function createObjectToEditorObjectTransformer(designerContext: PageEditorDesignerContext) {
+function createObjectToEditorObjectTransformer(
+    designerContext: PageEditorDesignerContext
+) {
     const transformer = createTransformer(
         (treeObjectAdapter: ITreeObjectAdapter): EditorObject => {
-            return new EditorObject(treeObjectAdapter, designerContext, transformer);
+            return new EditorObject(
+                treeObjectAdapter,
+                designerContext,
+                transformer
+            );
         }
     );
     return transformer;
@@ -82,7 +88,7 @@ export class EditorObject implements IBaseObject {
     }
 
     set rect(value: Rect) {
-        DocumentStore.updateObject(this.object, {
+        getProjectStore(this.treeObjectAdapter.object).updateObject(this.object, {
             left: value.left,
             top: value.top,
             width: value.width,
@@ -106,7 +112,9 @@ export class EditorObject implements IBaseObject {
             }
         }
 
-        return _map(childrenObjects, (object: ITreeObjectAdapter) => this.transformer(object));
+        return _map(childrenObjects, (object: ITreeObjectAdapter) =>
+            this.transformer(object)
+        );
     }
 
     get isMoveable() {
@@ -127,9 +135,17 @@ export class EditorObject implements IBaseObject {
         return NaN;
     }
 
-    resizeColumn(columnIndex: number, savedColumnWidth: number, offset: number) {
+    resizeColumn(
+        columnIndex: number,
+        savedColumnWidth: number,
+        offset: number
+    ) {
         if (this.object instanceof Widget) {
-            return this.object.resizeColumn(columnIndex, savedColumnWidth, offset);
+            return this.object.resizeColumn(
+                columnIndex,
+                savedColumnWidth,
+                offset
+            );
         }
     }
 
@@ -232,13 +248,19 @@ class DragSnapLinesOverlay extends React.Component {
 ////////////////////////////////////////////////////////////////////////////////
 
 const DragWidget = observer(
-    ({ page, pageEditorContext }: { page: Page; pageEditorContext: PageEditorDesignerContext }) => {
+    ({
+        page,
+        pageEditorContext
+    }: {
+        page: Page;
+        pageEditorContext: PageEditorDesignerContext;
+    }) => {
         return pageEditorContext.dragWidget ? (
             <WidgetComponent
                 widget={pageEditorContext.dragWidget}
                 left={page.left + pageEditorContext.dragWidget.left}
                 top={page.top + pageEditorContext.dragWidget.top}
-                dataContext={dataContext}
+                dataContext={getProjectStore(page).dataContext}
             />
         ) : null;
     }
@@ -260,7 +282,9 @@ class PageDocument implements IDocument {
 
     @computed
     get rootObject() {
-        const transformer = createObjectToEditorObjectTransformer(this.pageEditorContext);
+        const transformer = createObjectToEditorObjectTransformer(
+            this.pageEditorContext
+        );
         return transformer(this.page);
     }
 
@@ -288,7 +312,11 @@ class PageDocument implements IDocument {
     }
 
     objectFromPoint(point: Point) {
-        const id = getObjectIdFromPoint(this, this.pageEditorContext.viewState, point);
+        const id = getObjectIdFromPoint(
+            this,
+            this.pageEditorContext.viewState,
+            point
+        );
         if (!id) {
             return undefined;
         }
@@ -305,9 +333,15 @@ class PageDocument implements IDocument {
     }
 
     getObjectsInsideRect(rect: Rect) {
-        const ids = getObjectIdsInsideRect(this.pageEditorContext.viewState, rect);
+        const ids = getObjectIdsInsideRect(
+            this.pageEditorContext.viewState,
+            rect
+        );
 
-        const editorObjectsGroupedByParent = new Map<IEezObject, EditorObject[]>();
+        const editorObjectsGroupedByParent = new Map<
+            IEezObject,
+            EditorObject[]
+        >();
         let maxLengthGroup: EditorObject[] | undefined;
 
         ids.forEach(id => {
@@ -338,11 +372,15 @@ class PageDocument implements IDocument {
     }
 
     onDragStart(op: "move" | "resize"): void {
-        UndoManager.setCombineCommands(true);
+        getProjectStore(this.page).UndoManager.setCombineCommands(true);
     }
 
-    onDragEnd(op: "move" | "resize", changed: boolean, objects: IBaseObject[]): void {
-        UndoManager.setCombineCommands(false);
+    onDragEnd(
+        op: "move" | "resize",
+        changed: boolean,
+        objects: IBaseObject[]
+    ): void {
+        getProjectStore(this.page).UndoManager.setCombineCommands(false);
     }
 }
 
@@ -380,9 +418,14 @@ interface PageEditorProps {
 }
 
 @observer
-export class PageEditor extends React.Component<PageEditorProps, { hasError: boolean }>
+export class PageEditor
+    extends React.Component<PageEditorProps, { hasError: boolean }>
     implements IPanel {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     pageEditorContext: PageEditorDesignerContext = new PageEditorDesignerContext();
+    currentWidgetContainer?: ITreeObjectAdapter;
 
     @observable pageDocument: PageDocument;
 
@@ -393,10 +436,29 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
 
         this.state = { hasError: false };
 
-        this.pageEditorContext = new PageEditorDesignerContext();
+        this.updatePageDocument();
+    }
 
-        this.UNSAFE_componentWillReceiveProps(props);
+    @action
+    updatePageDocument() {
+        if (this.props.widgetContainer != this.currentWidgetContainer) {
+            this.currentWidgetContainer = this.props.widgetContainer;
 
+            this.pageDocument = new PageDocument(
+                this.props.widgetContainer,
+                this.pageEditorContext
+            );
+
+            this.options = {
+                center: {
+                    x: 0,
+                    y: 0
+                }
+            };
+        }
+    }
+
+    componentDidMount() {
         autorun(() => {
             this.pageEditorContext.set(
                 this.pageDocument,
@@ -408,16 +470,8 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
         });
     }
 
-    @action
-    UNSAFE_componentWillReceiveProps(props: PageEditorProps) {
-        this.pageDocument = new PageDocument(props.widgetContainer, this.pageEditorContext);
-
-        this.options = {
-            center: {
-                x: 0,
-                y: 0
-            }
-        };
+    componentDidUpdate() {
+        this.updatePageDocument();
     }
 
     @bind
@@ -427,7 +481,8 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
             return false;
         }
 
-        const selectedObjects = this.pageEditorContext.viewState.selectedObjects;
+        const selectedObjects = this.pageEditorContext.viewState
+            .selectedObjects;
 
         for (let i = 0; i < selectedObjects.length; ++i) {
             const selectedObject = (selectedObjects[i] as EditorObject).object;
@@ -485,14 +540,16 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
 
     @bind
     focusHander() {
-        NavigationStore.setSelectedPanel(this);
+        this.context.NavigationStore.setSelectedPanel(this);
     }
 
     savedViewState: IViewStatePersistantState | undefined;
 
     @computed
     get viewStatePersistantState(): IViewStatePersistantState {
-        const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
+        const uiState = this.context.UIStateStore.getObjectUIState(
+            this.props.widgetContainer.object
+        );
 
         let transform: ITransform | undefined;
         if (uiState && uiState.pageEditorCanvasViewState) {
@@ -501,8 +558,8 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
 
         let viewState: IViewStatePersistantState = {
             transform,
-            selectedObjects: this.props.widgetContainer.selectedItems.map(item =>
-                getId(item.object)
+            selectedObjects: this.props.widgetContainer.selectedItems.map(
+                item => getId(item.object)
             )
         };
 
@@ -522,28 +579,41 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
         if (!this.pageEditorContext.dragWidget) {
             this.savedViewState = viewState;
 
-            const uiState = UIStateStore.getObjectUIState(this.props.widgetContainer.object);
+            const uiState = this.context.UIStateStore.getObjectUIState(
+                this.props.widgetContainer.object
+            );
             if (
                 !uiState ||
                 !uiState.pageEditorCanvasViewState ||
-                !_isEqual(uiState.pageEditorCanvasViewState.transform, viewState.transform)
+                !_isEqual(
+                    uiState.pageEditorCanvasViewState.transform,
+                    viewState.transform
+                )
             ) {
-                UIStateStore.updateObjectUIState(this.props.widgetContainer.object, {
-                    pageEditorCanvasViewState: {
-                        transform: viewState.transform
+                this.context.UIStateStore.updateObjectUIState(
+                    this.props.widgetContainer.object,
+                    {
+                        pageEditorCanvasViewState: {
+                            transform: viewState.transform
+                        }
                     }
-                });
+                );
             }
 
             // selection changed in Editor => change selection in Tree
-            this.props.widgetContainer.selectObjectIds(viewState.selectedObjects);
+            this.props.widgetContainer.selectObjectIds(
+                viewState.selectedObjects
+            );
         }
     }
 
     getDragWidget(event: React.DragEvent) {
         if (
             DragAndDropManager.dragObject &&
-            isObjectInstanceOf(DragAndDropManager.dragObject, Widget.classInfo) &&
+            isObjectInstanceOf(
+                DragAndDropManager.dragObject,
+                Widget.classInfo
+            ) &&
             event.dataTransfer.effectAllowed === "copy"
         ) {
             return DragAndDropManager.dragObject as Widget;
@@ -567,7 +637,9 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
                 setParent(this.pageEditorContext.dragWidget, page.widgets);
 
                 this.pageEditorContext.viewState.selectObjects([
-                    this.pageEditorContext.document.findObjectById("WidgetPaletteItem")!
+                    this.pageEditorContext.document.findObjectById(
+                        "WidgetPaletteItem"
+                    )!
                 ]);
 
                 dragSnapLines.start(this.pageEditorContext);
@@ -578,8 +650,12 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
             const transform = this.pageEditorContext.viewState.transform;
 
             const p = transform.clientToPagePoint({
-                x: event.nativeEvent.clientX - (widget.width * transform.scale) / 2,
-                y: event.nativeEvent.clientY - (widget.height * transform.scale) / 2
+                x:
+                    event.nativeEvent.clientX -
+                    (widget.width * transform.scale) / 2,
+                y:
+                    event.nativeEvent.clientY -
+                    (widget.height * transform.scale) / 2
             });
 
             const { left, top } = dragSnapLines.snapLines!.dragSnap(
@@ -599,7 +675,7 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
         if (this.pageEditorContext.dragWidget) {
             const page = this.props.widgetContainer.object as Page;
 
-            const object = DocumentStore.addObject(
+            const object = this.context.addObject(
                 page.widgets,
                 toJS(this.pageEditorContext.dragWidget)
             );
@@ -608,7 +684,9 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
             dragSnapLines.clear();
 
             setTimeout(() => {
-                const objectAdapter = this.pageEditorContext.document.findObjectById(getId(object));
+                const objectAdapter = this.pageEditorContext.document.findObjectById(
+                    getId(object)
+                );
                 if (objectAdapter) {
                     const viewState = this.pageEditorContext.viewState;
                     viewState.selectObjects([objectAdapter]);
@@ -728,10 +806,20 @@ export class PageEditor extends React.Component<PageEditorProps, { hasError: boo
                                     height: pageRect && pageRect.height
                                 }}
                             >
-                                <WidgetComponent widget={this.page} dataContext={dataContext} />
+                                <WidgetComponent
+                                    widget={this.page}
+                                    dataContext={
+                                        getProjectStore(
+                                            this.props.widgetContainer.object
+                                        ).dataContext
+                                    }
+                                />
                             </div>
                         }
-                        <DragWidget page={this.page} pageEditorContext={this.pageEditorContext} />
+                        <DragWidget
+                            page={this.page}
+                            pageEditorContext={this.pageEditorContext}
+                        />
                     </PageEditorCanvas>
                 </PageEditorCanvasContainer>
             </Provider>

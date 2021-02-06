@@ -15,10 +15,9 @@ import {
     getPropertyInfo,
     getClassInfo
 } from "project-editor/core/object";
-import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
-import { ProjectStore, BuildConfiguration, getProject } from "project-editor/project/project";
+import { BuildConfiguration, getProject, ProjectStoreClass } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
@@ -82,8 +81,10 @@ export function dumpData(data: number[] | Buffer) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function showCheckResult() {
-    let outputSection = OutputSectionsStore.getSection(Section.OUTPUT);
+function showCheckResult(ProjectStore: ProjectStoreClass) {
+    const OutputSections = ProjectStore.OutputSectionsStore;
+
+    let outputSection = OutputSections.getSection(Section.OUTPUT);
 
     let checkResultMassage: string;
 
@@ -107,7 +108,7 @@ function showCheckResult() {
 
     checkResultMassage += " detected";
 
-    OutputSectionsStore.write(Section.OUTPUT, Type.INFO, checkResultMassage);
+    OutputSections.write(Section.OUTPUT, Type.INFO, checkResultMassage);
 }
 
 class BuildException {
@@ -115,6 +116,7 @@ class BuildException {
 }
 
 async function getBuildResults(
+    ProjectStore: ProjectStoreClass,
     sectionNames: string[] | undefined,
     buildConfiguration: BuildConfiguration | undefined
 ) {
@@ -146,7 +148,7 @@ async function getBuildResults(
 
 const sectionNamesRegexp = /\/\/\$\{eez-studio (.*)\}/g;
 
-function getSectionNames(): string[] {
+function getSectionNames(ProjectStore: ProjectStoreClass): string[] {
     if (ProjectStore.masterProject) {
         return ["GUI_ASSETS_DATA"];
     }
@@ -166,6 +168,7 @@ function getSectionNames(): string[] {
 }
 
 async function generateFile(
+    ProjectStore: ProjectStoreClass,
     buildResults: BuildResult[],
     template: string | undefined,
     filePath: string
@@ -185,10 +188,11 @@ async function generateFile(
         await writeBinaryData(filePath, parts["GUI_ASSETS_DATA"]);
     }
 
-    OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `File "${filePath}" builded`);
+    ProjectStore.OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `File "${filePath}" builded`);
 }
 
 async function generateFiles(
+    ProjectStore: ProjectStoreClass,
     destinationFolderPath: string,
     configurationBuildResults: {
         [configurationName: string]: BuildResult[];
@@ -198,6 +202,7 @@ async function generateFiles(
 
     if (ProjectStore.masterProject) {
         generateFile(
+            ProjectStore,
             configurationBuildResults[
             ProjectStore.selectedBuildConfiguration
                 ? ProjectStore.selectedBuildConfiguration.name
@@ -217,6 +222,7 @@ async function generateFiles(
                 for (const configuration of build.configurations) {
                     try {
                         await generateFile(
+                            ProjectStore,
                             configurationBuildResults[configuration.name],
                             buildFile.template,
                             destinationFolderPath +
@@ -227,6 +233,7 @@ async function generateFiles(
                         await new Promise(resolve => setTimeout(resolve, 10));
 
                         await generateFile(
+                            ProjectStore,
                             configurationBuildResults[configuration.name],
                             buildFile.template,
                             destinationFolderPath +
@@ -237,6 +244,7 @@ async function generateFiles(
                 }
             } else {
                 generateFile(
+                    ProjectStore,
                     configurationBuildResults[
                     ProjectStore.selectedBuildConfiguration
                         ? ProjectStore.selectedBuildConfiguration.name
@@ -250,22 +258,24 @@ async function generateFiles(
     }
 }
 
-function anythingToBuild() {
+function anythingToBuild(ProjectStore: ProjectStoreClass) {
     return ProjectStore.project.settings.build.files.length > 0 || ProjectStore.masterProject;
 }
 
-export async function build({ onlyCheck }: { onlyCheck: boolean }) {
+export async function build(ProjectStore: ProjectStoreClass, { onlyCheck }: { onlyCheck: boolean }) {
     const timeStart = new Date().getTime();
 
-    OutputSectionsStore.setActiveSection(Section.OUTPUT);
-    OutputSectionsStore.clear(Section.OUTPUT);
+    const OutputSections = ProjectStore.OutputSectionsStore;
 
-    if (!anythingToBuild()) {
-        OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+    OutputSections.setActiveSection(Section.OUTPUT);
+    OutputSections.clear(Section.OUTPUT);
+
+    if (!anythingToBuild(ProjectStore)) {
+        OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
         return;
     }
 
-    OutputSectionsStore.setLoading(Section.OUTPUT, true);
+    OutputSections.setLoading(Section.OUTPUT, true);
 
     // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -283,7 +293,7 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
                 throw new BuildException("Cannot find destination folder.");
             }
 
-            sectionNames = getSectionNames();
+            sectionNames = getSectionNames(ProjectStore);
         }
 
         let configurationBuildResuts: {
@@ -296,12 +306,13 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
             !ProjectStore.masterProject
         ) {
             for (const configuration of ProjectStore.project.settings.build.configurations) {
-                OutputSectionsStore.write(
+                OutputSections.write(
                     Section.OUTPUT,
                     Type.INFO,
                     `Building ${configuration.name} configuration`
                 );
                 configurationBuildResuts[configuration.name] = await getBuildResults(
+                    ProjectStore,
                     sectionNames,
                     configuration
                 );
@@ -311,67 +322,71 @@ export async function build({ onlyCheck }: { onlyCheck: boolean }) {
                 ProjectStore.selectedBuildConfiguration ||
                 ProjectStore.project.settings.build.configurations[0];
             if (selectedBuildConfiguration) {
-                OutputSectionsStore.write(
+                OutputSections.write(
                     Section.OUTPUT,
                     Type.INFO,
                     `Building ${selectedBuildConfiguration.name} configuration`
                 );
                 configurationBuildResuts[selectedBuildConfiguration.name] = await getBuildResults(
+                    ProjectStore,
                     sectionNames,
                     selectedBuildConfiguration
                 );
             } else {
                 configurationBuildResuts["default"] = await getBuildResults(
+                    ProjectStore,
                     sectionNames,
                     undefined
                 );
             }
         }
 
-        showCheckResult();
+        showCheckResult(ProjectStore);
 
         if (onlyCheck) {
             return;
         }
 
-        await generateFiles(destinationFolderPath, configurationBuildResuts);
+        await generateFiles(ProjectStore, destinationFolderPath, configurationBuildResuts);
 
-        OutputSectionsStore.write(
+        OutputSections.write(
             Section.OUTPUT,
             Type.INFO,
             `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
         );
 
-        OutputSectionsStore.write(
+        OutputSections.write(
             Section.OUTPUT,
             Type.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
-            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
+            OutputSections.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
         } else {
-            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
+            OutputSections.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
         }
 
-        showCheckResult();
+        showCheckResult(ProjectStore);
     } finally {
-        OutputSectionsStore.setLoading(Section.OUTPUT, false);
+        OutputSections.setLoading(Section.OUTPUT, false);
     }
 }
 
-export async function buildExtensions() {
+export async function buildExtensions(ProjectStore: ProjectStoreClass) {
     const timeStart = new Date().getTime();
 
-    OutputSectionsStore.setActiveSection(Section.OUTPUT);
-    OutputSectionsStore.clear(Section.OUTPUT);
+    const OutputSections = ProjectStore.OutputSectionsStore;
 
-    if (!extensionDefinitionAnythingToBuild()) {
-        OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+    OutputSections.setActiveSection(Section.OUTPUT);
+    OutputSections.clear(Section.OUTPUT);
+
+    if (!extensionDefinitionAnythingToBuild(ProjectStore)) {
+        OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
         return;
     }
 
-    OutputSectionsStore.setLoading(Section.OUTPUT, true);
+    OutputSections.setLoading(Section.OUTPUT, true);
 
     // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -385,31 +400,31 @@ export async function buildExtensions() {
             throw new BuildException("Cannot find destination folder.");
         }
 
-        showCheckResult();
+        showCheckResult(ProjectStore);
 
-        await extensionDefinitionBuild();
+        await extensionDefinitionBuild(ProjectStore);
 
-        OutputSectionsStore.write(
+        OutputSections.write(
             Section.OUTPUT,
             Type.INFO,
             `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
         );
 
-        OutputSectionsStore.write(
+        OutputSections.write(
             Section.OUTPUT,
             Type.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
-            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
+            OutputSections.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
         } else {
-            OutputSectionsStore.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
+            OutputSections.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
         }
 
-        showCheckResult();
+        showCheckResult(ProjectStore);
     } finally {
-        OutputSectionsStore.setLoading(Section.OUTPUT, false);
+        OutputSections.setLoading(Section.OUTPUT, false);
     }
 }
 
@@ -454,7 +469,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
 
 let setMessagesTimeoutId: any;
 
-export function backgroundCheck() {
+export function backgroundCheck(ProjectStore: ProjectStoreClass) {
     //console.time("backgroundCheck");
 
     const messages = checkTransformer(ProjectStore.project);
@@ -464,7 +479,7 @@ export function backgroundCheck() {
     }
 
     setMessagesTimeoutId = setTimeout(() => {
-        OutputSectionsStore.setMessages(Section.CHECKS, messages);
+        ProjectStore.OutputSectionsStore.setMessages(Section.CHECKS, messages);
     }, 100);
 
     //console.timeEnd("backgroundCheck");

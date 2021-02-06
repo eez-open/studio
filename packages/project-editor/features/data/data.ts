@@ -17,7 +17,6 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
-import { ProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,14 +177,10 @@ export function findDataItem(project: Project, dataItemName: string) {
 
 export class DataContext {
     constructor(
-        private _project?: Project,
+        public project: Project,
         public parentDataContext?: DataContext,
         public defaultValueOverrides?: any
     ) { }
-
-    get project() {
-        return this._project ?? ProjectStore.project;
-    }
 
     findDataItemDefaultValue(dataItemId: string): any {
         if (this.defaultValueOverrides) {
@@ -341,5 +336,3 @@ export class DataContext {
 
     executeAction(action: string) { }
 }
-
-export const dataContext = new DataContext();

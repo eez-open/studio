@@ -6,16 +6,13 @@ import {
     DisplayItemChildrenObject,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
-import { OutputSectionsStore } from "project-editor/core/store";
 import { IEezObject } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
 import { BuildResult } from "project-editor/core/extensions";
 
 import * as projectBuild from "project-editor/project/build";
-import { ProjectStore, Project, BuildConfiguration } from "project-editor/project/project";
-
-import * as data from "project-editor/features/data/data";
+import { Project, BuildConfiguration, getProjectStore, getProject } from "project-editor/project/project";
 
 import { getData as getBitmapData, BitmapData } from "project-editor/features/gui/bitmap";
 import { Font } from "project-editor/features/gui/font";
@@ -138,7 +135,7 @@ function getSelectedWidgetForSelectWidget(
 ): DisplayItem | undefined {
     let widget = item.object as Widget.SelectWidget;
     if (widget.data && widget.widgets) {
-        let index: number = data.dataContext.getEnumValue(widget.data);
+        let index: number = getProjectStore(widgetContainerDisplayItem.object).dataContext.getEnumValue(widget.data);
         if (index >= 0 && index < widget.widgets.length) {
             let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
@@ -204,7 +201,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                             "itemWidget"
                         ];
 
-                        const dataValue = data.dataContext.get(widget.data as string);
+                        const dataValue = getProjectStore(widgetContainerDisplayItem.object).dataContext.get(widget.data as string);
                         if (dataValue && Array.isArray(dataValue)) {
                             for (let i = 0; i < dataValue.length; i++) {
                                 enumWidget(treeNode, itemWidgetItem, x, y);
@@ -443,41 +440,41 @@ function getItem(
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
+    getProjectStore(object).OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
 
     return 0;
 }
 
 function getPageLayoutIndex(object: any, propertyName: string) {
-    const gui = ProjectStore.project.gui;
+    const gui = getProject(object).gui;
     const pages = gui.pages.filter(page => page.isUsedAsCustomWidget);
     return getItem(pages, object, propertyName);
 }
 
 function getDataItemIndex(object: any, propertyName: string) {
-    const dataItems = (ProjectStore.project as Project).data;
+    const dataItems = getProject(object).data;
     return getItem(dataItems, object, propertyName);
 }
 
 function getActionIndex(object: any, propertyName: string) {
-    const actions = (ProjectStore.project as Project).actions;
+    const actions = getProject(object).actions;
     return getItem(actions, object, propertyName);
 }
 
 function getBitmapIndex(object: any, propertyName: string) {
-    const gui = ProjectStore.project.gui;
+    const gui = getProject(object).gui;
     const bitmaps = gui.bitmaps;
     return getItem(bitmaps, object, propertyName);
 }
 
 function getFontIndex(object: any, propertyName: string) {
-    const gui = ProjectStore.project.gui;
+    const gui = getProject(object).gui;
     const fonts = gui.fonts;
     return getItem(fonts, object, propertyName);
 }
 
 function getStyleIndex(object: any, propertyName: string) {
-    const gui = ProjectStore.project.gui;
+    const gui = getProject(object).gui;
     const styles = gui.styles;
 
     let itemName = object[propertyName];
@@ -495,13 +492,13 @@ function getStyleIndex(object: any, propertyName: string) {
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
+    getProjectStore(object).OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
 
     return 0;
 }
 
-function getDefaultStyleIndex() {
-    const gui = ProjectStore.project.gui;
+function getDefaultStyleIndex(object: IEezObject) {
+    const gui = getProject(object).gui;
     const styles = gui.styles;
     for (let i = 0; i < styles.length; i++) {
         if (styles[i].name === "default") {
@@ -1149,7 +1146,7 @@ function buildWidget(object: Widget.Widget | Page) {
     if (object.style) {
         style = getStyleIndex(object, "style");
     } else {
-        style = getDefaultStyleIndex();
+        style = getDefaultStyleIndex(object);
     }
     result.addField(new UInt8(style));
 
@@ -1225,7 +1222,7 @@ function buildWidget(object: Widget.Widget | Page) {
         if (widget.itemWidget) {
             itemWidget = buildWidget(widget.itemWidget);
         } else {
-            OutputSectionsStore.write(
+            getProjectStore(object).OutputSectionsStore.write(
                 output.Section.OUTPUT,
                 output.Type.ERROR,
                 "List item widget is missing",

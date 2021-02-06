@@ -41,8 +41,6 @@ import {
     createContextMenu,
     showContextMenu,
     canContainChildren,
-    DocumentStore,
-    NavigationStore,
     INavigationStore,
     createObjectNavigationItem,
     isObjectNavigationItem
@@ -55,6 +53,7 @@ import {
 } from "project-editor/core/clipboard";
 import { DragAndDropManagerClass, DragAndDropManager } from "project-editor/core/dd";
 import { objectToJson } from "project-editor/core/serialization";
+import { getProjectStore } from "project-editor/project/project";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -1041,6 +1040,8 @@ export class TreeAdapter implements ITreeAdapter {
 
             let aNewObject: IEezObject | undefined;
 
+            const DocumentStore = getProjectStore(this.rootItem.object);
+
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
                 aNewObject = DocumentStore.insertObjectBefore(dropItem.object, object);
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
@@ -1179,7 +1180,9 @@ export class ListAdapter implements ITreeAdapter {
     ) {
         this.onDoubleClickCallback = onDoubleClick;
 
-        this.navigationStore = navigationStore || NavigationStore;
+        const DocumentStore = getProjectStore(this.object);
+
+        this.navigationStore = navigationStore || DocumentStore.NavigationStore;
         this.dragAndDropManager = dragAndDropManager || DragAndDropManager;
 
         autorun(() => {
@@ -1424,6 +1427,8 @@ export class ListAdapter implements ITreeAdapter {
             let object = objectToJson(this.dragAndDropManager.dragObject);
 
             let dropItem = this.dragAndDropManager.dropObject as ListItem;
+
+            const DocumentStore = getProjectStore(this.object);
 
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
                 DocumentStore.insertObjectBefore(dropItem.object, object);

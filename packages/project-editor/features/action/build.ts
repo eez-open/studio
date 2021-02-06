@@ -1,7 +1,6 @@
 import { BuildResult } from "project-editor/core/extensions";
 
 import { Project, BuildConfiguration } from "project-editor/project/project";
-import { ProjectStore } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
 import { Action } from "project-editor/features/action/action";
@@ -92,7 +91,7 @@ export function build(
                 !action.usedIn ||
                 action.usedIn.indexOf(buildConfiguration.name) !== -1
         );
-        for (const importDirective of ProjectStore.project.settings.general.imports) {
+        for (const importDirective of project.settings.general.imports) {
             if (importDirective.project) {
                 projectActions.push(
                     ...importDirective.project.actions.filter(

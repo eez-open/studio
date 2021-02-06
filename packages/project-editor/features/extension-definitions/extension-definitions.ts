@@ -13,12 +13,12 @@ import {
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 
 import { metrics } from "project-editor/features/extension-definitions/metrics";
+import { getProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -230,6 +230,8 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
                 messages.push(output.propertyNotSetMessage(object, "idfRevisionNumber"));
             }
 
+            const ProjectStore = getProjectStore(object);
+
             let extensionDefinitions = ProjectStore.project.extensionDefinitions;
             if (
                 extensionDefinitions.find(
@@ -255,16 +257,6 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
 }
 
 registerClass(ExtensionDefinition);
-
-export function findExtensionDefinition(name: string) {
-    let extensionDefinitions = ProjectStore.project.extensionDefinitions;
-    for (const extensionDefinition of extensionDefinitions) {
-        if (extensionDefinition.name == name) {
-            return extensionDefinition;
-        }
-    }
-    return undefined;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

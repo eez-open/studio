@@ -3,7 +3,12 @@ import ReactDOM from "react-dom";
 import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
 import { observer } from "mobx-react";
 
-import { humanize, camelize, capitalize, stringCompare } from "eez-studio-shared/string";
+import {
+    humanize,
+    camelize,
+    capitalize,
+    stringCompare
+} from "eez-studio-shared/string";
 
 import { theme } from "eez-studio-ui/theme";
 import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
@@ -11,19 +16,17 @@ import { Loader } from "eez-studio-ui/loader";
 
 import { getProperty } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
-import {
-    DocumentStore,
-    UndoManager,
-    NavigationStore,
-    createObjectNavigationItem
-} from "project-editor/core/store";
+import { createObjectNavigationItem } from "project-editor/core/store";
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
-import { ProjectStore } from "project-editor/project/project";
+import {
+    ProjectStoreClass
+} from "project-editor/project/project";
 
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +61,7 @@ interface Changes {
 }
 
 class FindChanges {
-    constructor(private existingEnums: ScpiEnum[]) {}
+    constructor(private ProjectStore: ProjectStoreClass, private existingEnums: ScpiEnum[]) {}
 
     cleanUpScpiCommand(command: string) {
         command = command.trim();
@@ -99,7 +102,10 @@ class FindChanges {
     getParameterTypeAndRange(name: string, table: Element) {
         const elements = table.querySelectorAll("tr>td>p");
         for (let i = 0; i < elements.length; ++i) {
-            if (elements[i].textContent && elements[i].textContent!.trim() === name) {
+            if (
+                elements[i].textContent &&
+                elements[i].textContent!.trim() === name
+            ) {
                 let type;
                 let range;
 
@@ -159,14 +165,22 @@ class FindChanges {
     findEnum(suggestedEnumName: string, members: string): string {
         // find in existing enums
         for (let i = 0; i < this.existingEnums.length; ++i) {
-            if (this.existingEnums[i].members.map(member => member.name).join("|") === members) {
+            if (
+                this.existingEnums[i].members
+                    .map(member => member.name)
+                    .join("|") === members
+            ) {
                 return this.existingEnums[i].name;
             }
         }
 
         // find in new enums
         for (let i = 0; i < this.newEnums.length; ++i) {
-            if (this.newEnums[i].members.map(member => member.name).join("|") === members) {
+            if (
+                this.newEnums[i].members
+                    .map(member => member.name)
+                    .join("|") === members
+            ) {
                 return this.newEnums[i].name;
             }
         }
@@ -275,7 +289,10 @@ class FindChanges {
                 if (name.startsWith("{")) {
                     isOptional = false;
                     if (!name.endsWith("}")) {
-                        console.error("Invalid params spec", commandNameAndParams);
+                        console.error(
+                            "Invalid params spec",
+                            commandNameAndParams
+                        );
                         return undefined;
                     }
                     name = name.substr(1, name.length - 2);
@@ -292,7 +309,10 @@ class FindChanges {
                     return undefined;
                 }
 
-                let { type, range } = this.getParameterTypeAndRange(name, table);
+                let { type, range } = this.getParameterTypeAndRange(
+                    name,
+                    table
+                );
 
                 name = name.substr(1, name.length - 2);
 
@@ -322,7 +342,10 @@ class FindChanges {
                                 types.push({
                                     type: "boolean"
                                 });
-                            } else if (type === "quoted string" || type === "ascii string") {
+                            } else if (
+                                type === "quoted string" ||
+                                type === "ascii string"
+                            ) {
                                 types.push({
                                     type: "quoted-string"
                                 });
@@ -367,11 +390,17 @@ class FindChanges {
         let firstOptional = false;
         for (let i = 0; i < params.length; ++i) {
             if (i < params.length - 1 && params[i].name === "...") {
-                console.error('Type "..." should be at the end', commandNameAndParams);
+                console.error(
+                    'Type "..." should be at the end',
+                    commandNameAndParams
+                );
             }
             if (firstOptional) {
                 if (!params[i].isOptional) {
-                    console.error("All optional should be at the end", commandNameAndParams);
+                    console.error(
+                        "All optional should be at the end",
+                        commandNameAndParams
+                    );
                 }
             } else {
                 if (params[i].isOptional) {
@@ -388,7 +417,8 @@ class FindChanges {
             let bookmark = anchorElements[i].getAttribute("name");
             if (
                 bookmark &&
-                (bookmark.startsWith("_scpi_subsys_") || bookmark.startsWith("_scpi_"))
+                (bookmark.startsWith("_scpi_subsys_") ||
+                    bookmark.startsWith("_scpi_"))
             ) {
                 return 2;
             }
@@ -411,7 +441,9 @@ class FindChanges {
 
         const parameters = this.getCommandParameters(textContent, table);
 
-        const existingCommand = commands.find(existingCommand => existingCommand.name === name);
+        const existingCommand = commands.find(
+            existingCommand => existingCommand.name === name
+        );
         if (!existingCommand) {
             commands.push({
                 bookmark,
@@ -425,7 +457,10 @@ class FindChanges {
         }
     }
 
-    getSubsystemFromScpiFileVersion1Doc(file: string, anchorElements: NodeListOf<Element>) {
+    getSubsystemFromScpiFileVersion1Doc(
+        file: string,
+        anchorElements: NodeListOf<Element>
+    ) {
         let topicElement = anchorElements[0] && anchorElements[0].parentElement;
         if (topicElement != null) {
             let topic = topicElement.textContent;
@@ -445,22 +480,32 @@ class FindChanges {
                 for (let i = 1; i < anchorElements.length; i++) {
                     let bookmark = anchorElements[i].getAttribute("name");
                     if (bookmark) {
-                        let commandElement = anchorElements[i].parentElement as HTMLElement;
+                        let commandElement = anchorElements[i]
+                            .parentElement as HTMLElement;
                         if (commandElement) {
                             let command = commandElement.textContent;
                             if (command) {
-                                let cleanedUpCommand = this.cleanUpScpiCommand(command);
+                                let cleanedUpCommand = this.cleanUpScpiCommand(
+                                    command
+                                );
                                 if (cleanedUpCommand) {
-                                    let table = commandElement.nextElementSibling;
+                                    let table =
+                                        commandElement.nextElementSibling;
                                     while (table) {
                                         if (table.tagName == "TABLE") {
-                                            let tr = table.querySelector("tr:first-child");
+                                            let tr = table.querySelector(
+                                                "tr:first-child"
+                                            );
                                             if (tr) {
-                                                let td = tr.querySelector("td:first-child");
+                                                let td = tr.querySelector(
+                                                    "td:first-child"
+                                                );
                                                 if (
                                                     td &&
                                                     td.textContent &&
-                                                    td.textContent.indexOf("Syntax") != -1
+                                                    td.textContent.indexOf(
+                                                        "Syntax"
+                                                    ) != -1
                                                 ) {
                                                     let pList = tr.querySelectorAll(
                                                         "td:nth-child(2)>p"
@@ -475,7 +520,10 @@ class FindChanges {
                                                         );
 
                                                         p = pList[1];
-                                                        if (p && p.textContent) {
+                                                        if (
+                                                            p &&
+                                                            p.textContent
+                                                        ) {
                                                             this.addCommand(
                                                                 commands,
                                                                 bookmark,
@@ -511,7 +559,10 @@ class FindChanges {
         return [];
     }
 
-    getSubsystemFromScpiFileVersion2Doc(file: string, anchorElements: NodeListOf<Element>) {
+    getSubsystemFromScpiFileVersion2Doc(
+        file: string,
+        anchorElements: NodeListOf<Element>
+    ) {
         let subsystems: Subsystem[] = [];
 
         let subsystem: Subsystem | undefined;
@@ -539,7 +590,8 @@ class FindChanges {
 
                             subsystem.commands.push({
                                 name: this.getCommandFromSyntax(text),
-                                helpLink: file + "#" + (commandBookmark || bookmark),
+                                helpLink:
+                                    file + "#" + (commandBookmark || bookmark),
                                 parameters
                             });
                         } else {
@@ -553,12 +605,21 @@ class FindChanges {
         return subsystems;
     }
 
-    getSubsystemFromScpiFileDoc(file: string, anchorElements: NodeListOf<Element>) {
+    getSubsystemFromScpiFileDoc(
+        file: string,
+        anchorElements: NodeListOf<Element>
+    ) {
         let version = this.detectVersionOfScpiFileDoc(anchorElements);
         if (version === 1) {
-            return this.getSubsystemFromScpiFileVersion1Doc(file, anchorElements);
+            return this.getSubsystemFromScpiFileVersion1Doc(
+                file,
+                anchorElements
+            );
         } else if (version === 2) {
-            return this.getSubsystemFromScpiFileVersion2Doc(file, anchorElements);
+            return this.getSubsystemFromScpiFileVersion2Doc(
+                file,
+                anchorElements
+            );
         } else {
             return [];
         }
@@ -566,73 +627,92 @@ class FindChanges {
 
     getCommandsFromScpiDoc() {
         return new Promise<Subsystem[]>((resolve, reject) => {
-            if (ProjectStore.project.settings.general.scpiDocFolder === undefined) {
+            if (
+                this.ProjectStore.project.settings.general.scpiDocFolder ===
+                undefined
+            ) {
                 reject("SCPI help folder is not defined");
                 return;
             }
 
-            let scpiHelpFolderPath = ProjectStore.getAbsoluteFilePath(
-                ProjectStore.project.settings.general.scpiDocFolder
+            let scpiHelpFolderPath = this.ProjectStore.getAbsoluteFilePath(
+                this.ProjectStore.project.settings.general.scpiDocFolder
             );
 
             const fs = EEZStudio.electron.remote.require("fs");
             fs.exists(scpiHelpFolderPath, (exists: boolean) => {
                 if (!exists) {
-                    reject(`SCPI help folder "${scpiHelpFolderPath}" doesn't exists.`);
+                    reject(
+                        `SCPI help folder "${scpiHelpFolderPath}" doesn't exists.`
+                    );
                 } else {
-                    fs.readdir(scpiHelpFolderPath, (err: any, files: string[]) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
+                    fs.readdir(
+                        scpiHelpFolderPath,
+                        (err: any, files: string[]) => {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
 
-                        files = files.filter(file => file.endsWith("html"));
+                            files = files.filter(file => file.endsWith("html"));
 
-                        let promises: Promise<Subsystem[]>[] = files.map(file => {
-                            return new Promise<Subsystem[]>((resolve, reject) => {
-                                fs.readFile(
-                                    scpiHelpFolderPath + "/" + file,
-                                    "utf-8",
-                                    (err: any, data: string) => {
-                                        if (!err) {
-                                            let element = document.createElement("div");
-                                            element.innerHTML = data;
-                                            let anchorElements = element.querySelectorAll(
-                                                "A[name]"
+                            let promises: Promise<Subsystem[]>[] = files.map(
+                                file => {
+                                    return new Promise<Subsystem[]>(
+                                        (resolve, reject) => {
+                                            fs.readFile(
+                                                scpiHelpFolderPath + "/" + file,
+                                                "utf-8",
+                                                (err: any, data: string) => {
+                                                    if (!err) {
+                                                        let element = document.createElement(
+                                                            "div"
+                                                        );
+                                                        element.innerHTML = data;
+                                                        let anchorElements = element.querySelectorAll(
+                                                            "A[name]"
+                                                        );
+                                                        let subsystems = this.getSubsystemFromScpiFileDoc(
+                                                            file,
+                                                            anchorElements
+                                                        );
+                                                        resolve(subsystems);
+                                                    } else {
+                                                        resolve([]);
+                                                    }
+                                                }
                                             );
-                                            let subsystems = this.getSubsystemFromScpiFileDoc(
-                                                file,
-                                                anchorElements
-                                            );
-                                            resolve(subsystems);
-                                        } else {
-                                            resolve([]);
                                         }
-                                    }
-                                );
-                            });
-                        });
+                                    );
+                                }
+                            );
 
-                        Promise.all(promises)
-                            .then(results => {
-                                let allSubsystems: Subsystem[] = [];
+                            Promise.all(promises)
+                                .then(results => {
+                                    let allSubsystems: Subsystem[] = [];
 
-                                results.forEach(subsystems => {
-                                    if (subsystems) {
-                                        allSubsystems = allSubsystems.concat(subsystems);
-                                    }
-                                });
+                                    results.forEach(subsystems => {
+                                        if (subsystems) {
+                                            allSubsystems = allSubsystems.concat(
+                                                subsystems
+                                            );
+                                        }
+                                    });
 
-                                resolve(allSubsystems);
-                            })
-                            .catch(err => reject(err));
-                    });
+                                    resolve(allSubsystems);
+                                })
+                                .catch(err => reject(err));
+                        }
+                    );
                 }
             });
         });
     }
 
-    static compareCommandDefinitions(a: CommandDefinition, b: CommandDefinition) {
+    static compareCommandDefinitions(
+        a: CommandDefinition,
+        b: CommandDefinition
+    ) {
         let c1 = a.command.name.toUpperCase();
         let c2 = b.command.name.toUpperCase();
         return c1 < c2 ? -1 : c1 > c2 ? 1 : 0;
@@ -697,7 +777,10 @@ class FindChanges {
             }
 
             if (type1.type === "discrete") {
-                if (!!type1.enumeration && type1.enumeration !== type2.enumeration) {
+                if (
+                    !!type1.enumeration &&
+                    type1.enumeration !== type2.enumeration
+                ) {
                     return false;
                 }
             }
@@ -709,11 +792,15 @@ class FindChanges {
     compareParameters(parameters1: IParameter[], parameters2: IParameter[]) {
         const sortedParameters1: IParameter[] = parameters1
             .slice()
-            .sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
+            .sort((a: IParameter, b: IParameter) =>
+                stringCompare(a.name, b.name)
+            );
 
         const sortedParameters2: IParameter[] = parameters2
             .slice()
-            .sort((a: IParameter, b: IParameter) => stringCompare(a.name, b.name));
+            .sort((a: IParameter, b: IParameter) =>
+                stringCompare(a.name, b.name)
+            );
 
         if (sortedParameters1.length !== sortedParameters2.length) {
             return false;
@@ -747,13 +834,21 @@ class FindChanges {
         return new Promise<Changes>((resolve, reject) => {
             this.getCommandsFromScpiDoc()
                 .then(subsystems => {
-                    let existingSubsystems = objectToJS(ProjectStore.project.scpi.subsystems);
+                    let existingSubsystems = objectToJS(
+                        this.ProjectStore.project.scpi.subsystems
+                    );
 
                     // added
-                    let added = this.findMissingCommands(subsystems, existingSubsystems);
+                    let added = this.findMissingCommands(
+                        subsystems,
+                        existingSubsystems
+                    );
 
                     // deleted
-                    let deleted = this.findMissingCommands(existingSubsystems, subsystems);
+                    let deleted = this.findMissingCommands(
+                        existingSubsystems,
+                        subsystems
+                    );
 
                     // moved
                     let moved: MovedCommandDefinition[] = [];
@@ -763,7 +858,10 @@ class FindChanges {
                                 existingSubsystems,
                                 command.name
                             );
-                            if (result && result.subsystem.name !== subsystem.name) {
+                            if (
+                                result &&
+                                result.subsystem.name !== subsystem.name
+                            ) {
                                 moved.push({
                                     command: command,
                                     subsystem: result.subsystem,
@@ -784,7 +882,8 @@ class FindChanges {
                             );
                             if (
                                 existingCommand &&
-                                existingCommand.subsystem.name === subsystem.name &&
+                                existingCommand.subsystem.name ===
+                                    subsystem.name &&
                                 (!existingCommand.command.helpLink ||
                                     !subsystem.helpLink ||
                                     (existingCommand.command.helpLink &&
@@ -821,7 +920,10 @@ class FindChanges {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function findCommandInScpiSubsystems(subsystems: ScpiSubsystem[], commandName: string) {
+function findCommandInScpiSubsystems(
+    subsystems: ScpiSubsystem[],
+    commandName: string
+) {
     for (const subsystem of subsystems) {
         for (const command of subsystem.commands) {
             if (command.name === commandName) {
@@ -903,12 +1005,21 @@ const TablesDiv = styled.div`
 
 type Section = "added" | "deleted" | "moved" | "updated" | "newEnums";
 
-const SECTIONS: Section[] = ["added", "deleted", "moved", "updated", "newEnums"];
+const SECTIONS: Section[] = [
+    "added",
+    "deleted",
+    "moved",
+    "updated",
+    "newEnums"
+];
 
 @observer
 export class ImportScpiDocDialog extends React.Component<{
     onHidden: () => void;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     constructor(props: any) {
         super(props);
     }
@@ -968,9 +1079,9 @@ export class ImportScpiDocDialog extends React.Component<{
 
         $(this.dialog).modal();
 
-        const scpi = ProjectStore.project.scpi;
+        const scpi = this.context.project.scpi;
 
-        const findChanges = new FindChanges(scpi.enums);
+        const findChanges = new FindChanges(this.context, scpi.enums);
 
         findChanges
             .getChanges()
@@ -1025,13 +1136,13 @@ export class ImportScpiDocDialog extends React.Component<{
 
         this.onOkCalled = true;
 
-        ProjectStore.backgroundCheckEnabled = false;
+        this.context.backgroundCheckEnabled = false;
 
         $(this.dialog).modal("hide");
 
-        UndoManager.setCombineCommands(true);
+        this.context.UndoManager.setCombineCommands(true);
 
-        const scpi = ProjectStore.project.scpi;
+        const scpi = this.context.project.scpi;
 
         let existingSubsystems = scpi.subsystems;
 
@@ -1043,19 +1154,24 @@ export class ImportScpiDocDialog extends React.Component<{
                 return existingSubsystem;
             }
 
-            return DocumentStore.addObject(existingSubsystems, {
+            return this.context.addObject(existingSubsystems, {
                 name: subsystem.name,
                 helpLink: subsystem.helpLink,
                 commands: []
             });
         };
 
-        this.changes.subsystems.forEach(subsystem => getOrAddSubsystem(subsystem));
+        this.changes.subsystems.forEach(subsystem =>
+            getOrAddSubsystem(subsystem)
+        );
 
         this.selectedChanges.added.forEach(commandDefinition => {
             let subsystem = getOrAddSubsystem(commandDefinition.subsystem);
 
-            DocumentStore.addObject(getProperty(subsystem, "commands"), commandDefinition.command);
+            this.context.addObject(
+                getProperty(subsystem, "commands"),
+                commandDefinition.command
+            );
         });
 
         this.selectedChanges.deleted.forEach(commandDefinition => {
@@ -1064,7 +1180,7 @@ export class ImportScpiDocDialog extends React.Component<{
                 commandDefinition.command.name
             );
             if (result) {
-                DocumentStore.deleteObject(result.command as ScpiCommand);
+                this.context.deleteObject(result.command as ScpiCommand);
             }
         });
 
@@ -1075,18 +1191,23 @@ export class ImportScpiDocDialog extends React.Component<{
             );
             if (result) {
                 let command = result.command as ScpiCommand;
-                DocumentStore.deleteObject(command);
+                this.context.deleteObject(command);
 
                 command.helpLink = commandDefinition.command.helpLink;
 
-                let subsystem = getOrAddSubsystem(commandDefinition.toSubsystem);
+                let subsystem = getOrAddSubsystem(
+                    commandDefinition.toSubsystem
+                );
 
-                DocumentStore.addObject(getProperty(subsystem, "commands"), command);
+                this.context.addObject(
+                    getProperty(subsystem, "commands"),
+                    command
+                );
             }
         });
 
         this.selectedChanges.newEnums.forEach(newEnum => {
-            DocumentStore.addObject(scpi.enums, newEnum as any);
+            this.context.addObject(scpi.enums, newEnum as any);
         });
 
         this.selectedChanges.updated.forEach(commandDefinition => {
@@ -1095,42 +1216,46 @@ export class ImportScpiDocDialog extends React.Component<{
                 commandDefinition.command.name
             );
             if (result) {
-                DocumentStore.updateObject(result.command, {
+                this.context.updateObject(result.command, {
                     helpLink: commandDefinition.command.helpLink,
-                    parameters: toJS(commandDefinition.command.parameters).map(parameter => {
-                        return {
-                            name: parameter.name,
-                            type: parameter.type.map(type => {
-                                if (type.type === "discrete") {
-                                    if (
-                                        !scpi.enums.find(
-                                            scpiEnum => scpiEnum.name === type.enumeration
-                                        )
-                                    ) {
-                                        return {
-                                            type: "discrete"
-                                        };
+                    parameters: toJS(commandDefinition.command.parameters).map(
+                        parameter => {
+                            return {
+                                name: parameter.name,
+                                type: parameter.type.map(type => {
+                                    if (type.type === "discrete") {
+                                        if (
+                                            !scpi.enums.find(
+                                                scpiEnum =>
+                                                    scpiEnum.name ===
+                                                    type.enumeration
+                                            )
+                                        ) {
+                                            return {
+                                                type: "discrete"
+                                            };
+                                        }
                                     }
-                                }
-                                return type;
-                            }),
-                            isOptional: parameter.isOptional,
-                            description: parameter.description
-                        };
-                    })
+                                    return type;
+                                }),
+                                isOptional: parameter.isOptional,
+                                description: parameter.description
+                            };
+                        }
+                    )
                 });
             }
         });
 
-        UndoManager.setCombineCommands(false);
+        this.context.UndoManager.setCombineCommands(false);
 
         // always stay in scpi subsystems list view
-        NavigationStore.setNavigationSelectedItem(
+        this.context.NavigationStore.setNavigationSelectedItem(
             scpi,
             createObjectNavigationItem(scpi.subsystems)!
         );
 
-        ProjectStore.backgroundCheckEnabled = true;
+        this.context.backgroundCheckEnabled = true;
     }
 
     onCancel() {
@@ -1171,7 +1296,10 @@ export class ImportScpiDocDialog extends React.Component<{
                 if (this.selectedChanges[section].length == 0) {
                     checkbox.indeterminate = false;
                     checkbox.checked = false;
-                } else if (this.selectedChanges[section].length == this.changes[section].length) {
+                } else if (
+                    this.selectedChanges[section].length ==
+                    this.changes[section].length
+                ) {
                     checkbox.indeterminate = false;
                     checkbox.checked = true;
                 } else {
@@ -1184,7 +1312,9 @@ export class ImportScpiDocDialog extends React.Component<{
                 "click",
                 action((event: any) => {
                     if (this.selectedChanges[section].length == 0) {
-                        (this.selectedChanges as any)[section] = this.changes[section].slice();
+                        (this.selectedChanges as any)[section] = this.changes[
+                            section
+                        ].slice();
                     } else {
                         this.selectedChanges[section] = [];
                     }
@@ -1193,13 +1323,20 @@ export class ImportScpiDocDialog extends React.Component<{
         });
     }
 
-    isChangeSelected(section: Section, changeDefinition: CommandDefinition | IEnum) {
+    isChangeSelected(
+        section: Section,
+        changeDefinition: CommandDefinition | IEnum
+    ) {
         let commandDefinitions: any = this.selectedChanges[section];
         return commandDefinitions.indexOf(changeDefinition) !== -1;
     }
 
     @action
-    handleSelectCommand(section: Section, commandDefinition: CommandDefinition, event: any) {
+    handleSelectCommand(
+        section: Section,
+        commandDefinition: CommandDefinition,
+        event: any
+    ) {
         let commandDefinitions: any = this.selectedChanges[section];
         if (event.target.checked) {
             commandDefinitions.push(commandDefinition);
@@ -1229,31 +1366,32 @@ export class ImportScpiDocDialog extends React.Component<{
             ];
         } else if (this.changes) {
             if (this.hasChanges) {
-                let tabs = SECTIONS.filter(section => this.changes[section].length > 0).map(
-                    section => (
-                        <li role="presentation" key={section} className="nav-item">
-                            <a
-                                href="#"
-                                onClick={this.handleTabClick.bind(this, section)}
+                let tabs = SECTIONS.filter(
+                    section => this.changes[section].length > 0
+                ).map(section => (
+                    <li role="presentation" key={section} className="nav-item">
+                        <a
+                            href="#"
+                            onClick={this.handleTabClick.bind(this, section)}
+                            className={
+                                "nav-link" +
+                                (this.activeTab === section ? " active" : "")
+                            }
+                        >
+                            {humanize(section).toUpperCase()}
+                            <span
                                 className={
-                                    "nav-link" + (this.activeTab === section ? " active" : "")
+                                    "ml-2 badge badge-pills" +
+                                    (this.activeTab === section
+                                        ? " badge-light"
+                                        : " badge-dark")
                                 }
                             >
-                                {humanize(section).toUpperCase()}
-                                <span
-                                    className={
-                                        "ml-2 badge badge-pills" +
-                                        (this.activeTab === section
-                                            ? " badge-light"
-                                            : " badge-dark")
-                                    }
-                                >
-                                    {this.changes[section].length}
-                                </span>
-                            </a>
-                        </li>
-                    )
-                );
+                                {this.changes[section].length}
+                            </span>
+                        </a>
+                    </li>
+                ));
 
                 let tables = SECTIONS.map(section => {
                     if (this.changes[section].length === 0) {
@@ -1266,7 +1404,9 @@ export class ImportScpiDocDialog extends React.Component<{
                             <tr>
                                 <th className="col-8">
                                     <input
-                                        ref={ref => (this.addedSelectAllCheckbox = ref!)}
+                                        ref={ref =>
+                                            (this.addedSelectAllCheckbox = ref!)
+                                        }
                                         type="checkbox"
                                     />{" "}
                                     Command
@@ -1279,7 +1419,9 @@ export class ImportScpiDocDialog extends React.Component<{
                             <tr>
                                 <th className="col-8">
                                     <input
-                                        ref={ref => (this.deletedSelectAllCheckbox = ref!)}
+                                        ref={ref =>
+                                            (this.deletedSelectAllCheckbox = ref!)
+                                        }
                                         type="checkbox"
                                     />{" "}
                                     Command
@@ -1292,7 +1434,9 @@ export class ImportScpiDocDialog extends React.Component<{
                             <tr>
                                 <th className="col-6">
                                     <input
-                                        ref={ref => (this.movedSelectAllCheckbox = ref!)}
+                                        ref={ref =>
+                                            (this.movedSelectAllCheckbox = ref!)
+                                        }
                                         type="checkbox"
                                     />{" "}
                                     Command
@@ -1306,7 +1450,9 @@ export class ImportScpiDocDialog extends React.Component<{
                             <tr>
                                 <th className="col-8">
                                     <input
-                                        ref={ref => (this.updatedSelectAllCheckbox = ref!)}
+                                        ref={ref =>
+                                            (this.updatedSelectAllCheckbox = ref!)
+                                        }
                                         type="checkbox"
                                     />{" "}
                                     Command
@@ -1319,7 +1465,9 @@ export class ImportScpiDocDialog extends React.Component<{
                             <tr>
                                 <th className="col-4">
                                     <input
-                                        ref={ref => (this.newEnumsSelectAllCheckbox = ref!)}
+                                        ref={ref =>
+                                            (this.newEnumsSelectAllCheckbox = ref!)
+                                        }
                                         type="checkbox"
                                     />{" "}
                                     Enum
@@ -1330,7 +1478,11 @@ export class ImportScpiDocDialog extends React.Component<{
                     }
 
                     let tbody = (this.changes[section] as any).map(
-                        (commandOrNewEnumDefinition: CommandDefinition | IEnum) => {
+                        (
+                            commandOrNewEnumDefinition:
+                                | CommandDefinition
+                                | IEnum
+                        ) => {
                             let checkbox = (
                                 <input
                                     type="checkbox"
@@ -1355,7 +1507,9 @@ export class ImportScpiDocDialog extends React.Component<{
                                             {checkbox} {newEnum.name}
                                         </td>
                                         <td className="col-8">
-                                            {newEnum.members.map(member => member.name).join("|")}
+                                            {newEnum.members
+                                                .map(member => member.name)
+                                                .join("|")}
                                         </td>
                                     </tr>
                                 );
@@ -1368,24 +1522,36 @@ export class ImportScpiDocDialog extends React.Component<{
                                     section === "updated"
                                 ) {
                                     return (
-                                        <tr key={commandDefinition.command.name}>
+                                        <tr
+                                            key={commandDefinition.command.name}
+                                        >
                                             <td className="col-8">
-                                                {checkbox} {commandDefinition.command.name}
+                                                {checkbox}{" "}
+                                                {commandDefinition.command.name}
                                             </td>
                                             <td className="col-4">
-                                                {commandDefinition.subsystem.name}
+                                                {
+                                                    commandDefinition.subsystem
+                                                        .name
+                                                }
                                             </td>
                                         </tr>
                                     );
                                 } else {
                                     // section === "moved"
                                     return (
-                                        <tr key={commandDefinition.command.name}>
+                                        <tr
+                                            key={commandDefinition.command.name}
+                                        >
                                             <td className="col-6">
-                                                {checkbox} {commandDefinition.command.name}
+                                                {checkbox}{" "}
+                                                {commandDefinition.command.name}
                                             </td>
                                             <td className="col-3">
-                                                {commandDefinition.subsystem.name}
+                                                {
+                                                    commandDefinition.subsystem
+                                                        .name
+                                                }
                                             </td>
                                             <td className="col-3">
                                                 {
@@ -1403,7 +1569,12 @@ export class ImportScpiDocDialog extends React.Component<{
                     return (
                         <table
                             key={section}
-                            style={{ display: this.activeTab === section ? "block" : "none" }}
+                            style={{
+                                display:
+                                    this.activeTab === section
+                                        ? "block"
+                                        : "none"
+                            }}
                         >
                             <thead>{thead}</thead>
                             <tbody>{tbody}</tbody>
@@ -1412,7 +1583,10 @@ export class ImportScpiDocDialog extends React.Component<{
                 });
 
                 content = (
-                    <form className="form-horizontal" onSubmit={this.onOk.bind(this)}>
+                    <form
+                        className="form-horizontal"
+                        onSubmit={this.onOk.bind(this)}
+                    >
                         <ul className="nav nav-pills">{tabs}</ul>
                         <TablesDiv>{tables}</TablesDiv>
                     </form>
@@ -1493,17 +1667,19 @@ export class ImportScpiDocDialog extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function showImportScpiDocDialog() {
+export function showImportScpiDocDialog(ProjectStore: ProjectStoreClass) {
     let el = document.createElement("div");
     document.body.appendChild(el);
     ReactDOM.render(
         <ThemeProvider theme={theme}>
-            <ImportScpiDocDialog
-                onHidden={() => {
-                    ReactDOM.unmountComponentAtNode(el);
-                    el.remove();
-                }}
-            />
+            <ProjectContext.Provider value={ProjectStore}>
+                <ImportScpiDocDialog
+                    onHidden={() => {
+                        ReactDOM.unmountComponentAtNode(el);
+                        el.remove();
+                    }}
+                />
+            </ProjectContext.Provider>
         </ThemeProvider>,
         el
     );

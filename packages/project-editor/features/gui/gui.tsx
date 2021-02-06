@@ -15,12 +15,11 @@ import {
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
-import { Project } from "project-editor/project/project";
+import { getProject, getProjectStore, Project } from "project-editor/project/project";
 
 import { Page, IPage } from "project-editor/features/gui/page";
 import { Style, IStyle, findStyle } from "project-editor/features/gui/style";
@@ -30,13 +29,17 @@ import { Theme, ITheme, Color, IColor } from "project-editor/features/gui/theme"
 
 import { build } from "project-editor/features/gui/build";
 import { metrics } from "project-editor/features/gui/metrics";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class GuiNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     render() {
-        return <MenuNavigation id={this.props.id} navigationObject={ProjectStore.project.gui} />;
+        return <MenuNavigation id={this.props.id} navigationObject={this.context.project.gui} />;
     }
 }
 
@@ -81,7 +84,7 @@ export class Gui extends EezObject implements IGui {
                 typeClass: Style,
                 hideInPropertyGrid: true,
                 enumerable: (object: IEezObject, propertyInfo: PropertyInfo) => {
-                    return !ProjectStore.masterProjectEnabled;
+                    return !getProjectStore(object).masterProjectEnabled;
                 }
             },
             {
@@ -90,7 +93,7 @@ export class Gui extends EezObject implements IGui {
                 typeClass: Font,
                 hideInPropertyGrid: true,
                 enumerable: (object: IEezObject, propertyInfo: PropertyInfo) => {
-                    return !ProjectStore.masterProjectEnabled;
+                    return !getProjectStore(object).masterProjectEnabled;
                 },
                 check: (object: IEezObject[]) => {
                     let messages: output.Message[] = [];
@@ -126,7 +129,7 @@ export class Gui extends EezObject implements IGui {
                         );
                     }
 
-                    if (!findStyle(ProjectStore.project, "default")) {
+                    if (!findStyle(getProjectStore(object).project, "default")) {
                         messages.push(
                             new output.Message(
                                 output.Type.ERROR,
@@ -200,7 +203,7 @@ export class Gui extends EezObject implements IGui {
             }
         });
 
-        for (const importDirective of ProjectStore.project.settings.general.imports) {
+        for (const importDirective of getProject(this).settings.general.imports) {
             const project = importDirective.project;
             if (project && project.gui) {
                 project.gui.stylesMap.forEach(style => {
@@ -276,7 +279,7 @@ registerFeatureImplementation("gui", {
         build: build,
         metrics: metrics,
         toJsHook: (jsObject: Project) => {
-            const gui = ProjectStore.project.gui;
+            const gui = jsObject.gui;
             if (gui) {
                 //
                 jsObject.gui.colors.forEach((color: any) => delete color.id);
@@ -286,7 +289,7 @@ registerFeatureImplementation("gui", {
                     theme.colors = gui.themes[i].colors;
                 });
 
-                delete jsObject.gui.themeColors;
+                delete (jsObject.gui as Partial<Gui>).themeColors;
 
                 jsObject.gui.fonts.forEach(font =>
                     font.glyphs.forEach(glyph => {

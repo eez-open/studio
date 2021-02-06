@@ -38,6 +38,7 @@ import {
     findScpiEnum,
     getScpiEnumsAsDialogEnumItems
 } from "project-editor/features/scpi/enum";
+import { getProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +79,7 @@ export class ScpiParameterType extends EezObject implements IParameterType {
             if (!this.enumeration) {
                 messages.push(output.propertyNotSetMessage(this, "enumeration"));
             } else {
-                if (!findScpiEnum(this.enumeration)) {
+                if (!findScpiEnum(getProjectStore(object), this.enumeration)) {
                     messages.push(output.propertyNotFoundMessage(this, "enumeration"));
                 }
             }
@@ -167,6 +168,7 @@ export class ScpiParameter extends EezObject implements IScpiParameter {
                 typeClass: ScpiParameterType,
                 defaultValue: [],
                 onSelect: async (object: ScpiParameter, propertyInfo: PropertyInfo) => {
+                    const ProjectStore = getProjectStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -231,7 +233,7 @@ export class ScpiParameter extends EezObject implements IScpiParameter {
                                     name: "enumeration",
                                     type: "enum",
                                     enumItems: () => {
-                                        return getScpiEnumsAsDialogEnumItems();
+                                        return getScpiEnumsAsDialogEnumItems(ProjectStore);
                                     },
                                     visible: (values: any) => {
                                         return !values.any && values.discrete;
@@ -417,7 +419,7 @@ export class ScpiResponseType extends EezObject implements IResponseType {
             if (!this.enumeration) {
                 messages.push(output.propertyNotSetMessage(this, "enumeration"));
             } else {
-                if (!findScpiEnum(this.enumeration)) {
+                if (!findScpiEnum(getProjectStore(object), this.enumeration)) {
                     messages.push(output.propertyNotFoundMessage(this, "enumeration"));
                 }
             }
@@ -446,6 +448,7 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
                 typeClass: ScpiResponseType,
                 defaultValue: [],
                 onSelect: async (object: ScpiResponse, propertyInfo: PropertyInfo) => {
+                    const ProjectStore = getProjectStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -524,7 +527,7 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
                                     name: "enumeration",
                                     type: "enum",
                                     enumItems: () => {
-                                        return getScpiEnumsAsDialogEnumItems();
+                                        return getScpiEnumsAsDialogEnumItems(ProjectStore);
                                     },
                                     visible: (values: any) => {
                                         return !values.any && values.discrete;

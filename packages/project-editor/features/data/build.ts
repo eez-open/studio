@@ -1,7 +1,6 @@
 import { BuildResult } from "project-editor/core/extensions";
 
 import { Project, BuildConfiguration } from "project-editor/project/project";
-import { ProjectStore } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
 import { DataItem } from "project-editor/features/data/data";
@@ -70,7 +69,7 @@ export function build(
                 !dataItem.usedIn ||
                 dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
         );
-        for (const importDirective of ProjectStore.project.settings.general.imports) {
+        for (const importDirective of project.settings.general.imports) {
             if (importDirective.project) {
                 projectDataItems.push(
                     ...importDirective.project.data.filter(

@@ -10,32 +10,35 @@ import { IShortcut } from "shortcuts/interfaces";
 import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 
 import { NavigationComponent } from "project-editor/core/object";
-import { NavigationStore, DocumentStore } from "project-editor/core/store";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
-import { ProjectStore } from "project-editor/project/project";
-
 import { Shortcut } from "project-editor/features/shortcuts/shortcuts";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class ShortcutsNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (this.context.NavigationStore.selectedPanel) {
+            return this.context.NavigationStore.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return this.context.NavigationStore.selectedObject;
     }
 
     @computed
     get shortcutsStore() {
-        const shortcuts = ProjectStore.project.shortcuts.shortcuts;
+        const shortcuts = this.context.project.shortcuts.shortcuts;
 
         let shortcutsMap = new Map<string, Shortcut>();
         shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
+
+        const DocumentStore = this.context;
 
         return {
             shortcuts: observable.map(shortcutsMap),

@@ -4,11 +4,18 @@ import { observer } from "mobx-react";
 import chokidar from "chokidar";
 
 import { confirmSave } from "eez-studio-shared/util";
-import { fileExistsSync, getFileNameWithoutExtension } from "eez-studio-shared/util-electron";
+import {
+    fileExistsSync,
+    getFileNameWithoutExtension
+} from "eez-studio-shared/util-electron";
 import { _map, _keys, _filter } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
-import { showGenericDialog, FieldComponent, TableField } from "eez-studio-ui/generic-dialog";
+import {
+    showGenericDialog,
+    FieldComponent,
+    TableField
+} from "eez-studio-ui/generic-dialog";
 import { Tree } from "eez-studio-ui/tree";
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
 import { styled } from "eez-studio-ui/styled-components";
@@ -29,19 +36,31 @@ import {
     getRootObject
 } from "project-editor/core/object";
 import { loadObject, objectToJson } from "project-editor/core/serialization";
-import * as output from "project-editor/core/output";
-
-import { DocumentStore, UIStateStore, UndoManager } from "project-editor/core/store";
+import {
+    Message,
+    propertyNotSetMessage,
+    propertyNotFoundMessage,
+    Type,
+    propertyInvalidValueMessage
+} from "project-editor/core/output";
+import {DocumentStoreClass} from "project-editor/core/store";
 
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
 import "project-editor/project/builtInFeatures";
 
 import { Action, IAction } from "project-editor/features/action/action";
-import { DataItem, IDataItem } from "project-editor/features/data/data";
+import {
+    DataContext,
+    DataItem,
+    IDataItem
+} from "project-editor/features/data/data";
 import { Gui, IGui } from "project-editor/features/gui/gui";
 import { Scpi, IScpi } from "project-editor/features/scpi/scpi";
-import { Shortcuts, IShortcuts } from "project-editor/features/shortcuts/shortcuts";
+import {
+    Shortcuts,
+    IShortcuts
+} from "project-editor/features/shortcuts/shortcuts";
 import {
     ExtensionDefinition,
     IExtensionDefinition
@@ -49,7 +68,12 @@ import {
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
-import { usage, startSearch, SearchCallbackMessage } from "project-editor/core/search";
+import {
+    usage,
+    startSearch,
+    SearchCallbackMessage,
+    CurrentSearch
+} from "project-editor/core/search";
 
 import {
     build as buildProject,
@@ -70,7 +94,9 @@ export interface IBuildConfiguration {
     properties: string;
     screenOrientation: "landscape" | "portrait";
 }
-export class BuildConfiguration extends EezObject implements IBuildConfiguration {
+export class BuildConfiguration
+    extends EezObject
+    implements IBuildConfiguration {
     @observable name: string;
     @observable description: string;
     @observable properties: string;
@@ -111,13 +137,15 @@ export class BuildConfiguration extends EezObject implements IBuildConfiguration
         },
         showInNavigation: true,
         check: (object: IBuildConfiguration) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (object.properties) {
                 try {
                     JSON.parse(object.properties);
                 } catch (err) {
-                    messages.push(output.propertyInvalidValueMessage(object, "properties"));
+                    messages.push(
+                        propertyInvalidValueMessage(object, "properties")
+                    );
                 }
             }
 
@@ -175,12 +203,9 @@ registerClass(BuildFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function isFilesPropertyEnumerable() {
-    return (
-        (ProjectStore.project as any).gui ||
-        ProjectStore.project.actions ||
-        ProjectStore.project.data
-    );
+function isFilesPropertyEnumerable(object: IEezObject): boolean {
+    const project: Project = getProject(object);
+    return !!(project.gui || project.actions || project.data);
 }
 
 export interface IBuild {
@@ -235,7 +260,9 @@ class UsageTreeNode {
         this.label = label;
         this.children = children
             ? children.map(child =>
-                  typeof child == "string" ? new UsageTreeNode(child, []) : child
+                  typeof child == "string"
+                      ? new UsageTreeNode(child, [])
+                      : child
               )
             : [];
         this.selected = false;
@@ -256,13 +283,18 @@ class UsageTreeField extends FieldComponent {
 
     @computed
     get rootNode() {
-        let assetsUsage: IAssetsUsage = this.props.values[this.props.fieldProperties.name];
+        let assetsUsage: IAssetsUsage = this.props.values[
+            this.props.fieldProperties.name
+        ];
         return new UsageTreeNode(
             "",
             _keys(assetsUsage.assets)
                 .sort()
                 .map(key => {
-                    return new UsageTreeNode(humanize(key), assetsUsage.assets[key].split(", "));
+                    return new UsageTreeNode(
+                        humanize(key),
+                        assetsUsage.assets[key].split(", ")
+                    );
                 })
         );
     }
@@ -274,7 +306,9 @@ class UsageTreeField extends FieldComponent {
 
         this.selectedNode = node;
 
-        let assetsUsage: IAssetsUsage = this.props.values[this.props.fieldProperties.name];
+        let assetsUsage: IAssetsUsage = this.props.values[
+            this.props.fieldProperties.name
+        ];
         if (this.selectedNode && this.selectedNode.children.length === 0) {
             assetsUsage.selectedAsset = this.selectedNode.id;
         } else {
@@ -288,7 +322,11 @@ class UsageTreeField extends FieldComponent {
 
     render() {
         return (
-            <Tree showOnlyChildren={true} rootNode={this.rootNode} selectNode={this.selectNode} />
+            <Tree
+                showOnlyChildren={true}
+                rootNode={this.rootNode}
+                selectNode={this.selectNode}
+            />
         );
     }
 }
@@ -308,7 +346,8 @@ class BuildAssetsUssage {
 
     onMessage(message: SearchCallbackMessage) {
         if (message.type == "value") {
-            const path = message.valueObject.propertyInfo.referencedObjectCollectionPath!;
+            const path = message.valueObject.propertyInfo
+                .referencedObjectCollectionPath!;
 
             const importedProject = this.importDirective.project!;
 
@@ -318,16 +357,27 @@ class BuildAssetsUssage {
                 return true;
             }
 
-            const collection = getObjectFromPath(importedProject, path.split("/")) as EezObject[];
+            const collection = getObjectFromPath(
+                importedProject,
+                path.split("/")
+            ) as EezObject[];
             const object =
-                collection && collection.find(object => assetName == getProperty(object, "name"));
+                collection &&
+                collection.find(
+                    object => assetName == getProperty(object, "name")
+                );
 
             if (object) {
                 // console.log("FOUND", path, assetName, object);
                 const set = this.assets[path] ?? new Set<string>();
                 set.add(assetName);
                 this.assets[path] = set;
-                runInAction(() => (this.assetsUsage.assets[path] = Array.from(set).join(", ")));
+                runInAction(
+                    () =>
+                        (this.assetsUsage.assets[path] = Array.from(set).join(
+                            ", "
+                        ))
+                );
             } else {
                 // console.log("NOT FOUND", path, assetName);
             }
@@ -342,7 +392,9 @@ class BuildAssetsUssage {
 function showUsage(importDirective: ImportDirective) {
     const buildAssetsUsage = new BuildAssetsUssage(importDirective);
 
-    usage(message => buildAssetsUsage.onMessage(message));
+    const ProjectStore = getProjectStore(importDirective);
+
+    usage(ProjectStore, message => buildAssetsUsage.onMessage(message));
 
     showGenericDialog({
         dialogDefinition: {
@@ -368,10 +420,15 @@ function showUsage(importDirective: ImportDirective) {
             action(result => {
                 const assetsUsage: IAssetsUsage = result.values.assetsUsage;
                 if (assetsUsage.selectedAsset) {
-                    UIStateStore.searchPattern = assetsUsage.selectedAsset;
-                    UIStateStore.searchMatchCase = true;
-                    UIStateStore.searchMatchWholeWord = true;
-                    startSearch(assetsUsage.selectedAsset, true, true);
+                    ProjectStore.UIStateStore.searchPattern = assetsUsage.selectedAsset;
+                    ProjectStore.UIStateStore.searchMatchCase = true;
+                    ProjectStore.UIStateStore.searchMatchWholeWord = true;
+                    startSearch(
+                        ProjectStore,
+                        assetsUsage.selectedAsset,
+                        true,
+                        true
+                    );
                 }
             })
         )
@@ -379,6 +436,7 @@ function showUsage(importDirective: ImportDirective) {
 }
 
 function openProject(importDirective: ImportDirective) {
+    const ProjectStore = getProjectStore(importDirective);
     EEZStudio.electron.ipcRenderer.send(
         "open-file",
         ProjectStore.getAbsoluteFilePath(importDirective.projectFilePath)
@@ -438,25 +496,30 @@ export class ImportDirective {
                 type: PropertyType.Any,
                 computed: true,
                 propertyGridComponent: ImportDirectiveCustomUI,
-                hideInPropertyGrid: (importObject: ImportDirective) => !importObject.project
+                hideInPropertyGrid: (importObject: ImportDirective) =>
+                    !importObject.project
             }
         ],
         defaultValue: {},
         check: (object: ImportDirective) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (object.projectFilePath) {
-                if (!fileExistsSync(ProjectStore.getAbsoluteFilePath(object.projectFilePath))) {
+                if (
+                    !fileExistsSync(
+                        getProjectStore(object).getAbsoluteFilePath(object.projectFilePath)
+                    )
+                ) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            Type.ERROR,
                             "File doesn't exists",
                             getChildOfObject(object, "projectFilePath")
                         )
                     );
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "projectFilePath"));
+                messages.push(propertyNotSetMessage(object, "projectFilePath"));
             }
 
             return messages;
@@ -465,9 +528,14 @@ export class ImportDirective {
 
     @computed({ keepAlive: true })
     get project() {
+        const ProjectStore = getProjectStore(this);
+
         return this.projectFilePath
             ? ProjectStore.loadExternalProject(
-                  ProjectStore.getAbsoluteFilePath(this.projectFilePath, getProject(this))
+                  ProjectStore.getAbsoluteFilePath(
+                      this.projectFilePath,
+                      getProject(this)
+                  )
               )
             : undefined;
     }
@@ -508,7 +576,8 @@ export class General extends EezObject implements IGeneral {
                 name: "scpiDocFolder",
                 displayName: "SCPI documentation folder",
                 type: PropertyType.RelativeFolder,
-                hideInPropertyGrid: () => !(ProjectStore.project as any).scpi
+                hideInPropertyGrid: (object: IEezObject) =>
+                    !getProject(object).scpi
             },
             {
                 name: "namespace",
@@ -530,18 +599,24 @@ export class General extends EezObject implements IGeneral {
                 type: PropertyType.Array,
                 typeClass: ImportDirective,
                 defaultValue: [],
-                hideInPropertyGrid: () => !!ProjectStore.project.masterProject
+                hideInPropertyGrid: (object: IEezObject) =>
+                    !!getProject(object).masterProject
             }
         ],
         showInNavigation: true,
         check: (object: General) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (object.masterProject) {
-                if (!fileExistsSync(ProjectStore.getAbsoluteFilePath(object.masterProject))) {
+                const ProjectStore = getProjectStore(object);
+                if (
+                    !fileExistsSync(
+                        ProjectStore.getAbsoluteFilePath(object.masterProject)
+                    )
+                ) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            Type.ERROR,
                             "File doesn't exists",
                             getChildOfObject(object, "masterProject")
                         )
@@ -583,8 +658,11 @@ export class Settings extends EezObject implements ISettings {
                 type: PropertyType.Object,
                 typeClass: Build,
                 hideInPropertyGrid: true,
-                enumerable: (object: IEezObject, propertyInfo: PropertyInfo) => {
-                    return !ProjectStore.masterProjectEnabled;
+                enumerable: (
+                    object: IEezObject,
+                    propertyInfo: PropertyInfo
+                ) => {
+                    return !getProjectStore(object).masterProjectEnabled;
                 }
             }
         ],
@@ -626,20 +704,30 @@ function getProjectClassInfo() {
     if (numProjectFeatures != projectFeatures.length) {
         numProjectFeatures = projectFeatures.length;
 
-        let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(projectFeature => {
-            return {
-                name: projectFeature.eezStudioExtension.implementation.projectFeature.key,
-                displayName:
-                    projectFeature.eezStudioExtension.implementation.projectFeature.displayName,
-                type: projectFeature.eezStudioExtension.implementation.projectFeature.type,
-                typeClass:
-                    projectFeature.eezStudioExtension.implementation.projectFeature.typeClass,
-                isOptional: !projectFeature.eezStudioExtension.implementation.projectFeature
-                    .mandatory,
-                hideInPropertyGrid: true,
-                check: projectFeature.eezStudioExtension.implementation.projectFeature.check
-            };
-        });
+        let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(
+            projectFeature => {
+                return {
+                    name:
+                        projectFeature.eezStudioExtension.implementation
+                            .projectFeature.key,
+                    displayName:
+                        projectFeature.eezStudioExtension.implementation
+                            .projectFeature.displayName,
+                    type:
+                        projectFeature.eezStudioExtension.implementation
+                            .projectFeature.type,
+                    typeClass:
+                        projectFeature.eezStudioExtension.implementation
+                            .projectFeature.typeClass,
+                    isOptional: !projectFeature.eezStudioExtension
+                        .implementation.projectFeature.mandatory,
+                    hideInPropertyGrid: true,
+                    check:
+                        projectFeature.eezStudioExtension.implementation
+                            .projectFeature.check
+                };
+            }
+        );
 
         projectProperties.splice(
             0,
@@ -675,6 +763,9 @@ class BuildAssetsMap {
 }
 
 export class Project extends EezObject implements IProject {
+    ProjectStore!: ProjectStoreClass;
+    isReadOnly: boolean = false;
+
     @observable settings: Settings;
     @observable data: DataItem[];
     @observable actions: Action[];
@@ -684,15 +775,17 @@ export class Project extends EezObject implements IProject {
     @observable extensionDefinitions: ExtensionDefinition[];
 
     @computed get projectName() {
-        if (ProjectStore.project === this) {
-            return ProjectStore.filePath
-                ? getFileNameWithoutExtension(ProjectStore.filePath)
+        if (this.ProjectStore.project === this) {
+            return this.ProjectStore.filePath
+                ? getFileNameWithoutExtension(this.ProjectStore.filePath)
                 : "<current project>";
         }
 
         if (this.importDirective) {
             return getFileNameWithoutExtension(
-                ProjectStore.getAbsoluteFilePath(this.importDirective.projectFilePath)
+                this.ProjectStore.getAbsoluteFilePath(
+                    this.importDirective.projectFilePath
+                )
             );
         }
 
@@ -701,7 +794,7 @@ export class Project extends EezObject implements IProject {
 
     @computed
     get importDirective() {
-        return ProjectStore.project.settings.general.imports.find(
+        return this.ProjectStore.project.settings.general.imports.find(
             importDirective => importDirective.project === this
         );
     }
@@ -733,8 +826,10 @@ export class Project extends EezObject implements IProject {
     get masterProject() {
         return (
             this.settings.general.masterProject &&
-            ProjectStore.loadExternalProject(
-                ProjectStore.getAbsoluteFilePath(this.settings.general.masterProject)
+            this.ProjectStore.loadExternalProject(
+                this.ProjectStore.getAbsoluteFilePath(
+                    this.settings.general.masterProject
+                )
             )
         );
     }
@@ -755,7 +850,7 @@ export class Project extends EezObject implements IProject {
     @computed({ keepAlive: true })
     get assetCollectionPaths() {
         const assetCollectionPaths = new Set<string>();
-        ProjectStore.project.allAssetsMaps.forEach(assetsMap =>
+        this.ProjectStore.project.allAssetsMaps.forEach(assetsMap =>
             assetCollectionPaths.add(assetsMap.path)
         );
         return assetCollectionPaths;
@@ -825,11 +920,17 @@ export class Project extends EezObject implements IProject {
 
     @computed({ keepAlive: true })
     get allAssets() {
-        return new Map([...this.localAssets, ...this.masterAssets, ...this.importedAssets]);
+        return new Map([
+            ...this.localAssets,
+            ...this.masterAssets,
+            ...this.importedAssets
+        ]);
     }
 
     getAllObjectsOfType(referencedObjectCollectionPath: string) {
-        const isAssetType = this.assetCollectionPaths.has(referencedObjectCollectionPath);
+        const isAssetType = this.assetCollectionPaths.has(
+            referencedObjectCollectionPath
+        );
 
         if (isAssetType) {
             return Array.from(this.allAssets.keys())
@@ -839,7 +940,7 @@ export class Project extends EezObject implements IProject {
                 .map(assets => assets[0]);
         } else {
             return (
-                (DocumentStore.getObjectFromPath(
+                (this.ProjectStore.getObjectFromPath(
                     referencedObjectCollectionPath.split("/")
                 ) as IEezObject[]) || []
             );
@@ -878,7 +979,11 @@ export async function load(filePath: string) {
             } else {
                 console.time("load");
                 let projectJs = JSON.parse(data);
-                let project = loadObject(undefined, projectJs, Project) as Project;
+                let project = loadObject(
+                    undefined,
+                    projectJs,
+                    Project
+                ) as Project;
                 console.timeEnd("load");
 
                 resolve(project);
@@ -887,19 +992,24 @@ export async function load(filePath: string) {
     });
 }
 
-export function save(filePath: string) {
+export function save(ProjectStore: ProjectStoreClass, filePath: string) {
     const toJsHook = (jsObject: any) => {
         let projectFeatures = getExtensionsByCategory("project-feature");
         for (let projectFeature of projectFeatures) {
-            if (projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook) {
-                projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook(jsObject);
+            if (
+                projectFeature.eezStudioExtension.implementation.projectFeature
+                    .toJsHook
+            ) {
+                projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook(
+                    jsObject
+                );
             }
         }
     };
 
     const json = objectToJson(ProjectStore.project, 2, toJsHook);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         const fs = EEZStudio.electron.remote.require("fs");
         fs.writeFile(filePath, json, "utf8", (err: any) => {
             if (err) {
@@ -916,7 +1026,9 @@ export function findAllReferencedObjects(
     referencedObjectCollectionPath: string,
     referencedObjectName: string
 ) {
-    return project.allAssets.get(referencedObjectCollectionPath + "/" + referencedObjectName);
+    return project.allAssets.get(
+        referencedObjectCollectionPath + "/" + referencedObjectName
+    );
 }
 
 export function findReferencedObject(
@@ -936,7 +1048,7 @@ export function findReferencedObject(
 export function checkObjectReference(
     object: IEezObject,
     propertyName: string,
-    messages: output.Message[],
+    messages: Message[],
     mandatory?: boolean
 ) {
     const value = getProperty(object, propertyName);
@@ -950,17 +1062,17 @@ export function checkObjectReference(
         }
 
         const objects = findAllReferencedObjects(
-            ProjectStore.project,
+            getProject(object),
             propertyInfo.referencedObjectCollectionPath,
             value
         );
 
         if (!objects || objects.length == 0) {
-            messages.push(output.propertyNotFoundMessage(object, propertyName));
+            messages.push(propertyNotFoundMessage(object, propertyName));
         } else if (objects.length > 1) {
             messages.push(
-                new output.Message(
-                    output.Type.ERROR,
+                new Message(
+                    Type.ERROR,
                     `Ambiguous, found in multiple projects: ${objects
                         .map(object => getProject(object).projectName)
                         .join(", ")}`,
@@ -970,41 +1082,26 @@ export function checkObjectReference(
         }
     } else {
         if (mandatory) {
-            messages.push(output.propertyNotSetMessage(object, propertyName));
+            messages.push(propertyNotSetMessage(object, propertyName));
         }
     }
-}
-
-export function getProject(object: IEezObject) {
-    return getRootObject(object) as Project;
-}
-
-export function isObjectReadOnly(object: IEezObject) {
-    return getProject(object) != ProjectStore.project;
-}
-
-export function isAnyObjectReadOnly(objects: IEezObject[]) {
-    return !!objects.find(isObjectReadOnly);
-}
-
-export function getNameProperty(object: IEezObject) {
-    let name = getProperty(object, "name");
-    const project = getProject(object);
-    if (project != ProjectStore.project && project.namespace) {
-        name = project.namespace + NAMESPACE_PREFIX + name;
-    }
-    return name;
 }
 
 function getUIStateFilePath(projectFilePath: string) {
     return projectFilePath + "-ui-state";
 }
 
-class ProjectStoreClass {
+export class ProjectStoreClass extends DocumentStoreClass {
     @observable filePath: string | undefined;
     @observable backgroundCheckEnabled = true;
 
+    dataContext!: DataContext;
+
+    currentSearch = new CurrentSearch(this);
+
     constructor() {
+        super();
+
         autorun(() => {
             this.updateProjectWindowState();
         });
@@ -1023,9 +1120,13 @@ class ProjectStoreClass {
 
             if (this.project) {
                 const importedProjectFiles = this.project.settings.general.imports
-                    .filter(importDirective => !!importDirective.projectFilePath)
+                    .filter(
+                        importDirective => !!importDirective.projectFilePath
+                    )
                     .map(importDirective =>
-                        this.getAbsoluteFilePath(importDirective.projectFilePath)
+                        this.getAbsoluteFilePath(
+                            importDirective.projectFilePath
+                        )
                     );
                 watcher = chokidar.watch(importedProjectFiles);
                 watcher.on("change", path => {
@@ -1033,7 +1134,9 @@ class ProjectStoreClass {
                     if (project) {
                         runInAction(() => {
                             this.externalProjects.delete(path);
-                            this.mapExternalProjectToAbsolutePath.delete(project);
+                            this.mapExternalProjectToAbsolutePath.delete(
+                                project
+                            );
                         });
                     }
                 });
@@ -1047,7 +1150,10 @@ class ProjectStoreClass {
             if (project) {
                 let i;
                 for (i = 0; i < project.settings.general.imports.length; i++) {
-                    if (project.settings.general.imports[i].project === undefined) {
+                    if (
+                        project.settings.general.imports[i].project ===
+                        undefined
+                    ) {
                         break;
                     }
                 }
@@ -1061,8 +1167,8 @@ class ProjectStoreClass {
 
         autorun(() => {
             // check the project in the background
-            if (ProjectStore.project && ProjectStore.backgroundCheckEnabled) {
-                backgroundCheck();
+            if (this.project && this.project.ProjectStore.backgroundCheckEnabled) {
+                backgroundCheck(this);
             }
         });
     }
@@ -1073,7 +1179,7 @@ class ProjectStoreClass {
         let title = "";
 
         if (this.project) {
-            if (DocumentStore.modified) {
+            if (this.modified) {
                 title += "\u25CF ";
             }
 
@@ -1091,15 +1197,23 @@ class ProjectStoreClass {
         }
 
         EEZStudio.electron.ipcRenderer.send("windowSetState", {
-            modified: DocumentStore.modified,
+            modified: this.modified,
             projectFilePath: this.filePath,
-            undo: (UndoManager && UndoManager.canUndo && UndoManager.undoDescription) || null,
-            redo: (UndoManager && UndoManager.canRedo && UndoManager.redoDescription) || null
+            undo:
+                (this.UndoManager &&
+                    this.UndoManager.canUndo &&
+                    this.UndoManager.undoDescription) ||
+                null,
+            redo:
+                (this.UndoManager &&
+                    this.UndoManager.canRedo &&
+                    this.UndoManager.redoDescription) ||
+                null
         });
     }
 
     get project() {
-        return DocumentStore.document as Project;
+        return this.document as Project;
     }
 
     updateMruFilePath() {
@@ -1123,13 +1237,19 @@ class ProjectStoreClass {
         const path = EEZStudio.electron.remote.require("path");
         const filePath = this.getProjectFilePath(project ?? this.project);
         return filePath
-            ? path.resolve(path.dirname(filePath), relativeFilePath.replace(/(\\|\/)/g, path.sep))
+            ? path.resolve(
+                  path.dirname(filePath),
+                  relativeFilePath.replace(/(\\|\/)/g, path.sep)
+              )
             : relativeFilePath;
     }
 
     getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {
         const path = EEZStudio.electron.remote.require("path");
-        let folder = path.relative(path.dirname(this.filePath), absoluteFolderPath);
+        let folder = path.relative(
+            path.dirname(this.filePath),
+            absoluteFolderPath
+        );
         if (folder == "") {
             folder = ".";
         }
@@ -1141,7 +1261,9 @@ class ProjectStoreClass {
         let configuration =
             this.project &&
             this.project.settings.build.configurations.find(
-                configuration => configuration.name == UIStateStore.selectedBuildConfiguration
+                configuration =>
+                    configuration.name ==
+                    this.UIStateStore.selectedBuildConfiguration
             );
         if (!configuration) {
             if (this.project.settings.build.configurations.length > 0) {
@@ -1151,19 +1273,30 @@ class ProjectStoreClass {
         return configuration;
     }
 
-    changeProject(projectFilePath: string | undefined, project?: Project, uiState?: Project) {
+    changeProject(
+        projectFilePath: string | undefined,
+        project?: Project,
+        uiState?: Project
+    ) {
         action(() => {
             this.filePath = projectFilePath;
         })();
 
-        DocumentStore.changeDocument(project, uiState);
+        if (project) {
+            project.ProjectStore = this;
+            this.dataContext = new DataContext(project);
+        } else {
+            this.dataContext = undefined as any;
+        }
+
+        this.changeDocument(project, uiState);
     }
 
     doSave(callback: (() => void) | undefined) {
         if (this.filePath) {
-            save(this.filePath)
+            save(this, this.filePath)
                 .then(() => {
-                    DocumentStore.setModified(false);
+                    this.setModified(false);
 
                     if (callback) {
                         callback();
@@ -1193,7 +1326,10 @@ class ProjectStoreClass {
                     EEZStudio.electron.remote.getCurrentWindow(),
                     {
                         filters: [
-                            { name: "EEZ Project", extensions: ["eez-project"] },
+                            {
+                                name: "EEZ Project",
+                                extensions: ["eez-project"]
+                            },
                             { name: "All Files", extensions: ["*"] }
                         ]
                     }
@@ -1219,22 +1355,26 @@ class ProjectStoreClass {
     loadUIState(projectFilePath: string) {
         return new Promise<any>((resolve, reject) => {
             const fs = EEZStudio.electron.remote.require("fs");
-            fs.readFile(getUIStateFilePath(projectFilePath), "utf8", (err: any, data: string) => {
-                if (err) {
-                    resolve({});
-                } else {
-                    resolve(JSON.parse(data));
+            fs.readFile(
+                getUIStateFilePath(projectFilePath),
+                "utf8",
+                (err: any, data: string) => {
+                    if (err) {
+                        resolve({});
+                    } else {
+                        resolve(JSON.parse(data));
+                    }
                 }
-            });
+            );
         });
     }
 
     saveUIState() {
-        if (this.filePath && UIStateStore.isModified) {
+        if (this.filePath && this.UIStateStore.isModified) {
             const fs = EEZStudio.electron.remote.require("fs");
             fs.writeFile(
                 getUIStateFilePath(this.filePath),
-                UIStateStore.save(),
+                this.UIStateStore.save(),
                 "utf8",
                 (err: any) => {
                     if (err) {
@@ -1260,7 +1400,7 @@ class ProjectStoreClass {
     }
 
     open(sender: any, filePath: any) {
-        if (!this.project || (!this.filePath && !DocumentStore.modified)) {
+        if (!this.project || (!this.filePath && !this.modified)) {
             this.openFile(filePath);
         }
     }
@@ -1268,7 +1408,7 @@ class ProjectStoreClass {
     saveModified(callback: any) {
         this.saveUIState();
 
-        if (this.project && DocumentStore.modified) {
+        if (this.project && this.modified) {
             confirmSave({
                 saveCallback: () => {
                     this.saveToFile(false, callback);
@@ -1294,15 +1434,15 @@ class ProjectStoreClass {
     }
 
     check() {
-        buildProject({ onlyCheck: true });
+        buildProject(this, { onlyCheck: true });
     }
 
     build() {
-        buildProject({ onlyCheck: false });
+        buildProject(this, { onlyCheck: false });
     }
 
     buildExtensions() {
-        buildExtensions();
+        buildExtensions(this);
     }
 
     closeWindow() {
@@ -1336,7 +1476,7 @@ class ProjectStoreClass {
                     ]
                 },
                 values: {
-                    metrics: getAllMetrics()
+                    metrics: getAllMetrics(this)
                 },
                 showOkButton: false
             }).catch(() => {});
@@ -1373,9 +1513,15 @@ class ProjectStoreClass {
             (async () => {
                 const project = await load(filePath);
 
+                project.isReadOnly = true;
+                project.ProjectStore = this;
+
                 runInAction(() => {
                     this.externalProjects.set(filePath, project);
-                    this.mapExternalProjectToAbsolutePath.set(project, filePath);
+                    this.mapExternalProjectToAbsolutePath.set(
+                        project,
+                        filePath
+                    );
                 });
 
                 this.externalProjectsLoading.set(filePath, false);
@@ -1386,4 +1532,28 @@ class ProjectStoreClass {
     }
 }
 
-export const ProjectStore = new ProjectStoreClass();
+export function getProject(object: IEezObject) {
+    return getRootObject(object) as Project;
+}
+
+export function getProjectStore(object: IEezObject) {
+    return getProject(object).ProjectStore;
+}
+
+export function isObjectReadOnly(object: IEezObject) {
+    return getProject(object).isReadOnly;
+}
+
+export function isAnyObjectReadOnly(objects: IEezObject[]) {
+    return !!objects.find(isObjectReadOnly);
+}
+
+export function getNameProperty(object: IEezObject) {
+    let name = getProperty(object, "name");
+    const project = getProject(object);
+    if (isObjectReadOnly(object) && project.namespace) {
+        name = project.namespace + NAMESPACE_PREFIX + name;
+    }
+    return name;
+}
+

@@ -12,10 +12,10 @@ import {
     getClassInfo
 } from "project-editor/core/object";
 import {
-    NavigationStore,
     createObjectNavigationItem,
     compareNavigationItem
 } from "project-editor/core/store";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,6 +43,9 @@ interface NavigationMenuItemProps {
 
 @observer
 class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     constructor(props: NavigationMenuItemProps) {
         super(props);
 
@@ -50,7 +53,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     }
 
     onClick() {
-        NavigationStore.setNavigationSelectedItem(
+        this.context.NavigationStore.setNavigationSelectedItem(
             this.props.navigationObject,
             createObjectNavigationItem(this.props.item)!
         );
@@ -59,7 +62,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     render() {
         let className = classNames({
             selected: compareNavigationItem(
-                NavigationStore.getNavigationSelectedItem(this.props.navigationObject),
+                this.context.NavigationStore.getNavigationSelectedItem(this.props.navigationObject),
                 this.props.item
             )
         });
@@ -89,8 +92,11 @@ const MenuContainer = styled.div`
 class Menu extends React.Component<{
     navigationObject: IEezObject;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     onFocus() {
-        NavigationStore.setSelectedPanel(undefined);
+        this.context.NavigationStore.setSelectedPanel(undefined);
     }
 
     render() {
@@ -128,9 +134,12 @@ export class MenuNavigation extends React.Component<
     },
     {}
 > {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     render() {
         let subNavigation: JSX.Element | undefined;
-        let selectedItem = NavigationStore.getNavigationSelectedItemAsObject(
+        let selectedItem = this.context.NavigationStore.getNavigationSelectedItemAsObject(
             this.props.navigationObject
         );
         if (selectedItem) {

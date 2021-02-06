@@ -8,10 +8,10 @@ import { TabsView } from "eez-studio-ui/tabs";
 import styled from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";
 
-import { UIStateStore, OutputSectionsStore, NavigationStore } from "project-editor/core/store";
 import { Message as OutputMessage, Type as MessageType } from "project-editor/core/output";
 
 import { ObjectPath } from "project-editor/components/ObjectPath";
+import { ProjectContext } from "project-editor/project/context";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
@@ -99,14 +99,17 @@ const MessagesDiv = styled.div`
 
 @observer
 class Messages extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     private divRef = React.createRef<any>();
 
     onSelectMessage(message: OutputMessage) {
-        OutputSectionsStore.activeSection.selectMessage(message);
+        this.context.OutputSectionsStore.activeSection.selectMessage(message);
     }
 
     scrollToBottom() {
-        if (this.divRef.current && OutputSectionsStore.activeSection.scrollToBottom) {
+        if (this.divRef.current && this.context.OutputSectionsStore.activeSection.scrollToBottom) {
             const div: HTMLDivElement = this.divRef.current;
             div.scrollTop = div.scrollHeight;
         }
@@ -124,7 +127,7 @@ class Messages extends React.Component {
         // TODO this is workaround because for some reason componentDidUpdate is not called
         setTimeout(() => this.scrollToBottom());
 
-        let rows = OutputSectionsStore.activeSection.messages.map(message => (
+        let rows = this.context.OutputSectionsStore.activeSection.messages.map(message => (
             <Message
                 key={message.id}
                 message={message}
@@ -184,32 +187,35 @@ const TabsViewContainer = styled.div`
 
 @observer
 export class Output extends React.Component<{}, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @disposeOnUnmount
     activeSectionChanged = autorun(() => {
-        NavigationStore.setSelectedPanel(OutputSectionsStore.activeSection);
+        this.context.NavigationStore.setSelectedPanel(this.context.OutputSectionsStore.activeSection);
     });
 
     onFocus() {
-        NavigationStore.setSelectedPanel(OutputSectionsStore.activeSection);
+        this.context.NavigationStore.setSelectedPanel(this.context.OutputSectionsStore.activeSection);
     }
 
     @action.bound
     onKeyDown(event: any) {
         if (event.keyCode == 27) {
             // ESC KEY
-            UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible;
+            this.context.UIStateStore.viewOptions.outputVisible = !this.context.UIStateStore.viewOptions.outputVisible;
         }
     }
 
     @action.bound onClose() {
-        UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible;
+        this.context.UIStateStore.viewOptions.outputVisible = !this.context.UIStateStore.viewOptions.outputVisible;
     }
 
     render() {
         return (
             <OutputDiv tabIndex={0} onFocus={this.onFocus} onKeyDown={this.onKeyDown}>
                 <TabsViewContainer>
-                    <TabsView tabs={OutputSectionsStore.sections} />
+                    <TabsView tabs={this.context.OutputSectionsStore.sections} />
                     <IconAction
                         icon="material:close"
                         iconSize={16}

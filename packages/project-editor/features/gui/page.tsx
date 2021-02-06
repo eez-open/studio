@@ -31,7 +31,7 @@ import {
     ITreeObjectAdapter,
     TreeAdapter
 } from "project-editor/core/objectAdapter";
-import { NavigationStore, EditorsStore, IPanel, UIStateStore } from "project-editor/core/store";
+import type { IPanel } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -47,21 +47,25 @@ import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page
 import { WidgetPalette } from "project-editor/features/gui/page-editor/WidgetPalette";
 import { WidgetContainerComponent } from "project-editor/features/gui/page-editor/render";
 
-import { Project, findReferencedObject, getProject } from "project-editor/project/project";
+import { Project, findReferencedObject, getProject, getProjectStore } from "project-editor/project/project";
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { Widget, IWidget } from "project-editor/features/gui/widget";
 
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class PageEditor extends EditorComponent implements IPanel {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @bind
     focusHandler() {
-        NavigationStore.setSelectedPanel(this);
+        this.context.NavigationStore.setSelectedPanel(this);
     }
 
     @computed
@@ -150,20 +154,23 @@ export class PageTabState implements IEditorState {
 
 @observer
 export class PagesNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (this.context.NavigationStore.selectedPanel) {
+            return this.context.NavigationStore.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return this.context.NavigationStore.selectedObject;
     }
 
     @computed
     get widgetContainerDisplayItem() {
-        if (!EditorsStore.activeEditor) {
+        if (!this.context.EditorsStore.activeEditor) {
             return undefined;
         }
-        let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+        let pageTabState = this.context.EditorsStore.activeEditor.state as PageTabState;
         if (!pageTabState) {
             return undefined;
         }
@@ -205,8 +212,8 @@ export class PagesNavigation extends NavigationComponent {
             return selectedObjects;
         }
 
-        if (EditorsStore.activeEditor) {
-            let pageTabState = EditorsStore.activeEditor.state as PageTabState;
+        if (this.context.EditorsStore.activeEditor) {
+            let pageTabState = this.context.EditorsStore.activeEditor.state as PageTabState;
             return [pageTabState.page];
         }
 
@@ -215,7 +222,7 @@ export class PagesNavigation extends NavigationComponent {
 
     @bind
     onFocus() {
-        NavigationStore.setSelectedPanel(this);
+        this.context.NavigationStore.setSelectedPanel(this);
     }
 
     render() {
@@ -247,13 +254,13 @@ export class PagesNavigation extends NavigationComponent {
 
         const buttons: JSX.Element[] = [];
 
-        if (!UIStateStore.viewOptions.themesVisible) {
+        if (!this.context.UIStateStore.viewOptions.themesVisible) {
             buttons.push(
                 <IconAction
                     key="show-themes"
                     icon="material:palette"
                     iconSize={16}
-                    onClick={action(() => (UIStateStore.viewOptions.themesVisible = true))}
+                    onClick={action(() => (this.context.UIStateStore.viewOptions.themesVisible = true))}
                     title="Show themes panel"
                 ></IconAction>
             );
@@ -275,17 +282,17 @@ export class PagesNavigation extends NavigationComponent {
             <Splitter
                 type="horizontal"
                 persistId={`project-editor/pages${
-                    UIStateStore.viewOptions.themesVisible ? "" : "-without-themes"
+                    this.context.UIStateStore.viewOptions.themesVisible ? "" : "-without-themes"
                 }`}
-                sizes={`240px|100%|400px${UIStateStore.viewOptions.themesVisible ? "|240px" : ""}`}
+                sizes={`240px|100%|400px${this.context.UIStateStore.viewOptions.themesVisible ? "|240px" : ""}`}
                 childrenOverflow={`hidden|hidden|hidden${
-                    UIStateStore.viewOptions.themesVisible ? "|hidden" : ""
+                    this.context.UIStateStore.viewOptions.themesVisible ? "|hidden" : ""
                 }`}
             >
                 {navigation}
                 <Editors />
                 {properties}
-                {UIStateStore.viewOptions.themesVisible && <ThemesSideView hasCloseButton={true} />}
+                {this.context.UIStateStore.viewOptions.themesVisible && <ThemesSideView hasCloseButton={true} />}
             </Splitter>
         );
     }
@@ -598,7 +605,7 @@ export class Page extends EezObject implements IPage {
         const pageStyle = findStyle(getProject(this), this.style || "default");
         if (pageStyle && pageStyle.backgroundColorProperty) {
             style.backgroundColor = to16bitsColor(
-                getThemedColor(pageStyle.backgroundColorProperty)
+                getThemedColor(getProjectStore(style), pageStyle.backgroundColorProperty)
             );
         } else {
             console.log(this.style, pageStyle);

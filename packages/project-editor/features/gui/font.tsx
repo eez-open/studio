@@ -34,8 +34,6 @@ import {
     getLabel
 } from "project-editor/core/object";
 import {
-    DocumentStore,
-    NavigationStore,
     INavigationStore,
     IPanel,
     createObjectNavigationItem
@@ -43,7 +41,8 @@ import {
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { ProjectStore, Project, findReferencedObject } from "project-editor/project/project";
+import { Project, findReferencedObject, getProjectStore } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
 
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
@@ -928,7 +927,7 @@ export class Glyph extends EezObject {
                 }
             }
 
-            DocumentStore.updateObject(this, {
+            getProjectStore(this).updateObject(this, {
                 width,
                 height,
                 glyphBitmap: {
@@ -952,6 +951,9 @@ const GlyphSelectFieldContainerDiv = styled.div`
 
 @observer
 export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     fontFilePath: string;
     fontBpp: number;
     fontSize: number;
@@ -1092,7 +1094,7 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                 );
             } else {
                 extractFont({
-                    absoluteFilePath: ProjectStore.getAbsoluteFilePath(fontFilePath),
+                    absoluteFilePath: this.context.getAbsoluteFilePath(fontFilePath),
                     relativeFilePath: fontFilePath,
                     bpp: fontBpp,
                     size: fontSize,
@@ -1462,6 +1464,9 @@ class Glyphs extends React.Component<{
 class GlyphEditor extends React.Component<{
     glyph: Glyph | undefined;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     div: HTMLDivElement;
 
     @observable hitTestResult: EditorImageHitTestResult | undefined = undefined;
@@ -1496,7 +1501,7 @@ class GlyphEditor extends React.Component<{
                 font.bpp
             );
 
-            DocumentStore.updateObject(this.props.glyph, {
+            this.context.updateObject(this.props.glyph, {
                 glyphBitmap: newGlyphBitmap
             });
 
@@ -1609,6 +1614,10 @@ export class FontEditor
         onDoubleClickItem?: (item: IEezObject) => void;
     }>
     implements IPanel {
+
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     get glyphs() {
         let font = this.props.font;
         return font.glyphs;
@@ -1639,7 +1648,7 @@ export class FontEditor
     onBrowseGlyph(glyph: Glyph) {
         browseGlyph(glyph)
             .then(propertyValues => {
-                DocumentStore.updateObject(glyph, propertyValues);
+                this.context.updateObject(glyph, propertyValues);
             })
             .catch(error => console.error(error));
     }
@@ -1686,10 +1695,10 @@ export class FontEditor
 
             const newFont = await rebuildFont({
                 font: objectToJS(font),
-                projectFilePath: ProjectStore.filePath!
+                projectFilePath: this.context.filePath!
             });
 
-            DocumentStore.replaceObject(font, loadObject(getParent(font), newFont, Font));
+            this.context.replaceObject(font, loadObject(getParent(font), newFont, Font));
 
             notification.info(`Font rebuilded.`);
         } catch (err) {
@@ -1702,7 +1711,7 @@ export class FontEditor
         const font = this.props.font;
         let newGlyph = cloneObject(undefined, font.glyphs[font.glyphs.length - 1]) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
-        newGlyph = DocumentStore.addObject(font.glyphs, newGlyph) as Glyph;
+        newGlyph = this.context.addObject(font.glyphs, newGlyph) as Glyph;
         this._selectedGlyph = newGlyph;
     }
 
@@ -1711,7 +1720,7 @@ export class FontEditor
         const font = this.props.font;
         let selectedGlyph = this.selectedGlyph;
         if (selectedGlyph && font.glyphs[font.glyphs.length - 1] == selectedGlyph) {
-            DocumentStore.deleteObject(selectedGlyph);
+            this.context.deleteObject(selectedGlyph);
         }
     }
 
@@ -1832,7 +1841,7 @@ export class FontEditor
 
     @bind
     onFocus() {
-        NavigationStore.setSelectedPanel(this);
+        this.context.NavigationStore.setSelectedPanel(this);
     }
 
     @bind
@@ -1899,6 +1908,9 @@ export class FontEditor
 
 @observer
 export class FontsNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     static getFont(object: IEezObject | undefined) {
         while (object) {
             if (object instanceof Font) {
@@ -1911,7 +1923,7 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
 
         if (navigationStore.selectedPanel) {
             const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);
@@ -1930,7 +1942,7 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get font() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
 
         if (navigationStore.selectedPanel) {
             const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);
@@ -2224,7 +2236,7 @@ export class Font extends EezObject implements IFont {
                 .then(result => {
                     return extractFont({
                         name: result.values.name,
-                        absoluteFilePath: ProjectStore.getAbsoluteFilePath(result.values.filePath),
+                        absoluteFilePath: getProjectStore(parent).getAbsoluteFilePath(result.values.filePath),
                         relativeFilePath: result.values.filePath,
                         bpp: result.values.bpp,
                         size: result.values.size,

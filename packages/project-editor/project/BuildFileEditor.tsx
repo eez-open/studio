@@ -4,31 +4,33 @@ import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
-import { DocumentStore, UndoManager } from "project-editor/core/store";
-
 import { BuildFile } from "project-editor/project/project";
+import { ProjectContext } from "./context";
 
 @observer
 export class BuildFileEditor extends React.Component<{
     buildFile: BuildFile;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     codeEditor: CodeEditor;
 
     @bind
     onChange(value: string) {
-        DocumentStore.updateObject(this.props.buildFile, {
+        this.context.updateObject(this.props.buildFile, {
             template: value
         });
     }
 
     @bind
     onFocus() {
-        UndoManager.setCombineCommands(true);
+        this.context.UndoManager.setCombineCommands(true);
     }
 
     @bind
     onBlur() {
-        UndoManager.setCombineCommands(false);
+        this.context.UndoManager.setCombineCommands(false);
     }
 
     componentDidMount() {

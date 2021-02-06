@@ -134,7 +134,7 @@ export interface PropertyInfo {
         | React.FunctionComponent<PropertyProps>;
     propertyGridCollapsable?: boolean;
     propertyGridCollapsableDefaultPropertyName?: string;
-    propertyGridCollapsableEnabled?: () => boolean;
+    propertyGridCollapsableEnabled?: (object: IEezObject) => boolean;
     enumerable?: boolean | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     showOnlyChildrenInTree?: boolean;
     isOptional?: boolean;

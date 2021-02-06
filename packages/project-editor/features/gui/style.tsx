@@ -25,10 +25,7 @@ import {
     getParent
 } from "project-editor/core/object";
 import {
-    NavigationStore,
-    SimpleNavigationStoreClass,
-    DocumentStore,
-    UndoManager
+    SimpleNavigationStoreClass
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import * as output from "project-editor/core/output";
@@ -38,10 +35,10 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import {
-    ProjectStore,
     Project,
     findReferencedObject,
-    getProject
+    getProject,
+    getProjectStore
 } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
@@ -49,6 +46,7 @@ import { findFont } from "project-editor/features/gui/font";
 import { drawText } from "project-editor/features/gui/draw";
 import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
 import { Font } from "project-editor/features/gui/font";
+import { ProjectContext } from "project-editor/project/context";
 
 const { MenuItem } = EEZStudio.electron.remote;
 
@@ -102,17 +100,20 @@ export class StyleEditor extends React.Component<{
 
 @observer
 export class StylesNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @computed
     get navigationObject() {
-        if (ProjectStore.masterProject) {
-            return ProjectStore.masterProject.gui.styles;
+        if (this.context.masterProject) {
+            return this.context.masterProject.gui.styles;
         }
         return this.props.navigationObject;
     }
 
     @computed
     get style() {
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
 
         if (navigationStore.selectedPanel) {
             if (navigationStore.selectedPanel.selectedObject instanceof Style) {
@@ -130,7 +131,7 @@ export class StylesNavigation extends NavigationComponent {
     render() {
         if (this.props.navigationStore) {
             // used in select style dialog
-            if (ProjectStore.masterProject) {
+            if (this.context.masterProject) {
                 return (
                     <Splitter
                         type="horizontal"
@@ -275,6 +276,8 @@ const inheritFromProperty: PropertyInfo = {
         }),
     onSelectTitle: "Select Style",
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
+        const ProjectStore = getProjectStore(props.objects[0]);
+
         let menuItems: Electron.MenuItem[] = [];
 
         if (isAnyPropertyModified(props)) {
@@ -319,7 +322,7 @@ const inheritFromProperty: PropertyInfo = {
                                 },
                                 values: {}
                             }).then(result => {
-                                UndoManager.setCombineCommands(true);
+                                ProjectStore.UndoManager.setCombineCommands(true);
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
@@ -337,13 +340,13 @@ const inheritFromProperty: PropertyInfo = {
 
                                 objectPropertyValues.inheritFrom = result.values.name;
 
-                                DocumentStore.addObject(
+                                ProjectStore.addObject(
                                     ProjectStore.project.gui.styles,
                                     stylePropertyValues
                                 );
-                                DocumentStore.updateObject(object, objectPropertyValues);
+                                ProjectStore.updateObject(object, objectPropertyValues);
 
-                                UndoManager.setCombineCommands(false);
+                                ProjectStore.UndoManager.setCombineCommands(false);
                             });
                         }
                     })
@@ -358,7 +361,7 @@ const inheritFromProperty: PropertyInfo = {
                         new MenuItem({
                             label: "Update Style",
                             click: () => {
-                                UndoManager.setCombineCommands(true);
+                                ProjectStore.UndoManager.setCombineCommands(true);
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
@@ -376,10 +379,10 @@ const inheritFromProperty: PropertyInfo = {
                                     }
                                 });
 
-                                DocumentStore.updateObject(style, stylePropertyValues);
-                                DocumentStore.updateObject(object, objectPropertyValues);
+                                ProjectStore.updateObject(style, stylePropertyValues);
+                                ProjectStore.updateObject(object, objectPropertyValues);
 
-                                UndoManager.setCombineCommands(false);
+                                ProjectStore.UndoManager.setCombineCommands(false);
                             }
                         })
                     );
@@ -457,7 +460,7 @@ const activeColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
 };
 
 const activeBackgroundColorProperty: PropertyInfo = {
@@ -466,7 +469,7 @@ const activeBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
 };
 
 const focusColorProperty: PropertyInfo = {
@@ -475,7 +478,7 @@ const focusColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
 };
 
 const focusBackgroundColorProperty: PropertyInfo = {
@@ -484,7 +487,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
 };
 
 const borderSizeProperty: PropertyInfo = {
@@ -604,7 +607,7 @@ function getInheritedValue(
                 propertyName === "focusBackgroundColor" ||
                 propertyName === "borderColor")
         ) {
-            value = getThemedColor(value);
+            value = getThemedColor(getProjectStore(styleObject), value);
         }
 
         return {
@@ -716,6 +719,8 @@ export class Style extends EezObject implements IStyle {
         check: (object: Style) => {
             let messages: output.Message[] = [];
 
+            const Projectstore = getProjectStore(object);
+
             if (object.id != undefined) {
                 if (!(object.id > 0 || object.id < 32768)) {
                     messages.push(
@@ -726,13 +731,13 @@ export class Style extends EezObject implements IStyle {
                         )
                     );
                 } else {
-                    if (ProjectStore.project.gui.allStyleIdToStyleMap.get(object.id)!.length > 1) {
+                    if (Projectstore.project.gui.allStyleIdToStyleMap.get(object.id)!.length > 1) {
                         messages.push(output.propertyNotUniqueMessage(object, "id"));
                     }
                 }
             }
 
-            if (object.inheritFrom && !findStyle(ProjectStore.project, object.inheritFrom)) {
+            if (object.inheritFrom && !findStyle(Projectstore.project, object.inheritFrom)) {
                 messages.push(output.propertyNotFoundMessage(object, "inheritFrom"));
             } else {
                 // if (!object.fontName) {
@@ -781,7 +786,7 @@ export class Style extends EezObject implements IStyle {
                     messages.push(output.propertyInvalidValueMessage(object, "backgroundColor"));
                 }
 
-                if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
+                if (Projectstore.project.settings.general.projectVersion !== "v1") {
                     if (isNaN(object.activeColor16)) {
                         messages.push(output.propertyInvalidValueMessage(object, "activeColor"));
                     }

@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "eez-studio-ui/styled-components";
 
-import { ProjectStore } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -20,6 +20,9 @@ export class ConfigurationReferencesPropertyValue extends React.Component<{
     onChange: (value: string[] | undefined) => void;
     readOnly: boolean;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     render() {
         const { readOnly } = this.props;
 
@@ -53,7 +56,7 @@ export class ConfigurationReferencesPropertyValue extends React.Component<{
                 </div>
                 {this.props.value && (
                     <ConfigurationReferencesPropertyValueConfigurationsDiv>
-                        {ProjectStore.project.settings.build.configurations.map(configuration => {
+                        {this.context.project.settings.build.configurations.map(configuration => {
                             return (
                                 <div key={configuration.name} className="checkbox">
                                     <label>

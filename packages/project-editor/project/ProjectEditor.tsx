@@ -16,17 +16,9 @@ import {
     getClassInfo,
     getEditorComponent
 } from "project-editor/core/object";
-import {
-    UndoManager,
-    DocumentStore,
-    UIStateStore,
-    EditorsStore,
-    NavigationStore,
-    INavigationStore,
-    OutputSectionsStore
-} from "project-editor/core/store";
 import { startSearch } from "project-editor/core/search";
 import { Section } from "project-editor/core/output";
+import { INavigationStore } from "project-editor/core/store";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Panel } from "project-editor/components/Panel";
@@ -34,7 +26,8 @@ import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
-import { ProjectStore, BuildConfiguration } from "project-editor/project/project";
+import { BuildConfiguration } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,46 +52,52 @@ const ToolbarNav = styled.nav`
 
 @observer
 class Toolbar extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     startSearch() {
         startSearch(
-            UIStateStore.searchPattern,
-            UIStateStore.searchMatchCase,
-            UIStateStore.searchMatchWholeWord
+            this.context,
+            this.context.UIStateStore.searchPattern,
+            this.context.UIStateStore.searchMatchCase,
+            this.context.UIStateStore.searchMatchWholeWord
         );
     }
 
     @action.bound
     onSearchPatternChange(event: any) {
-        UIStateStore.searchPattern = event.target.value;
+        this.context.UIStateStore.searchPattern = event.target.value;
         this.startSearch();
     }
 
     @action.bound
     toggleMatchCase() {
-        UIStateStore.searchMatchCase = !UIStateStore.searchMatchCase;
+        this.context.UIStateStore.searchMatchCase = !this.context.UIStateStore
+            .searchMatchCase;
         this.startSearch();
     }
 
     @action.bound
     toggleMatchWholeWord() {
-        UIStateStore.searchMatchWholeWord = !UIStateStore.searchMatchWholeWord;
+        this.context.UIStateStore.searchMatchWholeWord = !this.context.UIStateStore
+            .searchMatchWholeWord;
         this.startSearch();
     }
 
     onSelectedBuildConfigurationChange(event: any) {
-        UIStateStore.setSelectedBuildConfiguration(event.target.value);
+        this.context.UIStateStore.setSelectedBuildConfiguration(event.target.value);
     }
 
     get isBuildConfigurationSelectorVisible() {
         return (
-            (ProjectStore.project as any).gui ||
-            ProjectStore.project.actions ||
-            ProjectStore.project.data
+            (this.context.project as any).gui ||
+            this.context.project.actions ||
+            this.context.project.data
         );
     }
 
     render() {
-        let configurations = ProjectStore.project.settings.build.configurations.map(
+        let configurations = this.context.project.settings.build.configurations.map(
             (item: BuildConfiguration) => {
                 return (
                     <option key={item.name} value={item.name}>
@@ -115,27 +114,31 @@ class Toolbar extends React.Component {
                         <IconAction
                             title="Save"
                             icon="material:save"
-                            onClick={() => ProjectStore.save()}
-                            enabled={DocumentStore.isModified}
+                            onClick={() => this.context.save()}
+                            enabled={this.context.isModified}
                         />
                     </div>
 
                     <div className="btn-group" role="group">
                         <IconAction
                             title={
-                                UndoManager.canUndo ? `Undo "${UndoManager.undoDescription}"` : ""
+                                this.context.UndoManager.canUndo
+                                    ? `Undo "${this.context.UndoManager.undoDescription}"`
+                                    : ""
                             }
                             icon="material:undo"
-                            onClick={() => UndoManager.undo()}
-                            enabled={UndoManager.canUndo}
+                            onClick={() => this.context.UndoManager.undo()}
+                            enabled={this.context.UndoManager.canUndo}
                         />
                         <IconAction
                             title={
-                                UndoManager.canRedo ? `Redo "${UndoManager.redoDescription}"` : ""
+                                this.context.UndoManager.canRedo
+                                    ? `Redo "${this.context.UndoManager.redoDescription}"`
+                                    : ""
                             }
                             icon="material:redo"
-                            onClick={() => UndoManager.redo()}
-                            enabled={UndoManager.canRedo}
+                            onClick={() => this.context.UndoManager.redo()}
+                            enabled={this.context.UndoManager.canRedo}
                         />
                     </div>
 
@@ -145,8 +148,13 @@ class Toolbar extends React.Component {
                                 title="Configuration"
                                 id="btn-toolbar-configuration"
                                 className="form-control"
-                                value={UIStateStore.selectedBuildConfiguration}
-                                onChange={this.onSelectedBuildConfigurationChange.bind(this)}
+                                value={
+                                    this.context.UIStateStore
+                                        .selectedBuildConfiguration
+                                }
+                                onChange={this.onSelectedBuildConfigurationChange.bind(
+                                    this
+                                )}
                             >
                                 {configurations}
                             </select>
@@ -157,12 +165,12 @@ class Toolbar extends React.Component {
                         <IconAction
                             title="Check"
                             icon="material:check"
-                            onClick={() => ProjectStore.check()}
+                            onClick={() => this.context.check()}
                         />
                         <IconAction
                             title="Build"
                             icon="material:build"
-                            onClick={() => ProjectStore.build()}
+                            onClick={() => this.context.build()}
                         />
                     </div>
                 </div>
@@ -173,7 +181,7 @@ class Toolbar extends React.Component {
                             className="form-control"
                             type="text"
                             placeholder="search"
-                            value={UIStateStore.searchPattern}
+                            value={this.context.UIStateStore.searchPattern}
                             onChange={this.onSearchPatternChange}
                         />
                         <div className="btn-group" role="group">
@@ -182,7 +190,7 @@ class Toolbar extends React.Component {
                                 title="Match case"
                                 iconSize={20}
                                 enabled={true}
-                                selected={UIStateStore.searchMatchCase}
+                                selected={this.context.UIStateStore.searchMatchCase}
                                 onClick={this.toggleMatchCase}
                             />
                             <IconAction
@@ -190,7 +198,9 @@ class Toolbar extends React.Component {
                                 title="Match whole word"
                                 iconSize={20}
                                 enabled={true}
-                                selected={UIStateStore.searchMatchWholeWord}
+                                selected={
+                                    this.context.UIStateStore.searchMatchWholeWord
+                                }
                                 onClick={this.toggleMatchWholeWord}
                             />
                             <IconAction
@@ -211,10 +221,13 @@ class Toolbar extends React.Component {
 
 @observer
 class Editor extends React.Component<{}, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     render() {
         let editor: JSX.Element | undefined;
 
-        let activeEditor = EditorsStore.activeEditor;
+        let activeEditor = this.context.EditorsStore.activeEditor;
         if (activeEditor) {
             let EditorComponent = getEditorComponent(activeEditor.object);
             if (EditorComponent) {
@@ -240,11 +253,14 @@ const EditorsDiv = styled.div`
 
 @observer
 export class Editors extends React.Component<{}, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     render() {
         return (
             <EditorsDiv>
                 <div>
-                    <TabsView tabs={EditorsStore.editors} />
+                    <TabsView tabs={this.context.EditorsStore.editors} />
                 </div>
                 <Editor />
             </EditorsDiv>
@@ -256,13 +272,21 @@ export class Editors extends React.Component<{}, {}> {
 
 @observer
 export class PropertiesPanel extends React.Component<
-    { object: IEezObject | undefined; navigationStore?: INavigationStore; buttons?: JSX.Element[] },
+    {
+        object: IEezObject | undefined;
+        navigationStore?: INavigationStore;
+        buttons?: JSX.Element[];
+    },
     {}
 > {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     render() {
         let objects: IEezObject[];
 
-        const navigationStore = this.props.navigationStore || NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
 
         if (
             navigationStore.selectedPanel &&
@@ -282,7 +306,10 @@ export class PropertiesPanel extends React.Component<
                 const childObject = getParent(object);
                 const parent = getParent(childObject);
                 if (parent) {
-                    const propertyInfo = findPropertyByChildObject(parent, childObject);
+                    const propertyInfo = findPropertyByChildObject(
+                        parent,
+                        childObject
+                    );
                     if (propertyInfo && !propertyInfo.hideInPropertyGrid) {
                         objects = [parent];
                     }
@@ -305,17 +332,24 @@ export class PropertiesPanel extends React.Component<
 
 @observer
 class Content extends React.Component<{}, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (this.context.NavigationStore.selectedPanel) {
+            return this.context.NavigationStore.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return this.context.NavigationStore.selectedObject;
     }
 
     @computed
     get hideInProperties() {
-        for (let object: IEezObject | undefined = this.object; object; object = getParent(object)) {
+        for (
+            let object: IEezObject | undefined = this.object;
+            object;
+            object = getParent(object)
+        ) {
             if (!isArray(object) && getEditorComponent(object)) {
                 return getClassInfo(object).hideInProperties;
             }
@@ -324,10 +358,15 @@ class Content extends React.Component<{}, {}> {
     }
 
     render() {
-        if (!ProjectStore.project) {
+        if (!this.context.project) {
             return <div />;
         }
-        return <MenuNavigation id="project" navigationObject={ProjectStore.project} />;
+        return (
+            <MenuNavigation
+                id="project"
+                navigationObject={this.context.project}
+            />
+        );
     }
 }
 
@@ -349,7 +388,9 @@ class StatusBarItem extends React.Component<
 > {
     render() {
         return (
-            <StatusBarItemSpan onClick={this.props.onClick}>{this.props.body}</StatusBarItemSpan>
+            <StatusBarItemSpan onClick={this.props.onClick}>
+                {this.props.body}
+            </StatusBarItemSpan>
         );
     }
 }
@@ -363,10 +404,14 @@ const StatusBarDiv = styled.div`
 
 @observer
 class StatusBar extends React.Component<{}, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     @action
     onChecksClicked() {
-        UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible;
-        OutputSectionsStore.setActiveSection(Section.CHECKS);
+        this.context.UIStateStore.viewOptions.outputVisible = !this.context.UIStateStore
+            .viewOptions.outputVisible;
+        this.context.OutputSectionsStore.setActiveSection(Section.CHECKS);
     }
 
     render() {
@@ -374,7 +419,10 @@ class StatusBar extends React.Component<{}, {}> {
             <StatusBarDiv>
                 <StatusBarItem
                     key="checks"
-                    body={OutputSectionsStore.getSection(Section.CHECKS).title}
+                    body={
+                        this.context.OutputSectionsStore.getSection(Section.CHECKS)
+                            .title
+                    }
                     onClick={this.onChecksClicked}
                 />
             </StatusBarDiv>
@@ -418,18 +466,21 @@ const MainContent = styled.div`
 
 @observer
 export class ProjectEditor extends React.Component<{}, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     render() {
-        if (!ProjectStore.project) {
+        if (!this.context.project) {
             return null;
         }
 
         let statusBar: JSX.Element | undefined;
-        if (!UIStateStore.viewOptions.outputVisible) {
+        if (!this.context.UIStateStore.viewOptions.outputVisible) {
             statusBar = <StatusBar />;
         }
 
         let outputPanel: JSX.Element | undefined;
-        if (UIStateStore.viewOptions.outputVisible) {
+        if (this.context.UIStateStore.viewOptions.outputVisible) {
             outputPanel = <Output />;
         }
 
@@ -441,7 +492,9 @@ export class ProjectEditor extends React.Component<{}, {}> {
                 <Splitter
                     type="vertical"
                     persistId={
-                        outputPanel ? "project-editor/with-output" : "project-editor/without-output"
+                        outputPanel
+                            ? "project-editor/with-output"
+                            : "project-editor/without-output"
                     }
                     sizes={outputPanel ? "100%|240px" : "100%"}
                     childrenOverflow="hidden|hidden"

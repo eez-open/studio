@@ -6,8 +6,6 @@ import { IconAction } from "eez-studio-ui/action";
 
 import { IEezObject, objectToString, getClassInfo } from "project-editor/core/object";
 import {
-    EditorsStore,
-    NavigationStore,
     addItem,
     canAdd,
     createObjectAdapterNavigationItem
@@ -20,6 +18,7 @@ import {
 
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,6 +88,9 @@ interface TreeNavigationPanelProps {
 
 @observer
 export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProps, {}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     static navigationTreeFilter(object: IEezObject) {
         const classInfo = getClassInfo(object);
         return (
@@ -100,17 +102,17 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
 
     @bind
     onTreeDoubleClick(object: IEezObject) {
-        if (EditorsStore.activeEditor && EditorsStore.activeEditor.object == object) {
-            EditorsStore.activeEditor.makePermanent();
+        if (this.context.EditorsStore.activeEditor && this.context.EditorsStore.activeEditor.object == object) {
+            this.context.EditorsStore.activeEditor.makePermanent();
         }
     }
 
     onFocus() {
-        NavigationStore.setSelectedPanel(undefined);
+        this.context.NavigationStore.setSelectedPanel(undefined);
     }
 
     render() {
-        let navigationObjectAdapter = NavigationStore.getNavigationSelectedItemAsObjectAdapter(
+        let navigationObjectAdapter = this.context.NavigationStore.getNavigationSelectedItemAsObjectAdapter(
             this.props.navigationObject
         );
 
@@ -118,7 +120,7 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
             const newNavigationObjectAdapter = new TreeObjectAdapter(this.props.navigationObject);
 
             setTimeout(() => {
-                NavigationStore.setNavigationSelectedItem(
+                this.context.NavigationStore.setNavigationSelectedItem(
                     this.props.navigationObject,
                     createObjectAdapterNavigationItem(newNavigationObjectAdapter)!
                 );

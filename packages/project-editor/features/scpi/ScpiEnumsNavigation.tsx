@@ -5,35 +5,37 @@ import { observer } from "mobx-react";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { NavigationComponent } from "project-editor/core/object";
-import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
-
-import { ProjectStore } from "project-editor/project/project";
+import { getObjectFromNavigationItem } from "project-editor/core/store";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { ProjectContext } from "project-editor/project/context";
 
 @observer
 export class ScpiEnumsNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     handleRefresh() {
-        showImportScpiDocDialog();
+        showImportScpiDocDialog(this.context);
     }
 
     @computed
     get object() {
-        if (NavigationStore.selectedPanel) {
-            return NavigationStore.selectedPanel.selectedObject;
+        if (this.context.NavigationStore.selectedPanel) {
+            return this.context.NavigationStore.selectedPanel.selectedObject;
         }
-        return NavigationStore.selectedObject;
+        return this.context.NavigationStore.selectedObject;
     }
 
     render() {
-        let enums = ProjectStore.project.scpi.enums;
+        let enums = this.context.project.scpi.enums;
 
         let selectedScpiEnum = getObjectFromNavigationItem(
-            NavigationStore.getNavigationSelectedItem(enums)
+            this.context.NavigationStore.getNavigationSelectedItem(enums)
         ) as ScpiEnum;
 
         return (

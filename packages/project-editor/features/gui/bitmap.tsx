@@ -11,7 +11,6 @@ import {
     PropertyType,
     NavigationComponent
 } from "project-editor/core/object";
-import { NavigationStore } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -22,10 +21,10 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
 
-import { ProjectStore } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { Project, findReferencedObject, getProject } from "project-editor/project/project";
+import { Project, findReferencedObject, getProject, getProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,16 +69,19 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
 
 @observer
 export class BitmapsNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @computed
     get bitmap() {
-        if (NavigationStore.selectedPanel) {
-            if (NavigationStore.selectedPanel.selectedObject instanceof Bitmap) {
-                return NavigationStore.selectedPanel.selectedObject;
+        if (this.context.NavigationStore.selectedPanel) {
+            if (this.context.NavigationStore.selectedPanel.selectedObject instanceof Bitmap) {
+                return this.context.NavigationStore.selectedPanel.selectedObject;
             }
         }
 
-        if (NavigationStore.selectedObject instanceof Bitmap) {
-            return NavigationStore.selectedObject;
+        if (this.context.NavigationStore.selectedObject instanceof Bitmap) {
+            return this.context.NavigationStore.selectedObject;
         }
 
         return undefined;
@@ -192,7 +194,7 @@ export class Bitmap extends EezObject implements IBitmap {
                 return new Promise<IBitmap>((resolve, reject) => {
                     const fs = EEZStudio.electron.remote.require("fs");
                     fs.readFile(
-                        ProjectStore.getAbsoluteFilePath(result.values.imageFilePath),
+                        getProjectStore(parent).getAbsoluteFilePath(result.values.imageFilePath),
                         "base64",
                         (err: any, data: any) => {
                             if (err) {
@@ -223,7 +225,7 @@ export class Bitmap extends EezObject implements IBitmap {
         if (this.bpp !== 32) {
             const style = findStyle(getProject(this), this.style || "default");
             if (style && style.backgroundColorProperty) {
-                return getThemedColor(style.backgroundColorProperty);
+                return getThemedColor(getProjectStore(this), style.backgroundColorProperty);
             }
         }
         return "transparent";

@@ -1,11 +1,5 @@
 import React from "react";
-import {
-    computed,
-    observable,
-    action,
-    runInAction,
-    autorun
-} from "mobx";
+import { computed, observable, action, runInAction, autorun } from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
@@ -22,12 +16,6 @@ import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
-import {
-    NavigationStore,
-    UndoManager,
-    DocumentStore,
-    OutputSectionsStore
-} from "project-editor/core/store";
 import { Section } from "project-editor/core/output";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import {
@@ -60,10 +48,12 @@ import { getThemedColor } from "project-editor/features/gui/theme";
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
 import {
-    ProjectStore,
     isAnyObjectReadOnly,
-    getNameProperty
+    getNameProperty,
+    getProjectStore
 } from "project-editor/project/project";
+
+import { ProjectContext } from "project-editor/project/context";
 
 const { Menu, MenuItem } = EEZStudio.electron.remote;
 
@@ -308,6 +298,9 @@ class ThemedColorInput extends React.Component<{
     onChange: (newValue: any) => void;
     readOnly: boolean;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @bind
     onDragOver(event: React.DragEvent) {
         event.preventDefault();
@@ -338,7 +331,7 @@ class ThemedColorInput extends React.Component<{
     render() {
         const { value, readOnly } = this.props;
 
-        const color = getThemedColor(value);
+        const color = getThemedColor(this.context, value);
 
         return (
             <label
@@ -388,9 +381,10 @@ function isArrayElementPropertyVisible(
 }
 
 function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
+    const DocumentStore = getProjectStore(object);
     const selectedObject =
-        NavigationStore.selectedPanel &&
-        NavigationStore.selectedPanel.selectedObject;
+        DocumentStore.NavigationStore.selectedPanel &&
+        DocumentStore.NavigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
         ((getParent(selectedObject) === object &&
@@ -403,7 +397,7 @@ function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
 }
 
 function isPropertyInError(object: IEezObject, propertyInfo: PropertyInfo) {
-    return !!OutputSectionsStore.getSection(Section.CHECKS).messages.find(
+    return !!getProjectStore(object).OutputSectionsStore.getSection(Section.CHECKS).messages.find(
         message =>
             message.object &&
             getParent(message.object) === object &&
@@ -417,6 +411,9 @@ class ArrayElementProperty extends React.Component<{
     object: IEezObject;
     readOnly: boolean;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @bind
     updateObject(propertyValues: Object) {
         let object = this.props.object;
@@ -424,7 +421,7 @@ class ArrayElementProperty extends React.Component<{
             if (isValue(object)) {
                 object = getParent(object);
             }
-            DocumentStore.updateObject(object, propertyValues);
+            this.context.updateObject(object, propertyValues);
         }
     }
 
@@ -465,10 +462,13 @@ class ArrayElementProperties extends React.Component<{
     readOnly: boolean;
     className?: string;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @bind
     onRemove(event: any) {
         event.preventDefault();
-        DocumentStore.deleteObject(this.props.object);
+        this.context.deleteObject(this.props.object);
     }
 
     render() {
@@ -500,6 +500,9 @@ class ArrayElementProperties extends React.Component<{
 
 @observer
 class ArrayProperty extends React.Component<PropertyProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @computed
     get value() {
         return (this.props.objects[0] as any)[this.props.propertyInfo.name] as
@@ -511,11 +514,11 @@ class ArrayProperty extends React.Component<PropertyProps> {
     onAdd(event: any) {
         event.preventDefault();
 
-        UndoManager.setCombineCommands(true);
+        this.context.UndoManager.setCombineCommands(true);
 
         let value = this.value;
         if (value === undefined) {
-            DocumentStore.updateObject(this.props.objects[0], {
+            this.context.updateObject(this.props.objects[0], {
                 [this.props.propertyInfo.name]: []
             });
 
@@ -529,8 +532,8 @@ class ArrayProperty extends React.Component<PropertyProps> {
         if (!typeClass.classInfo.defaultValue) {
             console.error(`Class "${typeClass.name}" is missing defaultValue`);
         } else {
-            DocumentStore.addObject(value, typeClass.classInfo.defaultValue);
-            UndoManager.setCombineCommands(false);
+            this.context.addObject(value, typeClass.classInfo.defaultValue);
+            this.context.UndoManager.setCombineCommands(false);
         }
     }
 
@@ -613,10 +616,10 @@ class PropertyCollapsedStore {
         return propertyInfo.name;
     }
 
-    isCollapsed(propertyInfo: PropertyInfo) {
+    isCollapsed(object: IEezObject, propertyInfo: PropertyInfo) {
         const enabled =
             !propertyInfo.propertyGridCollapsableEnabled ||
-            propertyInfo.propertyGridCollapsableEnabled();
+            propertyInfo.propertyGridCollapsableEnabled(object);
 
         if (!enabled) {
             return true;
@@ -630,8 +633,8 @@ class PropertyCollapsedStore {
     }
 
     @action
-    toggleColapsed(propertyInfo: PropertyInfo) {
-        this.map[this.getKey(propertyInfo)] = !this.isCollapsed(propertyInfo);
+    toggleColapsed(object: IEezObject, propertyInfo: PropertyInfo) {
+        this.map[this.getKey(propertyInfo)] = !this.isCollapsed(object, propertyInfo);
         localStorage.setItem(
             "PropertyCollapsedStore",
             JSON.stringify(this.map)
@@ -643,21 +646,24 @@ const propertyCollapsedStore = new PropertyCollapsedStore();
 
 @observer
 class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @observable collapsed = true;
 
     @bind
     toggleCollapsed() {
-        propertyCollapsedStore.toggleColapsed(this.props.propertyInfo);
+        propertyCollapsedStore.toggleColapsed(this.props.objects[0], this.props.propertyInfo);
     }
 
     @bind
     updateObject(propertyValues: Object) {
-        UndoManager.setCombineCommands(true);
+        this.context.UndoManager.setCombineCommands(true);
         this.props.objects.forEach(object => {
             object = (object as any)[this.props.propertyInfo.name];
-            DocumentStore.updateObject(object, propertyValues);
+            this.context.updateObject(object, propertyValues);
         });
-        UndoManager.setCombineCommands(false);
+        this.context.UndoManager.setCombineCommands(false);
     }
 
     render() {
@@ -674,6 +680,7 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
         }
 
         const collapsed = propertyCollapsedStore.isCollapsed(
+            this.props.objects[0],
             this.props.propertyInfo
         );
         if (collapsed) {
@@ -740,7 +747,7 @@ class PropertyName extends React.Component<PropertyProps> {
 
     @bind
     toggleCollapsed() {
-        propertyCollapsedStore.toggleColapsed(this.props.propertyInfo);
+        propertyCollapsedStore.toggleColapsed(this.props.objects[0], this.props.propertyInfo);
     }
 
     render() {
@@ -749,8 +756,9 @@ class PropertyName extends React.Component<PropertyProps> {
         if (propertyInfo.propertyGridCollapsable) {
             const enabled =
                 !propertyInfo.propertyGridCollapsableEnabled ||
-                propertyInfo.propertyGridCollapsableEnabled();
+                propertyInfo.propertyGridCollapsableEnabled(this.props.objects[0]);
             const collapsed = propertyCollapsedStore.isCollapsed(
+                this.props.objects[0],
                 this.props.propertyInfo
             );
 
@@ -786,6 +794,9 @@ class PropertyName extends React.Component<PropertyProps> {
 
 @observer
 class Property extends React.Component<PropertyProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     textarea: HTMLDivElement;
     input: HTMLInputElement;
     select: HTMLSelectElement;
@@ -794,7 +805,7 @@ class Property extends React.Component<PropertyProps> {
 
     @disposeOnUnmount
     changeDocumentDisposer = autorun(() => {
-        if (ProjectStore.project) {
+        if (this.context.project) {
             const getPropertyValueResult = getPropertyValue(
                 this.props.objects,
                 this.props.propertyInfo
@@ -833,11 +844,11 @@ class Property extends React.Component<PropertyProps> {
         let el = this.input || this.textarea || this.select;
         if (el) {
             $(el).on("focus", () => {
-                UndoManager.setCombineCommands(true);
+                this.context.UndoManager.setCombineCommands(true);
             });
 
             $(el).on("blur", () => {
-                UndoManager.setCombineCommands(false);
+                this.context.UndoManager.setCombineCommands(false);
             });
         }
 
@@ -965,14 +976,14 @@ class Property extends React.Component<PropertyProps> {
                     newValue = undefined;
                 }
                 if (newValue != oldValue) {
-                    UndoManager.setCombineCommands(true);
+                    this.context.UndoManager.setCombineCommands(true);
 
                     runInAction(() => {
                         replaceObjectReference(this.props.objects[0], newValue);
                         this.changeValue(newValue);
                     });
 
-                    UndoManager.setCombineCommands(false);
+                    this.context.UndoManager.setCombineCommands(false);
                 }
             })
             .catch(error => {
@@ -1203,7 +1214,7 @@ class Property extends React.Component<PropertyProps> {
                         </div>
                     );
                 } else {
-                    let objects: IEezObject[] = ProjectStore.project.getAllObjectsOfType(
+                    let objects: IEezObject[] = this.context.project.getAllObjectsOfType(
                         propertyInfo.referencedObjectCollectionPath!
                     );
 
@@ -1409,7 +1420,7 @@ class Property extends React.Component<PropertyProps> {
                                 className="btn btn-secondary"
                                 type="button"
                                 onClick={async () => {
-                                    if (ProjectStore.filePath) {
+                                    if (this.context.filePath) {
                                         const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
                                             {
                                                 properties: ["openDirectory"]
@@ -1419,7 +1430,7 @@ class Property extends React.Component<PropertyProps> {
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
                                             this.changeValue(
-                                                ProjectStore.getFolderPathRelativeToProjectPath(
+                                                this.context.getFolderPathRelativeToProjectPath(
                                                     filePaths[0]
                                                 )
                                             );
@@ -1468,7 +1479,7 @@ class Property extends React.Component<PropertyProps> {
                                 className="btn btn-secondary"
                                 type="button"
                                 onClick={async () => {
-                                    if (ProjectStore.filePath) {
+                                    if (this.context.filePath) {
                                         const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
                                             {
                                                 properties: ["openFile"],
@@ -1480,7 +1491,7 @@ class Property extends React.Component<PropertyProps> {
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
                                             this.changeValue(
-                                                ProjectStore.getFolderPathRelativeToProjectPath(
+                                                this.context.getFolderPathRelativeToProjectPath(
                                                     filePaths[0]
                                                 )
                                             );
@@ -1545,7 +1556,7 @@ class Property extends React.Component<PropertyProps> {
                                                     "fs"
                                                 );
                                                 fs.readFile(
-                                                    ProjectStore.getAbsoluteFilePath(
+                                                    this.context.getAbsoluteFilePath(
                                                         filePaths[0]
                                                     ),
                                                     "base64",
@@ -1560,7 +1571,7 @@ class Property extends React.Component<PropertyProps> {
                                                 );
                                             } else {
                                                 this.changeValue(
-                                                    ProjectStore.getFilePathRelativeToProjectPath(
+                                                    this.context.getFilePathRelativeToProjectPath(
                                                         filePaths[0]
                                                     )
                                                 );
@@ -1579,7 +1590,7 @@ class Property extends React.Component<PropertyProps> {
                                 this._value &&
                                 this._value.startsWith("data:image/")
                                     ? this._value
-                                    : ProjectStore.getAbsoluteFilePath(
+                                    : this.context.getAbsoluteFilePath(
                                           this._value || ""
                                       )
                             }
@@ -1916,6 +1927,9 @@ interface PropertyGridProps {
 
 @observer
 export class PropertyGrid extends React.Component<PropertyGridProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     div: HTMLDivElement | null;
     lastObject: IEezObject | undefined;
 
@@ -1947,16 +1961,16 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
     @bind
     updateObject(propertyValues: Object) {
-        UndoManager.setCombineCommands(true);
+        this.context.UndoManager.setCombineCommands(true);
 
         this.objects.forEach(object => {
             if (isValue(object)) {
                 object = getParent(object);
             }
-            DocumentStore.updateObject(object, propertyValues);
+            this.context.updateObject(object, propertyValues);
         });
 
-        UndoManager.setCombineCommands(false);
+        this.context.UndoManager.setCombineCommands(false);
     }
 
     render() {
@@ -2005,7 +2019,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 propertyInfo.type === PropertyType.Boolean ||
                 propertyInfo.type === PropertyType.Any ||
                 (propertyInfo.propertyGridCollapsable &&
-                    (!propertyCollapsedStore.isCollapsed(propertyInfo) ||
+                    (!propertyCollapsedStore.isCollapsed(objects[0], propertyInfo) ||
                         !propertyInfo.propertyGridCollapsableDefaultPropertyName));
 
             const propertyProps = {

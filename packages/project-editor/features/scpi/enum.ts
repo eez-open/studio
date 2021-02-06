@@ -19,9 +19,8 @@ import {
     getLabel
 } from "project-editor/core/object";
 
-import { ProjectStore } from "project-editor/project/project";
-
 import { ScpiEnumsNavigation } from "project-editor/features/scpi/ScpiEnumsNavigation";
+import { ProjectStoreClass } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -146,7 +145,7 @@ export class ScpiEnum extends EezObject implements IScpiEnum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findScpiEnum(enumeration: string) {
+export function findScpiEnum(ProjectStore: ProjectStoreClass, enumeration: string) {
     const scpi = ProjectStore.project.scpi;
 
     for (let i = 0; i < scpi.enums.length; ++i) {
@@ -158,7 +157,7 @@ export function findScpiEnum(enumeration: string) {
     return undefined;
 }
 
-export function getScpiEnumsAsDialogEnumItems(): EnumItems {
+export function getScpiEnumsAsDialogEnumItems(ProjectStore: ProjectStoreClass): EnumItems {
     return ProjectStore.project.scpi.enums
         .slice()
         .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))

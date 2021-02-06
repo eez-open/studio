@@ -9,9 +9,8 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
-import { ProjectStore } from "project-editor/project/project";
 import { registerFeatureImplementation } from "project-editor/core/extensions";
-import { findReferencedObject, Project } from "project-editor/project/project";
+import { findReferencedObject, Project, getProject } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/action/build";
@@ -54,14 +53,14 @@ export class Action extends EezObject implements IAction {
                         id: "native"
                     }
                 ],
-                hideInPropertyGrid: () =>
-                    ProjectStore.project.settings.general.projectVersion !== "v1"
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectVersion !== "v1"
             },
             {
                 name: "implementation",
                 type: PropertyType.Cpp,
-                hideInPropertyGrid: () =>
-                    ProjectStore.project.settings.general.projectVersion !== "v1"
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectVersion !== "v1"
             },
             {
                 name: "usedIn",

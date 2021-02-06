@@ -1,14 +1,13 @@
 /// <reference path="./globals.d.ts"/>
-import { configure, action } from "mobx";
-import "mobx-react-lite/batchingForReactDom";
 import React from "react";
 import ReactDOM from "react-dom";
+import { configure, action } from "mobx";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
+import { ProjectStoreClass } from "./project/project";
 
-import * as StoreModule from "project-editor/core/store";
-import * as ProjectModule from "project-editor/project/project";
+const ProjectStore = new ProjectStoreClass();
 
 const ipcRenderer = EEZStudio.electron.ipcRenderer;
 
@@ -25,30 +24,32 @@ EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
     // make sure we store all the values waiting to be stored inside blur event handler
     blurAll();
 
-    const { ProjectStore } = (await import(
-        "project-editor/project/project"
-    )) as typeof ProjectModule;
     ProjectStore.closeWindow();
 });
 
 EEZStudio.electron.ipcRenderer.on("reload", async () => {
-    const { ProjectStore } = (await import(
-        "project-editor/project/project"
-    )) as typeof ProjectModule;
     ProjectStore.saveUIState();
     window.location.reload();
 });
 
 (async () => {
     try {
-        init();
+        init(ProjectStore);
 
-        const ProjectEditorModule = await import("project-editor/project/ProjectEditor");
+        const { ProjectContext } = await import(
+            "project-editor/project/context"
+        );
+
+        const { ProjectEditor } = await import(
+            "project-editor/project/ProjectEditor"
+        );
 
         ReactDOM.render(
-            <ThemeProvider theme={theme}>
-                <ProjectEditorModule.ProjectEditor />
-            </ThemeProvider>,
+            <ProjectContext.Provider value={ProjectStore}>
+                <ThemeProvider theme={theme}>
+                    <ProjectEditor />
+                </ThemeProvider>
+            </ProjectContext.Provider>,
             document.getElementById("EezStudio_Content")
         );
 
@@ -58,19 +59,13 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
     }
 })();
 
-async function init() {
-    const { UndoManager, NavigationStore, UIStateStore } = (await import(
-        "project-editor/core/store"
-    )) as typeof StoreModule;
-
+async function init(ProjectStore: ProjectStoreClass) {
     const extensionsModule = await import("project-editor/core/extensions");
     await extensionsModule.loadExtensions();
 
-    const { ProjectStore } = (await import(
-        "project-editor/project/project"
-    )) as typeof ProjectModule;
-
-    EEZStudio.electron.ipcRenderer.on("newProject", () => ProjectStore.newProject());
+    EEZStudio.electron.ipcRenderer.on("newProject", () =>
+        ProjectStore.newProject()
+    );
 
     EEZStudio.electron.ipcRenderer.on("open", (sender: any, filePath: any) =>
         ProjectStore.open(sender, filePath)
@@ -81,26 +76,40 @@ async function init() {
 
     EEZStudio.electron.ipcRenderer.on("check", () => ProjectStore.check());
     EEZStudio.electron.ipcRenderer.on("build", () => ProjectStore.build());
-    EEZStudio.electron.ipcRenderer.on("build-extensions", () => ProjectStore.buildExtensions());
+    EEZStudio.electron.ipcRenderer.on("build-extensions", () =>
+        ProjectStore.buildExtensions()
+    );
 
-    EEZStudio.electron.ipcRenderer.on("undo", () => UndoManager.undo());
-    EEZStudio.electron.ipcRenderer.on("redo", () => UndoManager.redo());
+    EEZStudio.electron.ipcRenderer.on("undo", () =>
+        ProjectStore.UndoManager.undo()
+    );
+    EEZStudio.electron.ipcRenderer.on("redo", () =>
+        ProjectStore.UndoManager.redo()
+    );
 
     EEZStudio.electron.ipcRenderer.on(
         "cut",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.cutSelection()
+        () =>
+            ProjectStore.NavigationStore.selectedPanel &&
+            ProjectStore.NavigationStore.selectedPanel.cutSelection()
     );
     EEZStudio.electron.ipcRenderer.on(
         "copy",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.copySelection()
+        () =>
+            ProjectStore.NavigationStore.selectedPanel &&
+            ProjectStore.NavigationStore.selectedPanel.copySelection()
     );
     EEZStudio.electron.ipcRenderer.on(
         "paste",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.pasteSelection()
+        () =>
+            ProjectStore.NavigationStore.selectedPanel &&
+            ProjectStore.NavigationStore.selectedPanel.pasteSelection()
     );
     EEZStudio.electron.ipcRenderer.on(
         "delete",
-        () => NavigationStore.selectedPanel && NavigationStore.selectedPanel.deleteSelection()
+        () =>
+            ProjectStore.NavigationStore.selectedPanel &&
+            ProjectStore.NavigationStore.selectedPanel.deleteSelection()
     );
 
     // EEZStudio.electron.ipcRenderer.on('goBack', () => ProjectStore.selection.selectionGoBack());
@@ -109,11 +118,15 @@ async function init() {
     EEZStudio.electron.ipcRenderer.on(
         "toggleOutput",
         action(
-            () => (UIStateStore.viewOptions.outputVisible = !UIStateStore.viewOptions.outputVisible)
+            () =>
+                (ProjectStore.UIStateStore.viewOptions.outputVisible = !ProjectStore
+                    .UIStateStore.viewOptions.outputVisible)
         )
     );
 
-    EEZStudio.electron.ipcRenderer.on("showProjectMetrics", () => ProjectStore.showMetrics());
+    EEZStudio.electron.ipcRenderer.on("showProjectMetrics", () =>
+        ProjectStore.showMetrics()
+    );
 
     if (window.location.search == "?mru") {
         let mruFilePath = ipcRenderer.sendSync("getMruFilePath");

@@ -12,13 +12,13 @@ import {
     getObjectPropertyAsObject,
     getParent,
     getKey,
-    getClassInfo
+    getClassInfo,
+    getRootObject
 } from "project-editor/core/object";
-import { DocumentStore, OutputSectionsStore } from "project-editor/core/store";
 
 import { Section, Type } from "project-editor/core/output";
 
-import { ProjectStore, ImportDirective, findReferencedObject, getProject } from "project-editor/project/project";
+import { ImportDirective, findReferencedObject, getProject, Project, getProjectStore, ProjectStoreClass } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -198,7 +198,7 @@ function* searchForReference(
                         if (importedProject) {
                             if (valueObject.propertyInfo.referencedObjectCollectionPath) {
                                 const object = findReferencedObject(
-                                    ProjectStore.project,
+                                    root as Project,
                                     valueObject.propertyInfo.referencedObjectCollectionPath,
                                     valueObject.value
                                 );
@@ -292,10 +292,12 @@ export type SearchCallbackMessage = SearchCallbackMessageValue | SearchCallbackM
 
 type SearchCallback = (message: SearchCallbackMessage) => boolean;
 
-class CurrentSearch {
+export class CurrentSearch {
     interval: any;
 
     searchCallback?: SearchCallback;
+
+    constructor(public ProjectStore: ProjectStoreClass) {}
 
     finishSearch() {
         if (this.searchCallback) {
@@ -310,17 +312,18 @@ class CurrentSearch {
     }
 
     startNewSearch(
-        root: IEezObject,
         patternOrObject: string | IEezObject | undefined,
         matchCase: boolean,
         matchWholeWord: boolean,
         searchCallback?: SearchCallback
     ) {
-        OutputSectionsStore.clear(Section.SEARCH);
+        this.ProjectStore.OutputSectionsStore.clear(Section.SEARCH);
 
         this.finishSearch();
 
         this.searchCallback = searchCallback;
+
+        const root = this.ProjectStore.project;
 
         if (
             root &&
@@ -351,7 +354,7 @@ class CurrentSearch {
                                 return;
                             }
                         } else {
-                            OutputSectionsStore.write(
+                            this.ProjectStore.OutputSectionsStore.write(
                                 Section.SEARCH,
                                 Type.INFO,
                                 objectToString(valueObject),
@@ -371,17 +374,14 @@ class CurrentSearch {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let theCurrentSearch = new CurrentSearch();
-
 function startNewSearch(
-    root: IEezObject,
+    ProjectStore: ProjectStoreClass,
     patternOrObject: string | IEezObject | undefined,
     matchCase: boolean,
     matchWholeWord: boolean,
     searchCallback?: SearchCallback
 ) {
-    theCurrentSearch.startNewSearch(
-        root,
+    ProjectStore.currentSearch.startNewSearch(
         patternOrObject || "",
         matchCase,
         matchWholeWord,
@@ -389,24 +389,25 @@ function startNewSearch(
     );
 }
 
-export function startSearch(pattern: string, matchCase: boolean, matchWholeWord: boolean) {
-    OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(DocumentStore.document, pattern, matchCase, matchWholeWord);
+export function startSearch(ProjectStore: ProjectStoreClass, pattern: string, matchCase: boolean, matchWholeWord: boolean) {
+    ProjectStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
+    startNewSearch(ProjectStore, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: IEezObject) {
-    OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(DocumentStore.document, object, true, true);
+    const ProjectStore = getProjectStore(object);
+    ProjectStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
+    startNewSearch(ProjectStore, object, true, true);
 }
 
-export function usage(searchCallback: SearchCallback) {
-    startNewSearch(DocumentStore.document, undefined, true, true, searchCallback);
+export function usage(ProjectStore: ProjectStoreClass, searchCallback: SearchCallback) {
+    startNewSearch(ProjectStore, undefined, true, true, searchCallback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isReferenced(object: IEezObject) {
-    let resultsGenerator = searchForReference(DocumentStore.document, object, false);
+    let resultsGenerator = searchForReference(getRootObject(object), object, false);
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -421,7 +422,8 @@ export function isReferenced(object: IEezObject) {
 }
 
 export function replaceObjectReference(object: IEezObject, newValue: string) {
-    let resultsGenerator = searchForReference(DocumentStore.document, object, false);
+    const rootObject = getRootObject(object);
+    let resultsGenerator = searchForReference(rootObject, object, false);
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -448,7 +450,7 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
             if (parent) {
                 let key = getKey(searchValue);
                 if (parent && key && typeof key == "string") {
-                    DocumentStore.updateObject(parent, {
+                    getProjectStore(rootObject).updateObject(parent, {
                         [key]: value
                     });
                 }

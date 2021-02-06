@@ -2,11 +2,9 @@ const LZ4 = require("lz4");
 
 import { strToColor16 } from "eez-studio-shared/color";
 
-import { OutputSectionsStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
 import { BuildResult } from "project-editor/core/extensions";
-import { ProjectStore } from "project-editor/project/project";
 
 import * as projectBuild from "project-editor/project/build";
 import { Project, BuildConfiguration, getProject } from "project-editor/project/project";
@@ -496,7 +494,7 @@ function buildGuiFontsEnum(assets: Assets) {
 }
 
 async function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
-    if (!ProjectStore.masterProject) {
+    if (!assets.ProjectStore.masterProject) {
         await dataBuffer.packRegions(assets.fonts.length, async (i: number) => {
             getFontData(assets.fonts[i], dataBuffer);
         });
@@ -729,7 +727,7 @@ function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer | null) {
 
     return buildListData((document: Struct) => {
         let styles = new ObjectList();
-        if (!ProjectStore.masterProject) {
+        if (!assets.ProjectStore.masterProject) {
             const assetStyles = assets.styles.filter(style => !!style) as Style[];
             assetStyles.forEach(style => {
                 styles.addItem(buildStyle(style));
@@ -1315,7 +1313,7 @@ function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
     return buildListData((document: Struct) => {
         let themes = new ObjectList();
 
-        if (!ProjectStore.masterProject) {
+        if (!assets.ProjectStore.masterProject) {
             assets.rootProject.gui.themes.forEach(theme => {
                 themes.addItem(buildTheme(theme));
             });
@@ -1325,7 +1323,7 @@ function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
 
         let colors = new ObjectList();
 
-        if (!ProjectStore.masterProject) {
+        if (!assets.ProjectStore.masterProject) {
             assets.colors.forEach(color => {
                 colors.addItem(buildColor(color));
             });
@@ -1358,7 +1356,7 @@ function buildDataItemNames(assets: Assets, dataBuffer: DataBuffer) {
 async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
 
-    await dataBuffer.packRegions(ProjectStore.masterProject ? 7 : 5, async i => {
+    await dataBuffer.packRegions(assets.ProjectStore.masterProject ? 7 : 5, async i => {
         if (i == 0) {
             buildGuiDocumentData(assets, dataBuffer);
         } else if (i == 1) {
@@ -1388,13 +1386,13 @@ async function buildGuiAssetsData(assets: Assets) {
     compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
     outputBuffer.copy(compressedData, 4, 0, compressedSize);
 
-    OutputSectionsStore.write(
+    assets.ProjectStore.OutputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Uncompressed size: " + inputBuffer.length
     );
 
-    OutputSectionsStore.write(
+    assets.ProjectStore.OutputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Compressed size: " + compressedSize
@@ -1426,10 +1424,12 @@ class Assets {
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
 
+    get ProjectStore() { return this.rootProject.ProjectStore; }
+
     collectProjects(project: Project) {
         if (this.projects.indexOf(project) === -1) {
             this.projects.push(project);
-            for (const importDirective of ProjectStore.project.settings.general.imports) {
+            for (const importDirective of this.rootProject.settings.general.imports) {
                 if (importDirective.project) {
                     this.collectProjects(importDirective.project);
                 }
@@ -1472,7 +1472,7 @@ class Assets {
         }
 
         this.styles = [undefined];
-        if (!ProjectStore.masterProject) {
+        if (!this.ProjectStore.masterProject) {
             this.getAssets<Style>(
                 project => project.gui.styles,
                 style => style.id != undefined
@@ -1499,7 +1499,7 @@ class Assets {
         buildGuiStylesData(this, null);
     }
 
-    static getAssetIndex<T>(
+    getAssetIndex<T>(
         object: any,
         propertyName: string,
         findAsset: (project: Project, assetName: string) => T | undefined,
@@ -1516,11 +1516,11 @@ class Assets {
                 assetIndex = collection.length - 1;
             }
             assetIndex++;
-            return ProjectStore.masterProject ? -assetIndex : assetIndex;
+            return this.ProjectStore.masterProject ? -assetIndex : assetIndex;
         }
 
         const message = output.propertyNotFoundMessage(object, propertyName);
-        OutputSectionsStore.write(
+        this.ProjectStore.OutputSectionsStore.write(
             output.Section.OUTPUT,
             message.type,
             message.text,
@@ -1531,15 +1531,15 @@ class Assets {
     }
 
     getDataItemIndex(object: any, propertyName: string) {
-        return Assets.getAssetIndex(object, propertyName, findDataItem, this.dataItems);
+        return this.getAssetIndex(object, propertyName, findDataItem, this.dataItems);
     }
 
     getActionIndex(object: any, propertyName: string) {
-        return Assets.getAssetIndex(object, propertyName, findAction, this.actions);
+        return this.getAssetIndex(object, propertyName, findAction, this.actions);
     }
 
     getPageIndex(object: any, propertyName: string) {
-        return Assets.getAssetIndex(object, propertyName, findPage, this.pages);
+        return this.getAssetIndex(object, propertyName, findPage, this.pages);
     }
 
     addStyle(style: Style) {
@@ -1560,7 +1560,7 @@ class Assets {
     }
 
     doGetStyleIndex(project: Project, styleNameOrObject: string | Style): number {
-        if (ProjectStore.masterProject) {
+        if (this.ProjectStore.masterProject) {
             if (typeof styleNameOrObject === "string") {
                 const styleName = styleNameOrObject;
                 const style = findStyle(project, styleName);
@@ -1639,11 +1639,11 @@ class Assets {
     }
 
     getFontIndex(object: any, propertyName: string) {
-        return Assets.getAssetIndex(object, propertyName, findFont, this.fonts);
+        return this.getAssetIndex(object, propertyName, findFont, this.fonts);
     }
 
     getBitmapIndex(object: any, propertyName: string) {
-        return Assets.getAssetIndex(object, propertyName, findBitmap, this.bitmaps);
+        return this.getAssetIndex(object, propertyName, findBitmap, this.bitmaps);
     }
 
     getColorIndex(
@@ -1659,7 +1659,7 @@ class Assets {
     ) {
         let color = getStyleProperty(style, propertyName, false);
 
-        let colors = ProjectStore.project.gui.colors;
+        let colors = this.ProjectStore.project.gui.colors;
 
         for (let i = 0; i < colors.length; i++) {
             if (colors[i].name === color) {
@@ -1691,18 +1691,18 @@ class Assets {
                             return true;
                         }
 
-                        let baseStyle = findStyle(ProjectStore.project, usedStyle.inheritFrom);
+                        let baseStyle = findStyle(this.rootProject, usedStyle.inheritFrom);
                         while (baseStyle) {
                             if (baseStyle == style) {
                                 return true;
                             }
-                            baseStyle = findStyle(ProjectStore.project, baseStyle.inheritFrom);
+                            baseStyle = findStyle(this.rootProject, baseStyle.inheritFrom);
                         }
 
                         return false;
                     })
                 ) {
-                    OutputSectionsStore.write(
+                    this.ProjectStore.OutputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused style: " + style.name,
@@ -1713,7 +1713,7 @@ class Assets {
 
             project.gui.fonts.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
-                    OutputSectionsStore.write(
+                    this.ProjectStore.OutputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused font: " + font.name,
@@ -1724,7 +1724,7 @@ class Assets {
 
             project.gui.bitmaps.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
-                    OutputSectionsStore.write(
+                    this.ProjectStore.OutputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused bitmap: " + bitmap.name,

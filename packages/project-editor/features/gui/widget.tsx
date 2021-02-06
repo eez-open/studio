@@ -36,10 +36,10 @@ import {
     PropertyProps
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
-import { DocumentStore, NavigationStore, IContextMenuContext } from "project-editor/core/store";
+import type { IContextMenuContext } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { Project, checkObjectReference, getProject } from "project-editor/project/project";
+import { checkObjectReference, getProject, getProjectStore } from "project-editor/project/project";
 
 import {
     IResizeHandler,
@@ -57,14 +57,10 @@ import {
 
 import { onSelectItem } from "project-editor/components/SelectItem";
 
-import { ProjectStore } from "project-editor/project/project";
-
-// import * as data from "project-editor/features/data/data";
-
 import { Page, findPage } from "project-editor/features/gui/page";
 import { findBitmap } from "project-editor/features/gui/bitmap";
 import { Style, IStyle } from "project-editor/features/gui/style";
-import { DataContext, dataContext, findDataItem } from "project-editor/features/data/data";
+import { DataContext, findDataItem } from "project-editor/features/data/data";
 import {
     drawText,
     styleGetBorderRadius,
@@ -133,7 +129,7 @@ function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo
         propertyGridGroup: styleGroup,
         propertyGridCollapsable: true,
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
-        propertyGridCollapsableEnabled: () => !ProjectStore.masterProjectEnabled,
+        propertyGridCollapsableEnabled: (object: IEezObject) => !getProjectStore(object).masterProjectEnabled,
         enumerable: false
     };
 }
@@ -566,7 +562,7 @@ export class Widget extends EezObject implements IWidget {
 
         selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
-        return DocumentStore.replaceObject(
+        return getProjectStore(this).replaceObject(
             this,
             loadObject(getParent(this), selectWidgetJsObject, Widget)
         );
@@ -624,13 +620,14 @@ export class Widget extends EezObject implements IWidget {
         containerWidgetJsObject.width = createWidgetsResult.width;
         containerWidgetJsObject.height = createWidgetsResult.height;
 
-        return DocumentStore.replaceObjects(
+        return getProjectStore(this).replaceObjects(
             fromWidgets,
             loadObject(getParent(fromWidgets[0]), containerWidgetJsObject, Widget)
         );
     }
 
     static async createLayout(fromWidgets: Widget[]) {
+        const ProjectStore = getProjectStore(this);
         const layouts = ProjectStore.project.gui.pages;
 
         try {
@@ -654,7 +651,7 @@ export class Widget extends EezObject implements IWidget {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            DocumentStore.addObject(
+            ProjectStore.addObject(
                 layouts,
                 loadObject(
                     undefined,
@@ -670,7 +667,7 @@ export class Widget extends EezObject implements IWidget {
                 )
             );
 
-            return DocumentStore.replaceObjects(
+            return ProjectStore.replaceObjects(
                 fromWidgets,
                 loadObject(
                     getParent(fromWidgets[0]),
@@ -713,7 +710,7 @@ export class Widget extends EezObject implements IWidget {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            return DocumentStore.replaceObjects(
+            return getProjectStore(this).replaceObjects(
                 fromWidgets,
                 loadObject(
                     getParent(fromWidgets[0]),
@@ -739,7 +736,7 @@ export class Widget extends EezObject implements IWidget {
         if (parent) {
             let selectWidget = getParent(parent);
             if (selectWidget instanceof SelectWidget) {
-                return DocumentStore.replaceObject(
+                return getProjectStore(this).replaceObject(
                     selectWidget,
                     cloneObject(getParent(selectWidget), this)
                 );
@@ -1247,7 +1244,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
             if (!object.data) {
                 messages.push(output.propertyNotSetMessage(object, "data"));
             } else {
-                let dataItem = findDataItem(ProjectStore.project, object.data);
+                let dataItem = findDataItem(getProject(object), object.data);
                 if (dataItem) {
                     let enumItems: string[] = [];
                     if (dataItem.type == "enum") {
@@ -1442,12 +1439,14 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                         return true;
                     }
 
-                    const layout = findPage(ProjectStore.project, widget.layout);
+                    const project = getProject(widget);
+
+                    const layout = findPage(project, widget.layout);
                     if (!layout) {
                         return true;
                     }
 
-                    return getProject(layout) != ProjectStore.project;
+                    return false;
                 }
             }
         ],
@@ -1493,7 +1492,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                 }
 
                 if (object.layout) {
-                    let layout = findPage(ProjectStore.project, object.layout);
+                    let layout = findPage(getProject(object), object.layout);
                     if (!layout) {
                         messages.push(output.propertyNotFoundMessage(object, "layout"));
                     }
@@ -1507,7 +1506,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
     });
 
     get layoutPage() {
-        return this.getLayoutPage(dataContext);
+        return this.getLayoutPage(getProjectStore(this).dataContext);
     }
 
     getLayoutPage(dataContext: DataContext) {
@@ -1571,7 +1570,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
 
     open() {
         if (this.layoutPage) {
-            NavigationStore.showObject(this.layoutPage);
+            getProjectStore(this).NavigationStore.showObject(this.layoutPage);
         }
     }
 
@@ -1588,7 +1587,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
             containerWidgetJsObject.width = this.width;
             containerWidgetJsObject.height = this.height;
 
-            return DocumentStore.replaceObject(
+            return getProjectStore(this).replaceObject(
                 this,
                 loadObject(getParent(this), containerWidgetJsObject, Widget)
             );
@@ -1611,7 +1610,7 @@ enum DisplayOption {
 }
 
 const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
-    hideInPropertyGrid: () => ProjectStore.project.settings.general.projectVersion !== "v1"
+    hideInPropertyGrid: (object: IEezObject) => getProject(object).settings.general.projectVersion !== "v1"
 };
 
 export interface IDisplayDataWidget extends IWidget {
@@ -1681,7 +1680,7 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             }
 
             if (object.displayOption === undefined) {
-                if ((ProjectStore.project as Project).settings.general.projectVersion !== "v1") {
+                if (getProject(object).settings.general.projectVersion !== "v1") {
                     messages.push(output.propertyNotSetMessage(object, "displayOption"));
                 }
             }
@@ -1829,7 +1828,7 @@ export class TextWidget extends Widget implements ITextWidget {
             }
         );
 
-        return DocumentStore.replaceObject(
+        return getProjectStore(this).replaceObject(
             this,
             loadObject(getParent(this), displayDataWidgetJsObject, Widget)
         );
@@ -2255,7 +2254,7 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
 
     @bind
     resizeToFitBitmap() {
-        DocumentStore.updateObject(this.props.objects[0], {
+        getProjectStore(this).updateObject(this.props.objects[0], {
             width: this.bitmapWidget.bitmapObject!.imageElement!.width,
             height: this.bitmapWidget.bitmapObject!.imageElement!.height
         });
@@ -2345,7 +2344,7 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
                 }
 
                 if (object.bitmap) {
-                    let bitmap = findBitmap(ProjectStore.project, object.bitmap);
+                    let bitmap = findBitmap(getProject(object), object.bitmap);
                     if (!bitmap) {
                         messages.push(output.propertyNotFoundMessage(object, "bitmap"));
                     }
@@ -2358,7 +2357,7 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
 
     @computed
     get bitmapObject() {
-        return this.getBitmapObject(dataContext);
+        return this.getBitmapObject(getProjectStore(this).dataContext);
     }
 
     getBitmapObject(dataContext: DataContext) {
@@ -2734,8 +2733,10 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
                 messages.push(output.propertyNotSetMessage(object, "data"));
             }
 
+            const project = getProject(object);
+
             if (object.line1Data) {
-                if (!findDataItem(ProjectStore.project, object.line1Data)) {
+                if (!findDataItem(project, object.line1Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "line1Data"));
                 }
             } else {
@@ -2743,7 +2744,7 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             }
 
             if (object.line2Data) {
-                if (!findDataItem(ProjectStore.project, object.line2Data)) {
+                if (!findDataItem(project, object.line2Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "line2Data"));
                 }
             } else {
@@ -2912,9 +2913,11 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
                 messages.push(output.propertyNotSetMessage(object, "data"));
             }
 
-            if (ProjectStore.project.settings.general.projectVersion === "v1") {
+            const project = getProject(object);
+
+            if (project.settings.general.projectVersion === "v1") {
                 if (object.y2Data) {
-                    if (!findDataItem(ProjectStore.project, object.y2Data)) {
+                    if (!findDataItem(project, object.y2Data)) {
                         messages.push(output.propertyNotFoundMessage(object, "y2Data"));
                     }
                 } else {
@@ -3121,8 +3124,10 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
                 messages.push(output.propertyNotSetMessage(object, "data"));
             }
 
+            const project = getProject(object);
+
             if (object.dwellData) {
-                if (!findDataItem(ProjectStore.project, object.dwellData)) {
+                if (!findDataItem(project, object.dwellData)) {
                     messages.push(output.propertyNotFoundMessage(object, "dwellData"));
                 }
             } else {
@@ -3130,7 +3135,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             }
 
             if (object.y1Data) {
-                if (!findDataItem(ProjectStore.project, object.y1Data)) {
+                if (!findDataItem(project, object.y1Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "y1Data"));
                 }
             } else {
@@ -3138,7 +3143,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             }
 
             if (object.y2Data) {
-                if (!findDataItem(ProjectStore.project, object.y2Data)) {
+                if (!findDataItem(project, object.y2Data)) {
                     messages.push(output.propertyNotFoundMessage(object, "y2Data"));
                 }
             } else {
@@ -3146,7 +3151,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             }
 
             if (object.cursorData) {
-                if (!findDataItem(ProjectStore.project, object.cursorData)) {
+                if (!findDataItem(project, object.cursorData)) {
                     messages.push(output.propertyNotFoundMessage(object, "cursorData"));
                 }
             } else {

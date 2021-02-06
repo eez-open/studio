@@ -6,9 +6,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { NavigationComponent, getAncestorOfType } from "project-editor/core/object";
-import { NavigationStore, getObjectFromNavigationItem } from "project-editor/core/store";
-
-import { ProjectStore } from "project-editor/project/project";
+import { getObjectFromNavigationItem } from "project-editor/core/store";
 
 import {
     ListNavigation,
@@ -18,19 +16,23 @@ import {
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiSubsystemOrCommandEditor } from "project-editor/features/scpi/ScpiSubsystemOrCommandEditor";
+import { ProjectContext } from "project-editor/project/context";
 
 @observer
 export class ScpiSubsystemsNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     handleRefresh() {
-        showImportScpiDocDialog();
+        showImportScpiDocDialog(this.context);
     }
 
     @computed
     get object(): ScpiSubsystem | ScpiCommand | undefined {
         // return selectedObject from selectedPanel if it is descendant of ScpiCommand or ScpiSubsystem
-        let object = NavigationStore.selectedPanel
-            ? NavigationStore.selectedPanel.selectedObject
-            : NavigationStore.selectedObject;
+        let object = this.context.NavigationStore.selectedPanel
+            ? this.context.NavigationStore.selectedPanel.selectedObject
+            : this.context.NavigationStore.selectedObject;
         if (object) {
             const command = getAncestorOfType(object, ScpiCommand.classInfo);
             if (command) {
@@ -44,36 +46,36 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         }
 
         // return lastly selected ScpiCommand or ScpiSubsystem
-        let subsystems = ProjectStore.project.scpi.subsystems;
+        let subsystems = this.context.project.scpi.subsystems;
 
         let subsystem = getObjectFromNavigationItem(
-            NavigationStore.getNavigationSelectedItem(subsystems)
+            this.context.NavigationStore.getNavigationSelectedItem(subsystems)
         ) as ScpiSubsystem;
 
         let commands =
             subsystem &&
             (getObjectFromNavigationItem(
-                NavigationStore.getNavigationSelectedItem(subsystem)
+                this.context.NavigationStore.getNavigationSelectedItem(subsystem)
             ) as ScpiCommand[]);
 
         let command =
             commands &&
             (getObjectFromNavigationItem(
-                NavigationStore.getNavigationSelectedItem(commands)
+                this.context.NavigationStore.getNavigationSelectedItem(commands)
             ) as ScpiCommand);
 
         return command || commands || subsystem;
     }
 
     render() {
-        let subsystems = ProjectStore.project.scpi.subsystems;
+        let subsystems = this.context.project.scpi.subsystems;
 
         let selectedScpiSubsystem = getObjectFromNavigationItem(
-            NavigationStore.getNavigationSelectedItem(subsystems)
+            this.context.NavigationStore.getNavigationSelectedItem(subsystems)
         ) as ScpiSubsystem;
 
         let additionalButtons;
-        if (ProjectStore.project.settings.general.scpiDocFolder) {
+        if (this.context.project.settings.general.scpiDocFolder) {
             additionalButtons = [
                 <IconAction
                     key="refresh"

@@ -3,25 +3,28 @@ import React from "react";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { ProjectStore } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
+import { ProjectContext } from "project-editor/project/context";
 
 @observer
 export class ScpiSubsystemOrCommandEditor extends React.Component<
     { object: ScpiSubsystem | ScpiCommand },
     {}
 > {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     render() {
         const properties = <PropertiesPanel object={this.props.object} />;
 
         if (
             this.props.object &&
             this.props.object.helpLink &&
-            ProjectStore.project.settings.general.scpiDocFolder
+            this.context.project.settings.general.scpiDocFolder
         ) {
-            let scpiHelpFolderPath = ProjectStore.getAbsoluteFilePath(
-                ProjectStore.project.settings.general.scpiDocFolder
+            let scpiHelpFolderPath = this.context.getAbsoluteFilePath(
+                this.context.project.settings.general.scpiDocFolder
             );
 
             let src;

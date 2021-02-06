@@ -2,12 +2,14 @@ import React from "react";
 
 import { Icon } from "eez-studio-ui/icon";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
-
-import { ProjectStore } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RelativeFileInput extends FieldComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     onClear() {
         this.props.onChange(undefined);
     }
@@ -19,7 +21,7 @@ export class RelativeFileInput extends FieldComponent {
         });
 
         if (result.filePaths && result.filePaths[0]) {
-            this.props.onChange(ProjectStore.getFilePathRelativeToProjectPath(result.filePaths[0]));
+            this.props.onChange(this.context.getFilePathRelativeToProjectPath(result.filePaths[0]));
         }
     }
 

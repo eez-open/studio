@@ -8,15 +8,18 @@ import {
 } from "instrument/export";
 import { getProperty } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
-import { OutputSectionsStore } from "project-editor/core/store";
 import { Section, Type } from "project-editor/core/output";
 
-import { ProjectStore } from "project-editor/project/project";
 import { getExtensionsByCategory } from "project-editor/core/extensions";
+
+import type { ProjectStoreClass } from "project-editor/project/project";
 
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
-function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefinition) {
+function getInstrumentExtensionProperties(
+    ProjectStore: ProjectStoreClass,
+    extensionDefinition: ExtensionDefinition
+) {
     const project = ProjectStore.project;
 
     let instrumentExtensionProperties: any = {};
@@ -28,7 +31,8 @@ function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefiniti
                 .collectExtensionDefinitions &&
             getProperty(
                 project,
-                projectFeature.eezStudioExtension.implementation.projectFeature.key
+                projectFeature.eezStudioExtension.implementation.projectFeature
+                    .key
             )
         ) {
             projectFeature.eezStudioExtension.implementation.projectFeature.collectExtensionDefinitions(
@@ -42,7 +46,7 @@ function getInstrumentExtensionProperties(extensionDefinition: ExtensionDefiniti
     return instrumentExtensionProperties;
 }
 
-function getExtensionsToBuild() {
+function getExtensionsToBuild(ProjectStore: ProjectStoreClass) {
     let extensionDefinitions = ProjectStore.project.extensionDefinitions;
 
     return (
@@ -57,12 +61,14 @@ function getExtensionsToBuild() {
     );
 }
 
-export function extensionDefinitionAnythingToBuild() {
-    return getExtensionsToBuild().length > 0;
+export function extensionDefinitionAnythingToBuild(ProjectStore: ProjectStoreClass) {
+    return getExtensionsToBuild(ProjectStore).length > 0;
 }
 
-export async function extensionDefinitionBuild() {
-    const extensionsToBuild = getExtensionsToBuild();
+export async function extensionDefinitionBuild(
+    ProjectStore: ProjectStoreClass
+) {
+    const extensionsToBuild = getExtensionsToBuild(ProjectStore);
 
     if (!extensionsToBuild) {
         return;
@@ -78,15 +84,22 @@ export async function extensionDefinitionBuild() {
 
         // from configuration
         const configuration = ProjectStore.project.settings.build.configurations.find(
-            configuration => configuration.name == extensionDefinition.buildConfiguration
+            configuration =>
+                configuration.name == extensionDefinition.buildConfiguration
         );
         if (configuration && configuration.properties) {
-            properties = Object.assign(properties, JSON.parse(configuration.properties));
+            properties = Object.assign(
+                properties,
+                JSON.parse(configuration.properties)
+            );
         }
 
         // from extension definition
         if (idfFromProject.properties) {
-            properties = Object.assign(properties, JSON.parse(idfFromProject.properties));
+            properties = Object.assign(
+                properties,
+                JSON.parse(idfFromProject.properties)
+            );
         }
 
         // from other project extensions
@@ -94,7 +107,7 @@ export async function extensionDefinitionBuild() {
             {
                 properties
             },
-            getInstrumentExtensionProperties(idfFromProject)
+            getInstrumentExtensionProperties(ProjectStore, idfFromProject)
         );
 
         if (configuration) {
@@ -134,17 +147,18 @@ export async function extensionDefinitionBuild() {
 
                 idfFilePath,
 
-                instrumentIdf.image && ProjectStore.getAbsoluteFilePath(instrumentIdf.image),
+                instrumentIdf.image &&
+                    ProjectStore.getAbsoluteFilePath(instrumentIdf.image),
 
                 ProjectStore.project.settings.general.scpiDocFolder &&
-                ProjectStore.getAbsoluteFilePath(
-                    ProjectStore.project.settings.general.scpiDocFolder
-                ),
+                    ProjectStore.getAbsoluteFilePath(
+                        ProjectStore.project.settings.general.scpiDocFolder
+                    ),
 
                 properties
             );
 
-            OutputSectionsStore.write(
+            ProjectStore.OutputSectionsStore.write(
                 Section.OUTPUT,
                 Type.INFO,
                 `Instrument definition file "${idfFileName}" builded.`

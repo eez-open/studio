@@ -12,7 +12,8 @@ import {
     getClassInfo
 } from "project-editor/core/object";
 import { loadObject, objectToJson } from "project-editor/core/serialization";
-import { DocumentStore } from "project-editor/core/store";
+
+const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
 export interface SerializedData {
     objectClassName: string;
@@ -57,11 +58,11 @@ let clipboardData: string;
 
 export function setClipboardData(event: any, value: string) {
     clipboardData = value;
-    event.dataTransfer.setData(DocumentStore.clipboardDataId, clipboardData);
+    event.dataTransfer.setData(CLIPOARD_DATA_ID, clipboardData);
 }
 
 export function getEezStudioDataFromDragEvent(event: any) {
-    let data = event.dataTransfer.getData(DocumentStore.clipboardDataId);
+    let data = event.dataTransfer.getData(CLIPOARD_DATA_ID);
     if (!data) {
         data = clipboardData;
     }

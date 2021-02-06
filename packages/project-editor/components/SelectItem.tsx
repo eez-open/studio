@@ -23,12 +23,13 @@ import { Widget } from "project-editor/features/gui/widget";
 import { Glyph } from "project-editor/features/gui/font";
 
 import {
-    ProjectStore,
     Project,
     getNameProperty,
     findReferencedObject,
-    getProject
+    getProject,
+    getProjectStore
 } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,13 +46,16 @@ class SelectItemDialog extends React.Component<{
     onOk: (value: any) => void;
     onCancel: () => void;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>
+
     @observable _selectedProject: Project | undefined;
 
     @computed
     get allProjects() {
         return [
-            ProjectStore.project,
-            ...ProjectStore.project.settings.general.imports
+            this.context.project,
+            ...this.context.project.settings.general.imports
                 .filter(importDirective => !!importDirective.project)
                 .map(importDirective => importDirective.project!)
         ];
@@ -65,7 +69,7 @@ class SelectItemDialog extends React.Component<{
         if (this.currentlySelectedObject) {
             return getProject(this.currentlySelectedObject);
         }
-        return ProjectStore.project;
+        return this.context.project;
     }
 
     @computed
@@ -78,7 +82,10 @@ class SelectItemDialog extends React.Component<{
 
     @computed
     get collectionObject() {
-        return getObjectFromPath(this.selectedProject, this.collectionPath.split("/"));
+        return getObjectFromPath(
+            this.selectedProject,
+            this.collectionPath.split("/")
+        );
     }
 
     @computed
@@ -90,14 +97,18 @@ class SelectItemDialog extends React.Component<{
                 ? (object as Widget).style.fontName
                 : getProperty(object, propertyInfo.name);
 
-        return findReferencedObject(ProjectStore.project, this.collectionPath, name);
+        return findReferencedObject(
+            this.context.project,
+            this.collectionPath,
+            name
+        );
     }
 
     @computed
     get navigationStore() {
         return new SimpleNavigationStoreClass(
             this.currentlySelectedObject,
-            this.selectedProject === ProjectStore.project // editable
+            this.selectedProject === this.context.project // editable
         );
     }
 
@@ -129,7 +140,8 @@ class SelectItemDialog extends React.Component<{
         let value;
 
         if (propertyInfo.type === PropertyType.String) {
-            const glyphCode = `\\u${(this.navigationStore.selectedObject as Glyph).encoding
+            const glyphCode = `\\u${(this.navigationStore
+                .selectedObject as Glyph).encoding
                 .toString(16)
                 .padStart(4, "0")}`;
 
@@ -139,9 +151,15 @@ class SelectItemDialog extends React.Component<{
                 params.textInputSelection.start != null &&
                 params.textInputSelection.end != null
             ) {
-                const existingValue: string = getProperty(object, propertyInfo.name);
+                const existingValue: string = getProperty(
+                    object,
+                    propertyInfo.name
+                );
                 value =
-                    existingValue.substring(0, params.textInputSelection.start) +
+                    existingValue.substring(
+                        0,
+                        params.textInputSelection.start
+                    ) +
                     glyphCode +
                     existingValue.substring(params.textInputSelection.end);
             } else {
@@ -159,7 +177,8 @@ class SelectItemDialog extends React.Component<{
     };
 
     render() {
-        let NavigationComponent = getClassInfo(this.collectionObject).navigationComponent!;
+        let NavigationComponent = getClassInfo(this.collectionObject)
+            .navigationComponent!;
 
         return (
             <Dialog
@@ -178,7 +197,10 @@ class SelectItemDialog extends React.Component<{
                                 selectStyle={{ width: "auto" }}
                             >
                                 {this.allProjects.map(project => (
-                                    <option key={project.projectName} value={project.projectName}>
+                                    <option
+                                        key={project.projectName}
+                                        value={project.projectName}
+                                    >
                                         {project.projectName}
                                     </option>
                                 ))}
@@ -189,7 +211,10 @@ class SelectItemDialog extends React.Component<{
             >
                 <SelectItemDialogDiv>
                     <NavigationComponent
-                        id={getClassInfo(this.collectionObject!).navigationComponentId! + "-dialog"}
+                        id={
+                            getClassInfo(this.collectionObject!)
+                                .navigationComponentId! + "-dialog"
+                        }
                         navigationObject={this.collectionObject}
                         navigationStore={this.navigationStore}
                         dragAndDropManager={this.dragAndDropManager}
@@ -224,13 +249,15 @@ export async function onSelectItem(
         };
 
         const [modalDialog, element] = showDialog(
-            <SelectItemDialog
-                object={object}
-                propertyInfo={propertyInfo}
-                params={params}
-                onOk={onOk}
-                onCancel={onDispose}
-            />,
+            <ProjectContext.Provider value={getProjectStore(object)}>
+                <SelectItemDialog
+                    object={object}
+                    propertyInfo={propertyInfo}
+                    params={params}
+                    onOk={onOk}
+                    onCancel={onDispose}
+                />
+            </ProjectContext.Provider>,
             {
                 jsPanel: Object.assign({}, opts)
             }

@@ -12,7 +12,8 @@ import {
     getChildOfObject,
     humanizePropertyName
 } from "project-editor/core/object";
-import { OutputSectionsStore, UIStateStore, IPanel } from "project-editor/core/store";
+
+import type { DocumentStoreClass, IPanel } from "project-editor/core/store";
 
 export { MessageType as Type } from "project-editor/core/object";
 
@@ -40,7 +41,7 @@ export class OutputSection implements IPanel {
     @observable messages: Message[] = [];
     @observable selectedMessage: Message | undefined;
 
-    constructor(public id: number, public name: string, public scrollToBottom: boolean) {}
+    constructor(public DocumentStore: DocumentStoreClass, public id: number, public name: string, public scrollToBottom: boolean) {}
 
     @computed
     get title(): string | React.ReactNode {
@@ -75,7 +76,7 @@ export class OutputSection implements IPanel {
             );
         }
 
-        if (this.id == Section.SEARCH && (UIStateStore.searchPattern || this.messages.length > 0)) {
+        if (this.id == Section.SEARCH && (this.DocumentStore.UIStateStore.searchPattern || this.messages.length > 0)) {
             return `${this.name} (${this.messages.length})`;
         }
 
@@ -145,7 +146,7 @@ export class OutputSection implements IPanel {
     }
 
     makeActive(): void {
-        OutputSectionsStore.setActiveSection(this.id);
+        this.DocumentStore.OutputSectionsStore.setActiveSection(this.id);
     }
 }
 
@@ -155,10 +156,10 @@ export class OutputSections {
     sections: OutputSection[] = [];
     @observable activeSection: OutputSection;
 
-    constructor() {
-        this.sections[Section.CHECKS] = new OutputSection(Section.CHECKS, "Checks", false);
-        this.sections[Section.OUTPUT] = new OutputSection(Section.OUTPUT, "Output", true);
-        this.sections[Section.SEARCH] = new OutputSection(Section.SEARCH, "Search results", false);
+    constructor(public DocumentStore: DocumentStoreClass) {
+        this.sections[Section.CHECKS] = new OutputSection(DocumentStore, Section.CHECKS, "Checks", false);
+        this.sections[Section.OUTPUT] = new OutputSection(DocumentStore, Section.OUTPUT, "Output", true);
+        this.sections[Section.SEARCH] = new OutputSection(DocumentStore, Section.SEARCH, "Search results", false);
         this.activeSection = this.sections[Section.CHECKS];
         this.activeSection.active = true;
     }
@@ -169,7 +170,7 @@ export class OutputSections {
 
     @action
     setActiveSection(sectionType: Section) {
-        UIStateStore.viewOptions.outputVisible = true;
+        this.DocumentStore.UIStateStore.viewOptions.outputVisible = true;
         this.activeSection.active = false;
         this.activeSection = this.sections[sectionType];
         this.activeSection.active = true;
