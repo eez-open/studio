@@ -372,7 +372,7 @@ class PageDocument implements IDocument {
     }
 
     onDragStart(op: "move" | "resize"): void {
-        getProjectStore(this.page).UndoManager.setCombineCommands(true);
+        getProjectStore(this.page.object).UndoManager.setCombineCommands(true);
     }
 
     onDragEnd(
@@ -380,7 +380,7 @@ class PageDocument implements IDocument {
         changed: boolean,
         objects: IBaseObject[]
     ): void {
-        getProjectStore(this.page).UndoManager.setCombineCommands(false);
+        getProjectStore(this.page.object).UndoManager.setCombineCommands(false);
     }
 }
 
