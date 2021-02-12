@@ -7,7 +7,6 @@ import { setup } from "setup/setup";
 
 import * as HomeWindowModule from "main/home-window";
 import * as SettingsModule from "main/settings";
-import { openFile } from "main/project-editor-window";
 
 // disable security warnings inside dev console
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;
@@ -30,8 +29,9 @@ app.on("ready", async function () {
     // }
     app.on("second-instance", function (event, commandLine, workingDirectory) {
         const projectFilePath = commandLine[commandLine.length - 1];
+        const { openProject } = require("main/menu");
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
-            openFile(projectFilePath);
+            openProject(projectFilePath);
         } else {
             const {
                 bringHomeWindowToFocus
@@ -53,12 +53,14 @@ app.on("ready", async function () {
         BrowserWindow.addDevToolsExtension(process.argv[2].substr("devToolsExtension=".length));
     }
 
+    const { openProject } = require("main/menu");
+
     if (projectFilePath) {
-        openFile(projectFilePath);
+        openProject(projectFilePath);
     } else {
         const projectFilePath = process.argv[process.argv.length - 1];
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
-            openFile(projectFilePath);
+            openProject(projectFilePath);
         } else {
             const { openHomeWindow } = require("main/home-window") as typeof HomeWindowModule;
             openHomeWindow();
@@ -87,7 +89,8 @@ app.on("will-finish-launching", function () {
         event.preventDefault();
         if (path.toLowerCase().endsWith(".eez-project")) {
             if (app.isReady()) {
-                openFile(path);
+                const { openProject } = require("main/menu");
+                openProject(path);
             } else {
                 projectFilePath = path;
             }

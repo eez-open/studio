@@ -3,15 +3,11 @@ import fs from "fs";
 import { app, dialog, Menu, ipcMain, BrowserWindow } from "electron";
 import { autorun, runInAction } from "mobx";
 
-import { importInstrumentDefinitionFile } from "main/home-window";
-import { createNewProjectWindow, openFile } from "main/project-editor-window";
+import { importInstrumentDefinitionFile, openHomeWindow } from "main/home-window";
 import {
-    openWindow,
     IWindow,
     setForceQuit,
     windows,
-    WindowType,
-    getWindowType,
     findWindowByBrowserWindow
 } from "main/window";
 import { settings } from "main/settings";
@@ -83,10 +79,17 @@ let fileRecentSubmenu: Electron.MenuItemConstructorOptions = {
 
 const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
+        label: "New Window",
+        accelerator: "CmdOrCtrl+N",
+        click: function (item, focusedWindow) {
+            openHomeWindow();
+        }
+    },
+    {
         label: "New Project",
         accelerator: "CmdOrCtrl+N",
         click: function (item, focusedWindow) {
-            createNewProjectWindow();
+            createNewProject();
         }
     },
     {
@@ -105,11 +108,30 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
             });
             const filePaths = result.filePaths;
             if (filePaths && filePaths[0]) {
-                openFile(filePaths[0]);
+                openProject(filePaths[0]);
             }
         }
     },
     fileRecentSubmenu,
+    {
+        type: "separator"
+    },
+    {
+        label: "Import Instrument Definition...",
+        click: async function (item: any, focusedWindow: any) {
+            const result = await dialog.showOpenDialog({
+                properties: ["openFile"],
+                filters: [
+                    { name: "Instrument Definition Files", extensions: ["zip"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            });
+            const filePaths = result.filePaths;
+            if (filePaths && filePaths[0]) {
+                importInstrumentDefinitionFile(filePaths[0]);
+            }
+        }
+    },
     {
         type: "separator"
     },
@@ -192,23 +214,6 @@ if (os.platform() != "darwin") {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function insertBefore(
-    newMenuItems: Electron.MenuItemConstructorOptions[],
-    referenceMenuItems: Electron.MenuItemConstructorOptions[],
-    id: string
-) {
-    for (let i = 0; i < referenceMenuItems.length; i++) {
-        if (referenceMenuItems[i].id === id) {
-            return referenceMenuItems
-                .slice(0, i)
-                .concat(newMenuItems)
-                .concat(referenceMenuItems.slice(i));
-        }
-    }
-
-    return newMenuItems.concat(referenceMenuItems);
-}
-
 function enableMenuItem(
     menuItems: Electron.MenuItemConstructorOptions[],
     id: string,
@@ -221,42 +226,6 @@ function enableMenuItem(
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-const fileMenu: Electron.MenuItemConstructorOptions = {
-    label: "File",
-    submenu: fileMenuSubmenu
-};
-
-const homeFileMenu: Electron.MenuItemConstructorOptions = {
-    label: "File",
-    submenu: insertBefore(
-        [
-            {
-                label: "Import Instrument Definition...",
-                click: async function (item: any, focusedWindow: any) {
-                    const result = await dialog.showOpenDialog({
-                        properties: ["openFile"],
-                        filters: [
-                            { name: "Instrument Definition Files", extensions: ["zip"] },
-                            { name: "All Files", extensions: ["*"] }
-                        ]
-                    });
-                    const filePaths = result.filePaths;
-                    if (filePaths && filePaths[0]) {
-                        importInstrumentDefinitionFile(filePaths[0]);
-                    }
-                }
-            },
-            {
-                type: "separator"
-            }
-        ],
-        fileMenuSubmenu,
-        "save"
-    )
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -385,12 +354,22 @@ const helpMenu: Electron.MenuItemConstructorOptions = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildFileMenu(windowType: WindowType) {
+export function openProject(projectFilePath: string) {
+    BrowserWindow.getFocusedWindow()!.webContents.send("open-project", projectFilePath);
+}
+
+function createNewProject() {
+    BrowserWindow.getFocusedWindow()!.webContents.send("new-project");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function buildFileMenu() {
     fileRecentSubmenu.submenu = settings.mru.map(mru => ({
         label: mru.filePath,
         click: function () {
             if (fs.existsSync(mru.filePath)) {
-                openFile(mru.filePath);
+                openProject(mru.filePath);
             } else {
                 // file not found, remove from mru
                 var i = settings.mru.indexOf(mru);
@@ -411,16 +390,15 @@ function buildFileMenu(windowType: WindowType) {
         }
     }));
 
-    if (windowType === "home") {
-        return homeFileMenu;
-    } else {
-        return fileMenu;
-    }
+    return {
+        label: "File",
+        submenu: fileMenuSubmenu
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildEditMenu(windowType: WindowType, win: IWindow | undefined) {
+function buildEditMenu(win: IWindow | undefined) {
     enableMenuItem(
         <Electron.MenuItemConstructorOptions[]>editMenu.submenu,
         "undo",
@@ -438,96 +416,77 @@ function buildEditMenu(windowType: WindowType, win: IWindow | undefined) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildViewMenu(windowType: WindowType) {
+function buildViewMenu() {
     let viewSubmenu: Electron.MenuItemConstructorOptions[] = [];
 
-    if (windowType !== "home") {
-        viewSubmenu.push(
-            {
-                label: "Home",
-                accelerator: "Ctrl+Shift+H",
-                click: function (item, focusedWindow) {
-                    openWindow({ url: "home/index.html" });
+    viewSubmenu.push(
+        {
+            label: "Workbench",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("openTab", "workbench");
                 }
-            },
-            {
-                type: "separator"
             }
-        );
-    }
+        },
+        {
+            label: "Shortcuts and Groups",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("openTab", "shortcutsAndGroups");
+                }
+            }
+        },
+        {
+            label: "Noteboooks",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("openTab", "homeSection_notebooks");
+                }
+            }
+        },
+        {
+            label: "Extension Manager",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("openTab", "extensions");
+                }
+            }
+        },
+        {
+            label: "Settings",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("openTab", "settings");
+                }
+            }
+        },
+        {
+            type: "separator"
+        }
+    );
 
-    if (windowType === "home") {
-        viewSubmenu.push(
-            {
-                label: "Workbench",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("openTab", "workbench");
-                    }
+    viewSubmenu.push(
+        {
+            label: "Toggle Output",
+            accelerator: "Ctrl+Shift+O",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("toggleOutput");
                 }
-            },
-            {
-                label: "Shortcuts and Groups",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("openTab", "shortcutsAndGroups");
-                    }
-                }
-            },
-            {
-                label: "Noteboooks",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("openTab", "homeSection_notebooks");
-                    }
-                }
-            },
-            {
-                label: "Extension Manager",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("openTab", "extensions");
-                    }
-                }
-            },
-            {
-                label: "Settings",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("openTab", "settings");
-                    }
-                }
-            },
-            {
-                type: "separator"
             }
-        );
-    }
-
-    if (windowType === "project") {
-        viewSubmenu.push(
-            {
-                label: "Toggle Output",
-                accelerator: "Ctrl+Shift+O",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("toggleOutput");
-                    }
+        },
+        {
+            label: "Toggle Experimental Layout",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("toggleExperimentalLayout");
                 }
-            },
-            {
-                label: "Toggle Experimental Layout",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("toggleExperimentalLayout");
-                    }
-                }
-            },
-            {
-                type: "separator"
             }
-        );
-    }
+        },
+        {
+            type: "separator"
+        }
+    );
 
     viewSubmenu.push(
         {
@@ -573,15 +532,6 @@ function buildViewMenu(windowType: WindowType) {
             type: "separator"
         },
         {
-            label: "Test",
-            click: function () {
-                openWindow({ url: "test/index.html" });
-            }
-        },
-        {
-            type: "separator"
-        },
-        {
             label: "Zoom In",
             role: "zoomIn"
         },
@@ -595,21 +545,19 @@ function buildViewMenu(windowType: WindowType) {
         }
     );
 
-    if (windowType === "project") {
-        viewSubmenu.push(
-            {
-                type: "separator"
-            },
-            {
-                label: "Project Metrics...",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("showProjectMetrics");
-                    }
+    viewSubmenu.push(
+        {
+            type: "separator"
+        },
+        {
+            label: "Project Metrics...",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("showProjectMetrics");
                 }
             }
-        );
-    }
+        }
+    );
 
     return {
         label: "View",
@@ -619,18 +567,18 @@ function buildViewMenu(windowType: WindowType) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildMenuTemplate(windowType: WindowType, win: IWindow | undefined) {
+function buildMenuTemplate(win: IWindow | undefined) {
     var menuTemplate: Electron.MenuItemConstructorOptions[] = [];
 
     if (os.platform() === "darwin") {
         menuTemplate.push(darwinAppMenu);
     }
 
-    menuTemplate.push(buildFileMenu(windowType));
+    menuTemplate.push(buildFileMenu());
 
-    menuTemplate.push(buildEditMenu(windowType, win));
+    menuTemplate.push(buildEditMenu(win));
 
-    menuTemplate.push(buildViewMenu(windowType));
+    menuTemplate.push(buildViewMenu());
 
     if (os.platform() == "darwin") {
         menuTemplate.push(darwinWindowMenu);
@@ -647,8 +595,7 @@ autorun(() => {
     for (let i = 0; i < windows.length; i++) {
         const win = windows[i];
         if (win.focused) {
-            const windowType = getWindowType(win);
-            let menuTemplate = buildMenuTemplate(windowType, win);
+            let menuTemplate = buildMenuTemplate(win);
             let menu = Menu.buildFromTemplate(menuTemplate);
             Menu.setApplicationMenu(menu);
         }
@@ -656,7 +603,7 @@ autorun(() => {
 });
 
 ipcMain.on("getReservedKeybindings", function (event: any) {
-    const menuTemplate = buildMenuTemplate("instrument", undefined);
+    const menuTemplate = buildMenuTemplate(undefined);
 
     let keybindings: string[] = [];
 
@@ -690,9 +637,4 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
     addKeybindings(menuTemplate);
 
     event.returnValue = keybindings;
-});
-
-ipcMain.on("open-file", function (event, path) {
-    event.preventDefault();
-    openFile(path);
 });

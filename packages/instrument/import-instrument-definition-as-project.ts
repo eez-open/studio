@@ -1,4 +1,3 @@
-import { toJS } from "mobx";
 import {
     writeJsObjectToFile,
     getFileNameWithoutExtension,
@@ -14,8 +13,6 @@ import * as notification from "eez-studio-ui/notification";
 import { getNewProject } from "project-editor/project/project";
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 import { Scpi } from "project-editor/features/scpi/scpi";
-
-import { getProjectWindowParams } from "main/project-editor-window-params";
 
 import { loadCommandsFromExtensionFolder } from "instrument/import";
 import { splitCommandToMnemonics } from "instrument/commands-tree";
@@ -136,7 +133,7 @@ export async function importInstrumentDefinitionAsProject(
 
         EEZStudio.electron.ipcRenderer.send(
             "openWindow",
-            toJS(getProjectWindowParams(projectFilePath))
+            projectFilePath
         );
 
         await new Promise(resolve => setTimeout(resolve));

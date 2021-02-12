@@ -86,7 +86,7 @@ export const types = {
         transient: true
     },
     foreign: {
-        fromDB: (value: any) => (value ? value.toString() : null),
+        fromDB: (value: any) => (value != null ? value.toString() : null),
         toDB: (value: any) => value
     },
     any: {},

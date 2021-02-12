@@ -188,7 +188,7 @@ export class ScriptsModel implements IModel {
                     selected: false
                 });
                 if (scriptId) {
-                    runInAction(() => (this.appStore.navigationStore.selectedScriptId = scriptId));
+                    this.appStore.navigationStore.changeSelectedScriptId(scriptId);
                 }
             })
             .catch(() => {});
@@ -474,9 +474,9 @@ export class ScriptsEditor extends React.Component<{ appStore: InstrumentAppStor
                     <MasterView
                         appStore={appStore}
                         selectedScript={scriptsModel.selectedScript}
-                        selectScript={action(
-                            (script: IShortcut) => (navigationStore.selectedScriptId = script.id)
-                        )}
+                        selectScript={
+                            (script: IShortcut) => navigationStore.changeSelectedScriptId(script.id)
+                        }
                     />
                     <DetailsView appStore={appStore} />
                 </Splitter>
@@ -558,7 +558,7 @@ export const showScriptError = action(
         errorColumnNumber: number | undefined
     ) => {
         appStore.navigationStore.navigateToScripts();
-        appStore.navigationStore.selectedScriptId = shortcut.id;
+        appStore.navigationStore.changeSelectedScriptId(shortcut.id);
         appStore.scriptsModel.errorMessage = errorMessage;
         appStore.scriptsModel.errorLineNumber = errorLineNumber;
         appStore.scriptsModel.errorColumnNumber = errorColumnNumber;
@@ -658,7 +658,7 @@ export async function importScript(appStore: InstrumentAppStore, filePath: strin
 
     if (scriptId) {
         appStore.navigationStore.navigateToScripts();
-        runInAction(() => (appStore.navigationStore.selectedScriptId = scriptId));
+        appStore.navigationStore.changeSelectedScriptId(scriptId);
     }
 
     return true;

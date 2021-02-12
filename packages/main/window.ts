@@ -3,7 +3,6 @@ import { action, observable, runInAction } from "mobx";
 
 import { getIcon } from "main/util";
 import { settingsRegisterWindow, settingsSetWindowBoundsIntoParams } from "main/settings";
-import { PROJECT_WINDOW_URL, PROJECT_FILE_PATH_PARAM } from "main/project-editor-window-params";
 
 export interface IWindowSate {
     modified: boolean;
@@ -125,13 +124,7 @@ export function findWindowByWebContents(webContents: Electron.WebContents) {
 }
 
 export function openWindow(params: IWindowParams) {
-    let win = findWindowByParams(params);
-    if (win) {
-        win.browserWindow.show();
-        return win.browserWindow;
-    } else {
-        return createWindow(params);
-    }
+    return createWindow(params);
 }
 
 export function closeWindow(params: IWindowParams) {
@@ -139,33 +132,6 @@ export function closeWindow(params: IWindowParams) {
     if (win) {
         win.browserWindow.close();
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export type WindowType = "home" | "instrument" | "project" | null;
-
-function isHome(win: IWindow | undefined) {
-    return !win || win.url.startsWith("home");
-}
-
-function isInstrument(win: IWindow | undefined) {
-    return win && win.url.startsWith("instrument");
-}
-
-function isProjectEditor(win: IWindow | undefined) {
-    return win && win.url.startsWith("project-editor");
-}
-
-export function getWindowType(win: IWindow | undefined) {
-    if (isHome(win)) {
-        return "home";
-    } else if (isInstrument(win)) {
-        return "instrument";
-    } else if (isProjectEditor(win)) {
-        return "project";
-    }
-    return null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,14 +203,12 @@ ipcMain.on(
                     undo: state.undo,
                     redo: state.redo
                 };
-
-                if (isProjectEditor(window)) {
-                    window.url =
-                        PROJECT_WINDOW_URL +
-                        PROJECT_FILE_PATH_PARAM +
-                        encodeURIComponent(state.projectFilePath);
-                }
             });
         }
     }
 );
+
+ipcMain.on("tabs-change", (event, tabs) => {
+    console.log("event.sender.id", event.sender.id);
+    console.log("tabs", tabs);
+});

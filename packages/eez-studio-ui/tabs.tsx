@@ -136,7 +136,7 @@ class TabView extends React.Component<
             title = (
                 <>
                     {icon}
-                    <span className="title">{this.props.tab.title}</span>
+                    <span className="title" title={this.props.tab.title}>{this.props.tab.title}</span>
                 </>
             );
         } else {

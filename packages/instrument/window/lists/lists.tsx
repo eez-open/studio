@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction, toJS } from "mobx";
+import { observable, computed, action, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -169,7 +169,7 @@ class MasterView extends React.Component<
                 numSamples: this.props.appStore.instrument!.listsMaxPointsProperty
             }
         })
-            .then(result => {
+            .then(async result => {
                 beginTransaction("Add instrument list");
                 let listId = this.props.appStore.instrumentListStore.createObject({
                     type: result.values.type,
@@ -186,7 +186,7 @@ class MasterView extends React.Component<
                 });
                 commitTransaction();
 
-                this.props.appStore.navigationStore.selectedListId = listId;
+                await this.props.appStore.navigationStore.changeSelectedListId(listId);
 
                 setTimeout(() => {
                     let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
@@ -285,7 +285,7 @@ export class ListsEditor extends React.Component<{ appStore: InstrumentAppStore 
                     selectedList={this.selectedList}
                     selectList={action(
                         (list: BaseList) =>
-                            (this.props.appStore.navigationStore.selectedListId = list.id)
+                            this.props.appStore.navigationStore.changeSelectedListId(list.id)
                     )}
                 />
                 <DetailsView list={this.selectedList} />
@@ -470,7 +470,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                     description: ""
                 }
             })
-                .then(result => {
+                .then(async result => {
                     let list = createTableListFromData(
                         data,
                         this.props.appStore,
@@ -483,9 +483,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                     let listId = this.props.appStore.instrumentListStore.createObject(list.toJS());
                     commitTransaction();
 
-                    runInAction(
-                        () => (this.props.appStore.navigationStore.selectedListId = listId)
-                    );
+                    await this.props.appStore.navigationStore.changeSelectedListId(listId);
 
                     setTimeout(() => {
                         let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
@@ -559,7 +557,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                 description: ""
             }
         })
-            .then(result => {
+            .then(async result => {
                 tableList.name = result.values.name;
                 tableList.description = result.values.description;
 
@@ -567,7 +565,7 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                 let listId = this.props.appStore.instrumentListStore.createObject(tableList.toJS());
                 commitTransaction();
 
-                runInAction(() => (this.props.appStore.navigationStore.selectedListId = listId));
+                await this.props.appStore.navigationStore.changeSelectedListId(listId);
 
                 setTimeout(() => {
                     let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);

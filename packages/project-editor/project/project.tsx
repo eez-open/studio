@@ -1007,7 +1007,9 @@ export function save(ProjectStore: ProjectStoreClass, filePath: string) {
         }
     };
 
+    (ProjectStore.project as any).ProjectStore = undefined;
     const json = objectToJson(ProjectStore.project, 2, toJsHook);
+    ProjectStore.project.ProjectStore = ProjectStore;
 
     return new Promise<void>((resolve, reject) => {
         const fs = EEZStudio.electron.remote.require("fs");
@@ -1370,39 +1372,30 @@ export class ProjectStoreClass extends DocumentStoreClass {
     }
 
     saveUIState() {
-        if (this.filePath && this.UIStateStore.isModified) {
-            const fs = EEZStudio.electron.remote.require("fs");
-            fs.writeFile(
-                getUIStateFilePath(this.filePath),
-                this.UIStateStore.save(),
-                "utf8",
-                (err: any) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log("UI state saved");
+        return new Promise<void>(resolve => {
+            if (this.filePath && this.UIStateStore.isModified) {
+                const fs = EEZStudio.electron.remote.require("fs");
+                fs.writeFile(
+                    getUIStateFilePath(this.filePath),
+                    this.UIStateStore.save(),
+                    "utf8",
+                    (err: any) => {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log("UI state saved");
+                        }
+                        resolve();
                     }
-                }
-            );
-        }
+                );
+            }
+        });
     }
 
-    openFile(filePath: string) {
-        load(filePath)
-            .then(project => {
-                this.loadUIState(filePath)
-                    .then(uiState => {
-                        this.changeProject(filePath, project, uiState);
-                    })
-                    .catch(error => console.error(error));
-            })
-            .catch(error => console.error(error));
-    }
-
-    open(sender: any, filePath: any) {
-        if (!this.project || (!this.filePath && !this.modified)) {
-            this.openFile(filePath);
-        }
+    async openFile(filePath: string) {
+        const project = await load(filePath);
+        const uiState = await this.loadUIState(filePath);
+        this.changeProject(filePath, project, uiState);
     }
 
     saveModified(callback: any) {
@@ -1446,14 +1439,16 @@ export class ProjectStoreClass extends DocumentStoreClass {
     }
 
     closeWindow() {
-        if (this.project) {
-            this.saveModified(() => {
-                this.changeProject(undefined);
-                EEZStudio.electron.ipcRenderer.send("readyToClose");
-            });
-        } else {
-            EEZStudio.electron.ipcRenderer.send("readyToClose");
-        }
+        return new Promise<void>(resolve => {
+            if (this.project) {
+                this.saveModified(() => {
+                    this.changeProject(undefined);
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        })
     }
 
     noProject() {

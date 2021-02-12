@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, autorun } from "mobx";
+import { observable, computed, action, runInAction, autorun } from "mobx";
 
 import { IRootNavigationItem } from "eez-studio-ui/app";
 
@@ -197,33 +197,38 @@ export class NavigationStore {
         return this.terminalNavigationItem;
     }
 
-    set mainNavigationSelectedItem(value: IInstrumentWindowNavigationItem) {
-        this.appStore.undoManager.confirmSave(
-            action(() => {
+    async changeMainNavigationSelectedItem(value: IInstrumentWindowNavigationItem) {
+        try {
+            await this.appStore.undoManager.confirmSave();
+            runInAction(() => {
                 this._mainNavigationSelectedItem = value;
             })
-        );
+            return true;
+        } catch (err) {
+            return false;
+        }
     }
 
     @action.bound
     navigateToHistory() {
-        this.mainNavigationSelectedItem = this.terminalNavigationItem;
+        this.changeMainNavigationSelectedItem(this.terminalNavigationItem);
     }
 
     @action.bound
     navigateToDeletedHistoryItems() {
-        this.mainNavigationSelectedItem = this.deletedHistoryItemsNavigationItem;
+        this.changeMainNavigationSelectedItem(this.deletedHistoryItemsNavigationItem);
     }
 
     @action.bound
-    navigateToSessionsList() {
-        this.mainNavigationSelectedItem = this.terminalNavigationItem;
-        showSessionsList(this);
+    async navigateToSessionsList() {
+        if (await this.changeMainNavigationSelectedItem(this.terminalNavigationItem)) {
+            showSessionsList(this);
+        }
     }
 
     @action.bound
     navigateToScripts() {
-        this.mainNavigationSelectedItem = this.scriptsNavigationItem;
+        this.changeMainNavigationSelectedItem(this.scriptsNavigationItem);
     }
 
     //
@@ -233,9 +238,11 @@ export class NavigationStore {
         return this._selectedListId;
     }
 
-    set selectedListId(value: string | undefined) {
-        this.appStore.undoManager.confirmSave(
-            action(() => {
+    async changeSelectedListId(value: string | undefined) {
+        try {
+            await this.appStore.undoManager.confirmSave();
+
+            runInAction(() => {
                 if (this._mainNavigationSelectedItem !== this.listsNavigationItem) {
                     // First switch to lists section ...
                     this._selectedListId = undefined;
@@ -252,8 +259,10 @@ export class NavigationStore {
                 } else {
                     this._selectedListId = value;
                 }
-            })
-        );
+            });
+        } catch (err) {
+
+        }
     }
 
     //
@@ -263,12 +272,16 @@ export class NavigationStore {
         return this._selectedScriptId;
     }
 
-    set selectedScriptId(value: string | undefined) {
-        this.appStore.undoManager.confirmSave(
-            action(() => {
+    async changeSelectedScriptId(value: string | undefined) {
+        try {
+            await this.appStore.undoManager.confirmSave();
+
+            runInAction(() => {
                 this._mainNavigationSelectedItem = this.scriptsNavigationItem;
                 this._selectedScriptId = value;
             })
-        );
+        } catch (err) {
+
+        }
     }
 }

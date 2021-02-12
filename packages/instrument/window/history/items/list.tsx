@@ -82,7 +82,7 @@ export class ListHistoryItemComponent extends React.Component<
     @action.bound
     onOpen() {
         if (this.listId) {
-            this.props.historyItem.appStore!.navigationStore.selectedListId = this.listId;
+            this.props.historyItem.appStore!.navigationStore.changeSelectedListId(this.listId);
         }
     }
 

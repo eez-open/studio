@@ -64,6 +64,7 @@ export interface INavigationStore {
     navigateToSessionsList(): void;
     mainHistoryView: HistoryView | undefined;
     selectedListId: string | undefined;
+    changeSelectedListId(listId: string | undefined): Promise<void>;
 }
 
 export interface IScrapbookStore {

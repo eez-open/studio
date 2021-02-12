@@ -161,7 +161,7 @@ export class List {
                     getCsvDataColumnDefinitions(this.bb3Instrument.appStore.instrument!)
                 );
 
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     const uploadInstructions = Object.assign(
                         {},
                         connection.instrument.defaultFileUploadInstructions,
@@ -205,9 +205,9 @@ export class List {
         return !!this.studioList;
     }
 
-    edit = action(() => {
+    edit = () => {
         if (this.studioList) {
-            this.bb3Instrument.appStore.navigationStore.selectedListId = this.studioList.id;
+            this.bb3Instrument.appStore.navigationStore.changeSelectedListId(this.studioList.id);
         }
-    });
+    };
 }

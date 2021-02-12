@@ -1,7 +1,11 @@
 import { observable, action, runInAction, autorun } from "mobx";
 
 import { confirmSave, objectClone } from "eez-studio-shared/util";
-import { IStore, beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import {
+    IStore,
+    beginTransaction,
+    commitTransaction
+} from "eez-studio-shared/store";
 
 interface ICommand {
     execute: () => void;
@@ -42,27 +46,30 @@ export class UndoManager {
         this.autorunDisposer();
     }
 
-    confirmSave(callback: () => void) {
-        if (this.modified) {
-            confirmSave({
-                saveCallback: () => {
-                    this.commit();
-                    callback();
-                },
-                dontSaveCallback: () => {
-                    this.rollback();
-                    callback();
-                },
-                cancelCallback: () => {}
-            });
-        } else {
-            callback();
-        }
+    confirmSave() {
+        return new Promise<void>((resolve, reject) => {
+            if (this.modified) {
+                confirmSave({
+                    saveCallback: () => {
+                        this.commit();
+                        resolve();
+                    },
+                    dontSaveCallback: () => {
+                        this.rollback();
+                        resolve();
+                    },
+                    cancelCallback: reject
+                });
+            } else {
+                resolve();
+            }
+        });
     }
 
     get modified() {
         return (
-            (this.dbObject && this.undoStack.length > 0) || (this._model && this._model.modified)
+            (this.dbObject && this.undoStack.length > 0) ||
+            (this._model && this._model.modified)
         );
     }
 
@@ -113,7 +120,12 @@ export class UndoManager {
     }
 
     @action
-    addCommand(transactionLabel: string, store: IStore, object: any, command: ICommand) {
+    addCommand(
+        transactionLabel: string,
+        store: IStore,
+        object: any,
+        command: ICommand
+    ) {
         if (this._model) {
             throw "try to add command while model is already set";
         }

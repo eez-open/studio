@@ -229,7 +229,7 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
 
     @bind
     onSelectionChange(item: IInstrumentWindowNavigationItem) {
-        this.props.appStore.navigationStore.mainNavigationSelectedItem = item;
+        this.props.appStore.navigationStore.changeMainNavigationSelectedItem(item);
     }
 
     @computed

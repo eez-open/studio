@@ -9,21 +9,47 @@ import { ThemeProvider } from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
-import { loadTabs } from "home/tabs-store";
+import { loadTabs, ProjectEditorTab, tabs } from "home/tabs-store";
 
 import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
 
 configure({ enforceActions: "observed" });
 
-EEZStudio.electron.ipcRenderer.on("beforeClose", () => {
-    const { destroyExtensions } = require("eez-studio-shared/extensions/extensions");
+EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
+    // make sure we store all the values waiting to be stored inside blur event handler
+    function blurAll() {
+        var tmp = document.createElement("input");
+        document.body.appendChild(tmp);
+        tmp.focus();
+        document.body.removeChild(tmp);
+    }
+    blurAll();
+
+    for (const tab of tabs.tabs) {
+        if (tab.beforeAppClose) {
+            await tab.beforeAppClose();
+        }
+    }
+
+    const {
+        destroyExtensions
+    } = require("eez-studio-shared/extensions/extensions");
     destroyExtensions();
     EEZStudio.electron.ipcRenderer.send("readyToClose");
 });
 
-EEZStudio.electron.ipcRenderer.on("reload", () => {
-    const { destroyExtensions } = require("eez-studio-shared/extensions/extensions");
+EEZStudio.electron.ipcRenderer.on("reload", async () => {
+    for (const tab of tabs.tabs) {
+        if (tab instanceof ProjectEditorTab) {
+            await tab.ProjectStore.saveUIState();
+        }
+    }
+
+    const {
+        destroyExtensions
+    } = require("eez-studio-shared/extensions/extensions");
     destroyExtensions();
+
     window.location.reload();
 });
 
@@ -42,8 +68,38 @@ EEZStudio.electron.ipcRenderer.on("show-about-box", async () => {
     showAboutBox();
 });
 
+EEZStudio.electron.ipcRenderer.on(
+    "open-project",
+    async (sender: any, filePath: any) => {
+        try {
+            const tab = await ProjectEditorTab.addTab(filePath);
+            if (tab) {
+                tab.makeActive();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+);
+
+EEZStudio.electron.ipcRenderer.on(
+    "new-project",
+    async (sender: any, filePath: any) => {
+        try {
+            const tab = await ProjectEditorTab.addTab();
+            if (tab) {
+                tab.makeActive();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+);
+
 async function main() {
-    const { loadExtensions } = await import("eez-studio-shared/extensions/extensions");
+    const { loadExtensions } = await import(
+        "eez-studio-shared/extensions/extensions"
+    );
     await loadExtensions();
 
     loadTabs();

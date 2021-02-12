@@ -155,8 +155,6 @@ export class InstrumentAppStore implements IEditor {
                 localStorage.setItem(`instrument/${this.instrumentId}/window/filters`, filters);
             }
         );
-
-        EEZStudio.electron.ipcRenderer.on("beforeClose", this.onBeforeClose);
     }
 
     onActivate() {
@@ -176,7 +174,6 @@ export class InstrumentAppStore implements IEditor {
     }
 
     onTerminate() {
-        EEZStudio.electron.ipcRenderer.removeListener("beforeClose", this.onBeforeClose);
         if (this.instrument) {
             this.instrument.terminate();
         }
@@ -193,6 +190,10 @@ export class InstrumentAppStore implements IEditor {
         this.history.onTerminate();
     }
 
+    onBeforeAppClose() {
+        return this.undoManager.confirmSave();
+    }
+
     render() {
         if (!this.editor) {
             this.editor = <App appStore={this} />;
@@ -205,13 +206,6 @@ export class InstrumentAppStore implements IEditor {
         if (this.undoManager.modified) {
             this.undoManager.commit();
         }
-    }
-
-    @bind
-    onBeforeClose() {
-        this.undoManager.confirmSave(() => {
-            EEZStudio.electron.ipcRenderer.send("readyToClose");
-        });
     }
 
     @bind

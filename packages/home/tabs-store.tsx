@@ -1,15 +1,29 @@
 import React from "react";
-import { observable, action, runInAction, reaction, autorun, computed } from "mobx";
+import {
+    observable,
+    action,
+    runInAction,
+    reaction,
+    autorun,
+    computed
+} from "mobx";
+import * as path from "path";
 
 import { onSimpleMessage } from "eez-studio-shared/util";
 
-import { loadPreinstalledExtension, extensions } from "eez-studio-shared/extensions/extensions";
+import {
+    loadPreinstalledExtension,
+    extensions
+} from "eez-studio-shared/extensions/extensions";
 import { IEditor, IHomeSection } from "eez-studio-shared/extensions/extension";
 
 import { ITab } from "eez-studio-ui/tabs";
 import { Icon } from "eez-studio-ui/icon";
 
-import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
+import {
+    HistoryView,
+    showSessionsList
+} from "instrument/window/history/history-view";
 
 import { WorkbenchObject, workbenchObjects } from "home/store";
 import * as DesignerModule from "home/designer/designer";
@@ -17,6 +31,9 @@ import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
 import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
 import * as SettingsModule from "home/settings";
+import { ProjectStoreClass } from "project-editor/project/project";
+import { ProjectContext } from "project-editor/project/context";
+import { ProjectEditor } from "project-editor/project/ProjectEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +41,7 @@ export interface IHomeTab extends ITab {
     editor?: IEditor;
     render(): JSX.Element;
     attention?: boolean;
+    beforeAppClose?(): Promise<void>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +58,9 @@ class WorkbenchTab implements IHomeTab {
     icon = "material:developer_board";
 
     render() {
-        const { Designer } = require("home/designer/designer") as typeof DesignerModule;
+        const {
+            Designer
+        } = require("home/designer/designer") as typeof DesignerModule;
         return <Designer />;
     }
 
@@ -67,10 +87,14 @@ class HistoryTab implements IHomeTab {
 
     render() {
         if (tabs.viewDeletedHistory) {
-            const { DeletedHistoryItemsSection } = require("home/history") as typeof HistoryModule;
+            const {
+                DeletedHistoryItemsSection
+            } = require("home/history") as typeof HistoryModule;
             return <DeletedHistoryItemsSection />;
         } else {
-            const { HistorySection } = require("home/history") as typeof HistoryModule;
+            const {
+                HistorySection
+            } = require("home/history") as typeof HistoryModule;
             return <HistorySection />;
         }
     }
@@ -97,7 +121,9 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     icon = "material:playlist_play";
 
     render() {
-        const { ShortcutsAndGroups } = require("home/shortcuts") as typeof ShortcutsModule;
+        const {
+            ShortcutsAndGroups
+        } = require("home/shortcuts") as typeof ShortcutsModule;
         return <ShortcutsAndGroups />;
     }
 
@@ -130,7 +156,12 @@ class ExtensionManagerTab implements IHomeTab {
     }
 
     get icon() {
-        return <Icon icon="material:extension" attention={this.numNewVersions > 0} />;
+        return (
+            <Icon
+                icon="material:extension"
+                attention={this.numNewVersions > 0}
+            />
+        );
     }
 
     @computed
@@ -183,7 +214,9 @@ class SettingsTab implements IHomeTab {
 
     @computed
     get attention() {
-        const { settingsController } = require("home/settings") as typeof SettingsModule;
+        const {
+            settingsController
+        } = require("home/settings") as typeof SettingsModule;
         return settingsController.isCompactDatabaseAdvisable;
     }
 
@@ -193,7 +226,9 @@ class SettingsTab implements IHomeTab {
 
     get tooltipTitle() {
         if (this.attention) {
-            const { COMPACT_DATABASE_MESSAGE } = require("home/settings") as typeof SettingsModule;
+            const {
+                COMPACT_DATABASE_MESSAGE
+            } = require("home/settings") as typeof SettingsModule;
             return COMPACT_DATABASE_MESSAGE;
         } else {
             return this.title;
@@ -308,6 +343,189 @@ class ObjectEditorTab implements IHomeTab {
         this.tabs.removeTab(this);
         this.editor.onTerminate();
     }
+
+    beforeAppClose() {
+        return this.editor.onBeforeAppClose();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+let projectEditorExtensionsLoaded = false;
+
+export class ProjectEditorTab implements IHomeTab {
+    static ID_PREFIX = "PROJECT_TAB_";
+
+    static async addTab(filePath?: string) {
+        if (!projectEditorExtensionsLoaded) {
+            projectEditorExtensionsLoaded = true;
+            const extensionsModule = await import(
+                "project-editor/core/extensions"
+            );
+            await extensionsModule.loadExtensions();
+        }
+
+        const { ProjectStoreClass } = await import(
+            "project-editor/project/project"
+        );
+
+        const ProjectStore = new ProjectStoreClass();
+        if (filePath) {
+            await ProjectStore.openFile(filePath);
+        } else {
+            ProjectStore.newProject();
+        }
+
+        ProjectStore.waitUntilready();
+
+        return tabs.addProjectTab(ProjectStore);
+    }
+
+    constructor(public tabs: Tabs, public ProjectStore: ProjectStoreClass) {}
+
+    permanent: boolean = true;
+    @observable _active: boolean = false;
+    loading: boolean = false;
+
+    get active() {
+        return this._active;
+    }
+
+    removeListeners: (() => void) | undefined;
+
+    set active(value: boolean) {
+        if (value !== this._active) {
+            runInAction(() => (this._active = value));
+            if (this._active) {
+                this.removeListeners = this.addListeners();
+            } else {
+                if (this.removeListeners) {
+                    this.removeListeners();
+                    this.removeListeners = undefined;
+                }
+            }
+        }
+    }
+
+    addListeners() {
+        const save = () => {
+            this.ProjectStore.save();
+        };
+        const saveAs = () => {
+            this.ProjectStore.saveAs();
+        };
+        const check = () => {
+            this.ProjectStore.check();
+        };
+        const build = () => {
+            this.ProjectStore.build();
+        };
+        const buildExtensions = () => {
+            this.ProjectStore.buildExtensions();
+        };
+        const undo = () => {
+            this.ProjectStore.UndoManager.undo();
+        };
+        const redo = () => {
+            this.ProjectStore.UndoManager.redo();
+        };
+        const cut = () => {
+            if (this.ProjectStore.NavigationStore.selectedPanel)
+                this.ProjectStore.NavigationStore.selectedPanel.cutSelection();
+        };
+        const copy = () => {
+            if (this.ProjectStore.NavigationStore.selectedPanel)
+                this.ProjectStore.NavigationStore.selectedPanel.copySelection();
+        };
+        const paste = () => {
+            if (this.ProjectStore.NavigationStore.selectedPanel)
+                this.ProjectStore.NavigationStore.selectedPanel.pasteSelection();
+        };
+        const deleteSelection = () => {
+            if (this.ProjectStore.NavigationStore.selectedPanel)
+                this.ProjectStore.NavigationStore.selectedPanel.deleteSelection();
+        };
+        const toggleOutput = action(() => {
+            this.ProjectStore.UIStateStore.viewOptions.outputVisible = !this
+                .ProjectStore.UIStateStore.viewOptions.outputVisible;
+        });
+        const showMetrics = () => this.ProjectStore.showMetrics();
+
+        EEZStudio.electron.ipcRenderer.on("save", save);
+        EEZStudio.electron.ipcRenderer.on("saveAs", saveAs);
+        EEZStudio.electron.ipcRenderer.on("check", check);
+        EEZStudio.electron.ipcRenderer.on("build", build);
+        EEZStudio.electron.ipcRenderer.on("build-extensions", buildExtensions);
+        EEZStudio.electron.ipcRenderer.on("undo", undo);
+        EEZStudio.electron.ipcRenderer.on("redo", redo);
+        EEZStudio.electron.ipcRenderer.on("cut", cut);
+        EEZStudio.electron.ipcRenderer.on("copy", copy);
+        EEZStudio.electron.ipcRenderer.on("paste", paste);
+        EEZStudio.electron.ipcRenderer.on("delete", deleteSelection);
+        EEZStudio.electron.ipcRenderer.on("toggleOutput", toggleOutput);
+        EEZStudio.electron.ipcRenderer.on("showProjectMetrics", showMetrics);
+
+        return () => {
+            EEZStudio.electron.ipcRenderer.removeListener("save", save);
+            EEZStudio.electron.ipcRenderer.removeListener("saveAs", saveAs);
+            EEZStudio.electron.ipcRenderer.removeListener("check", check);
+            EEZStudio.electron.ipcRenderer.removeListener("build", build);
+            EEZStudio.electron.ipcRenderer.removeListener(
+                "build-extensions",
+                buildExtensions
+            );
+            EEZStudio.electron.ipcRenderer.removeListener("undo", undo);
+            EEZStudio.electron.ipcRenderer.removeListener("redo", redo);
+            EEZStudio.electron.ipcRenderer.removeListener("cut", cut);
+            EEZStudio.electron.ipcRenderer.removeListener("copy", copy);
+            EEZStudio.electron.ipcRenderer.removeListener("paste", paste);
+            EEZStudio.electron.ipcRenderer.removeListener(
+                "delete",
+                deleteSelection
+            );
+            EEZStudio.electron.ipcRenderer.removeListener(
+                "toggleOutput",
+                toggleOutput
+            );
+            EEZStudio.electron.ipcRenderer.removeListener(
+                "showProjectMetrics",
+                showMetrics
+            );
+        };
+    }
+
+    get id() {
+        return ProjectEditorTab.ID_PREFIX + this.ProjectStore.filePath || "";
+    }
+
+    get title() {
+        return path.parse(this.ProjectStore.filePath || "").name;
+    }
+
+    get icon() {
+        return <Icon icon="material:developer_board" />;
+    }
+
+    render() {
+        return (
+            <ProjectContext.Provider value={this.ProjectStore}>
+                <ProjectEditor />
+            </ProjectContext.Provider>
+        );
+    }
+
+    @action
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    close() {
+        this.tabs.removeTab(this);
+    }
+
+    beforeAppClose() {
+        return this.ProjectStore.closeWindow();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,17 +549,24 @@ class Tabs {
     @observable activeTab: IHomeTab;
 
     constructor() {
-        this._firstTime = EEZStudio.electron.ipcRenderer.sendSync("getFirstTime");
+        this._firstTime = EEZStudio.electron.ipcRenderer.sendSync(
+            "getFirstTime"
+        );
 
-        loadPreinstalledExtension("instrument").then(() => {
+        loadPreinstalledExtension("instrument").then(async () => {
             if (!this.firstTime) {
                 const tabsJSON = window.localStorage.getItem("home/tabs");
                 if (tabsJSON) {
                     try {
                         const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
-                        savedTabs.forEach(savedTab => {
-                            this.openTabById(savedTab.id, savedTab.active);
-                        });
+
+                        for (const savedTab of savedTabs) {
+                            await this.openTabById(
+                                savedTab.id,
+                                savedTab.active
+                            );
+                        }
+
                         if (this.tabs.length == 0) {
                             this.openTabById("workbench", true);
                         }
@@ -361,12 +586,18 @@ class Tabs {
                             active: tab.active
                         } as ISavedTab)
                 ),
-            tabs => window.localStorage.setItem("home/tabs", JSON.stringify(tabs))
+            tabs => {
+                const tabsJSON = JSON.stringify(tabs);
+                window.localStorage.setItem("home/tabs", tabsJSON);
+                EEZStudio.electron.ipcRenderer.send("tabs-change", tabsJSON);
+            }
         );
 
         autorun(() => {
             const tabsToClose = this.tabs.filter(
-                tab => tab instanceof ObjectEditorTab && !workbenchObjects.get(tab.id)
+                tab =>
+                    tab instanceof ObjectEditorTab &&
+                    !workbenchObjects.get(tab.id)
             ) as ObjectEditorTab[];
 
             tabsToClose.forEach(tab => tab.close());
@@ -392,16 +623,20 @@ class Tabs {
                 this.activeTab &&
                 this.activeTab.id === "history" &&
                 this.mainHistoryView &&
-                this.mainHistoryView.props.appStore.deletedItemsHistory.deletedCount === 0
+                this.mainHistoryView.props.appStore.deletedItemsHistory
+                    .deletedCount === 0
             ) {
                 runInAction(() => (this.viewDeletedHistory = false));
             }
         });
 
-        onSimpleMessage("home/show-section", (args: { sectionId: string; itemId?: string }) => {
-            EEZStudio.electron.remote.getCurrentWindow().show();
-            this.navigateToTab(args.sectionId, args.itemId);
-        });
+        onSimpleMessage(
+            "home/show-section",
+            (args: { sectionId: string; itemId?: string }) => {
+                EEZStudio.electron.remote.getCurrentWindow().show();
+                this.navigateToTab(args.sectionId, args.itemId);
+            }
+        );
     }
 
     get firstTime() {
@@ -415,17 +650,23 @@ class Tabs {
 
     findTabDefinition(tabId: string) {
         return this.allTabs.find(
-            tab => tab.instance.id == tabId || tab.instance.id == "homeSection_" + tabId
+            tab =>
+                tab.instance.id == tabId ||
+                tab.instance.id == "homeSection_" + tabId
         );
     }
 
-    openTabById(tabId: string, makeActive: boolean) {
+    async openTabById(tabId: string, makeActive: boolean) {
         let tab = this.findTab(tabId);
 
         if (!tab) {
             const tabDefinition = this.findTabDefinition(tabId);
             if (tabDefinition) {
                 tab = tabDefinition.open();
+            } else if (tabId.startsWith(ProjectEditorTab.ID_PREFIX)) {
+                tab = await ProjectEditorTab.addTab(
+                    tabId.substr(ProjectEditorTab.ID_PREFIX.length)
+                );
             } else {
                 const object = workbenchObjects.get(tabId);
                 if (object) {
@@ -483,7 +724,9 @@ class Tabs {
             }
         });
 
-        return allTabs.concat([ExtensionManagerTab, SettingsTab].map(TabClassToTabDefinition));
+        return allTabs.concat(
+            [ExtensionManagerTab, SettingsTab].map(TabClassToTabDefinition)
+        );
     }
 
     findTab(id: string) {
@@ -505,6 +748,13 @@ class Tabs {
         }
 
         const tab = new ObjectEditorTab(this, object);
+        this.tabs.push(tab);
+        return tab;
+    }
+
+    @action
+    addProjectTab(ProjectStore: ProjectStoreClass) {
+        const tab = new ProjectEditorTab(this, ProjectStore);
         this.tabs.push(tab);
         return tab;
     }
@@ -562,10 +812,14 @@ class Tabs {
     // @TODO remove this, not requred in home
     selectedListId: string | undefined = undefined;
 
-    navigateToTab(tabId: string, itemId?: string) {
+    async changeSelectedListId(selectedListId: string | undefined) {
+        this.selectedListId = selectedListId;
+    }
+
+    async navigateToTab(tabId: string, itemId?: string) {
         const tabDefinition = this.findTabDefinition(tabId);
         if (tabDefinition) {
-            tabs.openTabById(tabId, true);
+            await tabs.openTabById(tabId, true);
 
             if (itemId && tabDefinition.selectItem) {
                 tabDefinition.selectItem(itemId);

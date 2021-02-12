@@ -19,6 +19,7 @@ export interface IEditor {
     onActivate(): void;
     onDeactivate(): void;
     onTerminate(): void;
+    onBeforeAppClose(): Promise<void>;
 
     render(): JSX.Element;
 }

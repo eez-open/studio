@@ -331,7 +331,8 @@ class AppStore implements IAppStore {
         },
         navigateToSessionsList() {},
         mainHistoryView: undefined,
-        selectedListId: undefined
+        selectedListId: undefined,
+        async changeSelectedListId() {}
     };
 
     searchViewSection: "calendar" | "sessions" = "calendar";
