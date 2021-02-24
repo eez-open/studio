@@ -620,14 +620,14 @@ export class Widget extends EezObject implements IWidget {
         containerWidgetJsObject.width = createWidgetsResult.width;
         containerWidgetJsObject.height = createWidgetsResult.height;
 
-        return getProjectStore(this).replaceObjects(
+        return getProjectStore(fromWidgets[0]).replaceObjects(
             fromWidgets,
             loadObject(getParent(fromWidgets[0]), containerWidgetJsObject, Widget)
         );
     }
 
     static async createLayout(fromWidgets: Widget[]) {
-        const ProjectStore = getProjectStore(this);
+        const ProjectStore = getProjectStore(fromWidgets[0]);
         const layouts = ProjectStore.project.gui.pages;
 
         try {
@@ -710,7 +710,7 @@ export class Widget extends EezObject implements IWidget {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            return getProjectStore(this).replaceObjects(
+            return getProjectStore(fromWidgets[0]).replaceObjects(
                 fromWidgets,
                 loadObject(
                     getParent(fromWidgets[0]),

@@ -1,4 +1,5 @@
 const tinycolor = require("tinycolor2");
+import type { DataType } from "instrument/window/waveform/dlog-file";
 
 const CONF_SINGLE_STEP_TIMEOUT = 1000 / 30;
 
@@ -15,9 +16,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function addAlphaToColor(color: string, alpha: number) {
-    return tinycolor(color)
-        .setAlpha(alpha)
-        .toRgbString();
+    return tinycolor(color).setAlpha(alpha).toRgbString();
 }
 
 function genRandomOffsets(K: number) {
@@ -38,19 +37,24 @@ function genRandomOffsets(K: number) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IWaveformDlogParams {
-    rowBytes: number;
-    rowOffset: number;
-    bitIndex?: number;
+    dataType: DataType;
+    dataOffset: number;
+    dataContainsSampleValidityBit: boolean;
+    columnDataIndex: number;
+    numBytesPerRow: number;
+    bitMask: number;
     logOffset?: number;
+    transformOffset: number;
+    transformScale: number;
 }
 
 export interface IWaveform {
     format: any;
     values: any;
-    offset:number;
+    offset: number;
     scale: number;
 
-    dlog?: IWaveformDlogParams,
+    dlog?: IWaveformDlogParams;
 
     length: number;
     value: (i: number) => number;
@@ -134,7 +138,13 @@ export function renderWaveformPath(
     job: IWaveformRenderJobSpecification,
     continuation: any
 ) {
-    const { waveform, xAxisController, yAxisController, strokeColor, label } = job;
+    const {
+        waveform,
+        xAxisController,
+        yAxisController,
+        strokeColor,
+        label
+    } = job;
 
     let xFromPx = xAxisController.valueToPx(xAxisController.from);
     let xToPx = xAxisController.valueToPx(xAxisController.to);
@@ -148,14 +158,20 @@ export function renderWaveformPath(
 
     function renderSparse() {
         let a = Math.max(Math.floor(xAxisPxToIndex(xFromPx)) - 1, 0);
-        let b = Math.min(Math.ceil(xAxisPxToIndex(xToPx)) + 1, waveform.length - 1);
+        let b = Math.min(
+            Math.ceil(xAxisPxToIndex(xToPx)) + 1,
+            waveform.length - 1
+        );
 
         ctx.fillStyle = strokeColor;
         ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 0.4;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        let r = Math.max(1, Math.min(4, 0.75 / Math.sqrt(xAxisPxToIndex(1) - xAxisPxToIndex(0))));
+        let r = Math.max(
+            1,
+            Math.min(4, 0.75 / Math.sqrt(xAxisPxToIndex(1) - xAxisPxToIndex(0)))
+        );
 
         // let y0 = Math.round(canvas.height - yAxisController.valueToPx(0));
 
@@ -164,9 +180,13 @@ export function renderWaveformPath(
 
         for (let i = a; i <= b; i++) {
             let x = Math.round(
-                xAxisController.valueToPx((i * xAxisController.range) / (waveform.length - 1))
+                xAxisController.valueToPx(
+                    (i * xAxisController.range) / (waveform.length - 1)
+                )
             );
-            let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
+            let y = Math.round(
+                canvas.height - yAxisController.valueToPx(waveform.value(i))
+            );
 
             ctx.beginPath();
             ctx.arc(x, y, r, 0, 2 * Math.PI);
@@ -359,7 +379,12 @@ export function renderWaveformPath(
 
                 if (xLabel == undefined || x > xLabel) {
                     xLabel = x;
-                    yLabel = (canvas.height - result[0] + canvas.height - result[1]) / 2;
+                    yLabel =
+                        (canvas.height -
+                            result[0] +
+                            canvas.height -
+                            result[1]) /
+                        2;
                 }
             }
         }
@@ -403,7 +428,9 @@ export function renderWaveformPath(
         function renderStep(a: number, b: number, K: number, offset: number) {
             for (let i = a + offset; i < b; i += K) {
                 let x = Math.round(
-                    xAxisController.valueToPx((i * xAxisController.range) / waveform.length)
+                    xAxisController.valueToPx(
+                        (i * xAxisController.range) / waveform.length
+                    )
                 );
                 let y = yAxisController.valueToPx(waveform.value(i));
                 if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
@@ -438,8 +465,12 @@ export function renderWaveformPath(
     function renderLogarithmic(
         continuation: ILogarithmicContinuation
     ): ILogarithmicContinuation | undefined {
-        let xFromPx = Math.floor(xAxisController.linearValueToPx(xAxisController.from));
-        let xToPx = Math.ceil(xAxisController.linearValueToPx(xAxisController.to));
+        let xFromPx = Math.floor(
+            xAxisController.linearValueToPx(xAxisController.from)
+        );
+        let xToPx = Math.ceil(
+            xAxisController.linearValueToPx(xAxisController.to)
+        );
 
         function init(): boolean {
             let a = Math.floor(xAxisPxToIndex(xFromPx)) - 1;
@@ -470,8 +501,12 @@ export function renderWaveformPath(
             let i = continuation.i;
             const iEnd = Math.min(i + K, b);
             for (; i < iEnd; ++i) {
-                let x = Math.round(xAxisController.valueToPx(i / waveform.samplingRate));
-                let y = Math.round(canvas.height - yAxisController.valueToPx(waveform.value(i)));
+                let x = Math.round(
+                    xAxisController.valueToPx(i / waveform.samplingRate)
+                );
+                let y = Math.round(
+                    canvas.height - yAxisController.valueToPx(waveform.value(i))
+                );
 
                 if (points.length === 0 || points[points.length - 1].x !== x) {
                     points.push({
@@ -507,7 +542,8 @@ export function renderWaveformPath(
             for (i = 0; i < points.length; ++i) {
                 if (
                     (i === 0 || points[i].x - points[i - 1].x > 2 * R) &&
-                    (i === points.length - 1 || points[i + 1].x - points[i].x > 2 * R)
+                    (i === points.length - 1 ||
+                        points[i + 1].x - points[i].x > 2 * R)
                 ) {
                     ctx.beginPath();
                     ctx.arc(points[i].x, points[i].y, R, 0, 2 * Math.PI);
@@ -557,7 +593,8 @@ export function renderWaveformPath(
 
         ctx.font = `${FONT_SIZE}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"`;
 
-        const width = Math.ceil(ctx.measureText(label).width) + 2 * HORZ_PADDING;
+        const width =
+            Math.ceil(ctx.measureText(label).width) + 2 * HORZ_PADDING;
         const height = FONT_SIZE + 2 * VERT_PADDING;
 
         xLabel = Math.round(xLabel - width);

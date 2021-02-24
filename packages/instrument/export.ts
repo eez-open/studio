@@ -210,6 +210,8 @@ function buildCommand(command: ScpiCommand) {
         let sendsBackDataBlockAttr;
         if (command.commandSyntax.sendsBackDataBlock) {
             sendsBackDataBlockAttr = ' sendsBackDataBlock="1"';
+        } else {
+            sendsBackDataBlockAttr = "";
         }
 
         commandSyntaxes = `<CommandSyntaxes><CommandSyntax${sendsBackDataBlockAttr}>${buildParameters(

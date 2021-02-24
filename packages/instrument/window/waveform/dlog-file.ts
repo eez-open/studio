@@ -1,6 +1,6 @@
 export enum Unit {
-    UNIT_NONE = -1,
-    UNIT_UNKNOWN,
+    UNIT_UNKNOWN = 255,
+    UNIT_NONE = 0,
     UNIT_VOLT,
     UNIT_MILLI_VOLT,
     UNIT_AMPER,
@@ -26,32 +26,69 @@ export enum Unit {
     UNIT_MICRO_FARAD,
     UNIT_NANO_FARAD,
     UNIT_PICO_FARAD,
-    UNIT_MINUTES,
-    UNIT_BIT
+    UNIT_MINUTE
 }
 
 enum Fields {
     FIELD_ID_COMMENT = 1,
+
+    FIELD_ID_START_TIME = 2,
+    FIELD_ID_DURATION = 3,
+
+    // If this field is equal to 1 then the first bit of the each row data
+    // tells us if that row contains valid sample data  (1 - valid, 0 - invalid).
+    // Default is 0.
+    FIELD_ID_DATA_CONTAINS_SAMPLE_VALIDITY_BIT = 4,
 
     FIELD_ID_X_UNIT = 10,
     FIELD_ID_X_STEP = 11,
     FIELD_ID_X_RANGE_MIN = 12,
     FIELD_ID_X_RANGE_MAX = 13,
     FIELD_ID_X_LABEL = 14,
-    FIELD_ID_X_SCALE = 15,
+    FIELD_ID_X_SCALE_TYPE = 15, // 0 - linear, 1 - logarithmic
 
     FIELD_ID_Y_UNIT = 30,
+    FIELD_ID_Y_DATA_TYPE = 31, // default is DATA_TYPE_FLOAT
     FIELD_ID_Y_RANGE_MIN = 32,
     FIELD_ID_Y_RANGE_MAX = 33,
     FIELD_ID_Y_LABEL = 34,
     FIELD_ID_Y_CHANNEL_INDEX = 35,
-    FIELD_ID_Y_SCALE = 36,
+    FIELD_ID_Y_SCALE_TYPE = 36, // 0 - linear, 1 - logarithmic
+    FIELD_ID_Y_TRANSFORM_OFFSET = 37, // default is 0.0
+    FIELD_ID_Y_TRANSFORM_SCALE = 38, // default is 1.0
+    FIELD_ID_Y_LAST_FIELD,
 
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
     FIELD_ID_CHANNEL_MODULE_REVISION = 51
 }
 
-export enum Scale {
+export enum DataType {
+    DATA_TYPE_BIT, // supported
+    DATA_TYPE_INT8,
+    DATA_TYPE_UINT8,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT16_BE, // supported
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT16_BE,
+    DATA_TYPE_INT24,
+    DATA_TYPE_INT24_BE, // supported
+    DATA_TYPE_UINT24,
+    DATA_TYPE_UINT24_BE,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT32_BE,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT32_BE,
+    DATA_TYPE_INT64,
+    DATA_TYPE_INT64_BE,
+    DATA_TYPE_UINT64,
+    DATA_TYPE_UINT64_BE,
+    DATA_TYPE_FLOAT, // supported
+    DATA_TYPE_FLOAT_BE,
+    DATA_TYPE_DOUBLE,
+    DATA_TYPE_DOUBLE_BE,
+};
+
+export enum ScaleType {
     LINEAR,
     LOGARITHMIC
 }
@@ -59,7 +96,7 @@ export enum Scale {
 export interface IDlogXAxis<UnitType> {
     unit: UnitType;
     step: number;
-    scale: Scale;
+    scaleType: ScaleType;
     range: {
         min: number;
         max: number;
@@ -69,6 +106,7 @@ export interface IDlogXAxis<UnitType> {
 
 export interface IDlogYAxis<UnitType> {
     dlogUnit: Unit;
+    dataType: DataType;
     unit: UnitType;
     range?: {
         min: number;
@@ -76,6 +114,8 @@ export interface IDlogYAxis<UnitType> {
     };
     label?: string;
     channelIndex: number;
+    transformOffset: number;
+    transformScale: number;
 }
 
 export interface IDlog<UnitType> {
@@ -84,16 +124,19 @@ export interface IDlog<UnitType> {
     xAxis: IDlogXAxis<UnitType>;
     yAxis: IDlogYAxis<UnitType>;
     yAxes: IDlogYAxis<UnitType>[];
-    yAxisScale: Scale;
+    yAxisScaleType: ScaleType;
     dataOffset: number;
 
-    numFloatsPerRow: number;
-    columnFloatIndexes: number[];
+    dataContainsSampleValidityBit: boolean;
+    columnDataIndexes: number[];
+    columnBitMask: number[];
+    numBytesPerRow: number;
 
     length: number;
 
     // legacy, version 1
     startTime?: Date;
+    duration: Number;
     hasJitterColumn: boolean;
 
     getValue(rowIndex: number, columnIndex: number): number;
@@ -108,7 +151,7 @@ export function decodeDlog<UnitType>(
     data: Uint8Array,
     getUnit: (unit: Unit) => UnitType
 ): IDlog<UnitType> | undefined {
-    const buffer = Buffer.allocUnsafe(4);
+    const buffer = Buffer.allocUnsafe(8);
 
     function readFloat(i: number) {
         buffer[0] = data[i];
@@ -116,6 +159,18 @@ export function decodeDlog<UnitType>(
         buffer[2] = data[i + 2];
         buffer[3] = data[i + 3];
         return buffer.readFloatLE(0);
+    }
+
+    function readDouble(i: number) {
+        buffer[0] = data[i];
+        buffer[1] = data[i + 1];
+        buffer[2] = data[i + 2];
+        buffer[3] = data[i + 3];
+        buffer[4] = data[i + 4];
+        buffer[5] = data[i + 5];
+        buffer[6] = data[i + 6];
+        buffer[7] = data[i + 7];
+        return buffer.readDoubleLE(0);
     }
 
     function readUInt8(i: number) {
@@ -133,6 +188,20 @@ export function decodeDlog<UnitType>(
         return buffer.readUInt16LE(0);
     }
 
+    function readInt16BE(i: number) {
+        buffer[0] = data[i];
+        buffer[1] = data[i + 1];
+        return buffer.readInt16BE(0);
+    }
+
+    function readInt24BE(i: number) {
+        buffer[0] = data[i];
+        buffer[1] = data[i + 1];
+        buffer[1] = data[i + 1];
+        buffer[3] = 0;
+        return buffer.readInt32BE(0) >> 8;
+    }
+
     function readUInt32(i: number) {
         buffer[0] = data[i];
         buffer[1] = data[i + 1];
@@ -147,24 +216,33 @@ export function decodeDlog<UnitType>(
             if (columns & (1 << (4 * iChannel))) {
                 yAxes.push({
                     dlogUnit: Unit.UNIT_VOLT,
+                    dataType: DataType.DATA_TYPE_FLOAT,
                     unit: getUnit(Unit.UNIT_VOLT),
-                    channelIndex: iChannel
+                    channelIndex: iChannel,
+                    transformOffset: 0,
+                    transformScale: 1.0
                 });
             }
 
             if (columns & (2 << (4 * iChannel))) {
                 yAxes.push({
                     dlogUnit: Unit.UNIT_AMPER,
+                    dataType: DataType.DATA_TYPE_FLOAT,
                     unit: getUnit(Unit.UNIT_AMPER),
-                    channelIndex: iChannel
+                    channelIndex: iChannel,
+                    transformOffset: 0,
+                    transformScale: 1.0
                 });
             }
 
             if (columns & (4 << (4 * iChannel))) {
                 yAxes.push({
                     dlogUnit: Unit.UNIT_WATT,
+                    dataType: DataType.DATA_TYPE_FLOAT,
                     unit: getUnit(Unit.UNIT_WATT),
-                    channelIndex: iChannel
+                    channelIndex: iChannel,
+                    transformOffset: 0,
+                    transformScale: 1.0
                 });
             }
         }
@@ -188,14 +266,23 @@ export function decodeDlog<UnitType>(
             if (fieldId === Fields.FIELD_ID_COMMENT) {
                 comment = readString(offset, offset + fieldDataLength);
                 offset += fieldDataLength;
+            } else if (fieldId === Fields.FIELD_ID_START_TIME) {
+                startTime = new Date(readUInt32(offset) * 1000);
+                offset += 4;
+            } else if (fieldId === Fields.FIELD_ID_DURATION) {
+                duration = readDouble(offset);
+                offset += 8;
+            } else if (fieldId === Fields.FIELD_ID_DATA_CONTAINS_SAMPLE_VALIDITY_BIT) {
+                dataContainsSampleValidityBit = !!readUInt8(offset);
+                offset++;
             } else if (fieldId === Fields.FIELD_ID_X_UNIT) {
                 xAxis.unit = getUnit(readUInt8(offset));
                 offset++;
             } else if (fieldId === Fields.FIELD_ID_X_STEP) {
                 xAxis.step = readFloat(offset);
                 offset += 4;
-            } else if (fieldId === Fields.FIELD_ID_X_SCALE) {
-                xAxis.scale = readUInt8(offset);
+            } else if (fieldId === Fields.FIELD_ID_X_SCALE_TYPE) {
+                xAxis.scaleType = readUInt8(offset);
                 offset++;
             } else if (fieldId === Fields.FIELD_ID_X_RANGE_MIN) {
                 xAxis.range.min = readFloat(offset);
@@ -208,7 +295,7 @@ export function decodeDlog<UnitType>(
                 offset += fieldDataLength;
             } else if (
                 fieldId >= Fields.FIELD_ID_Y_UNIT &&
-                fieldId <= Fields.FIELD_ID_Y_CHANNEL_INDEX
+                fieldId < Fields.FIELD_ID_Y_LAST_FIELD
             ) {
                 let yAxisIndex = readUInt8(offset);
                 offset++;
@@ -217,6 +304,7 @@ export function decodeDlog<UnitType>(
                 while (yAxisIndex >= yAxes.length) {
                     yAxes.push({
                         dlogUnit: yAxis.dlogUnit,
+                        dataType: DataType.DATA_TYPE_FLOAT,
                         unit: yAxis.unit,
                         range: yAxis.range
                             ? {
@@ -225,7 +313,9 @@ export function decodeDlog<UnitType>(
                               }
                             : undefined,
                         label: yAxis.label,
-                        channelIndex: yAxis.channelIndex
+                        channelIndex: yAxis.channelIndex,
+                        transformOffset: 0,
+                        transformScale: 1.0
                     });
                 }
 
@@ -243,6 +333,12 @@ export function decodeDlog<UnitType>(
                     destYAxis.dlogUnit = readUInt8(offset);
                     destYAxis.unit = getUnit(destYAxis.dlogUnit);
                     offset++;
+                } else if (fieldId === Fields.FIELD_ID_Y_DATA_TYPE) {
+                    destYAxis.dataType = readUInt8(offset);
+                    offset++;
+                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
+                    destYAxis.range!.min = readFloat(offset);
+                    offset += 4;
                 } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
                     destYAxis.range!.min = readFloat(offset);
                     offset += 4;
@@ -258,12 +354,18 @@ export function decodeDlog<UnitType>(
                 } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_INDEX) {
                     destYAxis.channelIndex = readUInt8(offset) - 1;
                     offset++;
+                } else if (fieldId === Fields.FIELD_ID_Y_TRANSFORM_OFFSET) {
+                    destYAxis.transformOffset = readDouble(offset);
+                    offset += 8;
+                } else if (fieldId === Fields.FIELD_ID_Y_TRANSFORM_SCALE) {
+                    destYAxis.transformScale = readDouble(offset);
+                    offset += 8;
                 } else {
                     // unknown field, skip
                     offset += fieldDataLength;
                 }
-            } else if (fieldId === Fields.FIELD_ID_Y_SCALE) {
-                yAxisScale = readUInt8(offset);
+            } else if (fieldId === Fields.FIELD_ID_Y_SCALE_TYPE) {
+                yAxisScaleType = readUInt8(offset);
                 offset++;
             } else if (fieldId === Fields.FIELD_ID_CHANNEL_MODULE_TYPE) {
                 readUInt8(offset); // channel index
@@ -307,26 +409,31 @@ export function decodeDlog<UnitType>(
             max: 1
         },
         label: "",
-        scale: Scale.LINEAR
+        scaleType: ScaleType.LINEAR
     };
 
     let yAxisDefined = false;
     let yAxis: IDlogYAxis<UnitType> = {
         dlogUnit: Unit.UNIT_UNKNOWN,
+        dataType: DataType.DATA_TYPE_FLOAT,
         unit: getUnit(Unit.UNIT_UNKNOWN),
         range: {
             min: 0,
             max: 1
         },
         label: "",
-        channelIndex: -1
+        channelIndex: -1,
+        transformOffset: 0,
+        transformScale: 1.0
     };
 
-    let yAxisScale = Scale.LINEAR;
+    let yAxisScaleType = ScaleType.LINEAR;
 
     let yAxes: IDlogYAxis<UnitType>[] = [];
 
     let startTime = undefined;
+    let duration = 0;
+    let dataContainsSampleValidityBit = false;
     let hasJitterColumn = false;
 
     if (version == 1) {
@@ -338,70 +445,106 @@ export function decodeDlog<UnitType>(
         hasJitterColumn = version === 1 ? !!(readUInt16(10) & 0x0001) : false;
     } else {
         readFields();
-        startTime = undefined;
         hasJitterColumn = false;
     }
 
     //
-    let columnIndex = hasJitterColumn ? 1 : 0;
+    let hasIsValidBit = false;
+    let columnDataIndexes: number[] = [];
+    let columnBitMask: number[] = [];
+    let numBytesPerRow: number = 0;
+
+    for (let yAxisIndex = 0; yAxisIndex < yAxes.length; yAxisIndex++) {
+        const yAxis = yAxes[yAxisIndex];
+        if (yAxis.dataType != DataType.DATA_TYPE_FLOAT) {
+            hasIsValidBit = true;
+            break;
+        }
+    }
+
+    let columnDataIndex = hasJitterColumn ? 1 : 0;
     let bitMask = 0;
-    let columnFloatIndexes: number[] = [];
+
+    if (hasIsValidBit) {
+        bitMask = 0x80;
+    }
 
     for (let yAxisIndex = 0; yAxisIndex < yAxes.length; yAxisIndex++) {
         const yAxis = yAxes[yAxisIndex];
 
-        columnFloatIndexes[yAxisIndex] = columnIndex;
-
-        if (yAxis.dlogUnit === Unit.UNIT_BIT) {
+        if (yAxis.dataType == DataType.DATA_TYPE_BIT) {
             if (bitMask == 0) {
-                bitMask = 0x4000; // first bit at mask 0x8000 is reserved for sample validity information (0 - not valid, 1 - valid)
+                bitMask = 0x80;
             } else {
                 bitMask >>= 1;
             }
 
+            columnDataIndexes[yAxisIndex] = columnDataIndex;
+            columnBitMask[yAxisIndex] = bitMask;
+
             if (bitMask == 1) {
-                columnIndex++;
+                columnDataIndex += 1;
                 bitMask = 0;
             }
         } else {
             if (bitMask != 0) {
-                columnIndex++;
+                columnDataIndex += 1;
                 bitMask = 0;
             }
 
-            columnIndex++;
+            columnDataIndexes[yAxisIndex] = columnDataIndex;
+
+            if (yAxis.dataType == DataType.DATA_TYPE_INT16_BE) {
+                columnDataIndex += 2;
+            } else if (yAxis.dataType == DataType.DATA_TYPE_INT24_BE) {
+                columnDataIndex += 3;
+            } else if (yAxis.dataType == DataType.DATA_TYPE_FLOAT) {
+                columnDataIndex += 4;
+            } else {
+                console.error("Unknown data type", yAxis.dataType);
+            }
         }
     }
 
     if (bitMask != 0) {
-        columnIndex++;
+        columnDataIndex += 1;
     }
 
-    let numFloatsPerRow = columnIndex;
+    numBytesPerRow = columnDataIndex;
 
     //
-    let length = (data.length - dataOffset) / (numFloatsPerRow * 4);
+    let length = (data.length - dataOffset) / numBytesPerRow;
 
     if (!yAxisDefined) {
         yAxis = yAxes[0];
     }
 
     const getValue = (rowIndex: number, columnIndex: number) => {
-        const offset =
-            dataOffset +
-            4 * (rowIndex * numFloatsPerRow + columnFloatIndexes[columnIndex]);
-        if (yAxes[columnIndex].dlogUnit == Unit.UNIT_BIT) {
-            const data = readUInt32(offset);
-            if (data & 0x8000) {
-                return data & (0x4000 >> yAxes[columnIndex].channelIndex)
-                    ? 1.0
-                    : 0.0;
-            } else {
-                return NaN;
+        let offset = dataOffset + rowIndex * numBytesPerRow;
+
+        if (!hasIsValidBit || (readUInt8(offset) & 0x80)) {
+            offset += columnDataIndexes[columnIndex];
+
+            const dataType = yAxes[columnIndex].dataType;
+
+            if (dataType == DataType.DATA_TYPE_BIT) {
+                return readUInt8(offset) & columnBitMask[columnIndex] ? 1.0 : 0.0;
             }
-        } else {
-            return readFloat(offset);
+            if (dataType == DataType.DATA_TYPE_INT16_BE) {
+                return yAxis.transformOffset + yAxis.transformScale * readInt16BE(offset);
+            }
+            if (dataType == DataType.DATA_TYPE_INT24_BE) {
+                return yAxis.transformOffset + yAxis.transformScale * readInt24BE(offset);
+            }
+
+            if (yAxis.dataType == DataType.DATA_TYPE_FLOAT) {
+                return readFloat(offset);
+            }
+
+            console.error("Unknown data type", yAxis.dataType);
         }
+
+        return NaN;
     };
 
     return {
@@ -409,13 +552,16 @@ export function decodeDlog<UnitType>(
         comment,
         xAxis,
         yAxis,
-        yAxisScale,
+        yAxisScaleType,
         yAxes,
         dataOffset,
-        numFloatsPerRow,
-        columnFloatIndexes,
+        columnDataIndexes,
+        columnBitMask,
+        numBytesPerRow,
         length,
         startTime,
+        duration,
+        dataContainsSampleValidityBit,
         hasJitterColumn,
         getValue
     };

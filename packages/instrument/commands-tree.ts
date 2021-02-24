@@ -99,7 +99,12 @@ export function addCommandToTree(command: ICommand, tree: ScpiCommandTreeNode) {
         let node;
 
         if (currentNode.nodes) {
-            node = currentNode.nodes.find(node => node.mnemonic === mnemonic);
+            node = currentNode.nodes.find(
+                node =>
+                    node.mnemonic === mnemonic &&
+                    node.optional === optional &&
+                    node.numericSuffix === numericSuffix
+            );
         } else {
             currentNode.nodes = [];
         }

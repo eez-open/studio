@@ -121,12 +121,12 @@ export function loadObject(
 export function objectToJson(
     object: IEezObject | IEezObject[],
     space?: number,
-    toJsHook?: (jsObject: any) => void
+    toJsHook?: (jsObject: any, object: IEezObject) => void
 ) {
     let jsObject = toJS(object);
 
     if (toJsHook) {
-        toJsHook(jsObject);
+        toJsHook(jsObject, object);
     }
 
     return JSON.stringify(

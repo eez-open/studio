@@ -1,4 +1,5 @@
 import type { IWaveformDlogParams } from "eez-studio-ui/chart/render";
+import { DataType } from "instrument/window/waveform/dlog-file";
 
 export enum WaveformFormat {
     UNKNOWN,
@@ -29,12 +30,23 @@ function getCsvValues(valuesArray: any) {
 
 const buffer = Buffer.allocUnsafe(8);
 
-function readUInt32(data: any, i: number) {
+function readUInt8(data: any, i: number) {
+    buffer[0] = data[i];
+    return buffer.readUInt8(0);
+}
+
+function readInt16BE(data: any, i: number) {
+    buffer[0] = data[i];
+    buffer[1] = data[i + 1];
+    return buffer.readInt16BE(0);
+}
+
+function readInt24BE(data: any, i: number) {
     buffer[0] = data[i];
     buffer[1] = data[i + 1];
     buffer[2] = data[i + 2];
-    buffer[3] = data[i + 3];
-    return buffer.readUInt32LE(0);
+    buffer[3] = 0;
+    return buffer.readInt32BE(0) >> 8;
 }
 
 function readFloat(data: any, i: number) {
@@ -127,36 +139,38 @@ export function initValuesAccesor(
             length = values.length;
         }
 
-        const { rowOffset, rowBytes, bitIndex, logOffset } = object.dlog!;
+        const { dataType, dataContainsSampleValidityBit, dataOffset, columnDataIndex, numBytesPerRow, bitMask, logOffset, transformOffset, transformScale } = object.dlog!;
 
-        if (bitIndex !== undefined) {
-            value = (index: number) => {
-                const data = readUInt32(values, rowOffset + index * rowBytes);
-                if (data & 0x8000) {
-                    return (
-                        offset + (data & (0x4000 >> bitIndex) ? 1.0 : 0.0) * scale
-                    );
+        value = (index: number) => {
+            let rowOffset = dataOffset + index * numBytesPerRow;
+
+            let value;
+
+            if (!dataContainsSampleValidityBit || (readUInt8(values, rowOffset) & 0x80)) {
+                rowOffset += columnDataIndex;
+
+                if (dataType == DataType.DATA_TYPE_BIT) {
+                    value = readUInt8(values, rowOffset) & bitMask ? 1.0 : 0.0;
+                } else if (dataType == DataType.DATA_TYPE_INT16_BE) {
+                    value = transformOffset + transformScale * readInt16BE(values, rowOffset);
+                } else if (dataType == DataType.DATA_TYPE_INT24_BE) {
+                    value = transformOffset + transformScale * readInt24BE(values, rowOffset);
+                } else if (dataType == DataType.DATA_TYPE_FLOAT) {
+                    value = readFloat(values, rowOffset);
                 } else {
-                    return NaN;
+                    console.error("Unknown data type", dataType);
+                    value = NaN;
                 }
-            };
-        } else {
-            value =
-                format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
-                    ? (index: number) => {
-                          return Math.log10(
-                              logOffset! +
-                                  readFloat(
-                                      values,
-                                      rowOffset + index * rowBytes
-                                  )
-                          );
-                      }
-                    : (index: number) =>
-                          offset +
-                          readFloat(values, rowOffset + index * rowBytes) *
-                              scale;
-        }
+            } else {
+                value = NaN;
+            }
+
+            if (format === WaveformFormat.EEZ_DLOG_LOGARITHMIC) {
+                return Math.log10(logOffset! + value);
+            } else {
+                return offset + value * scale;
+            }
+        };
 
         waveformData = value;
     } else if (format === WaveformFormat.JS_NUMBERS) {

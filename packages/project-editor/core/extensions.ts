@@ -27,7 +27,7 @@ interface ExtensionImplementation {
             properties: any
         ) => void;
         metrics?: (project: Project) => { [key: string]: string | number };
-        toJsHook?: (jsObject: any) => void;
+        toJsHook?: (jsObject: any, object: IEezObject) => void;
     };
 }
 

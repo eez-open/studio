@@ -1424,7 +1424,7 @@ class Assets {
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
 
-    get ProjectStore() { return this.rootProject.ProjectStore; }
+    get ProjectStore() { return this.rootProject._ProjectStore; }
 
     collectProjects(project: Project) {
         if (this.projects.indexOf(project) === -1) {

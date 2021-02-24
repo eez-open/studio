@@ -132,7 +132,7 @@ const Card = styled.div`
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface DialogDefinition {
+export interface DialogDefinition {
     id?: string;
     title?: string;
     size?: "small" | "medium" | "large";
@@ -140,7 +140,7 @@ interface DialogDefinition {
     error?: string;
 }
 
-interface GenericDialogResult {
+export interface GenericDialogResult {
     values: any;
     context: any;
 }

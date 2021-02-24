@@ -3409,7 +3409,7 @@ export class ChartView extends React.Component<
                 ? chartController.yAxisController.axisModel.color
                 : chartController.yAxisController.axisModel.colorInverse;
 
-            chartTitle = !chartController.yAxisController.isDigital && chartController.yAxisController.axisModel.label && (
+            chartTitle = chartController.yAxisController.axisModel.label && (
                 <div
                     className="EezStudio_Chart_Title"
                     style={{

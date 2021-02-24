@@ -9,7 +9,6 @@ import { Rect } from "eez-studio-shared/geometry";
 import { _minBy, _maxBy, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
 
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 import { IconAction, TextAction } from "eez-studio-ui/action";
 import { IFieldComponentProps } from "eez-studio-ui/generic-dialog";
@@ -49,6 +48,7 @@ import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
 
 import { drawGlyph, setColor, setBackColor } from "project-editor/features/gui/draw";
+import { showGenericDialog } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,7 +102,7 @@ export function browseGlyph(glyph: Glyph) {
 
     const title = "Select Glyph";
 
-    return showGenericDialog({
+    return showGenericDialog(getProjectStore(glyph), {
         dialogDefinition: {
             title,
             size: "large",
@@ -2164,7 +2164,7 @@ export class Font extends EezObject implements IFont {
                 return isFont(obj) && getProperty(obj, "createGlyphs");
             }
 
-            return showGenericDialog({
+            return showGenericDialog(getProjectStore(parent), {
                 dialogDefinition: {
                     title: "New Font",
                     fields: [

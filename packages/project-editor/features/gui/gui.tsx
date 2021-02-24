@@ -278,8 +278,8 @@ registerFeatureImplementation("gui", {
         },
         build: build,
         metrics: metrics,
-        toJsHook: (jsObject: Project) => {
-            const gui = jsObject.gui;
+        toJsHook: (jsObject: Project, object: Project) => {
+            const gui = object.gui;
             if (gui) {
                 //
                 jsObject.gui.colors.forEach((color: any) => delete color.id);

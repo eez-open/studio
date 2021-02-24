@@ -38,7 +38,7 @@ export const ReleaseInfo = observer(({ bb3Instrument }: { bb3Instrument: BB3Inst
         compareVersions(
             bb3Instrument.mcu.latestFirmwareVersion,
             bb3Instrument.mcu.firmwareVersion
-        ) > 1
+        ) > 0
     ) {
         return (
             <div className="alert alert-primary border mb-0" role="alert">

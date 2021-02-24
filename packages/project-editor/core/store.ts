@@ -1228,7 +1228,7 @@ export function canPaste(object: IEezObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getDocumentStore(object: IEezObject) {
-    return (getRootObject(object) as any).ProjectStore;
+    return (getRootObject(object) as any)._ProjectStore;
 }
 
 export async function addItem(object: IEezObject) {

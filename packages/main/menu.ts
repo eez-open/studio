@@ -638,3 +638,9 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
 
     event.returnValue = keybindings;
 });
+
+ipcMain.on("open-file", function (event, path) {
+    if (path.toLowerCase().endsWith(".eez-project")) {
+        openProject(path);
+    }
+});

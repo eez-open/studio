@@ -39,11 +39,12 @@ import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
 import {
+    DataType,
     Unit,
     IDlog,
     IDlogYAxis,
     decodeDlog,
-    Scale
+    ScaleType
 } from "instrument/window/waveform/dlog-file";
 import { dlogUnitToStudioUnit } from "instrument/connection/file-type-utils";
 
@@ -52,7 +53,8 @@ import { dlogUnitToStudioUnit } from "instrument/connection/file-type-utils";
 class DlogWaveformAxisModel implements IAxisModel {
     constructor(
         public yAxis: IDlogYAxis<IUnit>,
-        public semiLogarithmic?: { a: number; b: number }
+        public semiLogarithmic?: { a: number; b: number },
+        private yAxes?: IDlogYAxis<IUnit>[]
     ) {}
 
     get unit() {
@@ -124,11 +126,19 @@ class DlogWaveformAxisModel implements IAxisModel {
 
     @computed
     get label() {
-        return this.yAxis.label
-            ? this.yAxis.label
-            : `Channel ${this.yAxis.channelIndex + 1} ${capitalize(
-                  this.yAxis.unit.name
-              )}`;
+        function getLabel(yAxis: IDlogYAxis<IUnit>) {
+            return yAxis.label
+            ? yAxis.label
+            : `Channel ${yAxis.channelIndex + 1} ${capitalize(
+                  yAxis.unit.name
+              )}`
+        }
+
+        if (this.yAxes) {
+            return this.yAxes.map(getLabel).join(", ");
+        }
+
+        return getLabel(this.yAxis);
     }
 
     @computed
@@ -197,20 +207,14 @@ class DlogWaveformLineController extends LineController {
 
         const yAxisIndex = this.dlogWaveform.channels.indexOf(channel);
 
-        const rowBytes = 4 * dlogWaveform.dlog.numFloatsPerRow;
-        const rowOffset =
-            dataOffset + 4 * dlogWaveform.dlog.columnFloatIndexes[yAxisIndex];
+        const columnDataIndex = dlogWaveform.dlog.columnDataIndexes[yAxisIndex];
+        const numBytesPerRow = dlogWaveform.dlog.numBytesPerRow;
 
-        const length = (values.length - dataOffset) / rowBytes;
-
-        let bitIndex: number | undefined;
-        if (dlogWaveform.dlog.yAxes[yAxisIndex].dlogUnit === Unit.UNIT_BIT) {
-            bitIndex = dlogWaveform.dlog.yAxes[yAxisIndex].channelIndex;
-        }
+        const length = (values.length - dataOffset) / numBytesPerRow;
 
         this.waveform = {
             format:
-                dlogWaveform.dlog.yAxisScale === Scale.LINEAR
+                dlogWaveform.dlog.yAxisScaleType === ScaleType.LINEAR
                     ? WaveformFormat.EEZ_DLOG
                     : WaveformFormat.EEZ_DLOG_LOGARITHMIC,
             values,
@@ -218,10 +222,15 @@ class DlogWaveformLineController extends LineController {
             scale: 1,
 
             dlog: {
-                rowBytes,
-                rowOffset,
-                bitIndex,
-                logOffset: channel.yAxis.range ? 1 - channel.yAxis.range.min : 0
+                dataType: dlogWaveform.dlog.yAxes[yAxisIndex].dataType,
+                dataOffset,
+                dataContainsSampleValidityBit: dlogWaveform.dlog.dataContainsSampleValidityBit,
+                columnDataIndex,
+                numBytesPerRow,
+                bitMask: dlogWaveform.dlog.columnBitMask[yAxisIndex],
+                logOffset: channel.yAxis.range ? 1 - channel.yAxis.range.min : 0,
+                transformOffset: dlogWaveform.dlog.yAxes[yAxisIndex].transformOffset,
+                transformScale: dlogWaveform.dlog.yAxes[yAxisIndex].transformScale
             },
 
             length,
@@ -242,7 +251,7 @@ class DlogWaveformLineController extends LineController {
     @computed get yAxisController() {
         const yAxisController = super.yAxisController;
 
-        if (this.channel.yAxis.dlogUnit === Unit.UNIT_BIT) {
+        if (this.channel.yAxis.dataType === DataType.DATA_TYPE_BIT) {
             const offset =
                 1.0 -
                 (this.channelsGroup.channels.indexOf(this.channel) + 1) /
@@ -458,7 +467,7 @@ export class DlogWaveform extends FileHistoryItem {
                 xAxis: {
                     unit: TIME_UNIT,
                     step: 1,
-                    scale: Scale.LINEAR,
+                    scaleType: ScaleType.LINEAR,
                     range: {
                         min: 0,
                         max: 1
@@ -466,6 +475,7 @@ export class DlogWaveform extends FileHistoryItem {
                     label: ""
                 },
                 yAxis: {
+                    dataType: DataType.DATA_TYPE_FLOAT,
                     dlogUnit: Unit.UNIT_UNKNOWN,
                     unit: UNKNOWN_UNIT,
                     range: {
@@ -473,15 +483,20 @@ export class DlogWaveform extends FileHistoryItem {
                         max: 1
                     },
                     label: "",
-                    channelIndex: -1
+                    channelIndex: -1,
+                    transformOffset: 0,
+                    transformScale: 1.0
                 },
-                yAxisScale: Scale.LINEAR,
+                yAxisScaleType: ScaleType.LINEAR,
                 yAxes: [],
                 dataOffset: 0,
-                numFloatsPerRow: 1,
-                columnFloatIndexes: [0],
+                dataContainsSampleValidityBit: false,
+                columnDataIndexes: [0],
+                columnBitMask: [0],
+                numBytesPerRow: 1,
                 length: 0,
                 startTime: undefined,
+                duration: 0,
                 hasJitterColumn: false,
                 getValue: (rowIndex: number, columnIndex: number) => 0
             }
@@ -661,16 +676,17 @@ export class DlogWaveform extends FileHistoryItem {
         chartController.createYAxisController(
             new DlogWaveformAxisModel(
                 yAxis,
-                this.dlog.yAxisScale == Scale.LOGARITHMIC
+                this.dlog.yAxisScaleType == ScaleType.LOGARITHMIC
                     ? {
                           a: 0,
                           b: -(1 - yAxis.range!.min)
                       }
-                    : undefined
+                    : undefined,
+                channelsGroup.channels.map(channel => channel.yAxis)
             )
         );
 
-        if (yAxis.dlogUnit === Unit.UNIT_BIT) {
+        if (yAxis.dataType === DataType.DATA_TYPE_BIT) {
             chartController.yAxisController.isDigital = true;
         }
 
@@ -696,7 +712,7 @@ export class DlogWaveform extends FileHistoryItem {
     @computed get xAxisModel() {
         return new WaveformTimeAxisModel(
             this,
-            this.dlog.xAxis.scale === Scale.LOGARITHMIC
+            this.dlog.xAxis.scaleType === ScaleType.LOGARITHMIC
                 ? {
                       a: this.dlog.xAxis.range.min,
                       b: 0

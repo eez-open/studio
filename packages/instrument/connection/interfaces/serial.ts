@@ -23,7 +23,8 @@ export class SerialInterface implements CommunicationInterface {
             this.port = new SerialPort(
                 this.host.connectionParameters.serialParameters.port,
                 {
-                    baudRate: this.host.connectionParameters.serialParameters.baudRate
+                    baudRate: this.host.connectionParameters.serialParameters.baudRate,
+                    rtscts: true
                 },
                 (err: any) => {
                     if (err) {

@@ -763,8 +763,8 @@ class BuildAssetsMap {
 }
 
 export class Project extends EezObject implements IProject {
-    ProjectStore!: ProjectStoreClass;
-    isReadOnly: boolean = false;
+    _ProjectStore!: ProjectStoreClass;
+    _isReadOnly: boolean = false;
 
     @observable settings: Settings;
     @observable data: DataItem[];
@@ -775,15 +775,15 @@ export class Project extends EezObject implements IProject {
     @observable extensionDefinitions: ExtensionDefinition[];
 
     @computed get projectName() {
-        if (this.ProjectStore.project === this) {
-            return this.ProjectStore.filePath
-                ? getFileNameWithoutExtension(this.ProjectStore.filePath)
+        if (this._ProjectStore.project === this) {
+            return this._ProjectStore.filePath
+                ? getFileNameWithoutExtension(this._ProjectStore.filePath)
                 : "<current project>";
         }
 
         if (this.importDirective) {
             return getFileNameWithoutExtension(
-                this.ProjectStore.getAbsoluteFilePath(
+                this._ProjectStore.getAbsoluteFilePath(
                     this.importDirective.projectFilePath
                 )
             );
@@ -794,7 +794,7 @@ export class Project extends EezObject implements IProject {
 
     @computed
     get importDirective() {
-        return this.ProjectStore.project.settings.general.imports.find(
+        return this._ProjectStore.project.settings.general.imports.find(
             importDirective => importDirective.project === this
         );
     }
@@ -826,8 +826,8 @@ export class Project extends EezObject implements IProject {
     get masterProject() {
         return (
             this.settings.general.masterProject &&
-            this.ProjectStore.loadExternalProject(
-                this.ProjectStore.getAbsoluteFilePath(
+            this._ProjectStore.loadExternalProject(
+                this._ProjectStore.getAbsoluteFilePath(
                     this.settings.general.masterProject
                 )
             )
@@ -850,7 +850,7 @@ export class Project extends EezObject implements IProject {
     @computed({ keepAlive: true })
     get assetCollectionPaths() {
         const assetCollectionPaths = new Set<string>();
-        this.ProjectStore.project.allAssetsMaps.forEach(assetsMap =>
+        this._ProjectStore.project.allAssetsMaps.forEach(assetsMap =>
             assetCollectionPaths.add(assetsMap.path)
         );
         return assetCollectionPaths;
@@ -940,7 +940,7 @@ export class Project extends EezObject implements IProject {
                 .map(assets => assets[0]);
         } else {
             return (
-                (this.ProjectStore.getObjectFromPath(
+                (this._ProjectStore.getObjectFromPath(
                     referencedObjectCollectionPath.split("/")
                 ) as IEezObject[]) || []
             );
@@ -993,7 +993,7 @@ export async function load(filePath: string) {
 }
 
 export function save(ProjectStore: ProjectStoreClass, filePath: string) {
-    const toJsHook = (jsObject: any) => {
+    const toJsHook = (jsObject: any, object: IEezObject) => {
         let projectFeatures = getExtensionsByCategory("project-feature");
         for (let projectFeature of projectFeatures) {
             if (
@@ -1001,15 +1001,15 @@ export function save(ProjectStore: ProjectStoreClass, filePath: string) {
                     .toJsHook
             ) {
                 projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook(
-                    jsObject
+                    jsObject, object
                 );
             }
         }
     };
 
-    (ProjectStore.project as any).ProjectStore = undefined;
+    (ProjectStore.project as any)._ProjectStore = undefined;
     const json = objectToJson(ProjectStore.project, 2, toJsHook);
-    ProjectStore.project.ProjectStore = ProjectStore;
+    ProjectStore.project._ProjectStore = ProjectStore;
 
     return new Promise<void>((resolve, reject) => {
         const fs = EEZStudio.electron.remote.require("fs");
@@ -1169,7 +1169,7 @@ export class ProjectStoreClass extends DocumentStoreClass {
 
         autorun(() => {
             // check the project in the background
-            if (this.project && this.project.ProjectStore.backgroundCheckEnabled) {
+            if (this.project && this.project._ProjectStore.backgroundCheckEnabled) {
                 backgroundCheck(this);
             }
         });
@@ -1285,7 +1285,7 @@ export class ProjectStoreClass extends DocumentStoreClass {
         })();
 
         if (project) {
-            project.ProjectStore = this;
+            project._ProjectStore = this;
             this.dataContext = new DataContext(project);
         } else {
             this.dataContext = undefined as any;
@@ -1508,8 +1508,8 @@ export class ProjectStoreClass extends DocumentStoreClass {
             (async () => {
                 const project = await load(filePath);
 
-                project.isReadOnly = true;
-                project.ProjectStore = this;
+                project._isReadOnly = true;
+                project._ProjectStore = this;
 
                 runInAction(() => {
                     this.externalProjects.set(filePath, project);
@@ -1532,11 +1532,11 @@ export function getProject(object: IEezObject) {
 }
 
 export function getProjectStore(object: IEezObject) {
-    return getProject(object).ProjectStore;
+    return getProject(object)._ProjectStore;
 }
 
 export function isObjectReadOnly(object: IEezObject) {
-    return getProject(object).isReadOnly;
+    return getProject(object)._isReadOnly;
 }
 
 export function isAnyObjectReadOnly(objects: IEezObject[]) {
