@@ -128,10 +128,10 @@ class DlogWaveformAxisModel implements IAxisModel {
     get label() {
         function getLabel(yAxis: IDlogYAxis<IUnit>) {
             return yAxis.label
-            ? yAxis.label
-            : `Channel ${yAxis.channelIndex + 1} ${capitalize(
-                  yAxis.unit.name
-              )}`
+                ? yAxis.label
+                : `Channel ${yAxis.channelIndex + 1} ${capitalize(
+                      yAxis.unit.name
+                  )}`;
         }
 
         if (this.yAxes) {
@@ -210,7 +210,7 @@ class DlogWaveformLineController extends LineController {
         const columnDataIndex = dlogWaveform.dlog.columnDataIndexes[yAxisIndex];
         const numBytesPerRow = dlogWaveform.dlog.numBytesPerRow;
 
-        const length = (values.length - dataOffset) / numBytesPerRow;
+        const length = dlogWaveform.dlog.length;
 
         this.waveform = {
             format:
@@ -224,13 +224,18 @@ class DlogWaveformLineController extends LineController {
             dlog: {
                 dataType: dlogWaveform.dlog.yAxes[yAxisIndex].dataType,
                 dataOffset,
-                dataContainsSampleValidityBit: dlogWaveform.dlog.dataContainsSampleValidityBit,
+                dataContainsSampleValidityBit:
+                    dlogWaveform.dlog.dataContainsSampleValidityBit,
                 columnDataIndex,
                 numBytesPerRow,
                 bitMask: dlogWaveform.dlog.columnBitMask[yAxisIndex],
-                logOffset: channel.yAxis.range ? 1 - channel.yAxis.range.min : 0,
-                transformOffset: dlogWaveform.dlog.yAxes[yAxisIndex].transformOffset,
-                transformScale: dlogWaveform.dlog.yAxes[yAxisIndex].transformScale
+                logOffset: channel.yAxis.range
+                    ? 1 - channel.yAxis.range.min
+                    : 0,
+                transformOffset:
+                    dlogWaveform.dlog.yAxes[yAxisIndex].transformOffset,
+                transformScale:
+                    dlogWaveform.dlog.yAxes[yAxisIndex].transformScale
             },
 
             length,
@@ -327,6 +332,12 @@ class DlogWaveformChartsController extends ChartsController {
 
     get supportRulers() {
         return true;
+    }
+
+    get bookmarks() {
+        return this.dlogWaveform.dlog.bookmarks.length > 0
+            ? this.dlogWaveform.dlog.bookmarks
+            : undefined;
     }
 }
 
@@ -490,6 +501,9 @@ export class DlogWaveform extends FileHistoryItem {
                 yAxisScaleType: ScaleType.LINEAR,
                 yAxes: [],
                 dataOffset: 0,
+                textIndexFileOffset: 0,
+                textFileOffset: 0,
+                bookmarks: [],
                 dataContainsSampleValidityBit: false,
                 columnDataIndexes: [0],
                 columnBitMask: [0],

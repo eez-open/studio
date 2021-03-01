@@ -38,6 +38,7 @@ import {
     MeasurementsModel,
     ChartMeasurements
 } from "eez-studio-ui/chart/measurements";
+import { BookmarksView } from "eez-studio-ui/chart/bookmarks";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -390,12 +391,10 @@ export abstract class AxisController {
 
     get numSamples() {
         let numSamples = 0;
-        for (
-            let i = 0;
-            i < this.chartsController.lineControllers.length;
-            ++i
-        ) {
-            let waveformModel = this.chartsController.lineControllers[i].getWaveformModel();
+        for (let i = 0; i < this.chartsController.lineControllers.length; ++i) {
+            let waveformModel = this.chartsController.lineControllers[
+                i
+            ].getWaveformModel();
             if (waveformModel && waveformModel.length > numSamples) {
                 numSamples = waveformModel.length;
             }
@@ -1714,6 +1713,11 @@ export const globalViewOptions = new GlobalViewOptions();
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface ChartBookmark {
+    value: number;
+    text: string;
+}
+
 export abstract class ChartsController {
     constructor(
         public mode: ChartMode,
@@ -2058,14 +2062,18 @@ export abstract class ChartsController {
         return false;
     }
 
+    get bookmarks(): ChartBookmark[] | undefined {
+        return undefined;
+    }
+
     @computed get lineControllers() {
         const lineControllers: ILineController[] = [];
 
-        this.chartControllers.forEach(
-            chartController => {
-                chartController.lineControllers.forEach(lineController => lineControllers.push(lineController))
-            }
-        );
+        this.chartControllers.forEach(chartController => {
+            chartController.lineControllers.forEach(lineController =>
+                lineControllers.push(lineController)
+            );
+        });
 
         return lineControllers;
     }
@@ -2094,6 +2102,28 @@ export abstract class ChartsController {
     destroy() {
         if (this.measurementsController) {
             this.measurementsController.destroy();
+        }
+    }
+
+    @observable selectedBookmark = -1;
+
+    @action
+    selectBookmark(index: number) {
+        this.selectedBookmark = index;
+
+        if (
+            this.bookmarks &&
+            this.selectedBookmark >= 0 &&
+            this.selectedBookmark < this.bookmarks.length
+        ) {
+            const value = this.bookmarks[this.selectedBookmark].value;
+            let from = this.xAxisController.from;
+            let to = this.xAxisController.to;
+            if (!(value >= from && value < to)) {
+                from = value - this.xAxisController.distance / 2;
+                to = from + this.xAxisController.distance;
+                this.xAxisController.zoom(from, to);
+            }
         }
     }
 }
@@ -2615,6 +2645,121 @@ class AxisView extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@observer
+class Bookmark extends React.Component<
+    {
+        chartController: ChartController;
+        index: number;
+        x: number;
+        y1: number;
+        y2: number;
+    },
+    {}
+> {
+    @observable
+    mouseOver = false;
+
+    onMouseEnter = action(() => (this.mouseOver = true));
+
+    onMouseLeave = action(() => (this.mouseOver = false));
+
+    onClick = (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        this.props.chartController.chartsController.selectBookmark(
+            this.props.index
+        );
+    };
+
+    render() {
+        const { chartController, index, x, y1, y2 } = this.props;
+        const chartsController = chartController.chartsController;
+        return (
+            <g
+                onMouseEnter={this.onMouseEnter}
+                onMouseLeave={this.onMouseLeave}
+                onMouseDown={this.onClick}
+            >
+                <line
+                    x1={x}
+                    y1={y1}
+                    x2={x}
+                    y2={y2}
+                    strokeWidth={10}
+                    stroke={"transparent"}
+                />
+                <line
+                    x1={x}
+                    y1={y1}
+                    x2={x}
+                    y2={y2}
+                    strokeWidth={
+                        index == chartsController.selectedBookmark ||
+                        this.mouseOver
+                            ? 3
+                            : 1
+                    }
+                    stroke={"blue"}
+                />
+            </g>
+        );
+    }
+}
+
+@observer
+class Bookmarks extends React.Component<
+    {
+        chartController: ChartController;
+    },
+    {}
+> {
+    render() {
+        const { chartController } = this.props;
+        const chartsController = chartController.chartsController;
+        const axisController = chartController.xAxisController;
+
+        if (!chartsController.bookmarks) {
+            return null;
+        }
+
+        const x1 = chartsController.chartLeft;
+        const x2 = chartsController.chartLeft + chartsController.chartWidth;
+        const y1 = chartsController.chartTop;
+        const y2 = chartsController.chartTop + chartsController.chartHeight;
+
+        const visibleBookmarks = chartsController.bookmarks
+            .map((bookmark, i) => ({
+                index: i,
+                x:
+                    chartsController.chartLeft +
+                    axisController.valueToPx(bookmark.value)
+            }))
+            .filter(bookmark => bookmark.x >= x1 && bookmark.x <= x2);
+
+        if (visibleBookmarks.length == 0) {
+            return 0;
+        }
+
+        return (
+            <>
+                {visibleBookmarks.map(bookmark => (
+                    <Bookmark
+                        key={bookmark.index}
+                        chartController={chartController}
+                        index={bookmark.index}
+                        x={bookmark.x}
+                        y1={y1}
+                        y2={y2}
+                    />
+                ))}
+            </>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export interface MouseHandler {
     cursor: string;
     down(point: SVGPoint, event: PointerEvent): void;
@@ -2695,6 +2840,8 @@ class PanMouseHandler implements MouseHandler {
 }
 
 class ZoomToRectMouseHandler implements MouseHandler {
+    static MIN_SIZE = 5;
+
     constructor(private chartController: ChartController) {}
 
     @observable startPoint: Point;
@@ -2754,20 +2901,24 @@ class ZoomToRectMouseHandler implements MouseHandler {
             const xAxisController = chartsController.xAxisController;
             let fromPx = Math.min(this.startPoint.x, this.endPoint.x);
             let toPx = Math.max(this.startPoint.x, this.endPoint.x);
-            xAxisController.zoom(
-                xAxisController.pxToLinearValue(fromPx),
-                xAxisController.pxToLinearValue(toPx)
-            );
+            if (toPx - fromPx >= ZoomToRectMouseHandler.MIN_SIZE) {
+                xAxisController.zoom(
+                    xAxisController.pxToLinearValue(fromPx),
+                    xAxisController.pxToLinearValue(toPx)
+                );
+            }
         }
 
         if (this.orientation === "y" || this.orientation === "both") {
             const yAxisController = this.chartController.yAxisController;
             let fromPx = Math.min(this.startPoint.y, this.endPoint.y);
             let toPx = Math.max(this.startPoint.y, this.endPoint.y);
-            yAxisController.zoom(
-                yAxisController.pxToLinearValue(fromPx),
-                yAxisController.pxToLinearValue(toPx)
-            );
+            if (toPx - fromPx >= ZoomToRectMouseHandler.MIN_SIZE) {
+                yAxisController.zoom(
+                    yAxisController.pxToLinearValue(fromPx),
+                    yAxisController.pxToLinearValue(toPx)
+                );
+            }
         }
     }
 
@@ -2835,9 +2986,19 @@ class ZoomToRectMouseHandler implements MouseHandler {
         if (this.orientation === "x") {
             y = chartsController.chartHeight;
             height = chartsController.chartHeight;
+            if (height < ZoomToRectMouseHandler.MIN_SIZE) {
+                return null;
+            }
         } else if (this.orientation === "y") {
             x = 0;
             width = chartsController.chartWidth;
+            if (width < ZoomToRectMouseHandler.MIN_SIZE) {
+                return null;
+            }
+        } else {
+            if (width < ZoomToRectMouseHandler.MIN_SIZE || height < ZoomToRectMouseHandler.MIN_SIZE) {
+                return null;
+            }
         }
 
         return (
@@ -3532,6 +3693,10 @@ export class ChartView extends React.Component<
 
                         {this.mouseHandler && this.mouseHandler.render()}
                     </g>
+                    {isNonEmpty &&
+                        chartController.chartsController.bookmarks && (
+                            <Bookmarks chartController={chartController} />
+                        )}
                 </svg>
                 {chartTitle}
                 {chartXAxisTitle}
@@ -3698,6 +3863,18 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                 );
             }
         );
+
+        factory.registerComponent(
+            "BookmarksView",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme}>
+                        <BookmarksView chartsController={chartsController} />
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
     }
 
     get chartViewOptionsItem() {
@@ -3730,6 +3907,16 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         };
     }
 
+    get bookmarksItem() {
+        return {
+            type: "component",
+            componentName: "BookmarksView",
+            componentState: {},
+            title: "Bookmarks",
+            isClosable: false
+        };
+    }
+
     @computed
     get defaultLayoutConfig() {
         let content;
@@ -3741,10 +3928,13 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                     content: [
                         {
                             type: "stack",
-                            content: [
-                                this.chartViewOptionsItem,
-                                this.rulersItem
-                            ]
+                            content: this.props.chartsController.bookmarks
+                                ? [
+                                      this.chartViewOptionsItem,
+                                      this.rulersItem,
+                                      this.bookmarksItem
+                                  ]
+                                : [this.chartViewOptionsItem, this.rulersItem]
                         },
                         this.measurementsItem
                     ]
@@ -3754,7 +3944,9 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             content = [
                 {
                     type: "column",
-                    content: [this.chartViewOptionsItem]
+                    content: this.props.chartsController.bookmarks
+                        ? [this.chartViewOptionsItem, this.bookmarksItem]
+                        : [this.chartViewOptionsItem]
                 }
             ];
         }
@@ -3845,6 +4037,9 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                 "layout/2" +
                 (this.props.chartsController.supportRulers
                     ? "/with-rulers"
+                    : "") +
+                (this.props.chartsController.bookmarks
+                    ? "/with-bookmarks"
                     : "");
 
             return (

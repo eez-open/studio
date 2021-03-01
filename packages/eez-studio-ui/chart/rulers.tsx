@@ -314,6 +314,7 @@ export class RulersController {
         if (this.rulersModel.xAxisRulersEnabled) {
             return new DragXRulerMouseHandler(this, "none");
         } else if (
+            chartView.props.chartController.chartIndex < this.rulersModel.yAxisRulersEnabled.length &&
             this.rulersModel.yAxisRulersEnabled[chartView.props.chartController.chartIndex]
         ) {
             return new DragYRulerMouseHandler(chartView, "none");

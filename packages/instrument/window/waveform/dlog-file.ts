@@ -59,7 +59,10 @@ enum Fields {
     FIELD_ID_Y_LAST_FIELD,
 
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
-    FIELD_ID_CHANNEL_MODULE_REVISION = 51
+    FIELD_ID_CHANNEL_MODULE_REVISION = 51,
+
+    FILE_ID_TEXT_INDEX_FILE_OFFSET = 60,
+    FILE_ID_TEXT_FILE_OFFSET = 61
 }
 
 export enum DataType {
@@ -118,6 +121,11 @@ export interface IDlogYAxis<UnitType> {
     transformScale: number;
 }
 
+interface DlogBookmark {
+    value: number;
+    text: string;
+}
+
 export interface IDlog<UnitType> {
     version: number;
     comment?: string;
@@ -126,6 +134,10 @@ export interface IDlog<UnitType> {
     yAxes: IDlogYAxis<UnitType>[];
     yAxisScaleType: ScaleType;
     dataOffset: number;
+
+    textIndexFileOffset: number;
+    textFileOffset: number;
+    bookmarks: DlogBookmark[];
 
     dataContainsSampleValidityBit: boolean;
     columnDataIndexes: number[];
@@ -377,6 +389,12 @@ export function decodeDlog<UnitType>(
                 offset++;
                 readUInt16(offset); // module revision
                 offset += 2;
+            } else if (fieldId == Fields.FILE_ID_TEXT_INDEX_FILE_OFFSET) {
+                textIndexFileOffset = readUInt32(offset);
+                offset += 4;
+            } else if (fieldId == Fields.FILE_ID_TEXT_FILE_OFFSET) {
+                textFileOffset = readUInt32(offset);
+                offset += 4;
             } else {
                 // unknown field, skip
                 offset += fieldDataLength;
@@ -435,6 +453,9 @@ export function decodeDlog<UnitType>(
     let duration = 0;
     let dataContainsSampleValidityBit = false;
     let hasJitterColumn = false;
+
+    let textIndexFileOffset = 0;
+    let textFileOffset = 0;
 
     if (version == 1) {
         xAxis.step = readFloat(16);
@@ -512,8 +533,33 @@ export function decodeDlog<UnitType>(
 
     numBytesPerRow = columnDataIndex;
 
+    const bookmarks: DlogBookmark[] = [];
+    if (textIndexFileOffset != 0) {
+        let offset = textIndexFileOffset
+        while (offset < textFileOffset) {
+            let sampleIndex = readUInt32(offset);
+            offset += 4;
+
+            let textIndexStart = readUInt32(offset);
+            offset += 4;
+
+            let textIndexEnd;
+            if (offset < textFileOffset) {
+                textIndexEnd = readUInt32(offset + 4);
+            } else {
+                textIndexEnd = data.length;
+            }
+
+            let text = readString(textFileOffset + textIndexStart, textFileOffset + textIndexEnd);
+            bookmarks.push({
+                value: sampleIndex * xAxis.step,
+                text
+            });
+        }
+    }
+
     //
-    let length = (data.length - dataOffset) / numBytesPerRow;
+    let length = ((textIndexFileOffset != 0 ? textIndexFileOffset : data.length) - dataOffset) / numBytesPerRow;
 
     if (!yAxisDefined) {
         yAxis = yAxes[0];
@@ -555,6 +601,9 @@ export function decodeDlog<UnitType>(
         yAxisScaleType,
         yAxes,
         dataOffset,
+        textIndexFileOffset,
+        textFileOffset,
+        bookmarks,
         columnDataIndexes,
         columnBitMask,
         numBytesPerRow,
