@@ -40,8 +40,6 @@ enum Fields {
     // Default is 0.
     FIELD_ID_DATA_CONTAINS_SAMPLE_VALIDITY_BIT = 4,
 
-    FIELD_ID_DATA_SIZE = 5, // number of data rows
-
     FIELD_ID_X_UNIT = 10,
     FIELD_ID_X_STEP = 11,
     FIELD_ID_X_RANGE_MIN = 12,
@@ -63,7 +61,8 @@ enum Fields {
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
     FIELD_ID_CHANNEL_MODULE_REVISION = 51,
 
-    FIELD_ID_BOOKMARK = 62,
+    FILE_ID_TEXT_INDEX_FILE_OFFSET = 60,
+    FILE_ID_TEXT_FILE_OFFSET = 61
 }
 
 export enum DataType {
@@ -135,8 +134,9 @@ export interface IDlog<UnitType> {
     yAxes: IDlogYAxis<UnitType>[];
     yAxisScaleType: ScaleType;
     dataOffset: number;
-    dataSize: number;
 
+    textIndexFileOffset: number;
+    textFileOffset: number;
     bookmarks: DlogBookmark[];
 
     dataContainsSampleValidityBit: boolean;
@@ -287,9 +287,6 @@ export function decodeDlog<UnitType>(
             } else if (fieldId === Fields.FIELD_ID_DATA_CONTAINS_SAMPLE_VALIDITY_BIT) {
                 dataContainsSampleValidityBit = !!readUInt8(offset);
                 offset++;
-            } else if (fieldId === Fields.FIELD_ID_DATA_SIZE) {
-                dataSize = readUInt32(offset);
-                offset += 4;
             } else if (fieldId === Fields.FIELD_ID_X_UNIT) {
                 xAxis.unit = getUnit(readUInt8(offset));
                 offset++;
@@ -392,39 +389,12 @@ export function decodeDlog<UnitType>(
                 offset++;
                 readUInt16(offset); // module revision
                 offset += 2;
-            } else {
-                // unknown field, skip
-                offset += fieldDataLength;
-            }
-        }
-    }
-
-    function readBookmarks() {
-        let offset = dataOffset + dataSize * numBytesPerRow;
-        while (offset < data.length) {
-            const fieldLength = readUInt16(offset);
-            if (fieldLength == 0) {
-                break;
-            }
-
-            offset += 2;
-
-            const fieldId = readUInt8(offset);
-            offset++;
-
-            let fieldDataLength = fieldLength - 2 - 1;
-
-            if (fieldId == Fields.FIELD_ID_BOOKMARK) {
-                const position = readUInt32(offset);
-                const text = readString(
-                    offset + 4,
-                    offset + fieldDataLength
-                );
-                bookmarks.push({
-                    text,
-                    value: position * xAxis.step
-                })
-                offset += fieldDataLength;
+            } else if (fieldId == Fields.FILE_ID_TEXT_INDEX_FILE_OFFSET) {
+                textIndexFileOffset = readUInt32(offset);
+                offset += 4;
+            } else if (fieldId == Fields.FILE_ID_TEXT_FILE_OFFSET) {
+                textFileOffset = readUInt32(offset);
+                offset += 4;
             } else {
                 // unknown field, skip
                 offset += fieldDataLength;
@@ -484,7 +454,8 @@ export function decodeDlog<UnitType>(
     let dataContainsSampleValidityBit = false;
     let hasJitterColumn = false;
 
-    let dataSize = 0;
+    let textIndexFileOffset = 0;
+    let textFileOffset = 0;
 
     if (version == 1) {
         xAxis.step = readFloat(16);
@@ -563,12 +534,32 @@ export function decodeDlog<UnitType>(
     numBytesPerRow = columnDataIndex;
 
     const bookmarks: DlogBookmark[] = [];
-    if (dataSize != 0) {
-        readBookmarks();
+    if (textIndexFileOffset != 0) {
+        let offset = textIndexFileOffset
+        while (offset < textFileOffset) {
+            let sampleIndex = readUInt32(offset);
+            offset += 4;
+
+            let textIndexStart = readUInt32(offset);
+            offset += 4;
+
+            let textIndexEnd;
+            if (offset < textFileOffset) {
+                textIndexEnd = readUInt32(offset + 4);
+            } else {
+                textIndexEnd = data.length;
+            }
+
+            let text = readString(textFileOffset + textIndexStart, textFileOffset + textIndexEnd);
+            bookmarks.push({
+                value: sampleIndex * xAxis.step,
+                text
+            });
+        }
     }
 
     //
-    let length = dataSize != 0 ? dataSize : (data.length - dataOffset) / numBytesPerRow;
+    let length = ((textIndexFileOffset != 0 ? textIndexFileOffset : data.length) - dataOffset) / numBytesPerRow;
 
     if (!yAxisDefined) {
         yAxis = yAxes[0];
@@ -610,7 +601,8 @@ export function decodeDlog<UnitType>(
         yAxisScaleType,
         yAxes,
         dataOffset,
-        dataSize,
+        textIndexFileOffset,
+        textFileOffset,
         bookmarks,
         columnDataIndexes,
         columnBitMask,
