@@ -501,8 +501,6 @@ export class DlogWaveform extends FileHistoryItem {
                 yAxisScaleType: ScaleType.LINEAR,
                 yAxes: [],
                 dataOffset: 0,
-                textIndexFileOffset: 0,
-                textFileOffset: 0,
                 bookmarks: [],
                 dataContainsSampleValidityBit: false,
                 columnDataIndexes: [0],
