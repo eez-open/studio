@@ -17,6 +17,7 @@ import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
+import type { IDataContext } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -186,12 +187,16 @@ export function findDataItem(project: Project, dataItemName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DataContext {
+export class DataContext implements IDataContext {
     constructor(
         public project: Project,
         public parentDataContext?: DataContext,
         public defaultValueOverrides?: any
     ) {}
+
+    create(defaultValueOverrides: any): IDataContext {
+        return new DataContext(this.project, this, defaultValueOverrides);
+    }
 
     @observable values = new Map<string, string>();
 

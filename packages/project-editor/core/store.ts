@@ -97,12 +97,11 @@ import {
     buildExtensions
 } from "project-editor/project/build";
 import { getAllMetrics } from "project-editor/project/metrics";
+import { ActionNode, Widget } from "project-editor/features/gui/widget";
 import {
-    ActionNode,
     InputActionNode,
-    OutputActionNode,
-    Widget
-} from "project-editor/features/gui/widget";
+    OutputActionNode
+} from "project-editor/features/gui/action-nodes";
 import { Page, PageFragment } from "project-editor/features/gui/page";
 
 import { Section } from "project-editor/core/output";

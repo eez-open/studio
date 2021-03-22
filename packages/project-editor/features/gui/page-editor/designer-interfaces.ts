@@ -133,3 +133,14 @@ export interface IMouseHandler {
     selectionVisible: boolean;
     render?(context: IDesignerContext): React.ReactNode;
 }
+
+export interface IDataContext {
+    create(defaultValueOverrides: any): IDataContext;
+
+    get(dataItemId: string): any;
+    getEnumValue(dataItemId: string): number;
+    getBool(dataItemId: string): boolean;
+    getValueList(dataItemId: string): string[];
+    getMin(dataItemId: string): number;
+    getMax(dataItemId: string): number;
+}

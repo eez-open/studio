@@ -25,11 +25,29 @@ import {
     getStyleProperty,
     findStyle
 } from "project-editor/features/gui/style";
-import * as Widget from "project-editor/features/gui/widget";
 import { Page, findPage } from "project-editor/features/gui/page";
 import { Font, findFont } from "project-editor/features/gui/font";
 import { Theme } from "project-editor/features/gui/theme";
 import { Action, findAction } from "project-editor/features/action/action";
+import { Widget } from "project-editor/features/gui/widget";
+import {
+    BarGraphWidget,
+    BitmapWidget,
+    ButtonWidget,
+    ContainerWidget,
+    DisplayDataWidget,
+    LayoutViewWidget,
+    ListGraphWidget,
+    ListWidget,
+    MultilineTextWidget,
+    RectangleWidget,
+    SelectWidget,
+    TextWidget,
+    ToggleButtonWidget,
+    UpDownWidget,
+    GridWidget,
+    ButtonGroupWidget
+} from "project-editor/features/gui/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -822,7 +840,7 @@ function buildWidgetText(text: string) {
     return text;
 }
 
-function buildWidget(object: Widget.Widget | Page, assets: Assets) {
+function buildWidget(object: Widget | Page, assets: Assets) {
     let result = new Struct();
 
     // type
@@ -881,14 +899,14 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
     // data
     let data = 0;
-    if (object instanceof Widget.Widget && object.data) {
+    if (object instanceof Widget && object.data) {
         data = assets.getDataItemIndex(object, "data");
     }
     result.addField(new UInt16(data));
 
     // action
     let action: number = 0;
-    if (object instanceof Widget.Widget) {
+    if (object instanceof Widget) {
         if (object.action) {
             action = assets.getActionIndex(object, "action");
         }
@@ -917,11 +935,11 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific = new Struct();
 
         // widgets
-        let widgets: Widget.Widget[] | undefined;
+        let widgets: Widget[] | undefined;
         if (object instanceof Page) {
             widgets = object.widgets;
         } else {
-            widgets = (object as Widget.ContainerWidget).widgets;
+            widgets = (object as ContainerWidget).widgets;
         }
 
         let childWidgets = new ObjectList();
@@ -934,7 +952,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         specific.addField(childWidgets);
 
         let overlay = 0;
-        if (object instanceof Widget.ContainerWidget && object.overlay) {
+        if (object instanceof ContainerWidget && object.overlay) {
             overlay = assets.getDataItemIndex(object, "overlay");
         }
         specific.addField(new UInt16(overlay));
@@ -942,7 +960,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // flags
         let flags = 0;
 
-        if (overlay && object instanceof Widget.ContainerWidget) {
+        if (overlay && object instanceof ContainerWidget) {
             if (object.shadow) {
                 flags |= 1;
             }
@@ -956,7 +974,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(new UInt8(flags));
     } else if (type == WIDGET_TYPE_SELECT) {
-        let widget = object as Widget.SelectWidget;
+        let widget = object as SelectWidget;
         specific = new Struct();
 
         // widgets
@@ -969,7 +987,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(childWidgets);
     } else if (type == WIDGET_TYPE_LIST) {
-        let widget = object as Widget.ListWidget;
+        let widget = object as ListWidget;
         specific = new Struct();
 
         // listType
@@ -994,7 +1012,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // gap
         specific.addField(new UInt8(widget.gap || 0));
     } else if (type == WIDGET_TYPE_GRID) {
-        let widget = object as Widget.GridWidget;
+        let widget = object as GridWidget;
         specific = new Struct();
 
         // listType
@@ -1014,13 +1032,13 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(new ObjectPtr(itemWidget));
     } else if (type == WIDGET_TYPE_DISPLAY_DATA) {
-        let widget = object as Widget.DisplayDataWidget;
+        let widget = object as DisplayDataWidget;
         specific = new Struct();
 
         // displayOption
         specific.addField(new UInt8(widget.displayOption || 0));
     } else if (type == WIDGET_TYPE_TEXT) {
-        let widget = object as Widget.TextWidget;
+        let widget = object as TextWidget;
         specific = new Struct();
 
         // text
@@ -1043,7 +1061,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(new UInt8(flags));
     } else if (type == WIDGET_TYPE_MULTILINE_TEXT) {
-        let widget = object as Widget.MultilineTextWidget;
+        let widget = object as MultilineTextWidget;
         specific = new Struct();
 
         // text
@@ -1062,7 +1080,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
         // hanging
         specific.addField(new Int16(widget.hangingIndent || 0));
     } else if (type == WIDGET_TYPE_RECTANGLE) {
-        let widget = object as Widget.RectangleWidget;
+        let widget = object as RectangleWidget;
         specific = new Struct();
 
         // flags
@@ -1080,7 +1098,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(new UInt8(flags));
     } else if (type == WIDGET_TYPE_BUTTON_GROUP) {
-        let widget = object as Widget.ButtonGroupWidget;
+        let widget = object as ButtonGroupWidget;
         specific = new Struct();
 
         // selectedStyle
@@ -1088,7 +1106,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             new UInt16(assets.getStyleIndex(widget, "selectedStyle"))
         );
     } else if (type == WIDGET_TYPE_BAR_GRAPH) {
-        let widget = object as Widget.BarGraphWidget;
+        let widget = object as BarGraphWidget;
         specific = new Struct();
 
         // orientation
@@ -1140,7 +1158,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             new UInt16(assets.getStyleIndex(widget, "line2Style"))
         );
     } else if (type == WIDGET_TYPE_UP_DOWN) {
-        let widget = object as Widget.UpDownWidget;
+        let widget = object as UpDownWidget;
         specific = new Struct();
 
         // buttonStyle
@@ -1167,7 +1185,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(new String(upButtonText));
     } else if (type == WIDGET_TYPE_LIST_GRAPH) {
-        let widget = object as Widget.ListGraphWidget;
+        let widget = object as ListGraphWidget;
         specific = new Struct();
 
         // dwellData
@@ -1213,7 +1231,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             new UInt16(assets.getStyleIndex(widget, "cursorStyle"))
         );
     } else if (type == WIDGET_TYPE_BUTTON) {
-        let widget = object as Widget.ButtonWidget;
+        let widget = object as ButtonWidget;
         specific = new Struct();
 
         // text
@@ -1239,7 +1257,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
             new UInt16(assets.getStyleIndex(widget, "disabledStyle"))
         );
     } else if (type == WIDGET_TYPE_TOGGLE_BUTTON) {
-        let widget = object as Widget.ToggleButtonWidget;
+        let widget = object as ToggleButtonWidget;
         specific = new Struct();
 
         // text 1
@@ -1262,7 +1280,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(new String(text2));
     } else if (type == WIDGET_TYPE_BITMAP) {
-        let widget = object as Widget.BitmapWidget;
+        let widget = object as BitmapWidget;
         specific = new Struct();
 
         // bitmap
@@ -1273,7 +1291,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
 
         specific.addField(new UInt8(bitmap));
     } else if (type == WIDGET_TYPE_LAYOUT_VIEW) {
-        let widget = object as Widget.LayoutViewWidget;
+        let widget = object as LayoutViewWidget;
         specific = new Struct();
 
         // layout
@@ -1293,7 +1311,7 @@ function buildWidget(object: Widget.Widget | Page, assets: Assets) {
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields
     } else if (type == WIDGET_TYPE_SCROLL_BAR) {
-        let widget = object as Widget.ScrollBarWidget;
+        let widget = object as ScrollBarWidget;
         specific = new Struct();
 
         // thumbStyle
@@ -1856,6 +1874,7 @@ class Assets {
 ////////////////////////////////////////////////////////////////////////////////
 
 import { build as buildV1 } from "project-editor/features/gui/build-v1";
+import { ScrollBarWidget } from "./widgets";
 
 export async function build(
     project: Project,

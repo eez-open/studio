@@ -1,18 +1,20 @@
 import React from "react";
+import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { styled } from "eez-studio-ui/styled-components";
+import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { getId } from "project-editor/core/object";
 
-import { DataContext } from "project-editor/features/data/data";
-import type { IDesignerContext } from "project-editor/features/gui/page-editor/designer-interfaces";
+import type {
+    IDesignerContext,
+    IDataContext
+} from "project-editor/features/gui/page-editor/designer-interfaces";
 
 import { Page } from "project-editor/features/gui/page";
 import { Widget } from "project-editor/features/gui/widget";
-import { runInAction } from "mobx";
-import { Point, Rect } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -192,17 +194,17 @@ const WidgetDiv = styled.div`
 export const WidgetComponent = observer(
     ({
         widget,
+        designerContext,
         dataContext,
         left,
         top,
-        designerContext,
         onClick
     }: {
         widget: Widget | Page;
-        dataContext: DataContext;
+        designerContext: IDesignerContext;
+        dataContext: IDataContext;
         left?: number;
         top?: number;
-        designerContext: IDesignerContext;
         onClick?: () => void;
     }) => {
         const elRef = React.useRef<HTMLDivElement>(null);
@@ -259,7 +261,11 @@ export const WidgetComponent = observer(
             canvas.height = widget.height;
             canvas.style.imageRendering = "pixelated";
             canvas.style.display = "block";
-            widget.draw!(canvas.getContext("2d")!, dataContext);
+            widget.draw!(
+                canvas.getContext("2d")!,
+                designerContext,
+                dataContext
+            );
 
             canvasDiv = <div ref={refDiv}></div>;
         }
@@ -282,7 +288,7 @@ export const WidgetComponent = observer(
                 onClick={widget instanceof Widget ? widget.onClick : undefined}
             >
                 {canvasDiv}
-                {widget.render(dataContext, designerContext)}
+                {widget.render(designerContext, dataContext)}
             </WidgetDiv>
         );
     }
@@ -293,12 +299,12 @@ export const WidgetComponent = observer(
 export const WidgetContainerComponent = observer(
     ({
         widgets,
-        dataContext,
-        designerContext
+        designerContext,
+        dataContext
     }: {
         widgets: Widget[];
-        dataContext: DataContext;
         designerContext: IDesignerContext;
+        dataContext: IDataContext;
     }) => {
         return (
             <>
@@ -307,8 +313,8 @@ export const WidgetContainerComponent = observer(
                         <WidgetComponent
                             key={getId(widget)}
                             widget={widget}
-                            dataContext={dataContext}
                             designerContext={designerContext}
+                            dataContext={dataContext}
                         />
                     );
                 })}

@@ -25,10 +25,10 @@ import {
 import { getDocumentStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { DataContext } from "project-editor/features/data/data";
 import type {
     IResizeHandler,
-    IDesignerContext
+    IDesignerContext,
+    IDataContext
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import {
     WidgetContainerComponent,
@@ -656,18 +656,14 @@ export class Page extends EezObject implements IPage {
         return widgets;
     }
 
-    render(dataContext: DataContext, designerContext: IDesignerContext) {
+    render(designerContext: IDesignerContext, dataContext: IDataContext) {
         return (
             <WidgetContainerComponent
                 widgets={this.widgets}
-                dataContext={
-                    new DataContext(
-                        getProject(this),
-                        dataContext,
-                        this.dataContextOverridesObject
-                    )
-                }
                 designerContext={designerContext}
+                dataContext={dataContext.create(
+                    this.dataContextOverridesObject
+                )}
             />
         );
     }

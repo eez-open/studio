@@ -25,8 +25,25 @@ import {
 } from "project-editor/features/gui/bitmap";
 import { Font } from "project-editor/features/gui/font";
 import { Style } from "project-editor/features/gui/style";
-import * as Widget from "project-editor/features/gui/widget";
 import { Page, PageOrientation } from "project-editor/features/gui/page";
+import { Widget } from "project-editor/features/gui/widget";
+import {
+    BarGraphWidget,
+    BitmapWidget,
+    ButtonWidget,
+    ContainerWidget,
+    DisplayDataWidget,
+    LayoutViewWidget,
+    ListGraphWidget,
+    ListWidget,
+    MultilineTextWidget,
+    RectangleWidget,
+    SelectWidget,
+    TextWidget,
+    ToggleButtonWidget,
+    UpDownWidget,
+    YTGraphWidget
+} from "project-editor/features/gui/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -135,7 +152,7 @@ function traverseTree(
     return result;
 }
 
-function isWidgetOpaque(widgetObj: Widget.Widget) {
+function isWidgetOpaque(widgetObj: Widget) {
     return !(
         widgetObj.type === "Container" ||
         widgetObj.type === "List" ||
@@ -147,7 +164,7 @@ function getSelectedWidgetForSelectWidget(
     widgetContainerDisplayItem: DisplayItem,
     item: DisplayItem
 ): DisplayItem | undefined {
-    let widget = item.object as Widget.SelectWidget;
+    let widget = item.object as SelectWidget;
     if (widget.data && widget.widgets) {
         let index: number = getDocumentStore(
             widgetContainerDisplayItem.object
@@ -169,7 +186,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
             x: number,
             y: number
         ) {
-            let object = item.object as Widget.Widget | Page;
+            let object = item.object as Widget | Page;
 
             x += object.left || 0;
             y += object.top || 0;
@@ -186,15 +203,14 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                 children: [],
                 rect: rect,
                 item: item,
-                isOpaque:
-                    object instanceof Widget.Widget && isWidgetOpaque(object)
+                isOpaque: object instanceof Widget && isWidgetOpaque(object)
             };
 
             if (parentNode) {
                 parentNode.children.push(treeNode);
             }
 
-            if (!(object instanceof Widget.Widget)) {
+            if (!(object instanceof Widget)) {
                 let widgetsItemChildren = item.children;
 
                 if (!Array.isArray(widgetsItemChildren)) {
@@ -214,7 +230,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                         enumWidget(treeNode, child, x, y);
                     });
                 } else if (object.type == "List") {
-                    let widget = object as Widget.ListWidget;
+                    let widget = object as ListWidget;
                     let itemWidget = widget.itemWidget;
                     if (itemWidget) {
                         let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
@@ -1120,12 +1136,12 @@ function buildGuiStylesDef(project: Project) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildWidget(object: Widget.Widget | Page) {
+function buildWidget(object: Widget | Page) {
     let result = new Struct();
 
     // type
     let type: number;
-    if (object instanceof Widget.Widget) {
+    if (object instanceof Widget) {
         let widget = object;
         if (widget.type == "Container") {
             type = WIDGET_TYPE_CONTAINER;
@@ -1169,7 +1185,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
     // data
     let data: number = 0;
-    if (object instanceof Widget.Widget) {
+    if (object instanceof Widget) {
         if (object.data) {
             data = getDataItemIndex(object, "data");
         }
@@ -1178,7 +1194,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
     // action
     let action: number = 0;
-    if (object instanceof Widget.Widget) {
+    if (object instanceof Widget) {
         if (object.action) {
             action = getActionIndex(object, "action");
         }
@@ -1212,8 +1228,8 @@ function buildWidget(object: Widget.Widget | Page) {
     if (type == WIDGET_TYPE_CONTAINER) {
         specific = new Struct();
 
-        let widgets: Widget.Widget[];
-        if (object instanceof Widget.ContainerWidget) {
+        let widgets: Widget[];
+        if (object instanceof ContainerWidget) {
             widgets = object.widgets;
         } else {
             widgets = (object as Page).widgets;
@@ -1229,7 +1245,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(childWidgets);
 
-        if (!(object instanceof Widget.Widget)) {
+        if (!(object instanceof Widget)) {
             let rects = findPageTransparentRectanglesInContainer(object);
 
             let rectObjectList = new ObjectList();
@@ -1254,7 +1270,7 @@ function buildWidget(object: Widget.Widget | Page) {
             );
         }
     } else if (type == WIDGET_TYPE_SELECT) {
-        let widget = object as Widget.SelectWidget;
+        let widget = object as SelectWidget;
         specific = new Struct();
 
         // widgets
@@ -1267,7 +1283,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(childWidgets);
     } else if (type == WIDGET_TYPE_LIST) {
-        let widget = object as Widget.ListWidget;
+        let widget = object as ListWidget;
         specific = new Struct();
 
         // listType
@@ -1295,7 +1311,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new ObjectPtr(itemWidget));
     } else if (type == WIDGET_TYPE_DISPLAY_DATA) {
-        let widget = object as Widget.DisplayDataWidget;
+        let widget = object as DisplayDataWidget;
         specific = new Struct();
 
         // focusStyle
@@ -1311,7 +1327,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(focusStyle));
     } else if (type == WIDGET_TYPE_TEXT) {
-        let widget = object as Widget.TextWidget;
+        let widget = object as TextWidget;
         specific = new Struct();
 
         // text
@@ -1334,7 +1350,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(flags));
     } else if (type == WIDGET_TYPE_MULTILINE_TEXT) {
-        let widget = object as Widget.MultilineTextWidget;
+        let widget = object as MultilineTextWidget;
         specific = new Struct();
 
         // text
@@ -1347,7 +1363,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new String(text));
     } else if (type == WIDGET_TYPE_RECTANGLE) {
-        let widget = object as Widget.RectangleWidget;
+        let widget = object as RectangleWidget;
         specific = new Struct();
 
         // flags
@@ -1365,7 +1381,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(flags));
     } else if (type == WIDGET_TYPE_BAR_GRAPH) {
-        let widget = object as Widget.BarGraphWidget;
+        let widget = object as BarGraphWidget;
         specific = new Struct();
 
         // orientation
@@ -1426,7 +1442,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(line2Style));
     } else if (type == WIDGET_TYPE_YT_GRAPH) {
-        let widget = object as Widget.YTGraphWidget;
+        let widget = object as YTGraphWidget;
         specific = new Struct();
 
         // y1Style
@@ -1453,7 +1469,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(y2Style));
     } else if (type == WIDGET_TYPE_UP_DOWN) {
-        let widget = object as Widget.UpDownWidget;
+        let widget = object as UpDownWidget;
         specific = new Struct();
 
         // buttonStyle
@@ -1483,7 +1499,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new String(upButtonText));
     } else if (type == WIDGET_TYPE_LIST_GRAPH) {
-        let widget = object as Widget.ListGraphWidget;
+        let widget = object as ListGraphWidget;
         specific = new Struct();
 
         // dwellData
@@ -1542,7 +1558,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(cursorStyle));
     } else if (type == WIDGET_TYPE_BUTTON) {
-        let widget = object as Widget.ButtonWidget;
+        let widget = object as ButtonWidget;
         specific = new Struct();
 
         // text
@@ -1571,7 +1587,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(disabledStyle));
     } else if (type == WIDGET_TYPE_TOGGLE_BUTTON) {
-        let widget = object as Widget.ToggleButtonWidget;
+        let widget = object as ToggleButtonWidget;
         specific = new Struct();
 
         // text 1
@@ -1594,7 +1610,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new String(text2));
     } else if (type == WIDGET_TYPE_BITMAP) {
-        let widget = object as Widget.BitmapWidget;
+        let widget = object as BitmapWidget;
         specific = new Struct();
 
         // bitmap
@@ -1605,7 +1621,7 @@ function buildWidget(object: Widget.Widget | Page) {
 
         specific.addField(new UInt8(bitmap));
     } else if (type == WIDGET_TYPE_CUSTOM) {
-        let widget = object as Widget.LayoutViewWidget;
+        let widget = object as LayoutViewWidget;
         specific = new Struct();
 
         // layout

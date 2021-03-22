@@ -15,8 +15,6 @@ import {
     InheritedValue,
     PropertyType,
     getProperty,
-    isObjectInstanceOf,
-    findClass,
     getChildOfObject,
     MessageType,
     NavigationComponent,
@@ -50,15 +48,15 @@ import {
 } from "project-editor/features/gui/theme";
 import { Font } from "project-editor/features/gui/font";
 import { ProjectContext } from "project-editor/project/context";
+import { Widget } from "project-editor/features/gui/widget";
 
 const { MenuItem } = EEZStudio.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isWidgetParentOfStyle(object: IEezObject) {
-    const widgetClass = findClass("Widget")!;
     while (true) {
-        if (isObjectInstanceOf(object, widgetClass.classInfo)) {
+        if (object instanceof Widget) {
             return true;
         }
         if (!getParent(object)) {
