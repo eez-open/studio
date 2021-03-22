@@ -1,29 +1,38 @@
 import React from "react";
-import { observable, computed, action, toJS, autorun } from "mobx";
-import { observer, Provider } from "mobx-react";
-import { createTransformer, ITransformer } from "mobx-utils";
+import { observable, computed, action, toJS, autorun, runInAction } from "mobx";
+import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
-import { Point, Rect } from "eez-studio-shared/geometry";
-
 import {
-    IBaseObject,
+    BoundingRectBuilder,
+    Point,
+    pointDistance,
+    pointInRect,
+    Rect
+} from "eez-studio-shared/geometry";
+
+import type {
     IDocument,
     IViewStatePersistantState,
-    IResizeHandler,
-    IDesignerOptions
+    IDesignerOptions,
+    IDesignerContext,
+    IMouseHandler
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import { ITransform } from "project-editor/features/gui/page-editor/transform";
 import { DesignerContext } from "project-editor/features/gui/page-editor/context";
-import { Canvas } from "project-editor/features/gui/page-editor/canvas";
 import {
-    selectToolHandler,
+    ConnectionLineMouseHandler,
+    DragMouseHandler,
+    isSelectionMoveable,
+    ResizeMouseHandler,
+    RubberBandSelectionMouseHandler,
     SnapLines
 } from "project-editor/features/gui/page-editor/select-tool";
 import {
     getObjectIdFromPoint,
-    getObjectIdsInsideRect
+    getObjectIdsInsideRect,
+    getSelectedObjectsBoundingRect
 } from "project-editor/features/gui/page-editor/bounding-rects";
 import styled from "eez-studio-ui/styled-components";
 
@@ -35,186 +44,42 @@ import {
     setParent,
     getId
 } from "project-editor/core/object";
-import {
-    deleteItems,
-    IPanel
-} from "project-editor/core/store";
-import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { IPanel, getDocumentStore } from "project-editor/core/store";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { getProjectStore } from "project-editor/project/project";
-import { Page } from "project-editor/features/gui/page";
+import { ConnectionLine, Page } from "project-editor/features/gui/page";
 import { Widget } from "project-editor/features/gui/widget";
 import { WidgetComponent } from "project-editor/features/gui/page-editor/render";
 import { ProjectContext } from "project-editor/project/context";
+import { guid } from "eez-studio-shared/guid";
+import { ConnectionLines } from "project-editor/features/gui/page-editor/ConnectionLineComponent";
+import { Draggable } from "eez-studio-ui/draggable";
+import { PanMouseHandler } from "project-editor/features/gui/page-editor/mouse-handler";
+import { Selection } from "project-editor/features/gui/page-editor/selection";
+import { closestByClass } from "eez-studio-shared/dom";
 
-////////////////////////////////////////////////////////////////////////////////
-
-function createObjectToEditorObjectTransformer(
-    designerContext: PageEditorDesignerContext
-) {
-    const transformer = createTransformer(
-        (treeObjectAdapter: ITreeObjectAdapter): EditorObject => {
-            return new EditorObject(
-                treeObjectAdapter,
-                designerContext,
-                transformer
-            );
-        }
-    );
-    return transformer;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class EditorObject implements IBaseObject {
-    constructor(
-        public treeObjectAdapter: ITreeObjectAdapter,
-        private pageEditorContext: PageEditorDesignerContext,
-        private transformer: ITransformer<ITreeObjectAdapter, EditorObject>
-    ) {}
-
-    get object() {
-        return this.treeObjectAdapter.object as Page | Widget;
-    }
-
-    get id() {
-        return getId(this.object);
-    }
-
-    @computed
-    get rect() {
-        return this.object;
-    }
-
-    set rect(value: Rect) {
-        getProjectStore(this.treeObjectAdapter.object).updateObject(this.object, {
-            left: value.left,
-            top: value.top,
-            width: value.width,
-            height: value.height
-        });
-    }
-
-    @computed
-    get children(): EditorObject[] {
-        let childrenObjects = this.treeObjectAdapter.children;
-
-        if (Array.isArray(childrenObjects) && this.object instanceof Page) {
-            if (this.pageEditorContext.dragWidget) {
-                childrenObjects = [
-                    ...childrenObjects,
-                    {
-                        object: this.pageEditorContext.dragWidget,
-                        children: []
-                    } as any
-                ];
-            }
-        }
-
-        return _map(childrenObjects, (object: ITreeObjectAdapter) =>
-            this.transformer(object)
-        );
-    }
-
-    get isMoveable() {
-        if (this.object instanceof Widget) {
-            return this.object.isMoveable;
-        }
-        return true;
-    }
-
-    getResizeHandlers(): IResizeHandler[] | undefined | false {
-        return this.object.getResizeHandlers();
-    }
-
-    getColumnWidth(columnIndex: number): number {
-        if (this.object instanceof Widget) {
-            return this.object.getColumnWidth(columnIndex);
-        }
-        return NaN;
-    }
-
-    resizeColumn(
-        columnIndex: number,
-        savedColumnWidth: number,
-        offset: number
-    ) {
-        if (this.object instanceof Widget) {
-            return this.object.resizeColumn(
-                columnIndex,
-                savedColumnWidth,
-                offset
-            );
-        }
-    }
-
-    getRowHeight(rowIndex: number): number {
-        if (this.object instanceof Widget) {
-            return this.object.getRowHeight(rowIndex);
-        }
-        return NaN;
-    }
-
-    resizeRow(rowIndex: number, savedRowHeight: number, offset: number) {
-        if (this.object instanceof Widget) {
-            return this.object.resizeRow(rowIndex, savedRowHeight, offset);
-        }
-    }
-
-    open() {
-        if (this.object instanceof Widget) {
-            return this.object.open();
-        }
-    }
-
-    findObjectById(id: string): EditorObject | undefined {
-        if (this.id === id) {
-            return this;
-        }
-
-        for (const child of this.children) {
-            const object = child && child.findObjectById(id);
-            if (object) {
-                return object;
-            }
-        }
-
-        return undefined;
-    }
-
-    findObjectParent(editorObject: EditorObject): EditorObject | undefined {
-        for (const child of this.children) {
-            if (child.object === editorObject.object) {
-                return this;
-            }
-            const parent = child.findObjectParent(editorObject);
-            if (parent !== undefined) {
-                return parent;
-            }
-        }
-        return undefined;
-    }
-}
+const CONF_DOUBLE_CLICK_TIME = 350; // ms
+const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class DragSnapLines {
     @observable snapLines: SnapLines | undefined;
-    pageEditorContext: PageEditorDesignerContext | undefined;
+    designerContext: DesignerContext | undefined;
     dragWidget: Widget | undefined;
 
-    start(pageEditorContext: PageEditorDesignerContext) {
+    start(pageEditorContext: DesignerContext) {
         this.snapLines = new SnapLines();
-        this.pageEditorContext = pageEditorContext;
+        this.designerContext = pageEditorContext;
         this.dragWidget = pageEditorContext.dragWidget;
 
-        this.snapLines.find(pageEditorContext);
+        this.snapLines.find(pageEditorContext, () => true);
     }
 
     clear() {
         this.snapLines = undefined;
-        this.pageEditorContext = undefined;
+        this.designerContext = undefined;
         this.dragWidget = undefined;
     }
 }
@@ -223,24 +88,28 @@ const dragSnapLines = new DragSnapLines();
 
 @observer
 class DragSnapLinesOverlay extends React.Component {
-    get dragWidgetRect() {
-        return dragSnapLines.dragWidget!;
-    }
-
     render() {
         if (!dragSnapLines.snapLines) {
             return null;
         }
 
+        const page = dragSnapLines.designerContext!.document.page
+            .object as Page;
+        const dragWidget = dragSnapLines.dragWidget!;
+
         return (
-            dragSnapLines.snapLines && (
-                <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
-                    {dragSnapLines.snapLines.render(
-                        dragSnapLines.pageEditorContext!.viewState.transform,
-                        this.dragWidgetRect
-                    )}
-                </div>
-            )
+            <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
+                {dragSnapLines.snapLines.render(
+                    dragSnapLines.designerContext!,
+                    {
+                        left: page.left + dragWidget.left,
+                        top: page.top + dragWidget.top,
+                        width: dragWidget._geometry?.width ?? dragWidget.width,
+                        height:
+                            dragWidget._geometry?.height ?? dragWidget.height
+                    }
+                )}
+            </div>
         );
     }
 }
@@ -250,17 +119,18 @@ class DragSnapLinesOverlay extends React.Component {
 const DragWidget = observer(
     ({
         page,
-        pageEditorContext
+        designerContext
     }: {
         page: Page;
-        pageEditorContext: PageEditorDesignerContext;
+        designerContext: DesignerContext;
     }) => {
-        return pageEditorContext.dragWidget ? (
+        return designerContext.dragWidget ? (
             <WidgetComponent
-                widget={pageEditorContext.dragWidget}
-                left={page.left + pageEditorContext.dragWidget.left}
-                top={page.top + pageEditorContext.dragWidget.top}
-                dataContext={getProjectStore(page).dataContext}
+                widget={designerContext.dragWidget}
+                left={page.left + designerContext.dragWidget.left}
+                top={page.top + designerContext.dragWidget.top}
+                dataContext={designerContext.document.DocumentStore.dataContext}
+                designerContext={designerContext}
             />
         ) : null;
     }
@@ -268,63 +138,59 @@ const DragWidget = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class PageEditorDesignerContext extends DesignerContext {
-    @observable dragWidget: Widget | undefined;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 class PageDocument implements IDocument {
     constructor(
-        private page: ITreeObjectAdapter,
-        private pageEditorContext: PageEditorDesignerContext
+        public page: ITreeObjectAdapter,
+        private designerContext: DesignerContext
     ) {}
 
-    @computed
-    get rootObject() {
-        const transformer = createObjectToEditorObjectTransformer(
-            this.pageEditorContext
+    @computed get connectionLines(): ITreeObjectAdapter[] {
+        return (this.page.children as ITreeObjectAdapter[]).filter(
+            editorObject => editorObject.object instanceof ConnectionLine
         );
-        return transformer(this.page);
     }
 
-    get rootObjects() {
-        return [this.rootObject];
+    @computed get selectedConnectionLines() {
+        return this.connectionLines.filter(connectionLine =>
+            this.designerContext.viewState.isObjectIdSelected(connectionLine.id)
+        );
+    }
+
+    @computed get nonSelectedConnectionLines() {
+        return this.connectionLines.filter(
+            connectionLine =>
+                !this.designerContext.viewState.isObjectIdSelected(
+                    connectionLine.id
+                )
+        );
     }
 
     findObjectById(id: string) {
-        return this.rootObject.findObjectById(id);
+        return this.page.getObjectAdapter(id);
     }
 
-    findObjectParent(object: EditorObject) {
-        if (object.object === this.rootObject.object) {
-            return undefined;
-        }
-        return this.rootObject.findObjectParent(object);
+    findObjectParent(object: ITreeObjectAdapter) {
+        return this.page.getParent(object);
     }
 
-    createObject(params: any) {
-        // TODO ???
-    }
-
-    deleteObjects(objects: EditorObject[]) {
-        deleteItems(objects.map(editorObject => editorObject.object));
-    }
-
-    objectFromPoint(point: Point) {
-        const id = getObjectIdFromPoint(
+    objectFromPoint(
+        point: Point
+    ):
+        | {
+              id: string;
+              connectionInput?: string;
+              connectionOutput?: string;
+          }
+        | undefined {
+        return getObjectIdFromPoint(
             this,
-            this.pageEditorContext.viewState,
+            this.designerContext.viewState,
             point
         );
-        if (!id) {
-            return undefined;
-        }
-        return this.findObjectById(id);
     }
 
     resetTransform(transform: ITransform) {
-        const page = this.rootObject.object as Page;
+        const page = this.page.object as Page;
         transform.translate = {
             x: -page.width / 2,
             y: -page.height / 2
@@ -334,19 +200,26 @@ class PageDocument implements IDocument {
 
     getObjectsInsideRect(rect: Rect) {
         const ids = getObjectIdsInsideRect(
-            this.pageEditorContext.viewState,
+            this.designerContext.viewState,
             rect
         );
 
         const editorObjectsGroupedByParent = new Map<
             IEezObject,
-            EditorObject[]
+            ITreeObjectAdapter[]
         >();
-        let maxLengthGroup: EditorObject[] | undefined;
+        let maxLengthGroup: ITreeObjectAdapter[] | undefined;
 
         ids.forEach(id => {
             const editorObject = this.findObjectById(id);
-            if (editorObject) {
+            if (
+                editorObject &&
+                !(editorObject.object instanceof ConnectionLine) &&
+                !(
+                    editorObject.object instanceof Page &&
+                    editorObject.object.isAction
+                )
+            ) {
                 const parent = getParent(editorObject.object);
 
                 let group = editorObjectsGroupedByParent.get(parent);
@@ -367,20 +240,645 @@ class PageDocument implements IDocument {
         return maxLengthGroup ? maxLengthGroup : [];
     }
 
-    createContextMenu(objects: IBaseObject[]) {
+    createContextMenu(objects: ITreeObjectAdapter[]) {
         return this.page.createSelectionContextMenu();
     }
 
-    onDragStart(op: "move" | "resize"): void {
-        getProjectStore(this.page.object).UndoManager.setCombineCommands(true);
+    @computed get DocumentStore() {
+        return getDocumentStore(this.page.object);
     }
 
-    onDragEnd(
-        op: "move" | "resize",
-        changed: boolean,
-        objects: IBaseObject[]
-    ): void {
-        getProjectStore(this.page.object).UndoManager.setCombineCommands(false);
+    onDragStart(): void {
+        this.DocumentStore.UndoManager.setCombineCommands(true);
+    }
+
+    onDragEnd(): void {
+        this.DocumentStore.UndoManager.setCombineCommands(false);
+    }
+
+    connect(
+        sourceObjectId: string,
+        connectionOutput: string,
+        targetObjectId: string,
+        connectionInput: string
+    ) {
+        const page = this.page.object as Page;
+
+        const DocumentStore = this.DocumentStore;
+
+        const sourceObject = DocumentStore.getObjectFromObjectId(
+            sourceObjectId
+        ) as Widget;
+        const targetObject = DocumentStore.getObjectFromObjectId(
+            targetObjectId
+        ) as Widget;
+
+        if (!sourceObject.wireID) {
+            DocumentStore.updateObject(sourceObject, {
+                wireID: guid()
+            });
+        }
+
+        if (!targetObject.wireID) {
+            DocumentStore.updateObject(targetObject, {
+                wireID: guid()
+            });
+        }
+
+        DocumentStore.addObject(page.connectionLines, {
+            source: sourceObject.wireID,
+            output: connectionOutput,
+            target: targetObject.wireID,
+            input: connectionInput
+        });
+    }
+}
+
+const AllConnectionLines = observer(
+    ({
+        pageRect,
+        designerContext
+    }: {
+        pageRect: Rect;
+        designerContext: DesignerContext;
+    }) => {
+        return (
+            <svg
+                width={pageRect.width}
+                height={pageRect.height}
+                style={{
+                    position: "absolute",
+                    left: pageRect.left,
+                    top: pageRect.top
+                }}
+                viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${pageRect.height}`}
+            >
+                <ConnectionLines
+                    connectionLines={
+                        designerContext.document.nonSelectedConnectionLines
+                    }
+                    context={designerContext}
+                    selected={false}
+                />
+                <ConnectionLines
+                    connectionLines={
+                        designerContext.document.selectedConnectionLines
+                    }
+                    context={designerContext}
+                    selected={true}
+                />
+            </svg>
+        );
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+function CenterLines({
+    pageRect,
+    designerContext
+}: {
+    pageRect: Rect;
+    designerContext: IDesignerContext;
+}) {
+    const transform = designerContext.viewState.transform;
+
+    const CENTER_LINES_COLOR = "#ddd";
+    const CENTER_LINES_WIDTH = 1 / transform.scale;
+    const centerLineStyle = {
+        fill: "transparent",
+        stroke: CENTER_LINES_COLOR,
+        strokeWidth: CENTER_LINES_WIDTH
+    };
+    const PAGE_RECT_LINES_COLOR = "#ddd";
+    const PAGE_RECT_LINES_WIDTH = 2 / transform.scale;
+    const pageRectLineStyle = {
+        fill: "transparent",
+        stroke: PAGE_RECT_LINES_COLOR,
+        strokeWidth: PAGE_RECT_LINES_WIDTH
+    };
+
+    const center = designerContext.options.center!;
+
+    return (
+        <svg
+            width={pageRect.width}
+            height={pageRect.height}
+            style={{
+                position: "absolute",
+                left: pageRect.left,
+                top: pageRect.top
+            }}
+            viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${pageRect.height}`}
+        >
+            <line
+                x1={pageRect.left}
+                y1={center.y}
+                x2={pageRect.left + pageRect.width}
+                y2={center.y}
+                style={centerLineStyle}
+            />
+            <line
+                x1={center.x}
+                y1={pageRect.top}
+                x2={center.x}
+                y2={pageRect.top + pageRect.height}
+                style={centerLineStyle}
+            />
+            <rect
+                x={pageRect.left}
+                y={pageRect.top}
+                width={pageRect.width}
+                height={pageRect.height}
+                style={pageRectLineStyle}
+            />
+        </svg>
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const CanvasDiv = styled.div`
+    cursor: default;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    & > * {
+        user-select: none;
+    }
+`;
+
+@observer
+export class Canvas extends React.Component<{
+    designerContext: IDesignerContext;
+    className?: string;
+    style?: React.CSSProperties;
+    pageRect?: Rect;
+    dragAndDropActive: boolean;
+}> {
+    div: HTMLDivElement;
+    innerDiv: Element;
+    clientRectChangeDetectionAnimationFrameHandle: any;
+    deltaY = 0;
+
+    @observable _mouseHandler: IMouseHandler | undefined;
+    get mouseHandler() {
+        return this._mouseHandler;
+    }
+    set mouseHandler(value: IMouseHandler | undefined) {
+        runInAction(() => {
+            this._mouseHandler = value;
+            this.props.designerContext.viewState.isIdle = !this._mouseHandler;
+        });
+    }
+
+    buttonsAtDown: number;
+    lastMouseUpPosition: Point;
+    lastMouseUpTime: number | undefined;
+
+    draggable = new Draggable(this);
+
+    scrollLeft: number;
+    scrollTop: number;
+
+    @computed
+    get boundingOffsetRect() {
+        const transform = this.props.designerContext.viewState.transform;
+        const builder = new BoundingRectBuilder();
+        builder.addRect(transform.clientToOffsetRect(transform.clientRect));
+        return builder.getRect()!;
+    }
+
+    updateScroll() {
+        const boundingRect = this.boundingOffsetRect;
+
+        this.div.scrollLeft = -boundingRect.left;
+        this.scrollLeft = this.div.scrollLeft;
+
+        this.div.scrollTop = -boundingRect.top;
+        this.scrollTop = this.div.scrollTop;
+
+        if (
+            this.boundingOffsetRect.width >
+            this.props.designerContext.viewState.transform.clientRect.width
+        ) {
+            this.div.style.overflowX = "auto";
+        } else {
+            this.div.style.overflowX = "hidden";
+        }
+
+        if (
+            this.boundingOffsetRect.height >
+            this.props.designerContext.viewState.transform.clientRect.height
+        ) {
+            this.div.style.overflowY = "auto";
+        } else {
+            this.div.style.overflowY = "hidden";
+        }
+    }
+
+    userScrollTimeout: any;
+
+    @bind
+    clientRectChangeDetection() {
+        if ($(this.div).is(":visible")) {
+            const transform = this.props.designerContext.viewState.transform;
+
+            let clientRect = this.div.getBoundingClientRect();
+            if (
+                clientRect.left !== transform.clientRect.left ||
+                clientRect.top !== transform.clientRect.top ||
+                (clientRect.width &&
+                    clientRect.width !== transform.clientRect.width) ||
+                (clientRect.height &&
+                    clientRect.height !== transform.clientRect.height)
+            ) {
+                runInAction(() => {
+                    transform.clientRect = clientRect;
+                });
+            }
+        }
+
+        this.clientRectChangeDetectionAnimationFrameHandle = requestAnimationFrame(
+            this.clientRectChangeDetection
+        );
+    }
+
+    componentDidMount() {
+        this.draggable.attach(this.innerDiv);
+        this.updateScroll();
+        this.clientRectChangeDetection();
+
+        this.div.addEventListener("wheel", this.onWheel, {
+            passive: false
+        });
+    }
+
+    componentDidUpdate() {
+        this.updateScroll();
+    }
+
+    componentWillUnmount() {
+        this.draggable.attach(null);
+
+        if (this.clientRectChangeDetectionAnimationFrameHandle) {
+            cancelAnimationFrame(
+                this.clientRectChangeDetectionAnimationFrameHandle
+            );
+            this.clientRectChangeDetectionAnimationFrameHandle = undefined;
+        }
+
+        this.div.removeEventListener("wheel", this.onWheel);
+    }
+
+    @bind
+    onWheel(event: WheelEvent) {
+        if (event.buttons === 4) {
+            // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
+            return;
+        }
+
+        const transform = this.props.designerContext.viewState.transform;
+
+        if (event.ctrlKey) {
+            this.deltaY += event.deltaY;
+            if (Math.abs(this.deltaY) > 10) {
+                let scale: number;
+                if (this.deltaY < 0) {
+                    scale = transform.nextScale;
+                } else {
+                    scale = transform.previousScale;
+                }
+
+                this.deltaY = 0;
+
+                var point = transform.clientToOffsetPoint({
+                    x: event.clientX,
+                    y: event.clientY
+                });
+                let x = point.x - transform.clientRect.width / 2;
+                let y = point.y - transform.clientRect.height / 2;
+                let tx =
+                    x - ((x - transform.translate.x) * scale) / transform.scale;
+                let ty =
+                    y - ((y - transform.translate.y) * scale) / transform.scale;
+
+                runInAction(() => {
+                    transform.scale = scale;
+                    transform.translate = { x: tx, y: ty };
+                });
+            }
+        } else {
+            runInAction(() => {
+                transform.translate = {
+                    x:
+                        transform.translate.x -
+                        (event.shiftKey ? event.deltaY : event.deltaX),
+                    y:
+                        transform.translate.y -
+                        (event.shiftKey ? event.deltaX : event.deltaY)
+                };
+            });
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    @bind
+    onContextMenu(event: React.MouseEvent) {
+        event.preventDefault();
+    }
+
+    createMouseHandler(event: MouseEvent) {
+        const context = this.props.designerContext;
+
+        if (!event.altKey) {
+            if (
+                closestByClass(
+                    event.target,
+                    "EezStudio_DesignerSelection_ResizeHandle"
+                )
+            ) {
+                const cursor = (event.target as HTMLElement).style.cursor;
+                if (
+                    cursor === "nw-resize" ||
+                    cursor === "n-resize" ||
+                    cursor === "ne-resize" ||
+                    cursor === "w-resize" ||
+                    cursor === "e-resize" ||
+                    cursor === "sw-resize" ||
+                    cursor === "s-resize" ||
+                    cursor === "se-resize"
+                ) {
+                    return new ResizeMouseHandler(cursor);
+                }
+                return undefined;
+            }
+
+            const isMoveable = isSelectionMoveable(context);
+
+            if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
+                return isMoveable ? new DragMouseHandler() : undefined;
+            } else {
+                let point = context.viewState.transform.mouseEventToPagePoint(
+                    event
+                );
+                const result = context.document.objectFromPoint(point);
+                if (result) {
+                    const object = context.document.findObjectById(result.id);
+                    if (object) {
+                        if (!context.viewState.isObjectSelected(object)) {
+                            if (!event.ctrlKey && !event.shiftKey) {
+                                context.viewState.deselectAllObjects();
+                            }
+                            context.viewState.selectObject(object);
+                        }
+
+                        if (result.connectionOutput) {
+                            return new ConnectionLineMouseHandler(
+                                object,
+                                result.connectionOutput
+                            );
+                        } else {
+                            return isMoveable
+                                ? new DragMouseHandler()
+                                : undefined;
+                        }
+                    }
+                }
+            }
+        }
+
+        return new RubberBandSelectionMouseHandler();
+    }
+
+    @action.bound
+    onDragStart(event: PointerEvent) {
+        this.buttonsAtDown = event.buttons;
+
+        if (this.mouseHandler) {
+            this.mouseHandler.up(this.props.designerContext, event);
+            this.mouseHandler = undefined;
+        }
+
+        if (event.buttons && event.buttons !== 1) {
+            this.mouseHandler = new PanMouseHandler();
+        } else {
+            this.mouseHandler = this.createMouseHandler(event);
+        }
+
+        if (this.mouseHandler) {
+            this.mouseHandler.down(this.props.designerContext, event);
+        }
+    }
+
+    @bind
+    onDragMove(event: PointerEvent) {
+        if (this.mouseHandler) {
+            this.mouseHandler.move(this.props.designerContext, event);
+        }
+    }
+
+    @action.bound
+    onDragEnd(event: PointerEvent) {
+        let preventContextMenu = false;
+
+        if (this.mouseHandler) {
+            this.mouseHandler.up(this.props.designerContext, event);
+
+            if (this.mouseHandler instanceof PanMouseHandler) {
+                if (pointDistance(this.mouseHandler.totalMovement) > 10) {
+                    preventContextMenu = true;
+                }
+            }
+
+            this.mouseHandler = undefined;
+        }
+
+        let time = new Date().getTime();
+
+        if (this.buttonsAtDown === 1) {
+            let distance = pointDistance(
+                { x: event.clientX, y: event.clientY },
+                { x: this.draggable.xDragStart, y: this.draggable.yDragStart }
+            );
+
+            if (distance <= CONF_DOUBLE_CLICK_DISTANCE) {
+                if (this.lastMouseUpTime !== undefined) {
+                    let distance = pointDistance(
+                        { x: event.clientX, y: event.clientY },
+                        this.lastMouseUpPosition
+                    );
+
+                    if (
+                        time - this.lastMouseUpTime <= CONF_DOUBLE_CLICK_TIME &&
+                        distance <= CONF_DOUBLE_CLICK_DISTANCE
+                    ) {
+                        // double click
+                        if (
+                            this.props.designerContext.viewState.selectedObjects
+                                .length === 1
+                        ) {
+                            const object = this.props.designerContext.viewState
+                                .selectedObjects[0];
+                            object.open();
+                        } else if (
+                            this.props.designerContext.viewState.selectedObjects
+                                .length === 0
+                        ) {
+                            this.props.designerContext.viewState.resetTransform();
+                        }
+                    }
+                }
+
+                this.lastMouseUpTime = time;
+                this.lastMouseUpPosition = {
+                    x: event.clientX,
+                    y: event.clientY
+                };
+            } else {
+                this.lastMouseUpTime = undefined;
+            }
+        } else {
+            this.lastMouseUpTime = undefined;
+
+            if (!preventContextMenu && this.buttonsAtDown === 2) {
+                // show context menu
+                const context = this.props.designerContext;
+                const point = context.viewState.transform.mouseEventToPagePoint(
+                    event
+                );
+                if (
+                    context.viewState.selectedObjects.length === 0 ||
+                    !pointInRect(
+                        point,
+                        getSelectedObjectsBoundingRect(context.viewState)
+                    )
+                ) {
+                    context.viewState.deselectAllObjects();
+
+                    let result = context.document.objectFromPoint(point);
+                    if (!result) {
+                        return;
+                    }
+
+                    const object = context.document.findObjectById(result.id);
+                    if (!object) {
+                        return;
+                    }
+
+                    context.viewState.selectObject(object);
+                }
+
+                setTimeout(() => {
+                    const menu = context.document.createContextMenu(
+                        context.viewState.selectedObjects
+                    );
+                    if (menu) {
+                        if (this.mouseHandler) {
+                            this.mouseHandler.up(this.props.designerContext);
+                            this.mouseHandler = undefined;
+                        }
+
+                        menu.popup({});
+                    }
+                }, 0);
+            }
+        }
+    }
+
+    @action.bound
+    onScroll() {
+        // TODO
+        // currently, scrolling by using scroll bars are disabled
+        this.div.scrollLeft = this.scrollLeft;
+        this.div.scrollTop = this.scrollTop;
+    }
+
+    render() {
+        let style: React.CSSProperties = {};
+        if (this.mouseHandler) {
+            style.cursor = this.mouseHandler.cursor;
+        }
+        if (this.props.style) {
+            Object.assign(style, this.props.style);
+        }
+
+        this.draggable.cursor = style.cursor;
+
+        const transform = this.props.designerContext.viewState.transform;
+
+        const pageRect = transform.clientToPageRect(transform.clientRect);
+
+        const boundingOffsetRect = this.boundingOffsetRect;
+
+        const xt = Math.round(
+            transform.translate.x + transform.clientRect.width / 2
+        );
+        const yt = Math.round(
+            transform.translate.y + transform.clientRect.height / 2
+        );
+
+        if (
+            transform.clientRect.width <= 1 ||
+            transform.clientRect.height <= 1
+        ) {
+            style.visibility = "hidden";
+        }
+
+        return (
+            <CanvasDiv
+                ref={(ref: any) => (this.div = ref!)}
+                className={this.props.className}
+                style={style}
+                onContextMenu={this.onContextMenu}
+                onScroll={this.onScroll}
+            >
+                <div
+                    ref={ref => (this.innerDiv = ref!)}
+                    style={{
+                        transform: `translate(${-boundingOffsetRect.left}px, ${-boundingOffsetRect.top}px)`,
+                        width: "100%",
+                        height: "100%"
+                    }}
+                >
+                    <div
+                        className="eez-canvas"
+                        style={{
+                            position: "absolute",
+                            transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
+                            transformOrigin: "0 0",
+                            pointerEvents: this.props.dragAndDropActive
+                                ? "none"
+                                : "all"
+                        }}
+                    >
+                        {this.props.designerContext.options &&
+                            this.props.designerContext.options.center && (
+                                <CenterLines
+                                    pageRect={pageRect}
+                                    designerContext={this.props.designerContext}
+                                />
+                            )}
+                        {this.props.children}
+                    </div>
+                    <Selection
+                        context={this.props.designerContext}
+                        mouseHandler={this.mouseHandler}
+                    />
+
+                    {this.mouseHandler &&
+                        this.mouseHandler.render &&
+                        this.mouseHandler.render(this.props.designerContext)}
+
+                    <DragSnapLinesOverlay />
+                </div>
+            </CanvasDiv>
+        );
     }
 }
 
@@ -414,17 +912,18 @@ const PageEditorCanvas = styled(Canvas)`
 interface PageEditorProps {
     widgetContainer: ITreeObjectAdapter;
     onFocus?: () => void;
-    pageRect?: Rect;
 }
 
 @observer
 export class PageEditor
-    extends React.Component<PageEditorProps, { hasError: boolean }>
+    extends React.Component<PageEditorProps>
     implements IPanel {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
-    pageEditorContext: PageEditorDesignerContext = new PageEditorDesignerContext();
+    designerContext: DesignerContext = new DesignerContext(
+        "eez-page-editor-" + guid()
+    );
     currentWidgetContainer?: ITreeObjectAdapter;
 
     @observable pageDocument: PageDocument;
@@ -433,8 +932,6 @@ export class PageEditor
 
     constructor(props: PageEditorProps) {
         super(props);
-
-        this.state = { hasError: false };
 
         this.updatePageDocument();
     }
@@ -446,7 +943,7 @@ export class PageEditor
 
             this.pageDocument = new PageDocument(
                 this.props.widgetContainer,
-                this.pageEditorContext
+                this.designerContext
             );
 
             this.options = {
@@ -460,7 +957,7 @@ export class PageEditor
 
     componentDidMount() {
         autorun(() => {
-            this.pageEditorContext.set(
+            this.designerContext.set(
                 this.pageDocument,
                 this.viewStatePersistantState,
                 this.onSavePersistantState,
@@ -475,17 +972,13 @@ export class PageEditor
     }
 
     @bind
-    filterSnapLines(node: IBaseObject) {
-        const object = (node as EditorObject).object;
-        if (!object) {
-            return false;
-        }
+    filterSnapLines(node: ITreeObjectAdapter) {
+        const object = node.object;
 
-        const selectedObjects = this.pageEditorContext.viewState
-            .selectedObjects;
+        const selectedObjects = this.designerContext.viewState.selectedObjects;
 
         for (let i = 0; i < selectedObjects.length; ++i) {
-            const selectedObject = (selectedObjects[i] as EditorObject).object;
+            const selectedObject = selectedObjects[i].object;
 
             if (object === selectedObject) {
                 return false;
@@ -504,22 +997,12 @@ export class PageEditor
 
     @computed
     get selectedObject() {
-        const selectedObject =
-            this.pageEditorContext.viewState.selectedObjects.length === 1 &&
-            this.pageEditorContext.viewState.selectedObjects[0];
-
-        if (selectedObject) {
-            return (selectedObject as EditorObject).object;
-        }
-
-        return undefined;
+        return this.props.widgetContainer.selectedObjects[0];
     }
 
     @computed
     get selectedObjects() {
-        return this.pageEditorContext.viewState.selectedObjects.map(
-            selectedObject => selectedObject.object
-        );
+        return this.props.widgetContainer.selectedObjects;
     }
 
     cutSelection() {
@@ -557,10 +1040,7 @@ export class PageEditor
         }
 
         let viewState: IViewStatePersistantState = {
-            transform,
-            selectedObjects: this.props.widgetContainer.selectedItems.map(
-                item => getId(item.object)
-            )
+            transform
         };
 
         if (!this.savedViewState) {
@@ -576,7 +1056,7 @@ export class PageEditor
 
     @bind
     onSavePersistantState(viewState: IViewStatePersistantState) {
-        if (!this.pageEditorContext.dragWidget) {
+        if (!this.designerContext.dragWidget) {
             this.savedViewState = viewState;
 
             const uiState = this.context.UIStateStore.getObjectUIState(
@@ -599,11 +1079,6 @@ export class PageEditor
                     }
                 );
             }
-
-            // selection changed in Editor => change selection in Tree
-            this.props.widgetContainer.selectObjectIds(
-                viewState.selectedObjects
-            );
         }
     }
 
@@ -632,22 +1107,18 @@ export class PageEditor
 
             const widget = DragAndDropManager.dragObject as Widget;
 
-            if (!this.pageEditorContext.dragWidget) {
-                this.pageEditorContext.dragWidget = widget;
-                setParent(this.pageEditorContext.dragWidget, page.widgets);
+            if (!this.designerContext.dragWidget) {
+                this.designerContext.dragWidget = widget;
+                setParent(this.designerContext.dragWidget, page.widgets);
 
-                this.pageEditorContext.viewState.selectObjects([
-                    this.pageEditorContext.document.findObjectById(
-                        "WidgetPaletteItem"
-                    )!
-                ]);
+                this.designerContext.viewState.selectObjects([]);
 
-                dragSnapLines.start(this.pageEditorContext);
+                dragSnapLines.start(this.designerContext);
             }
 
             dragSnapLines.snapLines!.enabled = !event.shiftKey;
 
-            const transform = this.pageEditorContext.viewState.transform;
+            const transform = this.designerContext.viewState.transform;
 
             const p = transform.clientToPagePoint({
                 x:
@@ -672,23 +1143,23 @@ export class PageEditor
 
     @action.bound
     onDrop(event: React.DragEvent) {
-        if (this.pageEditorContext.dragWidget) {
+        if (this.designerContext.dragWidget) {
             const page = this.props.widgetContainer.object as Page;
 
             const object = this.context.addObject(
                 page.widgets,
-                toJS(this.pageEditorContext.dragWidget)
+                toJS(this.designerContext.dragWidget)
             );
 
-            this.pageEditorContext.dragWidget = undefined;
+            this.designerContext.dragWidget = undefined;
             dragSnapLines.clear();
 
             setTimeout(() => {
-                const objectAdapter = this.pageEditorContext.document.findObjectById(
+                const objectAdapter = this.designerContext.document.findObjectById(
                     getId(object)
                 );
                 if (objectAdapter) {
-                    const viewState = this.pageEditorContext.viewState;
+                    const viewState = this.designerContext.viewState;
                     viewState.selectObjects([objectAdapter]);
                 }
             }, 0);
@@ -697,13 +1168,13 @@ export class PageEditor
 
     @action.bound
     onDragLeave(event: React.DragEvent) {
-        if (this.pageEditorContext.dragWidget) {
-            this.pageEditorContext.dragWidget.left = 0;
-            this.pageEditorContext.dragWidget.top = 0;
-            this.pageEditorContext.dragWidget = undefined;
+        if (this.designerContext.dragWidget) {
+            this.designerContext.dragWidget.left = 0;
+            this.designerContext.dragWidget.top = 0;
+            this.designerContext.dragWidget = undefined;
 
             // deselect dragWidget
-            this.pageEditorContext.viewState.deselectAllObjects();
+            this.designerContext.viewState.deselectAllObjects();
 
             dragSnapLines.clear();
         }
@@ -715,10 +1186,10 @@ export class PageEditor
         } else if (event.shiftKey) {
             if (event.keyCode == 36) {
                 // home
-                this.pageEditorContext.viewState.moveSelection("home-y");
+                this.designerContext.viewState.moveSelection("home-y");
             } else if (event.keyCode == 35) {
                 // end
-                this.pageEditorContext.viewState.moveSelection("end-y");
+                this.designerContext.viewState.moveSelection("end-y");
             }
         } else if (event.ctrlKey) {
             if (event.keyCode == "X".charCodeAt(0)) {
@@ -733,25 +1204,25 @@ export class PageEditor
             this.props.widgetContainer.deleteSelection();
         } else if (event.keyCode == 27) {
             // esc
-            this.pageEditorContext.viewState.deselectAllObjects();
+            this.designerContext.viewState.deselectAllObjects();
         } else if (event.keyCode == 37) {
             // left
-            this.pageEditorContext.viewState.moveSelection("left");
+            this.designerContext.viewState.moveSelection("left");
         } else if (event.keyCode == 38) {
             // up
-            this.pageEditorContext.viewState.moveSelection("up");
+            this.designerContext.viewState.moveSelection("up");
         } else if (event.keyCode == 39) {
             // right
-            this.pageEditorContext.viewState.moveSelection("right");
+            this.designerContext.viewState.moveSelection("right");
         } else if (event.keyCode == 40) {
             // down
-            this.pageEditorContext.viewState.moveSelection("down");
+            this.designerContext.viewState.moveSelection("down");
         } else if (event.keyCode == 36) {
             // home
-            this.pageEditorContext.viewState.moveSelection("home-x");
+            this.designerContext.viewState.moveSelection("home-x");
         } else if (event.keyCode == 35) {
             // end
-            this.pageEditorContext.viewState.moveSelection("end-x");
+            this.designerContext.viewState.moveSelection("end-x");
         }
     }
 
@@ -764,65 +1235,60 @@ export class PageEditor
     }
 
     componentWillUnmount() {
-        this.pageEditorContext.destroy();
+        this.designerContext.destroy();
     }
 
     get page() {
-        return this.pageDocument.rootObject.object as Page;
+        return this.pageDocument.page.object as Page;
     }
 
     render() {
-        if (this.state.hasError) {
-            // TODO better error presentation
-            return <div>Error!</div>;
-        }
+        const transform = this.designerContext.viewState.transform;
+        const pageRect = transform.clientToPageRect(transform.clientRect);
 
-        const { onFocus } = this.props;
-
-        const pageRect = this.props.pageRect;
+        const content = (
+            <>
+                <AllConnectionLines
+                    pageRect={pageRect}
+                    designerContext={this.designerContext}
+                />
+                <div
+                    style={{
+                        position: "absolute"
+                    }}
+                >
+                    <WidgetComponent
+                        widget={this.page}
+                        dataContext={
+                            this.pageDocument.DocumentStore.dataContext
+                        }
+                        designerContext={this.designerContext}
+                    />
+                </div>
+                <DragWidget
+                    page={this.page}
+                    designerContext={this.designerContext}
+                />
+            </>
+        );
 
         return (
-            <Provider designerContext={this.pageEditorContext}>
-                <PageEditorCanvasContainer
-                    tabIndex={0}
-                    onFocus={onFocus || this.focusHander}
-                    onDragOver={this.onDragOver}
-                    onDrop={this.onDrop}
-                    onDragLeave={this.onDragLeave}
-                    onKeyDown={this.onKeyDown}
+            <PageEditorCanvasContainer
+                id={this.designerContext.containerId}
+                tabIndex={0}
+                onFocus={this.props.onFocus || this.focusHander}
+                onDragOver={this.onDragOver}
+                onDrop={this.onDrop}
+                onDragLeave={this.onDragLeave}
+                onKeyDown={this.onKeyDown}
+            >
+                <PageEditorCanvas
+                    designerContext={this.designerContext}
+                    dragAndDropActive={!!DragAndDropManager.dragObject}
                 >
-                    <PageEditorCanvas
-                        toolHandler={selectToolHandler}
-                        customOverlay={<DragSnapLinesOverlay />}
-                        pageRect={pageRect}
-                    >
-                        {
-                            <div
-                                style={{
-                                    position: "absolute",
-                                    left: pageRect && pageRect.left,
-                                    top: pageRect && pageRect.top,
-                                    width: pageRect && pageRect.width,
-                                    height: pageRect && pageRect.height
-                                }}
-                            >
-                                <WidgetComponent
-                                    widget={this.page}
-                                    dataContext={
-                                        getProjectStore(
-                                            this.props.widgetContainer.object
-                                        ).dataContext
-                                    }
-                                />
-                            </div>
-                        }
-                        <DragWidget
-                            page={this.page}
-                            pageEditorContext={this.pageEditorContext}
-                        />
-                    </PageEditorCanvas>
-                </PageEditorCanvasContainer>
-            </Provider>
+                    {this.designerContext.document && content}
+                </PageEditorCanvas>
+            </PageEditorCanvasContainer>
         );
     }
 }

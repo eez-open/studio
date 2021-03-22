@@ -16,5 +16,6 @@
         "xlocale": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
-    "workbench.editor.enablePreview": false
+    "workbench.editor.enablePreview": false,
+    "editor.formatOnSave": true,
 }

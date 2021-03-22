@@ -134,8 +134,8 @@ class SettingsController {
 
     @bind
     async createNewDatabase() {
-        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showSaveDialog(
+            EEZStudio.remote.getCurrentWindow(),
             {}
         );
         const filePath = result.filePath;

@@ -12,7 +12,8 @@
         var EEZStudio = {
             title: document.title,
             electron: require("electron"),
-            windowType: "shared/service"
+            windowType: "shared/service",
+            remote: require('@electron/remote')
         };
         const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(process.execPath)
         process.env.NODE_ENV = isDev ? "development" : "production";

@@ -527,7 +527,7 @@ export async function changeExtensionProperties(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function exportExtension(extension: IExtension, destFilePath: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         let extensionFolderPath = getExtensionFolderPath(extension.id);
         var output = fs.createWriteStream(destFilePath);
 

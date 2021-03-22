@@ -10,7 +10,7 @@ const {
     createGlobalStyle,
     keyframes,
     ThemeProvider
-} = styledComponents as ThemedStyledComponentsModule<ThemeInterface>;
+} = styledComponents as unknown as ThemedStyledComponentsModule<ThemeInterface>;
 
 export { css, styled, createGlobalStyle, keyframes, ThemeProvider };
 export default styled;

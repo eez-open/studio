@@ -5,6 +5,7 @@ declare const EEZStudio: {
     electron: typeof Electron;
     require: any;
     windowType: string;
+    remote: typeof Electron.remote;
 };
 
 declare module "quill";

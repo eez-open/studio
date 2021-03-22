@@ -10,11 +10,19 @@ import { IEezObject } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { loadObject } from "project-editor/core/serialization";
 import { BuildResult } from "project-editor/core/extensions";
+import { getDocumentStore } from "project-editor/core/store";
 
 import * as projectBuild from "project-editor/project/build";
-import { Project, BuildConfiguration, getProjectStore, getProject } from "project-editor/project/project";
+import {
+    Project,
+    BuildConfiguration,
+    getProject
+} from "project-editor/project/project";
 
-import { getData as getBitmapData, BitmapData } from "project-editor/features/gui/bitmap";
+import {
+    getData as getBitmapData,
+    BitmapData
+} from "project-editor/features/gui/bitmap";
 import { Font } from "project-editor/features/gui/font";
 import { Style } from "project-editor/features/gui/style";
 import * as Widget from "project-editor/features/gui/widget";
@@ -65,7 +73,10 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 // If hex image contains three consecutive '!' characters (33 is ASCII code)
 // then uploading hex image to the device will fail.
 // Here we replace "!!!"" with "!! ", i.e. [33, 33, 33] with [33, 33, 32].
-function fixDataForMegaBootloader(data: number[] | Uint8Array, object: IEezObject) {
+function fixDataForMegaBootloader(
+    data: number[] | Uint8Array,
+    object: IEezObject
+) {
     let result: number[] = [];
 
     let threeExclamationsDetected = false;
@@ -112,7 +123,10 @@ function traverseTree(
     let result = callback(node);
     if (result == undefined || result === TraverseTreeContinuation.CONTINUE) {
         for (let i = 0; i < node.children.length; i++) {
-            if (traverseTree(node.children[i], callback) == TraverseTreeContinuation.BREAK) {
+            if (
+                traverseTree(node.children[i], callback) ==
+                TraverseTreeContinuation.BREAK
+            ) {
                 return TraverseTreeContinuation.BREAK;
             }
         }
@@ -135,7 +149,9 @@ function getSelectedWidgetForSelectWidget(
 ): DisplayItem | undefined {
     let widget = item.object as Widget.SelectWidget;
     if (widget.data && widget.widgets) {
-        let index: number = getProjectStore(widgetContainerDisplayItem.object).dataContext.getEnumValue(widget.data);
+        let index: number = getDocumentStore(
+            widgetContainerDisplayItem.object
+        ).dataContext.getEnumValue(widget.data);
         if (index >= 0 && index < widget.widgets.length) {
             let widgetsItemChildren = item.children as DisplayItemChildrenArray;
 
@@ -170,7 +186,8 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                 children: [],
                 rect: rect,
                 item: item,
-                isOpaque: object instanceof Widget.Widget && isWidgetOpaque(object)
+                isOpaque:
+                    object instanceof Widget.Widget && isWidgetOpaque(object)
             };
 
             if (parentNode) {
@@ -181,12 +198,15 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                 let widgetsItemChildren = item.children;
 
                 if (!Array.isArray(widgetsItemChildren)) {
-                    widgetsItemChildren = widgetsItemChildren["widgets"].children;
+                    widgetsItemChildren =
+                        widgetsItemChildren["widgets"].children;
                 }
 
-                (widgetsItemChildren as DisplayItemChildrenArray).forEach(child => {
-                    enumWidget(treeNode, child, x, y);
-                });
+                (widgetsItemChildren as DisplayItemChildrenArray).forEach(
+                    child => {
+                        enumWidget(treeNode, child, x, y);
+                    }
+                );
             } else {
                 if (object.type == "Container") {
                     let widgetsItemChildren = item.children as DisplayItemChildrenArray;
@@ -201,7 +221,9 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                             "itemWidget"
                         ];
 
-                        const dataValue = getProjectStore(widgetContainerDisplayItem.object).dataContext.get(widget.data as string);
+                        const dataValue = getDocumentStore(
+                            widgetContainerDisplayItem.object
+                        ).dataContext.get(widget.data as string);
                         if (dataValue && Array.isArray(dataValue)) {
                             for (let i = 0; i < dataValue.length; i++) {
                                 enumWidget(treeNode, itemWidgetItem, x, y);
@@ -327,10 +349,16 @@ class PageTransparencyGrid {
             // mark as opaque
             for (let iCol = 0; iCol < this.cols.length; iCol++) {
                 let col = this.cols[iCol];
-                if (col.x >= rect.left && col.x + col.width <= rect.left + rect.width) {
+                if (
+                    col.x >= rect.left &&
+                    col.x + col.width <= rect.left + rect.width
+                ) {
                     for (let iRow = 0; iRow < col.rows.length; iRow++) {
                         let row = col.rows[iRow];
-                        if (row.y >= rect.top && row.y + row.height <= rect.top + rect.height) {
+                        if (
+                            row.y >= rect.top &&
+                            row.y + row.height <= rect.top + rect.height
+                        ) {
                             row.opaque = true;
                         }
                     }
@@ -356,7 +384,11 @@ class PageTransparencyGrid {
         let rowStart = colStart.rows[iRowStart];
 
         let iRowEnd: number;
-        for (iRowEnd = iRowStart + 1; iRowEnd < colStart.rows.length; iRowEnd++) {
+        for (
+            iRowEnd = iRowStart + 1;
+            iRowEnd < colStart.rows.length;
+            iRowEnd++
+        ) {
             let opaque = false;
 
             for (let iCol = iColStart; iCol <= iColEnd; iCol++) {
@@ -416,7 +448,9 @@ function findPageTransparentRectanglesInTree(tree: TreeNode): Rect[] {
 }
 
 function findPageTransparentRectanglesInContainer(container: IEezObject) {
-    return findPageTransparentRectanglesInTree(createWidgetTree(container, false));
+    return findPageTransparentRectanglesInTree(
+        createWidgetTree(container, false)
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -440,7 +474,12 @@ function getItem(
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    getProjectStore(object).OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
+    getDocumentStore(object).OutputSectionsStore.write(
+        output.Section.OUTPUT,
+        message.type,
+        message.text,
+        message.object
+    );
 
     return 0;
 }
@@ -492,7 +531,12 @@ function getStyleIndex(object: any, propertyName: string) {
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    getProjectStore(object).OutputSectionsStore.write(output.Section.OUTPUT, message.type, message.text, message.object);
+    getDocumentStore(object).OutputSectionsStore.write(
+        output.Section.OUTPUT,
+        message.type,
+        message.text,
+        message.object
+    );
 
     return 0;
 }
@@ -605,7 +649,8 @@ export function getFontData(font: Font) {
         }
 
         for (let i = startEncoding; i <= endEncoding; i++) {
-            const offsetIndex = 4 + (i - startEncoding) * (font.bpp === 8 ? 4 : 2);
+            const offsetIndex =
+                4 + (i - startEncoding) * (font.bpp === 8 ? 4 : 2);
             const offset = data.length;
             if (font.bpp === 8) {
                 // uint32 LE
@@ -731,7 +776,10 @@ function buildGuiBitmapsDef(project: Project) {
                     name: gui.bitmaps[i].name,
                     width: bitmapsData[i].width,
                     height: bitmapsData[i].height,
-                    pixels: fixDataForMegaBootloader(bitmapsData[i].pixels, gui.bitmaps[i])
+                    pixels: fixDataForMegaBootloader(
+                        bitmapsData[i].pixels,
+                        gui.bitmaps[i]
+                    )
                 });
             }
 
@@ -814,7 +862,10 @@ class Struct extends ObjectField {
     }
 
     packObject(): number[] {
-        return this.fields.reduce((data: any, field: any) => data.concat(field.pack()), []);
+        return this.fields.reduce(
+            (data: any, field: any) => data.concat(field.pack()),
+            []
+        );
     }
 }
 
@@ -853,7 +904,9 @@ class ObjectList extends Field {
 
     pack(): number[] {
         return [this.items.length].concat(
-            packUnsignedShort(this.items.length > 0 ? this.items[0].objectOffset : 0)
+            packUnsignedShort(
+                this.items.length > 0 ? this.items[0].objectOffset : 0
+            )
         );
     }
 }
@@ -1037,7 +1090,10 @@ function buildGuiStylesDef(project: Project) {
     }
 
     function pack(objects: ObjectField[] = []): number[] {
-        return objects.reduce((data: any, object: any) => data.concat(object.packObject()), []);
+        return objects.reduce(
+            (data: any, object: any) => data.concat(object.packObject()),
+            []
+        );
     }
 
     let colors = new Set<number>();
@@ -1057,9 +1113,9 @@ function buildGuiStylesDef(project: Project) {
         // OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
     }
 
-    return `// STYLES DEFINITION\nconst uint8_t styles[${data.length}] = {${projectBuild.dumpData(
-        data
-    )}};`;
+    return `// STYLES DEFINITION\nconst uint8_t styles[${
+        data.length
+    }] = {${projectBuild.dumpData(data)}};`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1193,7 +1249,9 @@ function buildWidget(object: Widget.Widget | Page) {
 
             specific.addField(rectObjectList);
 
-            specific.addField(new UInt8(object.closePageIfTouchedOutside ? 1 : 0));
+            specific.addField(
+                new UInt8(object.closePageIfTouchedOutside ? 1 : 0)
+            );
         }
     } else if (type == WIDGET_TYPE_SELECT) {
         let widget = object as Widget.SelectWidget;
@@ -1214,7 +1272,11 @@ function buildWidget(object: Widget.Widget | Page) {
 
         // listType
         specific.addField(
-            new UInt8(widget.listType === "vertical" ? LIST_TYPE_VERTICAL : LIST_TYPE_HORIZONTAL)
+            new UInt8(
+                widget.listType === "vertical"
+                    ? LIST_TYPE_VERTICAL
+                    : LIST_TYPE_HORIZONTAL
+            )
         );
 
         // itemWidget
@@ -1222,7 +1284,7 @@ function buildWidget(object: Widget.Widget | Page) {
         if (widget.itemWidget) {
             itemWidget = buildWidget(widget.itemWidget);
         } else {
-            getProjectStore(object).OutputSectionsStore.write(
+            getDocumentStore(object).OutputSectionsStore.write(
                 output.Section.OUTPUT,
                 output.Type.ERROR,
                 "List item widget is missing",
@@ -1582,7 +1644,10 @@ function buildGuiDocumentDecl(project: Project) {
     return `extern const uint8_t document[];`;
 }
 
-function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landscape") {
+function buildGuiDocumentDef(
+    project: Project,
+    orientation: "portrait" | "landscape"
+) {
     function buildCustomWidget(customWidget: Page) {
         var customWidgetStruct = new Struct();
 
@@ -1602,6 +1667,7 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
             const pageOrientation = page.portrait
                 ? page.portrait
                 : loadObject(
+                      getDocumentStore(project),
                       page,
                       {
                           left: 0,
@@ -1663,7 +1729,10 @@ function buildGuiDocumentDef(project: Project, orientation: "portrait" | "landsc
     }
 
     function pack(objects: ObjectField[] = []): number[] {
-        return objects.reduce((data: any, object: any) => data.concat(object.packObject()), []);
+        return objects.reduce(
+            (data: any, object: any) => data.concat(object.packObject()),
+            []
+        );
     }
 
     let document = new Struct();
@@ -1739,12 +1808,24 @@ export async function build(
         result.GUI_DOCUMENT_DECL = buildGuiDocumentDecl(project);
     }
 
-    if (!sectionNames || sectionNames.indexOf("GUI_DOCUMENT_PORTRAIT_DEF") !== -1) {
-        result.GUI_DOCUMENT_PORTRAIT_DEF = buildGuiDocumentDef(project, "portrait");
+    if (
+        !sectionNames ||
+        sectionNames.indexOf("GUI_DOCUMENT_PORTRAIT_DEF") !== -1
+    ) {
+        result.GUI_DOCUMENT_PORTRAIT_DEF = buildGuiDocumentDef(
+            project,
+            "portrait"
+        );
     }
 
-    if (!sectionNames || sectionNames.indexOf("GUI_DOCUMENT_LANDSCAPE_DEF") !== -1) {
-        result.GUI_DOCUMENT_LANDSCAPE_DEF = buildGuiDocumentDef(project, "landscape");
+    if (
+        !sectionNames ||
+        sectionNames.indexOf("GUI_DOCUMENT_LANDSCAPE_DEF") !== -1
+    ) {
+        result.GUI_DOCUMENT_LANDSCAPE_DEF = buildGuiDocumentDef(
+            project,
+            "landscape"
+        );
     }
 
     return result;

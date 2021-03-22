@@ -136,8 +136,8 @@ export function importInstrumentDefinition(instrumentDefinitionFilePath: string)
             if (result.values.importAs === "extension") {
                 importInstrumentDefinitionAsExtension(instrumentDefinitionFilePath);
             } else {
-                const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-                    EEZStudio.electron.remote.getCurrentWindow(),
+                const result = await EEZStudio.remote.dialog.showSaveDialog(
+                    EEZStudio.remote.getCurrentWindow(),
                     {
                         defaultPath:
                             getFileNameWithoutExtension(instrumentDefinitionFilePath) +
@@ -153,7 +153,7 @@ export function importInstrumentDefinition(instrumentDefinitionFilePath: string)
                     if (!projectFilePath.toLowerCase().endsWith(".eez-project")) {
                         projectFilePath += ".eez-project";
                     }
-        
+
                     importInstrumentDefinitionAsProject(
                         instrumentDefinitionFilePath,
                         projectFilePath

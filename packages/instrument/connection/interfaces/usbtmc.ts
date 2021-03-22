@@ -828,7 +828,7 @@ export class Instrument {
     }
 
     bulk_out_ep_write(buffer: Buffer) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             this.bulk_out_ep.timeout = this._timeout;
             this.bulk_out_ep.transfer(buffer, err => {
                 if (err) {

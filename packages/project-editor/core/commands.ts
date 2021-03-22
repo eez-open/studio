@@ -15,6 +15,7 @@ import {
     getClassInfo
 } from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
+import { getDocumentStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +51,9 @@ function getUniquePropertyValue(
         return value;
     }
     while (true) {
-        if (!existingObjects.find(object => getProperty(object, key) == value)) {
+        if (
+            !existingObjects.find(object => getProperty(object, key) == value)
+        ) {
             return value;
         }
 
@@ -68,8 +71,13 @@ function getUniquePropertyValue(
 }
 
 // ensure that unique properties are unique inside parent
-function ensureUniqueProperties(parentObject: IEezObject, objects: IEezObject[]) {
-    let existingObjects = (parentObject as IEezObject[]).map((object: IEezObject) => object);
+function ensureUniqueProperties(
+    parentObject: IEezObject,
+    objects: IEezObject[]
+) {
+    let existingObjects = (parentObject as IEezObject[]).map(
+        (object: IEezObject) => object
+    );
     objects.forEach(object => {
         for (const propertyInfo of getClassInfo(object).properties) {
             if (propertyInfo.unique) {
@@ -87,8 +95,17 @@ function ensureUniqueProperties(parentObject: IEezObject, objects: IEezObject[])
 ////////////////////////////////////////////////////////////////////////////////
 
 export let addObject = action(
-    (context: ICommandContext, parentObject: IEezObject, object: IEezObject) => {
-        object = loadObject(parentObject, object, getClass(parentObject));
+    (
+        context: ICommandContext,
+        parentObject: IEezObject,
+        object: IEezObject
+    ) => {
+        object = loadObject(
+            getDocumentStore(parentObject),
+            parentObject,
+            object,
+            getClass(parentObject)
+        );
         ensureUniqueProperties(parentObject, [object]);
 
         context.undoManager.executeCommand({
@@ -110,8 +127,19 @@ export let addObject = action(
 );
 
 export let addObjects = action(
-    (context: ICommandContext, parentObject: IEezObject, objects: IEezObject[]) => {
-        objects = objects.map(object => loadObject(parentObject, object, getClass(parentObject)));
+    (
+        context: ICommandContext,
+        parentObject: IEezObject,
+        objects: IEezObject[]
+    ) => {
+        objects = objects.map(object =>
+            loadObject(
+                getDocumentStore(parentObject),
+                parentObject,
+                object,
+                getClass(parentObject)
+            )
+        );
         ensureUniqueProperties(parentObject, objects);
 
         context.undoManager.executeCommand({
@@ -127,7 +155,10 @@ export let addObjects = action(
 
             get description() {
                 return (
-                    "Added: " + objects.map(object => getHumanReadableObjectPath(object)).join(", ")
+                    "Added: " +
+                    objects
+                        .map(object => getHumanReadableObjectPath(object))
+                        .join(", ")
                 );
             }
         });
@@ -137,8 +168,18 @@ export let addObjects = action(
 );
 
 export let insertObject = action(
-    (context: ICommandContext, parentObject: IEezObject, index: number, object: any) => {
-        object = loadObject(parentObject, object, getClass(parentObject));
+    (
+        context: ICommandContext,
+        parentObject: IEezObject,
+        index: number,
+        object: any
+    ) => {
+        object = loadObject(
+            getDocumentStore(parentObject),
+            parentObject,
+            object,
+            getClass(parentObject)
+        );
         ensureUniqueProperties(parentObject, [object]);
 
         context.undoManager.executeCommand({
@@ -163,7 +204,11 @@ class UpdateCommand implements ICommand {
     private oldValues: any = {};
     private newValues: any = {};
 
-    constructor(public object: IEezObject, private values: any, lastCommand?: UpdateCommand) {
+    constructor(
+        public object: IEezObject,
+        private values: any,
+        lastCommand?: UpdateCommand
+    ) {
         if (lastCommand) {
             this.oldValues = lastCommand.oldValues;
         }
@@ -172,7 +217,8 @@ class UpdateCommand implements ICommand {
             let propertyInfo = findPropertyByNameInObject(object, propertyName);
 
             if (propertyInfo) {
-                const updateObjectValueHook = getClassInfo(object).updateObjectValueHook;
+                const updateObjectValueHook = getClassInfo(object)
+                    .updateObjectValueHook;
                 if (updateObjectValueHook) {
                     const result = updateObjectValueHook(
                         object,
@@ -191,53 +237,61 @@ class UpdateCommand implements ICommand {
                 }
 
                 if (!lastCommand) {
-                    this.oldValues[propertyName] = getProperty(object, propertyName);
+                    this.oldValues[propertyName] = getProperty(
+                        object,
+                        propertyName
+                    );
                 }
                 this.newValues[propertyName] = values[propertyName];
             }
         }
     }
 
-    static assignValues(dest: any, src: any) {
-        for (let propertyName in src) {
-            dest[propertyName] = src[propertyName];
-        }
-    }
-
     @action
     execute() {
-        UpdateCommand.assignValues(this.object, this.newValues);
+        Object.assign(this.object, this.newValues);
     }
 
     @action
     undo() {
-        UpdateCommand.assignValues(this.object, this.oldValues);
+        Object.assign(this.object, this.oldValues);
     }
 
     @computed
     get description() {
         return (
-            `Changed (${_map(this.values, (value, name) => humanize(name)).join(", ")}): ` +
-            getHumanReadableObjectPath(this.object)
+            `Changed (${_map(this.values, (value, name) => humanize(name)).join(
+                ", "
+            )}): ` + getHumanReadableObjectPath(this.object)
         );
     }
 }
 
-export let updateObject = action((context: ICommandContext, object: IEezObject, values: any) => {
-    let previousCommand;
+export let updateObject = action(
+    (context: ICommandContext, object: IEezObject, values: any) => {
+        let previousCommand;
 
-    // TODO this should be moved to undoManager implementation
-    // merge with previous command
-    if (context.undoManager.combineCommands && context.undoManager.commands.length > 0) {
-        let command = context.undoManager.commands[context.undoManager.commands.length - 1];
-        if (command instanceof UpdateCommand && command.object == object) {
-            context.undoManager.commands.pop();
-            previousCommand = command;
+        // TODO this should be moved to undoManager implementation
+        // merge with previous command
+        if (
+            context.undoManager.combineCommands &&
+            context.undoManager.commands.length > 0
+        ) {
+            let command =
+                context.undoManager.commands[
+                    context.undoManager.commands.length - 1
+                ];
+            if (command instanceof UpdateCommand && command.object == object) {
+                context.undoManager.commands.pop();
+                previousCommand = command;
+            }
         }
-    }
 
-    context.undoManager.executeCommand(new UpdateCommand(object, values, previousCommand));
-});
+        context.undoManager.executeCommand(
+            new UpdateCommand(object, values, previousCommand)
+        );
+    }
+);
 
 export let deleteObject = action((context: ICommandContext, object: any) => {
     const parent = getParent(object);
@@ -266,52 +320,61 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
     }
 });
 
-export let deleteObjects = action((context: ICommandContext, objects: IEezObject[]) => {
-    let undoIndexes: number[];
+export let deleteObjects = action(
+    (context: ICommandContext, objects: IEezObject[]) => {
+        let undoIndexes: number[];
 
-    context.undoManager.executeCommand({
-        execute: action(() => {
-            undoIndexes = [];
-            for (let i = 0; i < objects.length; i++) {
-                let object = objects[i];
-                let parent = getParent(object);
+        context.undoManager.executeCommand({
+            execute: action(() => {
+                undoIndexes = [];
+                for (let i = 0; i < objects.length; i++) {
+                    let object = objects[i];
+                    let parent = getParent(object);
 
-                if (isArrayElement(object)) {
-                    const array = parent as IEezObject[];
-                    let index = array.indexOf(object);
-                    undoIndexes.push(index);
-                    array.splice(index, 1);
-                } else {
-                    undoIndexes.push(-1);
-                    (parent as any)[getKey(object)] = undefined;
+                    if (isArrayElement(object)) {
+                        const array = parent as IEezObject[];
+                        let index = array.indexOf(object);
+                        undoIndexes.push(index);
+                        array.splice(index, 1);
+                    } else {
+                        undoIndexes.push(-1);
+                        (parent as any)[getKey(object)] = undefined;
+                    }
                 }
-            }
-        }),
+            }),
 
-        undo: action(() => {
-            for (let i = objects.length - 1; i >= 0; i--) {
-                let object = objects[i];
-                let parent = getParent(object);
-                if (isArrayElement(object)) {
-                    const array = parent as IEezObject[];
-                    let index = undoIndexes[i];
-                    array.splice(index, 0, object);
-                } else {
-                    (parent as any)[getKey(object)] = object;
+            undo: action(() => {
+                for (let i = objects.length - 1; i >= 0; i--) {
+                    let object = objects[i];
+                    let parent = getParent(object);
+                    if (isArrayElement(object)) {
+                        const array = parent as IEezObject[];
+                        let index = undoIndexes[i];
+                        array.splice(index, 0, object);
+                    } else {
+                        (parent as any)[getKey(object)] = object;
+                    }
                 }
-            }
-        }),
+            }),
 
-        get description() {
-            return (
-                "Deleted: " + objects.map(object => getHumanReadableObjectPath(object)).join(", ")
-            );
-        }
-    });
-});
+            get description() {
+                return (
+                    "Deleted: " +
+                    objects
+                        .map(object => getHumanReadableObjectPath(object))
+                        .join(", ")
+                );
+            }
+        });
+    }
+);
 
 export let replaceObject = action(
-    (context: ICommandContext, object: IEezObject, replaceWithObject: IEezObject) => {
+    (
+        context: ICommandContext,
+        object: IEezObject,
+        replaceWithObject: IEezObject
+    ) => {
         let parent = getParent(object);
         if (isArrayElement(object)) {
             const array = parent as IEezObject[];
@@ -342,7 +405,11 @@ export let replaceObject = action(
 );
 
 export let replaceObjects = action(
-    (context: ICommandContext, objects: IEezObject[], replaceWithObject: IEezObject) => {
+    (
+        context: ICommandContext,
+        objects: IEezObject[],
+        replaceWithObject: IEezObject
+    ) => {
         if (objects.length === 1) {
             return replaceObject(context, objects[0], replaceWithObject);
         }
@@ -379,7 +446,9 @@ export let replaceObjects = action(
             get description() {
                 return (
                     "Replaced: " +
-                    objects.map(object => getHumanReadableObjectPath(object)).join(", ")
+                    objects
+                        .map(object => getHumanReadableObjectPath(object))
+                        .join(", ")
                 );
             }
         });

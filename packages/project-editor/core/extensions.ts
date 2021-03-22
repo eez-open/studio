@@ -118,8 +118,8 @@ export function loadExtensions(): Promise<void> {
         }
 
         function loadExtensionFolder(folder: string) {
-            const fs = EEZStudio.electron.remote.require("fs");
-            const path = EEZStudio.electron.remote.require("path");
+            const fs = EEZStudio.remote.require("fs");
+            const path = EEZStudio.remote.require("path");
 
             totalExtensions++;
 
@@ -152,13 +152,13 @@ export function loadExtensions(): Promise<void> {
         }
 
         function processExtensionsFolder(folder: string, files: string[]) {
-            const path = EEZStudio.electron.remote.require("path");
+            const path = EEZStudio.remote.require("path");
             for (let file of files) {
                 loadExtensionFolder(path.join(folder, file));
             }
         }
 
-        const fs = EEZStudio.electron.remote.require("fs");
+        const fs = EEZStudio.remote.require("fs");
 
         let extensionsFolder = __dirname + "/../features";
         fs.readdir(extensionsFolder, function (err: any, files: any) {

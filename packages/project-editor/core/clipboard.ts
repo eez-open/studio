@@ -9,9 +9,11 @@ import {
     PropertyType,
     getParent,
     getClass,
-    getClassInfo
+    getClassInfo,
+    EezObject
 } from "project-editor/core/object";
 import { loadObject, objectToJson } from "project-editor/core/serialization";
+import { DocumentStoreClass } from "project-editor/core/store";
 
 const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
@@ -36,17 +38,25 @@ export function objectsToClipboardData(objects: IEezObject[]): string {
     });
 }
 
-export function clipboardDataToObject(data: string) {
+export function clipboardDataToObject(
+    DocumentStore: DocumentStoreClass,
+    data: string
+) {
     let serializedData: SerializedData = JSON.parse(data);
 
     const aClass = findClass(serializedData.objectClassName);
     if (aClass) {
         serializedData.classInfo = aClass.classInfo;
         if (serializedData.object) {
-            serializedData.object = loadObject(undefined, serializedData.object, aClass);
+            serializedData.object = loadObject(
+                DocumentStore,
+                undefined,
+                serializedData.object,
+                aClass
+            );
         } else if (serializedData.objects) {
             serializedData.objects = serializedData.objects.map(object =>
-                loadObject(undefined, object, aClass)
+                loadObject(DocumentStore, undefined, object, aClass)
             );
         }
     }
@@ -61,13 +71,16 @@ export function setClipboardData(event: any, value: string) {
     event.dataTransfer.setData(CLIPOARD_DATA_ID, clipboardData);
 }
 
-export function getEezStudioDataFromDragEvent(event: any) {
+export function getEezStudioDataFromDragEvent(
+    DocumentStore: DocumentStoreClass,
+    event: any
+) {
     let data = event.dataTransfer.getData(CLIPOARD_DATA_ID);
     if (!data) {
         data = clipboardData;
     }
     if (data) {
-        return clipboardDataToObject(data);
+        return clipboardDataToObject(DocumentStore, data);
     }
     return undefined;
 }
@@ -118,28 +131,39 @@ export function findPastePlaceInside(
     return undefined;
 }
 
-export function findPastePlaceInsideAndOutside(object: IEezObject, serializedData: SerializedData) {
+export function findPastePlaceInsideAndOutside(
+    object: IEezObject,
+    serializedData: SerializedData
+): EezObject | undefined {
     if (!serializedData.classInfo) {
         return undefined;
     }
 
-    let place = findPastePlaceInside(object, serializedData.classInfo, !!serializedData.object);
+    let place = findPastePlaceInside(
+        object,
+        serializedData.classInfo,
+        !!serializedData.object
+    );
     if (place) {
         return place;
     }
 
     let parent = getParent(object);
-    return (
-        parent && findPastePlaceInside(parent, serializedData.classInfo, !!serializedData.object)
-    );
+    return parent && findPastePlaceInsideAndOutside(parent, serializedData);
 }
 
-export function checkClipboard(object: IEezObject) {
+export function checkClipboard(
+    DocumentStore: DocumentStoreClass,
+    object: IEezObject
+) {
     let text = pasteFromClipboard();
     if (text) {
-        let serializedData = clipboardDataToObject(text);
+        let serializedData = clipboardDataToObject(DocumentStore, text);
         if (serializedData) {
-            let pastePlace = findPastePlaceInsideAndOutside(object, serializedData);
+            let pastePlace = findPastePlaceInsideAndOutside(
+                object,
+                serializedData
+            );
             if (pastePlace) {
                 return {
                     serializedData: serializedData,
@@ -152,11 +176,11 @@ export function checkClipboard(object: IEezObject) {
 }
 
 export function copyToClipboard(text: string) {
-    EEZStudio.electron.remote.clipboard.write({
+    EEZStudio.remote.clipboard.write({
         text
     });
 }
 
 export function pasteFromClipboard(): string | undefined {
-    return EEZStudio.electron.remote.clipboard.readText();
+    return EEZStudio.remote.clipboard.readText();
 }

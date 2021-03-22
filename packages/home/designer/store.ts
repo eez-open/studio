@@ -1,6 +1,6 @@
 import { computed } from "mobx";
 
-const { Menu, MenuItem } = EEZStudio.electron.remote;
+const { Menu, MenuItem } = EEZStudio.remote;
 
 import { Rect, Point, pointInRect, isRectInsideRect } from "eez-studio-shared/geometry";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";

@@ -162,9 +162,17 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         this.animateReactionDisposer = this.animateReaction(props);
     }
 
-    componentWillReceiveProps(nextProps: any) {
+    updateAnimateReaction() {
         this.animateReactionDisposer();
-        this.animateReactionDisposer = this.animateReaction(nextProps);
+        this.animateReactionDisposer = this.animateReaction(this.props);
+    }
+
+    componentDidUpdate() {
+        this.updateAnimateReaction();
+    }
+
+    componentDidMount() {
+        this.updateAnimateReaction();
     }
 
     componentWillUnmount() {

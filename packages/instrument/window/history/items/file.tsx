@@ -284,8 +284,8 @@ export class FileHistoryItemComponent extends React.Component<
             options.defaultPath = getFileName(this.props.historyItem.sourceFilePath);
         }
 
-        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showSaveDialog(
+            EEZStudio.remote.getCurrentWindow(),
             options
         );
 
@@ -339,8 +339,8 @@ export class FileHistoryItemComponent extends React.Component<
             );
         }
 
-        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showSaveDialog(
+            EEZStudio.remote.getCurrentWindow(),
             options
         );
 

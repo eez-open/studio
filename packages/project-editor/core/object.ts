@@ -4,8 +4,15 @@ import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import { loadObject, objectToJson } from "project-editor/core/serialization";
-import { IContextMenuContext, INavigationStore } from "project-editor/core/store";
+import {
+    DocumentStoreClass,
+    IContextMenuContext,
+    INavigationStore,
+    getDocumentStore
+} from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
+import { Rect } from "eez-studio-shared/geometry";
+import type { IResizeHandler } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +41,9 @@ export enum PropertyType {
     ConfigurationReference,
     Boolean,
     GUID,
-    Any
+    Any,
+    ConnectionInput,
+    ConnectionOutput
 }
 
 export enum MessageType {
@@ -126,7 +135,9 @@ export interface PropertyInfo {
         params?: IOnSelectParams
     ) => Promise<any>;
     onSelectTitle?: string;
-    hideInPropertyGrid?: boolean | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+    hideInPropertyGrid?:
+        | boolean
+        | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?: boolean;
     propertyGridGroup?: IPropertyGridGroupDefinition;
     propertyGridComponent?:
@@ -135,7 +146,9 @@ export interface PropertyInfo {
     propertyGridCollapsable?: boolean;
     propertyGridCollapsableDefaultPropertyName?: string;
     propertyGridCollapsableEnabled?: (object: IEezObject) => boolean;
-    enumerable?: boolean | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+    enumerable?:
+        | boolean
+        | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     showOnlyChildrenInTree?: boolean;
     isOptional?: boolean;
     defaultValue?: any;
@@ -145,8 +158,14 @@ export interface PropertyInfo {
     skipSearch?: boolean;
     childLabel?: (childObject: IEezObject, childLabel: string) => string;
     check?: (object: IEezObject) => IMessage[];
-    interceptAddObject?: (parentObject: IEezObject, object: IEezObject) => IEezObject;
-    downloadFileName?: (object: IEezObject, propertyInfo: PropertyInfo) => string;
+    interceptAddObject?: (
+        parentObject: IEezObject,
+        object: IEezObject
+    ) => IEezObject;
+    downloadFileName?: (
+        object: IEezObject,
+        propertyInfo: PropertyInfo
+    ) => string;
     embeddedImage?: boolean;
     partOfNavigation?: boolean;
     fileFilters?: any;
@@ -161,7 +180,10 @@ export interface NavigationComponentProps {
     onDoubleClickItem?: (item: IEezObject) => void;
 }
 
-export class NavigationComponent extends React.Component<NavigationComponentProps, {}> {}
+export class NavigationComponent extends React.Component<
+    NavigationComponentProps,
+    {}
+> {}
 
 export interface IEditorState {
     loadState(state: any): void;
@@ -178,7 +200,10 @@ export interface EditorComponentProps {
     editor: IEditor;
 }
 
-export class EditorComponent extends React.Component<EditorComponentProps, {}> {}
+export class EditorComponent extends React.Component<
+    EditorComponentProps,
+    {}
+> {}
 
 export type InheritedValue =
     | {
@@ -209,16 +234,19 @@ export interface ClassInfo {
     editorComponent?: typeof EditorComponent;
     isEditorSupported?: (object: IEezObject) => boolean;
 
-    createEditorState?: (object: IEezObject) => IEditorState;
+    createEditorState?: (object: IEezObject) => IEditorState | undefined;
     newItem?: (object: IEezObject) => Promise<any>;
-    getInheritedValue?: (object: IEezObject, propertyName: string) => InheritedValue;
+    getInheritedValue?: (
+        object: IEezObject,
+        propertyName: string
+    ) => InheritedValue;
     defaultValue?: any;
     findPastePlaceInside?: (
         object: IEezObject,
         classInfo: ClassInfo,
         isSingleObject: boolean
     ) => IEezObject | PropertyInfo | undefined;
-    icon?: string;
+    icon?: string | React.ReactNode;
 
     propertyGridTableComponent?: any;
 
@@ -235,7 +263,11 @@ export interface ClassInfo {
           }
         | undefined;
 
-    afterUpdateObjectHook?: (object: IEezObject, changedProperties: any, oldValues: any) => void;
+    afterUpdateObjectHook?: (
+        object: IEezObject,
+        changedProperties: any,
+        oldValues: any
+    ) => void;
 
     creatableFromPalette?: boolean;
 
@@ -247,6 +279,16 @@ export interface ClassInfo {
     ) => void;
 
     check?: (object: IEezObject) => IMessage[];
+
+    getRect?: (object: IEezObject) => Rect;
+    setRect?: (object: IEezObject, rect: Rect) => void;
+    isMoveable?: (object: IEezObject) => boolean;
+    isSelectable?: (object: IEezObject) => boolean;
+    showSelectedObjectsParent?: (object: IEezObject) => boolean;
+    getResizeHandlers?: (
+        object: IEezObject
+    ) => IResizeHandler[] | undefined | false;
+    open?: (object: IEezObject) => void;
 }
 
 export function makeDerivedClassInfo(
@@ -288,7 +330,10 @@ export function makeDerivedClassInfo(
     const baseBeforeLoadHook = baseClassInfo.beforeLoadHook;
     const derivedBeforeLoadHook = derivedClassInfoProperties.beforeLoadHook;
     if (baseBeforeLoadHook && derivedBeforeLoadHook) {
-        derivedClassInfoProperties.beforeLoadHook = (object: IEezObject, jsObject: any) => {
+        derivedClassInfoProperties.beforeLoadHook = (
+            object: IEezObject,
+            jsObject: any
+        ) => {
             baseBeforeLoadHook(object, jsObject);
             derivedBeforeLoadHook(object, jsObject);
         };
@@ -302,7 +347,11 @@ export function makeDerivedClassInfo(
         };
     }
 
-    const derivedClassInfo = Object.assign({}, baseClassInfo, derivedClassInfoProperties);
+    const derivedClassInfo = Object.assign(
+        {},
+        baseClassInfo,
+        derivedClassInfoProperties
+    );
     derivedClassInfo.parentClassInfo = baseClassInfo;
     return derivedClassInfo;
 }
@@ -325,6 +374,10 @@ export function registerClass(aClass: EezClass) {
     classes.set(aClass.name, aClass);
 }
 
+export function getClassByName(className: string) {
+    return classes.get(className);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EezValueObject extends EezObject {
@@ -341,7 +394,9 @@ export class EezValueObject extends EezObject {
     static create(object: IEezObject, propertyInfo: PropertyInfo, value: any) {
         const valueObject = new EezValueObject();
 
-        setId(valueObject, getId(object) + "." + propertyInfo.name);
+        const DocumentStore = getDocumentStore(object);
+
+        setId(DocumentStore.objects, valueObject, DocumentStore.getChildId());
         setKey(valueObject, propertyInfo.name);
         setParent(valueObject, object);
 
@@ -359,7 +414,8 @@ registerClass(EezValueObject);
 export function isEezObject(object: any): object is IEezObject {
     return (
         object instanceof EezObject ||
-        (Array.isArray(object) && (object.length == 0 || isEezObject(object[0])))
+        (Array.isArray(object) &&
+            (object.length == 0 || isEezObject(object[0])))
     );
 }
 
@@ -379,7 +435,10 @@ export function getClassesDerivedFrom(parentClass: EezClass) {
     return derivedClasses;
 }
 
-export function isSubclassOf(classInfo: ClassInfo | undefined, baseClassInfo: ClassInfo) {
+export function isSubclassOf(
+    classInfo: ClassInfo | undefined,
+    baseClassInfo: ClassInfo
+) {
     while (classInfo) {
         if (classInfo === baseClassInfo) {
             return true;
@@ -389,7 +448,10 @@ export function isSubclassOf(classInfo: ClassInfo | undefined, baseClassInfo: Cl
     return false;
 }
 
-export function isProperSubclassOf(classInfo: ClassInfo | undefined, baseClassInfo: ClassInfo) {
+export function isProperSubclassOf(
+    classInfo: ClassInfo | undefined,
+    baseClassInfo: ClassInfo
+) {
     if (classInfo) {
         while (true) {
             classInfo = classInfo.parentClassInfo;
@@ -404,7 +466,10 @@ export function isProperSubclassOf(classInfo: ClassInfo | undefined, baseClassIn
     return false;
 }
 
-export function isObjectInstanceOf(object: IEezObject, baseClassInfo: ClassInfo) {
+export function isObjectInstanceOf(
+    object: IEezObject,
+    baseClassInfo: ClassInfo
+) {
     return isSubclassOf(getClassInfo(object), baseClassInfo);
 }
 
@@ -416,7 +481,9 @@ export function isObject(object: IEezObject | undefined) {
     return !!object && !isValue(object) && !isArray(object);
 }
 
-export function isArray(object: IEezObject | undefined): object is IEezObject[] {
+export function isArray(
+    object: IEezObject | undefined
+): object is IEezObject[] {
     return !!object && !isValue(object) && Array.isArray(object);
 }
 
@@ -440,7 +507,9 @@ export function getChildren(parent: IEezObject): IEezObject[] {
             return getProperty(parent, properties[0].name);
         }
 
-        return properties.map(propertyInfo => getProperty(parent, propertyInfo.name));
+        return properties.map(propertyInfo =>
+            getProperty(parent, propertyInfo.name)
+        );
     }
 }
 
@@ -456,68 +525,49 @@ export function getClassInfo(object: IEezObject): ClassInfo {
     return getClass(object).classInfo;
 }
 
-const objectMetaPropertiesMap = new Map<IEezObject, any>();
-
-(window as any).EEZStudio._objectMetaPropertiesMap = objectMetaPropertiesMap;
-
-function getObjectMetaProperty(object: IEezObject, propertyName: string): any {
-    let objectMetaProperties = objectMetaPropertiesMap.get(object);
-    return objectMetaProperties && objectMetaProperties[propertyName];
-}
-
-function setObjectMetaProperty(object: IEezObject, propertyName: string, propertyValue: any) {
-    let objectMetaProperties = objectMetaPropertiesMap.get(object);
-    if (!objectMetaProperties) {
-        objectMetaProperties = {};
-        objectMetaPropertiesMap.set(object, objectMetaProperties);
-    }
-    objectMetaProperties[propertyName] = propertyValue;
-}
-
 export function getId(object: IEezObject) {
-    return getObjectMetaProperty(object, "id");
+    return (object as any)._eez_id;
 }
 
-export function setId(object: IEezObject, id: string) {
-    return setObjectMetaProperty(object, "id", id);
+export function setId(
+    objects: Map<string, IEezObject>,
+    object: IEezObject,
+    id: string
+) {
+    (object as any)._eez_id = id;
+    objects.set(id, object);
 }
 
 export function getParent(object: IEezObject): IEezObject {
-    return getObjectMetaProperty(object, "parent");
+    return (object as any)._eez_parent;
 }
 
 export function setParent(object: IEezObject, parentObject: IEezObject) {
-    return setObjectMetaProperty(object, "parent", parentObject);
+    (object as any)._eez_parent = parentObject;
 }
 
 export function getKey(object: IEezObject): string {
-    return getObjectMetaProperty(object, "key");
+    return (object as any)._eez_key;
 }
 
 export function setKey(object: IEezObject, key: string) {
-    return setObjectMetaProperty(object, "key", key);
+    (object as any)._eez_key = key;
 }
 
 export function getPropertyInfo(object: IEezObject): PropertyInfo {
-    return getObjectMetaProperty(object, "propertyInfo");
+    return (object as any)._eez_propertyInfo;
 }
 
-export function setPropertyInfo(object: IEezObject, propertyInfo: PropertyInfo) {
-    return setObjectMetaProperty(object, "propertyInfo", propertyInfo);
+export function setPropertyInfo(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    (object as any)._eez_propertyInfo = propertyInfo;
 }
 
-export function getNextChildId(object: IEezObject) {
-    let lastChildId = getObjectMetaProperty(object, "lastChildId");
-    if (lastChildId == undefined) {
-        lastChildId = 1;
-    } else {
-        lastChildId++;
-    }
-    setObjectMetaProperty(object, "lastChildId", lastChildId);
-    return lastChildId;
-}
-
-export function getEditorComponent(object: IEezObject): typeof EditorComponent | undefined {
+export function getEditorComponent(
+    object: IEezObject
+): typeof EditorComponent | undefined {
     const isEditorSupported = getClassInfo(object).isEditorSupported;
     if (isEditorSupported && !isEditorSupported(object)) {
         return undefined;
@@ -561,48 +611,32 @@ export function isProperAncestor(object: IEezObject, ancestor: IEezObject) {
     return !!parent && isAncestor(parent, ancestor);
 }
 
-function uniqueTop(objects: IEezObject[]): IEezObject[] {
-    return _uniqWith(
-        objects,
-        (a: IEezObject, b: IEezObject) => isAncestor(a, b) || isAncestor(b, a)
-    );
-}
-
-function getParents(objects: IEezObject[]): IEezObject[] {
-    return uniqueTop(
-        objects.map(object => getParent(object)).filter(object => !!object) as IEezObject[]
-    );
-}
-
-export function reduceUntilCommonParent(objects: IEezObject[]): IEezObject[] {
-    let uniqueTopObjects = uniqueTop(objects);
-
-    let parents = getParents(uniqueTopObjects);
-
-    if (parents.length == 1) {
-        return uniqueTopObjects;
-    }
-
-    if (parents.length > 1) {
-        return reduceUntilCommonParent(parents);
-    }
-
-    return [];
-}
-
 export function isArrayElement(object: IEezObject) {
     return isArray(getParent(object));
 }
 
-export function findPropertyByNameInObject(object: IEezObject, propertyName: string) {
-    return getClassInfo(object).properties.find(propertyInfo => propertyInfo.name == propertyName);
+export function findPropertyByNameInObject(
+    object: IEezObject,
+    propertyName: string
+) {
+    return getClassInfo(object).properties.find(
+        propertyInfo => propertyInfo.name == propertyName
+    );
 }
 
-export function findPropertyByNameInClassInfo(classInfo: ClassInfo, propertyName: string) {
-    return classInfo.properties.find(propertyInfo => propertyInfo.name == propertyName);
+export function findPropertyByNameInClassInfo(
+    classInfo: ClassInfo,
+    propertyName: string
+) {
+    return classInfo.properties.find(
+        propertyInfo => propertyInfo.name == propertyName
+    );
 }
 
-export function findPropertyByChildObject(object: IEezObject, childObject: IEezObject) {
+export function findPropertyByChildObject(
+    object: IEezObject,
+    childObject: IEezObject
+) {
     return getClassInfo(object).properties.find(
         propertyInfo => getProperty(object, propertyInfo.name) === childObject
     );
@@ -616,7 +650,10 @@ export function getInheritedValue(object: IEezObject, propertyName: string) {
     return undefined;
 }
 
-export function isPropertyHidden(object: IEezObject, propertyInfo: PropertyInfo) {
+export function isPropertyHidden(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
     if (propertyInfo.hideInPropertyGrid === undefined) {
         return false;
     }
@@ -628,7 +665,10 @@ export function isPropertyHidden(object: IEezObject, propertyInfo: PropertyInfo)
     return propertyInfo.hideInPropertyGrid(object, propertyInfo);
 }
 
-export function isPropertyEnumerable(object: IEezObject, propertyInfo: PropertyInfo) {
+export function isPropertyEnumerable(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
     if (propertyInfo.enumerable === undefined) {
         return true;
     }
@@ -644,7 +684,10 @@ export function getProperty(object: IEezObject, name: string) {
     return (object as any)[name];
 }
 
-export function getPropertyAsString(object: IEezObject, propertyInfo: PropertyInfo) {
+export function getPropertyAsString(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
     let value = getProperty(object, propertyInfo.name);
     if (typeof value === "number") {
         return value.toString();
@@ -653,7 +696,9 @@ export function getPropertyAsString(object: IEezObject, propertyInfo: PropertyIn
         return value;
     }
     if (isArray(value)) {
-        return (value as IEezObject[]).map(object => getLabel(object)).join(", ");
+        return (value as IEezObject[])
+            .map(object => getLabel(object))
+            .join(", ");
     }
     return objectToString(value);
 }
@@ -672,8 +717,13 @@ export function objectToString(object: IEezObject) {
     if (isValue(object)) {
         label = getProperty(getParent(object), getKey(object));
     } else if (isArray(object)) {
-        let propertyInfo = findPropertyByNameInObject(getParent(object), getKey(object));
-        label = (propertyInfo && propertyInfo.displayName) || humanize(getKey(object));
+        let propertyInfo = findPropertyByNameInObject(
+            getParent(object),
+            getKey(object)
+        );
+        label =
+            (propertyInfo && propertyInfo.displayName) ||
+            humanize(getKey(object));
     } else {
         label = getLabel(object);
     }
@@ -714,7 +764,11 @@ export function getChildOfObject(
 
         const array = object as IEezObject[];
 
-        if (elementIndex !== undefined && elementIndex >= 0 && elementIndex < array.length) {
+        if (
+            elementIndex !== undefined &&
+            elementIndex >= 0 &&
+            elementIndex < array.length
+        ) {
             return array[elementIndex];
         } else {
             console.error("invalid array index");
@@ -734,7 +788,11 @@ export function getChildOfObject(
         if (propertyInfo.typeClass) {
             return childObjectOrValue;
         } else {
-            return EezValueObject.create(object, propertyInfo, childObjectOrValue);
+            return EezValueObject.create(
+                object,
+                propertyInfo,
+                childObjectOrValue
+            );
         }
     }
 
@@ -749,7 +807,9 @@ export function getAncestorOfType(
         if (isObjectInstanceOf(object, classInfo)) {
             return object;
         }
-        return getParent(object) && getAncestorOfType(getParent(object), classInfo);
+        return (
+            getParent(object) && getAncestorOfType(getParent(object), classInfo)
+        );
     }
     return undefined;
 }
@@ -758,7 +818,9 @@ export function getObjectPath(object: IEezObject): (string | number)[] {
     let parent = getParent(object);
     if (parent) {
         if (isArray(parent)) {
-            return getObjectPath(parent).concat(parent.indexOf(object as IEezObject));
+            return getObjectPath(parent).concat(
+                parent.indexOf(object as IEezObject)
+            );
         } else {
             return getObjectPath(parent).concat(getKey(object));
         }
@@ -766,7 +828,10 @@ export function getObjectPath(object: IEezObject): (string | number)[] {
     return [];
 }
 
-export function getObjectPropertyAsObject(object: IEezObject, propertyInfo: PropertyInfo) {
+export function getObjectPropertyAsObject(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
     return getChildOfObject(object, propertyInfo) as EezValueObject;
 }
 
@@ -780,76 +845,12 @@ export function getRootObject(object: IEezObject) {
 
 // Get object ancestors as array,
 // from the root object up to the given object (including given object)
-export function getAncestors(
-    object: IEezObject,
-    ancestor?: IEezObject,
-    showSingleArrayChild?: boolean
-): IEezObject[] {
-    if (!ancestor) {
-        return getAncestors(object, getRootObject(object));
+export function getAncestors(object: IEezObject): IEezObject[] {
+    let parent = getParent(object);
+    if (parent) {
+        return getAncestors(parent).concat([object]);
     }
-
-    if (isValue(object)) {
-        object = getParent(object);
-    }
-
-    if (isArray(ancestor)) {
-        let possibleAncestor = ancestor.find(
-            possibleAncestor =>
-                object == possibleAncestor ||
-                getId(object).startsWith(getId(possibleAncestor) + ".")
-        );
-        if (possibleAncestor) {
-            if (possibleAncestor == object) {
-                if (showSingleArrayChild) {
-                    return [ancestor, object];
-                } else {
-                    return [object];
-                }
-            } else {
-                if (showSingleArrayChild) {
-                    return [ancestor as IEezObject].concat(getAncestors(object, possibleAncestor));
-                } else {
-                    return getAncestors(object, possibleAncestor);
-                }
-            }
-        }
-    } else {
-        let numObjectOrArrayProperties = 0;
-        for (const propertyInfo of getClassInfo(ancestor).properties) {
-            if (
-                propertyInfo.type === PropertyType.Object ||
-                propertyInfo.type === PropertyType.Array
-            ) {
-                numObjectOrArrayProperties++;
-            }
-        }
-
-        if (numObjectOrArrayProperties > 0) {
-            for (const propertyInfo of getClassInfo(ancestor).properties) {
-                if (
-                    propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array
-                ) {
-                    let possibleAncestor: IEezObject = (ancestor as any)[propertyInfo.name];
-
-                    if (possibleAncestor === object) {
-                        return [ancestor];
-                    }
-
-                    if (
-                        possibleAncestor &&
-                        getId(object).startsWith(getId(possibleAncestor) + ".")
-                    ) {
-                        return [ancestor].concat(
-                            getAncestors(object, possibleAncestor, numObjectOrArrayProperties > 1)
-                        );
-                    }
-                }
-            }
-        }
-    }
-    return [];
+    return [object];
 }
 
 export function getHumanReadableObjectPath(object: IEezObject) {
@@ -891,59 +892,26 @@ export function getObjectFromPath(rootObject: IEezObject, path: string[]) {
     return object;
 }
 
-export function getObjectFromStringPath(rootObject: IEezObject, stringPath: string) {
+export function getObjectFromStringPath(
+    rootObject: IEezObject,
+    stringPath: string
+) {
     if (stringPath == "/") {
         return rootObject;
     }
     return getObjectFromPath(rootObject, stringPath.split("/").slice(1));
 }
 
-export function getObjectFromObjectId(
-    rootObject: IEezObject,
-    objectID: string
-): IEezObject | undefined {
-    function getDescendantObjectFromId(object: IEezObject, id: string): IEezObject | undefined {
-        if (getId(object) == id) {
-            return object;
-        }
-
-        if (isArray(object)) {
-            let childObject = object.find(
-                child => id == getId(child) || id.startsWith(getId(child) + ".")
-            );
-            if (childObject) {
-                if (getId(childObject) == id) {
-                    return childObject;
-                }
-                return getDescendantObjectFromId(childObject, id);
-            }
-        } else {
-            for (const propertyInfo of getClassInfo(object).properties) {
-                if (
-                    propertyInfo.type === PropertyType.Object ||
-                    propertyInfo.type === PropertyType.Array
-                ) {
-                    let childObject = getChildOfObject(object, propertyInfo);
-                    if (childObject) {
-                        if (getId(childObject) == id) {
-                            return childObject;
-                        }
-                        if (id.startsWith(getId(childObject) + ".")) {
-                            return getDescendantObjectFromId(childObject, id);
-                        }
-                    }
-                }
-            }
-        }
-
-        return undefined;
-    }
-
-    return getDescendantObjectFromId(rootObject, objectID as string);
-}
-
-export function cloneObject(parent: IEezObject | undefined, obj: IEezObject) {
-    return loadObject(parent, objectToJson(obj), getClass(obj));
+export function cloneObject(
+    DocumentStore: DocumentStoreClass,
+    obj: IEezObject
+) {
+    return loadObject(
+        DocumentStore,
+        undefined,
+        objectToJson(obj),
+        getClass(obj)
+    );
 }
 
 export function isShowOnlyChildrenInTree(object: IEezObject) {
@@ -951,7 +919,10 @@ export function isShowOnlyChildrenInTree(object: IEezObject) {
         return true;
     }
 
-    const propertyInfo = findPropertyByNameInObject(getParent(object), getKey(object));
+    const propertyInfo = findPropertyByNameInObject(
+        getParent(object),
+        getKey(object)
+    );
     if (!propertyInfo) {
         return true;
     }
@@ -980,7 +951,9 @@ export function isPartOfNavigation(object: IEezObject) {
 
 export function getArrayAndObjectProperties(object: IEezObject) {
     if (!getClassInfo(object)._arrayAndObjectProperties) {
-        getClassInfo(object)._arrayAndObjectProperties = getClassInfo(object).properties.filter(
+        getClassInfo(object)._arrayAndObjectProperties = getClassInfo(
+            object
+        ).properties.filter(
             propertyInfo =>
                 (propertyInfo.type === PropertyType.Array ||
                     propertyInfo.type === PropertyType.Object) &&
@@ -1000,7 +973,10 @@ export function getCommonProperties(objects: IEezObject[]) {
 
     properties = properties.filter(
         propertyInfo =>
-            !objects.find(object => isArray(object) || isPropertyHidden(object, propertyInfo))
+            !objects.find(
+                object =>
+                    isArray(object) || isPropertyHidden(object, propertyInfo)
+            )
     );
 
     if (objects.length > 1) {
@@ -1008,14 +984,20 @@ export function getCommonProperties(objects: IEezObject[]) {
         properties = properties.filter(
             propertyInfo =>
                 propertyInfo.type !== PropertyType.Array &&
-                !(propertyInfo.type === PropertyType.String && propertyInfo.unique === true)
+                !(
+                    propertyInfo.type === PropertyType.String &&
+                    propertyInfo.unique === true
+                )
         );
 
         // show only common properties
         properties = properties.filter(
             propertyInfo =>
                 !objects.find(
-                    object => !getClassInfo(object).properties.find(pi => pi === propertyInfo)
+                    object =>
+                        !getClassInfo(object).properties.find(
+                            pi => pi === propertyInfo
+                        )
                 )
         );
     }
@@ -1023,7 +1005,9 @@ export function getCommonProperties(objects: IEezObject[]) {
     return properties;
 }
 
-export function getPropertySourceInfo(props: PropertyProps): PropertyValueSourceInfo {
+export function getPropertySourceInfo(
+    props: PropertyProps
+): PropertyValueSourceInfo {
     function getSourceInfo(
         object: IEezObject,
         propertyInfo: PropertyInfo
@@ -1038,7 +1022,10 @@ export function getPropertySourceInfo(props: PropertyProps): PropertyValueSource
 
         if (propertyInfo.inheritable) {
             if (value === undefined) {
-                let inheritedValue = getInheritedValue(object, propertyInfo.name);
+                let inheritedValue = getInheritedValue(
+                    object,
+                    propertyInfo.name
+                );
                 if (inheritedValue) {
                     return {
                         source: "inherited",
@@ -1059,7 +1046,9 @@ export function getPropertySourceInfo(props: PropertyProps): PropertyValueSource
         };
     }
 
-    const sourceInfoArray = props.objects.map(object => getSourceInfo(object, props.propertyInfo));
+    const sourceInfoArray = props.objects.map(object =>
+        getSourceInfo(object, props.propertyInfo)
+    );
 
     for (let i = 1; i < sourceInfoArray.length; i++) {
         if (sourceInfoArray[i].source !== sourceInfoArray[0].source) {

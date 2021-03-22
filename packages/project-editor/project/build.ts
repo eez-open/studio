@@ -1,11 +1,17 @@
 import { createTransformer } from "mobx-utils";
 
 import { formatNumber } from "eez-studio-shared/util";
-import { writeTextFile, writeBinaryData } from "eez-studio-shared/util-electron";
+import {
+    writeTextFile,
+    writeBinaryData
+} from "eez-studio-shared/util-electron";
 import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
 
-import { getExtensionsByCategory, BuildResult } from "project-editor/core/extensions";
+import {
+    getExtensionsByCategory,
+    BuildResult
+} from "project-editor/core/extensions";
 import {
     IEezObject,
     isArray,
@@ -16,8 +22,9 @@ import {
     getClassInfo
 } from "project-editor/core/object";
 import { Section, Type } from "project-editor/core/output";
+import { DocumentStoreClass } from "project-editor/core/store";
 
-import { BuildConfiguration, getProject, ProjectStoreClass } from "project-editor/project/project";
+import { BuildConfiguration, getProject } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
@@ -38,13 +45,19 @@ export function getName<
     T extends {
         name: string;
     }
->(prefix: string, objectOrName: T | string, namingConvention: NamingConvention) {
+>(
+    prefix: string,
+    objectOrName: T | string,
+    namingConvention: NamingConvention
+) {
     let name;
     if (typeof objectOrName == "string") {
         name = objectOrName;
     } else {
         const project = getProject(objectOrName);
-        name = project.namespace ? project.namespace + "_" + objectOrName.name : objectOrName.name;
+        name = project.namespace
+            ? project.namespace + "_" + objectOrName.name
+            : objectOrName.name;
     }
     name = name.replace(/[^a-zA-Z_0-9]/g, " ");
 
@@ -64,25 +77,27 @@ export function getName<
 export function dumpData(data: number[] | Buffer) {
     const NUMBERS_PER_LINE = 16;
     let result = "";
-    _map(data, value => "0x" + formatNumber(value, 16, 2)).forEach((value, index) => {
-        if (result.length > 0) {
-            result += ",";
+    _map(data, value => "0x" + formatNumber(value, 16, 2)).forEach(
+        (value, index) => {
+            if (result.length > 0) {
+                result += ",";
+            }
+            if (index % NUMBERS_PER_LINE == 0) {
+                result += "\n" + TAB;
+            } else {
+                result += " ";
+            }
+            result += value;
         }
-        if (index % NUMBERS_PER_LINE == 0) {
-            result += "\n" + TAB;
-        } else {
-            result += " ";
-        }
-        result += value;
-    });
+    );
     result += "\n";
     return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function showCheckResult(ProjectStore: ProjectStoreClass) {
-    const OutputSections = ProjectStore.OutputSectionsStore;
+function showCheckResult(DocumentStore: DocumentStoreClass) {
+    const OutputSections = DocumentStore.OutputSectionsStore;
 
     let outputSection = OutputSections.getSection(Section.OUTPUT);
 
@@ -112,25 +127,30 @@ function showCheckResult(ProjectStore: ProjectStoreClass) {
 }
 
 class BuildException {
-    constructor(public message: string, public object?: IEezObject | undefined) { }
+    constructor(
+        public message: string,
+        public object?: IEezObject | undefined
+    ) {}
 }
 
 async function getBuildResults(
-    ProjectStore: ProjectStoreClass,
+    DocumentStore: DocumentStoreClass,
     sectionNames: string[] | undefined,
     buildConfiguration: BuildConfiguration | undefined
 ) {
-    const project = ProjectStore.project;
+    const project = DocumentStore.project;
 
     let buildResults: BuildResult[] = [];
 
     let projectFeatures = getExtensionsByCategory("project-feature");
     for (let projectFeature of projectFeatures) {
         if (
-            projectFeature.eezStudioExtension.implementation.projectFeature.build &&
+            projectFeature.eezStudioExtension.implementation.projectFeature
+                .build &&
             getProperty(
                 project,
-                projectFeature.eezStudioExtension.implementation.projectFeature.key
+                projectFeature.eezStudioExtension.implementation.projectFeature
+                    .key
             )
         ) {
             buildResults.push(
@@ -148,18 +168,20 @@ async function getBuildResults(
 
 const sectionNamesRegexp = /\/\/\$\{eez-studio (.*)\}/g;
 
-function getSectionNames(ProjectStore: ProjectStoreClass): string[] {
-    if (ProjectStore.masterProject) {
+function getSectionNames(DocumentStore: DocumentStoreClass): string[] {
+    if (DocumentStore.masterProject) {
         return ["GUI_ASSETS_DATA"];
     }
 
-    const project = ProjectStore.project;
+    const project = DocumentStore.project;
 
     const sectionNames: string[] = [];
 
     project.settings.build.files.forEach(buildFile => {
         let result;
-        while ((result = sectionNamesRegexp.exec(buildFile.template)) !== null) {
+        while (
+            (result = sectionNamesRegexp.exec(buildFile.template)) !== null
+        ) {
             sectionNames.push(result[1]);
         }
     });
@@ -168,7 +190,7 @@ function getSectionNames(ProjectStore: ProjectStoreClass): string[] {
 }
 
 async function generateFile(
-    ProjectStore: ProjectStoreClass,
+    DocumentStore: DocumentStoreClass,
     buildResults: BuildResult[],
     template: string | undefined,
     filePath: string
@@ -179,76 +201,89 @@ async function generateFile(
     }
 
     if (template) {
-        let buildFileContent = template.replace(sectionNamesRegexp, (_1, part) => {
-            return parts[part];
-        });
+        let buildFileContent = template.replace(
+            sectionNamesRegexp,
+            (_1, part) => {
+                return parts[part];
+            }
+        );
 
         await writeTextFile(filePath, buildFileContent);
     } else {
         await writeBinaryData(filePath, parts["GUI_ASSETS_DATA"]);
     }
 
-    ProjectStore.OutputSectionsStore.write(Section.OUTPUT, Type.INFO, `File "${filePath}" builded`);
+    DocumentStore.OutputSectionsStore.write(
+        Section.OUTPUT,
+        Type.INFO,
+        `File "${filePath}" builded`
+    );
 }
 
 async function generateFiles(
-    ProjectStore: ProjectStoreClass,
+    DocumentStore: DocumentStoreClass,
     destinationFolderPath: string,
     configurationBuildResults: {
         [configurationName: string]: BuildResult[];
     }
 ) {
-    const path = EEZStudio.electron.remote.require("path");
+    const path = EEZStudio.remote.require("path");
 
-    if (ProjectStore.masterProject) {
+    if (DocumentStore.masterProject) {
         generateFile(
-            ProjectStore,
+            DocumentStore,
             configurationBuildResults[
-            ProjectStore.selectedBuildConfiguration
-                ? ProjectStore.selectedBuildConfiguration.name
-                : "default"
+                DocumentStore.selectedBuildConfiguration
+                    ? DocumentStore.selectedBuildConfiguration.name
+                    : "default"
             ],
             undefined,
             destinationFolderPath +
-            "/" +
-            path.basename(ProjectStore.filePath, ".eez-project") +
-            ".res"
+                "/" +
+                path.basename(DocumentStore.filePath, ".eez-project") +
+                ".res"
         );
     } else {
-        const build = ProjectStore.project.settings.build;
+        const build = DocumentStore.project.settings.build;
 
         for (const buildFile of build.files) {
             if (buildFile.fileName.indexOf("<configuration>") !== -1) {
                 for (const configuration of build.configurations) {
                     try {
                         await generateFile(
-                            ProjectStore,
+                            DocumentStore,
                             configurationBuildResults[configuration.name],
                             buildFile.template,
                             destinationFolderPath +
-                            "/" +
-                            buildFile.fileName.replace("<configuration>", configuration.name)
+                                "/" +
+                                buildFile.fileName.replace(
+                                    "<configuration>",
+                                    configuration.name
+                                )
                         );
                     } catch (err) {
                         await new Promise(resolve => setTimeout(resolve, 10));
 
                         await generateFile(
-                            ProjectStore,
+                            DocumentStore,
                             configurationBuildResults[configuration.name],
                             buildFile.template,
                             destinationFolderPath +
-                            "/" +
-                            buildFile.fileName.replace("<configuration>", configuration.name)
+                                "/" +
+                                buildFile.fileName.replace(
+                                    "<configuration>",
+                                    configuration.name
+                                )
                         );
                     }
                 }
             } else {
                 generateFile(
-                    ProjectStore,
+                    DocumentStore,
                     configurationBuildResults[
-                    ProjectStore.selectedBuildConfiguration
-                        ? ProjectStore.selectedBuildConfiguration.name
-                        : "default"
+                        DocumentStore.selectedBuildConfiguration
+                            ? DocumentStore.selectedBuildConfiguration.name
+                            : "default"
                     ],
                     buildFile.template,
                     destinationFolderPath + "/" + buildFile.fileName
@@ -258,19 +293,25 @@ async function generateFiles(
     }
 }
 
-function anythingToBuild(ProjectStore: ProjectStoreClass) {
-    return ProjectStore.project.settings.build.files.length > 0 || ProjectStore.masterProject;
+function anythingToBuild(DocumentStore: DocumentStoreClass) {
+    return (
+        DocumentStore.project.settings.build.files.length > 0 ||
+        DocumentStore.masterProject
+    );
 }
 
-export async function build(ProjectStore: ProjectStoreClass, { onlyCheck }: { onlyCheck: boolean }) {
+export async function build(
+    DocumentStore: DocumentStoreClass,
+    { onlyCheck }: { onlyCheck: boolean }
+) {
     const timeStart = new Date().getTime();
 
-    const OutputSections = ProjectStore.OutputSectionsStore;
+    const OutputSections = DocumentStore.OutputSectionsStore;
 
     OutputSections.setActiveSection(Section.OUTPUT);
     OutputSections.clear(Section.OUTPUT);
 
-    if (!anythingToBuild(ProjectStore)) {
+    if (!anythingToBuild(DocumentStore)) {
         OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
         return;
     }
@@ -285,15 +326,15 @@ export async function build(ProjectStore: ProjectStoreClass, { onlyCheck }: { on
 
         let destinationFolderPath;
         if (!onlyCheck) {
-            destinationFolderPath = ProjectStore.getAbsoluteFilePath(
-                ProjectStore.project.settings.build.destinationFolder || "."
+            destinationFolderPath = DocumentStore.getAbsoluteFilePath(
+                DocumentStore.project.settings.build.destinationFolder || "."
             );
-            const fs = EEZStudio.electron.remote.require("fs");
+            const fs = EEZStudio.remote.require("fs");
             if (!fs.existsSync(destinationFolderPath)) {
                 throw new BuildException("Cannot find destination folder.");
             }
 
-            sectionNames = getSectionNames(ProjectStore);
+            sectionNames = getSectionNames(DocumentStore);
         }
 
         let configurationBuildResuts: {
@@ -301,58 +342,69 @@ export async function build(ProjectStore: ProjectStoreClass, { onlyCheck }: { on
         } = {};
 
         if (
-            ProjectStore.project.settings.general.projectVersion !== "v1" &&
-            ProjectStore.project.settings.build.configurations.length > 0 &&
-            !ProjectStore.masterProject
+            DocumentStore.project.settings.general.projectVersion !== "v1" &&
+            DocumentStore.project.settings.build.configurations.length > 0 &&
+            !DocumentStore.masterProject
         ) {
-            for (const configuration of ProjectStore.project.settings.build.configurations) {
+            for (const configuration of DocumentStore.project.settings.build
+                .configurations) {
                 OutputSections.write(
                     Section.OUTPUT,
                     Type.INFO,
                     `Building ${configuration.name} configuration`
                 );
-                configurationBuildResuts[configuration.name] = await getBuildResults(
-                    ProjectStore,
+                configurationBuildResuts[
+                    configuration.name
+                ] = await getBuildResults(
+                    DocumentStore,
                     sectionNames,
                     configuration
                 );
             }
         } else {
             const selectedBuildConfiguration =
-                ProjectStore.selectedBuildConfiguration ||
-                ProjectStore.project.settings.build.configurations[0];
+                DocumentStore.selectedBuildConfiguration ||
+                DocumentStore.project.settings.build.configurations[0];
             if (selectedBuildConfiguration) {
                 OutputSections.write(
                     Section.OUTPUT,
                     Type.INFO,
                     `Building ${selectedBuildConfiguration.name} configuration`
                 );
-                configurationBuildResuts[selectedBuildConfiguration.name] = await getBuildResults(
-                    ProjectStore,
+                configurationBuildResuts[
+                    selectedBuildConfiguration.name
+                ] = await getBuildResults(
+                    DocumentStore,
                     sectionNames,
                     selectedBuildConfiguration
                 );
             } else {
                 configurationBuildResuts["default"] = await getBuildResults(
-                    ProjectStore,
+                    DocumentStore,
                     sectionNames,
                     undefined
                 );
             }
         }
 
-        showCheckResult(ProjectStore);
+        showCheckResult(DocumentStore);
 
         if (onlyCheck) {
             return;
         }
 
-        await generateFiles(ProjectStore, destinationFolderPath, configurationBuildResuts);
+        await generateFiles(
+            DocumentStore,
+            destinationFolderPath,
+            configurationBuildResuts
+        );
 
         OutputSections.write(
             Section.OUTPUT,
             Type.INFO,
-            `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
+            `Build duration: ${
+                (new Date().getTime() - timeStart) / 1000
+            } seconds`
         );
 
         OutputSections.write(
@@ -362,26 +414,35 @@ export async function build(ProjectStore: ProjectStoreClass, { onlyCheck }: { on
         );
     } catch (err) {
         if (err instanceof BuildException) {
-            OutputSections.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                err.message,
+                err.object
+            );
         } else {
-            OutputSections.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                `Module build error: ${err}`
+            );
         }
 
-        showCheckResult(ProjectStore);
+        showCheckResult(DocumentStore);
     } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
 }
 
-export async function buildExtensions(ProjectStore: ProjectStoreClass) {
+export async function buildExtensions(DocumentStore: DocumentStoreClass) {
     const timeStart = new Date().getTime();
 
-    const OutputSections = ProjectStore.OutputSectionsStore;
+    const OutputSections = DocumentStore.OutputSectionsStore;
 
     OutputSections.setActiveSection(Section.OUTPUT);
     OutputSections.clear(Section.OUTPUT);
 
-    if (!extensionDefinitionAnythingToBuild(ProjectStore)) {
+    if (!extensionDefinitionAnythingToBuild(DocumentStore)) {
         OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
         return;
     }
@@ -392,22 +453,24 @@ export async function buildExtensions(ProjectStore: ProjectStoreClass) {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
-        let destinationFolderPath = ProjectStore.getAbsoluteFilePath(
-            ProjectStore.project.settings.build.destinationFolder || "."
+        let destinationFolderPath = DocumentStore.getAbsoluteFilePath(
+            DocumentStore.project.settings.build.destinationFolder || "."
         );
-        const fs = EEZStudio.electron.remote.require("fs");
+        const fs = EEZStudio.remote.require("fs");
         if (!fs.existsSync(destinationFolderPath)) {
             throw new BuildException("Cannot find destination folder.");
         }
 
-        showCheckResult(ProjectStore);
+        showCheckResult(DocumentStore);
 
-        await extensionDefinitionBuild(ProjectStore);
+        await extensionDefinitionBuild(DocumentStore);
 
         OutputSections.write(
             Section.OUTPUT,
             Type.INFO,
-            `Build duration: ${(new Date().getTime() - timeStart) / 1000} seconds`
+            `Build duration: ${
+                (new Date().getTime() - timeStart) / 1000
+            } seconds`
         );
 
         OutputSections.write(
@@ -417,12 +480,21 @@ export async function buildExtensions(ProjectStore: ProjectStoreClass) {
         );
     } catch (err) {
         if (err instanceof BuildException) {
-            OutputSections.write(Section.OUTPUT, Type.ERROR, err.message, err.object);
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                err.message,
+                err.object
+            );
         } else {
-            OutputSections.write(Section.OUTPUT, Type.ERROR, `Module build error: ${err}`);
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                `Module build error: ${err}`
+            );
         }
 
-        showCheckResult(ProjectStore);
+        showCheckResult(DocumentStore);
     } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
@@ -443,7 +515,8 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
         }
 
         // call check from property definition
-        const propertyCheckMethod = getPropertyInfo(object) && getPropertyInfo(object).check;
+        const propertyCheckMethod =
+            getPropertyInfo(object) && getPropertyInfo(object).check;
         if (propertyCheckMethod) {
             messages = messages.concat(propertyCheckMethod(object));
         }
@@ -469,17 +542,17 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
 
 let setMessagesTimeoutId: any;
 
-export function backgroundCheck(ProjectStore: ProjectStoreClass) {
+export function backgroundCheck(DocumentStore: DocumentStoreClass) {
     //console.time("backgroundCheck");
 
-    const messages = checkTransformer(ProjectStore.project);
+    const messages = checkTransformer(DocumentStore.project);
 
     if (setMessagesTimeoutId) {
         clearTimeout(setMessagesTimeoutId);
     }
 
     setMessagesTimeoutId = setTimeout(() => {
-        ProjectStore.OutputSectionsStore.setMessages(Section.CHECKS, messages);
+        DocumentStore.OutputSectionsStore.setMessages(Section.CHECKS, messages);
     }, 100);
 
     //console.timeEnd("backgroundCheck");

@@ -9,14 +9,15 @@ import {
     EezObject,
     registerClass,
     PropertyType,
-    getObjectFromObjectId,
     getParent
 } from "project-editor/core/object";
 import {
+    DocumentStoreClass,
     INavigationStore,
     SimpleNavigationStoreClass,
     IContextMenuContext,
-    getObjectFromNavigationItem
+    getObjectFromNavigationItem,
+    getDocumentStore
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -28,27 +29,23 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { DragAndDropManagerClass } from "project-editor/core/dd";
-import {
-    getProjectStore,
-    ProjectStoreClass
-} from "project-editor/project/project";
 import { Gui } from "project-editor/features/gui/gui";
 import { ProjectContext } from "project-editor/project/context";
 
-const { MenuItem } = EEZStudio.electron.remote;
+const { MenuItem } = EEZStudio.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getProjectWithThemes(ProjectStore: ProjectStoreClass) {
-    if (ProjectStore.masterProject) {
-        return ProjectStore.masterProject;
+function getProjectWithThemes(DocumentStore: DocumentStoreClass) {
+    if (DocumentStore.masterProject) {
+        return DocumentStore.masterProject;
     }
 
-    if (ProjectStore.project.gui.themes.length > 0) {
-        return ProjectStore.project;
+    if (DocumentStore.project.gui.themes.length > 0) {
+        return DocumentStore.project;
     }
 
-    for (const importDirective of ProjectStore.project.settings.general
+    for (const importDirective of DocumentStore.project.settings.general
         .imports) {
         if (importDirective.project) {
             if (importDirective.project.gui.themes.length > 0) {
@@ -57,15 +54,18 @@ function getProjectWithThemes(ProjectStore: ProjectStoreClass) {
         }
     }
 
-    return ProjectStore.project;
+    return DocumentStore.project;
 }
 
-const navigationStore = new SimpleNavigationStoreClass(undefined);
+let simpleNavigationStore: SimpleNavigationStoreClass;
 
-function getNavigationStore(ProjectStore: ProjectStoreClass) {
-    return getProjectWithThemes(ProjectStore) != ProjectStore.project
-        ? navigationStore
-        : ProjectStore.NavigationStore;
+function getNavigationStore(DocumentStore: DocumentStoreClass) {
+    if (!simpleNavigationStore) {
+        simpleNavigationStore = new SimpleNavigationStoreClass(undefined);
+    }
+    return getProjectWithThemes(DocumentStore) != DocumentStore.project
+        ? simpleNavigationStore
+        : DocumentStore.NavigationStore;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,10 +106,7 @@ class ColorItem extends React.Component<{
 
     @computed
     get colorObject() {
-        return getObjectFromObjectId(
-            getProjectWithThemes(this.context),
-            this.props.itemId
-        ) as Color;
+        return this.context.getObjectFromObjectId(this.props.itemId) as Color;
     }
 
     @computed
@@ -206,10 +203,7 @@ export class ThemesSideView extends React.Component<{
     declare context: React.ContextType<typeof ProjectContext>;
 
     onEditThemeName = (itemId: string) => {
-        const theme = getObjectFromObjectId(
-            getProjectWithThemes(this.context),
-            itemId
-        ) as Theme;
+        const theme = this.context.getObjectFromObjectId(itemId) as Theme;
 
         showGenericDialog({
             dialogDefinition: {
@@ -245,10 +239,7 @@ export class ThemesSideView extends React.Component<{
     };
 
     onEditColorName = (itemId: string) => {
-        const color = getObjectFromObjectId(
-            getProjectWithThemes(this.context),
-            itemId
-        ) as Color;
+        const color = this.context.getObjectFromObjectId(itemId) as Color;
 
         showGenericDialog({
             dialogDefinition: {
@@ -307,7 +298,7 @@ export class ThemesSideView extends React.Component<{
         );
 
         let colors;
-        if (!this.context.masterProject) {
+        if (!this.context.masterProject && gui.themes.length > 0) {
             colors = (
                 <ListNavigation
                     id="theme-colors"
@@ -403,17 +394,17 @@ export class Color extends EezObject implements IColor {
                 new MenuItem({
                     label: "Copy to other themes",
                     click: () => {
-                        const ProjectStore = getProjectStore(thisObject);
+                        const DocumentStore = getDocumentStore(thisObject);
 
-                        ProjectStore.UndoManager.setCombineCommands(true);
+                        DocumentStore.UndoManager.setCombineCommands(true);
 
                         const gui = getProjectWithThemes(
-                            getProjectStore(thisObject)
+                            getDocumentStore(thisObject)
                         ).gui;
 
                         const selectedTheme = getObjectFromNavigationItem(
                             getNavigationStore(
-                                ProjectStore
+                                DocumentStore
                             ).getNavigationSelectedItem(gui.themes)
                         ) as Theme;
 
@@ -427,13 +418,13 @@ export class Color extends EezObject implements IColor {
                             if (theme != selectedTheme) {
                                 const colors = theme.colors.slice();
                                 colors[colorIndex] = color;
-                                ProjectStore.updateObject(theme, {
+                                DocumentStore.updateObject(theme, {
                                     colors
                                 });
                             }
                         });
 
-                        ProjectStore.UndoManager.setCombineCommands(false);
+                        DocumentStore.UndoManager.setCombineCommands(false);
                     }
                 })
             );
@@ -526,7 +517,7 @@ registerClass(Theme);
 
 function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
     let selectedTheme = getObjectFromNavigationItem(
-        getNavigationStore(getProjectStore(gui)).getNavigationSelectedItem(
+        getNavigationStore(getDocumentStore(gui)).getNavigationSelectedItem(
             gui.themes
         )
     ) as Theme;
@@ -551,14 +542,14 @@ function getThemedColorInGui(gui: Gui, colorValue: string): string | undefined {
 }
 
 export function getThemedColor(
-    ProjectStore: ProjectStoreClass,
+    DocumentStore: DocumentStoreClass,
     colorValue: string
 ): string {
     if (colorValue.startsWith("#")) {
         return colorValue;
     }
 
-    const gui = getProjectWithThemes(ProjectStore).gui;
+    const gui = getProjectWithThemes(DocumentStore).gui;
     let color = getThemedColorInGui(gui, colorValue);
     if (color) {
         return color;

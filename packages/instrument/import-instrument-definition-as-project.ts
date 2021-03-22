@@ -10,23 +10,27 @@ import { IExtension } from "eez-studio-shared/extensions/extension";
 
 import * as notification from "eez-studio-ui/notification";
 
-import { getNewProject } from "project-editor/project/project";
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 import { Scpi } from "project-editor/features/scpi/scpi";
 
 import { loadCommandsFromExtensionFolder } from "instrument/import";
 import { splitCommandToMnemonics } from "instrument/commands-tree";
+import { DocumentStoreClass } from "project-editor/core/store";
+import { ProjectEditorTab } from "home/tabs-store";
 
 function generateExtensionGuid(extensionName: string) {
     var sha256 = require("sha256");
     var hash = sha256(extensionName);
     let i = 0;
-    return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, function(c) {
+    return "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".replace(/[x]/g, function (c) {
         return hash[i++ % hash.length];
     });
 }
 
-function createExtensionDefinitions(extension: IExtension, extensionName: string) {
+function createExtensionDefinitions(
+    extension: IExtension,
+    extensionName: string
+) {
     const extensionDefinition = new ExtensionDefinition();
 
     extensionDefinition.name = extensionName;
@@ -52,7 +56,9 @@ function createExtensionDefinitions(extension: IExtension, extensionName: string
 async function createScpi(extensionFolderPath: string) {
     const scpi: Scpi = new Scpi();
 
-    const { commands, enums } = await loadCommandsFromExtensionFolder(extensionFolderPath);
+    const { commands, enums } = await loadCommandsFromExtensionFolder(
+        extensionFolderPath
+    );
 
     const extensionFolderPathUrl = localPathToFileUrl(extensionFolderPath);
 
@@ -77,7 +83,9 @@ async function createScpi(extensionFolderPath: string) {
 
         scpiSubsystem.commands.push(
             Object.assign({}, command, {
-                helpLink: command.helpLink && command.helpLink.substr(extensionFolderPathUrl.length)
+                helpLink:
+                    command.helpLink &&
+                    command.helpLink.substr(extensionFolderPathUrl.length)
             })
         );
     });
@@ -102,7 +110,8 @@ export async function importInstrumentDefinitionAsProject(
         getFileNameWithoutExtension(projectFilePath);
 
         const extensionName = getFileNameWithoutExtension(projectFilePath);
-        const extensionFolderPath = getFolderName(projectFilePath) + "/" + extensionName;
+        const extensionFolderPath =
+            getFolderName(projectFilePath) + "/" + extensionName;
 
         const extension = await importExtensionToFolder(
             instrumentDefinitionFilePath,
@@ -117,7 +126,9 @@ export async function importInstrumentDefinitionAsProject(
             return;
         }
 
-        const project = getNewProject();
+        const DocumentStore = new DocumentStoreClass();
+
+        const project = DocumentStore.getNewProject();
 
         project.settings.general.scpiDocFolder = extensionName;
         project.settings.build.destinationFolder = ".";
@@ -131,10 +142,10 @@ export async function importInstrumentDefinitionAsProject(
 
         await writeJsObjectToFile(projectFilePath, objectToJS(project));
 
-        EEZStudio.electron.ipcRenderer.send(
-            "openWindow",
-            projectFilePath
-        );
+        const tab = await ProjectEditorTab.addTab(projectFilePath);
+        if (tab) {
+            tab.makeActive();
+        }
 
         await new Promise(resolve => setTimeout(resolve));
 

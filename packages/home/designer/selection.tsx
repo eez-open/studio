@@ -44,7 +44,8 @@ const SelectionDiv = styled.div`
 
     .EezStudio_DesignerSelection_RubberBend {
         position: absolute;
-        background-color: ${props => addAlphaToColor(props.theme.selectionBackgroundColor, 0.5)};
+        background-color: ${props =>
+            addAlphaToColor(props.theme.selectionBackgroundColor, 0.5)};
         border: 1px solid ${props => props.theme.selectionBackgroundColor};
     }
 
@@ -67,7 +68,9 @@ class SelectedObject extends React.Component<
 > {
     render() {
         const { object, viewState, className } = this.props;
-        let rect = viewState.transform.pageToOffsetRect(getObjectBoundingRect(object, viewState));
+        let rect = viewState.transform.pageToOffsetRect(
+            getObjectBoundingRect(object, viewState)
+        );
 
         if (className === "EezStudio_DesignerSelection_SelectedObjectsParent") {
             rect = rectExpand(rect, 2);
@@ -157,10 +160,12 @@ export class Selection extends React.Component<
 
         const isSelectionVisible =
             selectedObjects.length > 0 &&
-            (!this.props.mouseHandler || this.props.mouseHandler.selectionVisible);
+            (!this.props.mouseHandler ||
+                this.props.mouseHandler.selectionVisible);
 
         const isSelectedObjectWidgetPaletteItem =
-            selectedObjects.length === 1 && selectedObjects[0].id === "WidgetPaletteItem";
+            selectedObjects.length === 1 &&
+            selectedObjects[0].id === "WidgetPaletteItem";
 
         let selectedObjectRectsElement;
         let selectedObjectsBoundingRectElement;
@@ -187,33 +192,50 @@ export class Selection extends React.Component<
             if (selectedObjects.length > 1) {
                 let style: React.CSSProperties = {
                     position: "absolute",
-                    left: Math.floor(this.selectedObjectsBoundingRect.left) + "px",
-                    top: Math.floor(this.selectedObjectsBoundingRect.top) + "px",
-                    width: Math.floor(this.selectedObjectsBoundingRect.width) + "px",
-                    height: Math.floor(this.selectedObjectsBoundingRect.height) + "px"
+                    left:
+                        Math.floor(this.selectedObjectsBoundingRect.left) +
+                        "px",
+                    top:
+                        Math.floor(this.selectedObjectsBoundingRect.top) + "px",
+                    width:
+                        Math.floor(this.selectedObjectsBoundingRect.width) +
+                        "px",
+                    height:
+                        Math.floor(this.selectedObjectsBoundingRect.height) +
+                        "px"
                 };
 
                 selectedObjectsBoundingRectElement = (
-                    <div className="EezStudio_DesignerSelection_BoundingRect" style={style} />
+                    <div
+                        className="EezStudio_DesignerSelection_BoundingRect"
+                        style={style}
+                    />
                 );
             }
 
             // build resizeHandlersElement
             const isActiveRubberBendSelection =
                 this.props.mouseHandler &&
-                this.props.mouseHandler instanceof RubberBandSelectionMouseHandler &&
+                this.props.mouseHandler instanceof
+                    RubberBandSelectionMouseHandler &&
                 this.props.mouseHandler.rubberBendRect;
             if (!isActiveRubberBendSelection!) {
-                resizeHandlersElement = this.getResizeHandlers(this.selectedObjectsBoundingRect);
+                resizeHandlersElement = this.getResizeHandlers(
+                    this.selectedObjectsBoundingRect
+                );
             }
 
             // build selectedObjectsParentElement;
-            const parent = this.props.context.document.findObjectParent(selectedObjects[0]);
+            const parent = this.props.context.document.findObjectParent(
+                selectedObjects[0]
+            );
             if (parent) {
                 let i: number;
                 for (i = 1; i < selectedObjects.length; ++i) {
                     if (
-                        this.props.context.document.findObjectParent(selectedObjects[i]) != parent
+                        this.props.context.document.findObjectParent(
+                            selectedObjects[i]
+                        ) != parent
                     ) {
                         break;
                     }
@@ -231,7 +253,9 @@ export class Selection extends React.Component<
         }
 
         const style: React.CSSProperties = {
-            pointerEvents: isSelectedObjectWidgetPaletteItem ? "none" : undefined
+            pointerEvents: isSelectedObjectWidgetPaletteItem
+                ? "none"
+                : undefined
         };
 
         if (!isSelectionMoveable(this.props.context)) {

@@ -74,7 +74,9 @@ export class WorkbenchObject implements IWorkbenchObject {
         return this.implementation.content;
     }
 
-    activityLogEntryInfo(logEntry: IActivityLogEntry): IActivityLogEntryInfo | null {
+    activityLogEntryInfo(
+        logEntry: IActivityLogEntry
+    ): IActivityLogEntryInfo | null {
         return this.implementation.activityLogEntryInfo(logEntry);
     }
 
@@ -107,7 +109,10 @@ export class WorkbenchObject implements IWorkbenchObject {
     openEditor(target: "tab" | "window" | "default") {
         if (target === "default") {
             if (
-                EEZStudio.electron.ipcRenderer.sendSync("focusWindow", this.getEditorWindowArgs())
+                EEZStudio.electron.ipcRenderer.sendSync(
+                    "focusWindow",
+                    this.getEditorWindowArgs()
+                )
             ) {
                 return;
             }
@@ -140,7 +145,10 @@ export class WorkbenchObject implements IWorkbenchObject {
             }
 
             // open window
-            EEZStudio.electron.ipcRenderer.send("openWindow", toJS(this.getEditorWindowArgs()));
+            EEZStudio.electron.ipcRenderer.send(
+                "openWindow",
+                toJS(this.getEditorWindowArgs())
+            );
         }
     }
 
@@ -263,6 +271,7 @@ if (isRenderer()) {
             const workbenchObject = workbenchObjects.get(key);
             if (
                 workbenchObject &&
+                message.data.object &&
                 workbenchObject.type === message.data.object.type &&
                 workbenchObject.oid === message.data.object.id
             ) {

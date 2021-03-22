@@ -31,7 +31,7 @@ import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
 import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
 import * as SettingsModule from "home/settings";
-import { ProjectStoreClass } from "project-editor/project/project";
+import { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
 
@@ -365,23 +365,23 @@ export class ProjectEditorTab implements IHomeTab {
             await extensionsModule.loadExtensions();
         }
 
-        const { ProjectStoreClass } = await import(
-            "project-editor/project/project"
+        const { DocumentStoreClass } = await import(
+            "project-editor/core/store"
         );
 
-        const ProjectStore = new ProjectStoreClass();
+        const DocumentStore = new DocumentStoreClass();
         if (filePath) {
-            await ProjectStore.openFile(filePath);
+            await DocumentStore.openFile(filePath);
         } else {
-            ProjectStore.newProject();
+            DocumentStore.newProject();
         }
 
-        ProjectStore.waitUntilready();
+        DocumentStore.waitUntilready();
 
-        return tabs.addProjectTab(ProjectStore);
+        return tabs.addProjectTab(DocumentStore);
     }
 
-    constructor(public tabs: Tabs, public ProjectStore: ProjectStoreClass) {}
+    constructor(public tabs: Tabs, public DocumentStore: DocumentStoreClass) {}
 
     permanent: boolean = true;
     @observable _active: boolean = false;
@@ -409,47 +409,47 @@ export class ProjectEditorTab implements IHomeTab {
 
     addListeners() {
         const save = () => {
-            this.ProjectStore.save();
+            this.DocumentStore.save();
         };
         const saveAs = () => {
-            this.ProjectStore.saveAs();
+            this.DocumentStore.saveAs();
         };
         const check = () => {
-            this.ProjectStore.check();
+            this.DocumentStore.check();
         };
         const build = () => {
-            this.ProjectStore.build();
+            this.DocumentStore.build();
         };
         const buildExtensions = () => {
-            this.ProjectStore.buildExtensions();
+            this.DocumentStore.buildExtensions();
         };
         const undo = () => {
-            this.ProjectStore.UndoManager.undo();
+            this.DocumentStore.UndoManager.undo();
         };
         const redo = () => {
-            this.ProjectStore.UndoManager.redo();
+            this.DocumentStore.UndoManager.redo();
         };
         const cut = () => {
-            if (this.ProjectStore.NavigationStore.selectedPanel)
-                this.ProjectStore.NavigationStore.selectedPanel.cutSelection();
+            if (this.DocumentStore.NavigationStore.selectedPanel)
+                this.DocumentStore.NavigationStore.selectedPanel.cutSelection();
         };
         const copy = () => {
-            if (this.ProjectStore.NavigationStore.selectedPanel)
-                this.ProjectStore.NavigationStore.selectedPanel.copySelection();
+            if (this.DocumentStore.NavigationStore.selectedPanel)
+                this.DocumentStore.NavigationStore.selectedPanel.copySelection();
         };
         const paste = () => {
-            if (this.ProjectStore.NavigationStore.selectedPanel)
-                this.ProjectStore.NavigationStore.selectedPanel.pasteSelection();
+            if (this.DocumentStore.NavigationStore.selectedPanel)
+                this.DocumentStore.NavigationStore.selectedPanel.pasteSelection();
         };
         const deleteSelection = () => {
-            if (this.ProjectStore.NavigationStore.selectedPanel)
-                this.ProjectStore.NavigationStore.selectedPanel.deleteSelection();
+            if (this.DocumentStore.NavigationStore.selectedPanel)
+                this.DocumentStore.NavigationStore.selectedPanel.deleteSelection();
         };
         const toggleOutput = action(() => {
-            this.ProjectStore.UIStateStore.viewOptions.outputVisible = !this
-                .ProjectStore.UIStateStore.viewOptions.outputVisible;
+            this.DocumentStore.UIStateStore.viewOptions.outputVisible = !this
+                .DocumentStore.UIStateStore.viewOptions.outputVisible;
         });
-        const showMetrics = () => this.ProjectStore.showMetrics();
+        const showMetrics = () => this.DocumentStore.showMetrics();
 
         EEZStudio.electron.ipcRenderer.on("save", save);
         EEZStudio.electron.ipcRenderer.on("saveAs", saveAs);
@@ -495,11 +495,14 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get id() {
-        return ProjectEditorTab.ID_PREFIX + this.ProjectStore.filePath || "";
+        return ProjectEditorTab.ID_PREFIX + this.DocumentStore.filePath || "";
     }
 
     get title() {
-        return path.parse(this.ProjectStore.filePath || "").name;
+        return (
+            path.parse(this.DocumentStore.filePath || "").name ||
+            "Untitled project"
+        );
     }
 
     get icon() {
@@ -508,7 +511,7 @@ export class ProjectEditorTab implements IHomeTab {
 
     render() {
         return (
-            <ProjectContext.Provider value={this.ProjectStore}>
+            <ProjectContext.Provider value={this.DocumentStore}>
                 <ProjectEditor />
             </ProjectContext.Provider>
         );
@@ -520,11 +523,11 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     close() {
-        this.tabs.removeTab(this);
+        this.DocumentStore.saveModified(() => this.tabs.removeTab(this));
     }
 
     beforeAppClose() {
-        return this.ProjectStore.closeWindow();
+        return this.DocumentStore.closeWindow();
     }
 }
 
@@ -633,7 +636,7 @@ class Tabs {
         onSimpleMessage(
             "home/show-section",
             (args: { sectionId: string; itemId?: string }) => {
-                EEZStudio.electron.remote.getCurrentWindow().show();
+                EEZStudio.remote.getCurrentWindow().show();
                 this.navigateToTab(args.sectionId, args.itemId);
             }
         );
@@ -753,8 +756,8 @@ class Tabs {
     }
 
     @action
-    addProjectTab(ProjectStore: ProjectStoreClass) {
-        const tab = new ProjectEditorTab(this, ProjectStore);
+    addProjectTab(DocumentStore: DocumentStoreClass) {
+        const tab = new ProjectEditorTab(this, DocumentStore);
         this.tabs.push(tab);
         return tab;
     }
@@ -825,6 +828,14 @@ class Tabs {
                 tabDefinition.selectItem(itemId);
             }
         }
+    }
+
+    findProjectEditorTab(filePath: string) {
+        return this.tabs.find(
+            tab =>
+                tab instanceof ProjectEditorTab &&
+                tab.DocumentStore.filePath == filePath
+        );
     }
 }
 

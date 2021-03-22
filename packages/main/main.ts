@@ -1,7 +1,9 @@
 import "./fix-path";
 
-import { app, BrowserWindow } from "electron";
+import { app, session } from "electron";
 import { configure } from "mobx";
+
+require("@electron/remote/main").initialize();
 
 import { setup } from "setup/setup";
 
@@ -40,18 +42,26 @@ app.on("ready", async function () {
         }
     });
 
+    // start with:
+    // react devtools: npm start devToolsExtension="C:\Users\mvladic\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi\4.10.1_0"
+    // mobx devtools: npm start devToolsExtension="C:\Users\mvladic\AppData\Local\Google\Chrome\User Data\Default\Extensions\pfgnfdagidkfgccljigdamigbcnndkod\0.9.26_0"
+    if (
+        process.argv.length > 2 &&
+        process.argv[2].startsWith("devToolsExtension=")
+    ) {
+        await app.whenReady();
+        await session.defaultSession.loadExtension(
+            process.argv[2].substr("devToolsExtension=".length),
+            { allowFileAccess: true }
+        );
+    }
+
     const { loadSettings } = require("main/settings") as typeof SettingsModule;
     loadSettings();
 
     await setup();
 
     require("eez-studio-shared/service");
-
-    // start with:
-    // npm start devToolsExtension="C:\Users\mvladic\AppData\Local\Google\Chrome\User Data\Default\Extensions\fmkadmapgofadopljbjfkapdkoienihi\3.4.2_0"
-    if (process.argv.length > 2 && process.argv[2].startsWith("devToolsExtension=")) {
-        BrowserWindow.addDevToolsExtension(process.argv[2].substr("devToolsExtension=".length));
-    }
 
     const { openProject } = require("main/menu");
 
@@ -62,7 +72,9 @@ app.on("ready", async function () {
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
             openProject(projectFilePath);
         } else {
-            const { openHomeWindow } = require("main/home-window") as typeof HomeWindowModule;
+            const {
+                openHomeWindow
+            } = require("main/home-window") as typeof HomeWindowModule;
             openHomeWindow();
         }
     }

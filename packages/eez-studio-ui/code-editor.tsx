@@ -117,7 +117,12 @@ const CodeEditorDiv = styled.div`
     flex-grow: 1;
 `;
 
-export type CodeEditorMode = "c_cpp" | "javascript" | "json" | "scpi" | "python";
+export type CodeEditorMode =
+    | "c_cpp"
+    | "javascript"
+    | "json"
+    | "scpi"
+    | "python";
 
 interface CodeEditorProps {
     mode: CodeEditorMode;
@@ -138,7 +143,7 @@ interface CodeEditorProps {
 export class CodeEditor extends React.Component<CodeEditorProps, {}> {
     element: HTMLElement;
     editor: any;
-    promise: Promise<any> = new Promise(resolve => resolve());
+    promise: Promise<any> = new Promise<void>(resolve => resolve());
 
     resize() {
         if (this.editor) {
@@ -212,8 +217,10 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
 
     componentWillUnmount() {
         this.promise = this.promise.then(() => {
-            destroyEditor(this.editor);
-            this.editor = undefined;
+            if (this.editor) {
+                destroyEditor(this.editor);
+                this.editor = undefined;
+            }
         });
     }
 
@@ -262,7 +269,10 @@ interface CodeEditorPropertyProps {
     columnNumber?: number;
 }
 
-export class CodeEditorProperty extends React.Component<CodeEditorPropertyProps, {}> {
+export class CodeEditorProperty extends React.Component<
+    CodeEditorPropertyProps,
+    {}
+> {
     render() {
         let id = this.props.id || guid();
 
@@ -274,7 +284,10 @@ export class CodeEditorProperty extends React.Component<CodeEditorPropertyProps,
                 onBlur={this.props.onBlur}
                 readOnly={this.props.readOnly}
                 style={{
-                    height: this.props.height !== undefined ? this.props.height : 200,
+                    height:
+                        this.props.height !== undefined
+                            ? this.props.height
+                            : 200,
                     padding: 0
                 }}
                 className="form-control"
@@ -299,6 +312,10 @@ export class CodeEditorProperty extends React.Component<CodeEditorPropertyProps,
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
+        return (
+            <PropertyEnclosure errors={this.props.errors}>
+                {content}
+            </PropertyEnclosure>
+        );
     }
 }

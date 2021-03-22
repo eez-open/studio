@@ -4,27 +4,41 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { humanize } from "eez-studio-shared/string";
+import { objectClone } from "eez-studio-shared/util";
 
 import {
     EezClass,
     getClassesDerivedFrom,
     setId,
-    getClass,
-    getClassInfo
+    getClass
 } from "project-editor/core/object";
 import { loadObject } from "project-editor/core/serialization";
-import { objectToClipboardData, setClipboardData } from "project-editor/core/clipboard";
+import {
+    objectToClipboardData,
+    setClipboardData
+} from "project-editor/core/clipboard";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { Widget } from "project-editor/features/gui/widget";
+import { getTypeFromClass, Widget } from "project-editor/features/gui/widget";
 
 import styled from "eez-studio-ui/styled-components";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 function getWidgetType(widgetClass: EezClass) {
     if (widgetClass.name.endsWith("Widget")) {
-        return widgetClass.name.substring(0, widgetClass.name.length - "Widget".length);
+        return widgetClass.name.substring(
+            0,
+            widgetClass.name.length - "Widget".length
+        );
+    }
+
+    if (widgetClass.name.endsWith("ActionNode")) {
+        return widgetClass.name.substring(
+            0,
+            widgetClass.name.length - "ActionNode".length
+        );
     }
 
     return widgetClass.name;
@@ -42,9 +56,13 @@ const WidgetDiv = styled.div`
     flex-direction: column;
     align-items: center;
     & > img {
-        width: 48px;
-        height: 48px;
+        width: 32px;
+        height: 32px;
         object-fit: contain;
+    }
+    & > svg {
+        width: 32px;
+        height: 32px;
     }
     white-space: nowrap;
 `;
@@ -57,30 +75,55 @@ interface PaletteItemProps {
 
 @observer
 class PaletteItem extends React.Component<PaletteItemProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     @action.bound
     onDragStart(event: any) {
         let protoObject = new this.props.widgetClass();
-        let object = loadObject(
-            undefined,
-            JSON.parse(JSON.stringify(getClassInfo(protoObject).defaultValue!)),
-            this.props.widgetClass
-        );
 
-        if (!(object as any).style) {
-            (object as any).style = "default";
+        const widgetClass = getClass(protoObject);
+        const defaultValue = objectClone(widgetClass.classInfo.defaultValue!);
+
+        if (!defaultValue.type) {
+            defaultValue.type = getTypeFromClass(widgetClass);
         }
 
-        setId(object, "WidgetPaletteItem");
+        let object = loadObject(
+            this.context,
+            undefined,
+            defaultValue,
+            this.props.widgetClass
+        ) as Widget;
+
+        if (object.left == undefined) {
+            object.left = 0;
+        }
+        if (object.top == undefined) {
+            object.top = 0;
+        }
+        if (object.width == undefined) {
+            object.width = 0;
+        }
+        if (object.height == undefined) {
+            object.height = 0;
+        }
+
+        setId(this.context.objects, object, "WidgetPaletteItem");
 
         setClipboardData(event, objectToClipboardData(object));
 
         event.dataTransfer.effectAllowed = "copy";
 
-        event.dataTransfer.setDragImage(DragAndDropManager.blankDragImage, 0, 0);
+        event.dataTransfer.setDragImage(
+            DragAndDropManager.blankDragImage,
+            0,
+            0
+        );
 
         // postpone render, otherwise we can receive onDragEnd immediatelly
         setTimeout(() => {
-            DragAndDropManager.start(event, object);
+            DragAndDropManager.start(event, object, this.context);
         });
     }
 
@@ -94,7 +137,8 @@ class PaletteItem extends React.Component<PaletteItemProps> {
             selected: this.props.selected,
             dragging:
                 DragAndDropManager.dragObject &&
-                getClass(DragAndDropManager.dragObject) === this.props.widgetClass
+                getClass(DragAndDropManager.dragObject) ===
+                    this.props.widgetClass
         });
 
         let icon = this.props.widgetClass.classInfo.icon;
@@ -108,7 +152,7 @@ class PaletteItem extends React.Component<PaletteItemProps> {
                 onDragStart={this.onDragStart}
                 onDragEnd={this.onDragEnd}
             >
-                {icon && <img src={icon} />}
+                {typeof icon === "string" ? <img src={icon} /> : icon}
                 {label}
             </WidgetDiv>
         );
@@ -130,7 +174,8 @@ const WidgetPaletteDiv = styled.div`
 
     & > div {
         &.selected {
-            background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+            background-color: ${props =>
+                props.theme.nonFocusedSelectionBackgroundColor};
             color: ${props => props.theme.nonFocusedSelectionColor};
         }
     }
@@ -143,12 +188,14 @@ const WidgetPaletteDiv = styled.div`
             }
 
             &.selected {
-                background-color: ${props => props.theme.selectionBackgroundColor};
+                background-color: ${props =>
+                    props.theme.selectionBackgroundColor};
                 color: ${props => props.theme.selectionColor};
             }
 
             &.dragging {
-                background-color: ${props => props.theme.dragSourceBackgroundColor};
+                background-color: ${props =>
+                    props.theme.dragSourceBackgroundColor};
                 color: ${props => props.theme.dragSourceColor};
             }
         }
@@ -156,7 +203,9 @@ const WidgetPaletteDiv = styled.div`
 `;
 
 @observer
-export class WidgetPalette extends React.Component {
+export class WidgetPalette extends React.Component<{
+    widgetClass?: EezClass;
+}> {
     @observable selectedWidgetClass: EezClass | undefined;
 
     @action.bound
@@ -165,8 +214,11 @@ export class WidgetPalette extends React.Component {
     }
 
     render() {
-        let widgets = getClassesDerivedFrom(Widget)
-            .filter(widgetClass => widgetClass.classInfo.creatableFromPalette !== false)
+        let widgets = getClassesDerivedFrom(this.props.widgetClass || Widget)
+            .filter(
+                widgetClass =>
+                    widgetClass.classInfo.creatableFromPalette !== false
+            )
             .map(widgetClass => {
                 return (
                     <PaletteItem

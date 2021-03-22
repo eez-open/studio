@@ -276,7 +276,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
     sendValue(value: any) {
         if (this.callbackWindowId) {
-            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId);
+            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
             browserWindow.webContents.send("instrument/connection/value", value);
         }
     }
@@ -546,7 +546,7 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         this.communicationInterface.disconnect();
 
         if (this.callbackWindowId) {
-            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId);
+            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
             browserWindow.webContents.send("instrument/connection/value", {
                 error: "connection is diconnected"
             });
@@ -726,7 +726,7 @@ export class IpcConnection extends ConnectionBase {
         EEZStudio.electron.ipcRenderer.send("instrument/connection/upload", {
             instrumentId: this.instrument.id,
             instructions: toJS(instructions),
-            callbackWindowId: EEZStudio.electron.remote.getCurrentWindow().id
+            callbackWindowId: EEZStudio.remote.getCurrentWindow().id
         });
     }
 
@@ -831,7 +831,7 @@ export function setupIpcServer() {
                 () => {
                     let browserWindow = require("electron").BrowserWindow.fromId(
                         arg.callbackWindowId
-                    );
+                    )!;
                     browserWindow.webContents.send(
                         "instrument/connection/long-operation-result",
                         {}
@@ -840,7 +840,7 @@ export function setupIpcServer() {
                 error => {
                     let browserWindow = require("electron").BrowserWindow.fromId(
                         arg.callbackWindowId
-                    );
+                    )!;
                     browserWindow.webContents.send("instrument/connection/long-operation-result", {
                         error
                     });

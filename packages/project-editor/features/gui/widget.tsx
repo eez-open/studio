@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -33,23 +33,31 @@ import {
     IOnSelectParams,
     getChildOfObject,
     getParent,
-    PropertyProps
+    PropertyProps,
+    getClassInfo,
+    getLabel
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
-import type { IContextMenuContext } from "project-editor/core/store";
+import {
+    IContextMenuContext,
+    getDocumentStore
+} from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { checkObjectReference, getProject, getProjectStore } from "project-editor/project/project";
-
 import {
+    checkObjectReference,
+    getProject
+} from "project-editor/project/project";
+
+import type {
     IResizeHandler,
     IDesignerContext
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import {
     WidgetContainerComponent,
-    WidgetComponent
+    WidgetComponent,
+    WidgetGeometry
 } from "project-editor/features/gui/page-editor/render";
-import { EditorObject } from "project-editor/features/gui/page-editor/editor";
 import {
     IResizing,
     resizingProperty
@@ -75,8 +83,11 @@ import * as draw from "project-editor/features/gui/draw";
 import { Font } from "project-editor/features/gui/font";
 
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
+import { Rect } from "eez-studio-shared/geometry";
+import { styled } from "eez-studio-ui/styled-components";
+import { guid } from "eez-studio-shared/guid";
 
-const { MenuItem } = EEZStudio.electron.remote;
+const { MenuItem } = EEZStudio.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +131,10 @@ function makeActionPropertyInfo(
     };
 }
 
-function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo {
+function makeStylePropertyInfo(
+    name: string,
+    displayName?: string
+): PropertyInfo {
     return {
         name,
         displayName,
@@ -129,7 +143,8 @@ function makeStylePropertyInfo(name: string, displayName?: string): PropertyInfo
         propertyGridGroup: styleGroup,
         propertyGridCollapsable: true,
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
-        propertyGridCollapsableEnabled: (object: IEezObject) => !getProjectStore(object).masterProjectEnabled,
+        propertyGridCollapsableEnabled: (object: IEezObject) =>
+            !getDocumentStore(object).masterProjectEnabled,
         enumerable: false
     };
 }
@@ -144,7 +159,11 @@ function makeTextPropertyInfo(
         displayName,
         type: PropertyType.String,
         propertyGridGroup: propertyGridGroup || specificGroup,
-        onSelect: (object: IEezObject, propertyInfo: PropertyInfo, params?: IOnSelectParams) =>
+        onSelect: (
+            object: IEezObject,
+            propertyInfo: PropertyInfo,
+            params?: IOnSelectParams
+        ) =>
             onSelectItem(
                 object,
                 propertyInfo,
@@ -164,7 +183,11 @@ function htmlEncode(value: string) {
     return el.innerHTML;
 }
 
-function migrateStyleProperty(jsObject: any, propertyName: string, propertyName2?: string) {
+function migrateStyleProperty(
+    jsObject: any,
+    propertyName: string,
+    propertyName2?: string
+) {
     if (jsObject[propertyName] === undefined) {
         jsObject[propertyName] = propertyName2
             ? jsObject[propertyName2]
@@ -178,6 +201,25 @@ function migrateStyleProperty(jsObject: any, propertyName: string, propertyName2
     } else if (!jsObject[propertyName].inheritFrom) {
         jsObject[propertyName].inheritFrom = "default";
     }
+}
+
+function getClassFromType(type: string) {
+    if (type.startsWith("Local.")) {
+        return findClass("LayoutViewWidget");
+    }
+    let widgetClass = findClass(type + "Widget");
+    if (!widgetClass) {
+        widgetClass = findClass(type);
+    }
+    return widgetClass;
+}
+
+export function getTypeFromClass(objectClass: typeof EezObject) {
+    const className = objectClass.name;
+    if (className.endsWith("Widget")) {
+        return className.substring(0, className.length - "Widget".length);
+    }
+    return className;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,6 +246,8 @@ export interface IWidget {
     top: number;
     width: number;
     height: number;
+
+    wireID?: string;
 }
 
 export class Widget extends EezObject implements IWidget {
@@ -219,21 +263,35 @@ export class Widget extends EezObject implements IWidget {
 
     @observable resizing: IResizing;
 
+    @observable wireID?: string;
+
+    @observable _geometry: WidgetGeometry;
+
+    get autoSize() {
+        return false;
+    }
+
     get label() {
         return this.type;
     }
 
     static classInfo: ClassInfo = {
         getClass: function (jsObject: any) {
-            if (jsObject.type.startsWith("Local.")) {
-                return findClass("LayoutViewWidget");
-            }
-            return findClass(jsObject.type + "Widget");
+            return getClassFromType(jsObject.type);
         },
 
         label: (widget: Widget) => {
             if (widget.data) {
                 return `${humanize(widget.type)}: ${widget.data}`;
+            }
+
+            if (widget.type.endsWith("ActionNode")) {
+                return humanize(
+                    widget.type.substring(
+                        0,
+                        widget.type.length - "ActionNode".length
+                    )
+                );
             }
 
             return humanize(widget.type);
@@ -274,7 +332,12 @@ export class Widget extends EezObject implements IWidget {
             },
             makeDataPropertyInfo("data"),
             makeActionPropertyInfo("action"),
-            makeStylePropertyInfo("style", "Normal style")
+            makeStylePropertyInfo("style", "Normal style"),
+            {
+                name: "wireID",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
+            }
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -345,7 +408,9 @@ export class Widget extends EezObject implements IWidget {
                     new MenuItem({
                         label: "Put in Container",
                         click: () => {
-                            const containerWidget = Widget.putInContainer(objects as Widget[]);
+                            const containerWidget = Widget.putInContainer(
+                                objects as Widget[]
+                            );
                             context.selectObject(containerWidget);
                         }
                     })
@@ -355,7 +420,9 @@ export class Widget extends EezObject implements IWidget {
                     new MenuItem({
                         label: "Create Layout",
                         click: async () => {
-                            const layoutWidget = await Widget.createLayout(objects as Widget[]);
+                            const layoutWidget = await Widget.createLayout(
+                                objects as Widget[]
+                            );
                             if (layoutWidget) {
                                 context.selectObject(layoutWidget);
                             }
@@ -439,44 +506,58 @@ export class Widget extends EezObject implements IWidget {
         check: (object: Widget) => {
             let messages: output.Message[] = [];
 
-            if (object.left < 0) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Widget is outside of its parent",
-                        getChildOfObject(object, "left")
-                    )
-                );
-            }
+            const parent = getWidgetParent(object);
+            if (
+                !(
+                    (parent instanceof Page && parent.isAction) ||
+                    object instanceof ActionNode
+                )
+            ) {
+                if (object.left < 0) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "left")
+                        )
+                    );
+                }
 
-            if (object.top < 0) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Widget is outside of its parent",
-                        getChildOfObject(object, "top")
-                    )
-                );
-            }
+                if (object.top < 0) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "top")
+                        )
+                    );
+                }
 
-            if (object.left + object.width > getWidgetParent(object).width) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Widget is outside of its parent",
-                        getChildOfObject(object, "width")
-                    )
-                );
-            }
+                if (
+                    object.left + object.width >
+                    getWidgetParent(object).width
+                ) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "width")
+                        )
+                    );
+                }
 
-            if (object.top + object.height > getWidgetParent(object).height) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Widget is outside of its parent",
-                        getChildOfObject(object, "height")
-                    )
-                );
+                if (
+                    object.top + object.height >
+                    getWidgetParent(object).height
+                ) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "height")
+                        )
+                    );
+                }
             }
 
             let selectParent = object.selectParent;
@@ -506,11 +587,53 @@ export class Widget extends EezObject implements IWidget {
             checkObjectReference(object, "action", messages);
 
             return messages;
+        },
+        getRect: (object: Widget) => {
+            return {
+                left: object.left,
+                top: object.top,
+                width: object._geometry?.width ?? 0,
+                height: object._geometry?.height ?? 0
+            };
+        },
+        setRect: (object: Widget, value: Rect) => {
+            const props: Partial<Rect> = {};
+
+            if (value.left !== object.left) {
+                props.left = value.left;
+            }
+
+            if (value.top !== object.top) {
+                props.top = value.top;
+            }
+
+            if (value.width !== object._geometry?.width ?? 0) {
+                props.width = value.width;
+            }
+
+            if (value.height !== object._geometry?.height ?? 0) {
+                props.height = value.height;
+            }
+
+            const DocumentStore = getDocumentStore(object);
+            DocumentStore.updateObject(object, props);
+        },
+        isMoveable: (object: Widget) => {
+            return object.isMoveable;
+        },
+        isSelectable: (object: Widget) => {
+            return true;
+        },
+        showSelectedObjectsParent: (object: Widget) => {
+            return true;
+        },
+        getResizeHandlers(object: Widget) {
+            return object.getResizeHandlers();
         }
     };
 
     @computed
-    get absolutePosition() {
+    get absolutePositionPoint() {
         let x = this.left;
         let y = this.top;
 
@@ -523,7 +646,30 @@ export class Widget extends EezObject implements IWidget {
             y += parent.top;
         }
 
-        return `${x}, ${y}`;
+        return { x, y };
+    }
+
+    @computed
+    get absolutePosition() {
+        const point = this.absolutePositionPoint;
+
+        return `${point.x}, ${point.y}`;
+    }
+
+    @computed get inputProperties() {
+        const classInfo = getClassInfo(this);
+        const properties = classInfo.properties;
+        return properties.filter(
+            property => property.type == PropertyType.ConnectionInput
+        );
+    }
+
+    @computed get outputProperties() {
+        const classInfo = getClassInfo(this);
+        const properties = classInfo.properties;
+        return properties.filter(
+            property => property.type == PropertyType.ConnectionOutput
+        );
     }
 
     @computed
@@ -548,7 +694,10 @@ export class Widget extends EezObject implements IWidget {
     putInSelect() {
         let thisWidgetJsObject = objectToJS(this);
 
-        var selectWidgetJsObject = Object.assign({}, SelectWidget.classInfo.defaultValue);
+        var selectWidgetJsObject = Object.assign(
+            {},
+            SelectWidget.classInfo.defaultValue
+        );
 
         selectWidgetJsObject.left = this.left;
         selectWidgetJsObject.top = this.top;
@@ -562,9 +711,16 @@ export class Widget extends EezObject implements IWidget {
 
         selectWidgetJsObject.widgets = [thisWidgetJsObject];
 
-        return getProjectStore(this).replaceObject(
+        const DocumentStore = getDocumentStore(this);
+
+        return DocumentStore.replaceObject(
             this,
-            loadObject(getParent(this), selectWidgetJsObject, Widget)
+            loadObject(
+                DocumentStore,
+                getParent(this),
+                selectWidgetJsObject,
+                Widget
+            )
         );
     }
 
@@ -620,15 +776,22 @@ export class Widget extends EezObject implements IWidget {
         containerWidgetJsObject.width = createWidgetsResult.width;
         containerWidgetJsObject.height = createWidgetsResult.height;
 
-        return getProjectStore(fromWidgets[0]).replaceObjects(
+        const DocumentStore = getDocumentStore(fromWidgets[0]);
+
+        return DocumentStore.replaceObjects(
             fromWidgets,
-            loadObject(getParent(fromWidgets[0]), containerWidgetJsObject, Widget)
+            loadObject(
+                DocumentStore,
+                getParent(fromWidgets[0]),
+                containerWidgetJsObject,
+                Widget
+            )
         );
     }
 
     static async createLayout(fromWidgets: Widget[]) {
-        const ProjectStore = getProjectStore(fromWidgets[0]);
-        const layouts = ProjectStore.project.gui.pages;
+        const DocumentStore = getDocumentStore(fromWidgets[0]);
+        const layouts = DocumentStore.project.gui.pages;
 
         try {
             const result = await showGenericDialog({
@@ -638,7 +801,10 @@ export class Widget extends EezObject implements IWidget {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, layouts)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, layouts)
+                            ]
                         }
                     ]
                 },
@@ -651,9 +817,10 @@ export class Widget extends EezObject implements IWidget {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            ProjectStore.addObject(
+            DocumentStore.addObject(
                 layouts,
                 loadObject(
+                    DocumentStore,
                     undefined,
                     {
                         name: layoutName,
@@ -667,9 +834,10 @@ export class Widget extends EezObject implements IWidget {
                 )
             );
 
-            return ProjectStore.replaceObjects(
+            return DocumentStore.replaceObjects(
                 fromWidgets,
                 loadObject(
+                    DocumentStore,
                     getParent(fromWidgets[0]),
                     {
                         type: "LayoutView",
@@ -710,9 +878,10 @@ export class Widget extends EezObject implements IWidget {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            return getProjectStore(fromWidgets[0]).replaceObjects(
+            return getDocumentStore(fromWidgets[0]).replaceObjects(
                 fromWidgets,
                 loadObject(
+                    getDocumentStore(fromWidgets[0]),
                     getParent(fromWidgets[0]),
                     {
                         type: "LayoutView",
@@ -736,9 +905,10 @@ export class Widget extends EezObject implements IWidget {
         if (parent) {
             let selectWidget = getParent(parent);
             if (selectWidget instanceof SelectWidget) {
-                return getProjectStore(this).replaceObject(
+                const DocumentStore = getDocumentStore(this);
+                return DocumentStore.replaceObject(
                     selectWidget,
-                    cloneObject(getParent(selectWidget), this)
+                    cloneObject(DocumentStore, this)
                 );
             }
         }
@@ -747,7 +917,10 @@ export class Widget extends EezObject implements IWidget {
 
     draw?: (ctx: CanvasRenderingContext2D, dataContext: DataContext) => void;
 
-    render(dataContext: DataContext, designerContext?: IDesignerContext): React.ReactNode {
+    render(
+        dataContext: DataContext,
+        designerContext: IDesignerContext
+    ): React.ReactNode {
         return undefined;
     }
 
@@ -796,24 +969,19 @@ export class Widget extends EezObject implements IWidget {
         ];
     }
 
-    getColumnWidth(columnIndex: number) {
-        return NaN;
+    getClassName() {
+        return "";
     }
 
-    resizeColumn(columnIndex: number, savedColumnWidth: number, offset: number) {}
-
-    getRowHeight(rowIndex: number) {
-        return NaN;
-    }
-
-    resizeRow(rowIndex: number, savedRowWidth: number, offset: number) {}
-
-    open() {}
-
-    styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
+    styleHook(
+        style: React.CSSProperties,
+        designerContext: IDesignerContext | undefined
+    ) {
         const backgroundColor = this.style.backgroundColorProperty;
         style.backgroundColor = to16bitsColor(backgroundColor);
     }
+
+    onClick?: () => void = undefined;
 }
 
 registerClass(Widget);
@@ -929,11 +1097,20 @@ export class ContainerWidget extends Widget implements IContainerWidget {
         }
     };
 
-    render(dataContext: DataContext) {
-        return <WidgetContainerComponent widgets={this.widgets} dataContext={dataContext} />;
+    render(dataContext: DataContext, designerContext: IDesignerContext) {
+        return (
+            <WidgetContainerComponent
+                widgets={this.widgets}
+                dataContext={dataContext}
+                designerContext={designerContext}
+            />
+        );
     }
 
-    styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
+    styleHook(
+        style: React.CSSProperties,
+        designerContext: IDesignerContext | undefined
+    ) {
         super.styleHook(style, designerContext);
         if (this.overlay) {
             if (this.shadow) {
@@ -989,7 +1166,6 @@ export class ListWidget extends Widget implements IListWidget {
         ],
 
         defaultValue: {
-            type: "List",
             itemWidget: {
                 type: "Container",
                 widgets: [],
@@ -1017,7 +1193,11 @@ export class ListWidget extends Widget implements IListWidget {
 
             if (!object.itemWidget) {
                 messages.push(
-                    new output.Message(output.Type.ERROR, "List item widget is missing", object)
+                    new output.Message(
+                        output.Type.ERROR,
+                        "List item widget is missing",
+                        object
+                    )
                 );
             }
 
@@ -1025,7 +1205,7 @@ export class ListWidget extends Widget implements IListWidget {
         }
     });
 
-    render(dataContext: DataContext) {
+    render(dataContext: DataContext, designerContext: IDesignerContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -1055,7 +1235,14 @@ export class ListWidget extends Widget implements IListWidget {
                     widget={itemWidget}
                     left={xListItem}
                     top={yListItem}
-                    dataContext={new DataContext(getProject(this), dataContext, dataValue[i])}
+                    dataContext={
+                        new DataContext(
+                            getProject(this),
+                            dataContext,
+                            dataValue[i]
+                        )
+                    }
+                    designerContext={designerContext}
                 />
             );
         });
@@ -1100,7 +1287,6 @@ export class GridWidget extends Widget implements IGridWidget {
         ],
 
         defaultValue: {
-            type: "Grid",
             itemWidget: {
                 type: "Container",
                 widgets: [],
@@ -1127,7 +1313,11 @@ export class GridWidget extends Widget implements IGridWidget {
 
             if (!object.itemWidget) {
                 messages.push(
-                    new output.Message(output.Type.ERROR, "Grid item widget is missing", object)
+                    new output.Message(
+                        output.Type.ERROR,
+                        "Grid item widget is missing",
+                        object
+                    )
                 );
             }
 
@@ -1135,7 +1325,7 @@ export class GridWidget extends Widget implements IGridWidget {
         }
     });
 
-    render(dataContext: DataContext) {
+    render(dataContext: DataContext, designerContext: IDesignerContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -1176,7 +1366,14 @@ export class GridWidget extends Widget implements IGridWidget {
                     widget={itemWidget}
                     left={xListItem}
                     top={yListItem}
-                    dataContext={new DataContext(getProject(this), dataContext, dataValue[i])}
+                    dataContext={
+                        new DataContext(
+                            getProject(this),
+                            dataContext,
+                            dataValue[i]
+                        )
+                    }
+                    designerContext={designerContext}
                 />
             );
         });
@@ -1211,7 +1408,9 @@ export class SelectWidget extends Widget implements ISelectWidget {
                             getParent(childObject)
                         ) as SelectWidget;
 
-                        label = selectWidgetProperties.getChildLabel(childObject as Widget);
+                        label = selectWidgetProperties.getChildLabel(
+                            childObject as Widget
+                        );
                     }
 
                     return `${label || "???"} ➔ ${childLabel}`;
@@ -1228,7 +1427,6 @@ export class SelectWidget extends Widget implements ISelectWidget {
         ],
 
         defaultValue: {
-            type: "Select",
             widgets: [],
             left: 0,
             top: 0,
@@ -1290,14 +1488,22 @@ export class SelectWidget extends Widget implements ISelectWidget {
                         if (dataItem.type == "enum") {
                             let enumItems: string[];
                             try {
-                                enumItems = JSON.parse(dataItem.enumItems || "[]");
+                                enumItems = JSON.parse(
+                                    dataItem.enumItems || "[]"
+                                );
                             } catch (err) {
                                 enumItems = [];
-                                console.error("Invalid enum items", dataItem, err);
+                                console.error(
+                                    "Invalid enum items",
+                                    dataItem,
+                                    err
+                                );
                             }
 
                             if (index < enumItems.length) {
-                                let enumItemLabel = htmlEncode(enumItems[index]);
+                                let enumItemLabel = htmlEncode(
+                                    enumItems[index]
+                                );
                                 return enumItemLabel;
                             }
                         } else if (dataItem.type == "boolean") {
@@ -1325,14 +1531,17 @@ export class SelectWidget extends Widget implements ISelectWidget {
         return undefined;
     }
 
-    getSelectedIndex(dataContext: DataContext, designerContext?: IDesignerContext) {
+    getSelectedIndex(
+        dataContext: DataContext,
+        designerContext?: IDesignerContext
+    ) {
         if (designerContext) {
             const selectedObjects = designerContext.viewState.selectedObjects;
 
             for (let i = 0; i < this.widgets.length; ++i) {
                 if (
                     selectedObjects.find(selectedObject =>
-                        isAncestor((selectedObject as EditorObject).object, this.widgets[i])
+                        isAncestor(selectedObject.object, this.widgets[i])
                     )
                 ) {
                     this._lastSelectedIndexInSelectWidget = i;
@@ -1373,7 +1582,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
         return -1;
     }
 
-    render(dataContext: DataContext, designerContext?: IDesignerContext) {
+    render(dataContext: DataContext, designerContext: IDesignerContext) {
         const index = this.getSelectedIndex(dataContext, designerContext);
         if (index === -1) {
             return null;
@@ -1381,7 +1590,13 @@ export class SelectWidget extends Widget implements ISelectWidget {
 
         const selectedWidget = this.widgets[index];
 
-        return <WidgetContainerComponent widgets={[selectedWidget]} dataContext={dataContext} />;
+        return (
+            <WidgetContainerComponent
+                widgets={[selectedWidget]}
+                dataContext={dataContext}
+                designerContext={designerContext}
+            />
+        );
     }
 }
 
@@ -1401,7 +1616,11 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
             return null;
         }
         return (
-            <BootstrapButton color="primary" size="small" onClick={this.showLayout}>
+            <BootstrapButton
+                color="primary"
+                size="small"
+                onClick={this.showLayout}
+            >
                 Show Layout
             </BootstrapButton>
         );
@@ -1460,7 +1679,6 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
         },
 
         defaultValue: {
-            type: "LayoutView",
             left: 0,
             top: 0,
             width: 64,
@@ -1494,7 +1712,9 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                 if (object.layout) {
                     let layout = findPage(getProject(object), object.layout);
                     if (!layout) {
-                        messages.push(output.propertyNotFoundMessage(object, "layout"));
+                        messages.push(
+                            output.propertyNotFoundMessage(object, "layout")
+                        );
                     }
                 }
             }
@@ -1502,11 +1722,14 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
             checkObjectReference(object, "context", messages);
 
             return messages;
+        },
+        open: (object: LayoutViewWidget) => {
+            object.open();
         }
     });
 
     get layoutPage() {
-        return this.getLayoutPage(getProjectStore(this).dataContext);
+        return this.getLayoutPage(getDocumentStore(this).dataContext);
     }
 
     getLayoutPage(dataContext: DataContext) {
@@ -1545,14 +1768,19 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
         LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = undefined;
     }
 
-    render(dataContext: DataContext): React.ReactNode {
+    render(
+        dataContext: DataContext,
+        designerContext: IDesignerContext
+    ): React.ReactNode {
         const layoutPage = this.getLayoutPage(dataContext);
         if (!layoutPage) {
             return null;
         }
 
         if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
-            LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = window.requestAnimationFrame(LayoutViewWidget.clearRenderedLayoutPages)
+            LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = window.requestAnimationFrame(
+                LayoutViewWidget.clearRenderedLayoutPages
+            );
         }
         if (LayoutViewWidget.renderedLayoutPages.indexOf(layoutPage) != -1) {
             // circular rendering prevented
@@ -1561,7 +1789,13 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
 
         LayoutViewWidget.renderedLayoutPages.push(layoutPage);
 
-        const element = <WidgetComponent widget={layoutPage} dataContext={dataContext} />;
+        const element = (
+            <WidgetComponent
+                widget={layoutPage}
+                dataContext={dataContext}
+                designerContext={designerContext}
+            />
+        );
 
         LayoutViewWidget.renderedLayoutPages.pop();
 
@@ -1570,16 +1804,19 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
 
     open() {
         if (this.layoutPage) {
-            getProjectStore(this).NavigationStore.showObject(this.layoutPage);
+            getDocumentStore(this).NavigationStore.showObject(this.layoutPage);
         }
     }
 
     replaceWithContainer() {
         if (this.layoutPage) {
-            var containerWidgetJsObject = Object.assign({}, ContainerWidget.classInfo.defaultValue);
+            var containerWidgetJsObject = Object.assign(
+                {},
+                ContainerWidget.classInfo.defaultValue
+            );
 
-            containerWidgetJsObject.widgets = this.layoutPage.widgets.map(widget =>
-                objectToJS(widget)
+            containerWidgetJsObject.widgets = this.layoutPage.widgets.map(
+                widget => objectToJS(widget)
             );
 
             containerWidgetJsObject.left = this.left;
@@ -1587,9 +1824,16 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
             containerWidgetJsObject.width = this.width;
             containerWidgetJsObject.height = this.height;
 
-            return getProjectStore(this).replaceObject(
+            const DocumentStore = getDocumentStore(this);
+
+            return DocumentStore.replaceObject(
                 this,
-                loadObject(getParent(this), containerWidgetJsObject, Widget)
+                loadObject(
+                    DocumentStore,
+                    getParent(this),
+                    containerWidgetJsObject,
+                    Widget
+                )
             );
         }
         return undefined;
@@ -1610,7 +1854,8 @@ enum DisplayOption {
 }
 
 const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
-    hideInPropertyGrid: (object: IEezObject) => getProject(object).settings.general.projectVersion !== "v1"
+    hideInPropertyGrid: (object: IEezObject) =>
+        getProject(object).settings.general.projectVersion !== "v1"
 };
 
 export interface IDisplayDataWidget extends IWidget {
@@ -1624,9 +1869,13 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            Object.assign(makeStylePropertyInfo("focusStyle"), hideIfNotProjectVersion1, {
-                isOptional: true
-            }),
+            Object.assign(
+                makeStylePropertyInfo("focusStyle"),
+                hideIfNotProjectVersion1,
+                {
+                    isOptional: true
+                }
+            ),
             {
                 name: "displayOption",
                 type: PropertyType.Enum,
@@ -1661,7 +1910,6 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
         ],
 
         defaultValue: {
-            type: "DisplayData",
             data: "data",
             left: 0,
             top: 0,
@@ -1680,8 +1928,12 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             }
 
             if (object.displayOption === undefined) {
-                if (getProject(object).settings.general.projectVersion !== "v1") {
-                    messages.push(output.propertyNotSetMessage(object, "displayOption"));
+                if (
+                    getProject(object).settings.general.projectVersion !== "v1"
+                ) {
+                    messages.push(
+                        output.propertyNotSetMessage(object, "displayOption")
+                    );
                 }
             }
 
@@ -1786,13 +2038,16 @@ export class TextWidget extends Widget implements ITextWidget {
                 defaultValue: false,
                 propertyGridGroup: specificGroup
             },
-            Object.assign(makeStylePropertyInfo("focusStyle"), hideIfNotProjectVersion1, {
-                isOptional: true
-            })
+            Object.assign(
+                makeStylePropertyInfo("focusStyle"),
+                hideIfNotProjectVersion1,
+                {
+                    isOptional: true
+                }
+            )
         ],
 
         defaultValue: {
-            type: "Text",
             text: "Text",
             left: 0,
             top: 0,
@@ -1814,7 +2069,11 @@ export class TextWidget extends Widget implements ITextWidget {
     });
 
     draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
-        let text = this.text ? this.text : this.data ? (dataContext.get(this.data) as string) : "";
+        let text = this.text
+            ? this.text
+            : this.data
+            ? (dataContext.get(this.data) as string)
+            : "";
         drawText(ctx, text, 0, 0, this.width, this.height, this.style, false);
     };
 
@@ -1828,9 +2087,16 @@ export class TextWidget extends Widget implements ITextWidget {
             }
         );
 
-        return getProjectStore(this).replaceObject(
+        const DocumentStore = getDocumentStore(this);
+
+        return DocumentStore.replaceObject(
             this,
-            loadObject(getParent(this), displayDataWidgetJsObject, Widget)
+            loadObject(
+                DocumentStore,
+                getParent(this),
+                displayDataWidgetJsObject,
+                Widget
+            )
         );
     }
 }
@@ -1879,7 +2145,11 @@ class MultilineTextRender {
                 } else if (styleIsHorzAlignRight(this.style)) {
                     x = this.x2 + 1 - this.lineWidth;
                 } else {
-                    x = this.x1 + Math.floor((this.x2 - this.x1 + 1 - this.lineWidth) / 2);
+                    x =
+                        this.x1 +
+                        Math.floor(
+                            (this.x2 - this.x1 + 1 - this.lineWidth) / 2
+                        );
                 }
 
                 if (this.inverse) {
@@ -1900,7 +2170,10 @@ class MultilineTextRender {
                     this.font
                 );
             } else {
-                this.textHeight = Math.max(this.textHeight, y + this.lineHeight - this.y1);
+                this.textHeight = Math.max(
+                    this.textHeight,
+                    y + this.lineHeight - this.y1
+                );
             }
 
             this.line = "";
@@ -1920,14 +2193,20 @@ class MultilineTextRender {
 
         while (true) {
             let word = "";
-            while (i < this.text.length && this.text[i] != " " && this.text[i] != "\n") {
+            while (
+                i < this.text.length &&
+                this.text[i] != " " &&
+                this.text[i] != "\n"
+            ) {
                 word += this.text[i++];
             }
 
             let width = draw.measureStr(word, this.font, 0);
 
             while (
-                this.lineWidth + (this.line != "" ? this.spaceWidth : 0) + width >
+                this.lineWidth +
+                    (this.line != "" ? this.spaceWidth : 0) +
+                    width >
                 this.x2 - this.x1 + 1
             ) {
                 this.flushLine(y, step);
@@ -1964,7 +2243,9 @@ class MultilineTextRender {
 
                 i++;
 
-                let extraHeightBetweenParagraphs = Math.floor(0.2 * this.lineHeight);
+                let extraHeightBetweenParagraphs = Math.floor(
+                    0.2 * this.lineHeight
+                );
 
                 y += extraHeightBetweenParagraphs;
 
@@ -1989,14 +2270,26 @@ class MultilineTextRender {
             borderSize.left > 0
         ) {
             draw.setColor(this.style.borderColorProperty);
-            draw.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
+            draw.fillRect(
+                this.ctx,
+                this.x1,
+                this.y1,
+                this.x2,
+                this.y2,
+                borderRadius
+            );
             this.x1 += borderSize.left;
             this.y1 += borderSize.top;
             this.x2 -= borderSize.right;
             this.y2 -= borderSize.bottom;
             borderRadius = Math.max(
                 borderRadius -
-                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                    Math.max(
+                        borderSize.top,
+                        borderSize.right,
+                        borderSize.bottom,
+                        borderSize.left
+                    ),
                 0
             );
         }
@@ -2005,7 +2298,14 @@ class MultilineTextRender {
             ? this.style.colorProperty
             : this.style.backgroundColorProperty;
         draw.setColor(backgroundColor);
-        draw.fillRect(this.ctx, this.x1, this.y1, this.x2, this.y2, borderRadius);
+        draw.fillRect(
+            this.ctx,
+            this.x1,
+            this.y1,
+            this.x2,
+            this.y2,
+            borderRadius
+        );
 
         const font = styleGetFont(this.style);
         if (!font) {
@@ -2061,7 +2361,9 @@ export interface IMultilineTextWidget extends IWidget {
     hangingIndent: number;
 }
 
-export class MultilineTextWidget extends Widget implements IMultilineTextWidget {
+export class MultilineTextWidget
+    extends Widget
+    implements IMultilineTextWidget {
     @observable text?: string;
     @observable firstLineIndent: number;
     @observable hangingIndent: number;
@@ -2096,7 +2398,6 @@ export class MultilineTextWidget extends Widget implements IMultilineTextWidget 
         ],
 
         defaultValue: {
-            type: "MultilineText",
             text: "Multiline text",
             left: 0,
             top: 0,
@@ -2120,7 +2421,11 @@ export class MultilineTextWidget extends Widget implements IMultilineTextWidget 
     });
 
     draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
-        let text = this.text ? this.text : this.data ? (dataContext.get(this.data) as string) : "";
+        let text = this.text
+            ? this.text
+            : this.data
+            ? (dataContext.get(this.data) as string)
+            : "";
 
         const w = this.width;
         const h = this.height;
@@ -2178,7 +2483,6 @@ export class RectangleWidget extends Widget implements IRectangleWidget {
         ],
 
         defaultValue: {
-            type: "Rectangle",
             left: 0,
             top: 0,
             width: 64,
@@ -2191,7 +2495,9 @@ export class RectangleWidget extends Widget implements IRectangleWidget {
             let messages: output.Message[] = [];
 
             if (object.data) {
-                messages.push(output.propertySetButNotUsedMessage(object, "data"));
+                messages.push(
+                    output.propertySetButNotUsedMessage(object, "data")
+                );
             }
 
             return messages;
@@ -2236,7 +2542,9 @@ export class RectangleWidget extends Widget implements IRectangleWidget {
                 );
             }
 
-            draw.setColor(inverse ? style.backgroundColorProperty : style.colorProperty);
+            draw.setColor(
+                inverse ? style.backgroundColorProperty : style.colorProperty
+            );
             draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
         }
     };
@@ -2254,7 +2562,7 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
 
     @bind
     resizeToFitBitmap() {
-        getProjectStore(this).updateObject(this.props.objects[0], {
+        getDocumentStore(this).updateObject(this.props.objects[0], {
             width: this.bitmapWidget.bitmapObject!.imageElement!.width,
             height: this.bitmapWidget.bitmapObject!.imageElement!.height
         });
@@ -2280,7 +2588,11 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
         }
 
         return (
-            <BootstrapButton color="primary" size="small" onClick={this.resizeToFitBitmap}>
+            <BootstrapButton
+                color="primary"
+                size="small"
+                onClick={this.resizeToFitBitmap}
+            >
                 Resize to Fit Bitmap
             </BootstrapButton>
         );
@@ -2317,7 +2629,12 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
             }
         ],
 
-        defaultValue: { type: "Bitmap", left: 0, top: 0, width: 64, height: 32 },
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
+        },
 
         icon: "_images/widgets/Bitmap.png",
 
@@ -2346,7 +2663,9 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
                 if (object.bitmap) {
                     let bitmap = findBitmap(getProject(object), object.bitmap);
                     if (!bitmap) {
-                        messages.push(output.propertyNotFoundMessage(object, "bitmap"));
+                        messages.push(
+                            output.propertyNotFoundMessage(object, "bitmap")
+                        );
                     }
                 }
             }
@@ -2357,7 +2676,7 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
 
     @computed
     get bitmapObject() {
-        return this.getBitmapObject(getProjectStore(this).dataContext);
+        return this.getBitmapObject(getDocumentStore(this).dataContext);
     }
 
     getBitmapObject(dataContext: DataContext) {
@@ -2389,7 +2708,9 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
             let y2 = h - 1;
 
             if (bitmap.bpp !== 32) {
-                let backgroundColor = inverse ? style.colorProperty : style.backgroundColorProperty;
+                let backgroundColor = inverse
+                    ? style.colorProperty
+                    : style.backgroundColorProperty;
                 draw.setColor(backgroundColor);
                 draw.fillRect(ctx, x1, y1, x2, y2, 0);
             }
@@ -2423,7 +2744,14 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
                 draw.setColor(style.colorProperty);
             }
 
-            draw.drawBitmap(ctx, imageElement, x_offset, y_offset, width, height);
+            draw.drawBitmap(
+                ctx,
+                imageElement,
+                x_offset,
+                y_offset,
+                width,
+                height
+            );
         }
     };
 }
@@ -2454,7 +2782,12 @@ export class ButtonWidget extends Widget implements IButtonWidget {
             migrateStyleProperty(jsObject, "disabledStyle");
         },
 
-        defaultValue: { type: "Button", left: 0, top: 0, width: 32, height: 32 },
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 32,
+            height: 32
+        },
 
         icon: "_images/widgets/Button.png",
 
@@ -2477,8 +2810,16 @@ export class ButtonWidget extends Widget implements IButtonWidget {
             text = this.text;
         }
         let style =
-            this.enabled && dataContext.getBool(this.enabled) ? this.style : this.disabledStyle;
+            this.enabled && dataContext.getBool(this.enabled)
+                ? this.style
+                : this.disabledStyle;
         drawText(ctx, text, 0, 0, this.width, this.height, style, false);
+    };
+
+    onClick = () => {
+        if (this.action) {
+            getDocumentStore(this).DebugStore.executeAction(this.action);
+        }
     };
 }
 
@@ -2510,7 +2851,6 @@ export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
         ],
 
         defaultValue: {
-            type: "ToggleButton",
             left: 0,
             top: 0,
             width: 32,
@@ -2539,7 +2879,16 @@ export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
     });
 
     draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
-        drawText(ctx, this.text1 || "", 0, 0, this.width, this.height, this.style, false);
+        drawText(
+            ctx,
+            this.text1 || "",
+            0,
+            0,
+            this.width,
+            this.height,
+            this.style,
+            false
+        );
     };
 }
 
@@ -2558,7 +2907,6 @@ export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
         properties: [makeStylePropertyInfo("selectedStyle")],
 
         defaultValue: {
-            type: "ButtonGroup",
             left: 0,
             top: 0,
             width: 64,
@@ -2579,7 +2927,8 @@ export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
     });
 
     draw = (ctx: CanvasRenderingContext2D, dataContext: DataContext) => {
-        let buttonLabels = (this.data && dataContext.getValueList(this.data)) || [];
+        let buttonLabels =
+            (this.data && dataContext.getValueList(this.data)) || [];
         let selectedButton = (this.data && dataContext.get(this.data)) || 0;
 
         let x = 0;
@@ -2716,7 +3065,6 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
         },
 
         defaultValue: {
-            type: "BarGraph",
             left: 0,
             top: 0,
             width: 64,
@@ -2737,18 +3085,26 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
 
             if (object.line1Data) {
                 if (!findDataItem(project, object.line1Data)) {
-                    messages.push(output.propertyNotFoundMessage(object, "line1Data"));
+                    messages.push(
+                        output.propertyNotFoundMessage(object, "line1Data")
+                    );
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "line1Data"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "line1Data")
+                );
             }
 
             if (object.line2Data) {
                 if (!findDataItem(project, object.line2Data)) {
-                    messages.push(output.propertyNotFoundMessage(object, "line2Data"));
+                    messages.push(
+                        output.propertyNotFoundMessage(object, "line2Data")
+                    );
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "line2Data"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "line2Data")
+                );
             }
 
             return messages;
@@ -2759,9 +3115,15 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
         let barGraphWidget = this;
         let style = barGraphWidget.style;
 
-        let min = (barGraphWidget.data && dataContext.getMin(barGraphWidget.data)) || 0;
-        let max = (barGraphWidget.data && dataContext.getMax(barGraphWidget.data)) || 0;
-        let valueText = (barGraphWidget.data && dataContext.get(barGraphWidget.data)) || "0";
+        let min =
+            (barGraphWidget.data && dataContext.getMin(barGraphWidget.data)) ||
+            0;
+        let max =
+            (barGraphWidget.data && dataContext.getMax(barGraphWidget.data)) ||
+            0;
+        let valueText =
+            (barGraphWidget.data && dataContext.get(barGraphWidget.data)) ||
+            "0";
         let value = parseFloat(valueText);
         if (isNaN(value)) {
             value = 0;
@@ -2794,7 +3156,13 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             draw.setColor(style.backgroundColorProperty);
             draw.fillRect(ctx, 0, 0, this.width - pos - 1, this.height - 1);
             draw.setColor(style.colorProperty);
-            draw.fillRect(ctx, this.width - pos, 0, this.width - 1, this.height - 1);
+            draw.fillRect(
+                ctx,
+                this.width - pos,
+                0,
+                this.width - 1,
+                this.height - 1
+            );
         } else if (barGraphWidget.orientation == "top-bottom") {
             draw.setColor(style.colorProperty);
             draw.fillRect(ctx, 0, 0, this.width - 1, pos - 1);
@@ -2804,7 +3172,13 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             draw.setColor(style.backgroundColorProperty);
             draw.fillRect(ctx, 0, 0, this.width - 1, this.height - pos - 1);
             draw.setColor(style.colorProperty);
-            draw.fillRect(ctx, 0, this.height - pos, this.width - 1, this.height - 1);
+            draw.fillRect(
+                ctx,
+                0,
+                this.height - pos,
+                this.width - 1,
+                this.height - 1
+            );
         }
 
         if (horizontal) {
@@ -2842,7 +3216,8 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
         }
 
         function drawLine(lineData: string | undefined, lineStyle: Style) {
-            let value = (lineData && parseFloat(dataContext.get(lineData))) || 0;
+            let value =
+                (lineData && parseFloat(dataContext.get(lineData))) || 0;
             if (isNaN(value)) {
                 value = 0;
             }
@@ -2886,9 +3261,18 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [
-            Object.assign(makeStylePropertyInfo("y1Style"), hideIfNotProjectVersion1),
-            Object.assign(makeStylePropertyInfo("y2Style"), hideIfNotProjectVersion1),
-            Object.assign(makeDataPropertyInfo("y2Data"), hideIfNotProjectVersion1)
+            Object.assign(
+                makeStylePropertyInfo("y1Style"),
+                hideIfNotProjectVersion1
+            ),
+            Object.assign(
+                makeStylePropertyInfo("y2Style"),
+                hideIfNotProjectVersion1
+            ),
+            Object.assign(
+                makeDataPropertyInfo("y2Data"),
+                hideIfNotProjectVersion1
+            )
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -2897,7 +3281,6 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
         },
 
         defaultValue: {
-            type: "YTGraph",
             left: 0,
             top: 0,
             width: 64,
@@ -2918,10 +3301,14 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
             if (project.settings.general.projectVersion === "v1") {
                 if (object.y2Data) {
                     if (!findDataItem(project, object.y2Data)) {
-                        messages.push(output.propertyNotFoundMessage(object, "y2Data"));
+                        messages.push(
+                            output.propertyNotFoundMessage(object, "y2Data")
+                        );
                     }
                 } else {
-                    messages.push(output.propertyNotSetMessage(object, "y2Data"));
+                    messages.push(
+                        output.propertyNotSetMessage(object, "y2Data")
+                    );
                 }
             }
 
@@ -2954,7 +3341,12 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
             y2 -= borderSize.bottom;
             borderRadius = Math.max(
                 borderRadius -
-                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                    Math.max(
+                        borderSize.top,
+                        borderSize.right,
+                        borderSize.bottom,
+                        borderSize.left
+                    ),
                 0
             );
         }
@@ -2991,7 +3383,6 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
         },
 
         defaultValue: {
-            type: "UpDown",
             left: 0,
             top: 0,
             width: 64,
@@ -3010,11 +3401,15 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
             }
 
             if (!object.downButtonText) {
-                messages.push(output.propertyNotSetMessage(object, "downButtonText"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "downButtonText")
+                );
             }
 
             if (!object.upButtonText) {
-                messages.push(output.propertyNotSetMessage(object, "upButtonText"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "upButtonText")
+                );
             }
 
             return messages;
@@ -3042,7 +3437,9 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
             false
         );
 
-        let text = upDownWidget.data ? (dataContext.get(upDownWidget.data) as string) : "";
+        let text = upDownWidget.data
+            ? (dataContext.get(upDownWidget.data) as string)
+            : "";
         drawText(
             ctx,
             text,
@@ -3108,7 +3505,6 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
         },
 
         defaultValue: {
-            type: "ListGraph",
             left: 0,
             top: 0,
             width: 64,
@@ -3128,15 +3524,21 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
 
             if (object.dwellData) {
                 if (!findDataItem(project, object.dwellData)) {
-                    messages.push(output.propertyNotFoundMessage(object, "dwellData"));
+                    messages.push(
+                        output.propertyNotFoundMessage(object, "dwellData")
+                    );
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "dwellData"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "dwellData")
+                );
             }
 
             if (object.y1Data) {
                 if (!findDataItem(project, object.y1Data)) {
-                    messages.push(output.propertyNotFoundMessage(object, "y1Data"));
+                    messages.push(
+                        output.propertyNotFoundMessage(object, "y1Data")
+                    );
                 }
             } else {
                 messages.push(output.propertyNotSetMessage(object, "y1Data"));
@@ -3144,7 +3546,9 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
 
             if (object.y2Data) {
                 if (!findDataItem(project, object.y2Data)) {
-                    messages.push(output.propertyNotFoundMessage(object, "y2Data"));
+                    messages.push(
+                        output.propertyNotFoundMessage(object, "y2Data")
+                    );
                 }
             } else {
                 messages.push(output.propertyNotSetMessage(object, "y2Data"));
@@ -3152,10 +3556,14 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
 
             if (object.cursorData) {
                 if (!findDataItem(project, object.cursorData)) {
-                    messages.push(output.propertyNotFoundMessage(object, "cursorData"));
+                    messages.push(
+                        output.propertyNotFoundMessage(object, "cursorData")
+                    );
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "cursorData"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "cursorData")
+                );
             }
 
             return messages;
@@ -3187,7 +3595,12 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             y2 -= borderSize.bottom;
             borderRadius = Math.max(
                 borderRadius -
-                    Math.max(borderSize.top, borderSize.right, borderSize.bottom, borderSize.left),
+                    Math.max(
+                        borderSize.top,
+                        borderSize.right,
+                        borderSize.bottom,
+                        borderSize.left
+                    ),
                 0
             );
         }
@@ -3209,7 +3622,12 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
     @observable page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        defaultValue: { type: "AppView", left: 0, top: 0, width: 64, height: 32 },
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
+        },
 
         icon: "_images/widgets/AppView.png",
 
@@ -3224,7 +3642,7 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
         }
     });
 
-    render(dataContext: DataContext) {
+    render(dataContext: DataContext, designerContext: IDesignerContext) {
         if (!this.data) {
             return null;
         }
@@ -3239,7 +3657,7 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
             return null;
         }
 
-        return page.render(dataContext);
+        return page.render(dataContext, designerContext);
     }
 }
 
@@ -3269,7 +3687,6 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
         ],
 
         defaultValue: {
-            type: "ScrollBar",
             left: 0,
             top: 0,
             width: 128,
@@ -3288,11 +3705,15 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
             }
 
             if (!object.leftButtonText) {
-                messages.push(output.propertyNotSetMessage(object, "leftButtonText"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "leftButtonText")
+                );
             }
 
             if (!object.rightButtonText) {
-                messages.push(output.propertyNotSetMessage(object, "rightButtonText"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "rightButtonText")
+                );
             }
 
             return messages;
@@ -3345,11 +3766,8 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
         draw.fillRect(ctx, x, y, x + width - 1, y + height - 1, 0);
 
         // draw thumb
-        const [size, position, pageSize] = (widget.data && dataContext.get(widget.data)) || [
-            100,
-            25,
-            20
-        ];
+        const [size, position, pageSize] = (widget.data &&
+            dataContext.get(widget.data)) || [100, 25, 20];
 
         let xThumb;
         let widthThumb;
@@ -3358,18 +3776,31 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
 
         if (isHorizontal) {
             xThumb = Math.floor((position * width) / size);
-            widthThumb = Math.max(Math.floor((pageSize * width) / size), buttonSize);
+            widthThumb = Math.max(
+                Math.floor((pageSize * width) / size),
+                buttonSize
+            );
             yThumb = y;
             heightThumb = height;
         } else {
             xThumb = x;
             widthThumb = width;
             yThumb = Math.floor((position * height) / size);
-            heightThumb = Math.max(Math.floor((pageSize * height) / size), buttonSize);
+            heightThumb = Math.max(
+                Math.floor((pageSize * height) / size),
+                buttonSize
+            );
         }
 
         draw.setColor(this.thumbStyle.colorProperty);
-        draw.fillRect(ctx, xThumb, yThumb, xThumb + widthThumb - 1, yThumb + heightThumb - 1, 0);
+        draw.fillRect(
+            ctx,
+            xThumb,
+            yThumb,
+            xThumb + widthThumb - 1,
+            yThumb + heightThumb - 1,
+            0
+        );
 
         // draw right button
         drawText(
@@ -3394,7 +3825,6 @@ export interface IProgressWidget extends IWidget {}
 export class ProgressWidget extends Widget implements IProgressWidget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: {
-            type: "Progress",
             left: 0,
             top: 0,
             width: 128,
@@ -3416,7 +3846,14 @@ export class ProgressWidget extends Widget implements IProgressWidget {
         const percent = (widget.data && dataContext.get(widget.data)) || 25;
         draw.setColor(this.style.colorProperty);
         if (isHorizontal) {
-            draw.fillRect(ctx, 0, 0, (percent * this.width) / 100 - 1, this.height - 1, 0);
+            draw.fillRect(
+                ctx,
+                0,
+                0,
+                (percent * this.width) / 100 - 1,
+                this.height - 1,
+                0
+            );
         } else {
             draw.fillRect(
                 ctx,
@@ -3439,7 +3876,6 @@ export interface ICanvasWidget extends IWidget {}
 export class CanvasWidget extends Widget implements ICanvasWidget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: {
-            type: "Canvas",
             left: 0,
             top: 0,
             width: 64,
@@ -3474,3 +3910,508 @@ export class CanvasWidget extends Widget implements ICanvasWidget {
 }
 
 registerClass(CanvasWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ActionNode extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {});
+
+    get autoSize() {
+        return true;
+    }
+
+    getResizeHandlers(): IResizeHandler[] | undefined | false {
+        return [];
+    }
+
+    getClassName() {
+        return "eez-action-node";
+    }
+
+    styleHook(
+        style: React.CSSProperties,
+        designerContext: IDesignerContext | undefined
+    ) {}
+
+    render(dataContext: DataContext, designerContext?: IDesignerContext) {
+        const classInfo = getClassInfo(this);
+
+        return (
+            <>
+                <div className="title-enclosure">
+                    <div className="title">
+                        {typeof classInfo.icon == "string" ? (
+                            <img src={classInfo.icon} />
+                        ) : (
+                            classInfo.icon
+                        )}
+                        <span>{getLabel(this)}</span>
+                    </div>
+                </div>
+                <div className="body">
+                    <div className="inports">
+                        {this.inputProperties.map(property => (
+                            <div
+                                key={property.name}
+                                className="eez-connection-input"
+                                data-connection-input-id={property.name}
+                            >
+                                {humanize(property.name)}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="outports">
+                        {this.outputProperties.map(property => (
+                            <div
+                                key={property.name}
+                                className="eez-connection-output"
+                                data-connection-output-id={property.name}
+                            >
+                                {humanize(property.name)}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    execute() {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class InputActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "output",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 875 1065.3333740234375"
+            >
+                <path d="M43 8.667l814 498q18 11 18 26t-18 26l-814 498q-18 11-30.5 4t-12.5-28v-1000q0-21 12.5-28t30.5 4z" />
+            </svg>
+        )
+    });
+
+    execute() {
+        if (this.wireID) {
+            getDocumentStore(this).DebugStore.executeWire(this.wireID);
+        }
+    }
+}
+
+registerClass(InputActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class OutputActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "input",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900">
+                <path d="M900 50v800q0 21-14.5 35.5T850 900H50q-21 0-35.5-14.5T0 850V50q0-21 14.5-35.5T50 0h800q21 0 35.5 14.5T900 50z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(OutputActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GetVariableActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "output",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 33.94000244140625 36.08000183105469"
+            >
+                <path d="M18.4 28h-5.306l-3.42-9.119c-.127-.337-.26-.962-.4-1.875h-.057l-.457 1.956L5.327 28H0l6.325-14L.558 0H5.99l2.831 8.394c.22.666.418 1.454.592 2.362h.057l.614-2.437L13.204 0h4.917L12.28 13.881 18.4 28zm15.54-10.667l-5.11 13.775c-1.22 3.315-3.055 4.972-5.506 4.972-.934 0-1.702-.169-2.304-.507v-3.04a2.917 2.917 0 0 0 1.65.507c.98 0 1.662-.476 2.047-1.429l.65-1.58-5.107-12.698h4.327l2.33 7.75c.146.484.26 1.052.341 1.707h.048l.404-1.678 2.355-7.779h3.875z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(GetVariableActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SetVariableActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "input",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "output",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "variable",
+                type: PropertyType.String
+            },
+            {
+                name: "value",
+                type: PropertyType.String
+            }
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                version="1.2"
+                viewBox="0 0 16 11"
+            >
+                <path d="M14 0H2a2 2 0 0 0 0 4h12a2 2 0 0 0 0-4zm0 7H2a2 2 0 0 0 0 4h12a2 2 0 0 0 0-4z" />
+            </svg>
+        )
+    });
+
+    @observable variable: string;
+    @observable value: string;
+
+    @action
+    execute() {
+        const DocumentStore = getDocumentStore(this);
+        DocumentStore.dataContext.set(this.variable, this.value);
+        if (this.wireID) {
+            getDocumentStore(this).DebugStore.executeWire(this.wireID);
+        }
+    }
+}
+
+registerClass(SetVariableActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class CompareActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "input",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "True",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "False",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 594.8059692382812 1200.2340087890625"
+            >
+                <path d="M285.206.234C188.053 0 11.212 93.504 5.606 176.634c-5.606 83.13 11.325 88.253 19.2 92.8h91.2c20.839-47.054 46.22-74.561 112.8-74s139.612 83.846 108.8 157.6c-30.813 73.754-59.285 99.443-97.2 179.2-37.914 79.757-50.579 200.231-.8 300.4l112.4 2c-27.82-142.988 119.44-270.381 178-358.4 58.559-88.019 64.125-121.567 64.8-194.4-.516-69.114-25.544-138.181-80-194.4S382.358.468 285.206.234zm5.599 927.601c-75.174 0-136 60.825-136 135.999 0 75.175 60.826 136.4 136 136.4 75.175 0 136-61.226 136-136.4s-60.825-135.999-136-135.999z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(CompareActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ConstantActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "output",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44">
+                <path d="M4 8H0v32c0 2.21 1.79 4 4 4h32v-4H4V8zm22 20h4V8h-8v4h4v16zM40 0H12C9.79 0 8 1.79 8 4v28c0 2.21 1.79 4 4 4h28c2.21 0 4-1.79 4-4V4c0-2.21-1.79-4-4-4zm0 32H12V4h28v28z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(ConstantActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ScpiActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "input",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "output",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7">
+                <path d="M1.5 0C.67 0 0 .67 0 1.5S.67 3 1.5 3H2v1h-.5C.67 4 0 4.67 0 5.5S.67 7 1.5 7 3 6.33 3 5.5V5h1v.5C4 6.33 4.67 7 5.5 7S7 6.33 7 5.5 6.33 4 5.5 4H5V3h.5C6.33 3 7 2.33 7 1.5S6.33 0 5.5 0 4 .67 4 1.5V2H3v-.5C3 .67 2.33 0 1.5 0zm0 1c.28 0 .5.22.5.5V2h-.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5zm4 0c.28 0 .5.22.5.5s-.22.5-.5.5H5v-.5c0-.28.22-.5.5-.5zM3 3h1v1H3V3zM1.5 5H2v.5c0 .28-.22.5-.5.5S1 5.78 1 5.5s.22-.5.5-.5zM5 5h.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5V5z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(ScpiActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class OpenPageActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "input",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "output",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
+                <path d="M0 0h40v30H0V0zm36 8H4v18h32V8z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(OpenPageActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ClosePageActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "input",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "output",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
+                <path d="M0 0h40v30H0V0zm36 8H4v18h32V8zm-23.273 4.96l3.232-3.233L20 13.767l4.04-4.04 3.233 3.232L23.233 17l4.04 4.04-3.232 3.233L20 20.233l-4.04 4.04-3.233-3.232L16.767 17l-4.04-4.04z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(ClosePageActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class Test1ActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "input1",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "input2",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "input3",
+                type: PropertyType.ConnectionInput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "output1",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "output2",
+                type: PropertyType.ConnectionOutput,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "filePath",
+                type: PropertyType.String
+            }
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 14.049999237060547 14.005000114440918"
+            >
+                <path d="M11.964 6.349c-.514 0-1.006.192-1.406.555v-1.64a1.77 1.77 0 0 0-1.76-1.767V3.49l-1.631.001c.348-.381.547-.881.547-1.406A2.088 2.088 0 0 0 5.628 0a2.088 2.088 0 0 0-2.084 2.085c0 .514.191 1.004.555 1.406H1.787V3.5C.826 3.516.049 4.3.049 5.264h.005l.005 1.82C0 7.519.152 8.032.624 8.2c.199.072.588.117.951-.395a1.086 1.086 0 0 1 1.971.626c0 .6-.487 1.086-1.086 1.086-.354 0-.688-.176-.896-.475-.348-.504-.756-.422-.914-.363-.466.168-.611.684-.596 1.053v2.506H.049a1.77 1.77 0 0 0 1.769 1.767h6.973a1.77 1.77 0 0 0 1.768-1.768V9.971c.381.348.881.547 1.406.547a2.088 2.088 0 0 0 2.085-2.086 2.09 2.09 0 0 0-2.086-2.083zm0 3.17c-.355 0-.688-.176-.896-.475-.348-.506-.757-.424-.915-.365-.466.168-.61.684-.595 1.053v2.506a.768.768 0 0 1-.768.768H1.818a.77.77 0 0 1-.769-.769h.005V9.971a2.085 2.085 0 0 0 3.492-1.539A2.088 2.088 0 0 0 2.46 6.348a2.08 2.08 0 0 0-1.406.555v-1.64h-.005a.77.77 0 0 1 .769-.768V4.49l2.46-.005c.059.008.119.013.18.013.389 0 .793-.169.938-.579.071-.199.116-.587-.396-.949a1.086 1.086 0 1 1 1.714-.885c0 .355-.176.688-.477.898-.501.346-.421.753-.363.913.168.467.673.613 1.053.595H8.79v.006c.424 0 .768.345.768.768l.004 1.82c-.059.435.094.949.566 1.117.199.072.588.117.95-.395a1.084 1.084 0 1 1 .886 1.712z" />
+            </svg>
+        )
+    });
+}
+
+registerClass(Test1ActionNode);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const TrixEditorDiv = styled.div`
+    position: absolute;
+    background-color: #ffff88;
+    border: 1px solid ${props => props.theme.borderColor};
+    box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
+    padding: 5px;
+    .trix-button-group {
+        border: none !important;
+        margin-bottom: 5px;
+    }
+    .trix-button {
+        border: none !important;
+        font-size: 80%;
+    }
+    trix-editor {
+        border: 1px solid ${props => props.theme.borderColor};
+    }
+    trix-toolbar .trix-button-group:not(:first-child) {
+        margin-left: 5px;
+    }
+    &:focus {
+        trix-toolbar {
+            visibility: hidden;
+        }
+    }
+`;
+
+const TrixEditor = observer(
+    ({
+        value,
+        setValue
+    }: {
+        value: string;
+        setValue: (value: string) => void;
+    }) => {
+        const inputId = React.useMemo<string>(() => guid(), []);
+        const editorId = React.useMemo<string>(() => guid(), []);
+
+        React.useEffect(() => {
+            const trixEditor = document.getElementById(editorId) as HTMLElement;
+
+            if (value != trixEditor.innerHTML) {
+                console.log(
+                    `update trix "${value}" -> "${trixEditor.innerHTML}"`
+                );
+                (trixEditor as any).editor.loadHTML(value);
+            }
+
+            const onBlur = (e: any) => {
+                if (trixEditor.innerHTML != value) {
+                    console.log(
+                        `fromTrix "${trixEditor.innerHTML}" -> "${value}"`
+                    );
+                    setValue(trixEditor.innerHTML);
+                }
+            };
+            trixEditor.addEventListener("trix-blur", onBlur, false);
+
+            return () => {
+                trixEditor.removeEventListener("trix-blur", onBlur, false);
+            };
+        }, [value]);
+
+        var attributes: { [key: string]: string } = {
+            id: editorId,
+            input: inputId
+        };
+
+        return (
+            <TrixEditorDiv
+                className="eez-page-editor-capture-pointers"
+                tabIndex={0}
+            >
+                {React.createElement("trix-editor", attributes)}
+                <input id={inputId} value={value ?? ""} type="hidden"></input>
+            </TrixEditorDiv>
+        );
+    }
+);
+
+export class CommentActionNode extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        properties: [
+            {
+                name: "text",
+                type: PropertyType.String
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 13.5">
+                <path d="M13 0H1C.45 0 0 .45 0 1v8c0 .55.45 1 1 1h2v3.5L6.5 10H13c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm0 9H6l-2 2V9H1V1h12v8z" />
+            </svg>
+        )
+    });
+
+    @observable text: string;
+
+    render(dataContext: DataContext, designerContext?: IDesignerContext) {
+        const classInfo = getClassInfo(this);
+
+        return (
+            <>
+                <div className="title-enclosure">
+                    <div className="title">
+                        {typeof classInfo.icon == "string" ? (
+                            <img src={classInfo.icon} />
+                        ) : (
+                            classInfo.icon
+                        )}
+                    </div>
+                </div>
+                <div className="body">
+                    <TrixEditor
+                        value={this.text}
+                        setValue={action((value: string) => {
+                            const DocumentStore = getDocumentStore(this);
+                            DocumentStore.updateObject(this, {
+                                text: value
+                            });
+                        })}
+                    ></TrixEditor>
+                </div>
+            </>
+        );
+    }
+}
+
+registerClass(CommentActionNode);

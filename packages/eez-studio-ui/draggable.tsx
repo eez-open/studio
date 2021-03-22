@@ -2,6 +2,8 @@ import { bind } from "bind-decorator";
 
 import { closestBySelector } from "eez-studio-shared/dom";
 
+export const DRAGGABLE_OVERLAY_ELEMENT_ID = "eez-draggable-overlay-element";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 interface DraggableConfig {
@@ -50,12 +52,19 @@ export class Draggable {
         }
 
         // put in focus first parent with tabindex attribute
-        const parentWithTabindex = closestBySelector(this.element, "[tabindex]");
+        const parentWithTabindex = closestBySelector(
+            this.element,
+            "[tabindex]"
+        );
         if (parentWithTabindex) {
             parentWithTabindex.focus();
         }
 
         this.finishDragging(undefined, true);
+
+        if (closestBySelector(e.target, ".eez-page-editor-capture-pointers")) {
+            return;
+        }
 
         this.element.addEventListener("pointerup", this.onPointerUp);
         this.element.addEventListener("pointercancel", this.onPointerCancel);
@@ -63,6 +72,7 @@ export class Draggable {
         window.addEventListener("keydown", this.onKeyDown);
 
         this.overlayElement = document.createElement("div");
+        this.overlayElement.id = DRAGGABLE_OVERLAY_ELEMENT_ID;
         this.overlayElement.style.position = "absolute";
         this.overlayElement.style.left = "0";
         this.overlayElement.style.top = "0";
@@ -88,7 +98,11 @@ export class Draggable {
         this.yDragStart = e.clientY;
 
         if (this.config.onDragStart) {
-            this.params = this.config.onDragStart(e, this.xDragStart, this.yDragStart);
+            this.params = this.config.onDragStart(
+                e,
+                this.xDragStart,
+                this.yDragStart
+            );
         } else {
             this.params = undefined;
         }
@@ -152,7 +166,10 @@ export class Draggable {
             this.element.releasePointerCapture(this.capturedPointerId);
 
             this.element.removeEventListener("pointerup", this.onPointerUp);
-            this.element.removeEventListener("pointercancel", this.onPointerCancel);
+            this.element.removeEventListener(
+                "pointercancel",
+                this.onPointerCancel
+            );
         }
 
         window.removeEventListener("keydown", this.onKeyDown);

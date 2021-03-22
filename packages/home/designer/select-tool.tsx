@@ -2,7 +2,13 @@ import React from "react";
 import { observable, runInAction } from "mobx";
 
 import { closestByClass } from "eez-studio-shared/dom";
-import { Point, Rect, pointInRect, rectEqual, rectClone } from "eez-studio-shared/geometry";
+import {
+    Point,
+    Rect,
+    pointInRect,
+    rectEqual,
+    rectClone
+} from "eez-studio-shared/geometry";
 import {
     ISnapLines,
     findSnapLines,
@@ -14,8 +20,7 @@ import {
 import {
     IDesignerContext,
     IToolHandler,
-    IMouseHandler,
-    IBaseObject
+    IMouseHandler
 } from "home/designer/designer-interfaces";
 import { Transform } from "home/designer/transform";
 import { MouseHandler } from "home/designer/mouse-handler";
@@ -40,7 +45,9 @@ const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 // - resize selection
 
 export function isSelectionMoveable(context: IDesignerContext) {
-    return !context.viewState.selectedObjects.find(object => !object.isMoveable);
+    return !context.viewState.selectedObjects.find(
+        object => !object.isMoveable
+    );
 }
 
 export const selectToolHandler: IToolHandler = {
@@ -57,7 +64,10 @@ export const selectToolHandler: IToolHandler = {
     ) {
         if (
             context.viewState.selectedObjects.length === 0 ||
-            !pointInRect(point, getSelectedObjectsBoundingRect(context.viewState))
+            !pointInRect(
+                point,
+                getSelectedObjectsBoundingRect(context.viewState)
+            )
         ) {
             context.viewState.deselectAllObjects();
 
@@ -70,7 +80,9 @@ export const selectToolHandler: IToolHandler = {
         }
 
         setTimeout(() => {
-            const menu = context.document.createContextMenu(context.viewState.selectedObjects);
+            const menu = context.document.createContextMenu(
+                context.viewState.selectedObjects
+            );
             if (menu) {
                 showContextMenu(menu);
             }
@@ -84,7 +96,12 @@ export const selectToolHandler: IToolHandler = {
 
     createMouseHandler(context: IDesignerContext, event: MouseEvent) {
         if (!event.altKey) {
-            if (closestByClass(event.target, "EezStudio_DesignerSelection_ResizeHandle")) {
+            if (
+                closestByClass(
+                    event.target,
+                    "EezStudio_DesignerSelection_ResizeHandle"
+                )
+            ) {
                 const cursor = (event.target as HTMLElement).style.cursor;
                 if (
                     cursor === "nw-resize" ||
@@ -97,39 +114,6 @@ export const selectToolHandler: IToolHandler = {
                     cursor === "se-resize"
                 ) {
                     return new ResizeMouseHandler(cursor);
-                } else if (cursor === "col-resize") {
-                    if (context.viewState.selectedObjects.length === 1) {
-                        const selectedObject = context.viewState.selectedObjects[0];
-                        if (selectedObject.resizeColumn) {
-                            const dataColumnIndex = (event.target as HTMLElement).getAttribute(
-                                "data-column-index"
-                            );
-                            if (dataColumnIndex) {
-                                const columnIndex = parseInt(dataColumnIndex);
-                                if (!Number.isNaN(columnIndex)) {
-                                    return new ColumnResizeMouseHandler(
-                                        selectedObject,
-                                        columnIndex
-                                    );
-                                }
-                            }
-                        }
-                    }
-                } else if (cursor === "row-resize") {
-                    if (context.viewState.selectedObjects.length === 1) {
-                        const selectedObject = context.viewState.selectedObjects[0];
-                        if (selectedObject.resizeRow) {
-                            const dataRowIndex = (event.target as HTMLElement).getAttribute(
-                                "data-row-index"
-                            );
-                            if (dataRowIndex) {
-                                const rowIndex = parseInt(dataRowIndex);
-                                if (!Number.isNaN(rowIndex)) {
-                                    return new RowResizeMouseHandler(selectedObject, rowIndex);
-                                }
-                            }
-                        }
-                    }
                 }
                 return undefined;
             }
@@ -139,7 +123,9 @@ export const selectToolHandler: IToolHandler = {
             if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
                 return isMoveable ? new DragMouseHandler() : undefined;
             } else {
-                let point = context.viewState.transform.mouseEventToPagePoint(event);
+                let point = context.viewState.transform.mouseEventToPagePoint(
+                    event
+                );
                 let object = context.document.objectFromPoint(point);
                 if (object) {
                     if (!context.viewState.isObjectSelected(object)) {
@@ -249,8 +235,14 @@ export class SnapLines {
 
     dragSnap(left: number, top: number, width: number, height: number) {
         if (this.enabled) {
-            let lines1 = findClosestVerticalSnapLinesToPosition(this.lines, left);
-            let lines2 = findClosestVerticalSnapLinesToPosition(this.lines, left + width);
+            let lines1 = findClosestVerticalSnapLinesToPosition(
+                this.lines,
+                left
+            );
+            let lines2 = findClosestVerticalSnapLinesToPosition(
+                this.lines,
+                left + width
+            );
 
             if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
                 left = lines1.lines[0].pos;
@@ -259,7 +251,10 @@ export class SnapLines {
             }
 
             lines1 = findClosestHorizontalSnapLinesToPosition(this.lines, top);
-            lines2 = findClosestHorizontalSnapLinesToPosition(this.lines, top + height);
+            lines2 = findClosestHorizontalSnapLinesToPosition(
+                this.lines,
+                top + height
+            );
 
             if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
                 top = lines1.lines[0].pos;
@@ -358,7 +353,8 @@ class MouseHandlerWithSnapLines extends MouseHandler {
         super.move(context, event);
 
         this.snapLines.enabled =
-            !event.shiftKey && this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
+            !event.shiftKey &&
+            this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
     }
 
     render(context: IDesignerContext) {
@@ -387,10 +383,12 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             getSelectedObjectsBoundingRect(context.viewState)
         );
 
-        this.objectPositionsAtDown = context.viewState.selectedObjects.map(object => ({
-            x: object.rect.left,
-            y: object.rect.top
-        }));
+        this.objectPositionsAtDown = context.viewState.selectedObjects.map(
+            object => ({
+                x: object.rect.left,
+                y: object.rect.top
+            })
+        );
 
         this.left = this.selectionBoundingRectAtDown.left;
         this.top = this.selectionBoundingRectAtDown.top;
@@ -418,10 +416,12 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
 
             let rect = {
                 left: Math.round(
-                    this.objectPositionsAtDown[i].x + (left - this.selectionBoundingRectAtDown.left)
+                    this.objectPositionsAtDown[i].x +
+                        (left - this.selectionBoundingRectAtDown.left)
                 ),
                 top: Math.round(
-                    this.objectPositionsAtDown[i].y + (top - this.selectionBoundingRectAtDown.top)
+                    this.objectPositionsAtDown[i].y +
+                        (top - this.selectionBoundingRectAtDown.top)
                 ),
                 width: object.rect.width,
                 height: object.rect.height
@@ -436,7 +436,11 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
 
     up(context: IDesignerContext, event?: MouseEvent) {
         super.up(context, event);
-        context.document.onDragEnd("move", this.changed, context.viewState.selectedObjects);
+        context.document.onDragEnd(
+            "move",
+            this.changed,
+            context.viewState.selectedObjects
+        );
     }
 }
 
@@ -469,14 +473,19 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
         context.document.onDragStart("resize");
 
-        this.savedBoundingRect = rectClone(getSelectedObjectsBoundingRect(context.viewState));
+        this.savedBoundingRect = rectClone(
+            getSelectedObjectsBoundingRect(context.viewState)
+        );
         this.boundingRect = rectClone(this.savedBoundingRect);
 
         this.savedBoundingRects = [];
         this.savedRects = [];
         this.rects = [];
         for (const object of context.viewState.selectedObjects) {
-            const boundingRect = getObjectBoundingRect(object, context.viewState);
+            const boundingRect = getObjectBoundingRect(
+                object,
+                context.viewState
+            );
             this.savedBoundingRects.push(rectClone(boundingRect));
 
             const rect = object.rect;
@@ -487,7 +496,10 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
     snapX(x: number) {
         if (this.snapLines.enabled) {
-            let lines = findClosestVerticalSnapLinesToPosition(this.snapLines.lines, x);
+            let lines = findClosestVerticalSnapLinesToPosition(
+                this.snapLines.lines,
+                x
+            );
             return lines ? lines.lines[0].pos : x;
         } else {
             return x;
@@ -496,7 +508,10 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
     snapY(y: number) {
         if (this.snapLines.enabled) {
-            let lines = findClosestHorizontalSnapLinesToPosition(this.snapLines.lines, y);
+            let lines = findClosestHorizontalSnapLinesToPosition(
+                this.snapLines.lines,
+                y
+            );
             return lines ? lines.lines[0].pos : y;
         } else {
             return y;
@@ -506,7 +521,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     moveTop(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let bottom = rect.top + rect.height;
         rect.top = this.snapY(
-            savedRect.top + this.offsetDistance.y / context.viewState.transform.scale
+            savedRect.top +
+                this.offsetDistance.y / context.viewState.transform.scale
         );
         if (rect.top >= bottom) {
             rect.top = bottom - 1;
@@ -517,7 +533,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     moveLeft(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let right = rect.left + rect.width;
         rect.left = this.snapX(
-            savedRect.left + this.offsetDistance.x / context.viewState.transform.scale
+            savedRect.left +
+                this.offsetDistance.x / context.viewState.transform.scale
         );
         if (rect.left >= right) {
             rect.left = right - 1;
@@ -549,7 +566,12 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         rect.width = right - rect.left;
     }
 
-    maintainSameAspectRatio(savedRect: Rect, rect: Rect, top: boolean, left: boolean) {
+    maintainSameAspectRatio(
+        savedRect: Rect,
+        rect: Rect,
+        top: boolean,
+        left: boolean
+    ) {
         let startAspectRatio = savedRect.width / savedRect.height;
 
         let width;
@@ -609,7 +631,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         this.resizeRect(context, this.savedBoundingRect, this.boundingRect);
 
         let scaleWidth = this.boundingRect.width / this.savedBoundingRect.width;
-        let scaleHeight = this.boundingRect.height / this.savedBoundingRect.height;
+        let scaleHeight =
+            this.boundingRect.height / this.savedBoundingRect.height;
 
         let objects = context.viewState.selectedObjects;
 
@@ -621,12 +644,14 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
             rect.left = Math.floor(
                 savedRect.left +
                     (this.boundingRect.left - this.savedBoundingRect.left) +
-                    (savedBoundingRect.left - this.savedBoundingRect.left) * (scaleWidth - 1)
+                    (savedBoundingRect.left - this.savedBoundingRect.left) *
+                        (scaleWidth - 1)
             );
             rect.top = Math.floor(
                 savedRect.top +
                     (this.boundingRect.top - this.savedBoundingRect.top) +
-                    (savedBoundingRect.top - this.savedBoundingRect.top) * (scaleHeight - 1)
+                    (savedBoundingRect.top - this.savedBoundingRect.top) *
+                        (scaleHeight - 1)
             );
             rect.width = Math.floor(savedRect.width * scaleWidth);
             rect.height = Math.floor(savedRect.height * scaleHeight);
@@ -641,70 +666,10 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     up(context: IDesignerContext, event?: MouseEvent) {
         super.up(context, event);
 
-        context.document.onDragEnd("resize", this.changed, context.viewState.selectedObjects);
-    }
-}
-
-class ColumnResizeMouseHandler extends MouseHandlerWithSnapLines {
-    changed: boolean = false;
-    savedColumnWidth: number;
-
-    constructor(private selectedObject: IBaseObject, private columnIndex: number) {
-        super();
-    }
-
-    down(context: IDesignerContext, event: MouseEvent) {
-        super.down(context, event);
-
-        context.document.onDragStart("col-resize");
-
-        this.savedColumnWidth = this.selectedObject.getColumnWidth!(this.columnIndex);
-    }
-
-    move(context: IDesignerContext, event: MouseEvent) {
-        super.move(context, event);
-        this.selectedObject.resizeColumn!(
-            this.columnIndex,
-            this.savedColumnWidth,
-            this.offsetDistance.x / context.viewState.transform.scale
+        context.document.onDragEnd(
+            "resize",
+            this.changed,
+            context.viewState.selectedObjects
         );
-    }
-
-    up(context: IDesignerContext, event?: MouseEvent) {
-        super.up(context, event);
-
-        context.document.onDragEnd("col-resize", this.changed, [this.selectedObject]);
-    }
-}
-
-class RowResizeMouseHandler extends MouseHandlerWithSnapLines {
-    changed: boolean = false;
-    savedRowHeight: number;
-
-    constructor(private selectedObject: IBaseObject, private rowIndex: number) {
-        super();
-    }
-
-    down(context: IDesignerContext, event: MouseEvent) {
-        super.down(context, event);
-
-        context.document.onDragStart("row-resize");
-
-        this.savedRowHeight = this.selectedObject.getRowHeight!(this.rowIndex);
-    }
-
-    move(context: IDesignerContext, event: MouseEvent) {
-        super.move(context, event);
-        this.selectedObject.resizeRow!(
-            this.rowIndex,
-            this.savedRowHeight,
-            this.offsetDistance.y / context.viewState.transform.scale
-        );
-    }
-
-    up(context: IDesignerContext, event?: MouseEvent) {
-        super.up(context, event);
-
-        context.document.onDragEnd("row-resize", this.changed, [this.selectedObject]);
     }
 }

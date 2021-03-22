@@ -18,9 +18,9 @@ import {
     getParent,
     getLabel
 } from "project-editor/core/object";
+import { DocumentStoreClass } from "project-editor/core/store";
 
 import { ScpiEnumsNavigation } from "project-editor/features/scpi/ScpiEnumsNavigation";
-import { ProjectStoreClass } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +57,10 @@ export class ScpiEnumMember extends EezObject {
                 for (let i = 0; i < arr.length; ++i) {
                     if (arr[i] === object) {
                         thisIndex = i;
-                    } else if (arr[i] !== object && arr[i].name === object.name) {
+                    } else if (
+                        arr[i] !== object &&
+                        arr[i].name === object.name
+                    ) {
                         otherIndex = i;
                     }
                 }
@@ -92,7 +95,9 @@ export class ScpiEnum extends EezObject implements IScpiEnum {
 
     static classInfo: ClassInfo = {
         label: (scpiEnum: ScpiEnum) => {
-            return `${scpiEnum.name} (${scpiEnum.members.map(member => member.name).join("|")})`;
+            return `${scpiEnum.name} (${scpiEnum.members
+                .map(member => member.name)
+                .join("|")})`;
         },
         properties: [
             {
@@ -114,7 +119,10 @@ export class ScpiEnum extends EezObject implements IScpiEnum {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
                         }
                     ]
                 },
@@ -145,8 +153,11 @@ export class ScpiEnum extends EezObject implements IScpiEnum {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findScpiEnum(ProjectStore: ProjectStoreClass, enumeration: string) {
-    const scpi = ProjectStore.project.scpi;
+export function findScpiEnum(
+    DocumentStore: DocumentStoreClass,
+    enumeration: string
+) {
+    const scpi = DocumentStore.project.scpi;
 
     for (let i = 0; i < scpi.enums.length; ++i) {
         if (scpi.enums[i].name === enumeration) {
@@ -157,8 +168,10 @@ export function findScpiEnum(ProjectStore: ProjectStoreClass, enumeration: strin
     return undefined;
 }
 
-export function getScpiEnumsAsDialogEnumItems(ProjectStore: ProjectStoreClass): EnumItems {
-    return ProjectStore.project.scpi.enums
+export function getScpiEnumsAsDialogEnumItems(
+    DocumentStore: DocumentStoreClass
+): EnumItems {
+    return DocumentStore.project.scpi.enums
         .slice()
         .sort((a, b) => stringCompare(getLabel(a), getLabel(b)))
         .map(scpiEnum => ({

@@ -10,10 +10,6 @@ export interface IBaseObject {
     children: IBaseObject[];
     isMoveable: boolean;
     getResizeHandlers?: () => IResizeHandler[] | undefined | false;
-    getColumnWidth?: (columnIndex: number) => number;
-    resizeColumn?: (columnIndex: number, savedColumnWidth: number, offset: number) => void;
-    getRowHeight?: (rowIndex: number) => number;
-    resizeRow?: (rowIndex: number, savedRowHeight: number, offset: number) => void;
     open(): void;
 }
 
@@ -36,9 +32,9 @@ export interface IDocument {
     createContextMenu(objects: IBaseObject[]): Electron.Menu | undefined;
 
     // events
-    onDragStart(op: "move" | "resize" | "col-resize" | "row-resize"): void;
+    onDragStart(op: "move" | "resize"): void;
     onDragEnd(
-        op: "move" | "resize" | "col-resize" | "row-resize",
+        op: "move" | "resize",
         changed: boolean,
         objects: IBaseObject[]
     ): void;
@@ -52,9 +48,7 @@ export type HandleType =
     | "e-resize"
     | "sw-resize"
     | "s-resize"
-    | "se-resize"
-    | "col-resize"
-    | "row-resize";
+    | "se-resize";
 
 export interface IResizeHandler {
     // Top-left: 0, 0
@@ -122,7 +116,10 @@ export interface IMouseHandler {
 }
 
 export interface IToolHandler {
-    render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined): React.ReactNode;
+    render(
+        context: IDesignerContext,
+        mouseHandler: IMouseHandler | undefined
+    ): React.ReactNode;
 
     onClick(context: IDesignerContext, point: Point): void;
 
@@ -137,5 +134,8 @@ export interface IToolHandler {
     canDrag: boolean;
     drop(context: IDesignerContext, point: Point): void;
 
-    createMouseHandler(context: IDesignerContext, event: MouseEvent): IMouseHandler | undefined;
+    createMouseHandler(
+        context: IDesignerContext,
+        event: MouseEvent
+    ): IMouseHandler | undefined;
 }

@@ -5,7 +5,11 @@ import { observer } from "mobx-react";
 import { stringCompare } from "eez-studio-shared/string";
 
 import styled from "eez-studio-ui/styled-components";
-import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    Header,
+    Body
+} from "eez-studio-ui/header-with-body";
 import { TabsView } from "eez-studio-ui/tabs";
 import { ListContainer, List, IListNode, ListItem } from "eez-studio-ui/list";
 import { Icon } from "eez-studio-ui/icon";
@@ -22,11 +26,15 @@ import { Setup } from "home/setup";
 
 class AddTabPopupStuff {
     @computed get instrumentObjects() {
-        return Array.from(workbenchObjects.values()).filter(obj => !tabs.findTab(obj.id));
+        return Array.from(workbenchObjects.values()).filter(
+            obj => !tabs.findTab(obj.id)
+        );
     }
 
     @computed get tabs() {
-        return tabs.allTabs.filter(tab => !tabs.findTab(tab.instance.id.toString()));
+        return tabs.allTabs.filter(
+            tab => !tabs.findTab(tab.instance.id.toString())
+        );
     }
 
     @computed get sessionInfo() {
@@ -35,7 +43,11 @@ class AddTabPopupStuff {
     }
 
     @computed get anythingToAdd() {
-        return this.instrumentObjects.length > 0 || this.tabs.length > 0 || this.sessionInfo;
+        return (
+            this.instrumentObjects.length > 0 ||
+            this.tabs.length > 0 ||
+            this.sessionInfo
+        );
     }
 }
 
@@ -77,7 +89,12 @@ const AddTabPopup = observer(() => {
             <ListContainer tabIndex={0}>
                 <List
                     nodes={theAddTabPopupStuff.instrumentObjects
-                        .sort((a, b) => stringCompare(a.name.toLowerCase(), b.name.toLowerCase()))
+                        .sort((a, b) =>
+                            stringCompare(
+                                a.name.toLowerCase(),
+                                b.name.toLowerCase()
+                            )
+                        )
                         .map(obj => ({
                             id: obj.id,
                             data: obj,
@@ -190,7 +207,9 @@ class AppComponent extends React.Component {
     get addTabAttention() {
         return (
             tabs.allTabs.filter(
-                tab => !tabs.findTab(tab.instance.id.toString()) && tab.instance.attention
+                tab =>
+                    !tabs.findTab(tab.instance.id.toString()) &&
+                    tab.instance.attention
             ).length > 0
         );
     }
@@ -224,7 +243,13 @@ class AppComponent extends React.Component {
                     {tabs.tabs.map(tab => (
                         <TabContainer
                             key={tab.id}
-                            style={{ visibility: tab === tabs.activeTab ? "visible" : "hidden" }}
+                            style={{
+                                visibility:
+                                    tab === tabs.activeTab
+                                        ? "visible"
+                                        : "hidden",
+                                zIndex: tab === tabs.activeTab ? 1 : 0
+                            }}
                         >
                             {tab.render()}
                         </TabContainer>

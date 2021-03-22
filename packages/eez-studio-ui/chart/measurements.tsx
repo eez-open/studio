@@ -1212,8 +1212,8 @@ class MeasurementComponent extends React.Component<{
                 ]
             };
 
-            const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-                EEZStudio.electron.remote.getCurrentWindow(),
+            const result = await EEZStudio.remote.dialog.showSaveDialog(
+                EEZStudio.remote.getCurrentWindow(),
                 options
             );
 

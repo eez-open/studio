@@ -35,19 +35,24 @@ import {
 import {
     INavigationStore,
     IPanel,
-    createObjectNavigationItem
+    createObjectNavigationItem,
+    getDocumentStore
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { Project, findReferencedObject, getProjectStore } from "project-editor/project/project";
+import { Project, findReferencedObject } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
 
-import { drawGlyph, setColor, setBackColor } from "project-editor/features/gui/draw";
+import {
+    drawGlyph,
+    setColor,
+    setBackColor
+} from "project-editor/features/gui/draw";
 import { showGenericDialog } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +97,7 @@ export function browseGlyph(glyph: Glyph) {
     }
 
     function isNonBdfFont(obj: any) {
-        const path = EEZStudio.electron.remote.require("path");
+        const path = EEZStudio.remote.require("path");
         return isFont(obj) && path.extname(obj["filePath"]) != ".bdf";
     }
 
@@ -102,7 +107,9 @@ export function browseGlyph(glyph: Glyph) {
 
     const title = "Select Glyph";
 
-    return showGenericDialog(getProjectStore(glyph), {
+    const DocumentStore = getDocumentStore(glyph);
+
+    return showGenericDialog(DocumentStore, {
         dialogDefinition: {
             title,
             size: "large",
@@ -113,7 +120,10 @@ export function browseGlyph(glyph: Glyph) {
                     type: RelativeFileInput,
                     options: {
                         filters: [
-                            { name: "Font files", extensions: ["bdf", "ttf", "otf"] },
+                            {
+                                name: "Font files",
+                                extensions: ["bdf", "ttf", "otf"]
+                            },
                             { name: "All Files", extensions: ["*"] }
                         ]
                     }
@@ -163,7 +173,7 @@ export function browseGlyph(glyph: Glyph) {
             height: result.context.encoding.glyph.height,
             dx: result.context.encoding.glyph.dx,
             glyphBitmap: result.context.encoding.glyph.glyphBitmap,
-            source: loadObject(glyph, result.values, GlyphSource)
+            source: loadObject(DocumentStore, glyph, result.values, GlyphSource)
         };
     });
 }
@@ -227,7 +237,11 @@ export interface IGlyphBitmap {
     pixelArray: number[];
 }
 
-export function getPixelByteIndex(glyphBitmap: IGlyphBitmap, x: number, y: number): number {
+export function getPixelByteIndex(
+    glyphBitmap: IGlyphBitmap,
+    x: number,
+    y: number
+): number {
     return y * Math.floor((glyphBitmap.width + 7) / 8) + Math.floor(x / 8);
 }
 
@@ -241,7 +255,10 @@ export function getPixel(
         if (bpp === 8) {
             return glyphBitmap.pixelArray[y * glyphBitmap.width + x];
         } else {
-            return glyphBitmap.pixelArray[getPixelByteIndex(glyphBitmap, x, y)] & (0x80 >> x % 8);
+            return (
+                glyphBitmap.pixelArray[getPixelByteIndex(glyphBitmap, x, y)] &
+                (0x80 >> x % 8)
+            );
         }
     } else {
         return 0;
@@ -288,7 +305,12 @@ export function setPixel(
     return result;
 }
 
-function resizeGlyphBitmap(glyphBitmap: IGlyphBitmap, width: number, height: number, bpp: number) {
+function resizeGlyphBitmap(
+    glyphBitmap: IGlyphBitmap,
+    width: number,
+    height: number,
+    bpp: number
+) {
     let result = {
         width: width,
         height: height,
@@ -297,7 +319,13 @@ function resizeGlyphBitmap(glyphBitmap: IGlyphBitmap, width: number, height: num
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            setPixelInplace(result, x, y, getPixel(glyphBitmap, x, y, bpp), bpp);
+            setPixelInplace(
+                result,
+                x,
+                y,
+                getPixel(glyphBitmap, x, y, bpp),
+                bpp
+            );
         }
     }
 
@@ -331,7 +359,9 @@ export interface IGlyph {
 }
 
 export function serializePixelArray(pixelArrayAsNumberArray: number[]) {
-    return pixelArrayAsNumberArray.map(pixel => pixel.toString(16).padStart(2, "0")).join("");
+    return pixelArrayAsNumberArray
+        .map(pixel => pixel.toString(16).padStart(2, "0"))
+        .join("");
 }
 
 function deserializePixelArray(pixelArray: string | number[]) {
@@ -360,7 +390,9 @@ export class Glyph extends EezObject {
 
     static classInfo: ClassInfo = {
         label: (glyph: Glyph) => {
-            return glyph.encoding != undefined ? formatEncoding(glyph.encoding) : "";
+            return glyph.encoding != undefined
+                ? formatEncoding(glyph.encoding)
+                : "";
         },
         properties: [
             {
@@ -428,13 +460,21 @@ export class Glyph extends EezObject {
             return undefined;
         }
 
-        if (this.width == this.glyphBitmap.width && this.height == this.glyphBitmap.height) {
+        if (
+            this.width == this.glyphBitmap.width &&
+            this.height == this.glyphBitmap.height
+        ) {
             return this.glyphBitmap.pixelArray;
         }
 
         const font = this.font;
 
-        return resizeGlyphBitmap(this.glyphBitmap, this.width, this.height, font.bpp).pixelArray;
+        return resizeGlyphBitmap(
+            this.glyphBitmap,
+            this.width,
+            this.height,
+            font.bpp
+        ).pixelArray;
     }
 
     @computed
@@ -474,7 +514,9 @@ export class Glyph extends EezObject {
         let dx = this.dx || 0;
 
         canvas.width =
-            dx * GLYPH_EDITOR_PIXEL_SIZE + GLYPH_EDITOR_PADDING_LEFT + GLYPH_EDITOR_PADDING_RIGHT;
+            dx * GLYPH_EDITOR_PIXEL_SIZE +
+            GLYPH_EDITOR_PADDING_LEFT +
+            GLYPH_EDITOR_PADDING_RIGHT;
         canvas.height =
             fontHeight * GLYPH_EDITOR_PIXEL_SIZE +
             GLYPH_EDITOR_PADDING_TOP +
@@ -503,12 +545,18 @@ export class Glyph extends EezObject {
             if (x >= xOffset && x <= xOffset + width) {
                 ctx.beginPath();
                 ctx.moveTo(x * GLYPH_EDITOR_PIXEL_SIZE, 0);
-                ctx.lineTo(x * GLYPH_EDITOR_PIXEL_SIZE, clampY(yOffset) * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.lineTo(
+                    x * GLYPH_EDITOR_PIXEL_SIZE,
+                    clampY(yOffset) * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.strokeStyle = GLYPH_EDITOR_GRID_LINE_OUTER_COLOR;
                 ctx.stroke();
 
                 ctx.beginPath();
-                ctx.moveTo(x * GLYPH_EDITOR_PIXEL_SIZE, clampY(yOffset) * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.moveTo(
+                    x * GLYPH_EDITOR_PIXEL_SIZE,
+                    clampY(yOffset) * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.lineTo(
                     x * GLYPH_EDITOR_PIXEL_SIZE,
                     clampY(yOffset + height) * GLYPH_EDITOR_PIXEL_SIZE
@@ -521,13 +569,19 @@ export class Glyph extends EezObject {
                     x * GLYPH_EDITOR_PIXEL_SIZE,
                     clampY(yOffset + height) * GLYPH_EDITOR_PIXEL_SIZE
                 );
-                ctx.lineTo(x * GLYPH_EDITOR_PIXEL_SIZE, fontHeight * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.lineTo(
+                    x * GLYPH_EDITOR_PIXEL_SIZE,
+                    fontHeight * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.strokeStyle = GLYPH_EDITOR_GRID_LINE_OUTER_COLOR;
                 ctx.stroke();
             } else {
                 ctx.beginPath();
                 ctx.moveTo(x * GLYPH_EDITOR_PIXEL_SIZE, 0);
-                ctx.lineTo(x * GLYPH_EDITOR_PIXEL_SIZE, fontHeight * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.lineTo(
+                    x * GLYPH_EDITOR_PIXEL_SIZE,
+                    fontHeight * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.strokeStyle = GLYPH_EDITOR_GRID_LINE_OUTER_COLOR;
                 ctx.stroke();
             }
@@ -538,12 +592,18 @@ export class Glyph extends EezObject {
             if (y >= yOffset && y <= yOffset + height) {
                 ctx.beginPath();
                 ctx.moveTo(0, y * GLYPH_EDITOR_PIXEL_SIZE);
-                ctx.lineTo(clampX(xOffset) * GLYPH_EDITOR_PIXEL_SIZE, y * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.lineTo(
+                    clampX(xOffset) * GLYPH_EDITOR_PIXEL_SIZE,
+                    y * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.strokeStyle = GLYPH_EDITOR_GRID_LINE_OUTER_COLOR;
                 ctx.stroke();
 
                 ctx.beginPath();
-                ctx.moveTo(clampX(xOffset) * GLYPH_EDITOR_PIXEL_SIZE, y * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.moveTo(
+                    clampX(xOffset) * GLYPH_EDITOR_PIXEL_SIZE,
+                    y * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.lineTo(
                     clampX(xOffset + width) * GLYPH_EDITOR_PIXEL_SIZE,
                     y * GLYPH_EDITOR_PIXEL_SIZE
@@ -556,13 +616,19 @@ export class Glyph extends EezObject {
                     clampX(xOffset + width) * GLYPH_EDITOR_PIXEL_SIZE,
                     y * GLYPH_EDITOR_PIXEL_SIZE
                 );
-                ctx.lineTo(dx * GLYPH_EDITOR_PIXEL_SIZE, y * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.lineTo(
+                    dx * GLYPH_EDITOR_PIXEL_SIZE,
+                    y * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.strokeStyle = GLYPH_EDITOR_GRID_LINE_OUTER_COLOR;
                 ctx.stroke();
             } else {
                 ctx.beginPath();
                 ctx.moveTo(0, y * GLYPH_EDITOR_PIXEL_SIZE);
-                ctx.lineTo(dx * GLYPH_EDITOR_PIXEL_SIZE, y * GLYPH_EDITOR_PIXEL_SIZE);
+                ctx.lineTo(
+                    dx * GLYPH_EDITOR_PIXEL_SIZE,
+                    y * GLYPH_EDITOR_PIXEL_SIZE
+                );
                 ctx.strokeStyle = GLYPH_EDITOR_GRID_LINE_OUTER_COLOR;
                 ctx.stroke();
             }
@@ -571,7 +637,10 @@ export class Glyph extends EezObject {
         // draw ascent line
         ctx.beginPath();
         ctx.moveTo(0, fontAscent * GLYPH_EDITOR_PIXEL_SIZE);
-        ctx.lineTo(dx * GLYPH_EDITOR_PIXEL_SIZE, fontAscent * GLYPH_EDITOR_PIXEL_SIZE);
+        ctx.lineTo(
+            dx * GLYPH_EDITOR_PIXEL_SIZE,
+            fontAscent * GLYPH_EDITOR_PIXEL_SIZE
+        );
         ctx.strokeStyle = GLYPH_EDITOR_BASE_LINE_COLOR;
         ctx.stroke();
 
@@ -580,7 +649,12 @@ export class Glyph extends EezObject {
             ctx.fillStyle = "black";
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    const pixelValue = getPixel(this.glyphBitmap, x, y, font.bpp);
+                    const pixelValue = getPixel(
+                        this.glyphBitmap,
+                        x,
+                        y,
+                        font.bpp
+                    );
 
                     if (font.bpp === 8) {
                         ctx.globalAlpha = pixelValue / 255;
@@ -608,7 +682,8 @@ export class Glyph extends EezObject {
         const MEASURE_LINE_COLOR = "#aaa";
         const MEASURE_LINE_LABEL_COLOR = "#999";
         const MEASURE_LINE_LABEL_FONT_SIZE = 12;
-        const MEASURE_LINE_LABEL_FONT = MEASURE_LINE_LABEL_FONT_SIZE + "px Arial";
+        const MEASURE_LINE_LABEL_FONT =
+            MEASURE_LINE_LABEL_FONT_SIZE + "px Arial";
 
         ctx.strokeStyle = MEASURE_LINE_COLOR;
         ctx.fillStyle = MEASURE_LINE_LABEL_COLOR;
@@ -628,29 +703,53 @@ export class Glyph extends EezObject {
 
         const drawLeftArrow = (x: number, y: number) => {
             beginDrawArrow(x, y);
-            ctx.lineTo(x + MEASURE_LINE_ARROW_WIDTH, y - MEASURE_LINE_ARROW_HEIGHT / 2);
-            ctx.lineTo(x + MEASURE_LINE_ARROW_WIDTH, y + MEASURE_LINE_ARROW_HEIGHT / 2);
+            ctx.lineTo(
+                x + MEASURE_LINE_ARROW_WIDTH,
+                y - MEASURE_LINE_ARROW_HEIGHT / 2
+            );
+            ctx.lineTo(
+                x + MEASURE_LINE_ARROW_WIDTH,
+                y + MEASURE_LINE_ARROW_HEIGHT / 2
+            );
             endDrawArrow();
         };
 
         const drawRightArrow = (x: number, y: number) => {
             beginDrawArrow(x, y);
-            ctx.lineTo(x - MEASURE_LINE_ARROW_WIDTH, y - MEASURE_LINE_ARROW_HEIGHT / 2);
-            ctx.lineTo(x - MEASURE_LINE_ARROW_WIDTH, y + MEASURE_LINE_ARROW_HEIGHT / 2);
+            ctx.lineTo(
+                x - MEASURE_LINE_ARROW_WIDTH,
+                y - MEASURE_LINE_ARROW_HEIGHT / 2
+            );
+            ctx.lineTo(
+                x - MEASURE_LINE_ARROW_WIDTH,
+                y + MEASURE_LINE_ARROW_HEIGHT / 2
+            );
             endDrawArrow();
         };
 
         const drawTopArrow = (x: number, y: number) => {
             beginDrawArrow(x, y);
-            ctx.lineTo(x - MEASURE_LINE_ARROW_HEIGHT / 2, y + MEASURE_LINE_ARROW_WIDTH);
-            ctx.lineTo(x + MEASURE_LINE_ARROW_HEIGHT / 2, y + MEASURE_LINE_ARROW_WIDTH);
+            ctx.lineTo(
+                x - MEASURE_LINE_ARROW_HEIGHT / 2,
+                y + MEASURE_LINE_ARROW_WIDTH
+            );
+            ctx.lineTo(
+                x + MEASURE_LINE_ARROW_HEIGHT / 2,
+                y + MEASURE_LINE_ARROW_WIDTH
+            );
             endDrawArrow();
         };
 
         const drawBottomArrow = (x: number, y: number) => {
             beginDrawArrow(x, y);
-            ctx.lineTo(x - MEASURE_LINE_ARROW_HEIGHT / 2, y - MEASURE_LINE_ARROW_WIDTH);
-            ctx.lineTo(x + MEASURE_LINE_ARROW_HEIGHT / 2, y - MEASURE_LINE_ARROW_WIDTH);
+            ctx.lineTo(
+                x - MEASURE_LINE_ARROW_HEIGHT / 2,
+                y - MEASURE_LINE_ARROW_WIDTH
+            );
+            ctx.lineTo(
+                x + MEASURE_LINE_ARROW_HEIGHT / 2,
+                y - MEASURE_LINE_ARROW_WIDTH
+            );
             endDrawArrow();
         };
 
@@ -680,7 +779,10 @@ export class Glyph extends EezObject {
             } else {
                 y1 = y + lineOffset;
                 y2 = y1 - MEASURE_LINE_ARROW_HEIGHT / 2;
-                y3 = y1 + MEASURE_LINE_ARROW_HEIGHT + MEASURE_LINE_LABEL_FONT_SIZE / 2;
+                y3 =
+                    y1 +
+                    MEASURE_LINE_ARROW_HEIGHT +
+                    MEASURE_LINE_LABEL_FONT_SIZE / 2;
             }
 
             ctx.beginPath();
@@ -738,7 +840,10 @@ export class Glyph extends EezObject {
             } else {
                 x1 = x + lineOffset;
                 x2 = x1 - MEASURE_LINE_ARROW_HEIGHT / 2;
-                x3 = x1 + MEASURE_LINE_ARROW_HEIGHT + MEASURE_LINE_LABEL_FONT_SIZE / 2;
+                x3 =
+                    x1 +
+                    MEASURE_LINE_ARROW_HEIGHT +
+                    MEASURE_LINE_LABEL_FONT_SIZE / 2;
             }
 
             ctx.beginPath();
@@ -858,18 +963,32 @@ export class Glyph extends EezObject {
 
         return {
             x: GLYPH_EDITOR_PADDING_LEFT + x * GLYPH_EDITOR_PIXEL_SIZE,
-            y: GLYPH_EDITOR_PADDING_TOP + (fontAscent - (y + height)) * GLYPH_EDITOR_PIXEL_SIZE
+            y:
+                GLYPH_EDITOR_PADDING_TOP +
+                (fontAscent - (y + height)) * GLYPH_EDITOR_PIXEL_SIZE
         };
     }
 
-    editorImageHitTest(xTest: number, yTest: number): EditorImageHitTestResult | undefined {
+    editorImageHitTest(
+        xTest: number,
+        yTest: number
+    ): EditorImageHitTestResult | undefined {
         let width = this.width || 0;
         let height = this.height || 0;
 
-        let xResult = Math.floor((xTest - this.topLeftOffset.x) / GLYPH_EDITOR_PIXEL_SIZE);
-        let yResult = Math.floor((yTest - this.topLeftOffset.y) / GLYPH_EDITOR_PIXEL_SIZE);
+        let xResult = Math.floor(
+            (xTest - this.topLeftOffset.x) / GLYPH_EDITOR_PIXEL_SIZE
+        );
+        let yResult = Math.floor(
+            (yTest - this.topLeftOffset.y) / GLYPH_EDITOR_PIXEL_SIZE
+        );
 
-        if (xResult < 0 || xResult >= width || yResult < 0 || yResult >= height) {
+        if (
+            xResult < 0 ||
+            xResult >= width ||
+            yResult < 0 ||
+            yResult >= height
+        ) {
             return undefined;
         }
 
@@ -891,7 +1010,10 @@ export class Glyph extends EezObject {
 
     copyToClipboard() {
         if (this.glyphBitmap) {
-            const buffer = Buffer.alloc(this.glyphBitmap.width * this.glyphBitmap.height * 4, 0);
+            const buffer = Buffer.alloc(
+                this.glyphBitmap.width * this.glyphBitmap.height * 4,
+                0
+            );
 
             for (let x = 0; x < this.glyphBitmap.width; x++) {
                 for (let y = 0; y < this.glyphBitmap.height; y++) {
@@ -903,8 +1025,8 @@ export class Glyph extends EezObject {
                 }
             }
 
-            EEZStudio.electron.remote.clipboard.writeImage(
-                EEZStudio.electron.remote.nativeImage.createFromBuffer(buffer, {
+            EEZStudio.remote.clipboard.writeImage(
+                EEZStudio.remote.nativeImage.createFromBuffer(buffer, {
                     width: this.glyphBitmap.width,
                     height: this.glyphBitmap.height
                 })
@@ -913,7 +1035,7 @@ export class Glyph extends EezObject {
     }
 
     pasteFromClipboard() {
-        const image = EEZStudio.electron.remote.clipboard.readImage();
+        const image = EEZStudio.remote.clipboard.readImage();
         if (image) {
             const buffer = image.getBitmap();
 
@@ -923,11 +1045,12 @@ export class Glyph extends EezObject {
 
             for (let x = 0; x < width; x++) {
                 for (let y = 0; y < height; y++) {
-                    pixelArray[y * width + x] = 255 - buffer[(y * width + x) * 4];
+                    pixelArray[y * width + x] =
+                        255 - buffer[(y * width + x) * 4];
                 }
             }
 
-            getProjectStore(this).updateObject(this, {
+            getDocumentStore(this).updateObject(this, {
                 width,
                 height,
                 glyphBitmap: {
@@ -952,7 +1075,7 @@ const GlyphSelectFieldContainerDiv = styled.div`
 @observer
 export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     fontFilePath: string;
     fontBpp: number;
@@ -1011,7 +1134,10 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
             fontSize,
             fontThreshold
         });
-        if (GlyphSelectFieldType.fontsCache.length > GlyphSelectFieldType.MAX_CACHED_FONTS) {
+        if (
+            GlyphSelectFieldType.fontsCache.length >
+            GlyphSelectFieldType.MAX_CACHED_FONTS
+        ) {
             GlyphSelectFieldType.fontsCache.shift();
         }
     }
@@ -1040,7 +1166,9 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
             return;
         }
 
-        let fontBpp: number = this.props.values[this.props.fieldProperties.options.fontBppField];
+        let fontBpp: number = this.props.values[
+            this.props.fieldProperties.options.fontBppField
+        ];
         if (!fontBpp) {
             return;
         }
@@ -1049,7 +1177,9 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
         let fontThreshold: number = 0;
 
         if (!fontFilePath.toLowerCase().endsWith(".bdf")) {
-            fontSize = this.props.values[this.props.fieldProperties.options.fontSizeField];
+            fontSize = this.props.values[
+                this.props.fieldProperties.options.fontSizeField
+            ];
             if (!fontSize || fontSize < 6 || fontSize > 100) {
                 return;
             }
@@ -1058,7 +1188,11 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                 fontThreshold = this.props.values[
                     this.props.fieldProperties.options.fontThresholdField
                 ];
-                if (!fontThreshold || fontThreshold < 1 || fontThreshold > 255) {
+                if (
+                    !fontThreshold ||
+                    fontThreshold < 1 ||
+                    fontThreshold > 255
+                ) {
                     return;
                 }
             }
@@ -1089,12 +1223,15 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                     font,
                     font.glyphs.find(
                         glyph =>
-                            glyph.encoding == this.props.values[this.props.fieldProperties.name]
+                            glyph.encoding ==
+                            this.props.values[this.props.fieldProperties.name]
                     )
                 );
             } else {
                 extractFont({
-                    absoluteFilePath: this.context.getAbsoluteFilePath(fontFilePath),
+                    absoluteFilePath: this.context.getAbsoluteFilePath(
+                        fontFilePath
+                    ),
                     relativeFilePath: fontFilePath,
                     bpp: fontBpp,
                     size: fontSize,
@@ -1102,7 +1239,12 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                     createGlyphs: true
                 })
                     .then((fontValue: FontValue) => {
-                        const font: Font = loadObject(undefined, fontValue, Font) as Font;
+                        const font: Font = loadObject(
+                            this.context,
+                            undefined,
+                            fontValue,
+                            Font
+                        ) as Font;
 
                         GlyphSelectFieldType.putFontInCache(
                             font,
@@ -1117,7 +1259,9 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                             font.glyphs.find(
                                 glyph =>
                                     glyph.encoding ==
-                                    this.props.values[this.props.fieldProperties.name]
+                                    this.props.values[
+                                        this.props.fieldProperties.name
+                                    ]
                             )
                         );
                     })
@@ -1163,7 +1307,9 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
     render() {
         if (this.font) {
             return (
-                <GlyphSelectFieldContainerDiv ref={(ref: any) => (this.glyphsContainer = ref)}>
+                <GlyphSelectFieldContainerDiv
+                    ref={(ref: any) => (this.glyphsContainer = ref)}
+                >
                     <Glyphs
                         ref={ref => (this.glyphs = ref!)}
                         glyphs={this.font.glyphs}
@@ -1174,7 +1320,11 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                 </GlyphSelectFieldContainerDiv>
             );
         } else {
-            return <div style={{ padding: 20 }}>{this.isLoading && <Loader />}</div>;
+            return (
+                <div style={{ padding: 20 }}>
+                    {this.isLoading && <Loader />}
+                </div>
+            );
         }
     }
 }
@@ -1206,7 +1356,10 @@ const GlyphComponent = observer(
         React.useEffect(() => {
             if (refDiv.current) {
                 if (refDiv.current.children[0]) {
-                    refDiv.current.replaceChild(canvas, refDiv.current.children[0]);
+                    refDiv.current.replaceChild(
+                        canvas,
+                        refDiv.current.children[0]
+                    );
                 } else {
                     refDiv.current.appendChild(canvas);
                 }
@@ -1291,7 +1444,8 @@ const GlyphsDiv = styled.div`
             cursor: pointer;
 
             &.selected {
-                border: 2px solid ${props => props.theme.selectionBackgroundColor};
+                border: 2px solid
+                    ${props => props.theme.selectionBackgroundColor};
             }
 
             & > div {
@@ -1359,7 +1513,10 @@ class Glyphs extends React.Component<{
         setTimeout(() => {
             const $selectedGlyph = $(this.list).find(".selected");
             if ($selectedGlyph.length == 1) {
-                $selectedGlyph[0].scrollIntoView({ block: "nearest", behavior: "auto" });
+                $selectedGlyph[0].scrollIntoView({
+                    block: "nearest",
+                    behavior: "auto"
+                });
             }
         }, 100);
     }
@@ -1465,7 +1622,7 @@ class GlyphEditor extends React.Component<{
     glyph: Glyph | undefined;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     div: HTMLDivElement;
 
@@ -1497,7 +1654,12 @@ class GlyphEditor extends React.Component<{
                 glyphBitmap,
                 this.hitTestResult.x,
                 this.hitTestResult.y,
-                this.props.glyph.getPixel(this.hitTestResult.x, this.hitTestResult.y) ? 0 : 255,
+                this.props.glyph.getPixel(
+                    this.hitTestResult.x,
+                    this.hitTestResult.y
+                )
+                    ? 0
+                    : 255,
                 font.bpp
             );
 
@@ -1614,9 +1776,8 @@ export class FontEditor
         onDoubleClickItem?: (item: IEezObject) => void;
     }>
     implements IPanel {
-
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     get glyphs() {
         let font = this.props.font;
@@ -1628,7 +1789,9 @@ export class FontEditor
     get selectedGlyph() {
         let selectedGlyph = this._selectedGlyph;
         if (selectedGlyph && selectedGlyph.font != this.props.font) {
-            selectedGlyph = this.props.font.glyphsMap.get(selectedGlyph.encoding);
+            selectedGlyph = this.props.font.glyphsMap.get(
+                selectedGlyph.encoding
+            );
         }
         return selectedGlyph;
     }
@@ -1661,7 +1824,10 @@ export class FontEditor
     }
 
     get selectedObject() {
-        if (this.selectedGlyph && getParent(this.selectedGlyph) == this.props.font.glyphs) {
+        if (
+            this.selectedGlyph &&
+            getParent(this.selectedGlyph) == this.props.font.glyphs
+        ) {
             return this.selectedGlyph;
         } else {
             return this.props.font;
@@ -1698,7 +1864,10 @@ export class FontEditor
                 projectFilePath: this.context.filePath!
             });
 
-            this.context.replaceObject(font, loadObject(getParent(font), newFont, Font));
+            this.context.replaceObject(
+                font,
+                loadObject(this.context, getParent(font), newFont, Font)
+            );
 
             notification.info(`Font rebuilded.`);
         } catch (err) {
@@ -1709,7 +1878,10 @@ export class FontEditor
     @action.bound
     onAddGlyph() {
         const font = this.props.font;
-        let newGlyph = cloneObject(undefined, font.glyphs[font.glyphs.length - 1]) as Glyph;
+        let newGlyph = cloneObject(
+            this.context,
+            font.glyphs[font.glyphs.length - 1]
+        ) as Glyph;
         newGlyph.encoding = newGlyph.encoding + 1;
         newGlyph = this.context.addObject(font.glyphs, newGlyph) as Glyph;
         this._selectedGlyph = newGlyph;
@@ -1719,15 +1891,18 @@ export class FontEditor
     onDeleteGlyph() {
         const font = this.props.font;
         let selectedGlyph = this.selectedGlyph;
-        if (selectedGlyph && font.glyphs[font.glyphs.length - 1] == selectedGlyph) {
+        if (
+            selectedGlyph &&
+            font.glyphs[font.glyphs.length - 1] == selectedGlyph
+        ) {
             this.context.deleteObject(selectedGlyph);
         }
     }
 
     @bind
     async onCreateShadow() {
-        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showOpenDialog(
+            EEZStudio.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
                 filters: [
@@ -1756,7 +1931,12 @@ export class FontEditor
                 ctx.clearRect(0, 0, image.width, image.height);
                 ctx.drawImage(image, 0, 0);
 
-                let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
+                let imageData = ctx.getImageData(
+                    0,
+                    0,
+                    image.width,
+                    image.height
+                ).data;
 
                 const font = this.props.font;
 
@@ -1765,7 +1945,8 @@ export class FontEditor
 
                 const darkest =
                     imageData[
-                        (Math.round(image.width / 2) * image.width + Math.round(image.height / 2)) *
+                        (Math.round(image.width / 2) * image.width +
+                            Math.round(image.height / 2)) *
                             4 +
                             2
                     ];
@@ -1774,9 +1955,15 @@ export class FontEditor
                     const pixelArray = [];
                     for (let y = 0; y < glyphHeight; y++) {
                         for (let x = 0; x < glyphWidth; x++) {
-                            const blue = imageData[((top + y) * image.width + left + x) * 4 + 2];
-                            const shadow = ((255 - blue) / (255 - darkest)) * 255;
-                            pixelArray.push(Math.max(Math.min(255, Math.round(shadow)), 0));
+                            const blue =
+                                imageData[
+                                    ((top + y) * image.width + left + x) * 4 + 2
+                                ];
+                            const shadow =
+                                ((255 - blue) / (255 - darkest)) * 255;
+                            pixelArray.push(
+                                Math.max(Math.min(255, Math.round(shadow)), 0)
+                            );
                         }
                     }
                     return pixelArray;
@@ -1789,7 +1976,10 @@ export class FontEditor
                 };
 
                 font.glyphs[1].glyphBitmap = {
-                    pixelArray: getPixelArray(Math.round((image.width - glyphWidth) / 2), 0),
+                    pixelArray: getPixelArray(
+                        Math.round((image.width - glyphWidth) / 2),
+                        0
+                    ),
                     width: glyphWidth,
                     height: glyphHeight
                 };
@@ -1801,7 +1991,10 @@ export class FontEditor
                 };
 
                 font.glyphs[3].glyphBitmap = {
-                    pixelArray: getPixelArray(0, (image.height - glyphHeight) / 2),
+                    pixelArray: getPixelArray(
+                        0,
+                        (image.height - glyphHeight) / 2
+                    ),
                     width: glyphWidth,
                     height: glyphHeight
                 };
@@ -1831,7 +2024,10 @@ export class FontEditor
                 };
 
                 font.glyphs[7].glyphBitmap = {
-                    pixelArray: getPixelArray(image.width - glyphWidth, image.height - glyphHeight),
+                    pixelArray: getPixelArray(
+                        image.width - glyphWidth,
+                        image.height - glyphHeight
+                    ),
                     width: glyphWidth,
                     height: glyphHeight
                 };
@@ -1861,7 +2057,10 @@ export class FontEditor
         const isDialog = !!this.props.navigationStore;
 
         let onDeleteGlyph: (() => void) | undefined;
-        if (this.selectedGlyph && font.glyphs[font.glyphs.length - 1] == this.selectedGlyph) {
+        if (
+            this.selectedGlyph &&
+            font.glyphs[font.glyphs.length - 1] == this.selectedGlyph
+        ) {
             onDeleteGlyph = this.onDeleteGlyph;
         }
 
@@ -1873,10 +2072,14 @@ export class FontEditor
                 glyphs={this.glyphs}
                 selectedGlyph={this.selectedGlyph}
                 onSelectGlyph={this.onSelectGlyph}
-                onDoubleClickGlyph={this.props.onDoubleClickItem || this.onBrowseGlyph}
+                onDoubleClickGlyph={
+                    this.props.onDoubleClickItem || this.onBrowseGlyph
+                }
                 onRebuildGlyphs={onRebuildGlyphs}
                 onBrowseGlyph={
-                    isDialog && this.selectedGlyph ? this.onBrowseSelectedGlyph : undefined
+                    isDialog && this.selectedGlyph
+                        ? this.onBrowseSelectedGlyph
+                        : undefined
                 }
                 onAddGlyph={this.onAddGlyph}
                 onDeleteGlyph={onDeleteGlyph}
@@ -1909,7 +2112,7 @@ export class FontEditor
 @observer
 export class FontsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     static getFont(object: IEezObject | undefined) {
         while (object) {
@@ -1923,10 +2126,13 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
 
         if (navigationStore.selectedPanel) {
-            const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);
+            const font = FontsNavigation.getFont(
+                navigationStore.selectedPanel.selectedObject
+            );
             if (font) {
                 return navigationStore.selectedPanel.selectedObject;
             }
@@ -1942,10 +2148,13 @@ export class FontsNavigation extends NavigationComponent {
 
     @computed
     get font() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
 
         if (navigationStore.selectedPanel) {
-            const font = FontsNavigation.getFont(navigationStore.selectedPanel.selectedObject);
+            const font = FontsNavigation.getFont(
+                navigationStore.selectedPanel.selectedObject
+            );
             if (font) {
                 return font;
             }
@@ -2152,8 +2361,11 @@ export class Font extends EezObject implements IFont {
             }
 
             function isNonBdfFont(obj: IEezObject) {
-                const path = EEZStudio.electron.remote.require("path");
-                return isFont(obj) && path.extname(getProperty(obj, "filePath")) != ".bdf";
+                const path = EEZStudio.remote.require("path");
+                return (
+                    isFont(obj) &&
+                    path.extname(getProperty(obj, "filePath")) != ".bdf"
+                );
             }
 
             function isNonBdfFontAnd1BitPerPixel(obj: IEezObject) {
@@ -2164,14 +2376,17 @@ export class Font extends EezObject implements IFont {
                 return isFont(obj) && getProperty(obj, "createGlyphs");
             }
 
-            return showGenericDialog(getProjectStore(parent), {
+            return showGenericDialog(getDocumentStore(parent), {
                 dialogDefinition: {
                     title: "New Font",
                     fields: [
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique(undefined, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique(undefined, parent)
+                            ]
                         },
                         {
                             name: "filePath",
@@ -2180,7 +2395,10 @@ export class Font extends EezObject implements IFont {
                             validators: [validators.required],
                             options: {
                                 filters: [
-                                    { name: "Font files", extensions: ["bdf", "ttf", "otf"] },
+                                    {
+                                        name: "Font files",
+                                        extensions: ["bdf", "ttf", "otf"]
+                                    },
                                     { name: "All Files", extensions: ["*"] }
                                 ]
                             }
@@ -2236,7 +2454,9 @@ export class Font extends EezObject implements IFont {
                 .then(result => {
                     return extractFont({
                         name: result.values.name,
-                        absoluteFilePath: getProjectStore(parent).getAbsoluteFilePath(result.values.filePath),
+                        absoluteFilePath: getDocumentStore(
+                            parent
+                        ).getAbsoluteFilePath(result.values.filePath),
                         relativeFilePath: result.values.filePath,
                         bpp: result.values.bpp,
                         size: result.values.size,
@@ -2247,7 +2467,9 @@ export class Font extends EezObject implements IFont {
                         createBlankGlyphs: result.values.createBlankGlyphs
                     })
                         .then(font => {
-                            notification.info(`Added ${result.values.name} font.`);
+                            notification.info(
+                                `Added ${result.values.name} font.`
+                            );
                             return font;
                         })
                         .catch(err => {
@@ -2261,9 +2483,13 @@ export class Font extends EezObject implements IFont {
                             }
 
                             if (errorMessage) {
-                                notification.error(`Adding ${Font.name} failed: ${errorMessage}!`);
+                                notification.error(
+                                    `Adding ${Font.name} failed: ${errorMessage}!`
+                                );
                             } else {
-                                notification.error(`Adding ${Font.name} failed!`);
+                                notification.error(
+                                    `Adding ${Font.name} failed!`
+                                );
                             }
 
                             return false;
@@ -2300,5 +2526,7 @@ export function findFont(project: Project, fontName: string | undefined) {
     if (fontName == undefined) {
         return undefined;
     }
-    return findReferencedObject(project, "gui/fonts", fontName) as Font | undefined;
+    return findReferencedObject(project, "gui/fonts", fontName) as
+        | Font
+        | undefined;
 }

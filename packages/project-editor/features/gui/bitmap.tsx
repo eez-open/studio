@@ -18,13 +18,19 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
 
+import { getDocumentStore } from "project-editor/core/store";
+
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
 
 import { ProjectContext } from "project-editor/project/context";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { Project, findReferencedObject, getProject, getProjectStore } from "project-editor/project/project";
+import {
+    Project,
+    findReferencedObject,
+    getProject
+} from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,9 +62,13 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
 
         return (
             <BitmapEditorContainer>
-                <img src={bitmap.image} style={{ backgroundColor: bitmap.backgroundColor }} />
+                <img
+                    src={bitmap.image}
+                    style={{ backgroundColor: bitmap.backgroundColor }}
+                />
                 <h4>
-                    Dimension: {bitmap.imageElement.width} x {bitmap.imageElement.height}
+                    Dimension: {bitmap.imageElement.width} x{" "}
+                    {bitmap.imageElement.height}
                 </h4>
             </BitmapEditorContainer>
         );
@@ -70,13 +80,17 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
 @observer
 export class BitmapsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @computed
     get bitmap() {
         if (this.context.NavigationStore.selectedPanel) {
-            if (this.context.NavigationStore.selectedPanel.selectedObject instanceof Bitmap) {
-                return this.context.NavigationStore.selectedPanel.selectedObject;
+            if (
+                this.context.NavigationStore.selectedPanel
+                    .selectedObject instanceof Bitmap
+            ) {
+                return this.context.NavigationStore.selectedPanel
+                    .selectedObject;
             }
         }
 
@@ -95,7 +109,10 @@ export class BitmapsNavigation extends NavigationComponent {
                 sizes={"240px|100%|400px"}
                 childrenOverflow={"hidden|hidden|hidden"}
             >
-                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
+                <ListNavigation
+                    id={this.props.id}
+                    navigationObject={this.props.navigationObject}
+                />
                 {this.bitmap ? <BitmapEditor bitmap={this.bitmap} /> : <div />}
                 <PropertiesPanel object={this.bitmap} />
             </Splitter>
@@ -165,7 +182,10 @@ export class Bitmap extends EezObject implements IBitmap {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
                         },
                         {
                             name: "imageFilePath",
@@ -174,7 +194,10 @@ export class Bitmap extends EezObject implements IBitmap {
                             validators: [validators.required],
                             options: {
                                 filters: [
-                                    { name: "PNG Image files", extensions: ["png"] },
+                                    {
+                                        name: "PNG Image files",
+                                        extensions: ["png"]
+                                    },
                                     { name: "All Files", extensions: ["*"] }
                                 ]
                             }
@@ -192,9 +215,11 @@ export class Bitmap extends EezObject implements IBitmap {
                 }
             }).then(result => {
                 return new Promise<IBitmap>((resolve, reject) => {
-                    const fs = EEZStudio.electron.remote.require("fs");
+                    const fs = EEZStudio.remote.require("fs");
                     fs.readFile(
-                        getProjectStore(parent).getAbsoluteFilePath(result.values.imageFilePath),
+                        getDocumentStore(parent).getAbsoluteFilePath(
+                            result.values.imageFilePath
+                        ),
                         "base64",
                         (err: any, data: any) => {
                             if (err) {
@@ -225,7 +250,10 @@ export class Bitmap extends EezObject implements IBitmap {
         if (this.bpp !== 32) {
             const style = findStyle(getProject(this), this.style || "default");
             if (style && style.backgroundColorProperty) {
-                return getThemedColor(getProjectStore(this), style.backgroundColorProperty);
+                return getThemedColor(
+                    getDocumentStore(this),
+                    style.backgroundColorProperty
+                );
             }
         }
         return "transparent";
@@ -289,9 +317,12 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
 
             ctx.drawImage(image, 0, 0);
 
-            let imageData = ctx.getImageData(0, 0, image.width, image.height).data;
+            let imageData = ctx.getImageData(0, 0, image.width, image.height)
+                .data;
 
-            let pixels = new Uint8Array((bitmap.bpp === 32 ? 4 : 2) * image.width * image.height);
+            let pixels = new Uint8Array(
+                (bitmap.bpp === 32 ? 4 : 2) * image.width * image.height
+            );
 
             for (let i = 0; i < 4 * image.width * image.height; i += 4) {
                 let r = imageData[i];
@@ -328,5 +359,7 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findBitmap(project: Project, bitmapName: any) {
-    return findReferencedObject(project, "gui/bitmaps", bitmapName) as Bitmap | undefined;
+    return findReferencedObject(project, "gui/bitmaps", bitmapName) as
+        | Bitmap
+        | undefined;
 }

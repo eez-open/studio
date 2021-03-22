@@ -22,6 +22,9 @@ export interface ThemeInterface {
     errorColor: string;
     actionTextColor: string;
     actionHoverColor: string;
+    connectionLineColor: string;
+    selectedConnectionLineColor: string;
+    connectionLineInTheMakingColor: string;
 }
 
 export const theme: ThemeInterface = {
@@ -47,5 +50,8 @@ export const theme: ThemeInterface = {
     dropPlaceColor: "#7c4dff",
     errorColor: "#dc3545",
     actionTextColor: "#007bff",
-    actionHoverColor: "#0056b3"
+    actionHoverColor: "#0056b3",
+    connectionLineColor: "#999",
+    selectedConnectionLineColor: "red",
+    connectionLineInTheMakingColor: "#337bb7"
 };

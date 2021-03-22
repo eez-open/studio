@@ -8,7 +8,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
 import { IconAction } from "eez-studio-ui/action";
 
-const { Menu, MenuItem } = EEZStudio.electron.remote;
+const { Menu, MenuItem } = EEZStudio.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 

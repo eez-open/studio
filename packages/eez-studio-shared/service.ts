@@ -82,7 +82,7 @@ if (isRenderer()) {
             let serviceWindow: Electron.BrowserWindow | undefined;
 
             if (!executeInsideMainProcess) {
-                serviceWindow = EEZStudio.electron.remote.BrowserWindow.getAllWindows().find(
+                serviceWindow = EEZStudio.remote.BrowserWindow.getAllWindows().find(
                     window => window.webContents.getURL().endsWith("shared/service.html")
                 );
             }
@@ -105,7 +105,7 @@ if (isRenderer()) {
                         );
 
                         const task: ITask = {
-                            windowId: EEZStudio.electron.remote.getCurrentWindow().id,
+                            windowId: EEZStudio.remote.getCurrentWindow().id,
                             taskId,
                             serviceName,
                             inputParams: toJS(inputParams)
@@ -135,6 +135,11 @@ if (isRenderer()) {
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {
         webPreferences: {
             nodeIntegration: true,
+            webSecurity: false,
+            webviewTag: true,
+            nodeIntegrationInWorker: true,
+            plugins: true,
+            contextIsolation: false,
             enableRemoteModule: true
         },
         show: false

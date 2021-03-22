@@ -12,13 +12,13 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
+import { getDocumentStore } from "project-editor/core/store";
 
 import { registerFeatureImplementation } from "project-editor/core/extensions";
 
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 
 import { metrics } from "project-editor/features/extension-definitions/metrics";
-import { getProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +47,9 @@ export interface IExtensionDefinition {
     sdlFriendlyName: string;
 }
 
-export class ExtensionDefinition extends EezObject implements IExtensionDefinition {
+export class ExtensionDefinition
+    extends EezObject
+    implements IExtensionDefinition {
     @observable name: string;
     @observable description: string;
     @observable doNotBuild: boolean;
@@ -196,7 +198,10 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
                         }
                     ]
                 },
@@ -215,7 +220,9 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
             let messages: output.Message[] = [];
 
             if (!object.extensionName) {
-                messages.push(output.propertyNotSetMessage(object, "extensionName"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "extensionName")
+                );
             }
 
             if (!object.idn) {
@@ -227,12 +234,15 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
             }
 
             if (!object.idfRevisionNumber) {
-                messages.push(output.propertyNotSetMessage(object, "idfRevisionNumber"));
+                messages.push(
+                    output.propertyNotSetMessage(object, "idfRevisionNumber")
+                );
             }
 
-            const ProjectStore = getProjectStore(object);
+            const DocumentStore = getDocumentStore(object);
 
-            let extensionDefinitions = ProjectStore.project.extensionDefinitions;
+            let extensionDefinitions =
+                DocumentStore.project.extensionDefinitions;
             if (
                 extensionDefinitions.find(
                     extensionDefinition =>
@@ -240,14 +250,18 @@ export class ExtensionDefinition extends EezObject implements IExtensionDefiniti
                         extensionDefinition.idfGuid === object.idfGuid
                 )
             ) {
-                messages.push(output.propertyNotUniqueMessage(object, "idfGuid"));
+                messages.push(
+                    output.propertyNotUniqueMessage(object, "idfGuid")
+                );
             }
 
             if (object.properties) {
                 try {
                     JSON.parse(object.properties);
                 } catch (err) {
-                    messages.push(output.propertyInvalidValueMessage(object, "properties"));
+                    messages.push(
+                        output.propertyInvalidValueMessage(object, "properties")
+                    );
                 }
             }
 

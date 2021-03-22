@@ -1,13 +1,8 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
-import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
+import { observable, computed } from "mobx";
 
 import { _find } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
-
-import { Splitter } from "eez-studio-ui/splitter";
-import { IconAction } from "eez-studio-ui/action";
 
 import {
     IEezObject,
@@ -17,286 +12,50 @@ import {
     registerClass,
     PropertyType,
     isSubclassOf,
-    IEditorState,
     generalGroup,
     geometryGroup,
     styleGroup,
     specificGroup,
-    EditorComponent,
-    NavigationComponent,
-    getParent
+    getParent,
+    getClass,
+    getLabel,
+    cloneObject,
+    getId
 } from "project-editor/core/object";
-import {
-    TreeObjectAdapter,
-    ITreeObjectAdapter,
-    TreeAdapter
-} from "project-editor/core/objectAdapter";
-import type { IPanel } from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { ListNavigation } from "project-editor/components/ListNavigation";
-import { Tree } from "project-editor/components/Tree";
-import { Panel } from "project-editor/components/Panel";
-
 import { DataContext } from "project-editor/features/data/data";
-import {
+import type {
     IResizeHandler,
     IDesignerContext
 } from "project-editor/features/gui/page-editor/designer-interfaces";
-import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page-editor/editor";
-import { WidgetPalette } from "project-editor/features/gui/page-editor/WidgetPalette";
-import { WidgetContainerComponent } from "project-editor/features/gui/page-editor/render";
+import {
+    WidgetContainerComponent,
+    WidgetGeometry
+} from "project-editor/features/gui/page-editor/render";
 
-import { Project, findReferencedObject, getProject, getProjectStore } from "project-editor/project/project";
-import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
+import {
+    Project,
+    findReferencedObject,
+    getProject
+} from "project-editor/project/project";
 
 import { Widget, IWidget } from "project-editor/features/gui/widget";
 
 import { findStyle } from "project-editor/features/gui/style";
-import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
-import { ProjectContext } from "project-editor/project/context";
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class PageEditor extends EditorComponent implements IPanel {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
-
-    @bind
-    focusHandler() {
-        this.context.NavigationStore.setSelectedPanel(this);
-    }
-
-    @computed
-    get treeAdapter() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return new TreeAdapter(pageTabState.widgetContainerDisplayItem, undefined, undefined, true);
-    }
-
-    @computed
-    get selectedObject() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return pageTabState.selectedObject;
-    }
-
-    @computed
-    get selectedObjects() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return pageTabState.selectedObjects;
-    }
-
-    cutSelection() {
-        this.treeAdapter.cutSelection();
-    }
-
-    copySelection() {
-        this.treeAdapter.copySelection();
-    }
-
-    pasteSelection() {
-        this.treeAdapter.pasteSelection();
-    }
-
-    deleteSelection() {
-        this.treeAdapter.deleteSelection();
-    }
-
-    render() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return <StudioPageEditor widgetContainer={pageTabState.widgetContainerDisplayItem} />;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class PageTabState implements IEditorState {
-    page: Page;
-    widgetContainerDisplayItem: ITreeObjectAdapter;
-
-    constructor(object: IEezObject) {
-        this.page = object as Page;
-        this.widgetContainerDisplayItem = new TreeObjectAdapter(this.page);
-    }
-
-    @computed
-    get selectedObject(): IEezObject | undefined {
-        return this.widgetContainerDisplayItem.selectedObject || this.page;
-    }
-
-    @computed
-    get selectedObjects() {
-        return this.widgetContainerDisplayItem.selectedObjects;
-    }
-
-    loadState(state: any) {
-        this.widgetContainerDisplayItem.loadState(state);
-    }
-
-    saveState() {
-        return this.widgetContainerDisplayItem.saveState();
-    }
-
-    @action
-    selectObject(object: IEezObject) {
-        let ancestor: IEezObject | undefined;
-        for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-            let item = this.widgetContainerDisplayItem.getObjectAdapter(ancestor);
-            if (item) {
-                this.widgetContainerDisplayItem.selectItems([item]);
-                return;
-            }
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class PagesNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
-
-    @computed
-    get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
-        }
-        return this.context.NavigationStore.selectedObject;
-    }
-
-    @computed
-    get widgetContainerDisplayItem() {
-        if (!this.context.EditorsStore.activeEditor) {
-            return undefined;
-        }
-        let pageTabState = this.context.EditorsStore.activeEditor.state as PageTabState;
-        if (!pageTabState) {
-            return undefined;
-        }
-        return pageTabState.widgetContainerDisplayItem;
-    }
-
-    @computed
-    get treeAdapter() {
-        if (!this.widgetContainerDisplayItem) {
-            return null;
-        }
-        return new TreeAdapter(this.widgetContainerDisplayItem, undefined, undefined, true);
-    }
-
-    cutSelection() {
-        this.treeAdapter!.cutSelection();
-    }
-
-    copySelection() {
-        this.treeAdapter!.copySelection();
-    }
-
-    pasteSelection() {
-        this.treeAdapter!.pasteSelection();
-    }
-
-    deleteSelection() {
-        this.treeAdapter!.deleteSelection();
-    }
-
-    get selectedObject() {
-        return this.selectedObjects[0];
-    }
-
-    get selectedObjects() {
-        const selectedObjects =
-            this.widgetContainerDisplayItem && this.widgetContainerDisplayItem.selectedObjects;
-        if (selectedObjects && selectedObjects.length > 0) {
-            return selectedObjects;
-        }
-
-        if (this.context.EditorsStore.activeEditor) {
-            let pageTabState = this.context.EditorsStore.activeEditor.state as PageTabState;
-            return [pageTabState.page];
-        }
-
-        return [];
-    }
-
-    @bind
-    onFocus() {
-        this.context.NavigationStore.setSelectedPanel(this);
-    }
-
-    render() {
-        const navigation = (
-            <Splitter
-                type="vertical"
-                persistId="page-editor/navigation-structure"
-                sizes={`50%|50%`}
-                childrenOverflow="hidden|hidden"
-            >
-                <ListNavigation id={this.props.id} navigationObject={this.props.navigationObject} />
-                <Panel
-                    id="page-structure"
-                    title="Page Structure"
-                    body={
-                        this.treeAdapter ? (
-                            <Tree
-                                treeAdapter={this.treeAdapter}
-                                tabIndex={0}
-                                onFocus={this.onFocus}
-                            />
-                        ) : (
-                            <div />
-                        )
-                    }
-                />
-            </Splitter>
-        );
-
-        const buttons: JSX.Element[] = [];
-
-        if (!this.context.UIStateStore.viewOptions.themesVisible) {
-            buttons.push(
-                <IconAction
-                    key="show-themes"
-                    icon="material:palette"
-                    iconSize={16}
-                    onClick={action(() => (this.context.UIStateStore.viewOptions.themesVisible = true))}
-                    title="Show themes panel"
-                ></IconAction>
-            );
-        }
-
-        const properties = (
-            <Splitter
-                type="vertical"
-                persistId="page-editor/properties-widgets-palette"
-                sizes={`100%|200px`}
-                childrenOverflow="hidden|hidden"
-            >
-                <PropertiesPanel object={this.selectedObject} buttons={buttons} />
-                <Panel id="widgets" title="Widgets Palette" body={<WidgetPalette />} />
-            </Splitter>
-        );
-
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={`project-editor/pages${
-                    this.context.UIStateStore.viewOptions.themesVisible ? "" : "-without-themes"
-                }`}
-                sizes={`240px|100%|400px${this.context.UIStateStore.viewOptions.themesVisible ? "|240px" : ""}`}
-                childrenOverflow={`hidden|hidden|hidden${
-                    this.context.UIStateStore.viewOptions.themesVisible ? "|hidden" : ""
-                }`}
-            >
-                {navigation}
-                <Editors />
-                {properties}
-                {this.context.UIStateStore.viewOptions.themesVisible && <ThemesSideView hasCloseButton={true} />}
-            </Splitter>
-        );
-    }
-}
+import { getThemedColor } from "project-editor/features/gui/theme";
+import { visitObjects } from "project-editor/core/search";
+import { deleteObject, ICommandContext } from "project-editor/core/commands";
+import { humanize } from "eez-studio-shared/string";
+import { objectToClipboardData } from "project-editor/core/clipboard";
+import { guid } from "eez-studio-shared/guid";
+import {
+    PageEditor,
+    PagesNavigation,
+    PageTabState
+} from "project-editor/features/gui/PagesNavigation";
+import { Rect } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -384,6 +143,177 @@ registerClass(PageOrientation);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface IConnectionLine {
+    source: string;
+    output: string;
+    target: string;
+    input: string;
+}
+
+export class ConnectionLine extends EezObject implements IConnectionLine {
+    @observable source: string;
+    @observable output: string;
+    @observable target: string;
+    @observable input: string;
+
+    static classInfo: ClassInfo = {
+        label: (connectionLine: ConnectionLine) => {
+            return `${getLabel(connectionLine.sourceWidget!)}@${humanize(
+                connectionLine.output
+            )} ➝ ${getLabel(connectionLine.targetWidget!)}@${humanize(
+                connectionLine.input
+            )}`;
+        },
+
+        properties: [
+            {
+                name: "source",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "output",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "target",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "input",
+                type: PropertyType.String,
+                hideInPropertyGrid: true
+            }
+        ],
+
+        isSelectable: () => true
+    };
+
+    @computed get sourceWidget() {
+        const page = getParent(getParent(this)) as Page;
+        return page.wiredWidgets.get(this.source);
+    }
+
+    @computed get targetWidget() {
+        const page = getParent(getParent(this)) as Page;
+        return page.wiredWidgets.get(this.target);
+    }
+
+    @computed get sourcePosition() {
+        if (!(this.sourceWidget && this.sourceWidget._geometry)) {
+            return undefined;
+        }
+
+        const outputGeometry = this.sourceWidget._geometry.outputs[this.output];
+        if (!outputGeometry) {
+            return undefined;
+        }
+
+        return {
+            x: this.sourceWidget.left + outputGeometry.position.x,
+            y: this.sourceWidget.top + outputGeometry.position.y
+        };
+    }
+
+    @computed get targetPosition() {
+        if (!(this.targetWidget && this.targetWidget._geometry)) {
+            return undefined;
+        }
+        const inputGeometry = this.targetWidget._geometry.inputs[this.input];
+        if (!inputGeometry) {
+            return undefined;
+        }
+
+        return {
+            x: this.targetWidget.left + inputGeometry.position.x,
+            y: this.targetWidget.top + inputGeometry.position.y
+        };
+    }
+}
+
+registerClass(ConnectionLine);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IPageFragment {
+    widgets: IWidget[];
+    connectionLines: IConnectionLine[];
+}
+
+export class PageFragment extends EezObject implements IPageFragment {
+    widgets: Widget[];
+    connectionLines: ConnectionLine[];
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "widgets",
+                type: PropertyType.Array,
+                typeClass: Widget
+            },
+            {
+                name: "connectionLines",
+                type: PropertyType.Array,
+                typeClass: ConnectionLine
+            }
+        ]
+    };
+
+    addObjects(page: Page, objects: IEezObject[]) {
+        this.widgets = [];
+        this.connectionLines = [];
+
+        const DocumentStore = getDocumentStore(page);
+
+        const wireIDMap = new Map<string, string>();
+
+        objects.forEach((object: Widget) => {
+            const clone = cloneObject(DocumentStore, object) as Widget;
+            if (object.wireID) {
+                wireIDMap.set(object.wireID, object.wireID);
+            }
+            this.widgets.push(clone);
+        });
+
+        page.connectionLines.forEach(connectionLine => {
+            const source = wireIDMap.get(connectionLine.source);
+            const target = wireIDMap.get(connectionLine.target);
+            if (source && target) {
+                const clone = cloneObject(
+                    DocumentStore,
+                    connectionLine
+                ) as ConnectionLine;
+                this.connectionLines.push(clone);
+            }
+        });
+    }
+
+    rewire() {
+        const wireIDMap = new Map<string, string>();
+
+        this.widgets.forEach((object: Widget) => {
+            if (object.wireID) {
+                const wireID = guid();
+                wireIDMap.set(object.wireID, wireID);
+                object.wireID = wireID;
+            }
+        });
+
+        this.connectionLines.forEach(connectionLine => {
+            const newSource = wireIDMap.get(connectionLine.source)!;
+            const newTarget = wireIDMap.get(connectionLine.target)!;
+            connectionLine.source = newSource;
+            connectionLine.target = newTarget;
+        });
+    }
+}
+
+registerClass(PageFragment);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export interface IPage {
     name: string;
     description?: string;
@@ -402,6 +332,8 @@ export interface IPage {
     isUsedAsCustomWidget: boolean;
 
     dataContextOverrides: string;
+
+    connectionLines: IConnectionLine[];
 }
 
 export class Page extends EezObject implements IPage {
@@ -422,6 +354,10 @@ export class Page extends EezObject implements IPage {
     @observable isUsedAsCustomWidget: boolean;
 
     @observable dataContextOverrides: string;
+
+    @observable connectionLines: ConnectionLine[];
+
+    @observable _geometry: WidgetGeometry;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -498,6 +434,12 @@ export class Page extends EezObject implements IPage {
                 name: "isUsedAsCustomWidget",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup
+            },
+            {
+                name: "connectionLines",
+                type: PropertyType.Array,
+                typeClass: ConnectionLine,
+                hideInPropertyGrid: true
             }
         ],
         beforeLoadHook: (page: Page, jsObject: any) => {
@@ -514,6 +456,10 @@ export class Page extends EezObject implements IPage {
             if (jsObject["y"] !== undefined) {
                 jsObject["top"] = jsObject["y"];
                 delete jsObject["y"];
+            }
+
+            if (!jsObject.connectionLines) {
+                jsObject.connectionLines = [];
             }
         },
         isPropertyMenuSupported: true,
@@ -536,8 +482,12 @@ export class Page extends EezObject implements IPage {
             classInfo: ClassInfo,
             isSingleObject: boolean
         ): IEezObject | PropertyInfo | undefined => {
-            if (object && isSubclassOf(classInfo, Widget.classInfo)) {
-                return (object as Page).widgets;
+            if (object) {
+                if (isSubclassOf(classInfo, Widget.classInfo)) {
+                    return (object as Page).widgets;
+                } else if (classInfo === PageFragment.classInfo) {
+                    return object;
+                }
             }
             return undefined;
         },
@@ -552,14 +502,87 @@ export class Page extends EezObject implements IPage {
                     JSON.parse(object.dataContextOverrides);
                 } catch {
                     messages.push(
-                        output.propertyInvalidValueMessage(object, "dataContextOverrides")
+                        output.propertyInvalidValueMessage(
+                            object,
+                            "dataContextOverrides"
+                        )
                     );
                 }
             }
 
             return messages;
+        },
+        getRect: (object: Page) => {
+            return {
+                left: object.left,
+                top: object.top,
+                width: object._geometry?.width ?? 0,
+                height: object._geometry?.height ?? 0
+            };
+        },
+        setRect: (object: Page, value: Rect) => {
+            const props: Partial<Rect> = {};
+
+            if (value.left !== object.left) {
+                props.left = value.left;
+            }
+
+            if (value.top !== object.top) {
+                props.top = value.top;
+            }
+
+            if (value.width !== object._geometry?.width ?? 0) {
+                props.width = value.width;
+            }
+
+            if (value.height !== object._geometry?.height ?? 0) {
+                props.height = value.height;
+            }
+
+            const DocumentStore = getDocumentStore(object);
+            DocumentStore.updateObject(object, props);
+        },
+        isMoveable: (object: Page) => {
+            return !object.isAction;
+        },
+        isSelectable: (object: Page) => {
+            return !object.isAction;
+        },
+        showSelectedObjectsParent: (object: Page) => {
+            return !object.isAction;
+        },
+        getResizeHandlers(object: Page) {
+            return object.getResizeHandlers();
         }
     };
+
+    get autoSize() {
+        return false;
+    }
+
+    @computed get isAction() {
+        return getClass(getParent(this)).name == "Action";
+    }
+
+    @computed get wiredWidgets() {
+        const widgets = new Map<string, Widget>();
+
+        const v = visitObjects(this.widgets);
+        while (true) {
+            let visitResult = v.next();
+            if (visitResult.done) {
+                break;
+            }
+            if (visitResult.value instanceof Widget) {
+                const widget = visitResult.value;
+                if (widget.wireID) {
+                    widgets.set(widget.wireID, widget);
+                }
+            }
+        }
+
+        return widgets;
+    }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
         return [
@@ -590,25 +613,87 @@ export class Page extends EezObject implements IPage {
         }
     }
 
-    render(dataContext: DataContext) {
+    deleteConnectionLines(context: ICommandContext, widget: Widget) {
+        this.connectionLines
+            .filter(
+                connectionLine =>
+                    connectionLine.sourceWidget == widget ||
+                    connectionLine.targetWidget == widget
+            )
+            .forEach(connectionLine => deleteObject(context, connectionLine));
+    }
+
+    objectsToClipboardData(objects: IEezObject[]) {
+        const pageFragment = new PageFragment();
+        pageFragment.addObjects(this, objects);
+        return objectToClipboardData(pageFragment);
+    }
+
+    pastePageFragment(pageFragment: PageFragment) {
+        const DocumentStore = getDocumentStore(this);
+
+        DocumentStore.UndoManager.setCombineCommands(true);
+
+        pageFragment.rewire();
+
+        pageFragment.widgets.forEach(widget => {
+            widget.left += 20;
+            widget.top += 20;
+        });
+
+        DocumentStore.addObjects(
+            this.connectionLines,
+            pageFragment.connectionLines
+        );
+
+        const widgets = DocumentStore.addObjects(
+            this.widgets,
+            pageFragment.widgets
+        );
+
+        DocumentStore.UndoManager.setCombineCommands(false);
+
+        return widgets;
+    }
+
+    render(dataContext: DataContext, designerContext: IDesignerContext) {
         return (
             <WidgetContainerComponent
                 widgets={this.widgets}
                 dataContext={
-                    new DataContext(getProject(this), dataContext, this.dataContextOverridesObject)
+                    new DataContext(
+                        getProject(this),
+                        dataContext,
+                        this.dataContextOverridesObject
+                    )
                 }
+                designerContext={designerContext}
             />
         );
     }
 
-    styleHook(style: React.CSSProperties, designerContext: IDesignerContext | undefined) {
+    getClassName() {
+        return "";
+    }
+
+    styleHook(
+        style: React.CSSProperties,
+        designerContext: IDesignerContext | undefined
+    ) {
         const pageStyle = findStyle(getProject(this), this.style || "default");
         if (pageStyle && pageStyle.backgroundColorProperty) {
             style.backgroundColor = to16bitsColor(
-                getThemedColor(getProjectStore(style), pageStyle.backgroundColorProperty)
+                getThemedColor(
+                    getDocumentStore(style),
+                    pageStyle.backgroundColorProperty
+                )
             );
-        } else {
-            console.log(this.style, pageStyle);
+        }
+
+        if (!designerContext?.document.findObjectById(getId(this))) {
+            // this is layout widget page,
+            // forbid interaction with the content
+            style.pointerEvents = "none";
         }
     }
 }
@@ -618,5 +703,7 @@ registerClass(Page);
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findPage(project: Project, pageName: string) {
-    return findReferencedObject(project, "gui/pages", pageName) as Page | undefined;
+    return findReferencedObject(project, "gui/pages", pageName) as
+        | Page
+        | undefined;
 }

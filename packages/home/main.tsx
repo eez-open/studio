@@ -2,7 +2,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { configure } from "mobx";
-import "mobx-react-lite/batchingForReactDom";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
@@ -41,7 +40,7 @@ EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
 EEZStudio.electron.ipcRenderer.on("reload", async () => {
     for (const tab of tabs.tabs) {
         if (tab instanceof ProjectEditorTab) {
-            await tab.ProjectStore.saveUIState();
+            await tab.DocumentStore.saveUIState();
         }
     }
 
@@ -72,7 +71,10 @@ EEZStudio.electron.ipcRenderer.on(
     "open-project",
     async (sender: any, filePath: any) => {
         try {
-            const tab = await ProjectEditorTab.addTab(filePath);
+            let tab = tabs.findProjectEditorTab(filePath);
+            if (!tab) {
+                tab = await ProjectEditorTab.addTab(filePath);
+            }
             if (tab) {
                 tab.makeActive();
             }

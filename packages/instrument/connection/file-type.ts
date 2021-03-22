@@ -68,6 +68,11 @@ export function convertBmpToPng(data: string) {
         let browserWindow = new BrowserWindow({
             webPreferences: {
                 nodeIntegration: true,
+                webSecurity: false,
+                webviewTag: true,
+                nodeIntegrationInWorker: true,
+                plugins: true,
+                contextIsolation: false,
                 enableRemoteModule: true
             },
             show: false

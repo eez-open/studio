@@ -14,7 +14,8 @@ import {
     isValue,
     getParent,
     getClassInfo,
-    getEditorComponent
+    getEditorComponent,
+    getClass
 } from "project-editor/core/object";
 import { startSearch } from "project-editor/core/search";
 import { Section } from "project-editor/core/output";
@@ -79,13 +80,15 @@ class Toolbar extends React.Component {
 
     @action.bound
     toggleMatchWholeWord() {
-        this.context.UIStateStore.searchMatchWholeWord = !this.context.UIStateStore
-            .searchMatchWholeWord;
+        this.context.UIStateStore.searchMatchWholeWord = !this.context
+            .UIStateStore.searchMatchWholeWord;
         this.startSearch();
     }
 
     onSelectedBuildConfigurationChange(event: any) {
-        this.context.UIStateStore.setSelectedBuildConfiguration(event.target.value);
+        this.context.UIStateStore.setSelectedBuildConfiguration(
+            event.target.value
+        );
     }
 
     get isBuildConfigurationSelectorVisible() {
@@ -190,7 +193,9 @@ class Toolbar extends React.Component {
                                 title="Match case"
                                 iconSize={20}
                                 enabled={true}
-                                selected={this.context.UIStateStore.searchMatchCase}
+                                selected={
+                                    this.context.UIStateStore.searchMatchCase
+                                }
                                 onClick={this.toggleMatchCase}
                             />
                             <IconAction
@@ -199,7 +204,8 @@ class Toolbar extends React.Component {
                                 iconSize={20}
                                 enabled={true}
                                 selected={
-                                    this.context.UIStateStore.searchMatchWholeWord
+                                    this.context.UIStateStore
+                                        .searchMatchWholeWord
                                 }
                                 onClick={this.toggleMatchWholeWord}
                             />
@@ -282,7 +288,7 @@ export class PropertiesPanel extends React.Component<
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    render() {
+    @computed get objects() {
         let objects: IEezObject[];
 
         const navigationStore =
@@ -294,6 +300,11 @@ export class PropertiesPanel extends React.Component<
             navigationStore.selectedPanel.selectedObjects.length > 0
         ) {
             objects = navigationStore.selectedPanel.selectedObjects;
+        } else if (
+            navigationStore.selectedPanel &&
+            navigationStore.selectedPanel.selectedObject !== undefined
+        ) {
+            objects = [navigationStore.selectedPanel.selectedObject];
         } else if (this.props.object) {
             objects = [this.props.object];
         } else {
@@ -316,12 +327,27 @@ export class PropertiesPanel extends React.Component<
                 }
             }
         }
+        return objects;
+    }
 
+    @computed get title() {
+        if (this.objects.length == 1) {
+            if (isValue(this.objects[0])) {
+                const childObject = getParent(this.objects[0]);
+                return `${getClass(childObject).name} Properties`;
+            } else {
+                return `${getClass(this.objects[0]).name} Properties`;
+            }
+        }
+        return "Properties";
+    }
+
+    render() {
         return (
             <Panel
                 id="properties"
-                title="Properties"
-                body={<PropertyGrid objects={objects} />}
+                title={this.title}
+                body={<PropertyGrid objects={this.objects} />}
                 buttons={this.props.buttons}
             />
         );
@@ -409,8 +435,8 @@ class StatusBar extends React.Component<{}, {}> {
 
     @action
     onChecksClicked() {
-        this.context.UIStateStore.viewOptions.outputVisible = !this.context.UIStateStore
-            .viewOptions.outputVisible;
+        this.context.UIStateStore.viewOptions.outputVisible = !this.context
+            .UIStateStore.viewOptions.outputVisible;
         this.context.OutputSectionsStore.setActiveSection(Section.CHECKS);
     }
 
@@ -420,8 +446,9 @@ class StatusBar extends React.Component<{}, {}> {
                 <StatusBarItem
                     key="checks"
                     body={
-                        this.context.OutputSectionsStore.getSection(Section.CHECKS)
-                            .title
+                        this.context.OutputSectionsStore.getSection(
+                            Section.CHECKS
+                        ).title
                     }
                     onClick={this.onChecksClicked}
                 />

@@ -59,7 +59,7 @@ abstract class ListOperation {
                     undoable: false
                 });
 
-                let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId);
+                let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
                 browserWindow.webContents.send("instrument/connection/list-operation-result", {
                     error
                 });
@@ -198,7 +198,7 @@ export class GetListOperation extends ListOperation {
                     undoable: false
                 });
 
-                let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId);
+                let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
                 browserWindow.webContents.send("instrument/connection/list-operation-result", {
                     listData: [this.listData],
                     logId
@@ -288,7 +288,7 @@ export class SendListOperation extends ListOperation {
                 undoable: false
             });
 
-            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId);
+            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
             browserWindow.webContents.send("instrument/connection/list-operation-result", {});
         } else {
             this.logEntry = logEntry;
@@ -315,7 +315,7 @@ export async function getList(instrumentId: string, channelIndex: number) {
         getListRenderer(
             instrumentId,
             channelIndex,
-            EEZStudio.electron.remote.getCurrentWindow().id
+            EEZStudio.remote.getCurrentWindow().id
         );
     });
 }
@@ -352,7 +352,7 @@ function getListMain(connection: Connection, channelIndex: number, callbackWindo
             () => new GetListOperation(connection, channelIndex, callbackWindowId)
         );
     } catch (error) {
-        let browserWindow = require("electron").BrowserWindow.fromId(callbackWindowId);
+        let browserWindow = require("electron").BrowserWindow.fromId(callbackWindowId)!;
         browserWindow.webContents.send("instrument/connection/list-operation-result", {
             error
         });
@@ -376,7 +376,7 @@ export async function sendList(
             channelIndex,
             listName,
             listData,
-            EEZStudio.electron.remote.getCurrentWindow().id
+            EEZStudio.remote.getCurrentWindow().id
         );
     });
 }
@@ -442,7 +442,7 @@ function sendListMain(
                 )
         );
     } catch (error) {
-        let browserWindow = require("electron").BrowserWindow.fromId(callbackWindowId);
+        let browserWindow = require("electron").BrowserWindow.fromId(callbackWindowId)!;
         browserWindow.webContents.send("instrument/connection/list-operation-result", {
             error
         });

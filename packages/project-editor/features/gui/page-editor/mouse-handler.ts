@@ -1,5 +1,5 @@
 import { Point } from "eez-studio-shared/geometry";
-import {
+import type {
     IDesignerContext,
     IMouseHandler
 } from "project-editor/features/gui/page-editor/designer-interfaces";
@@ -33,7 +33,9 @@ export class MouseHandler implements IMouseHandler {
         this.distance = 0;
         this.movement = { x: 0, y: 0 };
 
-        this.modelPointAtDown = context.viewState.transform.mouseEventToPagePoint(event);
+        this.modelPointAtDown = context.viewState.transform.mouseEventToPagePoint(
+            event
+        );
     }
 
     move(context: IDesignerContext, event: MouseEvent) {
@@ -41,7 +43,9 @@ export class MouseHandler implements IMouseHandler {
 
         this.elapsedTime = new Date().getTime() - this.timeAtDown;
 
-        let offsetPoint = context.viewState.transform.mouseEventToOffsetPoint(event);
+        let offsetPoint = context.viewState.transform.mouseEventToOffsetPoint(
+            event
+        );
 
         this.offsetDistance = {
             x: offsetPoint.x - this.offsetPointAtDown.x,
@@ -60,14 +64,12 @@ export class MouseHandler implements IMouseHandler {
 
         this.lastOffsetPoint = offsetPoint;
 
-        this.lastModelPoint = context.viewState.transform.mouseEventToPagePoint(event);
+        this.lastModelPoint = context.viewState.transform.mouseEventToPagePoint(
+            event
+        );
     }
 
-    up(context: IDesignerContext, event?: MouseEvent) {
-        if (event) {
-            this.move(context, event);
-        }
-    }
+    up(context: IDesignerContext, event?: MouseEvent) {}
 
     get selectionVisible() {
         return true;

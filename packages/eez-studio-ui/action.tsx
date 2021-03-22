@@ -62,7 +62,8 @@ export class TextAction extends React.Component<
     render() {
         return (
             <Action className="EezStudio_TextAction" {...this.props}>
-                {this.props.icon && <Icon icon={this.props.icon} />} {this.props.text}
+                {this.props.icon && <Icon icon={this.props.icon} />}{" "}
+                {this.props.text}
             </Action>
         );
     }
@@ -86,7 +87,10 @@ export class IconAction extends React.Component<
     {}
 > {
     render() {
-        let className = classNames("EezStudio_IconAction", this.props.className);
+        let className = classNames(
+            "EezStudio_IconAction",
+            this.props.className
+        );
 
         let style;
         if (this.props.color) {
@@ -120,11 +124,20 @@ export class ButtonAction extends React.Component<{
 }> {
     render() {
         const { style, icon, iconSize, text } = this.props;
-        let className = classNames("EezStudio_ButtonAction btn", this.props.className);
+        let className = classNames(
+            "EezStudio_ButtonAction btn",
+            this.props.className
+        );
 
         return (
             <Action {...this.props} className={className} style={style}>
-                {icon && <Icon icon={icon} size={iconSize} style={{ marginRight: 10 }} />}
+                {icon && (
+                    <Icon
+                        icon={icon}
+                        size={iconSize}
+                        style={{ marginRight: 10 }}
+                    />
+                )}
                 {text}
             </Action>
         );
@@ -146,7 +159,15 @@ export class DropdownButtonAction extends React.Component<
     {}
 > {
     render() {
-        const { style, icon, iconSize, text, title, onClick, enabled } = this.props;
+        const {
+            style,
+            icon,
+            iconSize,
+            text,
+            title,
+            onClick,
+            enabled
+        } = this.props;
         let className = classNames(
             "EezStudio_ButtonAction btn dropdown-toggle",
             this.props.className
@@ -168,7 +189,13 @@ export class DropdownButtonAction extends React.Component<
                     aria-haspopup="true"
                     aria-expanded="false"
                 >
-                    {icon && <Icon icon={icon} size={iconSize} style={{ marginRight: 10 }} />}
+                    {icon && (
+                        <Icon
+                            icon={icon}
+                            size={iconSize}
+                            style={{ marginRight: 10 }}
+                        />
+                    )}
                     {text}
                 </button>
                 <div className="dropdown-menu">{this.props.children}</div>
@@ -192,7 +219,10 @@ export class DropdownIconAction extends React.Component<
 > {
     render() {
         const { style, icon, iconSize, title, onClick, enabled } = this.props;
-        let className = classNames("EezStudio_IconAction", this.props.className);
+        let className = classNames(
+            "EezStudio_IconAction",
+            this.props.className
+        );
 
         let buttonProps = {
             className,
@@ -244,7 +274,12 @@ export class DropdownItem extends React.Component<
         });
 
         return (
-            <a className={className} title={this.props.title} href="#" onClick={this.onClick}>
+            <a
+                className={className}
+                title={this.props.title}
+                href="#"
+                onClick={this.onClick}
+            >
                 {text}
             </a>
         );

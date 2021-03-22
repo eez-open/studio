@@ -35,7 +35,13 @@ export interface IDataItem {
 export class DataItem extends EezObject implements IDataItem {
     @observable name: string;
     @observable description?: string;
-    @observable type: "integer" | "float" | "boolean" | "string" | "enum" | "list";
+    @observable type:
+        | "integer"
+        | "float"
+        | "boolean"
+        | "string"
+        | "enum"
+        | "list";
     @observable enumItems: string;
     @observable defaultValue: string;
     @observable defaultValueList: string;
@@ -116,7 +122,10 @@ export class DataItem extends EezObject implements IDataItem {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
                         }
                     ]
                 },
@@ -170,7 +179,9 @@ registerFeatureImplementation("data", {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findDataItem(project: Project, dataItemName: string) {
-    return findReferencedObject(project, "data", dataItemName) as DataItem | undefined;
+    return findReferencedObject(project, "data", dataItemName) as
+        | DataItem
+        | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,7 +191,9 @@ export class DataContext {
         public project: Project,
         public parentDataContext?: DataContext,
         public defaultValueOverrides?: any
-    ) { }
+    ) {}
+
+    @observable values = new Map<string, string>();
 
     findDataItemDefaultValue(dataItemId: string): any {
         if (this.defaultValueOverrides) {
@@ -206,9 +219,22 @@ export class DataContext {
         return dataItem;
     }
 
+    getValue(dataItemId: string): string | undefined {
+        const value = this.values.get(dataItemId);
+        if (value) {
+            return value;
+        }
+        return this.parentDataContext?.getValue(dataItemId);
+    }
+
     get(dataItemId: string): any {
         if (dataItemId === undefined) {
             return undefined;
+        }
+
+        const value = this.getValue(dataItemId);
+        if (value) {
+            return value;
         }
 
         let dataItem = this.findDataItem(dataItemId);
@@ -221,7 +247,10 @@ export class DataContext {
                     if (isNaN(value)) {
                         value = dataItem.defaultValue;
                         if (dataItem.enumItems.indexOf(value) == -1) {
-                            console.error("Invalid integer default value", dataItem);
+                            console.error(
+                                "Invalid integer default value",
+                                dataItem
+                            );
                         }
                     }
                 } else if (dataItem.type == "float") {
@@ -233,14 +262,20 @@ export class DataContext {
                         value = dataItem.defaultValue;
                     }
                 } else if (dataItem.type == "boolean") {
-                    let defaultValue = dataItem.defaultValue.toString().trim().toLowerCase();
+                    let defaultValue = dataItem.defaultValue
+                        .toString()
+                        .trim()
+                        .toLowerCase();
                     if (defaultValue == "1" || defaultValue == "true") {
                         value = true;
                     } else if (defaultValue == "0" || defaultValue == "false") {
                         value = false;
                     } else {
                         value = false;
-                        console.error("Invalid boolean default value", dataItem);
+                        console.error(
+                            "Invalid boolean default value",
+                            dataItem
+                        );
                     }
                 } else if (dataItem.type == "list") {
                     try {
@@ -250,7 +285,11 @@ export class DataContext {
                                 : dataItem.defaultValue;
                     } catch (err) {
                         value = [];
-                        console.error("Invalid list default value", dataItem, err);
+                        console.error(
+                            "Invalid list default value",
+                            dataItem,
+                            err
+                        );
                     }
                 } else {
                     value = dataItem.defaultValue;
@@ -334,5 +373,7 @@ export class DataContext {
         return [];
     }
 
-    executeAction(action: string) { }
+    set(dataId: string, value: string) {
+        this.values.set(dataId, value);
+    }
 }

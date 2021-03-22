@@ -7,7 +7,7 @@ export const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(process.execPath
 
 export let app: Electron.App;
 if (isRenderer()) {
-    app = EEZStudio.electron.remote.app;
+    app = EEZStudio.remote.app;
 } else {
     app = require("electron").app;
 }
@@ -40,7 +40,7 @@ export function localPathToFileUrl(localPath: string) {
 }
 
 export function zipExtract(zipFilePath: string, destFolderPath: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         const extract = require("extract-zip");
         extract(zipFilePath, { dir: destFolderPath }, function (err: any) {
             if (err) {
@@ -56,7 +56,7 @@ export async function makeFolder(folderPath: string) {
     let exists = await fileExists(folderPath);
     if (!exists) {
         await makeFolder(path.dirname(folderPath));
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             fs.mkdir(folderPath, (err: any) => {
                 if (err) {
                     reject(err);
@@ -69,7 +69,7 @@ export async function makeFolder(folderPath: string) {
 }
 
 export function removeFolder(folderPath: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         const rimraf = require("rimraf");
         rimraf(folderPath, function () {
             resolve();
@@ -83,7 +83,7 @@ export function removeFile(filePath: string) {
 }
 
 export function renameFile(oldPath: string, newPath: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         fs.rename(oldPath, newPath, (err: any) => {
             if (err) {
                 reject(err);
@@ -161,7 +161,7 @@ export function readFile(
 }
 
 export function closeFile(fd: any) {
-    return new Promise<any>((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         fs.close(fd, (err: any) => {
             if (err) {
                 reject(err);

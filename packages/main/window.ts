@@ -2,7 +2,10 @@ import { BrowserWindow, ipcMain, app } from "electron";
 import { action, observable, runInAction } from "mobx";
 
 import { getIcon } from "main/util";
-import { settingsRegisterWindow, settingsSetWindowBoundsIntoParams } from "main/settings";
+import {
+    settingsRegisterWindow,
+    settingsSetWindowBoundsIntoParams
+} from "main/settings";
 
 export interface IWindowSate {
     modified: boolean;
@@ -42,12 +45,11 @@ export function createWindow(params: IWindowParams) {
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {
         webPreferences: {
             nodeIntegration: true,
-            // experimentalCanvasFeatures: true,
-            // webSecurity: false,
-            // allowRunningInsecureContent: true,
+            webSecurity: false,
             webviewTag: true,
             nodeIntegrationInWorker: true,
             plugins: true,
+            contextIsolation: false,
             enableRemoteModule: true
         },
         show: false
@@ -115,7 +117,9 @@ export function findWindowByParams(params: IWindowParams) {
     return windows.find(win => win.url === params.url);
 }
 
-export function findWindowByBrowserWindow(browserWindow: Electron.BrowserWindow) {
+export function findWindowByBrowserWindow(
+    browserWindow: Electron.BrowserWindow
+) {
     return windows.find(win => win.browserWindow === browserWindow);
 }
 
@@ -173,16 +177,16 @@ ipcMain.on("readyToClose", (event: any) => {
     }
 });
 
-app.on("browser-window-focus", function (
-    event: Electron.Event,
-    browserWindow: Electron.BrowserWindow
-) {
-    runInAction(() => {
-        windows.forEach(window => {
-            window.focused = window.browserWindow === browserWindow;
+app.on(
+    "browser-window-focus",
+    function (event: Electron.Event, browserWindow: Electron.BrowserWindow) {
+        runInAction(() => {
+            windows.forEach(window => {
+                window.focused = window.browserWindow === browserWindow;
+            });
         });
-    });
-});
+    }
+);
 
 ipcMain.on(
     "windowSetState",

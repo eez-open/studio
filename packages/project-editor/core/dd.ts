@@ -1,8 +1,10 @@
 import { observable, action } from "mobx";
 
 import { IEezObject } from "project-editor/core/object";
-import { getProjectStore } from "project-editor/project/project";
-import { UndoManagerClass } from "./store";
+import {
+    DocumentStoreClass,
+    UndoManagerClass
+} from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,6 +15,7 @@ interface IDropObject {}
 export class DragAndDropManagerClass {
     @observable dragObject: IEezObject | undefined;
     @observable dropObject: IDropObject | undefined;
+    DocumentStore: DocumentStoreClass;
     dragItemDeleted: boolean;
     dropEffect: string | undefined;
     blankDragImage: HTMLImageElement;
@@ -27,11 +30,15 @@ export class DragAndDropManagerClass {
     }
 
     @action
-    start(event: any, dragObject: IEezObject) {
+    start(
+        event: any,
+        dragObject: IEezObject,
+        DocumentStore: DocumentStoreClass
+    ) {
         this.dragObject = dragObject;
         this.dragItemDeleted = false;
 
-        this.UndoManager = getProjectStore(dragObject).UndoManager;
+        this.UndoManager = DocumentStore.UndoManager;
         this.UndoManager.setCombineCommands(true);
     }
 
@@ -49,14 +56,16 @@ export class DragAndDropManagerClass {
 
     setDropEffect(event: any) {
         this.dropEffect =
-            event.dataTransfer.effectAllowed == "copyMove" && !event.ctrlKey ? "move" : "copy";
+            event.dataTransfer.effectAllowed == "copyMove" && !event.ctrlKey
+                ? "move"
+                : "copy";
         event.dataTransfer.dropEffect = this.dropEffect;
     }
 
     deleteDragItem() {
         if (this.dropObject && this.dropEffect == "move") {
             if (this.dragObject) {
-                getProjectStore(this.dragObject).deleteObject(this.dragObject);
+                this.UndoManager?.DocumentStore.deleteObject(this.dragObject);
             }
             this.dropEffect = undefined;
             this.dragItemDeleted = true;

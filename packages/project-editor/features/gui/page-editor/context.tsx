@@ -3,16 +3,15 @@ import {
     computed,
     action,
     reaction,
-    runInAction,
-    IReactionDisposer,
-    autorun
+    IReactionDisposer
 } from "mobx";
 import stringify from "json-stable-stringify";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
-import {
-    IBaseObject,
+import { getDocumentStore } from "project-editor/core/store";
+
+import type {
     IDocument,
     IViewState,
     IViewStatePersistantState,
@@ -23,12 +22,12 @@ import {
 import { Transform } from "project-editor/features/gui/page-editor/transform";
 
 import { Widget, getWidgetParent } from "project-editor/features/gui/widget";
-import { getProjectStore } from "project-editor/project/project";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class ViewState implements IViewState {
-    document: IDocument;
+    @observable document?: IDocument;
 
     @observable transform = new Transform({
         scale: 1,
@@ -37,31 +36,20 @@ class ViewState implements IViewState {
 
     @observable isIdle: boolean = true;
 
-    @observable _selectedObjects: IBaseObject[] = [];
+    @observable dxMouseDrag: number | undefined;
+    @observable dyMouseDrag: number | undefined;
 
     persistentStateReactionDisposer: IReactionDisposer;
-    selectedObjectsReactionDisposer: IReactionDisposer;
 
-    constructor() {
-        // make sure selected object is still part of the document
-        this.selectedObjectsReactionDisposer = autorun(() => {
-            const selectedObjects = this._selectedObjects.filter(
-                selectedObject => !!this.document.findObjectById(selectedObject.id)
-            );
-
-            if (selectedObjects.length !== this._selectedObjects.length) {
-                runInAction(() => {
-                    this.selectObjects(selectedObjects);
-                });
-            }
-        });
-    }
+    constructor(public containerId: string) {}
 
     @action
     set(
         document: IDocument,
         viewStatePersistantState: IViewStatePersistantState,
-        onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
+        onSavePersistantState: (
+            viewStatePersistantState: IViewStatePersistantState
+        ) => void,
         lastViewState?: ViewState
     ) {
         if (this.persistentStateReactionDisposer) {
@@ -73,20 +61,10 @@ class ViewState implements IViewState {
         if (viewStatePersistantState) {
             if (viewStatePersistantState.transform) {
                 this.transform.scale = viewStatePersistantState.transform.scale;
-                this.transform.translate = viewStatePersistantState.transform.translate;
+                this.transform.translate =
+                    viewStatePersistantState.transform.translate;
             } else {
                 this.resetTransform();
-            }
-
-            if (viewStatePersistantState.selectedObjects) {
-                const selectedObjects: IBaseObject[] = [];
-                for (const id of viewStatePersistantState.selectedObjects) {
-                    const object = document.findObjectById(id);
-                    if (object) {
-                        selectedObjects.push(object);
-                    }
-                }
-                this.selectObjects(selectedObjects);
             }
         }
 
@@ -101,26 +79,22 @@ class ViewState implements IViewState {
     }
 
     get selectedObjects() {
-        return this._selectedObjects;
+        return this.document?.page.selectedItems ?? [];
     }
 
     @computed
     get persistentState(): IViewStatePersistantState {
-        const selectedObjects = this._selectedObjects.map(object => object.id);
-        selectedObjects.sort();
-
         return {
             transform: {
                 translate: this.transform.translate,
                 scale: this.transform.scale
-            },
-            selectedObjects
+            }
         };
     }
 
     @action
     resetTransform() {
-        if (this.document.resetTransform) {
+        if (this.document && this.document.resetTransform) {
             this.document.resetTransform(this.transform);
         } else {
             this.transform.scale = 1;
@@ -132,7 +106,10 @@ class ViewState implements IViewState {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined {
-        if (this.selectedObjects.length !== 1 || !this.selectedObjects[0].getResizeHandlers) {
+        if (
+            this.selectedObjects.length !== 1 ||
+            !this.selectedObjects[0].getResizeHandlers
+        ) {
             return undefined;
         }
 
@@ -185,47 +162,55 @@ class ViewState implements IViewState {
         ];
     }
 
-    isObjectSelected(object: IBaseObject): boolean {
+    isObjectSelected(object: ITreeObjectAdapter): boolean {
         return this.selectedObjects.indexOf(object) !== -1;
     }
 
-    selectObject(object: IBaseObject) {
-        runInAction(() => {
-            this._selectedObjects.push(object);
-        });
+    isObjectIdSelected(id: string): boolean {
+        return (
+            this.selectedObjects
+                .map(selectedObject => selectedObject.id)
+                .indexOf(id) !== -1
+        );
+    }
+
+    selectObject(object: ITreeObjectAdapter) {
+        if (object.isSelectable) {
+            this.document && this.document.page.selectItem(object);
+        }
     }
 
     @action
-    selectObjects(objects: IBaseObject[]) {
-        if (
-            JSON.stringify(objects.map(object => object.id).sort()) ===
-            JSON.stringify(this._selectedObjects.map(object => object.id).sort())
-        ) {
-            // there is no change
-            return;
-        }
-
-        this._selectedObjects = objects;
+    selectObjects(objects: ITreeObjectAdapter[]) {
+        this.document &&
+            this.document.page.selectItems(
+                objects.filter(object => object.isSelectable)
+            );
     }
 
     @action
     deselectAllObjects(): void {
-        if (this._selectedObjects.length === 0) {
-            // there is no change
-            return;
-        }
-
-        this._selectedObjects = [];
+        this.document && this.document.page.selectItems([]);
     }
 
     moveSelection(
-        where: "left" | "up" | "right" | "down" | "home-x" | "end-x" | "home-y" | "end-y"
+        where:
+            | "left"
+            | "up"
+            | "right"
+            | "down"
+            | "home-x"
+            | "end-x"
+            | "home-y"
+            | "end-y"
     ) {
-        const widgets = this._selectedObjects
-            .map(editorObject => editorObject.object)
-            .filter(object => object instanceof Widget) as Widget[];
+        const widgets =
+            this.document &&
+            (this.document.page.selectedObjects.filter(
+                object => object instanceof Widget
+            ) as Widget[]);
 
-        if (widgets.length === 0) {
+        if (!widgets || widgets.length === 0) {
             return;
         }
 
@@ -244,7 +229,7 @@ class ViewState implements IViewState {
             widget => getWidgetParent(widget) !== getWidgetParent(widgets[0])
         );
 
-        const DocumentStore = getProjectStore(widgets[0]);
+        const DocumentStore = getDocumentStore(widgets[0]);
 
         DocumentStore.UndoManager.setCombineCommands(true);
 
@@ -298,7 +283,6 @@ class ViewState implements IViewState {
     }
 
     destroy() {
-        this.selectedObjectsReactionDisposer();
         this.persistentStateReactionDisposer();
     }
 }
@@ -306,22 +290,35 @@ class ViewState implements IViewState {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DesignerContext implements IDesignerContext {
-    document: IDocument;
-    viewState: ViewState = new ViewState();
+    @observable document: IDocument;
+    viewState: ViewState;
     @observable options: IDesignerOptions = {};
-    filterSnapLines: ((node: IBaseObject) => boolean) | undefined;
+    filterSnapLines: ((node: ITreeObjectAdapter) => boolean) | undefined;
+    @observable dragWidget: Widget | undefined;
+
+    constructor(public containerId: string) {
+        this.viewState = new ViewState(this.containerId);
+    }
 
     @action
     set(
         document: IDocument,
         viewStatePersistantState: IViewStatePersistantState,
-        onSavePersistantState: (viewStatePersistantState: IViewStatePersistantState) => void,
+        onSavePersistantState: (
+            viewStatePersistantState: IViewStatePersistantState
+        ) => void,
         options?: IDesignerOptions,
-        filterSnapLines?: (node: IBaseObject) => boolean
+        filterSnapLines?: (node: ITreeObjectAdapter) => boolean
     ) {
         this.document = document;
 
-        this.viewState.set(document, viewStatePersistantState, onSavePersistantState);
+        this.viewState.set(
+            document,
+            viewStatePersistantState,
+            onSavePersistantState
+        );
+
+        this.viewState.deselectAllObjects();
 
         const newOptions = options || {};
         if (stringify(newOptions) !== stringify(this.options)) {

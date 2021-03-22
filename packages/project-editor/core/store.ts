@@ -1,10 +1,29 @@
-import { observable, extendObservable, computed, action, toJS, reaction, autorun } from "mobx";
+import {
+    observable,
+    extendObservable,
+    computed,
+    action,
+    toJS,
+    reaction,
+    autorun,
+    runInAction
+} from "mobx";
+import chokidar from "chokidar";
 
-import { _each, _isArray, _map, _uniqWith, _find } from "eez-studio-shared/algorithm";
+import {
+    _each,
+    _isArray,
+    _map,
+    _uniqWith,
+    _find
+} from "eez-studio-shared/algorithm";
 
 import * as notification from "eez-studio-ui/notification";
 
+import { confirmSave } from "eez-studio-shared/util";
 import { confirm } from "project-editor/core/util";
+
+import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
 
 import {
     IEezObject,
@@ -22,7 +41,6 @@ import {
     findPropertyByNameInObject,
     getObjectFromPath,
     getObjectFromStringPath,
-    getObjectFromObjectId,
     isPropertyEnumerable,
     isPartOfNavigation,
     getParent,
@@ -32,12 +50,15 @@ import {
     getClassInfo,
     getEditorComponent,
     isEezObject,
-    getRootObject
+    getRootObject,
+    getAncestorOfType,
+    getLabel
 } from "project-editor/core/object";
 import {
     checkClipboard,
     objectToClipboardData,
-    copyToClipboard
+    copyToClipboard,
+    objectsToClipboardData
 } from "project-editor/core/clipboard";
 import {
     ICommand,
@@ -52,13 +73,42 @@ import {
     insertObjectBefore,
     insertObjectAfter
 } from "project-editor/core/commands";
-import { loadObject, objectToJS } from "project-editor/core/serialization";
-import { TreeObjectAdapter, ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import {
+    loadObject,
+    objectToJS,
+    objectToJson
+} from "project-editor/core/serialization";
+import {
+    TreeObjectAdapter,
+    ITreeObjectAdapter
+} from "project-editor/core/objectAdapter";
 import { OutputSections, OutputSection } from "project-editor/core/output";
 
-import * as SearchModule from "project-editor/core/search";
+import { getExtensionsByCategory } from "project-editor/core/extensions";
 
-const { Menu, MenuItem } = EEZStudio.electron.remote;
+import * as SearchModule from "project-editor/core/search";
+import { DataContext } from "project-editor/features/data/data";
+import { CurrentSearch } from "project-editor/core/search";
+import { Project } from "project-editor/project/project";
+
+import {
+    build as buildProject,
+    backgroundCheck,
+    buildExtensions
+} from "project-editor/project/build";
+import { getAllMetrics } from "project-editor/project/metrics";
+import {
+    ActionNode,
+    InputActionNode,
+    OutputActionNode,
+    Widget
+} from "project-editor/features/gui/widget";
+import { Page, PageFragment } from "project-editor/features/gui/page";
+
+import { Section } from "project-editor/core/output";
+import { findAction } from "project-editor/features/action/action";
+
+const { Menu, MenuItem } = EEZStudio.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +161,9 @@ export function createObjectAdapterNavigationItem(
         : undefined;
 }
 
-export function getObjectFromNavigationItem(navigationItem: NavigationItem | undefined) {
+export function getObjectFromNavigationItem(
+    navigationItem: NavigationItem | undefined
+) {
     return navigationItem
         ? isObjectNavigationItem(navigationItem)
             ? navigationItem.object
@@ -129,8 +181,12 @@ export function compareNavigationItem(
 export interface INavigationStore {
     selectedPanel?: IPanel;
     selectedObject?: IEezObject;
-    getNavigationSelectedItem(navigationObject: IEezObject): NavigationItem | undefined;
-    getNavigationSelectedItemAsObject(navigationObject: IEezObject): IEezObject | undefined;
+    getNavigationSelectedItem(
+        navigationObject: IEezObject
+    ): NavigationItem | undefined;
+    getNavigationSelectedItemAsObject(
+        navigationObject: IEezObject
+    ): IEezObject | undefined;
     setNavigationSelectedItem(
         navigationObject: IEezObject,
         navigationSelectedItem: NavigationItem
@@ -142,7 +198,10 @@ export interface INavigationStore {
 export class SimpleNavigationStoreClass implements INavigationStore {
     @observable selectedItem: NavigationItem | undefined;
 
-    constructor(selectedObject: IEezObject | undefined, public editable = true) {
+    constructor(
+        selectedObject: IEezObject | undefined,
+        public editable = true
+    ) {
         this.selectedItem = createObjectNavigationItem(selectedObject);
     }
 
@@ -181,7 +240,9 @@ class NavigationStoreClass implements INavigationStore {
         let navigationMap = new Map<string, NavigationItem>();
 
         for (let stringPath in map) {
-            let navigationObject = this.DocumentStore.getObjectFromStringPath(stringPath);
+            let navigationObject = this.DocumentStore.getObjectFromStringPath(
+                stringPath
+            );
             if (navigationObject) {
                 let navigationItemStr = map[stringPath];
                 if (navigationItemStr === stringPath) {
@@ -190,14 +251,20 @@ class NavigationStoreClass implements INavigationStore {
                 let navigationItem: NavigationItem | undefined;
                 if (typeof navigationItemStr == "string") {
                     navigationItem = createObjectNavigationItem(
-                        this.DocumentStore.getObjectFromStringPath(navigationItemStr)
+                        this.DocumentStore.getObjectFromStringPath(
+                            navigationItemStr
+                        )
                     );
                 } else {
-                    let navigationObjectAdapter = new TreeObjectAdapter(navigationObject);
+                    let navigationObjectAdapter = new TreeObjectAdapter(
+                        navigationObject
+                    );
                     setTimeout(() => {
                         navigationObjectAdapter.loadState(navigationItemStr);
                     }, 0);
-                    navigationItem = createObjectAdapterNavigationItem(navigationObjectAdapter);
+                    navigationItem = createObjectAdapterNavigationItem(
+                        navigationObjectAdapter
+                    );
                 }
 
                 if (navigationItem) {
@@ -215,11 +282,17 @@ class NavigationStoreClass implements INavigationStore {
         for (var [id, navigationItem] of this.navigationMap) {
             let navigationObject = this.DocumentStore.getObjectFromObjectId(id);
             if (navigationObject) {
-                let navigationObjectPath = getObjectPathAsString(navigationObject);
+                let navigationObjectPath = getObjectPathAsString(
+                    navigationObject
+                );
                 if (isObjectNavigationItem(navigationItem)) {
-                    map[navigationObjectPath] = getObjectPathAsString(navigationItem.object);
+                    map[navigationObjectPath] = getObjectPathAsString(
+                        navigationItem.object
+                    );
                 } else {
-                    map[navigationObjectPath] = navigationItem.objectAdapter.saveState();
+                    map[
+                        navigationObjectPath
+                    ] = navigationItem.objectAdapter.saveState();
                 }
             }
         }
@@ -233,7 +306,7 @@ class NavigationStoreClass implements INavigationStore {
 
     @computed
     get selectedObject(): IEezObject | undefined {
-        let object: IEezObject = this.DocumentStore.document;
+        let object: IEezObject = this.DocumentStore.project;
         if (!object) {
             return undefined;
         }
@@ -263,7 +336,11 @@ class NavigationStoreClass implements INavigationStore {
 
         let object = selection[0];
 
-        for (let ancestor = getParent(object); ancestor; ancestor = getParent(ancestor)) {
+        for (
+            let ancestor = getParent(object);
+            ancestor;
+            ancestor = getParent(ancestor)
+        ) {
             let navigationItem = this.getNavigationSelectedItem(ancestor);
             if (navigationItem && !isObjectNavigationItem(navigationItem)) {
                 navigationItem.objectAdapter.selectObjects(selection);
@@ -280,7 +357,10 @@ class NavigationStoreClass implements INavigationStore {
                 if (navigationItem && !isObjectNavigationItem(navigationItem)) {
                     navigationItem.objectAdapter.selectObjects(selection);
                 } else {
-                    this.setNavigationSelectedItem(parent, createObjectNavigationItem(iterObject)!);
+                    this.setNavigationSelectedItem(
+                        parent,
+                        createObjectNavigationItem(iterObject)!
+                    );
                 }
             }
 
@@ -297,8 +377,14 @@ class NavigationStoreClass implements INavigationStore {
                 let grandparent = getParent(parent);
                 if (!isArray(grandparent)) {
                     let navigationItem = this.getNavigationSelectedItem(parent);
-                    if (navigationItem && !isObjectNavigationItem(navigationItem)) {
-                        if (navigationItem.objectAdapter.selectedObject != object) {
+                    if (
+                        navigationItem &&
+                        !isObjectNavigationItem(navigationItem)
+                    ) {
+                        if (
+                            navigationItem.objectAdapter.selectedObject !=
+                            object
+                        ) {
                             return false;
                         }
                     } else {
@@ -315,7 +401,9 @@ class NavigationStoreClass implements INavigationStore {
         return true;
     }
 
-    getNavigationSelectedItem(navigationObject: IEezObject): NavigationItem | undefined {
+    getNavigationSelectedItem(
+        navigationObject: IEezObject
+    ): NavigationItem | undefined {
         let item = this.navigationMap.get(getId(navigationObject));
 
         if (item && isObjectNavigationItem(item)) {
@@ -326,7 +414,8 @@ class NavigationStoreClass implements INavigationStore {
         }
 
         if (!item) {
-            let defaultNavigationKey = getClassInfo(navigationObject).defaultNavigationKey;
+            let defaultNavigationKey = getClassInfo(navigationObject)
+                .defaultNavigationKey;
             if (defaultNavigationKey) {
                 item = createObjectNavigationItem(
                     getProperty(navigationObject, defaultNavigationKey)
@@ -336,7 +425,9 @@ class NavigationStoreClass implements INavigationStore {
         return item;
     }
 
-    getNavigationSelectedItemAsObject(navigationObject: IEezObject): IEezObject | undefined {
+    getNavigationSelectedItemAsObject(
+        navigationObject: IEezObject
+    ): IEezObject | undefined {
         let navigationItem = this.getNavigationSelectedItem(navigationObject);
         if (!navigationItem) {
             return undefined;
@@ -372,7 +463,10 @@ class NavigationStoreClass implements INavigationStore {
 
         let parent = getParent(navigationObject);
         if (parent) {
-            this.setNavigationSelectedItem(parent, createObjectNavigationItem(navigationObject)!);
+            this.setNavigationSelectedItem(
+                parent,
+                createObjectNavigationItem(navigationObject)!
+            );
         }
     }
 
@@ -384,11 +478,15 @@ class NavigationStoreClass implements INavigationStore {
             object = getParent(object)
         ) {
             if (getEditorComponent(object)) {
-                const editor = this.DocumentStore.EditorsStore.openEditor(object);
+                const editor = this.DocumentStore.EditorsStore.openEditor(
+                    object
+                );
                 setTimeout(() => {
                     if (editor && editor.state) {
                         editor.state.selectObject(
-                            isValue(objectToShow) ? getParent(objectToShow) : objectToShow
+                            isValue(objectToShow)
+                                ? getParent(objectToShow)
+                                : objectToShow
                         );
                     }
                 }, 0);
@@ -448,7 +546,9 @@ class EditorsStoreClass {
         autorun(() => {
             let object = DocumentStore.NavigationStore.selectedObject;
             while (object) {
-                let navigationItem = DocumentStore.NavigationStore.getNavigationSelectedItem(object);
+                let navigationItem = DocumentStore.NavigationStore.getNavigationSelectedItem(
+                    object
+                );
                 while (navigationItem) {
                     if (isObjectNavigationItem(navigationItem)) {
                         if (
@@ -461,11 +561,22 @@ class EditorsStoreClass {
                             navigationItem.object
                         );
                     } else {
-                        let object = navigationItem.objectAdapter.selectedObject;
-                        if (object && !isArray(object) && getEditorComponent(object)) {
+                        let object =
+                            navigationItem.objectAdapter.selectedObject;
+                        if (
+                            object &&
+                            !isArray(object) &&
+                            getEditorComponent(object)
+                        ) {
                             this.openEditor(object);
-                        } else if (getEditorComponent(navigationItem.objectAdapter.object)) {
-                            this.openEditor(navigationItem.objectAdapter.object);
+                        } else if (
+                            getEditorComponent(
+                                navigationItem.objectAdapter.object
+                            )
+                        ) {
+                            this.openEditor(
+                                navigationItem.objectAdapter.object
+                            );
                         }
                         return;
                     }
@@ -503,19 +614,24 @@ class EditorsStoreClass {
                 .map((editor: any) => {
                     let object;
                     if (_isArray(editor.object)) {
-                        object = this.DocumentStore.getObjectFromPath(editor.object);
+                        object = this.DocumentStore.getObjectFromPath(
+                            editor.object
+                        );
                     } else {
-                        object = this.DocumentStore.getObjectFromStringPath(editor.object);
+                        object = this.DocumentStore.getObjectFromStringPath(
+                            editor.object
+                        );
                     }
                     if (object) {
                         let newEditor = new Editor(this.DocumentStore);
                         newEditor.object = object;
                         newEditor.active = editor.active;
                         newEditor.permanent = editor.permanent;
-                        const createEditorState = getClassInfo(object).createEditorState;
+                        const createEditorState = getClassInfo(object)
+                            .createEditorState;
                         if (createEditorState) {
                             newEditor.state = createEditorState(object);
-                            if (editor.state) {
+                            if (editor.state && newEditor.state) {
                                 newEditor.state.loadState(editor.state);
                             }
                         }
@@ -670,6 +786,7 @@ class UIStateStoreClass {
     @observable searchPattern: string;
     @observable searchMatchCase: boolean;
     @observable searchMatchWholeWord: boolean;
+    @observable activeOutputSection = Section.CHECKS;
 
     constructor(public DocumentStore: DocumentStoreClass) {
         autorun(() => {
@@ -679,13 +796,23 @@ class UIStateStoreClass {
         // react when selected panel or selected message in output window has changed
         reaction(
             () => ({
-                message: this.DocumentStore.OutputSectionsStore.activeSection.selectedMessage,
+                message: this.DocumentStore.OutputSectionsStore?.activeSection
+                    .selectedMessage,
                 panel: this.DocumentStore.NavigationStore.selectedPanel
             }),
             arg => {
-                if (arg.panel instanceof OutputSection && arg.message && arg.message.object) {
-                    this.DocumentStore.NavigationStore.showObject(arg.message.object);
+                if (
+                    arg.panel instanceof OutputSection &&
+                    arg.message &&
+                    arg.message.object
+                ) {
+                    this.DocumentStore.NavigationStore.showObject(
+                        arg.message.object
+                    );
                 }
+            },
+            {
+                delay: 100
             }
         );
     }
@@ -702,8 +829,11 @@ class UIStateStoreClass {
         this.viewOptions.load(uiState.viewOptions);
         this.DocumentStore.NavigationStore.load(uiState.navigationMap);
         this.DocumentStore.EditorsStore.load(uiState.editors);
-        this.selectedBuildConfiguration = uiState.selectedBuildConfiguration || "Default";
+        this.selectedBuildConfiguration =
+            uiState.selectedBuildConfiguration || "Default";
         this.features = observable(uiState.features || {});
+        this.activeOutputSection =
+            uiState.activeOutputSection ?? Section.CHECKS;
         this.loadObjects(uiState.objects);
     }
 
@@ -731,7 +861,8 @@ class UIStateStoreClass {
             editors: this.DocumentStore.EditorsStore.toJS,
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
-            objects: this.objectsJS
+            objects: this.objectsJS,
+            activeOutputSection: this.activeOutputSection
         };
     }
 
@@ -748,7 +879,11 @@ class UIStateStoreClass {
     }
 
     @action
-    getFeatureParam<T>(extensionName: string, paramName: string, defaultValue: T): T {
+    getFeatureParam<T>(
+        extensionName: string,
+        paramName: string,
+        defaultValue: T
+    ): T {
         let extension = this.features[extensionName];
         if (!extension) {
             extension = observable({});
@@ -882,7 +1017,9 @@ export class UndoManagerClass {
                 undoItem.commands[i].undo();
             }
 
-            this.DocumentStore.NavigationStore.setSelection(undoItem.selectionBefore);
+            this.DocumentStore.NavigationStore.setSelection(
+                undoItem.selectionBefore
+            );
 
             this.redoStack.push(undoItem);
 
@@ -915,7 +1052,9 @@ export class UndoManagerClass {
                 redoItem.commands[i].execute();
             }
 
-            this.DocumentStore.NavigationStore.setSelection(redoItem.selectionAfter);
+            this.DocumentStore.NavigationStore.setSelection(
+                redoItem.selectionAfter
+            );
 
             this.undoStack.push(redoItem);
 
@@ -926,31 +1065,603 @@ export class UndoManagerClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class DebugStoreClass {
+    @observable isActive = false;
+    page: Page | undefined;
+
+    constructor(public DocumentStore: DocumentStoreClass) {}
+
+    executeAction(actionName: string) {
+        const action = findAction(this.DocumentStore.project, actionName);
+        if (action && action.page) {
+            this.executePage(action.page);
+        }
+    }
+
+    executePage(page: Page) {
+        this.page = page;
+        const inputActionNode = page.widgets.find(
+            widget => widget instanceof InputActionNode
+        ) as ActionNode;
+        if (inputActionNode) {
+            this.executeActionNode(inputActionNode);
+        }
+    }
+
+    executeActionNode(actionNode: ActionNode) {
+        console.log(`Execute action: ${getLabel(actionNode)}`);
+        actionNode.execute();
+        if (actionNode instanceof OutputActionNode) {
+            console.log("Execute action done!");
+            this.page = undefined;
+        }
+    }
+
+    getConnectionline(wireID: string) {
+        if (this.page) {
+            return this.page.connectionLines.find(
+                connectionLine => connectionLine.source === wireID
+            );
+        }
+        return undefined;
+    }
+
+    executeWire(wireID: string) {
+        if (this.page) {
+            const connectionLine = this.getConnectionline(wireID);
+            if (connectionLine) {
+                const actionNode = this.page.wiredWidgets.get(
+                    connectionLine.target
+                ) as ActionNode;
+                this.executeActionNode(actionNode);
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function getUIStateFilePath(projectFilePath: string) {
+    return projectFilePath + "-ui-state";
+}
+
+export async function load(
+    DocumentStore: DocumentStoreClass,
+    filePath: string
+) {
+    return new Promise<Project>((resolve, reject) => {
+        const fs = EEZStudio.remote.require("fs");
+        fs.readFile(filePath, "utf8", (err: any, data: string) => {
+            if (err) {
+                reject(err);
+            } else {
+                //console.time("load");
+                let projectJs = JSON.parse(data);
+                let project = loadObject(
+                    DocumentStore,
+                    undefined,
+                    projectJs,
+                    Project
+                ) as Project;
+                //console.timeEnd("load");
+
+                resolve(project);
+            }
+        });
+    });
+}
+
+export function save(DocumentStore: DocumentStoreClass, filePath: string) {
+    const toJsHook = (jsObject: any, object: IEezObject) => {
+        let projectFeatures = getExtensionsByCategory("project-feature");
+        for (let projectFeature of projectFeatures) {
+            if (
+                projectFeature.eezStudioExtension.implementation.projectFeature
+                    .toJsHook
+            ) {
+                projectFeature.eezStudioExtension.implementation.projectFeature.toJsHook(
+                    jsObject,
+                    object
+                );
+            }
+        }
+    };
+
+    (DocumentStore.project as any)._DocumentStore = undefined;
+
+    const json = objectToJson(DocumentStore.project, 2, toJsHook);
+
+    DocumentStore.project._DocumentStore = DocumentStore;
+
+    return new Promise<void>((resolve, reject) => {
+        const fs = EEZStudio.remote.require("fs");
+        fs.writeFile(filePath, json, "utf8", (err: any) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class DocumentStoreClass {
     UndoManager = new UndoManagerClass(this);
     NavigationStore = new NavigationStoreClass(this);
     EditorsStore = new EditorsStoreClass(this);
-    OutputSectionsStore = new OutputSections(this);
     UIStateStore = new UIStateStoreClass(this);
+    OutputSectionsStore = new OutputSections(this);
+    DebugStore = new DebugStoreClass(this);
 
-    @observable private _document: IEezObject | undefined;
+    @observable private _project: Project | undefined;
     @observable modified: boolean = false;
 
+    @observable filePath: string | undefined;
+    @observable backgroundCheckEnabled = true;
+
+    dataContext!: DataContext;
+
+    currentSearch = new CurrentSearch(this);
+
+    objects = new Map<string, IEezObject>();
+    lastChildId = 0;
+
+    @observable externalProjects = new Map<string, Project>();
+    @observable mapExternalProjectToAbsolutePath = new Map<Project, string>();
+    externalProjectsLoading = new Map<string, boolean>();
+
+    constructor() {
+        autorun(
+            () => {
+                this.updateProjectWindowState();
+            },
+            {
+                delay: 100
+            }
+        );
+
+        autorun(
+            () => {
+                if (this.filePath) {
+                    this.updateMruFilePath();
+                }
+            },
+            {
+                delay: 100
+            }
+        );
+
+        let watcher: chokidar.FSWatcher | undefined = undefined;
+        autorun(() => {
+            if (watcher) {
+                watcher.close();
+            }
+
+            if (this.project) {
+                const importedProjectFiles = this.project.settings.general.imports
+                    .filter(
+                        importDirective => !!importDirective.projectFilePath
+                    )
+                    .map(importDirective =>
+                        this.getAbsoluteFilePath(
+                            importDirective.projectFilePath
+                        )
+                    );
+                watcher = chokidar.watch(importedProjectFiles);
+                watcher.on("change", path => {
+                    const project = this.externalProjects.get(path);
+                    if (project) {
+                        runInAction(() => {
+                            this.externalProjects.delete(path);
+                            this.mapExternalProjectToAbsolutePath.delete(
+                                project
+                            );
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    async waitUntilready() {
+        while (true) {
+            const project = this.project;
+            if (project) {
+                let i;
+                for (i = 0; i < project.settings.general.imports.length; i++) {
+                    if (
+                        project.settings.general.imports[i].project ===
+                        undefined
+                    ) {
+                        break;
+                    }
+                }
+                if (i == project.settings.general.imports.length) {
+                    break;
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+
+        autorun(() => {
+            // check the project in the background
+            if (
+                this.project &&
+                this.project._DocumentStore.backgroundCheckEnabled
+            ) {
+                backgroundCheck(this);
+            }
+        });
+    }
+
+    updateProjectWindowState() {
+        const path = EEZStudio.remote.require("path");
+
+        let title = "";
+
+        if (this.project) {
+            if (this.modified) {
+                title += "\u25CF ";
+            }
+
+            if (this.filePath) {
+                title += path.basename(this.filePath) + " - ";
+            } else {
+                title += "untitled - ";
+            }
+        }
+
+        title += EEZStudio.title;
+
+        if (title != document.title) {
+            document.title = title;
+        }
+
+        EEZStudio.electron.ipcRenderer.send("windowSetState", {
+            modified: this.modified,
+            projectFilePath: this.filePath,
+            undo:
+                (this.UndoManager &&
+                    this.UndoManager.canUndo &&
+                    this.UndoManager.undoDescription) ||
+                null,
+            redo:
+                (this.UndoManager &&
+                    this.UndoManager.canRedo &&
+                    this.UndoManager.redoDescription) ||
+                null
+        });
+    }
+
+    updateMruFilePath() {
+        EEZStudio.electron.ipcRenderer.send("setMruFilePath", this.filePath);
+    }
+
+    getFilePathRelativeToProjectPath(absoluteFilePath: string) {
+        const path = EEZStudio.remote.require("path");
+        return path.relative(path.dirname(this.filePath), absoluteFilePath);
+    }
+
+    getProjectFilePath(project: Project) {
+        if (project == this.project) {
+            return this.filePath;
+        } else {
+            return this.mapExternalProjectToAbsolutePath.get(project);
+        }
+    }
+
+    getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
+        const path = EEZStudio.remote.require("path");
+        const filePath = this.getProjectFilePath(project ?? this.project);
+        return filePath
+            ? path.resolve(
+                  path.dirname(filePath),
+                  relativeFilePath.replace(/(\\|\/)/g, path.sep)
+              )
+            : relativeFilePath;
+    }
+
+    getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {
+        const path = EEZStudio.remote.require("path");
+        let folder = path.relative(
+            path.dirname(this.filePath),
+            absoluteFolderPath
+        );
+        if (folder == "") {
+            folder = ".";
+        }
+        return folder;
+    }
+
     @computed
-    get document(): IEezObject {
-        return this._document!;
+    get selectedBuildConfiguration() {
+        let configuration =
+            this.project &&
+            this.project.settings.build.configurations.find(
+                configuration =>
+                    configuration.name ==
+                    this.UIStateStore.selectedBuildConfiguration
+            );
+        if (!configuration) {
+            if (this.project.settings.build.configurations.length > 0) {
+                configuration = this.project.settings.build.configurations[0];
+            }
+        }
+        return configuration;
+    }
+
+    doSave(callback: (() => void) | undefined) {
+        if (this.filePath) {
+            save(this, this.filePath)
+                .then(() => {
+                    this.setModified(false);
+
+                    if (callback) {
+                        callback();
+                    }
+                })
+                .catch(error => console.error("Save", error));
+        }
+    }
+
+    @action
+    savedAsFilePath(filePath: string, callback: (() => void) | undefined) {
+        if (filePath) {
+            this.filePath = filePath;
+            this.doSave(() => {
+                this.saveUIState();
+                if (callback) {
+                    callback();
+                }
+            });
+        }
+    }
+
+    async saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
+        if (this.project) {
+            if (!this.filePath || saveAs) {
+                const result = await EEZStudio.remote.dialog.showSaveDialog(
+                    EEZStudio.remote.getCurrentWindow(),
+                    {
+                        filters: [
+                            {
+                                name: "EEZ Project",
+                                extensions: ["eez-project"]
+                            },
+                            { name: "All Files", extensions: ["*"] }
+                        ]
+                    }
+                );
+                let filePath = result.filePath;
+                if (filePath) {
+                    if (!filePath.toLowerCase().endsWith(".eez-project")) {
+                        filePath += ".eez-project";
+                    }
+
+                    this.savedAsFilePath(filePath, callback);
+                }
+            } else {
+                this.doSave(callback);
+            }
+        }
+    }
+
+    getNewProject(): Project {
+        let project: any = {
+            settings: {
+                general: {},
+                build: {
+                    configurations: [
+                        {
+                            name: "Default"
+                        }
+                    ],
+                    files: []
+                }
+            }
+        };
+
+        return loadObject(
+            this,
+            undefined,
+            project as Project,
+            Project
+        ) as Project;
+    }
+
+    newProject() {
+        this.changeProject(undefined, this.getNewProject());
+    }
+
+    loadUIState(projectFilePath: string) {
+        return new Promise<any>((resolve, reject) => {
+            const fs = EEZStudio.remote.require("fs");
+            fs.readFile(
+                getUIStateFilePath(projectFilePath),
+                "utf8",
+                (err: any, data: string) => {
+                    if (err) {
+                        resolve({});
+                    } else {
+                        resolve(JSON.parse(data));
+                    }
+                }
+            );
+        });
+    }
+
+    saveUIState() {
+        return new Promise<void>(resolve => {
+            if (this.filePath && this.UIStateStore.isModified) {
+                const fs = EEZStudio.remote.require("fs");
+                fs.writeFile(
+                    getUIStateFilePath(this.filePath),
+                    this.UIStateStore.save(),
+                    "utf8",
+                    (err: any) => {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log("UI state saved");
+                        }
+                        resolve();
+                    }
+                );
+            }
+        });
+    }
+
+    async openFile(filePath: string) {
+        const project = await load(this, filePath);
+        const uiState = await this.loadUIState(filePath);
+        this.changeProject(filePath, project, uiState);
+    }
+
+    saveModified(callback: any) {
+        this.saveUIState();
+
+        if (this.project && this.modified) {
+            confirmSave({
+                saveCallback: () => {
+                    this.saveToFile(false, callback);
+                },
+
+                dontSaveCallback: () => {
+                    callback();
+                },
+
+                cancelCallback: () => {}
+            });
+        } else {
+            callback();
+        }
+    }
+
+    save() {
+        this.saveToFile(false, undefined);
+    }
+
+    saveAs() {
+        this.saveToFile(true, undefined);
+    }
+
+    check() {
+        buildProject(this, { onlyCheck: true });
+    }
+
+    build() {
+        buildProject(this, { onlyCheck: false });
+    }
+
+    buildExtensions() {
+        buildExtensions(this);
+    }
+
+    closeWindow() {
+        return new Promise<void>(resolve => {
+            if (this.project) {
+                this.saveModified(() => {
+                    this.changeProject(undefined);
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        });
+    }
+
+    noProject() {
+        this.changeProject(undefined);
+    }
+
+    showMetrics() {
+        const ID = "eez-project-editor-project-metrics";
+        if (!document.getElementById(ID)) {
+            showGenericDialog({
+                dialogDefinition: {
+                    id: ID,
+                    title: "Project Metrics",
+                    fields: [
+                        {
+                            name: "metrics",
+                            fullLine: true,
+                            type: TableField
+                        }
+                    ]
+                },
+                values: {
+                    metrics: getAllMetrics(this)
+                },
+                showOkButton: false
+            }).catch(() => {});
+        }
+    }
+
+    @computed
+    get masterProjectEnabled() {
+        return !!this.project.settings.general.masterProject;
+    }
+
+    @computed
+    get masterProject() {
+        return this.project.masterProject;
+    }
+
+    loadExternalProject(filePath: string) {
+        if (filePath == this.filePath) {
+            return this.project;
+        }
+
+        const project = this.externalProjects.get(filePath);
+        if (project) {
+            return project;
+        }
+
+        if (!this.externalProjectsLoading.get(filePath)) {
+            this.externalProjectsLoading.set(filePath, true);
+
+            (async () => {
+                const project = await load(this, filePath);
+
+                project._isReadOnly = true;
+                project._DocumentStore = this;
+
+                runInAction(() => {
+                    this.externalProjects.set(filePath, project);
+                    this.mapExternalProjectToAbsolutePath.set(
+                        project,
+                        filePath
+                    );
+                });
+
+                this.externalProjectsLoading.set(filePath, false);
+            })();
+        }
+
+        return undefined;
+    }
+
+    getChildId() {
+        return (++this.lastChildId).toString();
+    }
+
+    get project() {
+        return this._project!;
     }
 
     getObjectFromPath(path: string[]) {
-        return getObjectFromPath(this.document, path);
+        return getObjectFromPath(this.project, path);
     }
 
     getObjectFromStringPath(objectID: string) {
-        return getObjectFromStringPath(this.document, objectID);
+        return getObjectFromStringPath(this.project, objectID);
     }
 
     getObjectFromObjectId(objectID: string) {
-        return getObjectFromObjectId(this.document, objectID);
+        return this.objects.get(objectID);
     }
 
     @computed
@@ -964,8 +1675,25 @@ export class DocumentStoreClass {
     }
 
     @action
-    changeDocument(document?: IEezObject, uiState?: IEezObject) {
-        this._document = document;
+    changeProject(
+        projectFilePath: string | undefined,
+        project?: Project,
+        uiState?: Project
+    ) {
+        this.filePath = projectFilePath;
+
+        if (project) {
+            project._DocumentStore = this;
+            this.dataContext = new DataContext(project);
+        } else {
+            this.dataContext = undefined as any;
+        }
+
+        this._project = project;
+        if (!project) {
+            this.objects.clear();
+            this.lastChildId = 0;
+        }
         this.UIStateStore.load(uiState || {});
         this.UndoManager.clear();
     }
@@ -1033,7 +1761,10 @@ export class DocumentStoreClass {
                     oldValues[propertyName] = getProperty(object, propertyName);
                 }
 
-                let propertyInfo = findPropertyByNameInObject(object, propertyName);
+                let propertyInfo = findPropertyByNameInObject(
+                    object,
+                    propertyName
+                );
 
                 if (propertyInfo) {
                     if (propertyInfo.computed !== true) {
@@ -1046,6 +1777,7 @@ export class DocumentStoreClass {
                         ) {
                             // convert to EezObject
                             values[propertyName] = loadObject(
+                                this,
                                 object,
                                 inputValues[propertyName],
                                 propertyInfo.typeClass!
@@ -1072,26 +1804,61 @@ export class DocumentStoreClass {
             values
         );
 
-        const afterUpdateObjectHook = getClassInfo(object).afterUpdateObjectHook;
+        const afterUpdateObjectHook = getClassInfo(object)
+            .afterUpdateObjectHook;
         if (afterUpdateObjectHook) {
             afterUpdateObjectHook(object, inputValues, oldValues);
         }
     }
 
     deleteObject(object: IEezObject) {
-        return deleteObject(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            object
-        );
+        const commandContext = {
+            undoManager: this.UndoManager,
+            selectionManager: this.NavigationStore
+        };
+        let closeCombineCommands = false;
+
+        if (object instanceof Widget) {
+            if (!this.UndoManager.combineCommands) {
+                this.UndoManager.setCombineCommands(true);
+                closeCombineCommands = true;
+            }
+
+            const page = getAncestorOfType(object, Page.classInfo) as Page;
+            page.deleteConnectionLines(commandContext, object);
+        }
+
+        deleteObject(commandContext, object);
+
+        if (closeCombineCommands) {
+            this.UndoManager.setCombineCommands(false);
+        }
     }
 
     deleteObjects(objects: IEezObject[]) {
         if (objects.length === 1) {
             this.deleteObject(objects[0]);
         } else {
+            const commandContext = {
+                undoManager: this.UndoManager,
+                selectionManager: this.NavigationStore
+            };
+            let closeCombineCommands = false;
+
+            objects.forEach(object => {
+                if (object instanceof Widget) {
+                    if (!this.UndoManager.combineCommands) {
+                        this.UndoManager.setCombineCommands(true);
+                        closeCombineCommands = true;
+                    }
+                    const page = getAncestorOfType(
+                        object,
+                        Page.classInfo
+                    ) as Page;
+                    page.deleteConnectionLines(commandContext, object);
+                }
+            });
+
             deleteObjects(
                 {
                     undoManager: this.UndoManager,
@@ -1099,6 +1866,10 @@ export class DocumentStoreClass {
                 },
                 objects
             );
+
+            if (closeCombineCommands) {
+                this.UndoManager.setCombineCommands(false);
+            }
         }
     }
 
@@ -1153,6 +1924,14 @@ export class DocumentStoreClass {
             objectToInsert
         );
     }
+
+    objectsToClipboardData(objects: IEezObject[]) {
+        const page = getAncestorOfType(objects[0], Page.classInfo) as Page;
+        if (page) {
+            return page.objectsToClipboardData(objects);
+        }
+        return objectsToClipboardData(objects);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1170,7 +1949,10 @@ export function extendContextMenu(
 }
 
 export function canAdd(object: IEezObject) {
-    return (isArrayElement(object) || isArray(object)) && getClassInfo(object).newItem != undefined;
+    return (
+        (isArrayElement(object) || isArray(object)) &&
+        getClassInfo(object).newItem != undefined
+    );
 }
 
 function canDuplicate(object: IEezObject) {
@@ -1183,7 +1965,10 @@ function isOptional(object: IEezObject) {
         return false;
     }
 
-    let property: PropertyInfo | undefined = findPropertyByNameInObject(parent, getKey(object));
+    let property: PropertyInfo | undefined = findPropertyByNameInObject(
+        parent,
+        getKey(object)
+    );
 
     if (property == undefined) {
         return false;
@@ -1208,7 +1993,8 @@ export function canContainChildren(object: IEezObject) {
     for (const propertyInfo of getClassInfo(object).properties) {
         if (
             isPropertyEnumerable(object, propertyInfo) &&
-            (propertyInfo.type === PropertyType.Array || propertyInfo.type === PropertyType.Object)
+            (propertyInfo.type === PropertyType.Array ||
+                propertyInfo.type === PropertyType.Object)
         ) {
             return true;
         }
@@ -1217,9 +2003,12 @@ export function canContainChildren(object: IEezObject) {
     return false;
 }
 
-export function canPaste(object: IEezObject) {
+export function canPaste(
+    DocumentStore: DocumentStoreClass,
+    object: IEezObject
+) {
     try {
-        return checkClipboard(object);
+        return checkClipboard(DocumentStore, object);
     } catch (e) {
         return undefined;
     }
@@ -1228,7 +2017,7 @@ export function canPaste(object: IEezObject) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getDocumentStore(object: IEezObject) {
-    return (getRootObject(object) as any)._ProjectStore;
+    return (getRootObject(object) as Project)._DocumentStore;
 }
 
 export async function addItem(object: IEezObject) {
@@ -1247,7 +2036,9 @@ export async function addItem(object: IEezObject) {
         newObjectProperties = await parentClassInfo.newItem(parent);
     } catch (err) {
         if (err !== undefined) {
-            notification.error(`Adding ${getClass(parent).name} failed: ${err}!`);
+            notification.error(
+                `Adding ${getClass(parent).name} failed: ${err}!`
+            );
         }
         return null;
     }
@@ -1264,7 +2055,7 @@ export function pasteItem(object: IEezObject) {
     try {
         const DocumentStore = getDocumentStore(object);
 
-        let c = checkClipboard(object);
+        let c = checkClipboard(DocumentStore, object);
         if (c) {
             if (typeof c.pastePlace === "string") {
                 DocumentStore.updateObject(object, {
@@ -1282,6 +2073,19 @@ export function pasteItem(object: IEezObject) {
                             objectToJS(c.serializedData.object)
                         );
                     } else {
+                        if (
+                            c.serializedData.objectClassName == "PageFragment"
+                        ) {
+                            const page = getAncestorOfType(
+                                c.pastePlace,
+                                Page.classInfo
+                            ) as Page;
+                            if (page) {
+                                return page.pastePageFragment(
+                                    c.serializedData.object as PageFragment
+                                );
+                            }
+                        }
                         return DocumentStore.addObject(
                             c.pastePlace as IEezObject,
                             objectToJS(c.serializedData.object)
@@ -1327,7 +2131,10 @@ export interface IContextMenuContext {
     selectObjects(objects: IEezObject[]): void;
 }
 
-export function createContextMenu(context: IContextMenuContext, object: IEezObject) {
+export function createContextMenu(
+    context: IContextMenuContext,
+    object: IEezObject
+) {
     let menuItems: Electron.MenuItem[] = [];
 
     if (canAdd(object)) {
@@ -1404,7 +2211,9 @@ export function createContextMenu(context: IContextMenuContext, object: IEezObje
         );
     }
 
-    if (canPaste(object)) {
+    const DocumentStore = getDocumentStore(object);
+
+    if (canPaste(DocumentStore, object)) {
         clipboardMenuItems.push(
             new MenuItem({
                 label: "Paste",
@@ -1463,7 +2272,10 @@ export function createContextMenu(context: IContextMenuContext, object: IEezObje
     return undefined;
 }
 
-export function showContextMenu(context: IContextMenuContext, object: IEezObject) {
+export function showContextMenu(
+    context: IContextMenuContext,
+    object: IEezObject
+) {
     const menu = createContextMenu(context, object);
 
     if (menu) {
@@ -1474,7 +2286,9 @@ export function showContextMenu(context: IContextMenuContext, object: IEezObject
 ////////////////////////////////////////////////////////////////////////////////
 
 export function deleteItems(objects: IEezObject[], callback?: () => void) {
-    const { isReferenced } = require("project-editor/core/search") as typeof SearchModule;
+    const {
+        isReferenced
+    } = require("project-editor/core/search") as typeof SearchModule;
 
     function doDelete() {
         getDocumentStore(objects[0]).deleteObjects(objects);

@@ -281,7 +281,7 @@ export class HistoryItems extends React.Component<{
                             this.props.selection.selectItems([historyItem]);
                         }
 
-                        const { Menu, MenuItem } = EEZStudio.electron.remote;
+                        const { Menu, MenuItem } = EEZStudio.remote;
                         const menu = new Menu();
 
                         if (this.props.isDeletedItemsHistory) {

@@ -1,8 +1,7 @@
 import React from "react";
-import { observable, runInAction } from "mobx";
+import { observable, action, runInAction } from "mobx";
 
-import { closestByClass } from "eez-studio-shared/dom";
-import { Point, Rect, pointInRect, rectEqual, rectClone } from "eez-studio-shared/geometry";
+import { Point, Rect, rectEqual, rectClone } from "eez-studio-shared/geometry";
 import {
     ISnapLines,
     findSnapLines,
@@ -10,20 +9,18 @@ import {
     findClosestVerticalSnapLinesToPosition,
     drawSnapLinesGeneric
 } from "project-editor/features/gui/page-editor/snap-lines";
+import { addAlphaToColor } from "eez-studio-shared/color";
 
-import {
-    IDesignerContext,
-    IToolHandler,
-    IMouseHandler,
-    IBaseObject
-} from "project-editor/features/gui/page-editor/designer-interfaces";
-import { Transform } from "project-editor/features/gui/page-editor/transform";
+import { theme } from "eez-studio-ui/theme";
+
+import type { IDesignerContext } from "project-editor/features/gui/page-editor/designer-interfaces";
 import { MouseHandler } from "project-editor/features/gui/page-editor/mouse-handler";
-import { Selection } from "project-editor/features/gui/page-editor/selection";
 import {
     getObjectBoundingRect,
-    getSelectedObjectsBoundingRect
+    getSelectedObjectsBoundingRect,
+    getObjectIdFromPoint
 } from "project-editor/features/gui/page-editor/bounding-rects";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 const SNAP_LINES_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
@@ -33,6 +30,13 @@ const SNAP_LINES_DRAW_THEME = {
 };
 const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 
+const CONNECTION_LINE_DRAW_THEME = {
+    lineColor: "rgba(128, 128, 128, 1)",
+    lineWidth: 2.0,
+    connectedLineColor: "rgba(0, 255, 0, 1)",
+    connectedLineWidth: 2.0
+};
+
 // - select object with click
 // - selection context menu
 // - rubber band selection
@@ -40,122 +44,10 @@ const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 // - resize selection
 
 export function isSelectionMoveable(context: IDesignerContext) {
-    return !context.viewState.selectedObjects.find(object => !object.isMoveable);
+    return !context.viewState.selectedObjects.find(
+        object => !object.isMoveable
+    );
 }
-
-export const selectToolHandler: IToolHandler = {
-    render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined) {
-        return <Selection context={context} mouseHandler={mouseHandler} />;
-    },
-
-    onClick(context: IDesignerContext, point: Point) {},
-
-    onContextMenu(
-        context: IDesignerContext,
-        point: Point,
-        showContextMenu: (menu: Electron.Menu) => void
-    ) {
-        if (
-            context.viewState.selectedObjects.length === 0 ||
-            !pointInRect(point, getSelectedObjectsBoundingRect(context.viewState))
-        ) {
-            context.viewState.deselectAllObjects();
-
-            let object = context.document.objectFromPoint(point);
-            if (!object) {
-                return;
-            }
-
-            context.viewState.selectObject(object);
-        }
-
-        setTimeout(() => {
-            const menu = context.document.createContextMenu(context.viewState.selectedObjects);
-            if (menu) {
-                showContextMenu(menu);
-            }
-        }, 0);
-    },
-
-    cursor: "default",
-
-    canDrag: false,
-    drop() {},
-
-    createMouseHandler(context: IDesignerContext, event: MouseEvent) {
-        if (!event.altKey) {
-            if (closestByClass(event.target, "EezStudio_DesignerSelection_ResizeHandle")) {
-                const cursor = (event.target as HTMLElement).style.cursor;
-                if (
-                    cursor === "nw-resize" ||
-                    cursor === "n-resize" ||
-                    cursor === "ne-resize" ||
-                    cursor === "w-resize" ||
-                    cursor === "e-resize" ||
-                    cursor === "sw-resize" ||
-                    cursor === "s-resize" ||
-                    cursor === "se-resize"
-                ) {
-                    return new ResizeMouseHandler(cursor);
-                } else if (cursor === "col-resize") {
-                    if (context.viewState.selectedObjects.length === 1) {
-                        const selectedObject = context.viewState.selectedObjects[0];
-                        if (selectedObject.resizeColumn) {
-                            const dataColumnIndex = (event.target as HTMLElement).getAttribute(
-                                "data-column-index"
-                            );
-                            if (dataColumnIndex) {
-                                const columnIndex = parseInt(dataColumnIndex);
-                                if (!Number.isNaN(columnIndex)) {
-                                    return new ColumnResizeMouseHandler(
-                                        selectedObject,
-                                        columnIndex
-                                    );
-                                }
-                            }
-                        }
-                    }
-                } else if (cursor === "row-resize") {
-                    if (context.viewState.selectedObjects.length === 1) {
-                        const selectedObject = context.viewState.selectedObjects[0];
-                        if (selectedObject.resizeRow) {
-                            const dataRowIndex = (event.target as HTMLElement).getAttribute(
-                                "data-row-index"
-                            );
-                            if (dataRowIndex) {
-                                const rowIndex = parseInt(dataRowIndex);
-                                if (!Number.isNaN(rowIndex)) {
-                                    return new RowResizeMouseHandler(selectedObject, rowIndex);
-                                }
-                            }
-                        }
-                    }
-                }
-                return undefined;
-            }
-
-            const isMoveable = isSelectionMoveable(context);
-
-            if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
-                return isMoveable ? new DragMouseHandler() : undefined;
-            } else {
-                let point = context.viewState.transform.mouseEventToPagePoint(event);
-                let object = context.document.objectFromPoint(point);
-                if (object) {
-                    if (!context.viewState.isObjectSelected(object)) {
-                        if (!event.ctrlKey && !event.shiftKey) {
-                            context.viewState.deselectAllObjects();
-                        }
-                        context.viewState.selectObject(object);
-                    }
-                    return isMoveable ? new DragMouseHandler() : undefined;
-                }
-            }
-        }
-
-        return new RubberBandSelectionMouseHandler();
-    }
-};
 
 export class RubberBandSelectionMouseHandler extends MouseHandler {
     @observable rubberBendRect: Rect | undefined;
@@ -221,10 +113,16 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
                 <div
                     className="EezStudio_DesignerSelection_RubberBend"
                     style={{
+                        position: "absolute",
                         left: this.rubberBendRect.left,
                         top: this.rubberBendRect.top,
                         width: this.rubberBendRect.width,
-                        height: this.rubberBendRect.height
+                        height: this.rubberBendRect.height,
+                        backgroundColor: addAlphaToColor(
+                            theme.selectionBackgroundColor,
+                            0.5
+                        ),
+                        border: `1px solid ${theme.selectionBackgroundColor}`
                     }}
                 />
             )
@@ -236,21 +134,30 @@ export class SnapLines {
     lines: ISnapLines;
     enabled: boolean = false;
 
-    find(context: IDesignerContext) {
+    find(
+        context: IDesignerContext,
+        filterSnapLines?: (node: ITreeObjectAdapter) => boolean
+    ) {
         this.lines = findSnapLines(
             context,
             {
                 id: "",
-                children: context.document.rootObjects
-            },
-            context.filterSnapLines
+                children: [context.document.page]
+            } as ITreeObjectAdapter,
+            filterSnapLines || context.filterSnapLines
         );
     }
 
     dragSnap(left: number, top: number, width: number, height: number) {
         if (this.enabled) {
-            let lines1 = findClosestVerticalSnapLinesToPosition(this.lines, left);
-            let lines2 = findClosestVerticalSnapLinesToPosition(this.lines, left + width);
+            let lines1 = findClosestVerticalSnapLinesToPosition(
+                this.lines,
+                left
+            );
+            let lines2 = findClosestVerticalSnapLinesToPosition(
+                this.lines,
+                left + width
+            );
 
             if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
                 left = lines1.lines[0].pos;
@@ -259,7 +166,10 @@ export class SnapLines {
             }
 
             lines1 = findClosestHorizontalSnapLinesToPosition(this.lines, top);
-            lines2 = findClosestHorizontalSnapLinesToPosition(this.lines, top + height);
+            lines2 = findClosestHorizontalSnapLinesToPosition(
+                this.lines,
+                top + height
+            );
 
             if (lines1 && (!lines2 || lines1.diff <= lines2.diff)) {
                 top = lines1.lines[0].pos;
@@ -274,10 +184,12 @@ export class SnapLines {
         };
     }
 
-    render(transform: Transform, selectionRect: Rect) {
+    render(context: IDesignerContext, selectionRect: Rect) {
         if (!this.enabled) {
             return null;
         }
+
+        const transform = context.viewState.transform;
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
@@ -293,6 +205,7 @@ export class SnapLines {
         };
 
         drawSnapLinesGeneric(
+            context,
             this.lines,
             selectionRect,
             (pos: number, horizontal: boolean, closest: boolean) => {
@@ -358,19 +271,21 @@ class MouseHandlerWithSnapLines extends MouseHandler {
         super.move(context, event);
 
         this.snapLines.enabled =
-            !event.shiftKey && this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
+            !event.shiftKey &&
+            this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
     }
 
     render(context: IDesignerContext) {
-        return this.snapLines.render(
-            context.viewState.transform,
-            getSelectedObjectsBoundingRect(context.viewState)
-        );
+        const rect = getSelectedObjectsBoundingRect(context.viewState);
+        rect.left += context.viewState.dxMouseDrag ?? 0;
+        rect.top += context.viewState.dyMouseDrag ?? 0;
+        return this.snapLines.render(context, rect);
     }
 }
 
 export class DragMouseHandler extends MouseHandlerWithSnapLines {
     changed: boolean = false;
+    rects: Rect[] = [];
 
     selectionBoundingRectAtDown: Rect;
     objectPositionsAtDown: Point[];
@@ -378,24 +293,30 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     left: number;
     top: number;
 
+    selectionNode: HTMLElement;
+    objectNodes: HTMLElement[];
+
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
 
-        context.document.onDragStart("move");
+        context.document.onDragStart();
 
         this.selectionBoundingRectAtDown = rectClone(
             getSelectedObjectsBoundingRect(context.viewState)
         );
 
-        this.objectPositionsAtDown = context.viewState.selectedObjects.map(object => ({
-            x: object.rect.left,
-            y: object.rect.top
-        }));
+        this.objectPositionsAtDown = context.viewState.selectedObjects.map(
+            object => ({
+                x: object.rect.left,
+                y: object.rect.top
+            })
+        );
 
         this.left = this.selectionBoundingRectAtDown.left;
         this.top = this.selectionBoundingRectAtDown.top;
     }
 
+    @action
     move(context: IDesignerContext, event: MouseEvent) {
         super.move(context, event);
 
@@ -413,30 +334,82 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             this.selectionBoundingRectAtDown.height
         );
 
+        const viewState = context.viewState;
+
+        viewState.dxMouseDrag = left - this.selectionBoundingRectAtDown.left;
+        viewState.dyMouseDrag = top - this.selectionBoundingRectAtDown.top;
+
+        if (!this.selectionNode) {
+            const container = document.getElementById(
+                context.viewState.containerId
+            );
+
+            this.selectionNode = container?.querySelector(
+                ".EezStudio_DesignerSelection_Draggable"
+            ) as HTMLElement;
+
+            this.objectNodes = context.viewState.selectedObjects.map(
+                selectedObject =>
+                    container?.querySelector(
+                        `[data-designer-object-id="${selectedObject.id}"]`
+                    ) as HTMLElement
+            );
+        }
+
+        this.selectionNode.style.transform = `translate(${Math.round(
+            viewState.dxMouseDrag * context.viewState.transform.scale
+        )}px, ${Math.round(
+            viewState.dyMouseDrag * context.viewState.transform.scale
+        )}px)`;
+
+        this.changed = false;
+
         for (let i = 0; i < context.viewState.selectedObjects.length; ++i) {
             const object = context.viewState.selectedObjects[i];
 
-            let rect = {
+            this.rects[i] = {
                 left: Math.round(
-                    this.objectPositionsAtDown[i].x + (left - this.selectionBoundingRectAtDown.left)
+                    this.objectPositionsAtDown[i].x + viewState.dxMouseDrag
                 ),
                 top: Math.round(
-                    this.objectPositionsAtDown[i].y + (top - this.selectionBoundingRectAtDown.top)
+                    this.objectPositionsAtDown[i].y + viewState.dyMouseDrag
                 ),
                 width: object.rect.width,
                 height: object.rect.height
             };
 
-            if (!rectEqual(rect, object.rect)) {
+            if (!rectEqual(this.rects[i], object.rect)) {
                 this.changed = true;
-                object.rect = rect;
             }
+
+            const node = this.objectNodes[i];
+            node.style.left = this.rects[i].left + "px";
+            node.style.top = this.rects[i].top + "px";
         }
     }
 
+    @action
     up(context: IDesignerContext, event?: MouseEvent) {
         super.up(context, event);
-        context.document.onDragEnd("move", this.changed, context.viewState.selectedObjects);
+
+        if (this.changed) {
+            for (let i = 0; i < context.viewState.selectedObjects.length; ++i) {
+                const object = context.viewState.selectedObjects[i];
+                const rect = this.rects[i];
+                if (!rectEqual(rect, object.rect)) {
+                    object.rect = rect;
+                }
+            }
+        }
+
+        if (this.selectionNode) {
+            this.selectionNode.style.transform = ``;
+        }
+
+        context.viewState.dxMouseDrag = undefined;
+        context.viewState.dyMouseDrag = undefined;
+
+        context.document.onDragEnd();
     }
 }
 
@@ -450,7 +423,7 @@ type ResizeHandleType =
     | "s-resize"
     | "se-resize";
 
-class ResizeMouseHandler extends MouseHandlerWithSnapLines {
+export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     savedBoundingRect: Rect;
     boundingRect: Rect;
 
@@ -467,27 +440,34 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
 
-        context.document.onDragStart("resize");
+        context.document.onDragStart();
 
-        this.savedBoundingRect = rectClone(getSelectedObjectsBoundingRect(context.viewState));
+        this.savedBoundingRect = rectClone(
+            getSelectedObjectsBoundingRect(context.viewState)
+        );
         this.boundingRect = rectClone(this.savedBoundingRect);
 
         this.savedBoundingRects = [];
         this.savedRects = [];
         this.rects = [];
         for (const object of context.viewState.selectedObjects) {
-            const boundingRect = getObjectBoundingRect(object, context.viewState);
-            this.savedBoundingRects.push(rectClone(boundingRect));
+            const boundingRect = getObjectBoundingRect(object);
+            if (boundingRect) {
+                this.savedBoundingRects.push(rectClone(boundingRect));
 
-            const rect = object.rect;
-            this.savedRects.push(rectClone(rect));
-            this.rects.push(rectClone(rect));
+                const rect = object.rect;
+                this.savedRects.push(rectClone(rect));
+                this.rects.push(rectClone(rect));
+            }
         }
     }
 
     snapX(x: number) {
         if (this.snapLines.enabled) {
-            let lines = findClosestVerticalSnapLinesToPosition(this.snapLines.lines, x);
+            let lines = findClosestVerticalSnapLinesToPosition(
+                this.snapLines.lines,
+                x
+            );
             return lines ? lines.lines[0].pos : x;
         } else {
             return x;
@@ -496,7 +476,10 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
     snapY(y: number) {
         if (this.snapLines.enabled) {
-            let lines = findClosestHorizontalSnapLinesToPosition(this.snapLines.lines, y);
+            let lines = findClosestHorizontalSnapLinesToPosition(
+                this.snapLines.lines,
+                y
+            );
             return lines ? lines.lines[0].pos : y;
         } else {
             return y;
@@ -506,7 +489,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     moveTop(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let bottom = rect.top + rect.height;
         rect.top = this.snapY(
-            savedRect.top + this.offsetDistance.y / context.viewState.transform.scale
+            savedRect.top +
+                this.offsetDistance.y / context.viewState.transform.scale
         );
         if (rect.top >= bottom) {
             rect.top = bottom - 1;
@@ -517,7 +501,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     moveLeft(context: IDesignerContext, savedRect: Rect, rect: Rect) {
         let right = rect.left + rect.width;
         rect.left = this.snapX(
-            savedRect.left + this.offsetDistance.x / context.viewState.transform.scale
+            savedRect.left +
+                this.offsetDistance.x / context.viewState.transform.scale
         );
         if (rect.left >= right) {
             rect.left = right - 1;
@@ -549,7 +534,12 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         rect.width = right - rect.left;
     }
 
-    maintainSameAspectRatio(savedRect: Rect, rect: Rect, top: boolean, left: boolean) {
+    maintainSameAspectRatio(
+        savedRect: Rect,
+        rect: Rect,
+        top: boolean,
+        left: boolean
+    ) {
         let startAspectRatio = savedRect.width / savedRect.height;
 
         let width;
@@ -609,7 +599,8 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         this.resizeRect(context, this.savedBoundingRect, this.boundingRect);
 
         let scaleWidth = this.boundingRect.width / this.savedBoundingRect.width;
-        let scaleHeight = this.boundingRect.height / this.savedBoundingRect.height;
+        let scaleHeight =
+            this.boundingRect.height / this.savedBoundingRect.height;
 
         let objects = context.viewState.selectedObjects;
 
@@ -621,12 +612,14 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
             rect.left = Math.floor(
                 savedRect.left +
                     (this.boundingRect.left - this.savedBoundingRect.left) +
-                    (savedBoundingRect.left - this.savedBoundingRect.left) * (scaleWidth - 1)
+                    (savedBoundingRect.left - this.savedBoundingRect.left) *
+                        (scaleWidth - 1)
             );
             rect.top = Math.floor(
                 savedRect.top +
                     (this.boundingRect.top - this.savedBoundingRect.top) +
-                    (savedBoundingRect.top - this.savedBoundingRect.top) * (scaleHeight - 1)
+                    (savedBoundingRect.top - this.savedBoundingRect.top) *
+                        (scaleHeight - 1)
             );
             rect.width = Math.floor(savedRect.width * scaleWidth);
             rect.height = Math.floor(savedRect.height * scaleHeight);
@@ -641,70 +634,144 @@ class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     up(context: IDesignerContext, event?: MouseEvent) {
         super.up(context, event);
 
-        context.document.onDragEnd("resize", this.changed, context.viewState.selectedObjects);
+        context.document.onDragEnd();
     }
 }
 
-class ColumnResizeMouseHandler extends MouseHandlerWithSnapLines {
-    changed: boolean = false;
-    savedColumnWidth: number;
+export class ConnectionLineMouseHandler extends MouseHandler {
+    @observable startPoint: Point;
+    @observable endPoint: Point;
+    @observable.shallow target:
+        | {
+              objectId: string;
+              connectionInput: string;
+          }
+        | undefined;
 
-    constructor(private selectedObject: IBaseObject, private columnIndex: number) {
+    constructor(
+        private sourceObject: ITreeObjectAdapter,
+        private connectionOutput: string
+    ) {
         super();
     }
 
+    @action
     down(context: IDesignerContext, event: MouseEvent) {
         super.down(context, event);
 
-        context.document.onDragStart("col-resize");
+        context.document.onDragStart();
 
-        this.savedColumnWidth = this.selectedObject.getColumnWidth!(this.columnIndex);
+        this.connectionOutput;
+
+        const container = document.getElementById(
+            context.viewState.containerId
+        )!;
+        const node = container!.querySelector(
+            `[data-designer-object-id="${this.sourceObject.id}"] [data-connection-output-id="${this.connectionOutput}"]`
+        )!;
+
+        const boundingClientRect = node.getBoundingClientRect();
+        const pageRect = context.viewState.transform.clientToOffsetRect(
+            boundingClientRect
+        );
+
+        this.startPoint = {
+            x: pageRect.left + pageRect.width + 2,
+            y: pageRect.top + pageRect.height / 2
+        };
+
+        this.endPoint = this.startPoint;
+        this.target = undefined;
     }
 
+    @action
     move(context: IDesignerContext, event: MouseEvent) {
         super.move(context, event);
-        this.selectedObject.resizeColumn!(
-            this.columnIndex,
-            this.savedColumnWidth,
-            this.offsetDistance.x / context.viewState.transform.scale
+        let point = context.viewState.transform.mouseEventToPagePoint(event);
+        const result = getObjectIdFromPoint(
+            context.document,
+            context.viewState,
+            point
         );
+        if (result && result.connectionInput) {
+            const container = document.getElementById(
+                context.viewState.containerId
+            )!;
+            const node = container!.querySelector(
+                `[data-designer-object-id="${result.id}"] [data-connection-input-id="${result.connectionInput}"]`
+            )!;
+
+            const boundingClientRect = node.getBoundingClientRect();
+            const pageRect = context.viewState.transform.clientToOffsetRect(
+                boundingClientRect
+            );
+
+            this.endPoint = {
+                x: pageRect.left - 2,
+                y: pageRect.top + pageRect.height / 2
+            };
+            this.target = {
+                objectId: result.id,
+                connectionInput: result.connectionInput
+            };
+        } else {
+            this.endPoint = this.lastOffsetPoint;
+            this.target = undefined;
+        }
     }
 
     up(context: IDesignerContext, event?: MouseEvent) {
         super.up(context, event);
 
-        context.document.onDragEnd("col-resize", this.changed, [this.selectedObject]);
-    }
-}
+        if (this.target) {
+            context.document.connect(
+                this.sourceObject.id,
+                this.connectionOutput,
+                this.target.objectId,
+                this.target.connectionInput
+            );
+        }
 
-class RowResizeMouseHandler extends MouseHandlerWithSnapLines {
-    changed: boolean = false;
-    savedRowHeight: number;
-
-    constructor(private selectedObject: IBaseObject, private rowIndex: number) {
-        super();
-    }
-
-    down(context: IDesignerContext, event: MouseEvent) {
-        super.down(context, event);
-
-        context.document.onDragStart("row-resize");
-
-        this.savedRowHeight = this.selectedObject.getRowHeight!(this.rowIndex);
+        context.document.onDragEnd();
     }
 
-    move(context: IDesignerContext, event: MouseEvent) {
-        super.move(context, event);
-        this.selectedObject.resizeRow!(
-            this.rowIndex,
-            this.savedRowHeight,
-            this.offsetDistance.y / context.viewState.transform.scale
+    render(context: IDesignerContext) {
+        const transform = context.viewState.transform;
+
+        const offsetRect = transform.clientToOffsetRect(transform.clientRect);
+
+        const lineStyle = {
+            stroke: CONNECTION_LINE_DRAW_THEME.lineColor,
+            strokeWidth: CONNECTION_LINE_DRAW_THEME.lineWidth
+        };
+        const connectedLineStyle = {
+            stroke: CONNECTION_LINE_DRAW_THEME.connectedLineColor,
+            strokeWidth: CONNECTION_LINE_DRAW_THEME.connectedLineWidth
+        };
+
+        const line = (
+            <line
+                x1={this.startPoint.x}
+                y1={this.startPoint.y}
+                x2={this.endPoint.x}
+                y2={this.endPoint.y}
+                style={this.target ? connectedLineStyle : lineStyle}
+            />
         );
-    }
 
-    up(context: IDesignerContext, event?: MouseEvent) {
-        super.up(context, event);
-
-        context.document.onDragEnd("row-resize", this.changed, [this.selectedObject]);
+        return (
+            <svg
+                width={offsetRect.width}
+                height={offsetRect.height}
+                style={{
+                    position: "absolute",
+                    pointerEvents: "none",
+                    left: offsetRect.left,
+                    top: offsetRect.top
+                }}
+            >
+                {line}
+            </svg>
+        );
     }
 }

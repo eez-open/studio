@@ -56,7 +56,7 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
 
     @bind
     async attachFile() {
-        const result = await EEZStudio.electron.remote.dialog.showOpenDialog({
+        const result = await EEZStudio.remote.dialog.showOpenDialog({
             properties: ["openFile", "multiSelections"],
             filters: [{ name: "All Files", extensions: ["*"] }]
         });

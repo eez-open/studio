@@ -120,10 +120,10 @@ function doExport(
     filePath: string,
     progressToastId: notification.ToastId
 ) {
-    return new Promise((resolve, reject) => {
-        const fs = EEZStudio.electron.remote.require("fs") as typeof fsModule;
-        const path = EEZStudio.electron.remote.require("path") as typeof pathModule;
-        const archiver = EEZStudio.electron.remote.require("archiver") as typeof archiverModule;
+    return new Promise<void>((resolve, reject) => {
+        const fs = EEZStudio.remote.require("fs") as typeof fsModule;
+        const path = EEZStudio.remote.require("path") as typeof pathModule;
+        const archiver = EEZStudio.remote.require("archiver") as typeof archiverModule;
 
         var output = fs.createWriteStream(filePath);
         var archive = archiver("zip", {
@@ -208,8 +208,8 @@ function doExport(
 }
 
 export async function exportActivityLogItems(store: IStore, items: IActivityLogEntry[]) {
-    const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    const result = await EEZStudio.remote.dialog.showSaveDialog(
+        EEZStudio.remote.getCurrentWindow(),
         {
             filters: [
                 { name: "EEZ Notebook files", extensions: ["eez-notebook"] },

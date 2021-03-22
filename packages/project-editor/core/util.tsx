@@ -6,7 +6,7 @@ import {
     GenericDialog,
     GenericDialogResult
 } from "eez-studio-ui/generic-dialog";
-import { ProjectStoreClass } from "project-editor/project/project";
+import { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 
 export async function confirm(
@@ -14,8 +14,8 @@ export async function confirm(
     detail: string | undefined,
     callback: () => void
 ) {
-    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    const result = await EEZStudio.remote.dialog.showMessageBox(
+        EEZStudio.remote.getCurrentWindow(),
         {
             type: "question",
             title: "Project Editor - EEZ Studio",
@@ -33,8 +33,8 @@ export async function confirm(
 }
 
 export function info(message: string, detail?: string) {
-    return EEZStudio.electron.remote.dialog.showMessageBox(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    return EEZStudio.remote.dialog.showMessageBox(
+        EEZStudio.remote.getCurrentWindow(),
         {
             type: "info",
             title: "Project Editor - EEZ Studio",
@@ -48,7 +48,7 @@ export function info(message: string, detail?: string) {
 }
 
 export function showGenericDialog(
-    ProjectStore: ProjectStoreClass,
+    DocumentStore: DocumentStoreClass,
     conf: {
         dialogDefinition: DialogDefinition;
         values: any;
@@ -60,7 +60,7 @@ export function showGenericDialog(
 ) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
         const [modalDialog, element] = showDialog(
-            <ProjectContext.Provider value={ProjectStore}>
+            <ProjectContext.Provider value={DocumentStore}>
                 <GenericDialog
                     dialogDefinition={conf.dialogDefinition}
                     dialogContext={undefined}

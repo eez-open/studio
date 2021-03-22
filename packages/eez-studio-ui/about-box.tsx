@@ -47,7 +47,7 @@ async function getLatestVersion() {
                     if (duration >= GET_LATEST_VERSION_MIN_DURATION) {
                         resolve(latestReleaseVersion);
                     } else {
-                        setTimeout(() => resolve(latestReleaseVersion), 1000 - duration);
+                        setTimeout(() => resolve(latestReleaseVersion!), 1000 - duration);
                     }
                 } else {
                     reject();

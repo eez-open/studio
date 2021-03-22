@@ -454,8 +454,8 @@ export function showShortcutDialog(
         />
     );
 
-    // let win = new EEZStudio.electron.remote.BrowserWindow({
-    //     parent: EEZStudio.electron.remote.getCurrentWindow(),
+    // let win = new EEZStudio.remote.BrowserWindow({
+    //     parent: EEZStudio.remote.getCurrentWindow(),
     //     modal: true,
     //     title: "Edit Shortuct Definition - EEZ Studio",
     //     minimizable: false,

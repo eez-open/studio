@@ -396,9 +396,9 @@ export function buildInstrumentExtension(
     scpiHelpFolderPath: string | undefined,
     properties: any
 ) {
-    return new Promise((resolve, reject) => {
-        const fs = EEZStudio.electron.remote.require("fs");
-        const archiver = EEZStudio.electron.remote.require("archiver");
+    return new Promise<void>((resolve, reject) => {
+        const fs = EEZStudio.remote.require("fs");
+        const archiver = EEZStudio.remote.require("archiver");
         const xmlFormatter = require("xml-formatter");
 
         let extensionName = idf.extensionName;

@@ -22,18 +22,22 @@ export { MessageType as Type } from "project-editor/core/object";
 export enum Section {
     CHECKS,
     OUTPUT,
-    SEARCH
+    SEARCH,
+    DEBUG
 }
 
 export class Message implements IMessage {
     id: string = guid();
     @observable selected: boolean = false;
 
-    constructor(public type: MessageType, public text: string, public object?: IEezObject) {}
+    constructor(
+        public type: MessageType,
+        public text: string,
+        public object?: IEezObject
+    ) {}
 }
 
 export class OutputSection implements IPanel {
-    @observable active: boolean;
     permanent: boolean = true;
 
     @observable loading = false;
@@ -41,7 +45,16 @@ export class OutputSection implements IPanel {
     @observable messages: Message[] = [];
     @observable selectedMessage: Message | undefined;
 
-    constructor(public DocumentStore: DocumentStoreClass, public id: number, public name: string, public scrollToBottom: boolean) {}
+    constructor(
+        public DocumentStore: DocumentStoreClass,
+        public id: number,
+        public name: string,
+        public scrollToBottom: boolean
+    ) {}
+
+    @computed get active() {
+        return this.DocumentStore.UIStateStore.activeOutputSection === this.id;
+    }
 
     @computed
     get title(): string | React.ReactNode {
@@ -76,7 +89,11 @@ export class OutputSection implements IPanel {
             );
         }
 
-        if (this.id == Section.SEARCH && (this.DocumentStore.UIStateStore.searchPattern || this.messages.length > 0)) {
+        if (
+            this.id == Section.SEARCH &&
+            (this.DocumentStore.UIStateStore.searchPattern ||
+                this.messages.length > 0)
+        ) {
             return `${this.name} (${this.messages.length})`;
         }
 
@@ -113,7 +130,8 @@ export class OutputSection implements IPanel {
 
     @computed
     get selectedObject(): IEezObject | undefined {
-        return this.selectedMessage && this.messages.indexOf(this.selectedMessage) !== -1
+        return this.selectedMessage &&
+            this.messages.indexOf(this.selectedMessage) !== -1
             ? this.selectedMessage.object
             : undefined;
     }
@@ -154,14 +172,40 @@ export class OutputSection implements IPanel {
 
 export class OutputSections {
     sections: OutputSection[] = [];
-    @observable activeSection: OutputSection;
 
     constructor(public DocumentStore: DocumentStoreClass) {
-        this.sections[Section.CHECKS] = new OutputSection(DocumentStore, Section.CHECKS, "Checks", false);
-        this.sections[Section.OUTPUT] = new OutputSection(DocumentStore, Section.OUTPUT, "Output", true);
-        this.sections[Section.SEARCH] = new OutputSection(DocumentStore, Section.SEARCH, "Search results", false);
-        this.activeSection = this.sections[Section.CHECKS];
-        this.activeSection.active = true;
+        this.sections[Section.CHECKS] = new OutputSection(
+            DocumentStore,
+            Section.CHECKS,
+            "Checks",
+            false
+        );
+        this.sections[Section.OUTPUT] = new OutputSection(
+            DocumentStore,
+            Section.OUTPUT,
+            "Output",
+            true
+        );
+        this.sections[Section.SEARCH] = new OutputSection(
+            DocumentStore,
+            Section.SEARCH,
+            "Search results",
+            false
+        );
+        this.sections[Section.DEBUG] = new OutputSection(
+            DocumentStore,
+            Section.DEBUG,
+            "Debug",
+            false
+        );
+    }
+
+    @computed get activeSection() {
+        return (
+            this.sections[
+                this.DocumentStore.UIStateStore.activeOutputSection
+            ] ?? this.sections[Section.CHECKS]
+        );
     }
 
     getSection(sectionType: Section) {
@@ -170,10 +214,8 @@ export class OutputSections {
 
     @action
     setActiveSection(sectionType: Section) {
+        this.DocumentStore.UIStateStore.activeOutputSection = sectionType;
         this.DocumentStore.UIStateStore.viewOptions.outputVisible = true;
-        this.activeSection.active = false;
-        this.activeSection = this.sections[sectionType];
-        this.activeSection.active = true;
     }
 
     @action
@@ -187,7 +229,12 @@ export class OutputSections {
     }
 
     @action
-    write(sectionType: Section, type: MessageType, text: string, object?: IEezObject) {
+    write(
+        sectionType: Section,
+        type: MessageType,
+        text: string,
+        object?: IEezObject
+    ) {
         let section = this.sections[sectionType];
         section.messages.push(new Message(type, text, object));
     }

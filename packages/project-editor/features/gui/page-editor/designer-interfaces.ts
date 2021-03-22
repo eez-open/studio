@@ -1,47 +1,52 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
+import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
-import { IEezObject } from "project-editor/core/object";
+import { DocumentStoreClass } from "project-editor/core/store";
 
-import { ITransform, Transform } from "project-editor/features/gui/page-editor/transform";
-
-export interface IBaseObject {
-    id: string;
-    rect: Rect;
-    object: IEezObject;
-    children: IBaseObject[];
-    isMoveable: boolean;
-    getResizeHandlers?: () => IResizeHandler[] | undefined | false;
-    getColumnWidth?: (columnIndex: number) => number;
-    resizeColumn?: (columnIndex: number, savedColumnWidth: number, offset: number) => void;
-    getRowHeight?: (rowIndex: number) => number;
-    resizeRow?: (rowIndex: number, savedRowHeight: number, offset: number) => void;
-    open(): void;
-}
+import type {
+    ITransform,
+    Transform
+} from "project-editor/features/gui/page-editor/transform";
 
 export interface IDocument {
-    rootObjects: IBaseObject[];
+    DocumentStore: DocumentStoreClass;
 
-    findObjectById(id: string): IBaseObject | undefined;
-    findObjectParent(object: IBaseObject): IBaseObject | undefined;
+    page: ITreeObjectAdapter;
 
-    // modify
-    createObject(params: any): void;
-    deleteObjects(objects: IBaseObject[]): void;
+    selectedConnectionLines: ITreeObjectAdapter[];
+    nonSelectedConnectionLines: ITreeObjectAdapter[];
+
+    findObjectById(id: string): ITreeObjectAdapter | undefined;
+    findObjectParent(
+        object: ITreeObjectAdapter
+    ): ITreeObjectAdapter | undefined;
 
     // view
-    objectFromPoint(point: Point): IBaseObject | undefined;
-    getObjectsInsideRect(rect: Rect): IBaseObject[];
+    objectFromPoint(
+        point: Point
+    ):
+        | {
+              id: string;
+              connectionInput?: string;
+              connectionOutput?: string;
+          }
+        | undefined;
+    getObjectsInsideRect(rect: Rect): ITreeObjectAdapter[];
     resetTransform?(transform: ITransform): void;
 
     // misc.
-    createContextMenu(objects: IBaseObject[]): Electron.Menu | undefined;
+    createContextMenu(objects: ITreeObjectAdapter[]): Electron.Menu | undefined;
 
     // events
-    onDragStart(op: "move" | "resize" | "col-resize" | "row-resize"): void;
-    onDragEnd(
-        op: "move" | "resize" | "col-resize" | "row-resize",
-        changed: boolean,
-        objects: IBaseObject[]
+    onDragStart(): void;
+    onDragEnd(): void;
+
+    //
+    connect(
+        sourceObjectId: string,
+        connectionOutput: string,
+        targetObjectId: string,
+        connectionInput: string
     ): void;
 }
 
@@ -53,9 +58,7 @@ export type HandleType =
     | "e-resize"
     | "sw-resize"
     | "s-resize"
-    | "se-resize"
-    | "col-resize"
-    | "row-resize";
+    | "se-resize";
 
 export interface IResizeHandler {
     // Top-left: 0, 0
@@ -70,6 +73,8 @@ export interface IResizeHandler {
 }
 
 export interface IViewState {
+    containerId: string;
+
     transform: Transform;
     resetTransform(): void;
 
@@ -77,20 +82,32 @@ export interface IViewState {
     isIdle: boolean;
 
     // selection
-    selectedObjects: IBaseObject[];
+    selectedObjects: ITreeObjectAdapter[];
     getResizeHandlers: () => IResizeHandler[] | undefined;
 
-    isObjectSelected(object: IBaseObject): boolean;
+    isObjectSelected(object: ITreeObjectAdapter): boolean;
+    isObjectIdSelected(id: string): boolean;
 
-    selectObject(object: IBaseObject): void;
-    selectObjects(objects: IBaseObject[]): void;
+    selectObject(object: ITreeObjectAdapter): void;
+    selectObjects(objects: ITreeObjectAdapter[]): void;
     deselectAllObjects(): void;
 
     moveSelection(
-        where: "left" | "up" | "right" | "down" | "home-x" | "end-x" | "home-y" | "end-y"
+        where:
+            | "left"
+            | "up"
+            | "right"
+            | "down"
+            | "home-x"
+            | "end-x"
+            | "home-y"
+            | "end-y"
     ): void;
 
     persistentState: IViewStatePersistantState;
+
+    dxMouseDrag: number | undefined;
+    dyMouseDrag: number | undefined;
 }
 
 export interface IDesignerOptions {
@@ -101,20 +118,11 @@ export interface IDesignerContext {
     document: IDocument;
     viewState: IViewState;
     options: IDesignerOptions;
-    filterSnapLines?: (node: IBaseObject) => boolean;
+    filterSnapLines?: (node: ITreeObjectAdapter) => boolean;
 }
 
 export interface IViewStatePersistantState {
     transform?: ITransform;
-    selectedObjects: string[];
-}
-
-export interface IToolbarButton {
-    id: string;
-    label: string;
-    title: string;
-    className?: string;
-    onClick: (context: IDesignerContext) => void;
 }
 
 export interface IMouseHandler {
@@ -124,23 +132,4 @@ export interface IMouseHandler {
     up(context: IDesignerContext, event?: MouseEvent): void;
     selectionVisible: boolean;
     render?(context: IDesignerContext): React.ReactNode;
-}
-
-export interface IToolHandler {
-    render(context: IDesignerContext, mouseHandler: IMouseHandler | undefined): React.ReactNode;
-
-    onClick(context: IDesignerContext, point: Point): void;
-
-    onContextMenu(
-        context: IDesignerContext,
-        point: Point,
-        showContextMenu: (menu: Electron.Menu) => void
-    ): void;
-
-    cursor: string;
-
-    canDrag: boolean;
-    drop(context: IDesignerContext, point: Point): void;
-
-    createMouseHandler(context: IDesignerContext, event: MouseEvent): IMouseHandler | undefined;
 }

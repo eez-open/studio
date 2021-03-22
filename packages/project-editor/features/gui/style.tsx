@@ -25,7 +25,8 @@ import {
     getParent
 } from "project-editor/core/object";
 import {
-    SimpleNavigationStoreClass
+    SimpleNavigationStoreClass,
+    getDocumentStore
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import * as output from "project-editor/core/output";
@@ -37,18 +38,20 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     Project,
     findReferencedObject,
-    getProject,
-    getProjectStore
+    getProject
 } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { findFont } from "project-editor/features/gui/font";
 import { drawText } from "project-editor/features/gui/draw";
-import { getThemedColor, ThemesSideView } from "project-editor/features/gui/theme";
+import {
+    getThemedColor,
+    ThemesSideView
+} from "project-editor/features/gui/theme";
 import { Font } from "project-editor/features/gui/font";
 import { ProjectContext } from "project-editor/project/context";
 
-const { MenuItem } = EEZStudio.electron.remote;
+const { MenuItem } = EEZStudio.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +104,7 @@ export class StyleEditor extends React.Component<{
 @observer
 export class StylesNavigation extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @computed
     get navigationObject() {
@@ -113,7 +116,8 @@ export class StylesNavigation extends NavigationComponent {
 
     @computed
     get style() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
 
         if (navigationStore.selectedPanel) {
             if (navigationStore.selectedPanel.selectedObject instanceof Style) {
@@ -210,7 +214,9 @@ export class StylesNavigation extends NavigationComponent {
                         </Splitter>
 
                         <ThemesSideView
-                            navigationStore={new SimpleNavigationStoreClass(undefined)}
+                            navigationStore={
+                                new SimpleNavigationStoreClass(undefined)
+                            }
                             dragAndDropManager={this.props.dragAndDropManager}
                         />
                     </Splitter>
@@ -225,9 +231,17 @@ export class StylesNavigation extends NavigationComponent {
                     sizes="240px|100%|400px|240px"
                     childrenOverflow="hidden|hidden|hidden|hidden"
                 >
-                    <ListNavigation id={this.props.id} navigationObject={this.navigationObject} />
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.navigationObject}
+                    />
                     {this.style ? (
-                        <StyleEditor style={this.style} width={480} height={272} text="Hello!" />
+                        <StyleEditor
+                            style={this.style}
+                            width={480}
+                            height={272}
+                            text="Hello!"
+                        />
                     ) : (
                         <div />
                     )}
@@ -276,7 +290,7 @@ const inheritFromProperty: PropertyInfo = {
         }),
     onSelectTitle: "Select Style",
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
-        const ProjectStore = getProjectStore(props.objects[0]);
+        const DocumentStore = getDocumentStore(props.objects[0]);
 
         let menuItems: Electron.MenuItem[] = [];
 
@@ -314,7 +328,8 @@ const inheritFromProperty: PropertyInfo = {
                                                 validators.required,
                                                 validators.unique(
                                                     {},
-                                                    ProjectStore.project.gui.styles
+                                                    DocumentStore.project.gui
+                                                        .styles
                                                 )
                                             ]
                                         }
@@ -322,38 +337,47 @@ const inheritFromProperty: PropertyInfo = {
                                 },
                                 values: {}
                             }).then(result => {
-                                ProjectStore.UndoManager.setCombineCommands(true);
+                                DocumentStore.UndoManager.setCombineCommands(
+                                    true
+                                );
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
 
                                 properties.forEach(propertyInfo => {
-                                    stylePropertyValues[propertyInfo.name] = getProperty(
-                                        object,
+                                    stylePropertyValues[
                                         propertyInfo.name
-                                    );
+                                    ] = getProperty(object, propertyInfo.name);
 
-                                    objectPropertyValues[propertyInfo.name] = undefined;
+                                    objectPropertyValues[
+                                        propertyInfo.name
+                                    ] = undefined;
                                 });
 
                                 stylePropertyValues.name = result.values.name;
 
-                                objectPropertyValues.inheritFrom = result.values.name;
+                                objectPropertyValues.inheritFrom =
+                                    result.values.name;
 
-                                ProjectStore.addObject(
-                                    ProjectStore.project.gui.styles,
+                                DocumentStore.addObject(
+                                    DocumentStore.project.gui.styles,
                                     stylePropertyValues
                                 );
-                                ProjectStore.updateObject(object, objectPropertyValues);
+                                DocumentStore.updateObject(
+                                    object,
+                                    objectPropertyValues
+                                );
 
-                                ProjectStore.UndoManager.setCombineCommands(false);
+                                DocumentStore.UndoManager.setCombineCommands(
+                                    false
+                                );
                             });
                         }
                     })
                 );
 
                 const style = findStyle(
-                    ProjectStore.project,
+                    DocumentStore.project,
                     (props.objects[0] as Style).inheritFrom
                 );
                 if (style) {
@@ -361,28 +385,45 @@ const inheritFromProperty: PropertyInfo = {
                         new MenuItem({
                             label: "Update Style",
                             click: () => {
-                                ProjectStore.UndoManager.setCombineCommands(true);
+                                DocumentStore.UndoManager.setCombineCommands(
+                                    true
+                                );
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
                                 properties.forEach(propertyInfo => {
                                     if (
                                         propertyInfo.inheritable &&
-                                        getProperty(object, propertyInfo.name) !== undefined
+                                        getProperty(
+                                            object,
+                                            propertyInfo.name
+                                        ) !== undefined
                                     ) {
-                                        stylePropertyValues[propertyInfo.name] = getProperty(
+                                        stylePropertyValues[
+                                            propertyInfo.name
+                                        ] = getProperty(
                                             object,
                                             propertyInfo.name
                                         );
 
-                                        objectPropertyValues[propertyInfo.name] = undefined;
+                                        objectPropertyValues[
+                                            propertyInfo.name
+                                        ] = undefined;
                                     }
                                 });
 
-                                ProjectStore.updateObject(style, stylePropertyValues);
-                                ProjectStore.updateObject(object, objectPropertyValues);
+                                DocumentStore.updateObject(
+                                    style,
+                                    stylePropertyValues
+                                );
+                                DocumentStore.updateObject(
+                                    object,
+                                    objectPropertyValues
+                                );
 
-                                ProjectStore.UndoManager.setCombineCommands(false);
+                                DocumentStore.UndoManager.setCombineCommands(
+                                    false
+                                );
                             }
                         })
                     );
@@ -460,7 +501,9 @@ const activeColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) =>
+        getDocumentStore(object).project.settings.general.projectVersion ===
+        "v1"
 };
 
 const activeBackgroundColorProperty: PropertyInfo = {
@@ -469,7 +512,9 @@ const activeBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) =>
+        getDocumentStore(object).project.settings.general.projectVersion ===
+        "v1"
 };
 
 const focusColorProperty: PropertyInfo = {
@@ -478,7 +523,9 @@ const focusColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) =>
+        getDocumentStore(object).project.settings.general.projectVersion ===
+        "v1"
 };
 
 const focusBackgroundColorProperty: PropertyInfo = {
@@ -487,7 +534,9 @@ const focusBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "gui/colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) => getProjectStore(object).project.settings.general.projectVersion === "v1"
+    hideInPropertyGrid: (object: IEezObject) =>
+        getDocumentStore(object).project.settings.general.projectVersion ===
+        "v1"
 };
 
 const borderSizeProperty: PropertyInfo = {
@@ -607,7 +656,7 @@ function getInheritedValue(
                 propertyName === "focusBackgroundColor" ||
                 propertyName === "borderColor")
         ) {
-            value = getThemedColor(getProjectStore(styleObject), value);
+            value = getThemedColor(getDocumentStore(styleObject), value);
         }
 
         return {
@@ -617,7 +666,10 @@ function getInheritedValue(
     }
 
     if (styleObject.inheritFrom) {
-        let inheritFromStyleObject = findStyle(getProject(styleObject), styleObject.inheritFrom);
+        let inheritFromStyleObject = findStyle(
+            getProject(styleObject),
+            styleObject.inheritFrom
+        );
 
         if (inheritFromStyleObject) {
             return getInheritedValue(
@@ -697,7 +749,8 @@ export class Style extends EezObject implements IStyle {
                 delete jsObject.paddingVertical;
 
                 if (paddingHorizontal !== paddingVertical) {
-                    jsObject.padding = paddingVertical + " " + paddingHorizontal;
+                    jsObject.padding =
+                        paddingVertical + " " + paddingHorizontal;
                 } else {
                     jsObject.padding = paddingHorizontal;
                 }
@@ -712,14 +765,15 @@ export class Style extends EezObject implements IStyle {
         getInheritedValue: (styleObject: Style, propertyName: string) =>
             getInheritedValue(styleObject, propertyName, [], false),
         navigationComponentId: "styles",
-        isEditorSupported: (object: IEezObject) => !isWidgetParentOfStyle(object),
+        isEditorSupported: (object: IEezObject) =>
+            !isWidgetParentOfStyle(object),
         navigationComponent: StylesNavigation,
         icon: "format_color_fill",
         defaultValue: {},
         check: (object: Style) => {
             let messages: output.Message[] = [];
 
-            const Projectstore = getProjectStore(object);
+            const Projectstore = getDocumentStore(object);
 
             if (object.id != undefined) {
                 if (!(object.id > 0 || object.id < 32768)) {
@@ -731,20 +785,32 @@ export class Style extends EezObject implements IStyle {
                         )
                     );
                 } else {
-                    if (Projectstore.project.gui.allStyleIdToStyleMap.get(object.id)!.length > 1) {
-                        messages.push(output.propertyNotUniqueMessage(object, "id"));
+                    if (
+                        Projectstore.project.gui.allStyleIdToStyleMap.get(
+                            object.id
+                        )!.length > 1
+                    ) {
+                        messages.push(
+                            output.propertyNotUniqueMessage(object, "id")
+                        );
                     }
                 }
             }
 
-            if (object.inheritFrom && !findStyle(Projectstore.project, object.inheritFrom)) {
-                messages.push(output.propertyNotFoundMessage(object, "inheritFrom"));
+            if (
+                object.inheritFrom &&
+                !findStyle(Projectstore.project, object.inheritFrom)
+            ) {
+                messages.push(
+                    output.propertyNotFoundMessage(object, "inheritFrom")
+                );
             } else {
                 // if (!object.fontName) {
                 //     messages.push(output.propertyNotFoundMessage(object, "font"));
                 // }
 
-                let borderSizeError = Style.getRect(object.borderSizeProperty).error;
+                let borderSizeError = Style.getRect(object.borderSizeProperty)
+                    .error;
                 if (borderSizeError) {
                     messages.push(
                         new output.Message(
@@ -757,7 +823,12 @@ export class Style extends EezObject implements IStyle {
 
                 let borderRadius = object.borderRadiusProperty;
                 if (borderRadius < 0) {
-                    messages.push(output.propertyInvalidValueMessage(object, "borderRadius"));
+                    messages.push(
+                        output.propertyInvalidValueMessage(
+                            object,
+                            "borderRadius"
+                        )
+                    );
                 }
 
                 let alignHorizontal = object.alignHorizontalProperty;
@@ -766,7 +837,12 @@ export class Style extends EezObject implements IStyle {
                     alignHorizontal != "center" &&
                     alignHorizontal != "right"
                 ) {
-                    messages.push(output.propertyInvalidValueMessage(object, "alignHorizontal"));
+                    messages.push(
+                        output.propertyInvalidValueMessage(
+                            object,
+                            "alignHorizontal"
+                        )
+                    );
                 }
 
                 let alignVertical = object.alignVerticalProperty;
@@ -775,41 +851,77 @@ export class Style extends EezObject implements IStyle {
                     alignVertical != "center" &&
                     alignVertical != "bottom"
                 ) {
-                    messages.push(output.propertyInvalidValueMessage(object, "alignVertical"));
+                    messages.push(
+                        output.propertyInvalidValueMessage(
+                            object,
+                            "alignVertical"
+                        )
+                    );
                 }
 
                 if (isNaN(object.color16)) {
-                    messages.push(output.propertyInvalidValueMessage(object, "color"));
+                    messages.push(
+                        output.propertyInvalidValueMessage(object, "color")
+                    );
                 }
 
                 if (isNaN(object.backgroundColor16)) {
-                    messages.push(output.propertyInvalidValueMessage(object, "backgroundColor"));
+                    messages.push(
+                        output.propertyInvalidValueMessage(
+                            object,
+                            "backgroundColor"
+                        )
+                    );
                 }
 
-                if (Projectstore.project.settings.general.projectVersion !== "v1") {
+                if (
+                    Projectstore.project.settings.general.projectVersion !==
+                    "v1"
+                ) {
                     if (isNaN(object.activeColor16)) {
-                        messages.push(output.propertyInvalidValueMessage(object, "activeColor"));
+                        messages.push(
+                            output.propertyInvalidValueMessage(
+                                object,
+                                "activeColor"
+                            )
+                        );
                     }
 
                     if (isNaN(object.activeBackgroundColor16)) {
                         messages.push(
-                            output.propertyInvalidValueMessage(object, "activeBackgroundColor")
+                            output.propertyInvalidValueMessage(
+                                object,
+                                "activeBackgroundColor"
+                            )
                         );
                     }
 
                     if (isNaN(object.focusColor16)) {
-                        messages.push(output.propertyInvalidValueMessage(object, "focusColor"));
+                        messages.push(
+                            output.propertyInvalidValueMessage(
+                                object,
+                                "focusColor"
+                            )
+                        );
                     }
 
                     if (isNaN(object.focusBackgroundColor16)) {
                         messages.push(
-                            output.propertyInvalidValueMessage(object, "focusBackgroundColor")
+                            output.propertyInvalidValueMessage(
+                                object,
+                                "focusBackgroundColor"
+                            )
                         );
                     }
                 }
 
                 if (isNaN(object.borderColor16)) {
-                    messages.push(output.propertyInvalidValueMessage(object, "borderColor"));
+                    messages.push(
+                        output.propertyInvalidValueMessage(
+                            object,
+                            "borderColor"
+                        )
+                    );
                 }
 
                 let paddingError = Style.getRect(object.paddingProperty).error;
@@ -851,11 +963,15 @@ export class Style extends EezObject implements IStyle {
         }
 
         if (this.inheritFrom) {
-            let inheritFromStyleObject = findStyle(getProject(this), this.inheritFrom);
+            let inheritFromStyleObject = findStyle(
+                getProject(this),
+                this.inheritFrom
+            );
 
             if (inheritFromStyleObject) {
-                return getInheritedValue(inheritFromStyleObject, "fontObject", [this])
-                    ?.value as Font;
+                return getInheritedValue(inheritFromStyleObject, "fontObject", [
+                    this
+                ])?.value as Font;
             }
         }
 
@@ -1144,14 +1260,18 @@ export class Style extends EezObject implements IStyle {
     compareTo(otherStyle: Style): boolean {
         return (
             this.fontName === otherStyle.fontName &&
-            this.alignHorizontalProperty === otherStyle.alignHorizontalProperty &&
+            this.alignHorizontalProperty ===
+                otherStyle.alignHorizontalProperty &&
             this.alignVerticalProperty === otherStyle.alignVerticalProperty &&
             this.colorProperty === otherStyle.colorProperty &&
-            this.backgroundColorProperty === otherStyle.backgroundColorProperty &&
+            this.backgroundColorProperty ===
+                otherStyle.backgroundColorProperty &&
             this.activeColorProperty === otherStyle.activeColorProperty &&
-            this.activeBackgroundColorProperty === otherStyle.activeBackgroundColorProperty &&
+            this.activeBackgroundColorProperty ===
+                otherStyle.activeBackgroundColorProperty &&
             this.focusColorProperty === otherStyle.focusColorProperty &&
-            this.focusBackgroundColorProperty === otherStyle.focusBackgroundColorProperty &&
+            this.focusBackgroundColorProperty ===
+                otherStyle.focusBackgroundColorProperty &&
             this.borderSizeProperty === otherStyle.borderSizeProperty &&
             this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
             this.borderColorProperty === otherStyle.borderColorProperty &&
@@ -1172,7 +1292,12 @@ export function getStyleProperty(
     propertyName: string,
     translateThemedColors?: boolean
 ): any {
-    let inheritedValue = getInheritedValue(style, propertyName, [], translateThemedColors);
+    let inheritedValue = getInheritedValue(
+        style,
+        propertyName,
+        [],
+        translateThemedColors
+    );
     if (inheritedValue) {
         return inheritedValue.value;
     }
@@ -1180,16 +1305,56 @@ export function getStyleProperty(
     return propertiesMap[propertyName].defaultValue;
 }
 
-export function drawStylePreview(canvas: HTMLCanvasElement, style: Style, text: string) {
+export function drawStylePreview(
+    canvas: HTMLCanvasElement,
+    style: Style,
+    text: string
+) {
     let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (ctx) {
         ctx.save();
         if (canvas.width > canvas.height) {
-            drawText(ctx, text, 0, 0, canvas.width / 2, canvas.height, style, false);
-            drawText(ctx, text, canvas.width / 2, 0, canvas.width / 2, canvas.height, style, true);
+            drawText(
+                ctx,
+                text,
+                0,
+                0,
+                canvas.width / 2,
+                canvas.height,
+                style,
+                false
+            );
+            drawText(
+                ctx,
+                text,
+                canvas.width / 2,
+                0,
+                canvas.width / 2,
+                canvas.height,
+                style,
+                true
+            );
         } else {
-            drawText(ctx, text, 0, 0, canvas.width, canvas.height / 2, style, false);
-            drawText(ctx, text, 0, canvas.height / 2, canvas.width, canvas.height / 2, style, true);
+            drawText(
+                ctx,
+                text,
+                0,
+                0,
+                canvas.width,
+                canvas.height / 2,
+                style,
+                false
+            );
+            drawText(
+                ctx,
+                text,
+                0,
+                canvas.height / 2,
+                canvas.width,
+                canvas.height / 2,
+                style,
+                true
+            );
         }
         ctx.restore();
     }
@@ -1202,5 +1367,7 @@ export function findStyle(project: Project, styleName: string | undefined) {
         return undefined;
     }
 
-    return findReferencedObject(project, "gui/styles", styleName) as Style | undefined;
+    return findReferencedObject(project, "gui/styles", styleName) as
+        | Style
+        | undefined;
 }

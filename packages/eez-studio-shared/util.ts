@@ -16,26 +16,38 @@ export function parseXmlString(xmlString: string) {
 }
 
 export function getBoundingClientRectOfChildNodes(element: Element) {
-    const { BoundingRectBuilder } = require("eez-studio-shared/geometry") as typeof GeometryModule;
+    const {
+        BoundingRectBuilder
+    } = require("eez-studio-shared/geometry") as typeof GeometryModule;
     let boundingRectBuilder = new BoundingRectBuilder();
     element.childNodes.forEach(node => {
         if (node instanceof Element) {
-            boundingRectBuilder.addRect(getBoundingClientRectIncludingChildNodes(node));
+            boundingRectBuilder.addRect(
+                getBoundingClientRectIncludingChildNodes(node)
+            );
         }
     });
     return boundingRectBuilder.getRect()!;
 }
 
 export function getBoundingClientRectIncludingChildNodes(element: Element) {
-    const { BoundingRectBuilder } = require("eez-studio-shared/geometry") as typeof GeometryModule;
+    const {
+        BoundingRectBuilder
+    } = require("eez-studio-shared/geometry") as typeof GeometryModule;
     let boundingRectBuilder = new BoundingRectBuilder();
     boundingRectBuilder.addRect(element.getBoundingClientRect());
     boundingRectBuilder.addRect(getBoundingClientRectOfChildNodes(element));
     return boundingRectBuilder.getRect()!;
 }
 
-export function formatNumber(value: number, base: number, width: number): string {
-    return ("0".repeat(width) + value.toString(base)).substr(-width).toUpperCase();
+export function formatNumber(
+    value: number,
+    base: number,
+    width: number
+): string {
+    return ("0".repeat(width) + value.toString(base))
+        .substr(-width)
+        .toUpperCase();
 }
 
 export function formatTransferSpeed(speed: number) {
@@ -65,7 +77,9 @@ export function objectClone(obj: any) {
 
     return JSON.parse(
         JSON.stringify(toJS(a), (key: string, value: any) => {
-            return key.startsWith("$") ? undefined : value;
+            return key.startsWith("$") || key.startsWith("_eez_")
+                ? undefined
+                : value;
         })
     );
 }
@@ -233,7 +247,10 @@ export async function confirmSave({
         CANCEL
     }
 
-    const saveButtton = { label: mnemonicLabel("&&Save"), result: ConfirmResult.SAVE };
+    const saveButtton = {
+        label: mnemonicLabel("&&Save"),
+        result: ConfirmResult.SAVE
+    };
     const dontSaveButton = {
         label: mnemonicLabel("Do&&n't Save"),
         result: ConfirmResult.DONT_SAVE
@@ -265,8 +282,8 @@ export async function confirmSave({
         opts.defaultId = 2;
     }
 
-    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    const result = await EEZStudio.remote.dialog.showMessageBox(
+        EEZStudio.remote.getCurrentWindow(),
         opts
     );
     const buttonIndex = result.response;
@@ -324,7 +341,7 @@ export function compareVersions(v1: string, v2: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function sendSimpleMessage(message: string, args: any) {
-    EEZStudio.electron.remote.BrowserWindow.getAllWindows().forEach(window => {
+    EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
         window.webContents.send("shared/simple-message", {
             message,
             args
@@ -332,7 +349,10 @@ export function sendSimpleMessage(message: string, args: any) {
     });
 }
 
-export function onSimpleMessage(message: string, callback: (args: any) => void) {
+export function onSimpleMessage(
+    message: string,
+    callback: (args: any) => void
+) {
     EEZStudio.electron.ipcRenderer.on(
         "shared/simple-message",
         (

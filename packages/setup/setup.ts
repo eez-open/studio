@@ -118,7 +118,7 @@ async function doSetup(webContents: WebContents) {
 }
 
 export async function setup() {
-    return new Promise(resolve => {
+    return new Promise<void>(resolve => {
         if (isDev || !isAnySetupRequired()) {
             const {
                 loadExtensions
@@ -132,6 +132,11 @@ export async function setup() {
         let win = new BrowserWindow({
             webPreferences: {
                 nodeIntegration: true,
+                webSecurity: false,
+                webviewTag: true,
+                nodeIntegrationInWorker: true,
+                plugins: true,
+                contextIsolation: false,
                 enableRemoteModule: true
             },
             width: 600,

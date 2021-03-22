@@ -42,6 +42,7 @@ import {
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
+import { getDocumentStore } from "project-editor/core/store";
 
 import { getThemedColor } from "project-editor/features/gui/theme";
 
@@ -49,13 +50,12 @@ import { ConfigurationReferencesPropertyValue } from "project-editor/components/
 
 import {
     isAnyObjectReadOnly,
-    getNameProperty,
-    getProjectStore
+    getNameProperty
 } from "project-editor/project/project";
 
 import { ProjectContext } from "project-editor/project/context";
 
-const { Menu, MenuItem } = EEZStudio.electron.remote;
+const { Menu, MenuItem } = EEZStudio.remote;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -299,7 +299,7 @@ class ThemedColorInput extends React.Component<{
     readOnly: boolean;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @bind
     onDragOver(event: React.DragEvent) {
@@ -309,7 +309,7 @@ class ThemedColorInput extends React.Component<{
     @bind
     onDrop(event: React.DragEvent) {
         event.preventDefault();
-        var data = getEezStudioDataFromDragEvent(event);
+        var data = getEezStudioDataFromDragEvent(this.context, event);
         if (data && data.objectClassName === "Color" && data.object) {
             this.props.onChange(getProperty(data.object, "name"));
         }
@@ -381,7 +381,7 @@ function isArrayElementPropertyVisible(
 }
 
 function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
-    const DocumentStore = getProjectStore(object);
+    const DocumentStore = getDocumentStore(object);
     const selectedObject =
         DocumentStore.NavigationStore.selectedPanel &&
         DocumentStore.NavigationStore.selectedPanel.selectedObject;
@@ -397,12 +397,14 @@ function isHighlightedProperty(object: IEezObject, propertyInfo: PropertyInfo) {
 }
 
 function isPropertyInError(object: IEezObject, propertyInfo: PropertyInfo) {
-    return !!getProjectStore(object).OutputSectionsStore.getSection(Section.CHECKS).messages.find(
-        message =>
-            message.object &&
-            getParent(message.object) === object &&
-            getKey(message.object) === propertyInfo.name
-    );
+    return !!getDocumentStore(object)
+        .OutputSectionsStore.getSection(Section.CHECKS)
+        .messages.find(
+            message =>
+                message.object &&
+                getParent(message.object) === object &&
+                getKey(message.object) === propertyInfo.name
+        );
 }
 
 @observer
@@ -412,7 +414,7 @@ class ArrayElementProperty extends React.Component<{
     readOnly: boolean;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @bind
     updateObject(propertyValues: Object) {
@@ -463,7 +465,7 @@ class ArrayElementProperties extends React.Component<{
     className?: string;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @bind
     onRemove(event: any) {
@@ -501,7 +503,7 @@ class ArrayElementProperties extends React.Component<{
 @observer
 class ArrayProperty extends React.Component<PropertyProps> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @computed
     get value() {
@@ -634,7 +636,10 @@ class PropertyCollapsedStore {
 
     @action
     toggleColapsed(object: IEezObject, propertyInfo: PropertyInfo) {
-        this.map[this.getKey(propertyInfo)] = !this.isCollapsed(object, propertyInfo);
+        this.map[this.getKey(propertyInfo)] = !this.isCollapsed(
+            object,
+            propertyInfo
+        );
         localStorage.setItem(
             "PropertyCollapsedStore",
             JSON.stringify(this.map)
@@ -647,13 +652,16 @@ const propertyCollapsedStore = new PropertyCollapsedStore();
 @observer
 class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @observable collapsed = true;
 
     @bind
     toggleCollapsed() {
-        propertyCollapsedStore.toggleColapsed(this.props.objects[0], this.props.propertyInfo);
+        propertyCollapsedStore.toggleColapsed(
+            this.props.objects[0],
+            this.props.propertyInfo
+        );
     }
 
     @bind
@@ -747,7 +755,10 @@ class PropertyName extends React.Component<PropertyProps> {
 
     @bind
     toggleCollapsed() {
-        propertyCollapsedStore.toggleColapsed(this.props.objects[0], this.props.propertyInfo);
+        propertyCollapsedStore.toggleColapsed(
+            this.props.objects[0],
+            this.props.propertyInfo
+        );
     }
 
     render() {
@@ -756,7 +767,9 @@ class PropertyName extends React.Component<PropertyProps> {
         if (propertyInfo.propertyGridCollapsable) {
             const enabled =
                 !propertyInfo.propertyGridCollapsableEnabled ||
-                propertyInfo.propertyGridCollapsableEnabled(this.props.objects[0]);
+                propertyInfo.propertyGridCollapsableEnabled(
+                    this.props.objects[0]
+                );
             const collapsed = propertyCollapsedStore.isCollapsed(
                 this.props.objects[0],
                 this.props.propertyInfo
@@ -1421,7 +1434,7 @@ class Property extends React.Component<PropertyProps> {
                                 type="button"
                                 onClick={async () => {
                                     if (this.context.filePath) {
-                                        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+                                        const result = await EEZStudio.remote.dialog.showOpenDialog(
                                             {
                                                 properties: ["openDirectory"]
                                             }
@@ -1480,7 +1493,7 @@ class Property extends React.Component<PropertyProps> {
                                 type="button"
                                 onClick={async () => {
                                     if (this.context.filePath) {
-                                        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+                                        const result = await EEZStudio.remote.dialog.showOpenDialog(
                                             {
                                                 properties: ["openFile"],
                                                 filters:
@@ -1530,7 +1543,7 @@ class Property extends React.Component<PropertyProps> {
                                     className="btn btn-secondary"
                                     type="button"
                                     onClick={async () => {
-                                        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
+                                        const result = await EEZStudio.remote.dialog.showOpenDialog(
                                             {
                                                 properties: ["openFile"],
                                                 filters: [
@@ -1552,7 +1565,7 @@ class Property extends React.Component<PropertyProps> {
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
                                             if (propertyInfo.embeddedImage) {
-                                                const fs = EEZStudio.electron.remote.require(
+                                                const fs = EEZStudio.remote.require(
                                                     "fs"
                                                 );
                                                 fs.readFile(
@@ -1928,7 +1941,7 @@ interface PropertyGridProps {
 @observer
 export class PropertyGrid extends React.Component<PropertyGridProps> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     div: HTMLDivElement | null;
     lastObject: IEezObject | undefined;
@@ -2019,7 +2032,10 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                 propertyInfo.type === PropertyType.Boolean ||
                 propertyInfo.type === PropertyType.Any ||
                 (propertyInfo.propertyGridCollapsable &&
-                    (!propertyCollapsedStore.isCollapsed(objects[0], propertyInfo) ||
+                    (!propertyCollapsedStore.isCollapsed(
+                        objects[0],
+                        propertyInfo
+                    ) ||
                         !propertyInfo.propertyGridCollapsableDefaultPropertyName));
 
             const propertyProps = {

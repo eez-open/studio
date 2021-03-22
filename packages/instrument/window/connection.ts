@@ -81,7 +81,7 @@ export class Connection {
 
     acquire(traceEnabled: boolean = false) {
         const result = this.instrument.connection.acquire(
-            EEZStudio.electron.remote.getCurrentWindow().id,
+            EEZStudio.remote.getCurrentWindow().id,
             traceEnabled
         );
         if (result) {

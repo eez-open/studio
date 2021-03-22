@@ -66,30 +66,48 @@
         />
         <style>
             .jsPanel-modal-backdrop {
-            animation: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 1000 !important;
+                animation: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                z-index: 1000 !important;
             }
             .jsPanel-modal-backdrop-out {
-            animation: none;
+                animation: none;
             }
             .jsPanel-modal-backdrop-multi {
-            background: transparent;
+                background: transparent;
             }
             .jsPanel-modal {
-            z-index: 1001 !important;
+                z-index: 1001 !important;
             }
         </style>
         <script src="../../node_modules/jspanel4/dist/jspanel.js"></script>
         <script src="../../node_modules/jspanel4/dist/extensions/modal/jspanel.modal.js"></script>
 
-        <link rel="stylesheet" type="text/css" href="../eez-studio-ui/_stylesheets/main.css" />
-        <link rel="stylesheet" type="text/css" href="../eez-studio-ui/_stylesheets/app.css" />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="../../libs/trix/trix.css"
+        />
+        <script
+            type="text/javascript"
+            src="../../libs/trix/trix-core.js"
+        ></script>
+
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="../eez-studio-ui/_stylesheets/main.css"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="../eez-studio-ui/_stylesheets/app.css"
+        />
     </head>
 
     <body>
@@ -100,9 +118,12 @@
             var EEZStudio = {
                 title: document.title,
                 electron: require("electron"),
-                require: require
+                require: require,
+                remote: require("@electron/remote")
             };
-            const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(process.execPath);
+            const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(
+                process.execPath
+            );
             process.env.NODE_ENV = isDev ? "development" : "production";
             require("app-module-path").addPath(__dirname + "/..");
             require("./main.js");

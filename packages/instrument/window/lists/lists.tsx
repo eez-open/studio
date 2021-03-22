@@ -389,8 +389,8 @@ export async function saveTableListData(
     listName: string,
     tableListData: ITableListData
 ) {
-    const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    const result = await EEZStudio.remote.dialog.showSaveDialog(
+        EEZStudio.remote.getCurrentWindow(),
         {
             defaultPath: listName ? getValidFileNameFromFileName(listName) + ".list" : undefined,
             filters: [{ name: "EEZ List Files", extensions: ["list"] }]
@@ -424,8 +424,8 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
 
     @bind
     async import() {
-        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showOpenDialog(
+            EEZStudio.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
                 filters: [

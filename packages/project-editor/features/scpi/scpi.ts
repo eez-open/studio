@@ -18,6 +18,7 @@ import {
     getChildOfObject,
     getParent
 } from "project-editor/core/object";
+import { getDocumentStore } from "project-editor/core/store";
 
 import {
     IParameterType,
@@ -38,7 +39,6 @@ import {
     findScpiEnum,
     getScpiEnumsAsDialogEnumItems
 } from "project-editor/features/scpi/enum";
-import { getProjectStore } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,10 +77,14 @@ export class ScpiParameterType extends EezObject implements IParameterType {
             messages.push(output.propertyNotSetMessage(this, "type"));
         } else if (this.type === "discrete") {
             if (!this.enumeration) {
-                messages.push(output.propertyNotSetMessage(this, "enumeration"));
+                messages.push(
+                    output.propertyNotSetMessage(this, "enumeration")
+                );
             } else {
-                if (!findScpiEnum(getProjectStore(object), this.enumeration)) {
-                    messages.push(output.propertyNotFoundMessage(this, "enumeration"));
+                if (!findScpiEnum(getDocumentStore(object), this.enumeration)) {
+                    messages.push(
+                        output.propertyNotFoundMessage(this, "enumeration")
+                    );
                 }
             }
         }
@@ -95,7 +99,8 @@ function getScpiType(
 ) {
     return (object.type as (ScpiParameterType | ScpiResponseType)[]).find(
         (scpiType: ScpiParameterType | ScpiResponseType) =>
-            scpiType.type === type || (scpiType.type === ("numeric" as any) && type === "nr3")
+            scpiType.type === type ||
+            (scpiType.type === ("numeric" as any) && type === "nr3")
     );
 }
 
@@ -167,8 +172,11 @@ export class ScpiParameter extends EezObject implements IScpiParameter {
                 type: PropertyType.Array,
                 typeClass: ScpiParameterType,
                 defaultValue: [],
-                onSelect: async (object: ScpiParameter, propertyInfo: PropertyInfo) => {
-                    const ProjectStore = getProjectStore(object);
+                onSelect: async (
+                    object: ScpiParameter,
+                    propertyInfo: PropertyInfo
+                ) => {
+                    const DocumentStore = getDocumentStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -233,7 +241,9 @@ export class ScpiParameter extends EezObject implements IScpiParameter {
                                     name: "enumeration",
                                     type: "enum",
                                     enumItems: () => {
-                                        return getScpiEnumsAsDialogEnumItems(ProjectStore);
+                                        return getScpiEnumsAsDialogEnumItems(
+                                            DocumentStore
+                                        );
                                     },
                                     visible: (values: any) => {
                                         return !values.any && values.discrete;
@@ -417,10 +427,14 @@ export class ScpiResponseType extends EezObject implements IResponseType {
             messages.push(output.propertyNotSetMessage(this, "type"));
         } else if (this.type === "discrete") {
             if (!this.enumeration) {
-                messages.push(output.propertyNotSetMessage(this, "enumeration"));
+                messages.push(
+                    output.propertyNotSetMessage(this, "enumeration")
+                );
             } else {
-                if (!findScpiEnum(getProjectStore(object), this.enumeration)) {
-                    messages.push(output.propertyNotFoundMessage(this, "enumeration"));
+                if (!findScpiEnum(getDocumentStore(object), this.enumeration)) {
+                    messages.push(
+                        output.propertyNotFoundMessage(this, "enumeration")
+                    );
                 }
             }
         }
@@ -447,8 +461,11 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
                 type: PropertyType.Array,
                 typeClass: ScpiResponseType,
                 defaultValue: [],
-                onSelect: async (object: ScpiResponse, propertyInfo: PropertyInfo) => {
-                    const ProjectStore = getProjectStore(object);
+                onSelect: async (
+                    object: ScpiResponse,
+                    propertyInfo: PropertyInfo
+                ) => {
+                    const DocumentStore = getDocumentStore(object);
                     const result = await showGenericDialog({
                         dialogDefinition: {
                             title: "Select one or more type",
@@ -527,7 +544,9 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
                                     name: "enumeration",
                                     type: "enum",
                                     enumItems: () => {
-                                        return getScpiEnumsAsDialogEnumItems(ProjectStore);
+                                        return getScpiEnumsAsDialogEnumItems(
+                                            DocumentStore
+                                        );
                                     },
                                     visible: (values: any) => {
                                         return !values.any && values.discrete;
@@ -728,7 +747,10 @@ export class ScpiCommand extends EezObject implements IScpiCommand {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
                         }
                     ]
                 },
@@ -801,7 +823,10 @@ export class ScpiSubsystem extends EezObject implements ScpiSubsystem {
                         {
                             name: "name",
                             type: "string",
-                            validators: [validators.required, validators.unique({}, parent)]
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
                         }
                     ]
                 },

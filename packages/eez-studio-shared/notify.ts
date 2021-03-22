@@ -24,7 +24,7 @@ const targets = new Map<string, INotifyTarget>();
 
 function getBrowserWindow() {
     if (isRenderer()) {
-        return EEZStudio.electron.remote.BrowserWindow;
+        return EEZStudio.remote.BrowserWindow;
     } else {
         return require("electron").BrowserWindow;
     }
@@ -101,7 +101,7 @@ export function watch(
     // add target to other windows
     let targetWindowId: number;
     if (isRenderer()) {
-        targetWindowId = EEZStudio.electron.remote.getCurrentWindow().id;
+        targetWindowId = EEZStudio.remote.getCurrentWindow().id;
     } else {
         targetWindowId = -1;
     }
@@ -198,13 +198,13 @@ ipc.on("notify/send-message", function(event: any, args: ISendMessageArgs) {
 ipc.on("notify/get-targets", function(event: any, windowId: number) {
     let targetWindowId: number;
     if (isRenderer()) {
-        targetWindowId = EEZStudio.electron.remote.getCurrentWindow().id;
+        targetWindowId = EEZStudio.remote.getCurrentWindow().id;
     } else {
         targetWindowId = -1;
     }
     targets.forEach((target, targetId) => {
         if (target.callback) {
-            sendNotifyWatch(getBrowserWindow().fromId(windowId).webContents, {
+            sendNotifyWatch(getBrowserWindow().fromId(windowId)!.webContents, {
                 sourceId: target.sourceId,
                 filterSpecification: target.filterSpecification,
                 targetId,
@@ -215,18 +215,18 @@ ipc.on("notify/get-targets", function(event: any, windowId: number) {
 });
 
 if (isRenderer()) {
-    let currentWindowId = EEZStudio.electron.remote.getCurrentWindow().id;
-    EEZStudio.electron.remote.BrowserWindow.getAllWindows().forEach(window => {
+    let currentWindowId = EEZStudio.remote.getCurrentWindow().id;
+    EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
         if (currentWindowId !== window.id) {
             window.webContents.send(
                 "notify/get-targets",
-                EEZStudio.electron.remote.getCurrentWindow().id
+                EEZStudio.remote.getCurrentWindow().id
             );
         }
     });
 
     EEZStudio.electron.ipcRenderer.send(
         "notify/get-targets",
-        EEZStudio.electron.remote.getCurrentWindow().id
+        EEZStudio.remote.getCurrentWindow().id
     );
 }

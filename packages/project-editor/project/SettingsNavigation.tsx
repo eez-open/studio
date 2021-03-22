@@ -14,7 +14,10 @@ import {
 import { loadObject } from "project-editor/core/serialization";
 
 import { confirm } from "project-editor/core/util";
-import { Extension, getExtensionsByCategory } from "project-editor/core/extensions";
+import {
+    Extension,
+    getExtensionsByCategory
+} from "project-editor/core/extensions";
 
 import { BuildFile } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
@@ -33,33 +36,40 @@ class ProjectFeature extends React.Component<
     {}
 > {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     onAdd() {
         let newFeatureObject = loadObject(
+            this.context,
             this.context.project,
             this.props.extension.eezStudioExtension.implementation.projectFeature.create(),
-            this.props.extension.eezStudioExtension.implementation.projectFeature.typeClass,
-            this.props.extension.eezStudioExtension.implementation.projectFeature.key
+            this.props.extension.eezStudioExtension.implementation
+                .projectFeature.typeClass,
+            this.props.extension.eezStudioExtension.implementation
+                .projectFeature.key
         );
 
         let changes = {
-            [this.props.extension.eezStudioExtension.implementation.projectFeature
-                .key]: newFeatureObject
+            [this.props.extension.eezStudioExtension.implementation
+                .projectFeature.key]: newFeatureObject
         };
 
         this.context.updateObject(this.context.project, changes);
     }
 
     onRemove() {
-        confirm("Are you sure you want to remove this feature?", undefined, () => {
-            if (this.context.project) {
-                this.context.updateObject(this.context.project, {
-                    [this.props.extension.eezStudioExtension.implementation.projectFeature
-                        .key]: undefined
-                });
+        confirm(
+            "Are you sure you want to remove this feature?",
+            undefined,
+            () => {
+                if (this.context.project) {
+                    this.context.updateObject(this.context.project, {
+                        [this.props.extension.eezStudioExtension.implementation
+                            .projectFeature.key]: undefined
+                    });
+                }
             }
-        });
+        );
     }
 
     render() {
@@ -67,10 +77,14 @@ class ProjectFeature extends React.Component<
         if (
             getProperty(
                 this.context.project,
-                this.props.extension.eezStudioExtension.implementation.projectFeature.key
+                this.props.extension.eezStudioExtension.implementation
+                    .projectFeature.key
             )
         ) {
-            if (this.props.extension.eezStudioExtension.implementation.projectFeature.mandatory) {
+            if (
+                this.props.extension.eezStudioExtension.implementation
+                    .projectFeature.mandatory
+            ) {
                 button = (
                     <button
                         className="btn btn-secondary float-right"
@@ -104,23 +118,38 @@ class ProjectFeature extends React.Component<
         }
 
         return (
-            <div className="card shadow-sm m-2 rounded" style={{ width: "18rem" }}>
+            <div
+                className="card shadow-sm m-2 rounded"
+                style={{ width: "18rem" }}
+            >
                 <div className="card-body pb-5">
                     <h5 className="card-title">
                         <i
                             className="material-icons card-img-top"
-                            style={{ fontSize: 32, display: "inline", marginRight: 5 }}
+                            style={{
+                                fontSize: 32,
+                                display: "inline",
+                                marginRight: 5
+                            }}
                         >
                             {
-                                this.props.extension.eezStudioExtension.implementation
-                                    .projectFeature.icon
+                                this.props.extension.eezStudioExtension
+                                    .implementation.projectFeature.icon
                             }
                         </i>
                         {this.props.extension.eezStudioExtension.displayName ||
                             this.props.extension.name}
                     </h5>
-                    <p className="card-text">{this.props.extension.description}.</p>
-                    <div style={{ position: "absolute", bottom: "1rem", right: "1rem" }}>
+                    <p className="card-text">
+                        {this.props.extension.description}.
+                    </p>
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "1rem",
+                            right: "1rem"
+                        }}
+                    >
                         {button}
                     </div>
                 </div>
@@ -145,14 +174,20 @@ const SettingsEditorDiv = styled.div`
 `;
 
 @observer
-export class SettingsEditor extends React.Component<{ object: IEezObject | undefined }, {}> {
+export class SettingsEditor extends React.Component<
+    { object: IEezObject | undefined },
+    {}
+> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
-        const object = this.props.object || this.context.project.settings.general;
+        const object =
+            this.props.object || this.context.project.settings.general;
         if (object === this.context.project.settings.general) {
-            let projectFeatures = getExtensionsByCategory("project-feature").map(extension => (
+            let projectFeatures = getExtensionsByCategory(
+                "project-feature"
+            ).map(extension => (
                 <ProjectFeature key={extension.name} extension={extension} />
             ));
 
@@ -171,7 +206,9 @@ export class SettingsEditor extends React.Component<{ object: IEezObject | undef
                     body={<PropertyGrid objects={object ? [object] : []} />}
                 />
             );
-            if (getParent(object) === this.context.project.settings.build.files) {
+            if (
+                getParent(object) === this.context.project.settings.build.files
+            ) {
                 return (
                     <Splitter
                         type="horizontal"
@@ -193,7 +230,7 @@ export class SettingsEditor extends React.Component<{ object: IEezObject | undef
 @observer
 export class SettingsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @computed
     get object() {
@@ -211,7 +248,9 @@ export class SettingsNavigation extends NavigationComponent {
                 sizes={`240px|100%`}
                 childrenOverflow="hidden"
             >
-                <TreeNavigationPanel navigationObject={this.props.navigationObject} />
+                <TreeNavigationPanel
+                    navigationObject={this.props.navigationObject}
+                />
                 <SettingsEditor object={this.object} />
             </Splitter>
         );

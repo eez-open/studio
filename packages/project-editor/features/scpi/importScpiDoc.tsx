@@ -16,13 +16,12 @@ import { Loader } from "eez-studio-ui/loader";
 
 import { getProperty } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
-import { createObjectNavigationItem } from "project-editor/core/store";
+import {
+    DocumentStoreClass,
+    createObjectNavigationItem
+} from "project-editor/core/store";
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
-
-import {
-    ProjectStoreClass
-} from "project-editor/project/project";
 
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
@@ -61,7 +60,10 @@ interface Changes {
 }
 
 class FindChanges {
-    constructor(private ProjectStore: ProjectStoreClass, private existingEnums: ScpiEnum[]) {}
+    constructor(
+        private DocumentStore: DocumentStoreClass,
+        private existingEnums: ScpiEnum[]
+    ) {}
 
     cleanUpScpiCommand(command: string) {
         command = command.trim();
@@ -628,18 +630,18 @@ class FindChanges {
     getCommandsFromScpiDoc() {
         return new Promise<Subsystem[]>((resolve, reject) => {
             if (
-                this.ProjectStore.project.settings.general.scpiDocFolder ===
+                this.DocumentStore.project.settings.general.scpiDocFolder ===
                 undefined
             ) {
                 reject("SCPI help folder is not defined");
                 return;
             }
 
-            let scpiHelpFolderPath = this.ProjectStore.getAbsoluteFilePath(
-                this.ProjectStore.project.settings.general.scpiDocFolder
+            let scpiHelpFolderPath = this.DocumentStore.getAbsoluteFilePath(
+                this.DocumentStore.project.settings.general.scpiDocFolder
             );
 
-            const fs = EEZStudio.electron.remote.require("fs");
+            const fs = EEZStudio.remote.require("fs");
             fs.exists(scpiHelpFolderPath, (exists: boolean) => {
                 if (!exists) {
                     reject(
@@ -835,7 +837,7 @@ class FindChanges {
             this.getCommandsFromScpiDoc()
                 .then(subsystems => {
                     let existingSubsystems = objectToJS(
-                        this.ProjectStore.project.scpi.subsystems
+                        this.DocumentStore.project.scpi.subsystems
                     );
 
                     // added
@@ -1018,7 +1020,7 @@ export class ImportScpiDocDialog extends React.Component<{
     onHidden: () => void;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     constructor(props: any) {
         super(props);
@@ -1667,12 +1669,12 @@ export class ImportScpiDocDialog extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function showImportScpiDocDialog(ProjectStore: ProjectStoreClass) {
+export function showImportScpiDocDialog(DocumentStore: DocumentStoreClass) {
     let el = document.createElement("div");
     document.body.appendChild(el);
     ReactDOM.render(
         <ThemeProvider theme={theme}>
-            <ProjectContext.Provider value={ProjectStore}>
+            <ProjectContext.Provider value={DocumentStore}>
                 <ImportScpiDocDialog
                     onHidden={() => {
                         ReactDOM.unmountComponentAtNode(el);

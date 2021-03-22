@@ -56,7 +56,7 @@ export class Module {
                     }
                 );
 
-                await new Promise((resolve, reject) =>
+                await new Promise<void>((resolve, reject) =>
                     connection.upload(uploadInstructions, resolve, reject)
                 );
 

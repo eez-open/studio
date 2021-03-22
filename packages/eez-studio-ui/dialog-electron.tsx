@@ -1,6 +1,6 @@
 export function info(message: string, detail: string | undefined) {
-    return EEZStudio.electron.remote.dialog.showMessageBox(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    return EEZStudio.remote.dialog.showMessageBox(
+        EEZStudio.remote.getCurrentWindow(),
         {
             type: "info",
             title: "EEZ Studio",
@@ -13,8 +13,8 @@ export function info(message: string, detail: string | undefined) {
 }
 
 export function error(message: string, detail: string | undefined) {
-    return EEZStudio.electron.remote.dialog.showMessageBox(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    return EEZStudio.remote.dialog.showMessageBox(
+        EEZStudio.remote.getCurrentWindow(),
         {
             type: "error",
             title: "EEZ Studio",
@@ -32,8 +32,8 @@ export async function confirm(
     callback: () => void,
     cancelCallback?: () => void
 ) {
-    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    const result = await EEZStudio.remote.dialog.showMessageBox(
+        EEZStudio.remote.getCurrentWindow(),
         {
             type: "question",
             title: "EEZ Studio",
@@ -57,8 +57,8 @@ export async function confirmWithButtons(
     detail: string | undefined,
     buttons: string[]
 ) {
-    const result = await EEZStudio.electron.remote.dialog.showMessageBox(
-        EEZStudio.electron.remote.getCurrentWindow(),
+    const result = await EEZStudio.remote.dialog.showMessageBox(
+        EEZStudio.remote.getCurrentWindow(),
         {
             type: "question",
             title: "EEZ Studio",

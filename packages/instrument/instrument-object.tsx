@@ -868,7 +868,7 @@ export class InstrumentObject {
 
     addToContextMenu(menu: Electron.Menu) {
         if (this.isUnknownExtension) {
-            const { MenuItem } = EEZStudio.electron.remote;
+            const { MenuItem } = EEZStudio.remote;
 
             if (menu.items.length > 0) {
                 menu.append(

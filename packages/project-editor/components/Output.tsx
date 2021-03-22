@@ -8,10 +8,16 @@ import { TabsView } from "eez-studio-ui/tabs";
 import styled from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";
 
-import { Message as OutputMessage, Type as MessageType } from "project-editor/core/output";
+import {
+    Message as OutputMessage,
+    Section,
+    Type as MessageType
+} from "project-editor/core/output";
 
 import { ObjectPath } from "project-editor/components/ObjectPath";
 import { ProjectContext } from "project-editor/project/context";
+
+import { DebugPanel } from "project-editor/project/debug";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
@@ -25,7 +31,8 @@ const MessageRow = styled.tr`
     text-overflow: ellipsis;
 
     &.selected {
-        background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+        background-color: ${props =>
+            props.theme.nonFocusedSelectionBackgroundColor};
         color: ${props => props.theme.nonFocusedSelectionColor};
     }
 `;
@@ -100,7 +107,7 @@ const MessagesDiv = styled.div`
 @observer
 class Messages extends React.Component {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     private divRef = React.createRef<any>();
 
@@ -109,7 +116,10 @@ class Messages extends React.Component {
     }
 
     scrollToBottom() {
-        if (this.divRef.current && this.context.OutputSectionsStore.activeSection.scrollToBottom) {
+        if (
+            this.divRef.current &&
+            this.context.OutputSectionsStore.activeSection.scrollToBottom
+        ) {
             const div: HTMLDivElement = this.divRef.current;
             div.scrollTop = div.scrollHeight;
         }
@@ -124,16 +134,24 @@ class Messages extends React.Component {
     }
 
     render() {
+        if (
+            this.context.OutputSectionsStore.activeSection.id === Section.DEBUG
+        ) {
+            return <DebugPanel DebugStore={this.context.DebugStore} />;
+        }
+
         // TODO this is workaround because for some reason componentDidUpdate is not called
         setTimeout(() => this.scrollToBottom());
 
-        let rows = this.context.OutputSectionsStore.activeSection.messages.map(message => (
-            <Message
-                key={message.id}
-                message={message}
-                onSelect={this.onSelectMessage.bind(this)}
-            />
-        ));
+        let rows = this.context.OutputSectionsStore.activeSection.messages.map(
+            message => (
+                <Message
+                    key={message.id}
+                    message={message}
+                    onSelect={this.onSelectMessage.bind(this)}
+                />
+            )
+        );
 
         return (
             <MessagesDiv ref={this.divRef}>
@@ -161,10 +179,12 @@ const OutputDiv = styled.div`
             }
 
             &.selected {
-                background-color: ${props => props.theme.selectionBackgroundColor};
+                background-color: ${props =>
+                    props.theme.selectionBackgroundColor};
                 color: ${props => props.theme.selectionColor};
                 * {
-                    background-color: ${props => props.theme.selectionBackgroundColor};
+                    background-color: ${props =>
+                        props.theme.selectionBackgroundColor};
                     color: ${props => props.theme.selectionColor};
                 }
             }
@@ -188,34 +208,46 @@ const TabsViewContainer = styled.div`
 @observer
 export class Output extends React.Component<{}, {}> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @disposeOnUnmount
     activeSectionChanged = autorun(() => {
-        this.context.NavigationStore.setSelectedPanel(this.context.OutputSectionsStore.activeSection);
+        this.context.NavigationStore.setSelectedPanel(
+            this.context.OutputSectionsStore.activeSection
+        );
     });
 
-    onFocus() {
-        this.context.NavigationStore.setSelectedPanel(this.context.OutputSectionsStore.activeSection);
-    }
+    onFocus = () => {
+        this.context.NavigationStore.setSelectedPanel(
+            this.context.OutputSectionsStore.activeSection
+        );
+    };
 
     @action.bound
     onKeyDown(event: any) {
         if (event.keyCode == 27) {
             // ESC KEY
-            this.context.UIStateStore.viewOptions.outputVisible = !this.context.UIStateStore.viewOptions.outputVisible;
+            this.context.UIStateStore.viewOptions.outputVisible = !this.context
+                .UIStateStore.viewOptions.outputVisible;
         }
     }
 
     @action.bound onClose() {
-        this.context.UIStateStore.viewOptions.outputVisible = !this.context.UIStateStore.viewOptions.outputVisible;
+        this.context.UIStateStore.viewOptions.outputVisible = !this.context
+            .UIStateStore.viewOptions.outputVisible;
     }
 
     render() {
         return (
-            <OutputDiv tabIndex={0} onFocus={this.onFocus} onKeyDown={this.onKeyDown}>
+            <OutputDiv
+                tabIndex={0}
+                onFocus={this.onFocus}
+                onKeyDown={this.onKeyDown}
+            >
                 <TabsViewContainer>
-                    <TabsView tabs={this.context.OutputSectionsStore.sections} />
+                    <TabsView
+                        tabs={this.context.OutputSectionsStore.sections}
+                    />
                     <IconAction
                         icon="material:close"
                         iconSize={16}

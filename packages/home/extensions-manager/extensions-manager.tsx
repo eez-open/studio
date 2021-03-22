@@ -340,7 +340,7 @@ class MasterView extends React.Component {
     @observable isUpdatingAll: boolean = false;
 
     async installExtension() {
-        const result = await EEZStudio.electron.remote.dialog.showOpenDialog({
+        const result = await EEZStudio.remote.dialog.showOpenDialog({
             properties: ["openFile"],
             filters: [
                 { name: "Extensions", extensions: ["zip"] },
@@ -915,8 +915,8 @@ export class DetailsView extends React.Component {
             return;
         }
 
-        const result = await EEZStudio.electron.remote.dialog.showSaveDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showSaveDialog(
+            EEZStudio.remote.getCurrentWindow(),
             {
                 filters: [
                     { name: "Extension files", extensions: ["zip"] },
@@ -954,8 +954,8 @@ export class DetailsView extends React.Component {
             return;
         }
 
-        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showOpenDialog(
+            EEZStudio.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
                 filters: [

@@ -6,49 +6,65 @@ import {
     EezObject,
     PropertyType,
     PropertyInfo,
-    getId,
     setId,
     setParent,
     setKey,
-    getNextChildId,
     setPropertyInfo,
     getClassInfo
 } from "project-editor/core/object";
 
-export function getChildId(parent: IEezObject | undefined) {
-    let id;
-    if (parent) {
-        id = getId(parent) + "." + getNextChildId(parent);
-    } else {
-        id = "1";
-    }
+import { DocumentStoreClass } from "project-editor/core/store";
 
-    return id;
-}
+////////////////////////////////////////////////////////////////////////////////
 
-function loadArrayObject(arrayObject: any, parent: any, propertyInfo: PropertyInfo) {
+let CurrentDocumentStore: DocumentStoreClass;
+
+function loadArrayObject(
+    arrayObject: any,
+    parent: any,
+    propertyInfo: PropertyInfo
+) {
     const eezArray: EezObject[] = observable([]);
 
-    setId(eezArray, getChildId(parent));
+    setId(
+        CurrentDocumentStore.objects,
+        eezArray,
+        CurrentDocumentStore.getChildId()
+    );
     setParent(eezArray, parent);
     setKey(eezArray, propertyInfo.name);
     setPropertyInfo(eezArray, propertyInfo);
 
     arrayObject.forEach((object: any) =>
-        eezArray.push(loadObject(eezArray, object, propertyInfo.typeClass!))
+        eezArray.push(
+            loadObjectInternal(eezArray, object, propertyInfo.typeClass!)
+        )
     );
 
     return eezArray;
 }
 
 export function loadObject(
+    DocumentStore: DocumentStoreClass,
+    parent: IEezObject | IEezObject[] | undefined,
+    jsObjectOrString: any | string,
+    aClass: EezClass,
+    key?: string
+): IEezObject {
+    CurrentDocumentStore = DocumentStore;
+    return loadObjectInternal(parent, jsObjectOrString, aClass, key);
+}
+
+function loadObjectInternal(
     parent: IEezObject | IEezObject[] | undefined,
     jsObjectOrString: any | string,
     aClass: EezClass,
     key?: string
 ): IEezObject {
     let jsObject: any =
-        typeof jsObjectOrString == "string" ? JSON.parse(jsObjectOrString) : jsObjectOrString;
+        typeof jsObjectOrString == "string"
+            ? JSON.parse(jsObjectOrString)
+            : jsObjectOrString;
 
     if (Array.isArray(jsObject)) {
         return loadArrayObject(jsObject, parent, {
@@ -72,7 +88,11 @@ export function loadObject(
 
     const classInfo = getClassInfo(object);
 
-    setId(object, getChildId(parent as IEezObject));
+    setId(
+        CurrentDocumentStore.objects,
+        object,
+        CurrentDocumentStore.getChildId()
+    );
     setParent(object, parent as IEezObject);
 
     if (classInfo.beforeLoadHook) {
@@ -90,10 +110,18 @@ export function loadObject(
             let childObject: IEezObject | undefined;
 
             if (value) {
-                childObject = loadObject(object, value, propertyInfo.typeClass!);
+                childObject = loadObjectInternal(
+                    object,
+                    value,
+                    propertyInfo.typeClass!
+                );
             } else if (!propertyInfo.isOptional) {
                 let typeClass = propertyInfo.typeClass!;
-                childObject = loadObject(object, typeClass.classInfo.defaultValue, typeClass);
+                childObject = loadObjectInternal(
+                    object,
+                    typeClass.classInfo.defaultValue,
+                    typeClass
+                );
             }
 
             if (childObject) {
@@ -106,7 +134,11 @@ export function loadObject(
             }
 
             if (value) {
-                (object as any)[propertyInfo.name] = loadArrayObject(value, object, propertyInfo);
+                (object as any)[propertyInfo.name] = loadArrayObject(
+                    value,
+                    object,
+                    propertyInfo
+                );
             }
         } else {
             if (value !== undefined) {
@@ -118,12 +150,27 @@ export function loadObject(
     return object;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export function objectToJson(
     object: IEezObject | IEezObject[],
     space?: number,
     toJsHook?: (jsObject: any, object: IEezObject) => void
 ) {
+    const saved = {
+        _eez_parent: (object as any)._eez_parent,
+        _eez_propertyInfo: (object as any)._eez_propertyInfo,
+        _eez_id: (object as any)._eez_id,
+        _eez_key: (object as any)._eez_key
+    };
+    delete (object as any)._eez_parent;
+    delete (object as any)._eez_propertyInfo;
+    delete (object as any)._eez_id;
+    delete (object as any)._eez_key;
+
     let jsObject = toJS(object);
+
+    Object.assign(object, saved);
 
     if (toJsHook) {
         toJsHook(jsObject, object);

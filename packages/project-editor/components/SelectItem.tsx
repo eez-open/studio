@@ -16,7 +16,10 @@ import {
     IOnSelectParams,
     getClassInfo
 } from "project-editor/core/object";
-import { SimpleNavigationStoreClass } from "project-editor/core/store";
+import {
+    SimpleNavigationStoreClass,
+    getDocumentStore
+} from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 
 import { Widget } from "project-editor/features/gui/widget";
@@ -26,8 +29,7 @@ import {
     Project,
     getNameProperty,
     findReferencedObject,
-    getProject,
-    getProjectStore
+    getProject
 } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 
@@ -47,7 +49,7 @@ class SelectItemDialog extends React.Component<{
     onCancel: () => void;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @observable _selectedProject: Project | undefined;
 
@@ -249,7 +251,7 @@ export async function onSelectItem(
         };
 
         const [modalDialog, element] = showDialog(
-            <ProjectContext.Provider value={getProjectStore(object)}>
+            <ProjectContext.Provider value={getDocumentStore(object)}>
                 <SelectItemDialog
                     object={object}
                     propertyInfo={propertyInfo}

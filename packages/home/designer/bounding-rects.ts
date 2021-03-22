@@ -9,6 +9,7 @@ import {
 } from "eez-studio-shared/geometry";
 
 import { IBaseObject, IViewState } from "home/designer/designer-interfaces";
+import { tabs } from "home/tabs-store";
 
 class BoundingRects {
     @observable map = new Map<string, Rect>();
@@ -19,34 +20,36 @@ class BoundingRects {
 
     @action.bound
     updateBoundingRects() {
-        const $divs = $(`[data-designer-object-id]`);
+        if (tabs.findTab("workbench")) {
+            const $divs = $(`[data-designer-object-id]`);
 
-        const map = new Map<string, Rect>();
+            const map = new Map<string, Rect>();
 
-        for (let i = 0; i < $divs.length; ++i) {
-            const div = $divs[i];
-            const id = div.getAttribute("data-designer-object-id")!;
-            const rect = div.getBoundingClientRect();
-            map.set(id, rect);
-        }
-
-        for (const key of this.map.keys()) {
-            if (!map.has(key)) {
-                this.map.delete(key);
+            for (let i = 0; i < $divs.length; ++i) {
+                const div = $divs[i];
+                const id = div.getAttribute("data-designer-object-id")!;
+                const rect = div.getBoundingClientRect();
+                map.set(id, rect);
             }
-        }
 
-        for (const key of map.keys()) {
-            const r1 = map.get(key)!;
-            const r2 = this.map.get(key);
-            if (
-                !r2 ||
-                r2.left != r1.left ||
-                r2.top != r1.top ||
-                r2.width != r1.width ||
-                r2.height != r1.height
-            ) {
-                this.map.set(key, r1);
+            for (const key of this.map.keys()) {
+                if (!map.has(key)) {
+                    this.map.delete(key);
+                }
+            }
+
+            for (const key of map.keys()) {
+                const r1 = map.get(key)!;
+                const r2 = this.map.get(key);
+                if (
+                    !r2 ||
+                    r2.left != r1.left ||
+                    r2.top != r1.top ||
+                    r2.width != r1.width ||
+                    r2.height != r1.height
+                ) {
+                    this.map.set(key, r1);
+                }
             }
         }
 
@@ -68,7 +71,10 @@ class BoundingRects {
     }
 
     getBoundingRect(object: IBaseObject, viewState: IViewState) {
-        return BoundingRects.boundigRectToPageRect(this.map.get(object.id), viewState);
+        return BoundingRects.boundigRectToPageRect(
+            this.map.get(object.id),
+            viewState
+        );
     }
 
     getObjectIdFromPoint(viewState: IViewState, point: Point) {
@@ -89,13 +95,19 @@ class BoundingRects {
         this.map.forEach(rect => {
             boundingRectBuilder.addRect(rect);
         });
-        return BoundingRects.boundigRectToPageRect(boundingRectBuilder.getRect(), viewState);
+        return BoundingRects.boundigRectToPageRect(
+            boundingRectBuilder.getRect(),
+            viewState
+        );
     }
 
     getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
         const ids: string[] = [];
         this.map.forEach((boundingRect: Rect, id: string) => {
-            const pageRect = BoundingRects.boundigRectToPageRect(boundingRect, viewState);
+            const pageRect = BoundingRects.boundigRectToPageRect(
+                boundingRect,
+                viewState
+            );
             if (isRectInsideRect(pageRect, rect)) {
                 ids.push(id);
             }
@@ -106,11 +118,17 @@ class BoundingRects {
 
 const boundingRects = new BoundingRects();
 
-export function getObjectBoundingRectFromId(id: string, viewState?: IViewState) {
+export function getObjectBoundingRectFromId(
+    id: string,
+    viewState?: IViewState
+) {
     return boundingRects.getBoundingRectFromId(id, viewState);
 }
 
-export function getObjectBoundingRect(object: IBaseObject, viewState: IViewState) {
+export function getObjectBoundingRect(
+    object: IBaseObject,
+    viewState: IViewState
+) {
     return boundingRects.getBoundingRect(object, viewState);
 }
 

@@ -149,8 +149,8 @@ class MasterView extends React.Component {
 
     @bind
     async importNotebook() {
-        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showOpenDialog(
+            EEZStudio.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
                 filters: [

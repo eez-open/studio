@@ -851,7 +851,7 @@ class UndoManager {
 
     async execBeginTransaction(label: string) {
         if (this.currentTransaction) {
-            await new Promise(resolve => {
+            await new Promise<void>(resolve => {
                 this.pendingTransactions.push(resolve);
             });
         }

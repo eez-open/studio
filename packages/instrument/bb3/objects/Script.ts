@@ -69,7 +69,7 @@ function fetchScriptFiles(catalogScriptItemVersion: ICatalogScriptItemVersion) {
 
 async function uploadScriptFilesToInstrument(connection: Connection, files: IFetchedFile[]) {
     for (const file of files) {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             const sourceFileType = file.fileName.toLowerCase().endsWith(".py")
                 ? "text/x-python"
                 : "application/octet-stream";

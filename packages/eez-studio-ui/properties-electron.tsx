@@ -26,8 +26,8 @@ export class FileInputProperty extends React.Component<
     async onSelectFile(event: any) {
         event.preventDefault();
 
-        const result = await EEZStudio.electron.remote.dialog.showOpenDialog(
-            EEZStudio.electron.remote.getCurrentWindow(),
+        const result = await EEZStudio.remote.dialog.showOpenDialog(
+            EEZStudio.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
                 filters: [{ name: "All Files", extensions: ["*"] }]

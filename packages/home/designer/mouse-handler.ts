@@ -1,5 +1,8 @@
 import { Point } from "eez-studio-shared/geometry";
-import { IDesignerContext, IMouseHandler } from "home/designer/designer-interfaces";
+import {
+    IDesignerContext,
+    IMouseHandler
+} from "home/designer/designer-interfaces";
 
 export class MouseHandler implements IMouseHandler {
     constructor() {}
@@ -30,7 +33,9 @@ export class MouseHandler implements IMouseHandler {
         this.distance = 0;
         this.movement = { x: 0, y: 0 };
 
-        this.modelPointAtDown = context.viewState.transform.mouseEventToPagePoint(event);
+        this.modelPointAtDown = context.viewState.transform.mouseEventToPagePoint(
+            event
+        );
     }
 
     move(context: IDesignerContext, event: MouseEvent) {
@@ -38,7 +43,9 @@ export class MouseHandler implements IMouseHandler {
 
         this.elapsedTime = new Date().getTime() - this.timeAtDown;
 
-        let offsetPoint = context.viewState.transform.mouseEventToOffsetPoint(event);
+        let offsetPoint = context.viewState.transform.mouseEventToOffsetPoint(
+            event
+        );
 
         this.offsetDistance = {
             x: offsetPoint.x - this.offsetPointAtDown.x,
@@ -57,7 +64,9 @@ export class MouseHandler implements IMouseHandler {
 
         this.lastOffsetPoint = offsetPoint;
 
-        this.lastModelPoint = context.viewState.transform.mouseEventToPagePoint(event);
+        this.lastModelPoint = context.viewState.transform.mouseEventToPagePoint(
+            event
+        );
     }
 
     up(context: IDesignerContext, event?: MouseEvent) {

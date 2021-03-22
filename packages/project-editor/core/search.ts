@@ -18,13 +18,25 @@ import {
 
 import { Section, Type } from "project-editor/core/output";
 
-import { ImportDirective, findReferencedObject, getProject, Project, getProjectStore, ProjectStoreClass } from "project-editor/project/project";
+import {
+    DocumentStoreClass,
+    getDocumentStore
+} from "project-editor/core/store";
+
+import {
+    ImportDirective,
+    findReferencedObject,
+    getProject,
+    Project
+} from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 type VisitResult = EezValueObject | null;
 
-function* visitWithPause(parentObject: IEezObject): IterableIterator<VisitResult> {
+function* visitWithPause(
+    parentObject: IEezObject
+): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
         let arrayOfObjects = parentObject as IEezObject[];
         for (let i = 0; i < arrayOfObjects.length; i++) {
@@ -41,7 +53,10 @@ function* visitWithPause(parentObject: IEezObject): IterableIterator<VisitResult
                     ) {
                         yield* visitWithPause(value);
                     } else {
-                        yield getObjectPropertyAsObject(parentObject, propertyInfo);
+                        yield getObjectPropertyAsObject(
+                            parentObject,
+                            propertyInfo
+                        );
                     }
                 }
             }
@@ -52,7 +67,9 @@ function* visitWithPause(parentObject: IEezObject): IterableIterator<VisitResult
     yield null;
 }
 
-function* visitWithoutPause(parentObject: IEezObject): IterableIterator<VisitResult> {
+function* visitWithoutPause(
+    parentObject: IEezObject
+): IterableIterator<VisitResult> {
     if (isArray(parentObject)) {
         let arrayOfObjects = parentObject as IEezObject[];
         for (let i = 0; i < arrayOfObjects.length; i++) {
@@ -69,7 +86,37 @@ function* visitWithoutPause(parentObject: IEezObject): IterableIterator<VisitRes
                     ) {
                         yield* visitWithoutPause(value);
                     } else {
-                        yield getObjectPropertyAsObject(parentObject, propertyInfo);
+                        yield getObjectPropertyAsObject(
+                            parentObject,
+                            propertyInfo
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+export function* visitObjects(
+    parentObject: IEezObject
+): IterableIterator<IEezObject> {
+    if (isArray(parentObject)) {
+        let arrayOfObjects = parentObject as IEezObject[];
+        for (let i = 0; i < arrayOfObjects.length; i++) {
+            yield* visitObjects(arrayOfObjects[i]);
+        }
+    } else {
+        yield parentObject;
+
+        for (const propertyInfo of getClassInfo(parentObject).properties) {
+            if (!propertyInfo.skipSearch) {
+                if (
+                    propertyInfo.type === PropertyType.Object ||
+                    propertyInfo.type === PropertyType.Array
+                ) {
+                    let value = getProperty(parentObject, propertyInfo.name);
+                    if (value) {
+                        yield* visitObjects(value);
                     }
                 }
             }
@@ -192,36 +239,48 @@ function* searchForReference(
                     let match = false;
 
                     if (
-                        valueObject.propertyInfo.type === PropertyType.ObjectReference ||
-                        valueObject.propertyInfo.type === PropertyType.ThemedColor
+                        valueObject.propertyInfo.type ===
+                            PropertyType.ObjectReference ||
+                        valueObject.propertyInfo.type ===
+                            PropertyType.ThemedColor
                     ) {
                         if (importedProject) {
-                            if (valueObject.propertyInfo.referencedObjectCollectionPath) {
+                            if (
+                                valueObject.propertyInfo
+                                    .referencedObjectCollectionPath
+                            ) {
                                 const object = findReferencedObject(
                                     root as Project,
-                                    valueObject.propertyInfo.referencedObjectCollectionPath,
+                                    valueObject.propertyInfo
+                                        .referencedObjectCollectionPath,
                                     valueObject.value
                                 );
 
-                                if (object && getProject(object) == importedProject) {
+                                if (
+                                    object &&
+                                    getProject(object) == importedProject
+                                ) {
                                     match = true;
                                 }
                             }
                         } else {
                             if (
-                                valueObject.propertyInfo.referencedObjectCollectionPath ==
-                                objectParentPath &&
+                                valueObject.propertyInfo
+                                    .referencedObjectCollectionPath ==
+                                    objectParentPath &&
                                 valueObject.value === objectName
                             ) {
                                 match = true;
                             }
                         }
                     } else if (
-                        valueObject.propertyInfo.type === PropertyType.ConfigurationReference
+                        valueObject.propertyInfo.type ===
+                        PropertyType.ConfigurationReference
                     ) {
                         if (
-                            valueObject.propertyInfo.referencedObjectCollectionPath ==
-                            objectParentPath &&
+                            valueObject.propertyInfo
+                                .referencedObjectCollectionPath ==
+                                objectParentPath &&
                             valueObject.value
                         ) {
                             for (let i = 0; i < valueObject.value.length; i++) {
@@ -262,9 +321,12 @@ function* searchForAllReferences(
             if (!valueObject.propertyInfo.skipSearch) {
                 if (valueObject.value) {
                     if (
-                        valueObject.propertyInfo.type === PropertyType.ObjectReference ||
-                        valueObject.propertyInfo.type === PropertyType.ThemedColor ||
-                        valueObject.propertyInfo.type === PropertyType.ConfigurationReference
+                        valueObject.propertyInfo.type ===
+                            PropertyType.ObjectReference ||
+                        valueObject.propertyInfo.type ===
+                            PropertyType.ThemedColor ||
+                        valueObject.propertyInfo.type ===
+                            PropertyType.ConfigurationReference
                     ) {
                         yield valueObject;
                     }
@@ -288,7 +350,9 @@ interface SearchCallbackMessageFinish {
     type: "finish";
 }
 
-export type SearchCallbackMessage = SearchCallbackMessageValue | SearchCallbackMessageFinish;
+export type SearchCallbackMessage =
+    | SearchCallbackMessageValue
+    | SearchCallbackMessageFinish;
 
 type SearchCallback = (message: SearchCallbackMessage) => boolean;
 
@@ -297,7 +361,7 @@ export class CurrentSearch {
 
     searchCallback?: SearchCallback;
 
-    constructor(public ProjectStore: ProjectStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {}
 
     finishSearch() {
         if (this.searchCallback) {
@@ -317,24 +381,32 @@ export class CurrentSearch {
         matchWholeWord: boolean,
         searchCallback?: SearchCallback
     ) {
-        this.ProjectStore.OutputSectionsStore.clear(Section.SEARCH);
+        this.DocumentStore.OutputSectionsStore.clear(Section.SEARCH);
 
         this.finishSearch();
 
         this.searchCallback = searchCallback;
 
-        const root = this.ProjectStore.project;
+        const root = this.DocumentStore.project;
 
         if (
             root &&
-            (patternOrObject == undefined || typeof patternOrObject != "string" || patternOrObject.length > 0)
+            (patternOrObject == undefined ||
+                typeof patternOrObject != "string" ||
+                patternOrObject.length > 0)
         ) {
             let searchResultsGenerator =
                 typeof patternOrObject == "string"
-                    ? searchForPattern(root, patternOrObject, matchCase, matchWholeWord, true)
+                    ? searchForPattern(
+                          root,
+                          patternOrObject,
+                          matchCase,
+                          matchWholeWord,
+                          true
+                      )
                     : patternOrObject
-                        ? searchForReference(root, patternOrObject, true)
-                        : searchForAllReferences(root, true);
+                    ? searchForReference(root, patternOrObject, true)
+                    : searchForAllReferences(root, true);
 
             this.interval = setInterval(() => {
                 let startTime = new Date().getTime();
@@ -349,12 +421,14 @@ export class CurrentSearch {
                     let valueObject = searchResult.value;
                     if (valueObject) {
                         if (searchCallback) {
-                            if (!searchCallback({ type: "value", valueObject })) {
+                            if (
+                                !searchCallback({ type: "value", valueObject })
+                            ) {
                                 this.finishSearch();
                                 return;
                             }
                         } else {
-                            this.ProjectStore.OutputSectionsStore.write(
+                            this.DocumentStore.OutputSectionsStore.write(
                                 Section.SEARCH,
                                 Type.INFO,
                                 objectToString(valueObject),
@@ -375,13 +449,13 @@ export class CurrentSearch {
 ////////////////////////////////////////////////////////////////////////////////
 
 function startNewSearch(
-    ProjectStore: ProjectStoreClass,
+    DocumentStore: DocumentStoreClass,
     patternOrObject: string | IEezObject | undefined,
     matchCase: boolean,
     matchWholeWord: boolean,
     searchCallback?: SearchCallback
 ) {
-    ProjectStore.currentSearch.startNewSearch(
+    DocumentStore.currentSearch.startNewSearch(
         patternOrObject || "",
         matchCase,
         matchWholeWord,
@@ -389,25 +463,37 @@ function startNewSearch(
     );
 }
 
-export function startSearch(ProjectStore: ProjectStoreClass, pattern: string, matchCase: boolean, matchWholeWord: boolean) {
-    ProjectStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(ProjectStore, pattern, matchCase, matchWholeWord);
+export function startSearch(
+    DocumentStore: DocumentStoreClass,
+    pattern: string,
+    matchCase: boolean,
+    matchWholeWord: boolean
+) {
+    DocumentStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
+    startNewSearch(DocumentStore, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: IEezObject) {
-    const ProjectStore = getProjectStore(object);
-    ProjectStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
-    startNewSearch(ProjectStore, object, true, true);
+    const DocumentStore = getDocumentStore(object);
+    DocumentStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
+    startNewSearch(DocumentStore, object, true, true);
 }
 
-export function usage(ProjectStore: ProjectStoreClass, searchCallback: SearchCallback) {
-    startNewSearch(ProjectStore, undefined, true, true, searchCallback);
+export function usage(
+    DocumentStore: DocumentStoreClass,
+    searchCallback: SearchCallback
+) {
+    startNewSearch(DocumentStore, undefined, true, true, searchCallback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isReferenced(object: IEezObject) {
-    let resultsGenerator = searchForReference(getRootObject(object), object, false);
+    let resultsGenerator = searchForReference(
+        getRootObject(object),
+        object,
+        false
+    );
 
     while (true) {
         let searchResult = resultsGenerator.next();
@@ -435,7 +521,10 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
         if (searchValue) {
             let value: string | string[] = newValue;
 
-            if (searchValue.propertyInfo.type === PropertyType.ConfigurationReference) {
+            if (
+                searchValue.propertyInfo.type ===
+                PropertyType.ConfigurationReference
+            ) {
                 value = [];
                 for (let i = 0; i < searchValue.value.length; i++) {
                     if (searchValue.value[i] !== getProperty(object, "name")) {
@@ -450,7 +539,7 @@ export function replaceObjectReference(object: IEezObject, newValue: string) {
             if (parent) {
                 let key = getKey(searchValue);
                 if (parent && key && typeof key == "string") {
-                    getProjectStore(rootObject).updateObject(parent, {
+                    getDocumentStore(rootObject).updateObject(parent, {
                         [key]: value
                     });
                 }
