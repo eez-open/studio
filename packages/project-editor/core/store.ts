@@ -1,3 +1,4 @@
+import React from "react";
 import {
     observable,
     extendObservable,
@@ -52,7 +53,9 @@ import {
     isEezObject,
     getRootObject,
     getAncestorOfType,
-    getLabel
+    getLabel,
+    registerClass,
+    makeDerivedClassInfo
 } from "project-editor/core/object";
 import {
     checkClipboard,
@@ -1128,6 +1131,8 @@ export async function load(
     DocumentStore: DocumentStoreClass,
     filePath: string
 ) {
+    await initExtensions();
+
     return new Promise<Project>((resolve, reject) => {
         const fs = EEZStudio.remote.require("fs");
         fs.readFile(filePath, "utf8", (err: any, data: string) => {
@@ -1135,6 +1140,7 @@ export async function load(
                 reject(err);
             } else {
                 //console.time("load");
+
                 let projectJs = JSON.parse(data);
                 let project = loadObject(
                     DocumentStore,
@@ -2325,5 +2331,27 @@ export function deleteItems(objects: IEezObject[], callback?: () => void) {
         } else {
             doDelete();
         }
+    }
+}
+
+let extensionsInitialized = false;
+async function initExtensions() {
+    if (!extensionsInitialized) {
+        extensionsInitialized = true;
+        const { extensions } = await import(
+            "eez-studio-shared/extensions/extensions"
+        );
+
+        extensions.forEach(extension => {
+            if (extension.eezFlowExtensionInit) {
+                extension.eezFlowExtensionInit({
+                    React,
+                    registerClass,
+                    PropertyType,
+                    makeDerivedClassInfo,
+                    ActionNode
+                });
+            }
+        });
     }
 }

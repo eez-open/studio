@@ -16,11 +16,6 @@ import type { IResizeHandler } from "project-editor/features/gui/page-editor/des
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface EnumItem {
-    id: string | number;
-    label?: string;
-}
-
 export enum PropertyType {
     String,
     StringArray,
@@ -44,6 +39,11 @@ export enum PropertyType {
     Any,
     ConnectionInput,
     ConnectionOutput
+}
+
+export interface EnumItem {
+    id: string | number;
+    label?: string;
 }
 
 export enum MessageType {

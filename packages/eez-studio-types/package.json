@@ -1,0 +1,8 @@
+{
+    "name": "eez-studio-types",
+    "author": "Envox <eez@envox.hr>",
+    "description": "This package contains type definitions for developing EEZ Studio extensions",
+    "version": "0.0.3",
+    "license": "GPL-3.0-only",
+    "types": "index"
+}

@@ -9,6 +9,8 @@ import { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
 export { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
+import type { IEezStudio } from "eez-studio-types";
+
 export interface IActivityLogEntryInfo {
     name: string;
     content: JSX.Element | string;
@@ -28,7 +30,9 @@ export interface IObject {
     id: string;
     name: string;
     content: JSX.Element | null;
-    activityLogEntryInfo(logEntry: IActivityLogEntry): IActivityLogEntryInfo | null;
+    activityLogEntryInfo(
+        logEntry: IActivityLogEntry
+    ): IActivityLogEntryInfo | null;
     details: JSX.Element | null;
     isEditable: boolean;
     getEditor?(): IEditor;
@@ -71,7 +75,9 @@ interface IActivityLogTool1 {
     handler: (controller: IActivityLogController) => void;
 }
 
-type IActivityLogTool2 = (controller: IActivityLogController) => JSX.Element | null;
+type IActivityLogTool2 = (
+    controller: IActivityLogController
+) => JSX.Element | null;
 
 type IActivityLogTool = IActivityLogTool1 | IActivityLogTool2;
 
@@ -167,7 +173,9 @@ export interface IExtensionDefinition {
     objectTypes?: {
         [type: string]: (oid: string) => IObject | undefined;
     };
-    loadExtension?: (extensionFolderPath: string) => Promise<IExtension>;
+    loadExtension?: (
+        extensionFolderPath: string
+    ) => Promise<IExtension | undefined>;
     renderPropertiesComponent?: () => Promise<JSX.Element>;
     properties?: IExtensionProperties;
     isEditable?: boolean;
@@ -179,7 +187,12 @@ export interface IExtensionDefinition {
 
     measurementFunctions?: IMeasurementFunction[];
 
-    handleDragAndDropFile?(filePath: string, host: IExtensionHost): Promise<boolean>;
+    eezFlowExtensionInit?: (eezStudio: IEezStudio) => void;
+
+    handleDragAndDropFile?(
+        filePath: string,
+        host: IExtensionHost
+    ): Promise<boolean>;
 }
 
 export type IExtension = IExtensionDescription & IExtensionDefinition;

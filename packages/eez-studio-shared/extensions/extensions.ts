@@ -1,6 +1,7 @@
 import { observable, computed, action, runInAction, values } from "mobx";
 const EventEmitter = require("events");
 const fs = require("fs");
+const { resolve } = require("path");
 
 import { delay } from "eez-studio-shared/util";
 import {
@@ -12,7 +13,8 @@ import {
     removeFolder,
     renameFile,
     readFolder,
-    writeJsObjectToFile
+    writeJsObjectToFile,
+    makeFolder
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { firstWord } from "eez-studio-shared/string";
@@ -24,7 +26,11 @@ import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 import * as notification from "eez-studio-ui/notification";
 import { IToolbarButton } from "home/designer/designer-interfaces";
 
-import { IExtension, IObject, IExtensionProperties } from "eez-studio-shared/extensions/extension";
+import {
+    IExtension,
+    IObject,
+    IExtensionProperties
+} from "eez-studio-shared/extensions/extension";
 
 import {
     preInstalledExtensionsFolderPath,
@@ -37,28 +43,48 @@ import * as ShortcutsModule from "shortcuts/shortcuts";
 
 const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
 const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
+const CONF_NODE_MODULE_PROPERTY_NAME = "node-module";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-async function loadExtension(extensionFolderPath: string): Promise<IExtension | undefined> {
+async function loadExtension(
+    extensionFolderPath: string
+): Promise<IExtension | undefined> {
     let packageJsonFilePath = extensionFolderPath + "/" + "package.json";
     if (await fileExists(packageJsonFilePath)) {
         try {
             const packageJson = await readJsObjectFromFile(packageJsonFilePath);
-            const packageJsonEezStudio = packageJson[CONF_EEZ_STUDIO_PROPERTY_NAME];
+            const packageJsonEezStudio =
+                packageJson[CONF_EEZ_STUDIO_PROPERTY_NAME];
             if (packageJsonEezStudio) {
-                const mainScript = packageJsonEezStudio[CONF_MAIN_SCRIPT_PROPERTY_NAME];
-                if (mainScript) {
-                    const extension: IExtension = require(extensionFolderPath + "/" + mainScript)
-                        .default;
+                const mainScript =
+                    packageJsonEezStudio[CONF_MAIN_SCRIPT_PROPERTY_NAME];
 
+                let extension: IExtension | undefined;
+                try {
+                    if (mainScript) {
+                        extension = require(extensionFolderPath +
+                            "/" +
+                            mainScript).default;
+                    } else if (
+                        packageJsonEezStudio[CONF_NODE_MODULE_PROPERTY_NAME]
+                    ) {
+                        extension = require(extensionFolderPath).default;
+                    }
+                } catch (err) {
+                    console.log(err);
+                    return undefined;
+                }
+
+                if (extension) {
                     extension.id = packageJson.id || packageJson.name;
                     extension.name = packageJson.name;
                     extension.displayName = packageJson.displayName;
                     extension.version = packageJson.version;
                     extension.author = packageJson.author;
                     extension.description = packageJson.description;
-                    extension.moreDescription = packageJsonEezStudio.moreDescription;
+                    extension.moreDescription =
+                        packageJsonEezStudio.moreDescription;
 
                     extension.download = packageJson.download;
                     extension.sha256 = packageJson.sha256;
@@ -66,7 +92,8 @@ async function loadExtension(extensionFolderPath: string): Promise<IExtension | 
 
                     extension.image = packageJson.image;
                     if (extension.image) {
-                        const imageFilePath = extensionFolderPath + "/" + extension.image;
+                        const imageFilePath =
+                            extensionFolderPath + "/" + extension.image;
                         if (await fileExists(imageFilePath)) {
                             extension.image = localPathToFileUrl(imageFilePath);
                         }
@@ -147,18 +174,109 @@ async function loadAndRegisterExtension(folder: string) {
     }
 }
 
+async function getNodeModuleFolders() {
+    const yarn = resolve(__dirname, "../../../libs/yarn-1.22.10.js");
+    const cp = require("child_process");
+    const queue = require("queue");
+    const spawnQueue = queue({ concurrency: 1 });
+
+    async function yarnFn(args: string[]) {
+        return new Promise<void>((resolve, reject) => {
+            const env = {
+                NODE_ENV: "production",
+                ELECTRON_RUN_AS_NODE: "true"
+            };
+
+            spawnQueue.push((end: any) => {
+                const cmd = [process.execPath, yarn].concat(args).join(" ");
+
+                console.log("Launching yarn:", cmd);
+
+                cp.execFile(
+                    process.execPath,
+                    [yarn].concat(args),
+                    {
+                        cwd: extensionsFolderPath,
+                        env,
+                        timeout: 10 * 1000, // 10 seconds
+                        maxBuffer: 1024 * 1024
+                    },
+                    (err: any, stdout: any, stderr: any) => {
+                        if (err) {
+                            reject(stderr);
+                        } else {
+                            console.log("yarn", stdout);
+                            resolve();
+                        }
+                        end?.();
+                        spawnQueue.start();
+                    }
+                );
+            });
+
+            spawnQueue.start();
+        });
+    }
+
+    const packageJsonPath = `${extensionsFolderPath}/package.json`;
+    if (!(await fileExists(packageJsonPath))) {
+        try {
+            await yarnFn(["init", "-y"]);
+        } catch (err) {
+            console.log("yarn", err);
+        }
+    } else {
+        const cacheFolderPath = `${extensionsFolderPath}/cache`;
+        await makeFolder(cacheFolderPath);
+
+        try {
+            await yarnFn([
+                "install",
+                "--no-emoji",
+                "--no-lockfile",
+                "--cache-folder",
+                cacheFolderPath
+            ]);
+        } catch (err) {
+            console.log("yarn", err);
+        }
+    }
+
+    const packageJson = require(packageJsonPath);
+
+    return Object.keys(packageJson.dependencies).map(plugin =>
+        resolve(extensionsFolderPath, "node_modules", plugin.split("#")[0])
+    );
+}
+
 export async function loadExtensions() {
-    let preinstalledExtensionFolders = await readFolder(preInstalledExtensionsFolderPath);
+    let preinstalledExtensionFolders = await readFolder(
+        preInstalledExtensionsFolderPath
+    );
 
     let installedExtensionFolders: string[];
     try {
         installedExtensionFolders = await readFolder(extensionsFolderPath);
     } catch (err) {
-        console.info(`Extensions folder "${extensionsFolderPath}" doesn't exists.`);
+        console.info(
+            `Extensions folder "${extensionsFolderPath}" doesn't exists.`
+        );
         installedExtensionFolders = [];
     }
 
-    for (let folder of [...preinstalledExtensionFolders, ...installedExtensionFolders]) {
+    let nodeModuleFolders;
+    try {
+        nodeModuleFolders = await getNodeModuleFolders();
+    } catch (err) {
+        console.info(`Failed to get node module folders.`);
+        nodeModuleFolders = [];
+    }
+
+    for (let folder of [
+        ...preinstalledExtensionFolders,
+        ...installedExtensionFolders,
+        ...nodeModuleFolders
+    ]) {
         try {
             await loadAndRegisterExtension(folder);
         } catch (err) {
@@ -193,7 +311,10 @@ export async function importExtensionToFolder(
 export async function importExtensionToTempFolder(extensionFilePath: string) {
     const tmpExtensionFolderPath = extensionsFolderPath + "/" + guid() + "_tmp";
     try {
-        const extension = await importExtensionToFolder(extensionFilePath, tmpExtensionFolderPath);
+        const extension = await importExtensionToFolder(
+            extensionFilePath,
+            tmpExtensionFolderPath
+        );
 
         if (!extension) {
             await removeFolder(tmpExtensionFolderPath);
@@ -338,11 +459,20 @@ export async function installExtension(
         );
         let confirmed;
         if (compareVersionResult < 0) {
-            confirmed = await confirmReplaceNewerVersion(result.extension, existingExtension);
+            confirmed = await confirmReplaceNewerVersion(
+                result.extension,
+                existingExtension
+            );
         } else if (compareVersionResult > 0) {
-            confirmed = await confirmReplaceOlderVersion(result.extension, existingExtension);
+            confirmed = await confirmReplaceOlderVersion(
+                result.extension,
+                existingExtension
+            );
         } else {
-            confirmed = await confirmReplaceTheSameVersion(result.extension, existingExtension);
+            confirmed = await confirmReplaceTheSameVersion(
+                result.extension,
+                existingExtension
+            );
         }
 
         if (!confirmed) {
@@ -365,7 +495,9 @@ export async function installExtension(
             addShortcut(
                 Object.assign({}, shortcut, {
                     id: undefined,
-                    groupName: SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + result.extension.id,
+                    groupName:
+                        SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX +
+                        result.extension.id,
                     originalId: shortcut.id
                 })
             );
@@ -396,7 +528,9 @@ export async function uninstallExtension(extensionId: string) {
         const {
             SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
         } = require("shortcuts/shortcuts") as typeof ShortcutsModule;
-        deleteGroupInShortcuts(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extensionId);
+        deleteGroupInShortcuts(
+            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extensionId
+        );
     }
 }
 
@@ -474,7 +608,10 @@ watch(notifySource.id, undefined, (extensionChange: ExtensionChangeEvent) => {
     }
 });
 
-export async function changeExtensionImage(extension: IExtension, srcImageFilePath: string) {
+export async function changeExtensionImage(
+    extension: IExtension,
+    srcImageFilePath: string
+) {
     let extensionFolderPath = getExtensionFolderPath(extension.id);
 
     let destImageFilePath = extensionFolderPath + "/image.png";
@@ -573,7 +710,9 @@ export function getManufacturer(extension: IExtension) {
 }
 
 export function isInstrumentExtension(extension: IExtension) {
-    const eezStudioProperties = (extension as any)[CONF_EEZ_STUDIO_PROPERTY_NAME];
+    const eezStudioProperties = (extension as any)[
+        CONF_EEZ_STUDIO_PROPERTY_NAME
+    ];
     if (eezStudioProperties) {
         return !eezStudioProperties[CONF_MAIN_SCRIPT_PROPERTY_NAME];
     }
@@ -585,7 +724,9 @@ export function isInstrumentExtension(extension: IExtension) {
 export const extensions = observable(new Map<string, IExtension>());
 
 export const installedExtensions = computed(() => {
-    return Array.from(extensions.values()).filter(extension => !extension.preInstalled);
+    return Array.from(extensions.values()).filter(
+        extension => !extension.preInstalled
+    );
 });
 
 export const objectTypes = computed(() => {

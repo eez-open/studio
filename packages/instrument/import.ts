@@ -67,7 +67,15 @@ export type NumericSuffix = "optional" | "mandatory" | "none";
 ////////////////////////////////////////////////////////////////////////////////
 
 async function findIdfFile(extensionFolderPath: string) {
-    let files = await readFolder(extensionFolderPath);
+    let files;
+    try {
+        files = await readFolder(extensionFolderPath);
+    } catch (err) {
+        if (err.code == "ENOTDIR") {
+            return undefined;
+        }
+        throw err;
+    }
     return files.find(file => file.toLowerCase().endsWith(".idf"));
 }
 
@@ -106,98 +114,108 @@ function compareName(name1: string, name2: string) {
 }
 
 function buildEnums(sdl: JQuery<any>): IEnum[] {
-    return _map(sdl.find("GlobalDefinitions>Enum"), (element: HTMLElement, index: number) => {
-        const name = $(element).attr("name") || "";
+    return _map(
+        sdl.find("GlobalDefinitions>Enum"),
+        (element: HTMLElement, index: number) => {
+            const name = $(element).attr("name") || "";
 
-        const members: IEnumMember[] = _map(
-            $(element).find("Member"),
-            (element: HTMLElement, index: number) => {
-                const name = $(element).attr("mnemonic") || "";
-                const value = $(element).attr("value") || "";
-                return {
-                    name,
-                    value
-                };
-            }
-        );
+            const members: IEnumMember[] = _map(
+                $(element).find("Member"),
+                (element: HTMLElement, index: number) => {
+                    const name = $(element).attr("mnemonic") || "";
+                    const value = $(element).attr("value") || "";
+                    return {
+                        name,
+                        value
+                    };
+                }
+            );
 
-        return {
-            name,
-            members
-        };
-    });
+            return {
+                name,
+                members
+            };
+        }
+    );
 }
 
 function buildParameters(dom: JQuery): IParameter[] {
-    return _map(dom.find("Parameters>Parameter"), (element: HTMLElement, index: number) => {
-        const name = element.getAttribute("name") || index.toString();
+    return _map(
+        dom.find("Parameters>Parameter"),
+        (element: HTMLElement, index: number) => {
+            const name = element.getAttribute("name") || index.toString();
 
-        let isOptional;
-        try {
-            isOptional = !!JSON.parse(element.getAttribute("optional") || "false");
-        } catch (err) {
-            console.error(err);
-            isOptional = false;
+            let isOptional;
+            try {
+                isOptional = !!JSON.parse(
+                    element.getAttribute("optional") || "false"
+                );
+            } catch (err) {
+                console.error(err);
+                isOptional = false;
+            }
+
+            let type: IParameterType[] = [];
+
+            if ($(element).find("Any").length) {
+                type.push({
+                    type: "any"
+                });
+            } else {
+                if ($(element).find("NonDecimalNumeric").length) {
+                    type.push({
+                        type: "nr1"
+                    });
+                } else if ($(element).find("DecimalNumeric").length) {
+                    type.push({
+                        type: "nr2"
+                    });
+                }
+
+                if ($(element).find("String").length) {
+                    type.push({
+                        type: "quoted-string"
+                    });
+                }
+
+                if ($(element).find("DataBlock").length) {
+                    type.push({
+                        type: "data-block"
+                    });
+                }
+
+                if ($(element).find("Character>EnumRef").length) {
+                    type.push({
+                        type: "discrete",
+                        enumeration: $(element)
+                            .find("Character>EnumRef")
+                            .attr("name")
+                    });
+                }
+
+                if ($(element).find("Expression>ChannelList").length) {
+                    type.push({
+                        type: "channel-list"
+                    });
+                }
+
+                if ($(element).find("ArbitraryBlock").length) {
+                    type.push({
+                        type: "data-block"
+                    });
+                }
+            }
+
+            const description = element.getAttribute("description") || "";
+
+            return {
+                name,
+                type,
+                isOptional,
+                description
+            };
         }
-
-        let type: IParameterType[] = [];
-
-        if ($(element).find("Any").length) {
-            type.push({
-                type: "any"
-            });
-        } else {
-            if ($(element).find("NonDecimalNumeric").length) {
-                type.push({
-                    type: "nr1"
-                });
-            } else if ($(element).find("DecimalNumeric").length) {
-                type.push({
-                    type: "nr2"
-                });
-            }
-
-            if ($(element).find("String").length) {
-                type.push({
-                    type: "quoted-string"
-                });
-            }
-
-            if ($(element).find("DataBlock").length) {
-                type.push({
-                    type: "data-block"
-                });
-            }
-
-            if ($(element).find("Character>EnumRef").length) {
-                type.push({
-                    type: "discrete",
-                    enumeration: $(element).find("Character>EnumRef").attr("name")
-                });
-            }
-
-            if ($(element).find("Expression>ChannelList").length) {
-                type.push({
-                    type: "channel-list"
-                });
-            }
-
-            if ($(element).find("ArbitraryBlock").length) {
-                type.push({
-                    type: "data-block"
-                });
-            }
-        }
-
-        const description = element.getAttribute("description") || "";
-
-        return {
-            name,
-            type,
-            isOptional,
-            description
-        };
-    });
+    );
 }
 
 function buildResponse(dom: JQuery): IResponse {
@@ -215,19 +233,32 @@ function buildResponse(dom: JQuery): IResponse {
         type = "nr3";
     } else if (dom.find("Responses>Response>ResponseType>String").length) {
         type = "quoted-string";
-    } else if (dom.find("Responses>Response>ResponseType>ArbitraryAscii").length) {
+    } else if (
+        dom.find("Responses>Response>ResponseType>ArbitraryAscii").length
+    ) {
         type = "arbitrary-ascii";
-    } else if (dom.find("Responses>Response>ResponseType>ListOfQuotedString").length) {
+    } else if (
+        dom.find("Responses>Response>ResponseType>ListOfQuotedString").length
+    ) {
         type = "list-of-quoted-string";
     } else if (dom.find("Responses>Response>ResponseType>DataBlock").length) {
         type = "data-block";
-    } else if (dom.find("Responses>Response>ResponseType>DefiniteLengthArbitraryBlock").length) {
+    } else if (
+        dom.find("Responses>Response>ResponseType>DefiniteLengthArbitraryBlock")
+            .length
+    ) {
         type = "data-block";
-    } else if (dom.find("Responses>Response>ResponseType>NonStandardDataBlock").length) {
+    } else if (
+        dom.find("Responses>Response>ResponseType>NonStandardDataBlock").length
+    ) {
         type = "non-standard-data-block";
-    } else if (dom.find("Responses>Response>ResponseType>Character>EnumRef").length) {
+    } else if (
+        dom.find("Responses>Response>ResponseType>Character>EnumRef").length
+    ) {
         type = "discrete";
-        enumeration = dom.find("Responses>Response>ResponseType>Character>EnumRef").attr("name");
+        enumeration = dom
+            .find("Responses>Response>ResponseType>Character>EnumRef")
+            .attr("name");
     } else {
         type = undefined as any;
     }
@@ -240,23 +271,34 @@ function buildResponse(dom: JQuery): IResponse {
     };
 }
 
-function buildCommand(name: string, sdlCommand: JQuery, docPath: string, commands: ICommand[]) {
+function buildCommand(
+    name: string,
+    sdlCommand: JQuery,
+    docPath: string,
+    commands: ICommand[]
+) {
     const description = sdlCommand.find(">Synopsis").text() || "";
 
     let command: ICommand | undefined;
-    const commandSyntax = sdlCommand.find(">CommandSyntaxes>CommandSyntax:first-child");
+    const commandSyntax = sdlCommand.find(
+        ">CommandSyntaxes>CommandSyntax:first-child"
+    );
     if (commandSyntax.length) {
         command = {
             name: name,
             description,
             parameters: buildParameters(commandSyntax),
             response: undefined as any,
-            sendsBackDataBlock: !!parseInt(commandSyntax.attr("sendsBackDataBlock") || "0")
+            sendsBackDataBlock: !!parseInt(
+                commandSyntax.attr("sendsBackDataBlock") || "0"
+            )
         };
     }
 
     let query: ICommand | undefined;
-    const querySyntax = sdlCommand.find(">QuerySyntaxes>QuerySyntax:first-child");
+    const querySyntax = sdlCommand.find(
+        ">QuerySyntaxes>QuerySyntax:first-child"
+    );
     if (querySyntax.length) {
         query = {
             name: name + "?",
@@ -271,11 +313,15 @@ function buildCommand(name: string, sdlCommand: JQuery, docPath: string, command
         let helpLink = $(child).attr("name");
         if (helpLink) {
             if (command && compareName(command.name, helpLink)) {
-                command.helpLink = localPathToFileUrl(docPath + "/" + $(child).attr("url"));
+                command.helpLink = localPathToFileUrl(
+                    docPath + "/" + $(child).attr("url")
+                );
             }
 
             if (query && compareName(query.name, helpLink)) {
-                query.helpLink = localPathToFileUrl(docPath + "/" + $(child).attr("url"));
+                query.helpLink = localPathToFileUrl(
+                    docPath + "/" + $(child).attr("url")
+                );
             }
         }
     });
@@ -284,11 +330,15 @@ function buildCommand(name: string, sdlCommand: JQuery, docPath: string, command
         let helpLink = $(child).attr("name");
         if (helpLink) {
             if (command && !command.helpLink) {
-                command.helpLink = localPathToFileUrl(docPath + "/" + $(child).attr("url"));
+                command.helpLink = localPathToFileUrl(
+                    docPath + "/" + $(child).attr("url")
+                );
             }
 
             if (query && !query.helpLink) {
-                query.helpLink = localPathToFileUrl(docPath + "/" + $(child).attr("url"));
+                query.helpLink = localPathToFileUrl(
+                    docPath + "/" + $(child).attr("url")
+                );
             }
         }
     });
@@ -302,7 +352,11 @@ function buildCommand(name: string, sdlCommand: JQuery, docPath: string, command
     }
 }
 
-function buildCommonCommands(commonCommands: JQuery, docPath: string, commands: ICommand[]) {
+function buildCommonCommands(
+    commonCommands: JQuery,
+    docPath: string,
+    commands: ICommand[]
+) {
     commonCommands.find(">CommonCommand").each((i, child) => {
         let mnemonic = $(child).attr("mnemonic");
         if (mnemonic) {
@@ -311,7 +365,12 @@ function buildCommonCommands(commonCommands: JQuery, docPath: string, commands: 
     });
 }
 
-function buildNode(path: string, sdlNode: JQuery, docPath: string, commands: ICommand[]) {
+function buildNode(
+    path: string,
+    sdlNode: JQuery,
+    docPath: string,
+    commands: ICommand[]
+) {
     buildNodes(path, sdlNode.find(">Node"), docPath, commands);
 
     sdlNode.find(">SubsystemCommand").each((i, child) => {
@@ -319,7 +378,12 @@ function buildNode(path: string, sdlNode: JQuery, docPath: string, commands: ICo
     });
 }
 
-function buildNodes(path: string, sdlNodes: JQuery, docPath: string, commands: ICommand[]) {
+function buildNodes(
+    path: string,
+    sdlNodes: JQuery,
+    docPath: string,
+    commands: ICommand[]
+) {
     sdlNodes.each((i, child) => {
         let sdlNode = $(child);
 
@@ -358,7 +422,11 @@ function buildCommands(sdl: JQuery<any>, docPath: string) {
 
     let ScpiDefinition = sdl.find(">ScpiDefinition");
     if (ScpiDefinition.length) {
-        buildCommonCommands(ScpiDefinition.find(">CommonCommands"), docPath, commands);
+        buildCommonCommands(
+            ScpiDefinition.find(">CommonCommands"),
+            docPath,
+            commands
+        );
 
         ScpiDefinition.find(">SubsystemCommands>RootNode").each((i, child) => {
             buildNodes("", $(child), docPath, commands);
@@ -397,7 +465,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
     try {
         let idfFilePath = await findIdfFile(extensionFolderPath);
         if (!idfFilePath) {
-            throw "IDF file not found";
+            return undefined;
         }
 
         if (isRenderer()) {
@@ -408,7 +476,9 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 let id = ScpiConfiguration.attr("guid")!;
 
                 let name = ScpiConfiguration.attr("name") || "Unknown name";
-                let version = ScpiConfiguration.attr("firmwareVersion") || "Unknown version";
+                let version =
+                    ScpiConfiguration.attr("firmwareVersion") ||
+                    "Unknown version";
 
                 let properties: IInstrumentExtensionProperties;
                 let isEditable: boolean;
@@ -418,10 +488,14 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
 
                 let packageJsonFilePath = extensionFolderPath + "/package.json";
                 if (await fileExists(packageJsonFilePath)) {
-                    const packageJson = await readPackageJson(packageJsonFilePath);
+                    const packageJson = await readPackageJson(
+                        packageJsonFilePath
+                    );
                     version = packageJson.version;
                     properties = packageJson["eez-studio"];
-                    isEditable = await fileExists(extensionFolderPath + "/.editable");
+                    isEditable = await fileExists(
+                        extensionFolderPath + "/.editable"
+                    );
                     downloadUrl = packageJson.download;
                     sha256 = packageJson.sha256;
                     moreDescription = properties.moreDescription;
@@ -429,7 +503,10 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                     properties = EMPTY_INSTRUMENT_PROPERTIES;
                     isEditable = true;
 
-                    await writeBinaryData(extensionFolderPath + "/.editable", "");
+                    await writeBinaryData(
+                        extensionFolderPath + "/.editable",
+                        ""
+                    );
 
                     await writeJsObjectToFile(packageJsonFilePath, {
                         name,
@@ -442,7 +519,9 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
 
                 const isDirty =
                     isEditable &&
-                    ((await fileExists(extensionFolderPath + "/package.json")) ||
+                    ((await fileExists(
+                        extensionFolderPath + "/package.json"
+                    )) ||
                         (await fileExists(extensionFolderPath + "/image.png")));
 
                 const extension: IExtension = observable(
@@ -451,10 +530,13 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                         type: "instrument",
                         name,
                         description:
-                            ScpiConfiguration.attr("description") || "Unknown description.",
+                            ScpiConfiguration.attr("description") ||
+                            "Unknown description.",
                         moreDescription,
                         version,
-                        author: ScpiConfiguration.attr("author") || "Unknown author",
+                        author:
+                            ScpiConfiguration.attr("author") ||
+                            "Unknown author",
                         image: "",
                         renderPropertiesComponent: () => {
                             const {
@@ -470,9 +552,12 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                         isDirty,
 
                         shortName: ScpiConfiguration.attr("shortName") || "",
-                        revisionNumber: ScpiConfiguration.attr("revisionNumber") || "",
-                        supportedModels: ScpiConfiguration.attr("supportedModels") || "",
-                        revisionComments: ScpiConfiguration.attr("revisionComments") || ""
+                        revisionNumber:
+                            ScpiConfiguration.attr("revisionNumber") || "",
+                        supportedModels:
+                            ScpiConfiguration.attr("supportedModels") || "",
+                        revisionComments:
+                            ScpiConfiguration.attr("revisionComments") || ""
                     },
                     {
                         properties: observable.shallow
@@ -494,7 +579,9 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 return extension;
             }
         } else {
-            let packageJSON = await readPackageJson(extensionFolderPath + "/package.json");
+            let packageJSON = await readPackageJson(
+                extensionFolderPath + "/package.json"
+            );
 
             const extension: IExtension = {
                 id: packageJSON["id"],
@@ -516,7 +603,9 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
     throw "Unknown extension type!";
 }
 
-export async function loadCommandsFromExtensionFolder(extensionFolderPath: string) {
+export async function loadCommandsFromExtensionFolder(
+    extensionFolderPath: string
+) {
     try {
         let idfFilePath = await findIdfFile(extensionFolderPath);
         if (!idfFilePath) {

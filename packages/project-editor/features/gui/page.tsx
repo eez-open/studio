@@ -420,7 +420,8 @@ export class Page extends EezObject implements IPage {
             {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (page: Page) => page.isAction
             },
             {
                 name: "portrait",
