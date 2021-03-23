@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, computed } from "mobx";
 
-import { _find, _range } from "eez-studio-shared/algorithm";
+import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
 import { humanize } from "eez-studio-shared/string";
 import { validators } from "eez-studio-shared/validation";
@@ -29,7 +29,9 @@ import {
     getParent,
     getClassInfo,
     makeDerivedClassInfo,
-    getLabel
+    getLabel,
+    getAncestorOfType,
+    findPropertyByNameInObject
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
@@ -176,6 +178,9 @@ function getClassFromType(type: string) {
     if (!widgetClass) {
         widgetClass = findClass(type);
     }
+    if (!widgetClass) {
+        widgetClass = NotFoundWidget;
+    }
     return widgetClass;
 }
 
@@ -234,10 +239,6 @@ export class Widget extends EezObject implements IWidget {
 
     get autoSize() {
         return false;
-    }
-
-    get label() {
-        return this.type;
     }
 
     static classInfo: ClassInfo = {
@@ -863,6 +864,61 @@ export class Widget extends EezObject implements IWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function renderActionNode(
+    actionNode: ActionNode,
+    designerContext: IDesignerContext,
+    dataContext: IDataContext,
+    titleStyle?: React.CSSProperties
+) {
+    const classInfo = getClassInfo(actionNode);
+
+    const inputs = actionNode.inputProperties;
+    const outputs = actionNode.outputProperties;
+
+    return (
+        <>
+            <div className="title-enclosure">
+                <div className="title" style={titleStyle}>
+                    {typeof classInfo.icon == "string" ? (
+                        <img src={classInfo.icon} />
+                    ) : (
+                        classInfo.icon
+                    )}
+                    <span>{getLabel(actionNode)}</span>
+                </div>
+            </div>
+            {(inputs.length > 0 || outputs.length > 0) && (
+                <div className="body">
+                    <div className="inports">
+                        {inputs.map(property => (
+                            <div
+                                key={property.name}
+                                className="eez-connection-input"
+                                data-connection-input-id={property.name}
+                            >
+                                {humanize(property.name)}
+                            </div>
+                        ))}
+                    </div>
+                    <div className="outports">
+                        {outputs.map(property => (
+                            <div
+                                key={property.name}
+                                className="eez-connection-output"
+                                data-connection-output-id={property.name}
+                            >
+                                {humanize(property.name)}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ActionNode extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {});
 
@@ -884,47 +940,72 @@ export class ActionNode extends Widget {
     ) {}
 
     render(designerContext: IDesignerContext, dataContext: IDataContext) {
-        const classInfo = getClassInfo(this);
-
-        return (
-            <>
-                <div className="title-enclosure">
-                    <div className="title">
-                        {typeof classInfo.icon == "string" ? (
-                            <img src={classInfo.icon} />
-                        ) : (
-                            classInfo.icon
-                        )}
-                        <span>{getLabel(this)}</span>
-                    </div>
-                </div>
-                <div className="body">
-                    <div className="inports">
-                        {this.inputProperties.map(property => (
-                            <div
-                                key={property.name}
-                                className="eez-connection-input"
-                                data-connection-input-id={property.name}
-                            >
-                                {humanize(property.name)}
-                            </div>
-                        ))}
-                    </div>
-                    <div className="outports">
-                        {this.outputProperties.map(property => (
-                            <div
-                                key={property.name}
-                                className="eez-connection-output"
-                                data-connection-output-id={property.name}
-                            >
-                                {humanize(property.name)}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </>
-        );
+        return renderActionNode(this, designerContext, dataContext);
     }
 
     execute() {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class NotFoundWidget extends ActionNode {
+    static classInfo = makeDerivedClassInfo(ActionNode.classInfo, {
+        label: (widget: Widget) => {
+            return `${ActionNode.classInfo.label!(widget)} [NOT FOUND]`;
+        },
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 4.970000743865967 8"
+            >
+                <path d="M2.47 0C1.62 0 .99.26.59.66c-.4.4-.54.9-.59 1.28l1 .13c.04-.25.12-.5.31-.69C1.5 1.19 1.8 1 2.47 1c.66 0 1.02.16 1.22.34.2.18.28.4.28.66 0 .83-.34 1.06-.84 1.5-.5.44-1.16 1.08-1.16 2.25V6h1v-.25c0-.83.31-1.06.81-1.5.5-.44 1.19-1.08 1.19-2.25 0-.48-.17-1.02-.59-1.41C3.95.2 3.31 0 2.47 0zm-.5 7v1h1V7h-1z" />
+            </svg>
+        ),
+        beforeLoadHook(object: NotFoundWidget, jsObject: any) {
+            // make sure unknow properties are remembered
+            _each(jsObject, (value, key) => {
+                if (!findPropertyByNameInObject(object, key)) {
+                    (object as any)[key] = value;
+                }
+            });
+        }
+    });
+
+    @computed get inputProperties() {
+        const page = getAncestorOfType(this, Page.classInfo) as Page;
+        return page.connectionLines
+            .filter(connectionLine => connectionLine.target == this.wireID)
+            .map(connectionLine => ({
+                name: connectionLine.input,
+                type: PropertyType.ConnectionInput
+            }));
+    }
+
+    @computed get outputProperties() {
+        const page = getAncestorOfType(this, Page.classInfo) as Page;
+        return page.connectionLines
+            .filter(connectionLine => connectionLine.source == this.wireID)
+            .map(connectionLine => ({
+                name: connectionLine.output,
+                type: PropertyType.ConnectionOutput
+            }));
+    }
+
+    get autoSize() {
+        return (
+            this.inputProperties.length > 0 ||
+            this.outputProperties.length > 0 ||
+            this.width === 0 ||
+            this.height == 0
+        );
+    }
+
+    render(
+        designerContext: IDesignerContext,
+        dataContext: IDataContext
+    ): JSX.Element {
+        return renderActionNode(this, designerContext, dataContext, {
+            backgroundColor: "red"
+        });
+    }
 }

@@ -693,7 +693,16 @@ export class ConnectionLineMouseHandler extends MouseHandler {
             context.viewState,
             point
         );
-        if (result && result.connectionInput) {
+        if (
+            result &&
+            result.connectionInput &&
+            !context.document.connectionExists(
+                this.sourceObject.id,
+                this.connectionOutput,
+                result.id,
+                result.connectionInput
+            )
+        ) {
             const container = document.getElementById(
                 context.viewState.containerId
             )!;

@@ -256,6 +256,34 @@ class PageDocument implements IDocument {
         this.DocumentStore.UndoManager.setCombineCommands(false);
     }
 
+    connectionExists(
+        sourceObjectId: string,
+        connectionOutput: string,
+        targetObjectId: string,
+        connectionInput: string
+    ): boolean {
+        const page = this.page.object as Page;
+
+        const sourceObject = this.DocumentStore.getObjectFromObjectId(
+            sourceObjectId
+        ) as Widget;
+        const targetObject = this.DocumentStore.getObjectFromObjectId(
+            targetObjectId
+        ) as Widget;
+
+        return !!(
+            sourceObject.wireID &&
+            targetObject.wireID &&
+            page.connectionLines.find(
+                connectionLine =>
+                    connectionLine.source == sourceObject.wireID &&
+                    connectionLine.output == connectionOutput &&
+                    connectionLine.target == targetObject.wireID &&
+                    connectionLine.input == connectionInput
+            )
+        );
+    }
+
     connect(
         sourceObjectId: string,
         connectionOutput: string,
@@ -264,28 +292,26 @@ class PageDocument implements IDocument {
     ) {
         const page = this.page.object as Page;
 
-        const DocumentStore = this.DocumentStore;
-
-        const sourceObject = DocumentStore.getObjectFromObjectId(
+        const sourceObject = this.DocumentStore.getObjectFromObjectId(
             sourceObjectId
         ) as Widget;
-        const targetObject = DocumentStore.getObjectFromObjectId(
+        const targetObject = this.DocumentStore.getObjectFromObjectId(
             targetObjectId
         ) as Widget;
 
         if (!sourceObject.wireID) {
-            DocumentStore.updateObject(sourceObject, {
+            this.DocumentStore.updateObject(sourceObject, {
                 wireID: guid()
             });
         }
 
         if (!targetObject.wireID) {
-            DocumentStore.updateObject(targetObject, {
+            this.DocumentStore.updateObject(targetObject, {
                 wireID: guid()
             });
         }
 
-        DocumentStore.addObject(page.connectionLines, {
+        this.DocumentStore.addObject(page.connectionLines, {
             source: sourceObject.wireID,
             output: connectionOutput,
             target: targetObject.wireID,

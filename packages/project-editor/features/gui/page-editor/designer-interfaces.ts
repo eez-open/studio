@@ -42,6 +42,12 @@ export interface IDocument {
     onDragEnd(): void;
 
     //
+    connectionExists(
+        sourceObjectId: string,
+        connectionOutput: string,
+        targetObjectId: string,
+        connectionInput: string
+    ): boolean;
     connect(
         sourceObjectId: string,
         connectionOutput: string,
