@@ -128,7 +128,7 @@ export class ContainerWidget extends Widget implements IContainerWidget {
             height: 32
         } as IContainerWidget,
 
-        icon: "_images/widgets/Container.png",
+        icon: "../home/_images/widgets/Container.png",
 
         check: (object: ContainerWidget) => {
             let messages: output.Message[] = [];
@@ -270,7 +270,7 @@ export class ListWidget extends Widget implements IListWidget {
             gap: 0
         },
 
-        icon: "_images/widgets/List.png",
+        icon: "../home/_images/widgets/List.png",
 
         check: (object: ListWidget) => {
             let messages: output.Message[] = [];
@@ -384,7 +384,7 @@ export class GridWidget extends Widget implements IGridWidget {
             height: 64
         },
 
-        icon: "_images/widgets/Grid.png",
+        icon: "../home/_images/widgets/Grid.png",
 
         check: (object: GridWidget) => {
             let messages: output.Message[] = [];
@@ -516,7 +516,7 @@ export class SelectWidget extends Widget implements ISelectWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Select.png",
+        icon: "../home/_images/widgets/Select.png",
 
         check: (object: SelectWidget) => {
             let messages: output.Message[] = [];
@@ -789,7 +789,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
             height: 32
         },
 
-        icon: "_images/widgets/LayoutView.png",
+        icon: "../home/_images/widgets/LayoutView.png",
 
         check: (object: LayoutViewWidget) => {
             let messages: output.Message[] = [];
@@ -1054,7 +1054,7 @@ export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
             displayOption: 0
         },
 
-        icon: "_images/widgets/Data.png",
+        icon: "../home/_images/widgets/Data.png",
 
         check: (object: DisplayDataWidget) => {
             let messages: output.Message[] = [];
@@ -1195,7 +1195,7 @@ export class TextWidget extends Widget implements ITextWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Text.png",
+        icon: "../home/_images/widgets/Text.png",
 
         check: (object: TextWidget) => {
             let messages: output.Message[] = [];
@@ -1528,7 +1528,7 @@ export class MultilineTextWidget
             hangingIndent: 0
         },
 
-        icon: "_images/widgets/MultilineText.png",
+        icon: "../home/_images/widgets/MultilineText.png",
 
         check: (object: MultilineTextWidget) => {
             let messages: output.Message[] = [];
@@ -1614,7 +1614,7 @@ export class RectangleWidget extends Widget implements IRectangleWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Rectangle.png",
+        icon: "../home/_images/widgets/Rectangle.png",
 
         check: (object: RectangleWidget) => {
             let messages: output.Message[] = [];
@@ -1765,7 +1765,7 @@ export class BitmapWidget extends Widget implements IBitmapWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Bitmap.png",
+        icon: "../home/_images/widgets/Bitmap.png",
 
         check: (object: BitmapWidget) => {
             let messages: output.Message[] = [];
@@ -1922,7 +1922,7 @@ export class ButtonWidget extends Widget implements IButtonWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Button.png",
+        icon: "../home/_images/widgets/Button.png",
 
         check: (object: ButtonWidget) => {
             let messages: output.Message[] = [];
@@ -1994,7 +1994,7 @@ export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
             height: 32
         },
 
-        icon: "_images/widgets/ToggleButton.png",
+        icon: "../home/_images/widgets/ToggleButton.png",
 
         check: (object: ToggleButtonWidget) => {
             let messages: output.Message[] = [];
@@ -2054,7 +2054,7 @@ export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
             height: 32
         },
 
-        icon: "_images/widgets/ButtonGroup.png",
+        icon: "../home/_images/widgets/ButtonGroup.png",
 
         check: (object: ButtonGroupWidget) => {
             let messages: output.Message[] = [];
@@ -2217,7 +2217,7 @@ export class BarGraphWidget extends Widget implements IBarGraphWidget {
             orientation: "left-right"
         },
 
-        icon: "_images/widgets/BarGraph.png",
+        icon: "../home/_images/widgets/BarGraph.png",
 
         check: (object: BarGraphWidget) => {
             let messages: output.Message[] = [];
@@ -2436,7 +2436,7 @@ export class YTGraphWidget extends Widget implements IYTGraphWidget {
             height: 32
         },
 
-        icon: "_images/widgets/YTGraph.png",
+        icon: "../home/_images/widgets/YTGraph.png",
 
         check: (object: YTGraphWidget) => {
             let messages: output.Message[] = [];
@@ -2544,7 +2544,7 @@ export class UpDownWidget extends Widget implements IUpDownWidget {
             downButtonText: "<"
         },
 
-        icon: "_images/widgets/UpDown.png",
+        icon: "../home/_images/widgets/UpDown.png",
 
         check: (object: UpDownWidget) => {
             let messages: output.Message[] = [];
@@ -2668,7 +2668,7 @@ export class ListGraphWidget extends Widget implements IListGraphWidget {
             height: 32
         },
 
-        icon: "_images/widgets/ListGraph.png",
+        icon: "../home/_images/widgets/ListGraph.png",
 
         check: (object: ListGraphWidget) => {
             let messages: output.Message[] = [];
@@ -2790,7 +2790,7 @@ export class AppViewWidget extends Widget implements IAppViewWidget {
             height: 32
         },
 
-        icon: "_images/widgets/AppView.png",
+        icon: "../home/_images/widgets/AppView.png",
 
         check: (object: AppViewWidget) => {
             let messages: output.Message[] = [];
@@ -2856,7 +2856,7 @@ export class ScrollBarWidget extends Widget implements IScrollBarWidget {
             rightButtonText: ">"
         },
 
-        icon: "_images/widgets/UpDown.png",
+        icon: "../home/_images/widgets/UpDown.png",
 
         check: (object: ScrollBarWidget) => {
             let messages: output.Message[] = [];
@@ -2996,7 +2996,7 @@ export class ProgressWidget extends Widget implements IProgressWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Progress.png"
+        icon: "../home/_images/widgets/Progress.png"
     });
 
     draw = (
@@ -3051,7 +3051,7 @@ export class CanvasWidget extends Widget implements ICanvasWidget {
             height: 32
         },
 
-        icon: "_images/widgets/Canvas.png",
+        icon: "../home/_images/widgets/Canvas.png",
 
         check: (object: DisplayDataWidget) => {
             let messages: output.Message[] = [];
