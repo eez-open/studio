@@ -29,6 +29,7 @@ import { Output } from "project-editor/components/Output";
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
+import { isViewer } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -513,25 +514,29 @@ export class ProjectEditor extends React.Component<{}, {}> {
 
         let mainContent;
 
-        mainContent = (
-            <MainContent>
-                <Toolbar />
-                <Splitter
-                    type="vertical"
-                    persistId={
-                        outputPanel
-                            ? "project-editor/with-output"
-                            : "project-editor/without-output"
-                    }
-                    sizes={outputPanel ? "100%|240px" : "100%"}
-                    childrenOverflow="hidden|hidden"
-                >
-                    <Content />
-                    {outputPanel}
-                </Splitter>
-                {statusBar}
-            </MainContent>
-        );
+        if (isViewer()) {
+            mainContent = <Content />;
+        } else {
+            mainContent = (
+                <MainContent>
+                    <Toolbar />
+                    <Splitter
+                        type="vertical"
+                        persistId={
+                            outputPanel
+                                ? "project-editor/with-output"
+                                : "project-editor/without-output"
+                        }
+                        sizes={outputPanel ? "100%|240px" : "100%"}
+                        childrenOverflow="hidden|hidden"
+                    >
+                        <Content />
+                        {outputPanel}
+                    </Splitter>
+                    {statusBar}
+                </MainContent>
+            );
+        }
 
         return <ProjectEditorContainer>{mainContent}</ProjectEditorContainer>;
     }

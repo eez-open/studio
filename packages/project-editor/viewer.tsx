@@ -10,11 +10,11 @@ import * as notification from "eez-studio-ui/notification";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
-import { isBrowser } from "eez-studio-shared/util-electron";
+import { isViewer } from "eez-studio-shared/util-electron";
 
 configure({ enforceActions: "observed" });
 
-if (isBrowser()) {
+if (isViewer()) {
 } else {
     EEZStudio.electron.ipcRenderer?.on("beforeClose", async () => {
         EEZStudio.electron.ipcRenderer.send("readyToClose");

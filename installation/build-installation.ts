@@ -5,13 +5,17 @@ const packageJson = require("../package.json");
 
 async function getExtraResource() {
     return new Promise<string[]>((resolve, reject) => {
-        fs.readFile(__dirname + "/extra-resource.json", "utf8", (err: any, data: string) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(JSON.parse(data));
+        fs.readFile(
+            __dirname + "/extra-resource.json",
+            "utf8",
+            (err: any, data: string) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(JSON.parse(data));
+                }
             }
-        });
+        );
     });
 }
 
@@ -51,6 +55,8 @@ function getIgnore() {
         "^/node_modules/lzz-gyp/lzz-compiled/osx",
         "^/node_modules/lzz-gyp/lzz-compiled/bsd",
 
+        "^/dist/project-editor/viewer*.*",
+
         ".*\\.js\\.map"
     ];
 
@@ -85,7 +91,10 @@ if (os.platform() === "win32") {
 
         const appPaths = await packager(options);
 
-        fs.copyFileSync("./LICENSE.TXT", appPaths[0] + "/LICENSE.EEZSTUDIO.TXT");
+        fs.copyFileSync(
+            "./LICENSE.TXT",
+            appPaths[0] + "/LICENSE.EEZSTUDIO.TXT"
+        );
     } catch (err) {
         console.error(err);
     }

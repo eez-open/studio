@@ -114,7 +114,7 @@ import {
 
 import { Section } from "project-editor/core/output";
 import { findAction } from "project-editor/features/action/action";
-import { isBrowser } from "eez-studio-shared/util-electron";
+import { isViewer } from "eez-studio-shared/util-electron";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -1250,7 +1250,7 @@ export class DocumentStoreClass {
             }
         );
 
-        if (!isBrowser()) {
+        if (!isViewer()) {
             this.watch();
         }
     }
@@ -1322,7 +1322,7 @@ export class DocumentStoreClass {
     }
 
     updateProjectWindowState() {
-        if (isBrowser()) {
+        if (isViewer()) {
             return;
         }
 
@@ -1382,7 +1382,7 @@ export class DocumentStoreClass {
     }
 
     getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
-        if (isBrowser()) {
+        if (isViewer()) {
             return relativeFilePath;
         }
 
@@ -1509,7 +1509,7 @@ export class DocumentStoreClass {
     }
 
     loadUIState(projectFilePath: string) {
-        if (isBrowser()) {
+        if (isViewer()) {
             return {} as any;
         }
 

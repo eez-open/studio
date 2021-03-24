@@ -192,12 +192,12 @@ export class OutputSections {
             "Search results",
             false
         );
-        this.sections[Section.DEBUG] = new OutputSection(
-            DocumentStore,
-            Section.DEBUG,
-            "Debug",
-            false
-        );
+        // this.sections[Section.DEBUG] = new OutputSection(
+        //     DocumentStore,
+        //     Section.DEBUG,
+        //     "Debug",
+        //     false
+        // );
     }
 
     @computed get activeSection() {
