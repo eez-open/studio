@@ -1,12 +1,12 @@
 import { getProperty } from "project-editor/core/object";
-import { getExtensionsByCategory } from "project-editor/core/extensions";
+import { getProjectFeatures } from "project-editor/core/extensions";
 import { DocumentStoreClass } from "project-editor/core/store";
 
 export function getAllMetrics(DocumentStore: DocumentStoreClass) {
     let allMetrics: any = {};
 
     const project = DocumentStore.project;
-    let projectFeatures = getExtensionsByCategory("project-feature");
+    let projectFeatures = getProjectFeatures();
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature

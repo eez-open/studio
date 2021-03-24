@@ -68,7 +68,7 @@ import {
     migrateStyleProperty
 } from "project-editor/features/gui/widget";
 
-const { MenuItem } = EEZStudio.remote;
+const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 

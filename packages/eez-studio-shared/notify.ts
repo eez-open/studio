@@ -1,4 +1,4 @@
-import { isRenderer } from "eez-studio-shared/util-electron";
+import { isBrowser, isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { BrowserWindow } from "electron";
 
@@ -7,7 +7,11 @@ import { BrowserWindow } from "electron";
 export interface INotifySource {
     id: string;
     filterMessage?: (message: any, filterSpecification: any) => boolean;
-    onNewTarget?: (targetId: string, filterSpecification: any, inProcessTarget: boolean) => void;
+    onNewTarget?: (
+        targetId: string,
+        filterSpecification: any,
+        inProcessTarget: boolean
+    ) => void;
 }
 
 interface INotifyTarget {
@@ -42,12 +46,17 @@ export function unregisterSource(source: INotifySource) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function sendMessage(source: INotifySource, message: any, sendToTargetId?: string) {
+export function sendMessage(
+    source: INotifySource,
+    message: any,
+    sendToTargetId?: string
+) {
     targets.forEach((target, targetId) => {
         if (
             target.sourceId === source.id &&
             (!sendToTargetId || sendToTargetId === targetId) &&
-            (!source.filterMessage || source.filterMessage(message, target.filterSpecification))
+            (!source.filterMessage ||
+                source.filterMessage(message, target.filterSpecification))
         ) {
             if (target.callback) {
                 // notify target in this window
@@ -82,6 +91,10 @@ export function watch(
     filterSpecification: any,
     callback: (message: any) => void
 ) {
+    if (isBrowser()) {
+        return "";
+    }
+
     let targetId = guid();
 
     // add target to this window
@@ -151,28 +164,6 @@ function sendNotifyWatch(
     webContents.send("notify/watch", args);
 }
 
-let ipc: Electron.IpcRenderer | Electron.IpcMain;
-if (isRenderer()) {
-    ipc = EEZStudio.electron.ipcRenderer;
-} else {
-    ipc = require("electron").ipcMain;
-}
-
-ipc.on("notify/watch", function(event: any, args: INotifyWatchArgs) {
-    targets.set(args.targetId, {
-        sourceId: args.sourceId,
-        filterSpecification: args.filterSpecification,
-        targetWindowId: args.targetWindowId
-    });
-
-    let source = sources.get(args.sourceId);
-    if (source && source.onNewTarget) {
-        source.onNewTarget(args.targetId, args.filterSpecification, false);
-    }
-});
-
-////////////////////////////////////////////////////////////////////////////////
-
 interface ISendMessageArgs {
     targetId: string;
     message: any;
@@ -185,48 +176,78 @@ function sendSendMessage(
     target.send("notify/send-message", args);
 }
 
-ipc.on("notify/send-message", function(event: any, args: ISendMessageArgs) {
-    targets.forEach((target, targetId) => {
-        if (target.callback && targetId === args.targetId) {
-            target.callback(args.message);
+if (!isBrowser()) {
+    let ipc: Electron.IpcRenderer | Electron.IpcMain;
+    if (isRenderer()) {
+        ipc = EEZStudio.electron.ipcRenderer;
+    } else {
+        ipc = require("electron").ipcMain;
+    }
+
+    ipc.on("notify/watch", function (event: any, args: INotifyWatchArgs) {
+        targets.set(args.targetId, {
+            sourceId: args.sourceId,
+            filterSpecification: args.filterSpecification,
+            targetWindowId: args.targetWindowId
+        });
+
+        let source = sources.get(args.sourceId);
+        if (source && source.onNewTarget) {
+            source.onNewTarget(args.targetId, args.filterSpecification, false);
         }
     });
-});
 
-////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
 
-ipc.on("notify/get-targets", function(event: any, windowId: number) {
-    let targetWindowId: number;
-    if (isRenderer()) {
-        targetWindowId = EEZStudio.remote.getCurrentWindow().id;
-    } else {
-        targetWindowId = -1;
-    }
-    targets.forEach((target, targetId) => {
-        if (target.callback) {
-            sendNotifyWatch(getBrowserWindow().fromId(windowId)!.webContents, {
-                sourceId: target.sourceId,
-                filterSpecification: target.filterSpecification,
-                targetId,
-                targetWindowId
+    ipc.on(
+        "notify/send-message",
+        function (event: any, args: ISendMessageArgs) {
+            targets.forEach((target, targetId) => {
+                if (target.callback && targetId === args.targetId) {
+                    target.callback(args.message);
+                }
             });
         }
-    });
-});
-
-if (isRenderer()) {
-    let currentWindowId = EEZStudio.remote.getCurrentWindow().id;
-    EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
-        if (currentWindowId !== window.id) {
-            window.webContents.send(
-                "notify/get-targets",
-                EEZStudio.remote.getCurrentWindow().id
-            );
-        }
-    });
-
-    EEZStudio.electron.ipcRenderer.send(
-        "notify/get-targets",
-        EEZStudio.remote.getCurrentWindow().id
     );
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ipc.on("notify/get-targets", function (event: any, windowId: number) {
+        let targetWindowId: number;
+        if (isRenderer()) {
+            targetWindowId = EEZStudio.remote.getCurrentWindow().id;
+        } else {
+            targetWindowId = -1;
+        }
+        targets.forEach((target, targetId) => {
+            if (target.callback) {
+                sendNotifyWatch(
+                    getBrowserWindow().fromId(windowId)!.webContents,
+                    {
+                        sourceId: target.sourceId,
+                        filterSpecification: target.filterSpecification,
+                        targetId,
+                        targetWindowId
+                    }
+                );
+            }
+        });
+    });
+
+    if (isRenderer()) {
+        let currentWindowId = EEZStudio.remote.getCurrentWindow().id;
+        EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
+            if (currentWindowId !== window.id) {
+                window.webContents.send(
+                    "notify/get-targets",
+                    EEZStudio.remote.getCurrentWindow().id
+                );
+            }
+        });
+
+        EEZStudio.electron.ipcRenderer.send(
+            "notify/get-targets",
+            EEZStudio.remote.getCurrentWindow().id
+        );
+    }
 }

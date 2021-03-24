@@ -10,7 +10,7 @@ import {
     autorun,
     runInAction
 } from "mobx";
-import chokidar from "chokidar";
+import type { FSWatcher } from "chokidar";
 
 import {
     _each,
@@ -88,7 +88,7 @@ import {
 } from "project-editor/core/objectAdapter";
 import { OutputSections, OutputSection } from "project-editor/core/output";
 
-import { getExtensionsByCategory } from "project-editor/core/extensions";
+import { getProjectFeatures } from "project-editor/core/extensions";
 
 import * as SearchModule from "project-editor/core/search";
 import { DataContext } from "project-editor/features/data/data";
@@ -114,8 +114,9 @@ import {
 
 import { Section } from "project-editor/core/output";
 import { findAction } from "project-editor/features/action/action";
+import { isBrowser } from "eez-studio-shared/util-electron";
 
-const { Menu, MenuItem } = EEZStudio.remote;
+const { Menu, MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1139,31 +1140,32 @@ export async function load(
     await initExtensions();
 
     return new Promise<Project>((resolve, reject) => {
-        const fs = EEZStudio.remote.require("fs");
-        fs.readFile(filePath, "utf8", (err: any, data: string) => {
-            if (err) {
-                reject(err);
-            } else {
-                //console.time("load");
-
-                let projectJs = JSON.parse(data);
+        fetch(filePath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("HTTP error " + response.status);
+                }
+                return response.json();
+            })
+            .then(projectJs => {
                 let project = loadObject(
                     DocumentStore,
                     undefined,
                     projectJs,
                     Project
                 ) as Project;
-                //console.timeEnd("load");
-
                 resolve(project);
-            }
-        });
+                //console.timeEnd("load");
+            })
+            .catch(function (err) {
+                reject(err);
+            });
     });
 }
 
 export function save(DocumentStore: DocumentStoreClass, filePath: string) {
     const toJsHook = (jsObject: any, object: IEezObject) => {
-        let projectFeatures = getExtensionsByCategory("project-feature");
+        let projectFeatures = getProjectFeatures();
         for (let projectFeature of projectFeatures) {
             if (
                 projectFeature.eezStudioExtension.implementation.projectFeature
@@ -1222,6 +1224,11 @@ export class DocumentStoreClass {
     @observable mapExternalProjectToAbsolutePath = new Map<Project, string>();
     externalProjectsLoading = new Map<string, boolean>();
 
+    static async create() {
+        await initExtensions();
+        return new DocumentStoreClass();
+    }
+
     constructor() {
         autorun(
             () => {
@@ -1243,12 +1250,19 @@ export class DocumentStoreClass {
             }
         );
 
-        let watcher: chokidar.FSWatcher | undefined = undefined;
+        if (!isBrowser()) {
+            this.watch();
+        }
+    }
+
+    async watch() {
+        const chokidarModuleName = "chokidar";
+        const { watch } = await import(chokidarModuleName);
+        let watcher: FSWatcher | undefined = undefined;
         autorun(() => {
             if (watcher) {
                 watcher.close();
             }
-
             if (this.project) {
                 const importedProjectFiles = this.project.settings.general.imports
                     .filter(
@@ -1259,8 +1273,8 @@ export class DocumentStoreClass {
                             importDirective.projectFilePath
                         )
                     );
-                watcher = chokidar.watch(importedProjectFiles);
-                watcher.on("change", path => {
+                watcher = watch(importedProjectFiles) as FSWatcher;
+                watcher!.on("change", path => {
                     const project = this.externalProjects.get(path);
                     if (project) {
                         runInAction(() => {
@@ -1308,6 +1322,10 @@ export class DocumentStoreClass {
     }
 
     updateProjectWindowState() {
+        if (isBrowser()) {
+            return;
+        }
+
         const path = EEZStudio.remote.require("path");
 
         let title = "";
@@ -1364,6 +1382,10 @@ export class DocumentStoreClass {
     }
 
     getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
+        if (isBrowser()) {
+            return relativeFilePath;
+        }
+
         const path = EEZStudio.remote.require("path");
         const filePath = this.getProjectFilePath(project ?? this.project);
         return filePath
@@ -1487,6 +1509,10 @@ export class DocumentStoreClass {
     }
 
     loadUIState(projectFilePath: string) {
+        if (isBrowser()) {
+            return {} as any;
+        }
+
         return new Promise<any>((resolve, reject) => {
             const fs = EEZStudio.remote.require("fs");
             fs.readFile(
@@ -2354,21 +2380,26 @@ let extensionsInitialized = false;
 async function initExtensions() {
     if (!extensionsInitialized) {
         extensionsInitialized = true;
-        const { extensions } = await import(
-            "eez-studio-shared/extensions/extensions"
-        );
+        if (EEZStudio.electron) {
+            const { extensions } = await import(
+                "eez-studio-shared/extensions/extensions"
+            );
 
-        extensions.forEach(extension => {
-            if (extension.eezFlowExtensionInit) {
-                extension.eezFlowExtensionInit({
-                    React,
-                    mobx,
-                    registerClass,
-                    PropertyType,
-                    makeDerivedClassInfo,
-                    ActionNode
-                });
-            }
-        });
+            extensions.forEach(extension => {
+                if (extension.eezFlowExtensionInit) {
+                    extension.eezFlowExtensionInit({
+                        React,
+                        mobx,
+                        registerClass,
+                        PropertyType,
+                        makeDerivedClassInfo,
+                        ActionNode
+                    });
+                }
+            });
+        }
+
+        const extensionsModule = await import("project-editor/core/extensions");
+        await extensionsModule.loadExtensions();
     }
 }

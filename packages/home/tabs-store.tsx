@@ -351,25 +351,15 @@ class ObjectEditorTab implements IHomeTab {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let projectEditorExtensionsLoaded = false;
-
 export class ProjectEditorTab implements IHomeTab {
     static ID_PREFIX = "PROJECT_TAB_";
 
     static async addTab(filePath?: string) {
-        if (!projectEditorExtensionsLoaded) {
-            projectEditorExtensionsLoaded = true;
-            const extensionsModule = await import(
-                "project-editor/core/extensions"
-            );
-            await extensionsModule.loadExtensions();
-        }
-
         const { DocumentStoreClass } = await import(
             "project-editor/core/store"
         );
 
-        const DocumentStore = new DocumentStoreClass();
+        const DocumentStore = await DocumentStoreClass.create();
         if (filePath) {
             await DocumentStore.openFile(filePath);
         } else {

@@ -2,6 +2,7 @@
 
 declare const EEZStudio: {
     title: string;
+    browser?: boolean;
     electron: typeof Electron;
     require: any;
     windowType: string;

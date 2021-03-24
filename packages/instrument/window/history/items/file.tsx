@@ -4,7 +4,10 @@ import { observer } from "mobx-react";
 import { clipboard, nativeImage, SaveDialogOptions } from "electron";
 import { bind } from "bind-decorator";
 
-import { formatTransferSpeed, formatDateTimeLong } from "eez-studio-shared/util";
+import {
+    formatTransferSpeed,
+    formatDateTimeLong
+} from "eez-studio-shared/util";
 import {
     writeBinaryData,
     getFileName,
@@ -33,10 +36,17 @@ import pdfToPng from "pdf-services/pdf-to-png";
 
 import { FileState } from "instrument/connection/file-state";
 
-import { showAddNoteDialog, showEditNoteDialog } from "instrument/window/note-dialog";
+import {
+    showAddNoteDialog,
+    showEditNoteDialog
+} from "instrument/window/note-dialog";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import {
+    HistoryItem,
+    HistoryItemDiv,
+    HistoryItemDate
+} from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import { Waveform, convertToCsv } from "instrument/window/waveform/generic";
@@ -144,10 +154,14 @@ class PdfPreview extends React.Component<{
             if (!this.url) {
                 (async () => {
                     const [tempDirPath] = await getPdfTempDirPathPromise;
-                    const tempFilePath = tempDirPath + "/" + this.props.historyItem.id + ".pdf";
+                    const tempFilePath =
+                        tempDirPath + "/" + this.props.historyItem.id + ".pdf";
                     let exists = await fileExists(tempFilePath);
                     if (!exists) {
-                        await writeBinaryData(tempFilePath, this.props.historyItem.data);
+                        await writeBinaryData(
+                            tempFilePath,
+                            this.props.historyItem.data
+                        );
                     }
                     return new URL(`file:///${tempFilePath}`).href;
                 })().then(
@@ -198,12 +212,17 @@ class PdfPreview extends React.Component<{
             content = this.url && (
                 <WebView
                     ref={(ref: any) => (this.webView = ref)}
-                    src={"../../libs/pdfjs/web/viewer.html?file=" + encodeURIComponent(this.url)}
+                    src={
+                        "../../libs/pdfjs/web/viewer.html?file=" +
+                        encodeURIComponent(this.url)
+                    }
                     tabIndex={this.zoom ? 0 : undefined}
                 />
             );
         } else {
-            content = <img src={this.thumbnail || "../instrument/_images/pdf.png"} />;
+            content = (
+                <img src={this.thumbnail || "../instrument/_images/pdf.png"} />
+            );
         }
 
         return (
@@ -281,7 +300,9 @@ export class FileHistoryItemComponent extends React.Component<
 
         let options: SaveDialogOptions = { filters };
         if (this.props.historyItem.sourceFilePath) {
-            options.defaultPath = getFileName(this.props.historyItem.sourceFilePath);
+            options.defaultPath = getFileName(
+                this.props.historyItem.sourceFilePath
+            );
         }
 
         const result = await EEZStudio.remote.dialog.showSaveDialog(
@@ -291,7 +312,10 @@ export class FileHistoryItemComponent extends React.Component<
 
         let filePath = result.filePath;
         if (filePath) {
-            if (fileExtension && !filePath.toLowerCase().endsWith(fileExtension)) {
+            if (
+                fileExtension &&
+                !filePath.toLowerCase().endsWith(fileExtension)
+            ) {
                 filePath += "." + fileExtension;
             }
 
@@ -404,7 +428,9 @@ export class FileHistoryItemComponent extends React.Component<
                 : 0;
             let progress;
             if (this.props.historyItem.expectedDataLength) {
-                let transferSpeed = formatTransferSpeed(this.props.historyItem.transferSpeed);
+                let transferSpeed = formatTransferSpeed(
+                    this.props.historyItem.transferSpeed
+                );
                 progress = `${percent}% (${this.props.historyItem.dataLength} of ${this.props.historyItem.expectedDataLength}) ${transferSpeed}`;
             } else {
                 progress = `${this.props.historyItem.dataLength} bytes`;
@@ -455,7 +481,11 @@ export class FileHistoryItemComponent extends React.Component<
 
                 actions = (
                     <Toolbar>
-                        <IconAction icon="material:save" title="Save file" onClick={this.onSave} />
+                        <IconAction
+                            icon="material:save"
+                            title="Save file"
+                            onClick={this.onSave}
+                        />
                         {(this.props.historyItem instanceof DlogWaveform ||
                             this.props.historyItem instanceof Waveform) && (
                             <IconAction
@@ -466,7 +496,8 @@ export class FileHistoryItemComponent extends React.Component<
                                 enabled={!this.onSaveAsCsvInProgress}
                             />
                         )}
-                        {(this.props.historyItem.isImage || this.props.historyItem.isText) && (
+                        {(this.props.historyItem.isImage ||
+                            this.props.historyItem.isText) && (
                             <IconAction
                                 icon="material:content_copy"
                                 title="Copy to clipboard"
@@ -494,7 +525,9 @@ export class FileHistoryItemComponent extends React.Component<
                         <Balloon>
                             <PreventDraggable tag="div">
                                 <PropertyList>
-                                    <StaticRichTextProperty value={this.props.historyItem.note} />
+                                    <StaticRichTextProperty
+                                        value={this.props.historyItem.note}
+                                    />
                                 </PropertyList>
                             </PreventDraggable>
                         </Balloon>
@@ -518,12 +551,24 @@ export class FileHistoryItemComponent extends React.Component<
                 <div>
                     <div className="EezStudio_HistoryItemText mb-1">
                         {this.props.historyItem.sourceFilePath && (
-                            <div style={{ display: "flex", alignItems: "center" }}>
-                                <div>{this.props.historyItem.sourceFilePath}</div>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center"
+                                }}
+                            >
+                                <div>
+                                    {this.props.historyItem.sourceFilePath}
+                                </div>
                                 {this.props.historyItem.destinationFilePath && (
                                     <React.Fragment>
                                         <Icon icon="material:arrow_forward" />
-                                        <div>{this.props.historyItem.destinationFilePath}</div>
+                                        <div>
+                                            {
+                                                this.props.historyItem
+                                                    .destinationFilePath
+                                            }
+                                        </div>
                                     </React.Fragment>
                                 )}
                             </div>
@@ -584,7 +629,9 @@ export class FileHistoryItem extends HistoryItem {
                 StaticRichTextProperty
             } = require("eez-studio-ui/properties") as typeof UiPropertiesModule;
 
-            const { Balloon } = require("eez-studio-ui/balloon") as typeof UiBalloonModule;
+            const {
+                Balloon
+            } = require("eez-studio-ui/balloon") as typeof UiBalloonModule;
 
             note = (
                 <Balloon>
@@ -597,7 +644,9 @@ export class FileHistoryItem extends HistoryItem {
 
         return (
             <React.Fragment>
-                <div className="plain-text">{this.fileTypeAsDisplayString + " file"}</div>
+                <div className="plain-text">
+                    {this.fileTypeAsDisplayString + " file"}
+                </div>
                 {note}
             </React.Fragment>
         );
@@ -605,7 +654,12 @@ export class FileHistoryItem extends HistoryItem {
 
     @computed
     get listItemElement(): JSX.Element | null {
-        return <FileHistoryItemComponent appStore={this.appStore!} historyItem={this} />;
+        return (
+            <FileHistoryItemComponent
+                appStore={this.appStore!}
+                historyItem={this}
+            />
+        );
     }
 
     @computed
@@ -807,9 +861,15 @@ export class FileHistoryItem extends HistoryItem {
 
         try {
             // add unit to sample rate
-            firstRow = firstRow.replace(/(.*Sampling rate: )(.*)/, (match, a, b) => {
-                return a + SAMPLING_RATE_UNIT.formatValue(parseFloat(b), 0, " ");
-            });
+            firstRow = firstRow.replace(
+                /(.*Sampling rate: )(.*)/,
+                (match, a, b) => {
+                    return (
+                        a +
+                        SAMPLING_RATE_UNIT.formatValue(parseFloat(b), 0, " ")
+                    );
+                }
+            );
         } catch (err) {
             console.error(err);
         }

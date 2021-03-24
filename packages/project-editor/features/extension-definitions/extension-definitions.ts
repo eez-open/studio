@@ -14,8 +14,6 @@ import {
 import * as output from "project-editor/core/output";
 import { getDocumentStore } from "project-editor/core/store";
 
-import { registerFeatureImplementation } from "project-editor/core/extensions";
-
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 
 import { metrics } from "project-editor/features/extension-definitions/metrics";
@@ -274,20 +272,31 @@ registerClass(ExtensionDefinition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerFeatureImplementation("extension-definitions", {
-    projectFeature: {
-        mandatory: false,
-        key: "extensionDefinitions",
+export default {
+    name: "eezstudio-project-feature-extension-definitions",
+    version: "0.1.0",
+    description:
+        "This feature adds support for IEXT definitions into your project",
+    author: "EEZ",
+    authorLogo: "../eez-studio-ui/_images/eez_logo.png",
+    eezStudioExtension: {
         displayName: "IEXT definitions",
-        type: PropertyType.Array,
-        typeClass: ExtensionDefinition,
-        icon: "extension",
-        create: () => {
-            return [];
-        },
-        check: (object: IEezObject) => {
-            return [];
-        },
-        metrics: metrics
+        implementation: {
+            projectFeature: {
+                mandatory: false,
+                key: "extensionDefinitions",
+                displayName: "IEXT definitions",
+                type: PropertyType.Array,
+                typeClass: ExtensionDefinition,
+                icon: "extension",
+                create: () => {
+                    return [];
+                },
+                check: (object: IEezObject) => {
+                    return [];
+                },
+                metrics: metrics
+            }
+        }
     }
-});
+};

@@ -55,7 +55,7 @@ import {
 
 import { ProjectContext } from "project-editor/project/context";
 
-const { Menu, MenuItem } = EEZStudio.remote;
+const { Menu, MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 

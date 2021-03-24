@@ -4,9 +4,16 @@ import { Project, BuildConfiguration } from "project-editor/project/project";
 
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
+import actionFeature from "project-editor/features/action/action";
+import dataFeature from "project-editor/features/data/data";
+import extensionDefinitionsFeature from "project-editor/features/extension-definitions/extension-definitions";
+import guiFeature from "project-editor/features/gui/gui";
+import scpiFeature from "project-editor/features/scpi/scpi";
+import shortcutsFeature from "project-editor/features/shortcuts/shortcuts";
+
 export type BuildResult = { [key: string]: string };
 
-interface ExtensionImplementation {
+export interface ExtensionImplementation {
     projectFeature: {
         mandatory: boolean;
         key: string;
@@ -31,8 +38,6 @@ interface ExtensionImplementation {
     };
 }
 
-type Category = "project-feature";
-
 export interface Extension {
     name: string;
     version: string;
@@ -41,136 +46,53 @@ export interface Extension {
     authorLogo: string;
     eezStudioExtension: {
         displayName: string;
-        category: Category;
         implementation: ExtensionImplementation;
     };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let implementations = new Map<string, ExtensionImplementation>();
-let mapCategoryToExtensions = new Map<string, Extension[]>();
+let extensions: Extension[] = [];
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function registerExtensionImplementation(
-    url: string,
-    implementation: ExtensionImplementation
-) {
-    implementations.set(url, implementation);
-}
-
-export function registerFeatureImplementation(
-    featureName: string,
-    implementation: ExtensionImplementation
-) {
-    implementations.set("eez-studio://project/features/" + featureName, implementation);
-}
-
 export function loadExtensions(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        let totalExtensions = 0;
-        let numLoaded = 0;
-
         function sortExtensions() {
             // sort project-feature extensions such that mandatory extensions are before optional extensions
-            var extensions = mapCategoryToExtensions.get("project-feature");
-            if (extensions) {
-                mapCategoryToExtensions.set(
-                    "project-feature",
-                    extensions.sort((a, b) => {
-                        var aMandatory =
-                            a.eezStudioExtension.implementation.projectFeature.mandatory;
-                        var bMandatory =
-                            b.eezStudioExtension.implementation.projectFeature.mandatory;
-                        if (aMandatory && !bMandatory) {
-                            return -1;
-                        } else if (!aMandatory && bMandatory) {
-                            return 1;
-                        }
-                        return a.name.localeCompare(b.name);
-                    })
-                );
-            }
-        }
-
-        function loadExtensionFinished(extension?: Extension) {
-            numLoaded++;
-
-            if (extension) {
-                var categoryExtensions = mapCategoryToExtensions.get(
-                    extension.eezStudioExtension.category
-                );
-                if (!categoryExtensions) {
-                    categoryExtensions = [];
-                    mapCategoryToExtensions.set(
-                        extension.eezStudioExtension.category,
-                        categoryExtensions
-                    );
+            extensions.sort((a, b) => {
+                var aMandatory =
+                    a.eezStudioExtension.implementation.projectFeature
+                        .mandatory;
+                var bMandatory =
+                    b.eezStudioExtension.implementation.projectFeature
+                        .mandatory;
+                if (aMandatory && !bMandatory) {
+                    return -1;
+                } else if (!aMandatory && bMandatory) {
+                    return 1;
                 }
-                categoryExtensions.push(extension);
-            }
-
-            if (numLoaded == totalExtensions) {
-                sortExtensions();
-                resolve();
-            }
-        }
-
-        function loadExtensionFolder(folder: string) {
-            const fs = EEZStudio.remote.require("fs");
-            const path = EEZStudio.remote.require("path");
-
-            totalExtensions++;
-
-            fs.stat(folder, function (err: any, stats: any) {
-                if (err) {
-                    console.error(err);
-                    loadExtensionFinished();
-                } else if (stats.isDirectory) {
-                    fs.readFile(path.join(folder, "package.json"), "utf-8", function (
-                        err: any,
-                        data: any
-                    ) {
-                        if (err) {
-                            console.error(err);
-                            loadExtensionFinished();
-                        } else {
-                            let extension = JSON.parse(data);
-                            if (extension.eezStudioExtension) {
-                                extension.eezStudioExtension.implementation = implementations.get(
-                                    extension.eezStudioExtension.implementation
-                                );
-                                loadExtensionFinished(extension as Extension);
-                            }
-                        }
-                    });
-                } else {
-                    loadExtensionFinished();
-                }
+                return a.name.localeCompare(b.name);
             });
         }
 
-        function processExtensionsFolder(folder: string, files: string[]) {
-            const path = EEZStudio.remote.require("path");
-            for (let file of files) {
-                loadExtensionFolder(path.join(folder, file));
-            }
+        function addExtension(extension: Extension) {
+            extensions.push(extension);
         }
 
-        const fs = EEZStudio.remote.require("fs");
+        addExtension(actionFeature);
+        addExtension(dataFeature);
+        addExtension(extensionDefinitionsFeature);
+        addExtension(guiFeature);
+        addExtension(scpiFeature);
+        addExtension(shortcutsFeature);
 
-        let extensionsFolder = __dirname + "/../features";
-        fs.readdir(extensionsFolder, function (err: any, files: any) {
-            if (err) {
-                reject("Failed to load extensions!");
-            } else {
-                processExtensionsFolder(extensionsFolder, files);
-            }
-        });
+        sortExtensions();
+
+        resolve();
     });
 }
 
-export function getExtensionsByCategory(category: Category) {
-    return mapCategoryToExtensions.get(category) || [];
+export function getProjectFeatures() {
+    return extensions;
 }

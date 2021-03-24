@@ -1,15 +1,32 @@
-import fs from "fs";
-import path from "path";
-
 import { roundNumber } from "./roundNumber";
 
-export const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(process.execPath);
-
 export let app: Electron.App;
-if (isRenderer()) {
-    app = EEZStudio.remote.app;
+
+let fs: any;
+let path: any;
+
+if (isBrowser()) {
 } else {
-    app = require("electron").app;
+    fs = require("fs");
+    path = require("path");
+
+    if (isRenderer()) {
+        app = EEZStudio.remote.app;
+    } else {
+        app = require("electron").app;
+    }
+}
+
+export const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(
+    process.execPath
+);
+
+export function isBrowser() {
+    try {
+        return EEZStudio.browser;
+    } catch (err) {
+        return false;
+    }
 }
 
 export function isRenderer() {
@@ -32,7 +49,7 @@ export function isRenderer() {
 }
 
 export function getUserDataPath(relativePath: string) {
-    return app.getPath("userData") + path.sep + relativePath;
+    return isBrowser() ? "" : app.getPath("userData") + path.sep + relativePath;
 }
 
 export function localPathToFileUrl(localPath: string) {
@@ -142,22 +159,24 @@ export function readFile(
     length: number,
     position: number
 ) {
-    return new Promise<{ bytesRead: number; buffer: Buffer }>((resolve, reject) => {
-        fs.read(
-            fd,
-            buffer,
-            offset,
-            length,
-            position,
-            (err: any, bytesRead: number, buffer: Buffer) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve({ bytesRead, buffer });
+    return new Promise<{ bytesRead: number; buffer: Buffer }>(
+        (resolve, reject) => {
+            fs.read(
+                fd,
+                buffer,
+                offset,
+                length,
+                position,
+                (err: any, bytesRead: number, buffer: Buffer) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({ bytesRead, buffer });
+                    }
                 }
-            }
-        );
-    });
+            );
+        }
+    );
 }
 
 export function closeFile(fd: any) {
@@ -206,11 +225,16 @@ interface ICsvColumnDefinition {
     digits: number;
 }
 
-export async function readCsvFile(filePath: string, columnDefinitions: ICsvColumnDefinition[]) {
+export async function readCsvFile(
+    filePath: string,
+    columnDefinitions: ICsvColumnDefinition[]
+) {
     let data = await readTextFile(filePath);
 
     let result: any = {};
-    columnDefinitions.forEach(columnDefinition => (result[columnDefinition.id] = []));
+    columnDefinitions.forEach(
+        columnDefinition => (result[columnDefinition.id] = [])
+    );
 
     let rows = data.split("\n");
 
@@ -241,7 +265,10 @@ export async function readCsvFile(filePath: string, columnDefinitions: ICsvColum
     return result;
 }
 
-export function makeCsvData(data: any, columnDefinitions: ICsvColumnDefinition[]) {
+export function makeCsvData(
+    data: any,
+    columnDefinitions: ICsvColumnDefinition[]
+) {
     let rows = [];
 
     let n = data[columnDefinitions[0].id].length;
@@ -254,7 +281,12 @@ export function makeCsvData(data: any, columnDefinitions: ICsvColumnDefinition[]
         for (let j = 0; j < columnDefinitions.length; j++) {
             let columnDefinition = columnDefinitions[j];
             if (i < data[columnDefinition.id].length) {
-                row.push(roundNumber(data[columnDefinition.id][i], columnDefinition.digits));
+                row.push(
+                    roundNumber(
+                        data[columnDefinition.id][i],
+                        columnDefinition.digits
+                    )
+                );
             } else {
                 row.push("=");
             }
@@ -378,7 +410,9 @@ export function getShortFileName(filePath: string) {
         return fileNameWithoutExtension;
     }
 
-    return fileNameWithoutExtension + "." + extension.substring(0, 3).toUpperCase();
+    return (
+        fileNameWithoutExtension + "." + extension.substring(0, 3).toUpperCase()
+    );
 }
 
 export function isValidFileName(fileName: string, shortFileName: boolean) {
@@ -404,7 +438,7 @@ export function isValidFileName(fileName: string, shortFileName: boolean) {
 }
 
 export function isValidPath(path: string, shortFileName: boolean) {
-    if (path[0] >= '0' && path[0] <= "9" && path[1] == ":") {
+    if (path[0] >= "0" && path[0] <= "9" && path[1] == ":") {
         path = path.slice(2);
     }
 
@@ -431,12 +465,15 @@ export async function getTempFilePath(options?: any) {
 export async function getTempDirPath(options?: any) {
     return new Promise<[string, () => void]>((resolve, reject) => {
         const tmp = require("tmp");
-        tmp.dir(options, function (err: any, path: string, cleanupCallback: () => void) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve([path, cleanupCallback] as [string, () => void]);
+        tmp.dir(
+            options,
+            function (err: any, path: string, cleanupCallback: () => void) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve([path, cleanupCallback] as [string, () => void]);
+                }
             }
-        });
+        );
     });
 }

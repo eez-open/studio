@@ -14,10 +14,7 @@ import {
 import { loadObject } from "project-editor/core/serialization";
 
 import { confirm } from "project-editor/core/util";
-import {
-    Extension,
-    getExtensionsByCategory
-} from "project-editor/core/extensions";
+import { Extension, getProjectFeatures } from "project-editor/core/extensions";
 
 import { BuildFile } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
@@ -185,9 +182,7 @@ export class SettingsEditor extends React.Component<
         const object =
             this.props.object || this.context.project.settings.general;
         if (object === this.context.project.settings.general) {
-            let projectFeatures = getExtensionsByCategory(
-                "project-feature"
-            ).map(extension => (
+            let projectFeatures = getProjectFeatures().map(extension => (
                 <ProjectFeature key={extension.name} extension={extension} />
             ));
 

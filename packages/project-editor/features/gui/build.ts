@@ -1,5 +1,3 @@
-const LZ4 = require("lz4");
-
 import { strToColor16 } from "eez-studio-shared/color";
 
 import * as output from "project-editor/core/output";
@@ -1468,6 +1466,9 @@ async function buildGuiAssetsData(assets: Assets) {
     var inputBuffer = Buffer.from(
         dataBuffer.buffer.slice(0, dataBuffer.offset)
     );
+
+    const lz4ModuleName = "lz4";
+    const LZ4 = require(lz4ModuleName);
     var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
     var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
 

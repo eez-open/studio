@@ -8,7 +8,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
 import { IconAction } from "eez-studio-ui/action";
 
-const { Menu, MenuItem } = EEZStudio.remote;
+const { Menu, MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +118,11 @@ class TabView extends React.Component<
         let closeIcon: JSX.Element | undefined;
         if (this.props.tab.close) {
             closeIcon = (
-                <i className="close material-icons" onClick={this.onClose} title="Close tab">
+                <i
+                    className="close material-icons"
+                    onClick={this.onClose}
+                    title="Close tab"
+                >
                     close
                 </i>
             );
@@ -136,7 +140,9 @@ class TabView extends React.Component<
             title = (
                 <>
                     {icon}
-                    <span className="title" title={this.props.tab.title}>{this.props.tab.title}</span>
+                    <span className="title" title={this.props.tab.title}>
+                        {this.props.tab.title}
+                    </span>
                 </>
             );
         } else {
@@ -155,7 +161,9 @@ class TabView extends React.Component<
             >
                 <div>
                     {title}
-                    {this.props.tab.loading && <Loader size={24} style={{ marginLeft: 10 }} />}
+                    {this.props.tab.loading && (
+                        <Loader size={24} style={{ marginLeft: 10 }} />
+                    )}
                     {closeIcon}
                 </div>
             </div>
@@ -196,7 +204,8 @@ const TabsViewContainer = styled.div`
         &.active {
             background-color: white;
             font-weight: bold;
-            border-bottom: 3px solid ${props => props.theme.selectionBackgroundColor};
+            border-bottom: 3px solid
+                ${props => props.theme.selectionBackgroundColor};
         }
 
         & > div {

@@ -16,7 +16,6 @@ export interface IWindowSate {
 export interface IWindowParams {
     url: string;
     hideOnClose?: boolean;
-    args?: any;
 }
 
 export interface IWindow {
@@ -24,7 +23,6 @@ export interface IWindow {
     browserWindow: Electron.BrowserWindow;
     readyToClose: boolean;
     state: IWindowSate;
-    args: any;
     focused: boolean;
 }
 
@@ -71,7 +69,6 @@ export function createWindow(params: IWindowParams) {
                 undo: null,
                 redo: null
             },
-            args: params.args,
             focused: false
         })
     );
@@ -156,15 +153,6 @@ ipcMain.on("focusWindow", function (event: any, params: any) {
 
 ipcMain.on("closeWindow", function (event: any, params: any) {
     closeWindow(params);
-});
-
-ipcMain.on("getWindowArgs", (event: any) => {
-    var window = findWindowByWebContents(event.sender);
-    if (window) {
-        event.returnValue = window.args || null;
-    } else {
-        event.returnValue = undefined;
-    }
 });
 
 ipcMain.on("readyToClose", (event: any) => {

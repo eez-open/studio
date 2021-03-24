@@ -13,7 +13,6 @@ import {
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { findReferencedObject, Project } from "project-editor/project/project";
-import { registerFeatureImplementation } from "project-editor/core/extensions";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
@@ -144,38 +143,6 @@ export class DataItem extends EezObject implements IDataItem {
 }
 
 registerClass(DataItem);
-
-////////////////////////////////////////////////////////////////////////////////
-
-registerFeatureImplementation("data", {
-    projectFeature: {
-        mandatory: false,
-        key: "data",
-        type: PropertyType.Array,
-        typeClass: DataItem,
-        icon: "dns",
-        create: () => {
-            return [];
-        },
-        check: (object: IEezObject[]) => {
-            let messages: output.Message[] = [];
-
-            if (object.length > 32000) {
-                messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
-                        "Max. 32000 data items are supported",
-                        object
-                    )
-                );
-            }
-
-            return messages;
-        },
-        build: build,
-        metrics: metrics
-    }
-});
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -382,3 +349,44 @@ export class DataContext implements IDataContext {
         this.values.set(dataId, value);
     }
 }
+////////////////////////////////////////////////////////////////////////////////
+
+export default {
+    name: "eezstudio-project-feature-data",
+    version: "0.1.0",
+    description: "Project data",
+    author: "EEZ",
+    authorLogo: "../eez-studio-ui/_images/eez_logo.png",
+    eezStudioExtension: {
+        displayName: "Data",
+        implementation: {
+            projectFeature: {
+                mandatory: false,
+                key: "data",
+                type: PropertyType.Array,
+                typeClass: DataItem,
+                icon: "dns",
+                create: () => {
+                    return [];
+                },
+                check: (object: IEezObject[]) => {
+                    let messages: output.Message[] = [];
+
+                    if (object.length > 32000) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Max. 32000 data items are supported",
+                                object
+                            )
+                        );
+                    }
+
+                    return messages;
+                },
+                build: build,
+                metrics: metrics
+            }
+        }
+    }
+};

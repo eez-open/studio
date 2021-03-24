@@ -9,7 +9,7 @@ import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
 
 import {
-    getExtensionsByCategory,
+    getProjectFeatures,
     BuildResult
 } from "project-editor/core/extensions";
 import {
@@ -142,7 +142,7 @@ async function getBuildResults(
 
     let buildResults: BuildResult[] = [];
 
-    let projectFeatures = getExtensionsByCategory("project-feature");
+    let projectFeatures = getProjectFeatures();
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature

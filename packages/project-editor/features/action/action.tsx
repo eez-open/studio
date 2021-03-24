@@ -13,7 +13,6 @@ import {
     EditorComponent
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
-import { registerFeatureImplementation } from "project-editor/core/extensions";
 import {
     findReferencedObject,
     Project,
@@ -395,38 +394,48 @@ registerClass(Action);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerFeatureImplementation("action", {
-    projectFeature: {
-        mandatory: false,
-        key: "actions",
-        type: PropertyType.Array,
-        typeClass: Action,
-        icon: "code",
-        create: () => [],
-        check: (object: IEezObject[]) => {
-            let messages: Message[] = [];
-
-            if (object.length > 32000) {
-                messages.push(
-                    new Message(
-                        Type.ERROR,
-                        "Max. 32000 actions are supported",
-                        object
-                    )
-                );
-            }
-
-            return messages;
-        },
-        build: build,
-        metrics: metrics
-    }
-});
-
-////////////////////////////////////////////////////////////////////////////////
-
 export function findAction(project: Project, actionName: string) {
     return findReferencedObject(project, "actions", actionName) as
         | Action
         | undefined;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export default {
+    name: "eezstudio-project-feature-action",
+    version: "0.1.0",
+    description: "Project actions",
+    author: "EEZ",
+    authorLogo: "../eez-studio-ui/_images/eez_logo.png",
+    eezStudioExtension: {
+        displayName: "Action",
+        implementation: {
+            projectFeature: {
+                mandatory: false,
+                key: "actions",
+                type: PropertyType.Array,
+                typeClass: Action,
+                icon: "code",
+                create: () => [],
+                check: (object: IEezObject[]) => {
+                    let messages: Message[] = [];
+
+                    if (object.length > 32000) {
+                        messages.push(
+                            new Message(
+                                Type.ERROR,
+                                "Max. 32000 actions are supported",
+                                object
+                            )
+                        );
+                    }
+
+                    return messages;
+                },
+                build: build,
+                metrics: metrics
+            }
+        }
+    }
+};

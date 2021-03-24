@@ -1,21 +1,34 @@
 import Database from "better-sqlite3";
-import { isRenderer } from "eez-studio-shared/util-electron";
+import { isRenderer, isBrowser } from "eez-studio-shared/util-electron";
 
 import * as MainSettingsModule from "main/settings";
 
 export let getDbPath: () => string;
 export let setDbPath: (dbPath: string) => void;
-
-if (isRenderer()) {
-    getDbPath = function() {
-        return EEZStudio.electron.ipcRenderer.sendSync("getDbPath");
+if (isBrowser()) {
+    getDbPath = function () {
+        return "";
     };
 
-    setDbPath = function(dbPath: string) {
-        EEZStudio.electron.ipcRenderer.send("setDbPath", dbPath);
+    setDbPath = function (dbPath: string) {};
+} else if (isRenderer()) {
+    getDbPath = function () {
+        return EEZStudio.browser
+            ? ""
+            : EEZStudio.electron.ipcRenderer.sendSync("getDbPath");
+    };
+
+    setDbPath = function (dbPath: string) {
+        if (!EEZStudio.browser) {
+            EEZStudio.electron.ipcRenderer.send("setDbPath", dbPath);
+        }
+        EEZStudio.browser;
     };
 } else {
-    ({ getDbPath, setDbPath } = require("main/settings") as typeof MainSettingsModule);
+    ({
+        getDbPath,
+        setDbPath
+    } = require("main/settings") as typeof MainSettingsModule);
 }
 
 export let db = new Database(getDbPath());
@@ -101,7 +114,10 @@ export function dbQuery(query: string) {
                                 const low = row[key].low;
                                 const high = row[key].high;
                                 if (low !== undefined && high !== undefined) {
-                                    row[key] = Database.Integer.fromBits(low, high);
+                                    row[key] = Database.Integer.fromBits(
+                                        low,
+                                        high
+                                    );
                                 }
                             }
                         }

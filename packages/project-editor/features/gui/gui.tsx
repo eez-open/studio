@@ -16,8 +16,6 @@ import {
 import * as output from "project-editor/core/output";
 import { getDocumentStore } from "project-editor/core/store";
 
-import { registerFeatureImplementation } from "project-editor/core/extensions";
-
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
 import { getProject, Project } from "project-editor/project/project";
@@ -292,46 +290,62 @@ registerClass(Gui);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerFeatureImplementation("gui", {
-    projectFeature: {
-        mandatory: false,
-        key: "gui",
-        type: PropertyType.Object,
-        typeClass: Gui,
-        icon: "filter",
-        create: () => {
-            return {
-                pages: [],
-                styles: [],
-                fonts: [],
-                bitmaps: []
-            };
-        },
-        build: build,
-        metrics: metrics,
-        toJsHook: (jsObject: Project, object: Project) => {
-            const gui = object.gui;
-            if (gui) {
-                //
-                jsObject.gui.colors.forEach((color: any) => delete color.id);
+export default {
+    name: "eezstudio-project-feature-gui",
+    version: "0.1.0",
+    description: "This feature adds GUI support for your project",
+    author: "EEZ",
+    authorLogo: "../eez-studio-ui/_images/eez_logo.png",
+    eezStudioExtension: {
+        displayName: "GUI",
+        category: "project-feature",
+        implementation: {
+            projectFeature: {
+                mandatory: false,
+                key: "gui",
+                type: PropertyType.Object,
+                typeClass: Gui,
+                icon: "filter",
+                create: () => {
+                    return {
+                        pages: [],
+                        styles: [],
+                        fonts: [],
+                        bitmaps: []
+                    };
+                },
+                build: build,
+                metrics: metrics,
+                toJsHook: (jsObject: Project, object: Project) => {
+                    const gui = object.gui;
+                    if (gui) {
+                        //
+                        jsObject.gui.colors.forEach(
+                            (color: any) => delete color.id
+                        );
 
-                jsObject.gui.themes.forEach((theme: any, i: number) => {
-                    delete theme.id;
-                    theme.colors = gui.themes[i].colors;
-                });
+                        jsObject.gui.themes.forEach((theme: any, i: number) => {
+                            delete theme.id;
+                            theme.colors = gui.themes[i].colors;
+                        });
 
-                delete (jsObject.gui as Partial<Gui>).themeColors;
+                        delete (jsObject.gui as Partial<Gui>).themeColors;
 
-                jsObject.gui.fonts.forEach(font =>
-                    font.glyphs.forEach(glyph => {
-                        if (glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
-                            (glyph.glyphBitmap as any).pixelArray = serializePixelArray(
-                                glyph.glyphBitmap.pixelArray
-                            );
-                        }
-                    })
-                );
+                        jsObject.gui.fonts.forEach(font =>
+                            font.glyphs.forEach(glyph => {
+                                if (
+                                    glyph.glyphBitmap &&
+                                    glyph.glyphBitmap.pixelArray
+                                ) {
+                                    (glyph.glyphBitmap as any).pixelArray = serializePixelArray(
+                                        glyph.glyphBitmap.pixelArray
+                                    );
+                                }
+                            })
+                        );
+                    }
+                }
             }
         }
     }
-});
+};

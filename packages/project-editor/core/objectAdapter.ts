@@ -62,7 +62,7 @@ import { objectToJson } from "project-editor/core/serialization";
 import { Rect } from "eez-studio-shared/geometry";
 import type { IResizeHandler } from "project-editor/features/gui/page-editor/designer-interfaces";
 
-const { Menu, MenuItem } = EEZStudio.remote;
+const { Menu, MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 

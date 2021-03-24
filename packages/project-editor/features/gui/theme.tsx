@@ -32,7 +32,7 @@ import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { Gui } from "project-editor/features/gui/gui";
 import { ProjectContext } from "project-editor/project/context";
 
-const { MenuItem } = EEZStudio.remote;
+const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 

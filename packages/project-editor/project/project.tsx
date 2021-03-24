@@ -17,7 +17,7 @@ import { Tree } from "eez-studio-ui/tree";
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
 import { styled } from "eez-studio-ui/styled-components";
 
-import { getExtensionsByCategory } from "project-editor/core/extensions";
+import { getProjectFeatures } from "project-editor/core/extensions";
 import {
     ClassInfo,
     PropertyInfo,
@@ -730,7 +730,7 @@ function getProjectClassInfo() {
         };
     }
 
-    let projectFeatures = getExtensionsByCategory("project-feature");
+    let projectFeatures = getProjectFeatures();
     if (numProjectFeatures != projectFeatures.length) {
         numProjectFeatures = projectFeatures.length;
 

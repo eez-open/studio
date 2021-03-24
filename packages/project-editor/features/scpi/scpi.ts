@@ -27,8 +27,6 @@ import {
     IResponseTypeType
 } from "instrument/scpi";
 
-import { registerFeatureImplementation } from "project-editor/core/extensions";
-
 import { ScpiNavigation } from "project-editor/features/scpi/ScpiNavigation";
 import { ScpiSubsystemsNavigation } from "project-editor/features/scpi/ScpiSubsystemsNavigation";
 import { build } from "project-editor/features/scpi/build";
@@ -884,20 +882,30 @@ registerClass(Scpi);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerFeatureImplementation("scpi", {
-    projectFeature: {
-        mandatory: false,
-        key: "scpi",
-        type: PropertyType.Object,
-        typeClass: Scpi,
-        icon: "navigate_next",
-        create: () => {
-            return {
-                subsystems: [],
-                enums: []
-            };
-        },
-        build: build,
-        metrics: metrics
+export default {
+    name: "eezstudio-project-feature-scpi",
+    version: "0.1.0",
+    description: "This feature adds SCPI support for your project",
+    author: "EEZ",
+    authorLogo: "../eez-studio-ui/_images/eez_logo.png",
+    eezStudioExtension: {
+        displayName: "SCPI",
+        implementation: {
+            projectFeature: {
+                mandatory: false,
+                key: "scpi",
+                type: PropertyType.Object,
+                typeClass: Scpi,
+                icon: "navigate_next",
+                create: () => {
+                    return {
+                        subsystems: [],
+                        enums: []
+                    };
+                },
+                build: build,
+                metrics: metrics
+            }
+        }
     }
-});
+};

@@ -50,7 +50,7 @@ import { Font } from "project-editor/features/gui/font";
 import { ProjectContext } from "project-editor/project/context";
 import { Widget } from "project-editor/features/gui/widget";
 
-const { MenuItem } = EEZStudio.remote;
+const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 

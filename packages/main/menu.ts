@@ -3,7 +3,10 @@ import fs from "fs";
 import { app, dialog, Menu, ipcMain, BrowserWindow } from "electron";
 import { autorun, runInAction } from "mobx";
 
-import { importInstrumentDefinitionFile, openHomeWindow } from "main/home-window";
+import {
+    importInstrumentDefinitionFile,
+    openHomeWindow
+} from "main/home-window";
 import {
     IWindow,
     setForceQuit,
@@ -122,7 +125,10 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
             const result = await dialog.showOpenDialog({
                 properties: ["openFile"],
                 filters: [
-                    { name: "Instrument Definition Files", extensions: ["zip"] },
+                    {
+                        name: "Instrument Definition Files",
+                        extensions: ["zip"]
+                    },
                     { name: "All Files", extensions: ["*"] }
                 ]
             });
@@ -355,7 +361,10 @@ const helpMenu: Electron.MenuItemConstructorOptions = {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function openProject(projectFilePath: string) {
-    BrowserWindow.getFocusedWindow()!.webContents.send("open-project", projectFilePath);
+    BrowserWindow.getFocusedWindow()!.webContents.send(
+        "open-project",
+        projectFilePath
+    );
 }
 
 function createNewProject() {
@@ -402,13 +411,17 @@ function buildEditMenu(win: IWindow | undefined) {
     enableMenuItem(
         <Electron.MenuItemConstructorOptions[]>editMenu.submenu,
         "undo",
-        win !== undefined && win.state.undo != null ? !!win.state.undo : undoManager.canUndo
+        win !== undefined && win.state.undo != null
+            ? !!win.state.undo
+            : undoManager.canUndo
     );
 
     enableMenuItem(
         <Electron.MenuItemConstructorOptions[]>editMenu.submenu,
         "redo",
-        win !== undefined && win.state.redo != null ? !!win.state.redo : undoManager.canRedo
+        win !== undefined && win.state.redo != null
+            ? !!win.state.redo
+            : undoManager.canRedo
     );
 
     return editMenu;
@@ -432,7 +445,10 @@ function buildViewMenu() {
             label: "Shortcuts and Groups",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
-                    focusedWindow.webContents.send("openTab", "shortcutsAndGroups");
+                    focusedWindow.webContents.send(
+                        "openTab",
+                        "shortcutsAndGroups"
+                    );
                 }
             }
         },
@@ -440,7 +456,10 @@ function buildViewMenu() {
             label: "Noteboooks",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
-                    focusedWindow.webContents.send("openTab", "homeSection_notebooks");
+                    focusedWindow.webContents.send(
+                        "openTab",
+                        "homeSection_notebooks"
+                    );
                 }
             }
         },
@@ -629,7 +648,9 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
                 addKeybinding(menuItem.accelerator);
             }
             if (menuItem.submenu && "length" in menuItem.submenu) {
-                addKeybindings(menuItem.submenu as Electron.MenuItemConstructorOptions[]);
+                addKeybindings(
+                    menuItem.submenu as Electron.MenuItemConstructorOptions[]
+                );
             }
         }
     }

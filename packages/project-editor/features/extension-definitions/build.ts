@@ -11,7 +11,7 @@ import { objectToJS } from "project-editor/core/serialization";
 import { Section, Type } from "project-editor/core/output";
 import type { DocumentStoreClass } from "project-editor/core/store";
 
-import { getExtensionsByCategory } from "project-editor/core/extensions";
+import { getProjectFeatures } from "project-editor/core/extensions";
 
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
@@ -23,7 +23,7 @@ function getInstrumentExtensionProperties(
 
     let instrumentExtensionProperties: any = {};
 
-    let projectFeatures = getExtensionsByCategory("project-feature");
+    let projectFeatures = getProjectFeatures();
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature

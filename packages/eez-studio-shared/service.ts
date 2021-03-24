@@ -1,4 +1,4 @@
-import { isRenderer } from "eez-studio-shared/util-electron";
+import { isBrowser, isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { toJS } from "mobx";
 
@@ -33,7 +33,8 @@ export let service: <I, O>(
     return serviceImplementation;
 };
 
-if (isRenderer()) {
+if (isBrowser()) {
+} else if (isRenderer()) {
     if (EEZStudio.windowType === "shared/service") {
         // this is service process (renderer)
 
@@ -83,7 +84,10 @@ if (isRenderer()) {
 
             if (!executeInsideMainProcess) {
                 serviceWindow = EEZStudio.remote.BrowserWindow.getAllWindows().find(
-                    window => window.webContents.getURL().endsWith("shared/service.html")
+                    window =>
+                        window.webContents
+                            .getURL()
+                            .endsWith("shared/service.html")
                 );
             }
 
@@ -94,7 +98,10 @@ if (isRenderer()) {
 
                         EEZStudio.electron.ipcRenderer.once(
                             TASK_DONE_CHANNEL + taskId,
-                            (event: Electron.Event, taskResult: ITaskResult) => {
+                            (
+                                event: Electron.Event,
+                                taskResult: ITaskResult
+                            ) => {
                                 // result received from service process
                                 if (taskResult.error) {
                                     reject(taskResult.error);
@@ -113,10 +120,16 @@ if (isRenderer()) {
 
                         if (executeInsideMainProcess) {
                             // send task to main process
-                            EEZStudio.electron.ipcRenderer.send(NEW_TASK_CHANNEL, task);
+                            EEZStudio.electron.ipcRenderer.send(
+                                NEW_TASK_CHANNEL,
+                                task
+                            );
                         } else {
                             // send task to service process
-                            serviceWindow!.webContents.send(NEW_TASK_CHANNEL, task);
+                            serviceWindow!.webContents.send(
+                                NEW_TASK_CHANNEL,
+                                task
+                            );
                         }
                     });
                 };
@@ -145,33 +158,38 @@ if (isRenderer()) {
         show: false
     };
     let browserWindow = new BrowserWindow(windowContructorParams);
-    browserWindow.loadURL(`file://${__dirname}/../eez-studio-shared/service.html`);
+    browserWindow.loadURL(
+        `file://${__dirname}/../eez-studio-shared/service.html`
+    );
 
     // waiting for the new task
-    ipcMain.on(NEW_TASK_CHANNEL, (event: Electron.IpcMainEvent, task: ITask) => {
-        function send(taskResult: ITaskResult) {
-            // send result back to calling process
-            event.sender.send(TASK_DONE_CHANNEL + task.taskId, taskResult);
-        }
+    ipcMain.on(
+        NEW_TASK_CHANNEL,
+        (event: Electron.IpcMainEvent, task: ITask) => {
+            function send(taskResult: ITaskResult) {
+                // send result back to calling process
+                event.sender.send(TASK_DONE_CHANNEL + task.taskId, taskResult);
+            }
 
-        function sendResult(result: any) {
-            send({ result });
-        }
+            function sendResult(result: any) {
+                send({ result });
+            }
 
-        function sendError(error: any) {
-            send({ error });
-        }
+            function sendError(error: any) {
+                send({ error });
+            }
 
-        try {
-            const serviceImplementation: (
-                inputParams: any
-            ) => Promise<any> = require(task.serviceName).default;
+            try {
+                const serviceImplementation: (
+                    inputParams: any
+                ) => Promise<any> = require(task.serviceName).default;
 
-            serviceImplementation(task.inputParams)
-                .then(sendResult)
-                .catch(sendError);
-        } catch (error) {
-            sendError(error);
+                serviceImplementation(task.inputParams)
+                    .then(sendResult)
+                    .catch(sendError);
+            } catch (error) {
+                sendError(error);
+            }
         }
-    });
+    );
 }

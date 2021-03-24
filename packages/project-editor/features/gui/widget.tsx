@@ -60,7 +60,7 @@ import { Style, IStyle } from "project-editor/features/gui/style";
 
 import type { IContainerWidget } from "project-editor/features/gui/widgets";
 
-const { MenuItem } = EEZStudio.remote;
+const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
