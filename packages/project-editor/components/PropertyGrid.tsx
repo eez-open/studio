@@ -54,6 +54,7 @@ import {
 } from "project-editor/project/project";
 
 import { ProjectContext } from "project-editor/project/context";
+import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -1957,7 +1958,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             if (this.lastObject !== object) {
                 const $highlighted = $(this.div).find(".highlighted");
                 if ($highlighted[0]) {
-                    ($highlighted[0] as any).scrollIntoViewIfNeeded();
+                    scrollIntoViewIfNeeded($highlighted[0]);
                 }
                 this.lastObject = object;
             }

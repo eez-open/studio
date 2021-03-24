@@ -9,7 +9,8 @@ export function closest(element: any, predicate: (element: any) => boolean) {
 
 export function closestByClass(element: any, className: string) {
     return closest(element, (element: any) => {
-        const elementClassName = element.getAttribute && element.getAttribute("class");
+        const elementClassName =
+            element.getAttribute && element.getAttribute("class");
         if (!elementClassName) {
             return false;
         }
@@ -49,5 +50,13 @@ export function addCssStylesheet(id: string, href: string) {
         link.type = "text/css";
         link.href = href;
         document.head.appendChild(link);
+    }
+}
+
+export function scrollIntoViewIfNeeded(el: HTMLElement) {
+    if ((el as any).scrollIntoViewIfNeeded) {
+        (el as any).scrollIntoViewIfNeeded();
+    } else {
+        el.scrollIntoView();
     }
 }

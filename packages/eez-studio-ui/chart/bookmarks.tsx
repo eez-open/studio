@@ -5,6 +5,7 @@ import classNames from "classnames";
 import styled from "eez-studio-ui/styled-components";
 
 import { ChartBookmark, ChartsController } from "eez-studio-ui/chart/chart";
+import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 
 const BookmarksTableContainer = styled.div`
     background-color: white;
@@ -97,7 +98,7 @@ export class BookmarksView extends React.Component<{
     ensureVisible() {
         const selectedRow = $(this.div).find("tr.selected")[0];
         if (selectedRow) {
-            (selectedRow as any).scrollIntoViewIfNeeded();
+            scrollIntoViewIfNeeded(selectedRow);
         }
     }
 

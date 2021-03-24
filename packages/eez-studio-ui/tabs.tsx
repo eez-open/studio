@@ -7,6 +7,7 @@ import styled from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
 import { IconAction } from "eez-studio-ui/action";
+import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -39,7 +40,7 @@ class TabView extends React.Component<
 
     ensureVisible() {
         if (this.props.tab.active) {
-            ($(this.div)[0] as any).scrollIntoViewIfNeeded();
+            scrollIntoViewIfNeeded($(this.div)[0]);
         }
     }
 
