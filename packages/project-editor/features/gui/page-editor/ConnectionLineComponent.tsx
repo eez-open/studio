@@ -60,15 +60,15 @@ const ConnectionLineShape = observer(
         const scale = context.viewState.transform.scale;
         return (
             <g
-                className={classNames({ selected })}
+                className={classNames("connection-line", { selected })}
                 data-designer-object-id={connectionLineAdapter.id}
             >
                 <path
                     d={lineShape}
                     style={{
+                        fill: "none",
                         stroke: "white",
                         strokeOpacity: 0,
-                        fill: "none",
                         strokeWidth: scale
                             ? strokeBackgroundWidth / scale
                             : strokeBackgroundWidth
@@ -77,17 +77,17 @@ const ConnectionLineShape = observer(
                 <path
                     d={lineShape}
                     style={{
+                        fill: "none",
                         stroke: "white",
                         strokeOpacity: 0.4,
-                        fill: "none",
                         strokeWidth: strokeOutlineWidth
                     }}
                 ></path>
                 <path
                     d={lineShape}
                     style={{
-                        stroke: selected ? selectedLineColor : lineColor,
                         fill: "none",
+                        stroke: selected ? selectedLineColor : lineColor,
                         strokeWidth,
                         markerStart: selected
                             ? "url(#selectedLineStart)"

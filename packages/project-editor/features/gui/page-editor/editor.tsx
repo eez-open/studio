@@ -5,7 +5,6 @@ import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
-    BoundingRectBuilder,
     Point,
     pointDistance,
     pointInRect,
@@ -43,7 +42,10 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import { ConnectionLine, Page } from "project-editor/features/gui/page";
 import { Widget } from "project-editor/features/gui/widget";
-import { WidgetComponent } from "project-editor/features/gui/page-editor/render";
+import {
+    Svg,
+    WidgetComponent
+} from "project-editor/features/gui/page-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { guid } from "eez-studio-shared/guid";
 import { ConnectionLines } from "project-editor/features/gui/page-editor/ConnectionLineComponent";
@@ -322,24 +324,9 @@ class PageDocument implements IDocument {
 }
 
 const AllConnectionLines = observer(
-    ({
-        pageRect,
-        designerContext
-    }: {
-        pageRect: Rect;
-        designerContext: DesignerContext;
-    }) => {
+    ({ designerContext }: { designerContext: DesignerContext }) => {
         return (
-            <svg
-                width={pageRect.width}
-                height={pageRect.height}
-                style={{
-                    position: "absolute",
-                    left: pageRect.left,
-                    top: pageRect.top
-                }}
-                viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${pageRect.height}`}
-            >
+            <Svg designerContext={designerContext}>
                 <ConnectionLines
                     connectionLines={
                         designerContext.document.nonSelectedConnectionLines
@@ -354,7 +341,7 @@ const AllConnectionLines = observer(
                     context={designerContext}
                     selected={true}
                 />
-            </svg>
+            </Svg>
         );
     }
 );
@@ -362,10 +349,8 @@ const AllConnectionLines = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 function CenterLines({
-    pageRect,
     designerContext
 }: {
-    pageRect: Rect;
     designerContext: IDesignerContext;
 }) {
     const transform = designerContext.viewState.transform;
@@ -387,17 +372,10 @@ function CenterLines({
 
     const center = designerContext.options.center!;
 
+    const pageRect = transform.clientToPageRect(transform.clientRect);
+
     return (
-        <svg
-            width={pageRect.width}
-            height={pageRect.height}
-            style={{
-                position: "absolute",
-                left: pageRect.left,
-                top: pageRect.top
-            }}
-            viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${pageRect.height}`}
-        >
+        <Svg designerContext={designerContext}>
             <line
                 x1={pageRect.left}
                 y1={center.y}
@@ -419,7 +397,7 @@ function CenterLines({
                 height={pageRect.height}
                 style={pageRectLineStyle}
             />
-        </svg>
+        </Svg>
     );
 }
 
@@ -441,13 +419,11 @@ const CanvasDiv = styled.div`
 @observer
 export class Canvas extends React.Component<{
     designerContext: IDesignerContext;
-    className?: string;
     style?: React.CSSProperties;
     pageRect?: Rect;
     dragAndDropActive: boolean;
 }> {
     div: HTMLDivElement;
-    innerDiv: Element;
     clientRectChangeDetectionAnimationFrameHandle: any;
     deltaY = 0;
 
@@ -475,7 +451,7 @@ export class Canvas extends React.Component<{
                 this.mouseHandler instanceof ResizeMouseHandler)
         ) {
             this.dragScrollDispose = setupDragScroll(
-                this.innerDiv as HTMLElement,
+                this.div,
                 this.mouseHandler,
                 (point: Point) => {
                     const newTransform = this.props.designerContext.viewState.transform.clone();
@@ -498,47 +474,6 @@ export class Canvas extends React.Component<{
     lastMouseUpTime: number | undefined;
 
     draggable = new Draggable(this);
-
-    scrollLeft: number;
-    scrollTop: number;
-
-    @computed
-    get boundingOffsetRect() {
-        const transform = this.props.designerContext.viewState.transform;
-        const builder = new BoundingRectBuilder();
-        builder.addRect(transform.clientToOffsetRect(transform.clientRect));
-        return builder.getRect()!;
-    }
-
-    updateScroll() {
-        const boundingRect = this.boundingOffsetRect;
-
-        this.div.scrollLeft = -boundingRect.left;
-        this.scrollLeft = this.div.scrollLeft;
-
-        this.div.scrollTop = -boundingRect.top;
-        this.scrollTop = this.div.scrollTop;
-
-        if (
-            this.boundingOffsetRect.width >
-            this.props.designerContext.viewState.transform.clientRect.width
-        ) {
-            this.div.style.overflowX = "auto";
-        } else {
-            this.div.style.overflowX = "hidden";
-        }
-
-        if (
-            this.boundingOffsetRect.height >
-            this.props.designerContext.viewState.transform.clientRect.height
-        ) {
-            this.div.style.overflowY = "auto";
-        } else {
-            this.div.style.overflowY = "hidden";
-        }
-    }
-
-    userScrollTimeout: any;
 
     @bind
     clientRectChangeDetection() {
@@ -566,17 +501,12 @@ export class Canvas extends React.Component<{
     }
 
     componentDidMount() {
-        this.draggable.attach(this.innerDiv);
-        this.updateScroll();
+        this.draggable.attach(this.div);
         this.clientRectChangeDetection();
 
         this.div.addEventListener("wheel", this.onWheel, {
             passive: false
         });
-    }
-
-    componentDidUpdate() {
-        this.updateScroll();
     }
 
     componentWillUnmount() {
@@ -889,16 +819,13 @@ export class Canvas extends React.Component<{
         }
     }
 
-    @action.bound
-    onScroll() {
-        // TODO
-        // currently, scrolling by using scroll bars are disabled
-        this.div.scrollLeft = this.scrollLeft;
-        this.div.scrollTop = this.scrollTop;
-    }
-
     render() {
-        let style: React.CSSProperties = {};
+        let style: React.CSSProperties = {
+            position: "absolute",
+            overflow: "hidden",
+            width: "100%",
+            height: "100%"
+        };
         if (this.mouseHandler) {
             style.cursor = this.mouseHandler.cursor;
         }
@@ -909,10 +836,6 @@ export class Canvas extends React.Component<{
         this.draggable.cursor = style.cursor;
 
         const transform = this.props.designerContext.viewState.transform;
-
-        const pageRect = transform.clientToPageRect(transform.clientRect);
-
-        const boundingOffsetRect = this.boundingOffsetRect;
 
         const xt = Math.round(
             transform.translate.x + transform.clientRect.width / 2
@@ -931,50 +854,37 @@ export class Canvas extends React.Component<{
         return (
             <CanvasDiv
                 ref={(ref: any) => (this.div = ref!)}
-                className={this.props.className}
                 style={style}
                 onContextMenu={this.onContextMenu}
-                onScroll={this.onScroll}
             >
                 <div
-                    ref={ref => (this.innerDiv = ref!)}
+                    className="eez-canvas"
                     style={{
-                        transform: `translate(${-boundingOffsetRect.left}px, ${-boundingOffsetRect.top}px)`,
-                        width: "100%",
-                        height: "100%"
+                        position: "absolute",
+                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
+                        pointerEvents: this.props.dragAndDropActive
+                            ? "none"
+                            : "auto"
                     }}
                 >
-                    <div
-                        className="eez-canvas"
-                        style={{
-                            position: "absolute",
-                            transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
-                            transformOrigin: "0 0",
-                            pointerEvents: this.props.dragAndDropActive
-                                ? "none"
-                                : "all"
-                        }}
-                    >
-                        {this.props.designerContext.options &&
-                            this.props.designerContext.options.center && (
-                                <CenterLines
-                                    pageRect={pageRect}
-                                    designerContext={this.props.designerContext}
-                                />
-                            )}
-                        {this.props.children}
-                    </div>
-                    <Selection
-                        context={this.props.designerContext}
-                        mouseHandler={this.mouseHandler}
-                    />
-
-                    {this.mouseHandler &&
-                        this.mouseHandler.render &&
-                        this.mouseHandler.render(this.props.designerContext)}
-
-                    <DragSnapLinesOverlay />
+                    {this.props.designerContext.options &&
+                        this.props.designerContext.options.center && (
+                            <CenterLines
+                                designerContext={this.props.designerContext}
+                            />
+                        )}
+                    {this.props.children}
                 </div>
+                <Selection
+                    context={this.props.designerContext}
+                    mouseHandler={this.mouseHandler}
+                />
+
+                {this.mouseHandler &&
+                    this.mouseHandler.render &&
+                    this.mouseHandler.render(this.props.designerContext)}
+
+                <DragSnapLinesOverlay />
             </CanvasDiv>
         );
     }
@@ -998,6 +908,13 @@ const PageEditorCanvasContainer = styled.div`
 
     .EezStudio_DesignerSelection_ResizeHandle {
         background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .connection-line:hover > path:nth-child(3) {
+        stroke: ${props => props.theme.selectedConnectionLineColor} !important;
+        marker-start: url(#selectedLineStart) !important;
+        marker-end: url(#selectedLineEnd) !important;
+        fill: none;
     }
 `;
 
@@ -1104,19 +1021,19 @@ export class PageEditor
     }
 
     cutSelection() {
-        console.error("TODO cutSelection");
+        this.props.widgetContainer.cutSelection();
     }
 
     copySelection() {
-        console.error("TODO copySelection");
+        this.props.widgetContainer.copySelection();
     }
 
     pasteSelection() {
-        console.error("TODO pasteSelection");
+        this.props.widgetContainer.pasteSelection();
     }
 
     deleteSelection() {
-        console.error("TODO deleteSelection");
+        this.props.widgetContainer.deleteSelection();
     }
 
     @bind
@@ -1341,15 +1258,9 @@ export class PageEditor
     }
 
     render() {
-        const transform = this.designerContext.viewState.transform;
-        const pageRect = transform.clientToPageRect(transform.clientRect);
-
         const content = (
             <>
-                <AllConnectionLines
-                    pageRect={pageRect}
-                    designerContext={this.designerContext}
-                />
+                <AllConnectionLines designerContext={this.designerContext} />
                 <div
                     style={{
                         position: "absolute"

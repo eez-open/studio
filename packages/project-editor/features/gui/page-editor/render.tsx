@@ -18,6 +18,33 @@ import { Widget } from "project-editor/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const Svg: React.FunctionComponent<{
+    designerContext: IDesignerContext;
+    defs?: JSX.Element | null;
+    className?: string;
+    style?: React.CSSProperties;
+}> = observer(({ designerContext, defs, className, style, children }) => {
+    const transform = designerContext.viewState.transform;
+    let svgRect;
+    let gTransform;
+    if (transform) {
+        svgRect = transform.clientToPageRect(transform.clientRect);
+        gTransform = `translate(${-svgRect.left} ${-svgRect.top})`;
+    }
+
+    return (
+        <svg
+            className={className}
+            style={{ position: "absolute", ...svgRect, ...style }}
+        >
+            {defs && <defs>{defs}</defs>}
+            <g transform={gTransform}>{children}</g>
+        </svg>
+    );
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
 interface PortsGeometry {
     [inputName: string]: {
         rect: Rect;

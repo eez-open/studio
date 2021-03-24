@@ -106,7 +106,11 @@ import {
     InputActionNode,
     OutputActionNode
 } from "project-editor/features/gui/action-nodes";
-import { Page, PageFragment } from "project-editor/features/gui/page";
+import {
+    ConnectionLine,
+    Page,
+    PageFragment
+} from "project-editor/features/gui/page";
 
 import { Section } from "project-editor/core/output";
 import { findAction } from "project-editor/features/action/action";
@@ -1863,6 +1867,17 @@ export class DocumentStoreClass {
                     ) as Page;
                     page.deleteConnectionLines(commandContext, object);
                 }
+            });
+
+            objects = objects.filter(object => {
+                if (object instanceof ConnectionLine) {
+                    const page = getAncestorOfType(
+                        object,
+                        Page.classInfo
+                    ) as Page;
+                    return page.connectionLines.indexOf(object) != -1;
+                }
+                return true;
             });
 
             deleteObjects(

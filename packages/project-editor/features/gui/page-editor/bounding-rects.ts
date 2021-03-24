@@ -51,7 +51,7 @@ export function getObjectIdFromPoint(
         canvas = undefined;
     }
     if (canvas) {
-        canvas.style.pointerEvents = "all";
+        canvas.style.pointerEvents = "auto";
     }
 
     const draggableOverlayElement = document.getElementById(
@@ -68,7 +68,7 @@ export function getObjectIdFromPoint(
     );
 
     if (draggableOverlayElement) {
-        draggableOverlayElement.style.pointerEvents = "all";
+        draggableOverlayElement.style.pointerEvents = "auto";
     }
 
     if (canvas) {

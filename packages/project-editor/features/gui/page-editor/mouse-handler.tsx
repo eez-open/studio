@@ -29,7 +29,7 @@ import { Transform } from "project-editor/features/gui/page-editor/transform";
 const SNAP_LINES_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
     lineWidth: 0.5,
-    closestLineColor: "rgba(0, 255, 0, 1)",
+    closestLineColor: "rgb(32, 192, 32)",
     closestLineWidth: 1
 };
 const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
@@ -37,7 +37,7 @@ const CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME = 300;
 const CONNECTION_LINE_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
     lineWidth: 2.0,
-    connectedLineColor: "rgba(0, 255, 0, 1)",
+    connectedLineColor: "rgb(32, 192, 32)",
     connectedLineWidth: 2.0
 };
 
