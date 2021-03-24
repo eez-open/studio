@@ -25,3 +25,5 @@ TODO.txt
 .DS_Store
 
 builder-output
+
+**/*.eez-project-ui-state
