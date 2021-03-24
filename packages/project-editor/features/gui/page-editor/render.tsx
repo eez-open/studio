@@ -136,7 +136,7 @@ const WidgetDiv = styled.div`
                 svg {
                     fill: white;
                     margin-right: 5px;
-                    height: 12px;
+                    height: 14px;
                 }
 
                 img {

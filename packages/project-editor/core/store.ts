@@ -1,4 +1,5 @@
 import React from "react";
+import * as mobx from "mobx";
 import {
     observable,
     extendObservable,
@@ -2346,6 +2347,7 @@ async function initExtensions() {
             if (extension.eezFlowExtensionInit) {
                 extension.eezFlowExtensionInit({
                     React,
+                    mobx,
                     registerClass,
                     PropertyType,
                     makeDerivedClassInfo,

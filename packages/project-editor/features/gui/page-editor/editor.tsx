@@ -21,14 +21,7 @@ import type {
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import { ITransform } from "project-editor/features/gui/page-editor/transform";
 import { DesignerContext } from "project-editor/features/gui/page-editor/context";
-import {
-    ConnectionLineMouseHandler,
-    DragMouseHandler,
-    isSelectionMoveable,
-    ResizeMouseHandler,
-    RubberBandSelectionMouseHandler,
-    SnapLines
-} from "project-editor/features/gui/page-editor/select-tool";
+
 import {
     getObjectIdFromPoint,
     getObjectIdsInsideRect,
@@ -55,7 +48,15 @@ import { ProjectContext } from "project-editor/project/context";
 import { guid } from "eez-studio-shared/guid";
 import { ConnectionLines } from "project-editor/features/gui/page-editor/ConnectionLineComponent";
 import { Draggable } from "eez-studio-ui/draggable";
-import { PanMouseHandler } from "project-editor/features/gui/page-editor/mouse-handler";
+import {
+    PanMouseHandler,
+    ConnectionLineMouseHandler,
+    DragMouseHandler,
+    isSelectionMoveable,
+    ResizeMouseHandler,
+    RubberBandSelectionMouseHandler,
+    SnapLines
+} from "project-editor/features/gui/page-editor/mouse-handler";
 import { Selection } from "project-editor/features/gui/page-editor/selection";
 import { closestByClass } from "eez-studio-shared/dom";
 
@@ -450,15 +451,46 @@ export class Canvas extends React.Component<{
     clientRectChangeDetectionAnimationFrameHandle: any;
     deltaY = 0;
 
+    dragScrollDispose: (() => void) | undefined;
+
     @observable _mouseHandler: IMouseHandler | undefined;
     get mouseHandler() {
         return this._mouseHandler;
     }
     set mouseHandler(value: IMouseHandler | undefined) {
+        if (this.dragScrollDispose) {
+            this.dragScrollDispose();
+            this.dragScrollDispose = undefined;
+        }
+
         runInAction(() => {
             this._mouseHandler = value;
-            this.props.designerContext.viewState.isIdle = !this._mouseHandler;
         });
+
+        if (
+            this.mouseHandler &&
+            (this.mouseHandler instanceof RubberBandSelectionMouseHandler ||
+                this.mouseHandler instanceof ConnectionLineMouseHandler ||
+                this.mouseHandler instanceof DragMouseHandler ||
+                this.mouseHandler instanceof ResizeMouseHandler)
+        ) {
+            this.dragScrollDispose = setupDragScroll(
+                this.innerDiv as HTMLElement,
+                this.mouseHandler,
+                (point: Point) => {
+                    const newTransform = this.props.designerContext.viewState.transform.clone();
+                    newTransform.translateBy(point);
+
+                    runInAction(() => {
+                        this.props.designerContext.viewState.transform = newTransform;
+                    });
+
+                    this.mouseHandler?.onTransformChanged(
+                        this.props.designerContext
+                    );
+                }
+            );
+        }
     }
 
     buttonsAtDown: number;
@@ -567,7 +599,11 @@ export class Canvas extends React.Component<{
             return;
         }
 
-        const transform = this.props.designerContext.viewState.transform;
+        if (this.mouseHandler instanceof PanMouseHandler) {
+            return;
+        }
+
+        const transform = this.props.designerContext.viewState.transform.clone();
 
         if (event.ctrlKey) {
             this.deltaY += event.deltaY;
@@ -592,22 +628,32 @@ export class Canvas extends React.Component<{
                 let ty =
                     y - ((y - transform.translate.y) * scale) / transform.scale;
 
+                transform.scale = scale;
+                transform.translate = { x: tx, y: ty };
+
                 runInAction(() => {
-                    transform.scale = scale;
-                    transform.translate = { x: tx, y: ty };
+                    this.props.designerContext.viewState.transform = transform;
                 });
+
+                this.mouseHandler?.onTransformChanged(
+                    this.props.designerContext
+                );
             }
         } else {
+            transform.translate = {
+                x:
+                    transform.translate.x -
+                    (event.shiftKey ? event.deltaY : event.deltaX),
+                y:
+                    transform.translate.y -
+                    (event.shiftKey ? event.deltaX : event.deltaY)
+            };
+
             runInAction(() => {
-                transform.translate = {
-                    x:
-                        transform.translate.x -
-                        (event.shiftKey ? event.deltaY : event.deltaX),
-                    y:
-                        transform.translate.y -
-                        (event.shiftKey ? event.deltaX : event.deltaY)
-                };
+                this.props.designerContext.viewState.transform = transform;
             });
+
+            this.mouseHandler?.onTransformChanged(this.props.designerContext);
         }
 
         event.preventDefault();
@@ -650,7 +696,7 @@ export class Canvas extends React.Component<{
             if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
                 return isMoveable ? new DragMouseHandler() : undefined;
             } else {
-                let point = context.viewState.transform.mouseEventToPagePoint(
+                let point = context.viewState.transform.pointerEventToPagePoint(
                     event
                 );
                 const result = context.document.objectFromPoint(point);
@@ -687,7 +733,7 @@ export class Canvas extends React.Component<{
         this.buttonsAtDown = event.buttons;
 
         if (this.mouseHandler) {
-            this.mouseHandler.up(this.props.designerContext, event);
+            this.mouseHandler.up(this.props.designerContext);
             this.mouseHandler = undefined;
         }
 
@@ -698,6 +744,15 @@ export class Canvas extends React.Component<{
         }
 
         if (this.mouseHandler) {
+            this.mouseHandler.lastPointerEvent = {
+                clientX: event.clientX,
+                clientY: event.clientY,
+                movementX: event.movementX ?? 0,
+                movementY: event.movementY ?? 0,
+                ctrlKey: event.ctrlKey,
+                shiftKey: event.shiftKey
+            };
+
             this.mouseHandler.down(this.props.designerContext, event);
         }
     }
@@ -705,6 +760,23 @@ export class Canvas extends React.Component<{
     @bind
     onDragMove(event: PointerEvent) {
         if (this.mouseHandler) {
+            this.mouseHandler.lastPointerEvent = {
+                clientX: event.clientX,
+                clientY: event.clientY,
+                movementX: event.movementX
+                    ? event.movementX
+                    : this.mouseHandler.lastPointerEvent
+                    ? this.mouseHandler.lastPointerEvent.movementX
+                    : 0,
+                movementY: event.movementY
+                    ? event.movementY
+                    : this.mouseHandler.lastPointerEvent
+                    ? this.mouseHandler.lastPointerEvent.movementY
+                    : 0,
+                ctrlKey: event.ctrlKey,
+                shiftKey: event.shiftKey
+            };
+
             this.mouseHandler.move(this.props.designerContext, event);
         }
     }
@@ -714,7 +786,7 @@ export class Canvas extends React.Component<{
         let preventContextMenu = false;
 
         if (this.mouseHandler) {
-            this.mouseHandler.up(this.props.designerContext, event);
+            this.mouseHandler.up(this.props.designerContext);
 
             if (this.mouseHandler instanceof PanMouseHandler) {
                 if (pointDistance(this.mouseHandler.totalMovement) > 10) {
@@ -775,7 +847,7 @@ export class Canvas extends React.Component<{
             if (!preventContextMenu && this.buttonsAtDown === 2) {
                 // show context menu
                 const context = this.props.designerContext;
-                const point = context.viewState.transform.mouseEventToPagePoint(
+                const point = context.viewState.transform.pointerEventToPagePoint(
                     event
                 );
                 if (
@@ -1317,4 +1389,114 @@ export class PageEditor
             </PageEditorCanvasContainer>
         );
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const DRAG_SCROLL_BORDER_THRESHOLD = 10;
+const DRAG_SCROLL_MIN_SPEED = 50; // px per second
+const DRAG_SCROLL_MAX_SPEED = 800; // px per second
+const DRAG_SCROLL_MAX_SPEED_AT_DISTANCE = 50; // px
+
+function calcDragScrollSpeed(distance: number, dt: number) {
+    if (distance === 0) {
+        return 0;
+    }
+
+    let sign = 1;
+
+    if (distance < 0) {
+        distance = -distance;
+        sign = -1;
+    }
+
+    const min = (DRAG_SCROLL_MIN_SPEED * dt) / 1000;
+    const max = (DRAG_SCROLL_MAX_SPEED * dt) / 1000;
+
+    distance = Math.min(distance, DRAG_SCROLL_MAX_SPEED_AT_DISTANCE);
+
+    return (
+        sign *
+        (min + (distance / DRAG_SCROLL_MAX_SPEED_AT_DISTANCE) * (max - min))
+    );
+}
+
+function setupDragScroll(
+    el: HTMLElement,
+    mouseHandler: IMouseHandler,
+    translateBy: (point: Point) => void
+) {
+    let dragScrollLastTime: number | undefined;
+
+    function onDragScroll() {
+        const lastPointerEvent = mouseHandler.lastPointerEvent;
+        const r = el.getBoundingClientRect();
+
+        let tx = 0;
+        let ty = 0;
+
+        if (
+            lastPointerEvent.clientX < r.left + DRAG_SCROLL_BORDER_THRESHOLD &&
+            lastPointerEvent.movementX < 0
+        ) {
+            tx =
+                r.left +
+                DRAG_SCROLL_BORDER_THRESHOLD -
+                lastPointerEvent.clientX;
+        } else if (
+            lastPointerEvent.clientX > r.right - DRAG_SCROLL_BORDER_THRESHOLD &&
+            lastPointerEvent.movementX > 0
+        ) {
+            tx = -(
+                lastPointerEvent.clientX -
+                (r.right - DRAG_SCROLL_BORDER_THRESHOLD)
+            );
+        }
+
+        if (
+            lastPointerEvent.clientY < r.top + DRAG_SCROLL_BORDER_THRESHOLD &&
+            lastPointerEvent.movementY < 0
+        ) {
+            ty =
+                r.top + DRAG_SCROLL_BORDER_THRESHOLD - lastPointerEvent.clientY;
+        } else if (
+            lastPointerEvent.clientY >
+                r.bottom - DRAG_SCROLL_BORDER_THRESHOLD &&
+            lastPointerEvent.movementY > 0
+        ) {
+            ty = -(
+                lastPointerEvent.clientY -
+                (r.bottom - DRAG_SCROLL_BORDER_THRESHOLD)
+            );
+        }
+
+        if (tx || ty) {
+            if (!dragScrollLastTime) {
+                dragScrollLastTime = new Date().getTime();
+            } else {
+                const currentTime = new Date().getTime();
+                const dt = currentTime - dragScrollLastTime;
+                dragScrollLastTime = currentTime;
+
+                translateBy({
+                    x: calcDragScrollSpeed(tx, dt),
+                    y: calcDragScrollSpeed(ty, dt)
+                });
+            }
+        } else {
+            dragScrollLastTime = undefined;
+        }
+
+        dragScrollAnimationFrameRequest = window.requestAnimationFrame(
+            onDragScroll
+        );
+    }
+
+    let dragScrollAnimationFrameRequest = window.requestAnimationFrame(
+        onDragScroll
+    );
+
+    return () => {
+        window.cancelAnimationFrame(dragScrollAnimationFrameRequest);
+    };
 }

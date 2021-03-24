@@ -17,7 +17,7 @@ import type {
 import {
     RubberBandSelectionMouseHandler,
     isSelectionMoveable
-} from "project-editor/features/gui/page-editor/select-tool";
+} from "project-editor/features/gui/page-editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/features/gui/page-editor/bounding-rects";
 import { ConnectionLine } from "project-editor/features/gui/page";
 import { ActionNode } from "project-editor/features/gui/widget";
@@ -203,10 +203,7 @@ export class Selection extends React.Component<
     render() {
         let selectedObjects = this.selectedObjects;
 
-        const isSelectionVisible =
-            selectedObjects.length > 0 &&
-            (!this.props.mouseHandler ||
-                this.props.mouseHandler.selectionVisible);
+        const isSelectionVisible = selectedObjects.length > 0;
 
         const isSelectedObjectWidgetPaletteItem =
             selectedObjects.length === 1 &&

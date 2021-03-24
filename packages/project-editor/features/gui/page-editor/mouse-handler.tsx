@@ -13,14 +13,18 @@ import { addAlphaToColor } from "eez-studio-shared/color";
 
 import { theme } from "eez-studio-ui/theme";
 
-import type { IDesignerContext } from "project-editor/features/gui/page-editor/designer-interfaces";
-import { MouseHandler } from "project-editor/features/gui/page-editor/mouse-handler";
+import type {
+    IDesignerContext,
+    IMouseHandler,
+    IPointerEvent
+} from "project-editor/features/gui/page-editor/designer-interfaces";
 import {
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect,
     getObjectIdFromPoint
 } from "project-editor/features/gui/page-editor/bounding-rects";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { Transform } from "project-editor/features/gui/page-editor/transform";
 
 const SNAP_LINES_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
@@ -37,11 +41,137 @@ const CONNECTION_LINE_DRAW_THEME = {
     connectedLineWidth: 2.0
 };
 
-// - select object with click
-// - selection context menu
-// - rubber band selection
-// - move selection
-// - resize selection
+export class MouseHandler implements IMouseHandler {
+    constructor() {}
+
+    timeAtDown: number;
+    elapsedTime: number;
+
+    offsetPointAtDown: Point;
+    lastOffsetPoint: Point;
+    offsetDistance: Point;
+    movement: Point;
+    distance: number;
+
+    modelPointAtDown: Point;
+    lastModelPoint: Point;
+
+    cursor: string = "default";
+
+    transform: Transform;
+
+    lastPointerEvent!: IPointerEvent;
+
+    down(context: IDesignerContext, event: IPointerEvent) {
+        this.transform = context.viewState.transform;
+
+        this.timeAtDown = new Date().getTime();
+
+        this.lastOffsetPoint = this.offsetPointAtDown = this.transform.pointerEventToOffsetPoint(
+            event
+        );
+        this.offsetDistance = { x: 0, y: 0 };
+        this.distance = 0;
+        this.movement = { x: 0, y: 0 };
+
+        this.modelPointAtDown = this.transform.pointerEventToPagePoint(event);
+    }
+
+    move(context: IDesignerContext, event: IPointerEvent) {
+        this.transform = context.viewState.transform;
+
+        this.elapsedTime = new Date().getTime() - this.timeAtDown;
+
+        let offsetPoint = this.transform.pointerEventToOffsetPoint(event);
+
+        this.offsetDistance = {
+            x: offsetPoint.x - this.offsetPointAtDown.x,
+            y: offsetPoint.y - this.offsetPointAtDown.y
+        };
+
+        this.distance = Math.sqrt(
+            this.offsetDistance.x * this.offsetDistance.x +
+                this.offsetDistance.y * this.offsetDistance.y
+        );
+
+        this.movement = {
+            x: offsetPoint.x - this.lastOffsetPoint.x,
+            y: offsetPoint.y - this.lastOffsetPoint.y
+        };
+
+        this.lastOffsetPoint = offsetPoint;
+
+        this.lastModelPoint = this.transform.pointerEventToPagePoint(event);
+    }
+
+    up(context: IDesignerContext) {}
+
+    onTransformChanged(context: IDesignerContext) {
+        const transform = context.viewState.transform;
+
+        let point = this.transform.offsetToPagePoint(this.offsetPointAtDown);
+        this.offsetPointAtDown = transform.pageToOffsetPoint(point);
+
+        point = this.transform.offsetToPagePoint(this.lastOffsetPoint);
+        this.lastOffsetPoint = transform.pageToOffsetPoint(point);
+
+        this.offsetDistance = {
+            x: this.lastOffsetPoint.x - this.offsetPointAtDown.x,
+            y: this.lastOffsetPoint.y - this.offsetPointAtDown.y
+        };
+
+        this.distance = Math.sqrt(
+            this.offsetDistance.x * this.offsetDistance.x +
+                this.offsetDistance.y * this.offsetDistance.y
+        );
+
+        this.modelPointAtDown = transform.offsetToPagePoint(
+            this.offsetPointAtDown
+        );
+        this.lastModelPoint = transform.offsetToPagePoint(this.lastOffsetPoint);
+
+        this.movement = {
+            x: 0,
+            y: 0
+        };
+
+        const pointerEvent = Object.assign({}, this.lastPointerEvent);
+
+        point = this.transform.clientToPagePoint({
+            x: pointerEvent.clientX,
+            y: pointerEvent.clientY
+        });
+        const clientPoint = transform.pageToClientPoint(point);
+        pointerEvent.movementX = clientPoint.x - pointerEvent.clientX;
+        pointerEvent.movementY = clientPoint.y - pointerEvent.clientY;
+        pointerEvent.clientX = clientPoint.x;
+        pointerEvent.clientY = clientPoint.y;
+
+        this.transform = transform;
+
+        this.move(context, pointerEvent);
+    }
+}
+
+export class PanMouseHandler extends MouseHandler {
+    totalMovement = {
+        x: 0,
+        y: 0
+    };
+
+    cursor = "default";
+
+    down(context: IDesignerContext, event: IPointerEvent) {
+        super.down(context, event);
+    }
+
+    move(context: IDesignerContext, event: IPointerEvent) {
+        super.move(context, event);
+        context.viewState.transform.translateBy(this.movement);
+        this.totalMovement.x += this.movement.x;
+        this.totalMovement.y += this.movement.y;
+    }
+}
 
 export function isSelectionMoveable(context: IDesignerContext) {
     return !context.viewState.selectedObjects.find(
@@ -52,12 +182,13 @@ export function isSelectionMoveable(context: IDesignerContext) {
 export class RubberBandSelectionMouseHandler extends MouseHandler {
     @observable rubberBendRect: Rect | undefined;
 
-    down(context: IDesignerContext, event: MouseEvent) {
+    down(context: IDesignerContext, event: IPointerEvent) {
         super.down(context, event);
         context.viewState.deselectAllObjects();
     }
 
-    move(context: IDesignerContext, event: MouseEvent) {
+    @action
+    move(context: IDesignerContext, event: IPointerEvent) {
         super.move(context, event);
 
         let left;
@@ -88,9 +219,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
             height
         };
 
-        runInAction(() => {
-            this.rubberBendRect = rubberBendRect;
-        });
+        this.rubberBendRect = rubberBendRect;
 
         context.viewState.selectObjects(
             context.document.getObjectsInsideRect(
@@ -99,8 +228,8 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
         );
     }
 
-    up(context: IDesignerContext, event?: MouseEvent) {
-        super.up(context, event);
+    up(context: IDesignerContext) {
+        super.up(context);
 
         runInAction(() => {
             this.rubberBendRect = undefined;
@@ -261,13 +390,13 @@ export class SnapLines {
 class MouseHandlerWithSnapLines extends MouseHandler {
     snapLines = new SnapLines();
 
-    down(context: IDesignerContext, event: MouseEvent) {
+    down(context: IDesignerContext, event: IPointerEvent) {
         super.down(context, event);
 
         this.snapLines.find(context);
     }
 
-    move(context: IDesignerContext, event: MouseEvent) {
+    move(context: IDesignerContext, event: IPointerEvent) {
         super.move(context, event);
 
         this.snapLines.enabled =
@@ -296,7 +425,7 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     selectionNode: HTMLElement;
     objectNodes: HTMLElement[];
 
-    down(context: IDesignerContext, event: MouseEvent) {
+    down(context: IDesignerContext, event: IPointerEvent) {
         super.down(context, event);
 
         context.document.onDragStart();
@@ -317,7 +446,7 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     @action
-    move(context: IDesignerContext, event: MouseEvent) {
+    move(context: IDesignerContext, event: IPointerEvent) {
         super.move(context, event);
 
         if (this.elapsedTime < 100 && this.distance < 20) {
@@ -389,8 +518,8 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     @action
-    up(context: IDesignerContext, event?: MouseEvent) {
-        super.up(context, event);
+    up(context: IDesignerContext) {
+        super.up(context);
 
         if (this.changed) {
             for (let i = 0; i < context.viewState.selectedObjects.length; ++i) {
@@ -437,7 +566,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         super();
     }
 
-    down(context: IDesignerContext, event: MouseEvent) {
+    down(context: IDesignerContext, event: IPointerEvent) {
         super.down(context, event);
 
         context.document.onDragStart();
@@ -593,7 +722,8 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    move(context: IDesignerContext, event: MouseEvent) {
+    @action
+    move(context: IDesignerContext, event: IPointerEvent) {
         super.move(context, event);
 
         this.resizeRect(context, this.savedBoundingRect, this.boundingRect);
@@ -631,8 +761,8 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    up(context: IDesignerContext, event?: MouseEvent) {
-        super.up(context, event);
+    up(context: IDesignerContext) {
+        super.up(context);
 
         context.document.onDragEnd();
     }
@@ -656,7 +786,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
     }
 
     @action
-    down(context: IDesignerContext, event: MouseEvent) {
+    down(context: IDesignerContext, event: IPointerEvent) {
         super.down(context, event);
 
         context.document.onDragStart();
@@ -685,14 +815,15 @@ export class ConnectionLineMouseHandler extends MouseHandler {
     }
 
     @action
-    move(context: IDesignerContext, event: MouseEvent) {
+    move(context: IDesignerContext, event: IPointerEvent) {
         super.move(context, event);
-        let point = context.viewState.transform.mouseEventToPagePoint(event);
+
         const result = getObjectIdFromPoint(
             context.document,
             context.viewState,
-            point
+            this.lastModelPoint
         );
+
         if (
             result &&
             result.connectionInput &&
@@ -729,8 +860,8 @@ export class ConnectionLineMouseHandler extends MouseHandler {
         }
     }
 
-    up(context: IDesignerContext, event?: MouseEvent) {
-        super.up(context, event);
+    up(context: IDesignerContext) {
+        super.up(context);
 
         if (this.target) {
             context.document.connect(
@@ -782,5 +913,17 @@ export class ConnectionLineMouseHandler extends MouseHandler {
                 {line}
             </svg>
         );
+    }
+
+    @action
+    onTransformChanged(context: IDesignerContext) {
+        const startClientPoint = this.transform.offsetToPagePoint(
+            this.startPoint
+        );
+        this.startPoint = context.viewState.transform.pageToOffsetPoint(
+            startClientPoint
+        );
+
+        super.onTransformChanged(context);
     }
 }

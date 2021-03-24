@@ -1,9 +1,11 @@
 import React from "react";
+import mobx from "mobx";
 
 interface IEezObject {}
 
 interface PropertyInfo {
     name: string;
+    displayName?: string;
     type: any;
     hideInPropertyGrid?:
         | boolean
@@ -21,6 +23,7 @@ declare class ActionNode {
 
 export interface IEezStudio {
     React: typeof React;
+    mobx: typeof mobx;
     registerClass: (classToRegister: any) => void;
     PropertyType: any;
     makeDerivedClassInfo: (

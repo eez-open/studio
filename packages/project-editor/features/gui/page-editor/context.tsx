@@ -34,8 +34,6 @@ class ViewState implements IViewState {
         translate: { x: 0, y: 0 }
     });
 
-    @observable isIdle: boolean = true;
-
     @observable dxMouseDrag: number | undefined;
     @observable dyMouseDrag: number | undefined;
 
@@ -310,6 +308,7 @@ export class DesignerContext implements IDesignerContext {
         options?: IDesignerOptions,
         filterSnapLines?: (node: ITreeObjectAdapter) => boolean
     ) {
+        const differentDocument = this.document !== document;
         this.document = document;
 
         this.viewState.set(
@@ -318,7 +317,9 @@ export class DesignerContext implements IDesignerContext {
             onSavePersistantState
         );
 
-        this.viewState.deselectAllObjects();
+        if (differentDocument) {
+            this.viewState.deselectAllObjects();
+        }
 
         const newOptions = options || {};
         if (stringify(newOptions) !== stringify(this.options)) {

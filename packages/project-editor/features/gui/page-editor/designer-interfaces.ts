@@ -84,9 +84,6 @@ export interface IViewState {
     transform: Transform;
     resetTransform(): void;
 
-    // true if there is no active user interaction (like mouse) with the designer.
-    isIdle: boolean;
-
     // selection
     selectedObjects: ITreeObjectAdapter[];
     getResizeHandlers: () => IResizeHandler[] | undefined;
@@ -131,13 +128,23 @@ export interface IViewStatePersistantState {
     transform?: ITransform;
 }
 
+export interface IPointerEvent {
+    clientX: number;
+    clientY: number;
+    movementX: number;
+    movementY: number;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+}
+
 export interface IMouseHandler {
     cursor: string;
-    down(context: IDesignerContext, event: MouseEvent): void;
-    move(context: IDesignerContext, event: MouseEvent): void;
-    up(context: IDesignerContext, event?: MouseEvent): void;
-    selectionVisible: boolean;
+    lastPointerEvent: IPointerEvent;
+    down(context: IDesignerContext, event: IPointerEvent): void;
+    move(context: IDesignerContext, event: IPointerEvent): void;
+    up(context: IDesignerContext): void;
     render?(context: IDesignerContext): React.ReactNode;
+    onTransformChanged(context: IDesignerContext): void;
 }
 
 export interface IDataContext {

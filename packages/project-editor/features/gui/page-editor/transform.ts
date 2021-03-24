@@ -1,6 +1,7 @@
 import { observable, action, runInAction } from "mobx";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
+import { IPointerEvent } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 // prettier-ignore
 const SCALES = [
@@ -104,8 +105,12 @@ export class Transform implements ITransform {
 
     offsetToPagePoint(p: Point) {
         return {
-            x: (p.x - (this.clientRect.width / 2 + this.translate.x)) / this.scale,
-            y: (p.y - (this.clientRect.height / 2 + this.translate.y)) / this.scale
+            x:
+                (p.x - (this.clientRect.width / 2 + this.translate.x)) /
+                this.scale,
+            y:
+                (p.y - (this.clientRect.height / 2 + this.translate.y)) /
+                this.scale
         };
     }
 
@@ -120,16 +125,16 @@ export class Transform implements ITransform {
         };
     }
 
-    mouseEventToClientPoint(event: MouseEvent) {
+    pointerEventToClientPoint(event: IPointerEvent) {
         return { x: event.clientX, y: event.clientY };
     }
 
-    mouseEventToOffsetPoint(event: MouseEvent) {
-        return this.clientToOffsetPoint(this.mouseEventToClientPoint(event));
+    pointerEventToOffsetPoint(event: IPointerEvent) {
+        return this.clientToOffsetPoint(this.pointerEventToClientPoint(event));
     }
 
-    mouseEventToPagePoint(event: MouseEvent) {
-        return this.clientToPagePoint(this.mouseEventToClientPoint(event));
+    pointerEventToPagePoint(event: IPointerEvent) {
+        return this.clientToPagePoint(this.pointerEventToClientPoint(event));
     }
 
     clientToOffsetRect(rect: Rect) {
