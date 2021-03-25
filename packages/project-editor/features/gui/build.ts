@@ -27,7 +27,7 @@ import { Page, findPage } from "project-editor/features/gui/page";
 import { Font, findFont } from "project-editor/features/gui/font";
 import { Theme } from "project-editor/features/gui/theme";
 import { Action, findAction } from "project-editor/features/action/action";
-import { Widget } from "project-editor/features/gui/widget";
+import { Widget } from "project-editor/features/gui/component";
 import {
     BarGraphWidget,
     BitmapWidget,
@@ -935,7 +935,9 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // widgets
         let widgets: Widget[] | undefined;
         if (object instanceof Page) {
-            widgets = object.widgets;
+            widgets = object.components.filter(
+                widget => widget instanceof Widget
+            ) as Widget[];
         } else {
             widgets = (object as ContainerWidget).widgets;
         }

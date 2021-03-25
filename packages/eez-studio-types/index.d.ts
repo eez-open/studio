@@ -17,7 +17,7 @@ interface ClassInfo {
     icon?: React.ReactNode;
 }
 
-declare class ActionNode {
+declare class ActionComponent {
     static classInfo: ClassInfo;
 }
 
@@ -30,5 +30,5 @@ export interface IEezStudio {
         baseClassInfo: ClassInfo,
         derivedClassInfoProperties: Partial<ClassInfo>
     ) => ClassInfo;
-    ActionNode: typeof ActionNode;
+    ActionComponent: typeof ActionComponent;
 }

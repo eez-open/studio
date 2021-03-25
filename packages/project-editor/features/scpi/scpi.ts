@@ -33,7 +33,6 @@ import { build } from "project-editor/features/scpi/build";
 import { metrics } from "project-editor/features/scpi/metrics";
 import {
     ScpiEnum,
-    IScpiEnum,
     findScpiEnum,
     getScpiEnumsAsDialogEnumItems
 } from "project-editor/features/scpi/enum";
@@ -146,14 +145,7 @@ const ScpiParameterTable = styled.table`
     }
 `;
 
-export interface IScpiParameter {
-    name: string;
-    type: IParameterType[];
-    isOptional: string;
-    description: string;
-}
-
-export class ScpiParameter extends EezObject implements IScpiParameter {
+export class ScpiParameter extends EezObject {
     @observable name: string;
     @observable type: ScpiParameterType[];
     @observable isOptional: string;
@@ -443,12 +435,7 @@ export class ScpiResponseType extends EezObject implements IResponseType {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IScpiResponse {
-    type: IResponseType[];
-    description?: string;
-}
-
-export class ScpiResponse extends EezObject implements IScpiResponse {
+export class ScpiResponse extends EezObject {
     @observable type: ScpiResponseType[];
     @observable description?: string;
 
@@ -669,17 +656,7 @@ export class ScpiResponse extends EezObject implements IScpiResponse {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IScpiCommand {
-    name: string;
-    description?: string;
-    helpLink?: string;
-    usedIn?: string[];
-    parameters: IScpiParameter[];
-    response?: IScpiResponse;
-    sendsBackDataBlock: boolean;
-}
-
-export class ScpiCommand extends EezObject implements IScpiCommand {
+export class ScpiCommand extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable helpLink?: string;
@@ -778,14 +755,7 @@ registerClass(ScpiCommand);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IScpiSubsystem {
-    name: string;
-    description?: string;
-    helpLink?: string;
-    commands: IScpiCommand[];
-}
-
-export class ScpiSubsystem extends EezObject implements ScpiSubsystem {
+export class ScpiSubsystem extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable helpLink?: string;
@@ -846,12 +816,7 @@ registerClass(ScpiSubsystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IScpi {
-    subsystems: IScpiSubsystem[];
-    enums: IScpiEnum[];
-}
-
-export class Scpi extends EezObject implements IScpi {
+export class Scpi extends EezObject {
     @observable subsystems: ScpiSubsystem[];
     @observable enums: ScpiEnum[];
 

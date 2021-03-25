@@ -41,14 +41,18 @@ export function compareVersions(v1: string, v2: string) {
     return 0;
 }
 
-async function download(url: string, localPath: string, encoding: "utf8" | null) {
+async function download(
+    url: string,
+    localPath: string,
+    encoding: "utf8" | null
+) {
     const data = await request({
         method: "GET",
         url,
         encoding
     });
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
         writeFile(localPath, data, "utf8", err => {
             if (err) {
                 reject(err);
@@ -87,7 +91,9 @@ async function getExtraResource() {
     );
 
     const db = new Database(__dirname + "/init_storage.db");
-    const rows = db.prepare(`SELECT instrumentExtensionId FROM instrument`).all();
+    const rows = db
+        .prepare(`SELECT instrumentExtensionId FROM instrument`)
+        .all();
 
     const extensions: string[] = [];
 
@@ -112,7 +118,8 @@ async function getExtraResource() {
             if (extension.id === instrumentExtensionId) {
                 if (
                     !foundExtension ||
-                    compareVersions(extension.version, foundExtension.version) > 0
+                    compareVersions(extension.version, foundExtension.version) >
+                        0
                 ) {
                     foundExtension = extension;
                 }
@@ -124,18 +131,29 @@ async function getExtraResource() {
             return;
         }
 
-        const extensionZipFileName = foundExtension.name + "-" + foundExtension.version + ".zip";
-        const extensionZipFilePath = extraResourcesPath + "/" + extensionZipFileName;
+        const extensionZipFileName =
+            foundExtension.name + "-" + foundExtension.version + ".zip";
+        const extensionZipFilePath =
+            extraResourcesPath + "/" + extensionZipFileName;
 
-        const extensionData = await download(foundExtension.download, extensionZipFilePath, null);
+        const extensionData = await download(
+            foundExtension.download,
+            extensionZipFilePath,
+            null
+        );
 
         if (sha256(extensionData) !== foundExtension.sha256) {
             console.log(sha256(extensionData));
             console.log(foundExtension.sha256);
-            throw "Invalid hash for the extension zip file:" + extensionZipFileName;
+            throw (
+                "Invalid hash for the extension zip file:" +
+                extensionZipFileName
+            );
         }
 
-        extensions.push("./installation/extra-resources/" + extensionZipFileName);
+        extensions.push(
+            "./installation/extra-resources/" + extensionZipFileName
+        );
     }
 
     db.close();
@@ -150,7 +168,7 @@ async function getExtraResource() {
 }
 
 function writeExtraResource(extraResource: any) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         writeFile(
             __dirname + "/extra-resource.json",
             JSON.stringify(extraResource, undefined, 4),

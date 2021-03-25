@@ -17,11 +17,6 @@ import { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IShortcutAction {
-    type: IActionType;
-    data: string;
-}
-
 export class ShortcutAction extends EezObject {
     @observable type: IActionType;
     @observable data: string;
@@ -48,21 +43,7 @@ registerClass(ShortcutAction);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IShortcut {
-    id: string;
-    name: string;
-    usedIn?: string[];
-    action: IShortcutAction;
-    keybinding: string;
-    groupName: string;
-    showInToolbar: boolean;
-    toolbarButtonPosition: number;
-    toolbarButtonColor: string;
-    requiresConfirmation: boolean;
-    selected: boolean;
-}
-
-export class Shortcut extends EezObject implements IShortcut {
+export class Shortcut extends EezObject {
     id: string;
     @observable name: string;
     @observable usedIn?: string[];
@@ -126,11 +107,7 @@ registerClass(Shortcut);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IShortcuts {
-    shortcuts: IShortcut[];
-}
-
-export class Shortcuts extends EezObject implements IShortcuts {
+export class Shortcuts extends EezObject {
     @observable shortcuts: Shortcut[];
 
     static classInfo: ClassInfo = {

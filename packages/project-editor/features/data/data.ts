@@ -20,19 +20,7 @@ import type { IDataContext } from "project-editor/features/gui/page-editor/desig
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IDataItem {
-    name: string;
-    description?: string;
-    type: "integer" | "float" | "boolean" | "string" | "enum" | "list";
-    enumItems: string;
-    defaultValue: string;
-    defaultValueList: string;
-    defaultMinValue: number;
-    defaultMaxValue: number;
-    usedIn?: string[];
-}
-
-export class DataItem extends EezObject implements IDataItem {
+export class DataItem extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable type:

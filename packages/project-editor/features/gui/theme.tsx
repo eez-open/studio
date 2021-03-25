@@ -444,12 +444,7 @@ registerClass(Color);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ITheme {
-    id: string;
-    name: string;
-}
-
-export class Theme extends EezObject implements ITheme {
+export class Theme extends EezObject {
     @observable id: string;
     @observable name: string;
 

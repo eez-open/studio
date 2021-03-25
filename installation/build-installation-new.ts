@@ -7,18 +7,22 @@ const packageJson = require("../package.json");
 
 async function getExtraResource() {
     return new Promise<string[]>((resolve, reject) => {
-        fs.readFile(__dirname + "/extra-resource.json", "utf8", (err: any, data: string) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(
-                    JSON.parse(data).map((extraResourcePath: string) => ({
-                        from: extraResourcePath,
-                        to: path.basename(extraResourcePath)
-                    }))
-                );
+        fs.readFile(
+            __dirname + "/extra-resource.json",
+            "utf8",
+            (err: any, data: string) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(
+                        JSON.parse(data).map((extraResourcePath: string) => ({
+                            from: extraResourcePath,
+                            to: path.basename(extraResourcePath)
+                        }))
+                    );
+                }
             }
-        });
+        );
     });
 }
 
@@ -38,7 +42,13 @@ async function getExtraResource() {
         "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
         "!**/node_modules/*.d.ts",
         "!**/node_modules/.bin",
-        "!**/*.js.map"
+        "!**/*.js.map",
+        "!dist/project-editor/viewer-bundle.js",
+        "!dist/project-editor/viewer.html",
+        "!**/*.ilk",
+        "!**/*.lib",
+        "!node_modules/better-sqlite3/build/Release/obj",
+        "!dist/eez-studio-ui/_images/background.png"
     ];
 
     // if (Platform.current() === Platform.WINDOWS) {

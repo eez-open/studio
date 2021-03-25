@@ -33,14 +33,13 @@ import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page
 import { IPanel } from "project-editor/core/store";
 import { Page } from "project-editor/features/gui/page";
 import { PageTabState } from "project-editor/features/gui/PagesNavigation";
-import { WidgetPalette } from "project-editor/features/gui/page-editor/WidgetPalette";
+import { ComponentsPalette } from "project-editor/features/gui/page-editor/ComponentsPalette";
 import { ThemesSideView } from "project-editor/features/gui/theme";
 import { bind } from "bind-decorator";
 import { TreeAdapter } from "project-editor/core/objectAdapter";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 import { IconAction } from "eez-studio-ui/action";
-import { ActionNode } from "project-editor/features/gui/widget";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -248,11 +247,7 @@ export class ActionsNavigation extends NavigationComponent {
                     object={this.selectedObject}
                     buttons={buttons}
                 />
-                <Panel
-                    id="widgets"
-                    title="Palette"
-                    body={<WidgetPalette widgetClass={ActionNode} />}
-                />
+                <ComponentsPalette showOnlyActions={true} />
             </Splitter>
         );
 
@@ -288,15 +283,7 @@ export class ActionsNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IAction {
-    name: string;
-    description?: string;
-    implementationType: "native";
-    implementation?: string;
-    usedIn?: string[];
-}
-
-export class Action extends EezObject implements IAction {
+export class Action extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable implementationType: "native";

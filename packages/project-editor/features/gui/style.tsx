@@ -48,7 +48,7 @@ import {
 } from "project-editor/features/gui/theme";
 import { Font } from "project-editor/features/gui/font";
 import { ProjectContext } from "project-editor/project/context";
-import { Widget } from "project-editor/features/gui/widget";
+import { Component } from "project-editor/features/gui/component";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -56,7 +56,7 @@ const { MenuItem } = EEZStudio.remote || {};
 
 export function isWidgetParentOfStyle(object: IEezObject) {
     while (true) {
-        if (object instanceof Widget) {
+        if (object instanceof Component) {
             return true;
         }
         if (!getParent(object)) {
@@ -684,32 +684,7 @@ function getInheritedValue(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IStyle {
-    id?: number | undefined;
-    name?: string;
-    description?: string;
-    inheritFrom?: string;
-    alwaysBuild?: boolean;
-
-    font?: string;
-    alignHorizontal?: string;
-    alignVertical?: string;
-    color?: string;
-    backgroundColor?: string;
-    activeColor?: string;
-    activeBackgroundColor?: string;
-    focusColor?: string;
-    focusBackgroundColor?: string;
-    borderSize?: string;
-    borderRadius?: number;
-    borderColor?: string;
-    padding?: string;
-    margin?: string;
-    opacity?: number;
-    blink?: boolean;
-}
-
-export class Style extends EezObject implements IStyle {
+export class Style extends EezObject {
     @observable id: number | undefined;
     @observable name: string;
     @observable description?: string;

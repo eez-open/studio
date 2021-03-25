@@ -20,34 +20,7 @@ import { metrics } from "project-editor/features/extension-definitions/metrics";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IExtensionDefinition {
-    name: string;
-    description: string;
-    doNotBuild: boolean;
-    buildConfiguration: string;
-    buildFolder: string;
-    image: string;
-    extensionName: string;
-    idn: string;
-
-    properties: string;
-
-    idfName: string;
-    idfShortName: string;
-    idfFirmwareVersion: string;
-    idfGuid: string;
-    idfRevisionNumber: string;
-    idfDescription: string;
-    idfSupportedModels: string;
-    idfRevisionComments: string;
-    idfAuthor: string;
-
-    sdlFriendlyName: string;
-}
-
-export class ExtensionDefinition
-    extends EezObject
-    implements IExtensionDefinition {
+export class ExtensionDefinition extends EezObject {
     @observable name: string;
     @observable description: string;
     @observable doNotBuild: boolean;

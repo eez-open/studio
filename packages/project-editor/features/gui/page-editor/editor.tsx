@@ -41,10 +41,10 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import { ConnectionLine, Page } from "project-editor/features/gui/page";
-import { Widget } from "project-editor/features/gui/widget";
+import { Component } from "project-editor/features/gui/component";
 import {
     Svg,
-    WidgetComponent
+    ComponentEnclosure
 } from "project-editor/features/gui/page-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { guid } from "eez-studio-shared/guid";
@@ -70,12 +70,12 @@ const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 class DragSnapLines {
     @observable snapLines: SnapLines | undefined;
     designerContext: DesignerContext | undefined;
-    dragWidget: Widget | undefined;
+    dragComponent: Component | undefined;
 
     start(pageEditorContext: DesignerContext) {
         this.snapLines = new SnapLines();
         this.designerContext = pageEditorContext;
-        this.dragWidget = pageEditorContext.dragWidget;
+        this.dragComponent = pageEditorContext.dragComponent;
 
         this.snapLines.find(pageEditorContext, () => true);
     }
@@ -83,7 +83,7 @@ class DragSnapLines {
     clear() {
         this.snapLines = undefined;
         this.designerContext = undefined;
-        this.dragWidget = undefined;
+        this.dragComponent = undefined;
     }
 }
 
@@ -98,18 +98,21 @@ class DragSnapLinesOverlay extends React.Component {
 
         const page = dragSnapLines.designerContext!.document.page
             .object as Page;
-        const dragWidget = dragSnapLines.dragWidget!;
+        const dragComponent = dragSnapLines.dragComponent!;
 
         return (
             <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
                 {dragSnapLines.snapLines.render(
                     dragSnapLines.designerContext!,
                     {
-                        left: page.left + dragWidget.left,
-                        top: page.top + dragWidget.top,
-                        width: dragWidget._geometry?.width ?? dragWidget.width,
+                        left: page.left + dragComponent.left,
+                        top: page.top + dragComponent.top,
+                        width:
+                            dragComponent._geometry?.width ??
+                            dragComponent.width,
                         height:
-                            dragWidget._geometry?.height ?? dragWidget.height
+                            dragComponent._geometry?.height ??
+                            dragComponent.height
                     }
                 )}
             </div>
@@ -119,7 +122,7 @@ class DragSnapLinesOverlay extends React.Component {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const DragWidget = observer(
+const DragComponent = observer(
     ({
         page,
         designerContext
@@ -127,11 +130,11 @@ const DragWidget = observer(
         page: Page;
         designerContext: DesignerContext;
     }) => {
-        return designerContext.dragWidget ? (
-            <WidgetComponent
-                widget={designerContext.dragWidget}
-                left={page.left + designerContext.dragWidget.left}
-                top={page.top + designerContext.dragWidget.top}
+        return designerContext.dragComponent ? (
+            <ComponentEnclosure
+                component={designerContext.dragComponent}
+                left={page.left + designerContext.dragComponent.left}
+                top={page.top + designerContext.dragComponent.top}
                 dataContext={designerContext.document.DocumentStore.dataContext}
                 designerContext={designerContext}
             />
@@ -269,10 +272,10 @@ class PageDocument implements IDocument {
 
         const sourceObject = this.DocumentStore.getObjectFromObjectId(
             sourceObjectId
-        ) as Widget;
+        ) as Component;
         const targetObject = this.DocumentStore.getObjectFromObjectId(
             targetObjectId
-        ) as Widget;
+        ) as Component;
 
         return !!(
             sourceObject.wireID &&
@@ -297,10 +300,10 @@ class PageDocument implements IDocument {
 
         const sourceObject = this.DocumentStore.getObjectFromObjectId(
             sourceObjectId
-        ) as Widget;
+        ) as Component;
         const targetObject = this.DocumentStore.getObjectFromObjectId(
             targetObjectId
-        ) as Widget;
+        ) as Component;
 
         if (!sourceObject.wireID) {
             this.DocumentStore.updateObject(sourceObject, {
@@ -362,13 +365,6 @@ function CenterLines({
         stroke: CENTER_LINES_COLOR,
         strokeWidth: CENTER_LINES_WIDTH
     };
-    const PAGE_RECT_LINES_COLOR = "#ddd";
-    const PAGE_RECT_LINES_WIDTH = 2 / transform.scale;
-    const pageRectLineStyle = {
-        fill: "transparent",
-        stroke: PAGE_RECT_LINES_COLOR,
-        strokeWidth: PAGE_RECT_LINES_WIDTH
-    };
 
     const center = designerContext.options.center!;
 
@@ -389,13 +385,6 @@ function CenterLines({
                 x2={center.x}
                 y2={pageRect.top + pageRect.height}
                 style={centerLineStyle}
-            />
-            <rect
-                x={pageRect.left}
-                y={pageRect.top}
-                width={pageRect.width}
-                height={pageRect.height}
-                style={pageRectLineStyle}
             />
         </Svg>
     );
@@ -1071,7 +1060,7 @@ export class PageEditor
 
     @bind
     onSavePersistantState(viewState: IViewStatePersistantState) {
-        if (!this.designerContext.dragWidget) {
+        if (!this.designerContext.dragComponent) {
             this.savedViewState = viewState;
 
             const uiState = this.context.UIStateStore.getObjectUIState(
@@ -1097,34 +1086,34 @@ export class PageEditor
         }
     }
 
-    getDragWidget(event: React.DragEvent) {
+    getDragComponent(event: React.DragEvent) {
         if (
             DragAndDropManager.dragObject &&
             isObjectInstanceOf(
                 DragAndDropManager.dragObject,
-                Widget.classInfo
+                Component.classInfo
             ) &&
             event.dataTransfer.effectAllowed === "copy"
         ) {
-            return DragAndDropManager.dragObject as Widget;
+            return DragAndDropManager.dragObject as Component;
         }
         return undefined;
     }
 
     @action.bound
     onDragOver(event: React.DragEvent) {
-        const widget = this.getDragWidget(event);
-        if (widget) {
+        const dragComponent = this.getDragComponent(event);
+        if (dragComponent) {
             event.preventDefault();
             event.stopPropagation();
 
             const page = this.props.widgetContainer.object as Page;
 
-            const widget = DragAndDropManager.dragObject as Widget;
+            const component = DragAndDropManager.dragObject as Component;
 
-            if (!this.designerContext.dragWidget) {
-                this.designerContext.dragWidget = widget;
-                setParent(this.designerContext.dragWidget, page.widgets);
+            if (!this.designerContext.dragComponent) {
+                this.designerContext.dragComponent = component;
+                setParent(this.designerContext.dragComponent, page.components);
 
                 this.designerContext.viewState.selectObjects([]);
 
@@ -1138,35 +1127,35 @@ export class PageEditor
             const p = transform.clientToPagePoint({
                 x:
                     event.nativeEvent.clientX -
-                    (widget.width * transform.scale) / 2,
+                    (component.width * transform.scale) / 2,
                 y:
                     event.nativeEvent.clientY -
-                    (widget.height * transform.scale) / 2
+                    (component.height * transform.scale) / 2
             });
 
             const { left, top } = dragSnapLines.snapLines!.dragSnap(
                 p.x,
                 p.y,
-                widget.width,
-                widget.height
+                component.width,
+                component.height
             );
 
-            widget.left = Math.round(left - page.left);
-            widget.top = Math.round(top - page.top);
+            component.left = Math.round(left - page.left);
+            component.top = Math.round(top - page.top);
         }
     }
 
     @action.bound
     onDrop(event: React.DragEvent) {
-        if (this.designerContext.dragWidget) {
+        if (this.designerContext.dragComponent) {
             const page = this.props.widgetContainer.object as Page;
 
             const object = this.context.addObject(
-                page.widgets,
-                toJS(this.designerContext.dragWidget)
+                page.components,
+                toJS(this.designerContext.dragComponent)
             );
 
-            this.designerContext.dragWidget = undefined;
+            this.designerContext.dragComponent = undefined;
             dragSnapLines.clear();
 
             setTimeout(() => {
@@ -1183,12 +1172,12 @@ export class PageEditor
 
     @action.bound
     onDragLeave(event: React.DragEvent) {
-        if (this.designerContext.dragWidget) {
-            this.designerContext.dragWidget.left = 0;
-            this.designerContext.dragWidget.top = 0;
-            this.designerContext.dragWidget = undefined;
+        if (this.designerContext.dragComponent) {
+            this.designerContext.dragComponent.left = 0;
+            this.designerContext.dragComponent.top = 0;
+            this.designerContext.dragComponent = undefined;
 
-            // deselect dragWidget
+            // deselect dragComponent
             this.designerContext.viewState.deselectAllObjects();
 
             dragSnapLines.clear();
@@ -1266,15 +1255,15 @@ export class PageEditor
                         position: "absolute"
                     }}
                 >
-                    <WidgetComponent
-                        widget={this.page}
+                    <ComponentEnclosure
+                        component={this.page}
                         dataContext={
                             this.pageDocument.DocumentStore.dataContext
                         }
                         designerContext={this.designerContext}
                     />
                 </div>
-                <DragWidget
+                <DragComponent
                     page={this.page}
                     designerContext={this.designerContext}
                 />

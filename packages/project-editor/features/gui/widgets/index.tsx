@@ -36,13 +36,13 @@ import type {
     IDataContext
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import {
-    WidgetContainerComponent,
-    WidgetComponent
+    ComponentsContainerEnclosure,
+    ComponentEnclosure
 } from "project-editor/features/gui/page-editor/render";
 
 import { Page, findPage } from "project-editor/features/gui/page";
 import { findBitmap } from "project-editor/features/gui/bitmap";
-import { Style, IStyle } from "project-editor/features/gui/style";
+import { Style } from "project-editor/features/gui/style";
 import { findDataItem } from "project-editor/features/data/data";
 import {
     drawText,
@@ -61,25 +61,17 @@ import { BootstrapButton } from "project-editor/components/BootstrapButton";
 
 import {
     Widget,
-    IWidget,
     makeDataPropertyInfo,
     makeStylePropertyInfo,
     makeTextPropertyInfo,
     migrateStyleProperty
-} from "project-editor/features/gui/widget";
+} from "project-editor/features/gui/component";
 
 const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IContainerWidget extends IWidget {
-    name?: string;
-    widgets: IWidget[];
-    overlay?: string;
-    shadow?: boolean;
-}
-
-export class ContainerWidget extends Widget implements IContainerWidget {
+export class ContainerWidget extends Widget {
     @observable name?: string;
     @observable widgets: Widget[];
     @observable overlay?: string;
@@ -126,7 +118,7 @@ export class ContainerWidget extends Widget implements IContainerWidget {
             top: 0,
             width: 64,
             height: 32
-        } as IContainerWidget,
+        },
 
         icon: "../home/_images/widgets/Container.png",
 
@@ -187,8 +179,8 @@ export class ContainerWidget extends Widget implements IContainerWidget {
 
     render(designerContext: IDesignerContext, dataContext: IDataContext) {
         return (
-            <WidgetContainerComponent
-                widgets={this.widgets}
+            <ComponentsContainerEnclosure
+                components={this.widgets}
                 designerContext={designerContext}
                 dataContext={dataContext}
             />
@@ -213,13 +205,7 @@ registerClass(ContainerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IListWidget extends IWidget {
-    itemWidget?: IWidget;
-    listType?: string;
-    gap?: number;
-}
-
-export class ListWidget extends Widget implements IListWidget {
+export class ListWidget extends Widget {
     @observable itemWidget?: Widget;
     @observable listType?: string;
     @observable gap?: number;
@@ -318,9 +304,9 @@ export class ListWidget extends Widget implements IListWidget {
             }
 
             return (
-                <WidgetComponent
+                <ComponentEnclosure
                     key={i}
-                    widget={itemWidget}
+                    component={itemWidget}
                     designerContext={designerContext}
                     dataContext={dataContext.create(dataValue[i])}
                     left={xListItem}
@@ -335,12 +321,7 @@ registerClass(ListWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IGridWidget extends IWidget {
-    itemWidget?: IWidget;
-    gridFlow?: string;
-}
-
-export class GridWidget extends Widget implements IGridWidget {
+export class GridWidget extends Widget {
     @observable itemWidget?: Widget;
     @observable gridFlow?: string;
 
@@ -443,9 +424,9 @@ export class GridWidget extends Widget implements IGridWidget {
             let yListItem = col * itemWidget.height;
 
             return (
-                <WidgetComponent
+                <ComponentEnclosure
                     key={i}
-                    widget={itemWidget}
+                    component={itemWidget}
                     designerContext={designerContext}
                     dataContext={dataContext.create(dataValue[i])}
                     left={xListItem}
@@ -466,11 +447,7 @@ export function htmlEncode(value: string) {
     return el.innerHTML;
 }
 
-export interface ISelectWidget extends IWidget {
-    widgets: IWidget[];
-}
-
-export class SelectWidget extends Widget implements ISelectWidget {
+export class SelectWidget extends Widget {
     @observable widgets: Widget[];
 
     _lastSelectedIndexInSelectWidget: number | undefined;
@@ -695,8 +672,8 @@ export class SelectWidget extends Widget implements ISelectWidget {
         const selectedWidget = this.widgets[index];
 
         return (
-            <WidgetContainerComponent
-                widgets={[selectedWidget]}
+            <ComponentsContainerEnclosure
+                components={[selectedWidget]}
                 designerContext={designerContext}
                 dataContext={dataContext}
             />
@@ -733,12 +710,7 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ILayoutViewWidget extends IWidget {
-    layout: string;
-    context?: string;
-}
-
-export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
+export class LayoutViewWidget extends Widget {
     @observable layout: string;
     @observable context?: string;
 
@@ -926,8 +898,8 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
         LayoutViewWidget.renderedLayoutPages.push(layoutPage);
 
         const element = (
-            <WidgetComponent
-                widget={layoutPage}
+            <ComponentEnclosure
+                component={layoutPage}
                 designerContext={designerContext}
                 dataContext={dataContext}
             />
@@ -951,7 +923,7 @@ export class LayoutViewWidget extends Widget implements ILayoutViewWidget {
                 ContainerWidget.classInfo.defaultValue
             );
 
-            containerWidgetJsObject.widgets = this.layoutPage.widgets.map(
+            containerWidgetJsObject.widgets = this.layoutPage.components.map(
                 widget => objectToJS(widget)
             );
 
@@ -994,12 +966,7 @@ const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
         getProject(object).settings.general.projectVersion !== "v1"
 };
 
-export interface IDisplayDataWidget extends IWidget {
-    focusStyle: IStyle;
-    displayOption: DisplayOption;
-}
-
-export class DisplayDataWidget extends Widget implements IDisplayDataWidget {
+export class DisplayDataWidget extends Widget {
     @observable focusStyle: Style;
     @observable displayOption: DisplayOption;
 
@@ -1146,13 +1113,7 @@ registerClass(DisplayDataWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ITextWidget extends IWidget {
-    text?: string;
-    ignoreLuminocity: boolean;
-    focusStyle: IStyle;
-}
-
-export class TextWidget extends Widget implements ITextWidget {
+export class TextWidget extends Widget {
     @observable text?: string;
     @observable ignoreLuminocity: boolean;
     @observable focusStyle: Style;
@@ -1476,15 +1437,7 @@ export const indentationGroup: IPropertyGridGroupDefinition = {
     position: 5
 };
 
-export interface IMultilineTextWidget extends IWidget {
-    text?: string;
-    firstLineIndent: number;
-    hangingIndent: number;
-}
-
-export class MultilineTextWidget
-    extends Widget
-    implements IMultilineTextWidget {
+export class MultilineTextWidget extends Widget {
     @observable text?: string;
     @observable firstLineIndent: number;
     @observable hangingIndent: number;
@@ -1582,12 +1535,7 @@ registerClass(MultilineTextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IRectangleWidget extends IWidget {
-    ignoreLuminocity: boolean;
-    invertColors: boolean;
-}
-
-export class RectangleWidget extends Widget implements IRectangleWidget {
+export class RectangleWidget extends Widget {
     @observable ignoreLuminocity: boolean;
     @observable invertColors: boolean;
 
@@ -1730,11 +1678,7 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IBitmapWidget extends IWidget {
-    bitmap?: string;
-}
-
-export class BitmapWidget extends Widget implements IBitmapWidget {
+export class BitmapWidget extends Widget {
     @observable bitmap?: string;
 
     get label() {
@@ -1893,13 +1837,7 @@ registerClass(BitmapWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IButtonWidget extends IWidget {
-    text?: string;
-    enabled?: string;
-    disabledStyle: IStyle;
-}
-
-export class ButtonWidget extends Widget implements IButtonWidget {
+export class ButtonWidget extends Widget {
     @observable text?: string;
     @observable enabled?: string;
     @observable disabledStyle: Style;
@@ -1964,12 +1902,7 @@ registerClass(ButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IToggleButtonWidget extends IWidget {
-    text1?: string;
-    text2?: string;
-}
-
-export class ToggleButtonWidget extends Widget implements IToggleButtonWidget {
+export class ToggleButtonWidget extends Widget {
     @observable text1?: string;
     @observable text2?: string;
 
@@ -2037,11 +1970,7 @@ registerClass(ToggleButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IButtonGroupWidget extends IWidget {
-    selectedStyle: IStyle;
-}
-
-export class ButtonGroupWidget extends Widget implements IButtonGroupWidget {
+export class ButtonGroupWidget extends Widget {
     @observable selectedStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -2158,16 +2087,7 @@ registerClass(ButtonGroupWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IBarGraphWidget extends IWidget {
-    orientation?: string;
-    textStyle: IStyle;
-    line1Data?: string;
-    line1Style: IStyle;
-    line2Data?: string;
-    line2Style: IStyle;
-}
-
-export class BarGraphWidget extends Widget implements IBarGraphWidget {
+export class BarGraphWidget extends Widget {
     @observable orientation?: string;
     @observable textStyle: Style;
     @observable line1Data?: string;
@@ -2397,13 +2317,7 @@ registerClass(BarGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IYTGraphWidget extends IWidget {
-    y1Style: IStyle;
-    y2Data?: string;
-    y2Style: IStyle;
-}
-
-export class YTGraphWidget extends Widget implements IYTGraphWidget {
+export class YTGraphWidget extends Widget {
     @observable y1Style: Style;
     @observable y2Data?: string;
     @observable y2Style: Style;
@@ -2513,13 +2427,7 @@ registerClass(YTGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IUpDownWidget extends IWidget {
-    buttonsStyle: IStyle;
-    downButtonText?: string;
-    upButtonText?: string;
-}
-
-export class UpDownWidget extends Widget implements IUpDownWidget {
+export class UpDownWidget extends Widget {
     @observable buttonsStyle: Style;
     @observable downButtonText?: string;
     @observable upButtonText?: string;
@@ -2625,17 +2533,7 @@ registerClass(UpDownWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IListGraphWidget extends IWidget {
-    dwellData?: string;
-    y1Data?: string;
-    y1Style: IStyle;
-    y2Data?: string;
-    y2Style: IStyle;
-    cursorData?: string;
-    cursorStyle: IStyle;
-}
-
-export class ListGraphWidget extends Widget implements IListGraphWidget {
+export class ListGraphWidget extends Widget {
     @observable dwellData?: string;
     @observable y1Data?: string;
     @observable y1Style: Style;
@@ -2775,11 +2673,7 @@ registerClass(ListGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IAppViewWidget extends IWidget {
-    page: string;
-}
-
-export class AppViewWidget extends Widget implements IAppViewWidget {
+export class AppViewWidget extends Widget {
     @observable page: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -2826,14 +2720,7 @@ registerClass(AppViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IScrollBarWidget extends IWidget {
-    thumbStyle: IStyle;
-    buttonsStyle: IStyle;
-    leftButtonText?: string;
-    rightButtonText?: string;
-}
-
-export class ScrollBarWidget extends Widget implements IScrollBarWidget {
+export class ScrollBarWidget extends Widget {
     @observable thumbStyle: Style;
     @observable buttonsStyle: Style;
     @observable leftButtonText?: string;
@@ -2985,9 +2872,7 @@ registerClass(ScrollBarWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IProgressWidget extends IWidget {}
-
-export class ProgressWidget extends Widget implements IProgressWidget {
+export class ProgressWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: {
             left: 0,
@@ -3040,9 +2925,7 @@ registerClass(ProgressWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ICanvasWidget extends IWidget {}
-
-export class CanvasWidget extends Widget implements ICanvasWidget {
+export class CanvasWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         defaultValue: {
             left: 0,

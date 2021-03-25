@@ -15,13 +15,13 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const PIN_TO_LEFT = 1;
-const PIN_TO_RIGHT = 2;
-const PIN_TO_TOP = 4;
-const PIN_TO_BOTTOM = 8;
+export const PIN_TO_LEFT = 1;
+export const PIN_TO_RIGHT = 2;
+export const PIN_TO_TOP = 4;
+export const PIN_TO_BOTTOM = 8;
 
-const FIX_WIDTH = 1;
-const FIX_HEIGHT = 2;
+export const FIX_WIDTH = 1;
+export const FIX_HEIGHT = 2;
 
 export interface IResizing {
     pinToEdge: number;
@@ -51,7 +51,9 @@ export function resizeWidget(
         // left = left;
     } else {
         if (!fixedWidth) {
-            left = (rectWidgetOriginal.left * rectContainer.width) / rectContainerOriginal.width;
+            left =
+                (rectWidgetOriginal.left * rectContainer.width) /
+                rectContainerOriginal.width;
         }
     }
 
@@ -70,7 +72,8 @@ export function resizeWidget(
             left = right - rectWidgetOriginal.width;
         } else if (!pinToLeft && !pinToRight) {
             const center =
-                ((rectWidgetOriginal.left + rectWidgetOriginal.width / 2) * rectContainer.width) /
+                ((rectWidgetOriginal.left + rectWidgetOriginal.width / 2) *
+                    rectContainer.width) /
                 rectContainerOriginal.width;
             left = center - rectWidgetOriginal.width / 2;
             right = left + rectWidgetOriginal.width;
@@ -84,7 +87,9 @@ export function resizeWidget(
         //top = top;
     } else {
         if (!fixedHeight) {
-            top = (rectWidgetOriginal.top * rectContainer.height) / rectContainerOriginal.height;
+            top =
+                (rectWidgetOriginal.top * rectContainer.height) /
+                rectContainerOriginal.height;
         }
     }
 
@@ -92,7 +97,8 @@ export function resizeWidget(
         bottom = rectContainer.height - (rectContainerOriginal.height - bottom);
     } else {
         if (!fixedHeight) {
-            bottom = (bottom * rectContainer.height) / rectContainerOriginal.height;
+            bottom =
+                (bottom * rectContainer.height) / rectContainerOriginal.height;
         }
     }
 
@@ -103,7 +109,8 @@ export function resizeWidget(
             top = bottom - rectWidgetOriginal.height;
         } else if (!pinToTop && !pinToBottom) {
             const center =
-                ((rectWidgetOriginal.top + rectWidgetOriginal.height / 2) * rectContainer.height) /
+                ((rectWidgetOriginal.top + rectWidgetOriginal.height / 2) *
+                    rectContainer.height) /
                 rectContainerOriginal.height;
             top = center - rectWidgetOriginal.height / 2;
             bottom = top + rectWidgetOriginal.height;
@@ -181,7 +188,10 @@ export class ResizingProperty extends React.Component<PropertyProps> {
 
     @computed
     get resizing() {
-        return getProperty(this.props.objects[0], this.props.propertyInfo.name) as IResizing;
+        return getProperty(
+            this.props.objects[0],
+            this.props.propertyInfo.name
+        ) as IResizing;
     }
 
     @computed
@@ -317,10 +327,15 @@ export class ResizingProperty extends React.Component<PropertyProps> {
     @bind
     togglePinToAll() {
         const isPinToAll =
-            this.isPinToLeft && this.isPinToRight && this.isPinToTop && this.isPinToBottom;
+            this.isPinToLeft &&
+            this.isPinToRight &&
+            this.isPinToTop &&
+            this.isPinToBottom;
         this.props.updateObject({
             resizing: {
-                pinToEdge: isPinToAll ? 0 : PIN_TO_LEFT | PIN_TO_RIGHT | PIN_TO_TOP | PIN_TO_BOTTOM,
+                pinToEdge: isPinToAll
+                    ? 0
+                    : PIN_TO_LEFT | PIN_TO_RIGHT | PIN_TO_TOP | PIN_TO_BOTTOM,
                 fixSize: isPinToAll ? this.fixSize : 0
             }
         });
@@ -334,7 +349,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         this.props.updateObject({
             resizing: {
                 pinToEdge: this.pinToEdge,
-                fixSize: this.isFixWidth ? this.fixSize & ~FIX_WIDTH : this.fixSize | FIX_WIDTH
+                fixSize: this.isFixWidth
+                    ? this.fixSize & ~FIX_WIDTH
+                    : this.fixSize | FIX_WIDTH
             }
         });
     }
@@ -347,7 +364,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         this.props.updateObject({
             resizing: {
                 pinToEdge: this.pinToEdge,
-                fixSize: this.isFixHeight ? this.fixSize & ~FIX_HEIGHT : this.fixSize | FIX_HEIGHT
+                fixSize: this.isFixHeight
+                    ? this.fixSize & ~FIX_HEIGHT
+                    : this.fixSize | FIX_HEIGHT
             }
         });
     }
@@ -365,7 +384,10 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         this.props.updateObject({
             resizing: {
                 pinToEdge: this.pinToEdge,
-                fixSize: this.isFixWidth && this.isFixHeight ? 0 : FIX_WIDTH | FIX_HEIGHT
+                fixSize:
+                    this.isFixWidth && this.isFixHeight
+                        ? 0
+                        : FIX_WIDTH | FIX_HEIGHT
             }
         });
     }
@@ -403,7 +425,10 @@ export class ResizingProperty extends React.Component<PropertyProps> {
             () => {
                 const resizing =
                     props.object &&
-                    (getProperty(props.object, props.propertyInfo.name) as IResizing);
+                    (getProperty(
+                        props.object,
+                        props.propertyInfo.name
+                    ) as IResizing);
                 return {
                     pinToEdge: (resizing && resizing.pinToEdge) || 0,
                     fixSize: (resizing && resizing.fixSize) || 0
@@ -417,7 +442,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
     animationFrame() {
         this.animationFrameHandle = undefined;
 
-        let t = (new Date().getTime() - this.animationStart) / ANIMATION_OPEN_CLOSE_DURATION;
+        let t =
+            (new Date().getTime() - this.animationStart) /
+            ANIMATION_OPEN_CLOSE_DURATION;
 
         let done = false;
 
@@ -442,29 +469,43 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                 t * (this.finalWidgetRect.top - this.originalWidgetRect.top),
             width:
                 this.originalWidgetRect.width +
-                t * (this.finalWidgetRect.width - this.originalWidgetRect.width),
+                t *
+                    (this.finalWidgetRect.width -
+                        this.originalWidgetRect.width),
             height:
                 this.originalWidgetRect.height +
-                t * (this.finalWidgetRect.height - this.originalWidgetRect.height)
+                t *
+                    (this.finalWidgetRect.height -
+                        this.originalWidgetRect.height)
         };
 
         this.containerRect = {
             left:
                 this.originalContainerRect.left +
-                t * (this.finalContainerRect.left - this.originalContainerRect.left),
+                t *
+                    (this.finalContainerRect.left -
+                        this.originalContainerRect.left),
             top:
                 this.originalContainerRect.top +
-                t * (this.finalContainerRect.top - this.originalContainerRect.top),
+                t *
+                    (this.finalContainerRect.top -
+                        this.originalContainerRect.top),
             width:
                 this.originalContainerRect.width +
-                t * (this.finalContainerRect.width - this.originalContainerRect.width),
+                t *
+                    (this.finalContainerRect.width -
+                        this.originalContainerRect.width),
             height:
                 this.originalContainerRect.height +
-                t * (this.finalContainerRect.height - this.originalContainerRect.height)
+                t *
+                    (this.finalContainerRect.height -
+                        this.originalContainerRect.height)
         };
 
         if (!done) {
-            this.animationFrameHandle = requestAnimationFrame(this.animationFrame);
+            this.animationFrameHandle = requestAnimationFrame(
+                this.animationFrame
+            );
         }
     }
 
@@ -501,20 +542,38 @@ export class ResizingProperty extends React.Component<PropertyProps> {
     render() {
         const pinToLeft = (
             <g onClick={this.togglePinToLeft}>
-                <rect x={X1 + G3} y={Y1 + H / 2 - WL1 / 2} width={HL1} height={WL1} fill={RFC} />
+                <rect
+                    x={X1 + G3}
+                    y={Y1 + H / 2 - WL1 / 2}
+                    width={HL1}
+                    height={WL1}
+                    fill={RFC}
+                />
                 <line
                     x1={X1 + G3}
                     y1={Y1 + H / 2 - WL1 / 2}
                     x2={X1 + G3}
                     y2={Y1 + H / 2 + WL1 / 2}
-                    stroke={this.isPinToLeftAllowed ? (this.isPinToLeft ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToLeftAllowed
+                            ? this.isPinToLeft
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
                 <line
                     x1={X1 + G3}
                     y1={Y1 + H / 2}
                     x2={X1 + G3 + HL1}
                     y2={Y1 + H / 2}
-                    stroke={this.isPinToLeftAllowed ? (this.isPinToLeft ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToLeftAllowed
+                            ? this.isPinToLeft
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
             </g>
         );
@@ -533,34 +592,64 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                     y1={Y1 + H / 2 - WL1 / 2}
                     x2={X1 + W - G3}
                     y2={Y1 + H / 2 + WL1 / 2}
-                    stroke={this.isPinToRightAllowed ? (this.isPinToRight ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToRightAllowed
+                            ? this.isPinToRight
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
                 <line
                     x1={X1 + W - G3 - HL1}
                     y1={Y1 + H / 2}
                     x2={X1 + W - G3}
                     y2={Y1 + H / 2}
-                    stroke={this.isPinToRightAllowed ? (this.isPinToRight ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToRightAllowed
+                            ? this.isPinToRight
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
             </g>
         );
 
         const pinToTop = (
             <g onClick={this.togglePinToTop}>
-                <rect x={X1 + W / 2 - WL1 / 2} y={Y1 + G3} width={WL1} height={HL1} fill={RFC} />
+                <rect
+                    x={X1 + W / 2 - WL1 / 2}
+                    y={Y1 + G3}
+                    width={WL1}
+                    height={HL1}
+                    fill={RFC}
+                />
                 <line
                     x1={X1 + W / 2 - WL1 / 2}
                     y1={Y1 + G3}
                     x2={X1 + W / 2 + WL1 / 2}
                     y2={Y1 + G3}
-                    stroke={this.isPinToTopAllowed ? (this.isPinToTop ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToTopAllowed
+                            ? this.isPinToTop
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
                 <line
                     x1={X1 + W / 2}
                     y1={Y1 + G3}
                     x2={X1 + W / 2}
                     y2={Y1 + G3 + HL1}
-                    stroke={this.isPinToTopAllowed ? (this.isPinToTop ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToTopAllowed
+                            ? this.isPinToTop
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
             </g>
         );
@@ -579,21 +668,40 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                     y1={Y1 + H - G3}
                     x2={X1 + W / 2 + WL1 / 2}
                     y2={Y1 + H - G3}
-                    stroke={this.isPinToBottomAllowed ? (this.isPinToBottom ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToBottomAllowed
+                            ? this.isPinToBottom
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
                 <line
                     x1={X1 + W / 2}
                     y1={Y1 + H - G3}
                     x2={X1 + W / 2}
                     y2={Y1 + H - G3 - HL1}
-                    stroke={this.isPinToBottomAllowed ? (this.isPinToBottom ? LCA : LCE) : LCD}
+                    stroke={
+                        this.isPinToBottomAllowed
+                            ? this.isPinToBottom
+                                ? LCA
+                                : LCE
+                            : LCD
+                    }
                 />
             </g>
         );
 
         const pinToEdge = (
             <g>
-                <rect x={X1} y={Y1} width={W} height={H} fill={RFC} stroke={RSC} />
+                <rect
+                    x={X1}
+                    y={Y1}
+                    width={W}
+                    height={H}
+                    fill={RFC}
+                    stroke={RSC}
+                />
                 <text
                     x={X1 + W / 2}
                     y={H + G1 + LH}
@@ -635,14 +743,26 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                         y1={Y1 + H / 2 - WL2 / 2}
                         x2={X2 + G3}
                         y2={Y1 + H / 2 + WL2 / 2}
-                        stroke={this.isFixWidthAllowed ? (this.isFixWidth ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixWidthAllowed
+                                ? this.isFixWidth
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                     <line
                         x1={X2 + G3}
                         y1={Y1 + H / 2}
                         x2={X2 + G3 + HL2}
                         y2={Y1 + H / 2}
-                        stroke={this.isFixWidthAllowed ? (this.isFixWidth ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixWidthAllowed
+                                ? this.isFixWidth
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                 </g>
                 <g onClick={this.toggleFixWidth}>
@@ -658,14 +778,26 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                         y1={Y1 + H / 2 - WL2 / 2}
                         x2={X2 + W - G3}
                         y2={Y1 + H / 2 + WL2 / 2}
-                        stroke={this.isFixWidthAllowed ? (this.isFixWidth ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixWidthAllowed
+                                ? this.isFixWidth
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                     <line
                         x1={X2 + W - G3 - HL2}
                         y1={Y1 + H / 2}
                         x2={X2 + W - G3}
                         y2={Y1 + H / 2}
-                        stroke={this.isFixWidthAllowed ? (this.isFixWidth ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixWidthAllowed
+                                ? this.isFixWidth
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                 </g>
             </g>
@@ -686,14 +818,26 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                         y1={Y1 + G3}
                         x2={X2 + W / 2 + WL2 / 2}
                         y2={Y1 + G3}
-                        stroke={this.isFixHeightAllowed ? (this.isFixHeight ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixHeightAllowed
+                                ? this.isFixHeight
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                     <line
                         x1={X2 + W / 2}
                         y1={Y1 + G3}
                         x2={X2 + W / 2}
                         y2={Y1 + G3 + HL2}
-                        stroke={this.isFixHeightAllowed ? (this.isFixHeight ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixHeightAllowed
+                                ? this.isFixHeight
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                 </g>
                 <g onClick={this.toggleFixHeight}>
@@ -709,14 +853,26 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                         y1={Y1 + H - G3}
                         x2={X2 + W / 2 + WL2 / 2}
                         y2={Y1 + H - G3}
-                        stroke={this.isFixHeightAllowed ? (this.isFixHeight ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixHeightAllowed
+                                ? this.isFixHeight
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                     <line
                         x1={X2 + W / 2}
                         y1={Y1 + H - G3}
                         x2={X2 + W / 2}
                         y2={Y1 + H - G3 - HL2}
-                        stroke={this.isFixHeightAllowed ? (this.isFixHeight ? LCA : LCE) : LCD}
+                        stroke={
+                            this.isFixHeightAllowed
+                                ? this.isFixHeight
+                                    ? LCA
+                                    : LCE
+                                : LCD
+                        }
                     />
                 </g>
             </g>
@@ -724,7 +880,14 @@ export class ResizingProperty extends React.Component<PropertyProps> {
 
         const fixSize = (
             <g>
-                <rect x={X2} y={Y1} width={W} height={H} fill={RFC} stroke={RSC} />
+                <rect
+                    x={X2}
+                    y={Y1}
+                    width={W}
+                    height={H}
+                    fill={RFC}
+                    stroke={RSC}
+                />
                 <text
                     x={X2 + W / 2}
                     y={H + G1 + LH}
@@ -751,7 +914,14 @@ export class ResizingProperty extends React.Component<PropertyProps> {
 
         const preview = (
             <g onMouseEnter={() => this.startAnimation(false)}>
-                <rect x={X3} y={Y1} width={W} height={H} fill={PRFC} stroke={PRSC} />
+                <rect
+                    x={X3}
+                    y={Y1}
+                    width={W}
+                    height={H}
+                    fill={PRFC}
+                    stroke={PRSC}
+                />
                 <text
                     x={X3 + W / 2}
                     y={H + G1 + LH}
@@ -782,7 +952,11 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         ////////////////////////////////////////////////////////////////////////////////
 
         return (
-            <svg style={{ margin: "10 10 5 10" }} width={X3 + W + X1} height={Y1 + H + G1 + TH}>
+            <svg
+                style={{ margin: "10 10 5 10" }}
+                width={X3 + W + X1}
+                height={Y1 + H + G1 + TH}
+            >
                 {pinToEdge}
                 {fixSize}
                 {preview}

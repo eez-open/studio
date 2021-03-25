@@ -55,8 +55,9 @@ import {
     getRootObject,
     getAncestorOfType,
     getLabel,
-    registerClass,
-    makeDerivedClassInfo
+    makeDerivedClassInfo,
+    EezClass,
+    registerClassByName
 } from "project-editor/core/object";
 import {
     checkClipboard,
@@ -101,11 +102,14 @@ import {
     buildExtensions
 } from "project-editor/project/build";
 import { getAllMetrics } from "project-editor/project/metrics";
-import { ActionNode, Widget } from "project-editor/features/gui/widget";
 import {
-    InputActionNode,
-    OutputActionNode
-} from "project-editor/features/gui/action-nodes";
+    ActionComponent,
+    Component
+} from "project-editor/features/gui/component";
+import {
+    InputActionComponent,
+    OutputActionComponent
+} from "project-editor/features/gui/action-components";
 import {
     ConnectionLine,
     Page,
@@ -1088,18 +1092,18 @@ export class DebugStoreClass {
 
     executePage(page: Page) {
         this.page = page;
-        const inputActionNode = page.widgets.find(
-            widget => widget instanceof InputActionNode
-        ) as ActionNode;
-        if (inputActionNode) {
-            this.executeActionNode(inputActionNode);
+        const inputActionComponent = page.components.find(
+            widget => widget instanceof InputActionComponent
+        ) as ActionComponent;
+        if (inputActionComponent) {
+            this.executeActionComponent(inputActionComponent);
         }
     }
 
-    executeActionNode(actionNode: ActionNode) {
+    executeActionComponent(actionNode: ActionComponent) {
         console.log(`Execute action: ${getLabel(actionNode)}`);
         actionNode.execute();
-        if (actionNode instanceof OutputActionNode) {
+        if (actionNode instanceof OutputActionComponent) {
             console.log("Execute action done!");
             this.page = undefined;
         }
@@ -1118,10 +1122,10 @@ export class DebugStoreClass {
         if (this.page) {
             const connectionLine = this.getConnectionline(wireID);
             if (connectionLine) {
-                const actionNode = this.page.wiredWidgets.get(
+                const actionNode = this.page.wiredComponents.get(
                     connectionLine.target
-                ) as ActionNode;
-                this.executeActionNode(actionNode);
+                ) as ActionComponent;
+                this.executeActionComponent(actionNode);
             }
         }
     }
@@ -1854,7 +1858,7 @@ export class DocumentStoreClass {
         };
         let closeCombineCommands = false;
 
-        if (object instanceof Widget) {
+        if (object instanceof Component) {
             if (!this.UndoManager.combineCommands) {
                 this.UndoManager.setCombineCommands(true);
                 closeCombineCommands = true;
@@ -1882,7 +1886,7 @@ export class DocumentStoreClass {
             let closeCombineCommands = false;
 
             objects.forEach(object => {
-                if (object instanceof Widget) {
+                if (object instanceof Component) {
                     if (!this.UndoManager.combineCommands) {
                         this.UndoManager.setCombineCommands(true);
                         closeCombineCommands = true;
@@ -2390,10 +2394,15 @@ async function initExtensions() {
                     extension.eezFlowExtensionInit({
                         React,
                         mobx,
-                        registerClass,
+                        registerClass(aClass: EezClass) {
+                            registerClassByName(
+                                `${extension.name}/${aClass.name}`,
+                                aClass
+                            );
+                        },
                         PropertyType,
                         makeDerivedClassInfo,
-                        ActionNode
+                        ActionComponent
                     });
                 }
             });

@@ -11,12 +11,12 @@ import {
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
-import { ConnectionLine } from "../page";
-import { Widget } from "../widget";
+import { ConnectionLine } from "project-editor/features/gui/page";
+import { Component } from "project-editor/features/gui/component";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 export function getObjectBoundingRect(object: ITreeObjectAdapter) {
-    const widget = object.object as Widget;
+    const widget = object.object as Component;
     return {
         left: widget.absolutePositionPoint?.x ?? widget.left,
         top: widget.absolutePositionPoint?.y ?? widget.top,

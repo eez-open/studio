@@ -31,8 +31,8 @@ import type {
     IDataContext
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import {
-    WidgetContainerComponent,
-    WidgetGeometry
+    ComponentsContainerEnclosure,
+    ComponentGeometry
 } from "project-editor/features/gui/page-editor/render";
 
 import {
@@ -41,7 +41,7 @@ import {
     getProject
 } from "project-editor/project/project";
 
-import { Widget, IWidget } from "project-editor/features/gui/widget";
+import { Component } from "project-editor/features/gui/component";
 
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
@@ -59,22 +59,13 @@ import { Rect } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IPageOrientation {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    style?: string;
-    widgets: IWidget[];
-}
-
 export class PageOrientation extends EezObject {
     @observable x: number;
     @observable y: number;
     @observable width: number;
     @observable height: number;
     @observable style?: string;
-    @observable widgets: Widget[];
+    @observable components: Component[];
 
     static classInfo: ClassInfo = {
         properties: [
@@ -105,12 +96,18 @@ export class PageOrientation extends EezObject {
                 propertyGridGroup: styleGroup
             },
             {
-                name: "widgets",
+                name: "components",
                 type: PropertyType.Array,
-                typeClass: Widget,
+                typeClass: Component,
                 hideInPropertyGrid: true
             }
-        ]
+        ],
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (jsObject.widgets) {
+                jsObject.components = jsObject.widgets;
+                delete jsObject.widgets;
+            }
+        }
     };
 
     @computed
@@ -143,14 +140,7 @@ registerClass(PageOrientation);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IConnectionLine {
-    source: string;
-    output: string;
-    target: string;
-    input: string;
-}
-
-export class ConnectionLine extends EezObject implements IConnectionLine {
+export class ConnectionLine extends EezObject {
     @observable source: string;
     @observable output: string;
     @observable target: string;
@@ -158,9 +148,9 @@ export class ConnectionLine extends EezObject implements IConnectionLine {
 
     static classInfo: ClassInfo = {
         label: (connectionLine: ConnectionLine) => {
-            return `${getLabel(connectionLine.sourceWidget!)}@${humanize(
+            return `${getLabel(connectionLine.sourceComponent!)}@${humanize(
                 connectionLine.output
-            )} ➝ ${getLabel(connectionLine.targetWidget!)}@${humanize(
+            )} ➝ ${getLabel(connectionLine.targetComponent!)}@${humanize(
                 connectionLine.input
             )}`;
         },
@@ -191,44 +181,46 @@ export class ConnectionLine extends EezObject implements IConnectionLine {
         isSelectable: () => true
     };
 
-    @computed get sourceWidget() {
+    @computed get sourceComponent() {
         const page = getParent(getParent(this)) as Page;
-        return page.wiredWidgets.get(this.source);
+        return page.wiredComponents.get(this.source);
     }
 
-    @computed get targetWidget() {
+    @computed get targetComponent() {
         const page = getParent(getParent(this)) as Page;
-        return page.wiredWidgets.get(this.target);
+        return page.wiredComponents.get(this.target);
     }
 
     @computed get sourcePosition() {
-        if (!(this.sourceWidget && this.sourceWidget._geometry)) {
+        if (!(this.sourceComponent && this.sourceComponent._geometry)) {
             return undefined;
         }
 
-        const outputGeometry = this.sourceWidget._geometry.outputs[this.output];
+        const outputGeometry = this.sourceComponent._geometry.outputs[
+            this.output
+        ];
         if (!outputGeometry) {
             return undefined;
         }
 
         return {
-            x: this.sourceWidget.left + outputGeometry.position.x,
-            y: this.sourceWidget.top + outputGeometry.position.y
+            x: this.sourceComponent.left + outputGeometry.position.x,
+            y: this.sourceComponent.top + outputGeometry.position.y
         };
     }
 
     @computed get targetPosition() {
-        if (!(this.targetWidget && this.targetWidget._geometry)) {
+        if (!(this.targetComponent && this.targetComponent._geometry)) {
             return undefined;
         }
-        const inputGeometry = this.targetWidget._geometry.inputs[this.input];
+        const inputGeometry = this.targetComponent._geometry.inputs[this.input];
         if (!inputGeometry) {
             return undefined;
         }
 
         return {
-            x: this.targetWidget.left + inputGeometry.position.x,
-            y: this.targetWidget.top + inputGeometry.position.y
+            x: this.targetComponent.left + inputGeometry.position.x,
+            y: this.targetComponent.top + inputGeometry.position.y
         };
     }
 }
@@ -237,44 +229,46 @@ registerClass(ConnectionLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IPageFragment {
-    widgets: IWidget[];
-    connectionLines: IConnectionLine[];
-}
-
-export class PageFragment extends EezObject implements IPageFragment {
-    widgets: Widget[];
+export class PageFragment extends EezObject {
+    components: Component[];
     connectionLines: ConnectionLine[];
 
     static classInfo: ClassInfo = {
         properties: [
             {
-                name: "widgets",
+                name: "components",
                 type: PropertyType.Array,
-                typeClass: Widget
+                typeClass: Component
             },
             {
                 name: "connectionLines",
                 type: PropertyType.Array,
                 typeClass: ConnectionLine
             }
-        ]
+        ],
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (jsObject.widgets) {
+                jsObject.components = jsObject.widgets;
+                delete jsObject.widgets;
+            }
+        }
     };
 
     addObjects(page: Page, objects: IEezObject[]) {
-        this.widgets = [];
+        this.components = [];
         this.connectionLines = [];
 
         const DocumentStore = getDocumentStore(page);
 
         const wireIDMap = new Map<string, string>();
 
-        objects.forEach((object: Widget) => {
-            const clone = cloneObject(DocumentStore, object) as Widget;
+        objects.forEach((object: Component) => {
+            const clone = cloneObject(DocumentStore, object) as Component;
             if (object.wireID) {
                 wireIDMap.set(object.wireID, object.wireID);
             }
-            this.widgets.push(clone);
+            this.components.push(clone);
         });
 
         page.connectionLines.forEach(connectionLine => {
@@ -293,7 +287,7 @@ export class PageFragment extends EezObject implements IPageFragment {
     rewire() {
         const wireIDMap = new Map<string, string>();
 
-        this.widgets.forEach((object: Widget) => {
+        this.components.forEach((object: Component) => {
             if (object.wireID) {
                 const wireID = guid();
                 wireIDMap.set(object.wireID, wireID);
@@ -314,33 +308,11 @@ registerClass(PageFragment);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IPage {
-    name: string;
-    description?: string;
-    style?: string;
-    widgets: IWidget[];
-    usedIn?: string[];
-    closePageIfTouchedOutside: boolean;
-
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-
-    portrait: IPageOrientation;
-
-    isUsedAsCustomWidget: boolean;
-
-    dataContextOverrides: string;
-
-    connectionLines: IConnectionLine[];
-}
-
-export class Page extends EezObject implements IPage {
+export class Page extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable style?: string;
-    @observable widgets: Widget[];
+    @observable components: Component[];
     @observable usedIn?: string[];
     @observable closePageIfTouchedOutside: boolean;
 
@@ -357,7 +329,7 @@ export class Page extends EezObject implements IPage {
 
     @observable connectionLines: ConnectionLine[];
 
-    @observable _geometry: WidgetGeometry;
+    @observable _geometry: ComponentGeometry;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -406,9 +378,9 @@ export class Page extends EezObject implements IPage {
                 propertyGridGroup: styleGroup
             },
             {
-                name: "widgets",
+                name: "components",
                 type: PropertyType.Array,
-                typeClass: Widget,
+                typeClass: Component,
                 hideInPropertyGrid: true
             },
             {
@@ -444,6 +416,11 @@ export class Page extends EezObject implements IPage {
             }
         ],
         beforeLoadHook: (page: Page, jsObject: any) => {
+            if (jsObject.widgets) {
+                jsObject.components = jsObject.widgets;
+                delete jsObject.widgets;
+            }
+
             if (jsObject.landscape) {
                 Object.assign(jsObject, jsObject.landscape);
                 delete jsObject.landscape;
@@ -484,8 +461,8 @@ export class Page extends EezObject implements IPage {
             isSingleObject: boolean
         ): IEezObject | PropertyInfo | undefined => {
             if (object) {
-                if (isSubclassOf(classInfo, Widget.classInfo)) {
-                    return (object as Page).widgets;
+                if (isSubclassOf(classInfo, Component.classInfo)) {
+                    return (object as Page).components;
                 } else if (classInfo === PageFragment.classInfo) {
                     return object;
                 }
@@ -565,16 +542,16 @@ export class Page extends EezObject implements IPage {
         return getClass(getParent(this)).name == "Action";
     }
 
-    @computed get wiredWidgets() {
-        const widgets = new Map<string, Widget>();
+    @computed get wiredComponents() {
+        const widgets = new Map<string, Component>();
 
-        const v = visitObjects(this.widgets);
+        const v = visitObjects(this.components);
         while (true) {
             let visitResult = v.next();
             if (visitResult.done) {
                 break;
             }
-            if (visitResult.value instanceof Widget) {
+            if (visitResult.value instanceof Component) {
                 const widget = visitResult.value;
                 if (widget.wireID) {
                     widgets.set(widget.wireID, widget);
@@ -614,12 +591,12 @@ export class Page extends EezObject implements IPage {
         }
     }
 
-    deleteConnectionLines(context: ICommandContext, widget: Widget) {
+    deleteConnectionLines(context: ICommandContext, widget: Component) {
         this.connectionLines
             .filter(
                 connectionLine =>
-                    connectionLine.sourceWidget == widget ||
-                    connectionLine.targetWidget == widget
+                    connectionLine.sourceComponent == widget ||
+                    connectionLine.targetComponent == widget
             )
             .forEach(connectionLine => deleteObject(context, connectionLine));
     }
@@ -637,7 +614,7 @@ export class Page extends EezObject implements IPage {
 
         pageFragment.rewire();
 
-        pageFragment.widgets.forEach(widget => {
+        pageFragment.components.forEach(widget => {
             widget.left += 20;
             widget.top += 20;
         });
@@ -648,8 +625,8 @@ export class Page extends EezObject implements IPage {
         );
 
         const widgets = DocumentStore.addObjects(
-            this.widgets,
-            pageFragment.widgets
+            this.components,
+            pageFragment.components
         );
 
         DocumentStore.UndoManager.setCombineCommands(false);
@@ -659,8 +636,8 @@ export class Page extends EezObject implements IPage {
 
     render(designerContext: IDesignerContext, dataContext: IDataContext) {
         return (
-            <WidgetContainerComponent
-                widgets={this.widgets}
+            <ComponentsContainerEnclosure
+                components={this.components}
                 designerContext={designerContext}
                 dataContext={dataContext.create(
                     this.dataContextOverridesObject

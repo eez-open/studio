@@ -21,7 +21,7 @@ export function getConnectionLineShape(
     if (dx || dy) {
         if (
             context.viewState.isObjectIdSelected(
-                getId(connectionLine.sourceWidget!)
+                getId(connectionLine.sourceComponent!)
             )
         ) {
             sourcePositionX += dx;
@@ -30,7 +30,7 @@ export function getConnectionLineShape(
 
         if (
             context.viewState.isObjectIdSelected(
-                getId(connectionLine.targetWidget!)
+                getId(connectionLine.targetComponent!)
             )
         ) {
             targetPositionX += dx;

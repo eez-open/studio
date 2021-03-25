@@ -21,7 +21,10 @@ import type {
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 import { Transform } from "project-editor/features/gui/page-editor/transform";
 
-import { Widget, getWidgetParent } from "project-editor/features/gui/widget";
+import {
+    Component,
+    getWidgetParent
+} from "project-editor/features/gui/component";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,8 +208,8 @@ class ViewState implements IViewState {
         const widgets =
             this.document &&
             (this.document.page.selectedObjects.filter(
-                object => object instanceof Widget
-            ) as Widget[]);
+                object => object instanceof Component
+            ) as Component[]);
 
         if (!widgets || widgets.length === 0) {
             return;
@@ -292,7 +295,7 @@ export class DesignerContext implements IDesignerContext {
     viewState: ViewState;
     @observable options: IDesignerOptions = {};
     filterSnapLines: ((node: ITreeObjectAdapter) => boolean) | undefined;
-    @observable dragWidget: Widget | undefined;
+    @observable dragComponent: Component | undefined;
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this.containerId);

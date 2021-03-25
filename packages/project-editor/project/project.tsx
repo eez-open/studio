@@ -48,18 +48,12 @@ import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
 import "project-editor/project/builtInFeatures";
 
-import { Action, IAction } from "project-editor/features/action/action";
-import { DataItem, IDataItem } from "project-editor/features/data/data";
-import { Gui, IGui } from "project-editor/features/gui/gui";
-import { Scpi, IScpi } from "project-editor/features/scpi/scpi";
-import {
-    Shortcuts,
-    IShortcuts
-} from "project-editor/features/shortcuts/shortcuts";
-import {
-    ExtensionDefinition,
-    IExtensionDefinition
-} from "project-editor/features/extension-definitions/extension-definitions";
+import { Action } from "project-editor/features/action/action";
+import { DataItem } from "project-editor/features/data/data";
+import { Gui } from "project-editor/features/gui/gui";
+import { Scpi } from "project-editor/features/scpi/scpi";
+import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
+import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 
@@ -75,15 +69,7 @@ export const NAMESPACE_PREFIX = "::";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IBuildConfiguration {
-    name: string;
-    description: string;
-    properties: string;
-    screenOrientation: "landscape" | "portrait";
-}
-export class BuildConfiguration
-    extends EezObject
-    implements IBuildConfiguration {
+export class BuildConfiguration extends EezObject {
     @observable name: string;
     @observable description: string;
     @observable properties: string;
@@ -123,7 +109,7 @@ export class BuildConfiguration
             });
         },
         showInNavigation: true,
-        check: (object: IBuildConfiguration) => {
+        check: (object: BuildConfiguration) => {
             let messages: Message[] = [];
 
             if (object.properties) {
@@ -145,13 +131,7 @@ registerClass(BuildConfiguration);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IBuildFile {
-    fileName: string;
-    description?: string;
-    template: string;
-}
-
-export class BuildFile extends EezObject implements IBuildFile {
+export class BuildFile extends EezObject {
     @observable fileName: string;
     @observable description?: string;
     @observable template: string;
@@ -195,12 +175,7 @@ function isFilesPropertyEnumerable(object: IEezObject): boolean {
     return !!(project.gui || project.actions || project.data);
 }
 
-export interface IBuild {
-    files: IBuildFile[];
-    configurations: IBuildConfiguration[];
-}
-
-export class Build extends EezObject implements IBuild {
+export class Build extends EezObject {
     @observable configurations: BuildConfiguration[];
     @observable files: BuildFile[];
     @observable destinationFolder?: string;
@@ -548,15 +523,7 @@ export enum ProjectType {
     DASHBOARD = "dashboard"
 }
 
-export interface IGeneral {
-    projectType: string;
-    scpiDocFolder?: string;
-    namespace: string;
-    masterProject: string;
-    imports: ImportDirective[];
-}
-
-export class General extends EezObject implements IGeneral {
+export class General extends EezObject {
     @observable projectVersion: "v1" | "v2";
     @observable projectType: string;
     @observable scpiDocFolder?: string;
@@ -663,13 +630,7 @@ registerClass(General);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ISettings {
-    build: IBuild;
-    general: IGeneral;
-    scpiHelpFolder?: string;
-}
-
-export class Settings extends EezObject implements ISettings {
+export class Settings extends EezObject {
     @observable general: General;
     @observable build: Build;
     @observable scpiHelpFolder?: string;
@@ -769,16 +730,6 @@ function getProjectClassInfo() {
     return projectClassInfo;
 }
 
-export interface IProject {
-    settings: ISettings;
-    actions: IAction[];
-    data: IDataItem[];
-    scpi: IScpi;
-    gui: IGui;
-    shortcuts: IShortcuts;
-    extensionDefinitions: IExtensionDefinition[];
-}
-
 class BuildAssetsMap {
     assets = new Map<string, IEezObject[]>();
 
@@ -792,7 +743,7 @@ class BuildAssetsMap {
     }
 }
 
-export class Project extends EezObject implements IProject {
+export class Project extends EezObject {
     _DocumentStore!: DocumentStoreClass;
     _isReadOnly: boolean = false;
 

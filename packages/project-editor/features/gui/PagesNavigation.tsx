@@ -27,7 +27,7 @@ import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
 
 import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page-editor/editor";
-import { WidgetPalette } from "project-editor/features/gui/page-editor/WidgetPalette";
+import { ComponentsPalette } from "project-editor/features/gui/page-editor/ComponentsPalette";
 
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 
@@ -282,11 +282,7 @@ export class PagesNavigation extends NavigationComponent {
                     object={this.selectedObject}
                     buttons={buttons}
                 />
-                <Panel
-                    id="widgets"
-                    title="Widgets Palette"
-                    body={<WidgetPalette />}
-                />
+                <ComponentsPalette />
             </Splitter>
         );
 

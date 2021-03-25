@@ -269,8 +269,6 @@ export interface ClassInfo {
         oldValues: any
     ) => void;
 
-    creatableFromPalette?: boolean;
-
     extendContextMenu?: (
         object: IEezObject,
         context: IContextMenuContext,
@@ -374,6 +372,10 @@ export function registerClass(aClass: EezClass) {
     classes.set(aClass.name, aClass);
 }
 
+export function registerClassByName(name: string, aClass: EezClass) {
+    classes.set(name, aClass);
+}
+
 export function getClassByName(className: string) {
     return classes.get(className);
 }
@@ -425,13 +427,24 @@ export function findClass(className: string) {
     return classes.get(className);
 }
 
+export interface IObjectClassInfo {
+    name: string;
+    objectClass: EezClass;
+}
+
 export function getClassesDerivedFrom(parentClass: EezClass) {
-    const derivedClasses = [];
-    for (const aClass of classes.values()) {
-        if (isProperSubclassOf(aClass.classInfo, parentClass.classInfo)) {
-            derivedClasses.push(aClass);
+    const derivedClasses: IObjectClassInfo[] = [];
+
+    for (const className of classes.keys()) {
+        const objectClass = classes.get(className)!;
+        if (isProperSubclassOf(objectClass.classInfo, parentClass.classInfo)) {
+            derivedClasses.push({
+                name: className,
+                objectClass
+            });
         }
     }
+
     return derivedClasses;
 }
 
@@ -586,7 +599,7 @@ export function getLabel(object: IEezObject): string {
         return name;
     }
 
-    return getId(object);
+    return getClass(object).name;
 }
 
 export function isAncestor(object: IEezObject, ancestor: IEezObject): boolean {

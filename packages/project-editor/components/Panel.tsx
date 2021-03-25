@@ -10,6 +10,11 @@ const PanelContainer = styled.div`
     display: flex;
     flex-direction: column;
     height: 100%;
+    .btn-toolbar input {
+        border: 1px solid ${props => props.theme.borderColor};
+        margin: 2px 0;
+        max-width: 200px;
+    }
 `;
 
 const PanelHeader = styled.div`

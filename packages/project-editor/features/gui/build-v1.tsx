@@ -26,7 +26,7 @@ import {
 import { Font } from "project-editor/features/gui/font";
 import { Style } from "project-editor/features/gui/style";
 import { Page, PageOrientation } from "project-editor/features/gui/page";
-import { Widget } from "project-editor/features/gui/widget";
+import { Widget, Component } from "project-editor/features/gui/component";
 import {
     BarGraphWidget,
     BitmapWidget,
@@ -152,7 +152,7 @@ function traverseTree(
     return result;
 }
 
-function isWidgetOpaque(widgetObj: Widget) {
+function isWidgetOpaque(widgetObj: Component) {
     return !(
         widgetObj.type === "Container" ||
         widgetObj.type === "List" ||
@@ -186,7 +186,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
             x: number,
             y: number
         ) {
-            let object = item.object as Widget | Page;
+            let object = item.object as Component | Page;
 
             x += object.left || 0;
             y += object.top || 0;
@@ -203,14 +203,14 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                 children: [],
                 rect: rect,
                 item: item,
-                isOpaque: object instanceof Widget && isWidgetOpaque(object)
+                isOpaque: object instanceof Component && isWidgetOpaque(object)
             };
 
             if (parentNode) {
                 parentNode.children.push(treeNode);
             }
 
-            if (!(object instanceof Widget)) {
+            if (!(object instanceof Component)) {
                 let widgetsItemChildren = item.children;
 
                 if (!Array.isArray(widgetsItemChildren)) {
@@ -1232,7 +1232,9 @@ function buildWidget(object: Widget | Page) {
         if (object instanceof ContainerWidget) {
             widgets = object.widgets;
         } else {
-            widgets = (object as Page).widgets;
+            widgets = (object as Page).components.filter(
+                widget => widget instanceof Widget
+            ) as Widget[];
         }
 
         // widgets
@@ -1245,7 +1247,7 @@ function buildWidget(object: Widget | Page) {
 
         specific.addField(childWidgets);
 
-        if (!(object instanceof Widget)) {
+        if (!(object instanceof Component)) {
             let rects = findPageTransparentRectanglesInContainer(object);
 
             let rectObjectList = new ObjectList();
@@ -1669,9 +1671,11 @@ function buildGuiDocumentDef(
 
         // widgets
         let childWidgets = new ObjectList();
-        customWidget.widgets.forEach(childWidget => {
-            childWidgets.addItem(buildWidget(childWidget));
-        });
+        customWidget.components
+            .filter(widget => widget instanceof Widget)
+            .forEach((childWidget: Widget) => {
+                childWidgets.addItem(buildWidget(childWidget));
+            });
 
         customWidgetStruct.addField(childWidgets);
 

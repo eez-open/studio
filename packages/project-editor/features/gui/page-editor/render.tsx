@@ -14,7 +14,7 @@ import type {
 } from "project-editor/features/gui/page-editor/designer-interfaces";
 
 import { Page } from "project-editor/features/gui/page";
-import { Widget } from "project-editor/features/gui/widget";
+import { Component } from "project-editor/features/gui/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,18 +52,18 @@ interface PortsGeometry {
     };
 }
 
-export interface WidgetGeometry {
+export interface ComponentGeometry {
     width: number;
     height: number;
     inputs: PortsGeometry;
     outputs: PortsGeometry;
 }
 
-function calcWidgetGeometry(
-    widget: Widget | Page,
+function calcComponentGeometry(
+    component: Component | Page,
     el: HTMLElement,
     designerContext: IDesignerContext
-): WidgetGeometry {
+): ComponentGeometry {
     const transform = designerContext.viewState.transform;
 
     const rect = transform.clientToPageRect(el.getBoundingClientRect());
@@ -71,8 +71,8 @@ function calcWidgetGeometry(
     const inputs: PortsGeometry = {};
     const outputs: PortsGeometry = {};
 
-    if (widget instanceof Widget) {
-        widget.inputProperties.forEach(property => {
+    if (component instanceof Component) {
+        component.inputProperties.forEach(property => {
             const inputElement = el.querySelector(
                 `[data-connection-input-id="${property.name}"]`
             );
@@ -95,7 +95,7 @@ function calcWidgetGeometry(
             }
         });
 
-        widget.outputProperties.forEach(property => {
+        component.outputProperties.forEach(property => {
             const outputElement = el.querySelector(
                 `[data-connection-output-id="${property.name}"]`
             );
@@ -129,7 +129,7 @@ function calcWidgetGeometry(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const WidgetDiv = styled.div`
+const ComponentEnclosureDiv = styled.div`
     display: block;
     position: absolute;
 
@@ -218,16 +218,16 @@ const WidgetDiv = styled.div`
     }
 `;
 
-export const WidgetComponent = observer(
+export const ComponentEnclosure = observer(
     ({
-        widget,
+        component,
         designerContext,
         dataContext,
         left,
         top,
         onClick
     }: {
-        widget: Widget | Page;
+        component: Component | Page;
         designerContext: IDesignerContext;
         dataContext: IDataContext;
         left?: number;
@@ -238,29 +238,29 @@ export const WidgetComponent = observer(
 
         React.useLayoutEffect(() => {
             if (elRef.current) {
-                const geometry = calcWidgetGeometry(
-                    widget,
+                const geometry = calcComponentGeometry(
+                    component,
                     elRef.current,
                     designerContext
                 );
                 runInAction(() => {
-                    widget._geometry = geometry;
+                    component._geometry = geometry;
                 });
             }
         });
 
         const style: React.CSSProperties = {
-            left: left ?? widget.left,
-            top: top ?? widget.top
+            left: left ?? component.left,
+            top: top ?? component.top
         };
 
-        if (!widget.autoSize) {
-            style.width = widget.width;
-            style.height = widget.height;
+        if (!component.autoSize) {
+            style.width = component.width;
+            style.height = component.height;
         }
 
         const dataDesignerObjectId = designerContext
-            ? getId(widget)
+            ? getId(component)
             : undefined;
 
         const refDiv = React.useRef<HTMLDivElement>(null);
@@ -282,13 +282,13 @@ export const WidgetComponent = observer(
 
         let canvasDiv;
 
-        if (widget instanceof Widget && widget.draw) {
+        if (component instanceof Component && component.draw) {
             canvas = document.createElement("canvas");
-            canvas.width = widget.width;
-            canvas.height = widget.height;
+            canvas.width = component.width;
+            canvas.height = component.height;
             canvas.style.imageRendering = "pixelated";
             canvas.style.display = "block";
-            widget.draw!(
+            component.draw!(
                 canvas.getContext("2d")!,
                 designerContext,
                 dataContext
@@ -298,12 +298,12 @@ export const WidgetComponent = observer(
         }
 
         style.overflow = "visible";
-        widget.styleHook(style, designerContext);
+        component.styleHook(style, designerContext);
 
-        const className = widget.getClassName();
+        const className = component.getClassName();
 
         return (
-            <WidgetDiv
+            <ComponentEnclosureDiv
                 data-designer-object-id={dataDesignerObjectId}
                 ref={elRef}
                 className={classNames(className, {
@@ -312,34 +312,38 @@ export const WidgetComponent = observer(
                             .isActive
                 })}
                 style={style}
-                onClick={widget instanceof Widget ? widget.onClick : undefined}
+                onClick={
+                    component instanceof Component
+                        ? component.onClick
+                        : undefined
+                }
             >
                 {canvasDiv}
-                {widget.render(designerContext, dataContext)}
-            </WidgetDiv>
+                {component.render(designerContext, dataContext)}
+            </ComponentEnclosureDiv>
         );
     }
 );
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const WidgetContainerComponent = observer(
+export const ComponentsContainerEnclosure = observer(
     ({
-        widgets,
+        components,
         designerContext,
         dataContext
     }: {
-        widgets: Widget[];
+        components: Component[];
         designerContext: IDesignerContext;
         dataContext: IDataContext;
     }) => {
         return (
             <>
-                {widgets.map((widget, i) => {
+                {components.map((component, i) => {
                     return (
-                        <WidgetComponent
-                            key={getId(widget)}
-                            widget={widget}
+                        <ComponentEnclosure
+                            key={getId(component)}
+                            component={component}
                             designerContext={designerContext}
                             dataContext={dataContext}
                         />

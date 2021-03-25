@@ -15,7 +15,7 @@ import {
     getParent,
     getClassInfo,
     getEditorComponent,
-    getClass
+    getLabel
 } from "project-editor/core/object";
 import { startSearch } from "project-editor/core/search";
 import { Section } from "project-editor/core/output";
@@ -333,12 +333,11 @@ export class PropertiesPanel extends React.Component<
 
     @computed get title() {
         if (this.objects.length == 1) {
-            if (isValue(this.objects[0])) {
-                const childObject = getParent(this.objects[0]);
-                return `${getClass(childObject).name} Properties`;
-            } else {
-                return `${getClass(this.objects[0]).name} Properties`;
+            let object = this.objects[0];
+            if (isValue(object)) {
+                object = getParent(this.objects[0]);
             }
+            return `${getLabel(object)} Properties`;
         }
         return "Properties";
     }

@@ -163,9 +163,9 @@ export class Selection extends React.Component<
             (!this.props.mouseHandler ||
                 this.props.mouseHandler.selectionVisible);
 
-        const isSelectedObjectWidgetPaletteItem =
+        const isSelectedObjectComponentPaletteItem =
             selectedObjects.length === 1 &&
-            selectedObjects[0].id === "WidgetPaletteItem";
+            selectedObjects[0].id === "ComponentPaletteItem";
 
         let selectedObjectRectsElement;
         let selectedObjectsBoundingRectElement;
@@ -253,7 +253,7 @@ export class Selection extends React.Component<
         }
 
         const style: React.CSSProperties = {
-            pointerEvents: isSelectedObjectWidgetPaletteItem
+            pointerEvents: isSelectedObjectComponentPaletteItem
                 ? "none"
                 : undefined
         };

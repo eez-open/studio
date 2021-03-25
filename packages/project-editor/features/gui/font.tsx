@@ -180,13 +180,7 @@ export function browseGlyph(glyph: Glyph) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IGlyphSource {
-    filePath?: string;
-    size?: number;
-    encoding?: number;
-}
-
-export class GlyphSource extends EezObject implements IGlyphSource {
+export class GlyphSource extends EezObject {
     @observable filePath?: string;
     @observable size?: number;
     @observable encoding?: number;
@@ -345,17 +339,6 @@ export interface EditorImageHitTestResult {
     x: number;
     y: number;
     rect: Rect;
-}
-
-export interface IGlyph {
-    encoding: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    dx: number;
-    glyphBitmap?: IGlyphBitmap;
-    source?: IGlyphSource;
 }
 
 export function serializePixelArray(pixelArrayAsNumberArray: number[]) {
@@ -2228,12 +2211,7 @@ export class FontsNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IFontSource {
-    filePath: string;
-    size?: number;
-}
-
-export class FontSource extends EezObject implements IFontSource {
+export class FontSource extends EezObject {
     @observable filePath: string;
     @observable size?: number;
 
@@ -2267,20 +2245,7 @@ registerClass(FontSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IFont {
-    name: string;
-    description?: string;
-    source?: IFontSource;
-    bpp: number;
-    height: number;
-    ascent: number;
-    descent: number;
-    glyphs: IGlyph[];
-    screenOrientation: string;
-    alwaysBuild: boolean;
-}
-
-export class Font extends EezObject implements IFont {
+export class Font extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable source?: FontSource;

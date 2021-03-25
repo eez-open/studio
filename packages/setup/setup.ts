@@ -6,8 +6,16 @@ import * as ExtensionsModule from "eez-studio-shared/extensions/extensions";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 
 import { delay } from "eez-studio-shared/util";
-import { isDev, getUserDataPath, makeFolder, copyFile } from "eez-studio-shared/util-electron";
-import { DEFAULT_DB_NAME, EXTENSIONS_FOLDER_NAME } from "eez-studio-shared/conf";
+import {
+    isDev,
+    getUserDataPath,
+    makeFolder,
+    copyFile
+} from "eez-studio-shared/util-electron";
+import {
+    DEFAULT_DB_NAME,
+    EXTENSIONS_FOLDER_NAME
+} from "eez-studio-shared/conf";
 
 async function setupExtensions(
     webContents: WebContents,
@@ -27,7 +35,10 @@ async function setupExtensions(
         }
     });
 
-    webContents.send("setupMessage", `Installing ${fileList.length} extensions`);
+    webContents.send(
+        "setupMessage",
+        `Installing ${fileList.length} extensions`
+    );
 
     const {
         installExtension
@@ -77,7 +88,11 @@ async function setupExtensions(
     }
 }
 
-async function setupDatabase(webContents: WebContents, resourcesPath: string, dbFilePath: string) {
+async function setupDatabase(
+    webContents: WebContents,
+    resourcesPath: string,
+    dbFilePath: string
+) {
     webContents.send("setupMessage", "Installing database");
     await copyFile(resourcesPath + "/init_storage.db", dbFilePath);
     await delay(500);
@@ -120,10 +135,10 @@ async function doSetup(webContents: WebContents) {
 export async function setup() {
     return new Promise<void>(resolve => {
         if (isDev || !isAnySetupRequired()) {
-            const {
-                loadExtensions
-            } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
-            loadExtensions();
+            // const {
+            //     loadExtensions
+            // } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
+            // loadExtensions();
 
             resolve();
             return;

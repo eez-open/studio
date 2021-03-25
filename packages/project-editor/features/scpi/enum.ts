@@ -24,11 +24,6 @@ import { ScpiEnumsNavigation } from "project-editor/features/scpi/ScpiEnumsNavig
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IScpiEnumMember {
-    name: string;
-    value: string;
-}
-
 export class ScpiEnumMember extends EezObject {
     @observable name: string;
     @observable value: string;
@@ -84,12 +79,7 @@ export class ScpiEnumMember extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IScpiEnum {
-    name: string;
-    members: IScpiEnumMember[];
-}
-
-export class ScpiEnum extends EezObject implements IScpiEnum {
+export class ScpiEnum extends EezObject {
     @observable name: string;
     @observable members: ScpiEnumMember[];
 
@@ -136,7 +126,7 @@ export class ScpiEnum extends EezObject implements IScpiEnum {
         navigationComponent: ScpiEnumsNavigation,
         navigationComponentId: "scpi-enums",
         icon: "format_list_numbered",
-        check: (object: IScpiEnum) => {
+        check: (object: ScpiEnum) => {
             const messages: output.Message[] = [];
 
             // TODO this check is removed because it is too slow

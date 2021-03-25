@@ -122,16 +122,7 @@ export class BitmapsNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IBitmap {
-    name: string;
-    description?: string;
-    image: string;
-    bpp: number;
-    alwaysBuild: boolean;
-    style?: string;
-}
-
-export class Bitmap extends EezObject implements IBitmap {
+export class Bitmap extends EezObject {
     @observable name: string;
     @observable description?: string;
     @observable image: string;
@@ -214,7 +205,7 @@ export class Bitmap extends EezObject implements IBitmap {
                     bpp: 32
                 }
             }).then(result => {
-                return new Promise<IBitmap>((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                     const fs = EEZStudio.remote.require("fs");
                     fs.readFile(
                         getDocumentStore(parent).getAbsoluteFilePath(
