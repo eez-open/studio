@@ -14,7 +14,8 @@ import {
     renameFile,
     readFolder,
     writeJsObjectToFile,
-    makeFolder
+    makeFolder,
+    isRenderer
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { firstWord } from "eez-studio-shared/string";
@@ -265,10 +266,14 @@ export async function loadExtensions() {
     }
 
     let nodeModuleFolders;
-    try {
-        nodeModuleFolders = await getNodeModuleFolders();
-    } catch (err) {
-        console.info(`Failed to get node module folders.`);
+    if (isRenderer()) {
+        try {
+            nodeModuleFolders = await getNodeModuleFolders();
+        } catch (err) {
+            console.info(`Failed to get node module folders.`);
+            nodeModuleFolders = [];
+        }
+    } else {
         nodeModuleFolders = [];
     }
 

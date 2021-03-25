@@ -6,7 +6,7 @@ const SRC = "packages";
 const DST = "dist";
 
 // copy all from SRC to DST, excluding: *.ts, *.tsx, *.less, ...
-gulp.task("copy", function() {
+gulp.task("copy", function () {
     return gulp
         .src([
             SRC + "/**/*.*",
@@ -25,8 +25,8 @@ gulp.task("copy", function() {
 });
 
 // minify all *.js files in DST
-gulp.task("minify", function(cb) {
-    pump([gulp.src(SRC + "/**/*.js"), uglify(), gulp.dest(DST)], cb);
+gulp.task("minify", function (cb) {
+    pump([gulp.src(DST + "/**/*.js"), uglify(), gulp.dest(DST)], cb);
 });
 
 gulp.task("release", gulp.series("copy", "minify"));

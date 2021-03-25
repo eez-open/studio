@@ -135,10 +135,10 @@ async function doSetup(webContents: WebContents) {
 export async function setup() {
     return new Promise<void>(resolve => {
         if (isDev || !isAnySetupRequired()) {
-            // const {
-            //     loadExtensions
-            // } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
-            // loadExtensions();
+            const {
+                loadExtensions
+            } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
+            loadExtensions();
 
             resolve();
             return;
