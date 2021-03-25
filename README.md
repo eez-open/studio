@@ -8,24 +8,36 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 ## Introduction
 
-The EEZ Studio is an open source cross-platform modular visual tool aimed to address various programming and management tasks for [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other test and measurement instruments that support SCPI.
+The EEZ Studio is an open source cross-platform modular visual tool aimed to address various programming and management tasks for [EEZ BB3](https://github.com/eez-open/modular-psu) open source T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other T&M devices that support SCPI from manufacturers such as Keysight, Rigol, Siglent, etc.
 
-### EEZ Studio Project Editor (ESP)
+### EEZ _Flow_ (ex. Studio Project Editor or ESP)
 
-![ESP](images/esp_intro.png)
+![ESW](images/esp_intro.png)
 
 -   Modular visual development environment for designing TFT display screen decorations and defining user interaction (HMI)
 -   Supported modules (project features):
     -   _Settings (General, Build, Configurations, Files)_
     -   _Actions_
     -   _Data_
-    -   _Extentsion definitions_
+    -   _Extension definitions_
     -   _GUI (Pages, Widgets, Styles, Fonts, Bitmaps)_
     -   _SCPI (command subsystems, commands and context sensitive help)_
     -   _Shortcuts_
--   Generate C++ code for HMI functionality that can be directly included in Arduino IDE and upload into the 32-bit Arduino Due board
+-   Generate C++ code for HMI functionality that can be directly included in STM32CubeIDE for BB3 or Arduino IDE for H24005
 -   _Instrument definition file_ (IDF) builder with context sensitive SCPI commands help (based on Keysight’s [Offline Command Expert command set](https://www.keysight.com/main/software.jspx?cc=US&lc=eng&ckey=2333687&nid=-11143.0.00&id=2333687) XML structure) suitable for EEZ Studio Workbench (ESW) and [Keysight Command Expert](https://www.keysight.com/en/pd-2036130/command-expert)
 -   SCPI command help generator based on bookmarked HTML generated directly from .odt file using [EEZ WebPublish](https://github.com/eez-open/WebPublish) extension for OpenOffice/LibreOffice.
+
+![Flow](images/EEZ_Flow_M1_intro.png)
+
+New functionality is under development thanks to the sponsorship of the [NGI0 PET](https://nlnet.nl/project/EEZ-DIB/) fund from NLnet, which will enable quick and easy creation of flow diagrams using ready-made components. The target for executing the flow chart can be PC or EEZ BB3. This will be realized in five milestones:
+* [M1](https://github.com/eez-open/studio/issues/102) - Visual editor
+* [M2](https://github.com/eez-open/studio/issues/103) - Interpreter for PC
+* [M3](https://github.com/eez-open/studio/issues/104) - Interpreter for BB3
+* M4 - Debugger for PC
+* M5 - Debugger for BB3
+
+Interpreting the flowchart on a PC will allow the creation of a dashboard for remote control of various T&M instruments (including EEZ BB3). The debugger will simplify and speed up the development of flowcharts as it will allow step-by-step execution, setting breakpoints, etc.
+Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibilities for quickly creating different test scenarios, automating measurement data collection, and more.
 
 ### EEZ Studio Workbench (ESW)
 
@@ -35,7 +47,7 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 -   **Session oriented interaction with each SCPI instrument**
 -   Support for serial (via USB) and TCP/IP communication
 -   Direct import of ESP generated IDFs and **Keysight’s Offline Command Expert command** sets
--   **Built-in instrument extensions for Rigol 1000 series of DSO/MSO**
+-   IEXT (Instrument EXTension) catalog with growing number of supported instruments (Rigol, Siglent, Keysight, etc.)
 -   History of all activities with search/content filtering
 -   Quick navigation via calendar ("heatmap") or sessions list view
 -   Shortcuts (hotkeys and buttons) that can be user defined or come predefined from imported IDF. The shortcut can contain single or sequence of SCPI commands or Javascript code.
@@ -45,10 +57,12 @@ The EEZ Studio is an open source cross-platform modular visual tool aimed to add
 -   File download (PC to instrument) automation for transferring instrument profiles
 -   Simple arbitrary waveform editor (envelope and table mode)
 -   Displaying measurement data as graphs
+-   FFT analysis, harmonics and simple math functions (Period, Frequency, Min, Max, Peak-to-Peak, Average)
+-   Export graphs as .CSV file
 
 ---
 
-**Scheduled for future milestones:**
+**Scheduled for future releases:**
 
 -   Support for other connections (i.e. VXI-11, USBTMC, IVI) using 3rd party open source
 -   Instrument extensions for popular instruments from other vendors
@@ -88,7 +102,7 @@ npm start
 
 ### Build DEB package on Ubuntu
 
-First: install dependecies:
+First: install dependencies:
 
 ```
 sudo npm install -g electron-installer-debian
@@ -112,7 +126,7 @@ Built DEB package is located in `installation/linux`.
 
 ### Build RPM package on Ubuntu
 
-First, install dependecies:
+First, install dependencies:
 
 ```
 sudo npm install -g electron-installer-redhat
