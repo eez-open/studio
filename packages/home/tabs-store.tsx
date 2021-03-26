@@ -550,21 +550,23 @@ class Tabs {
             if (!this.firstTime) {
                 const tabsJSON = window.localStorage.getItem("home/tabs");
                 if (tabsJSON) {
-                    try {
-                        const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
+                    const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
 
-                        for (const savedTab of savedTabs) {
-                            await this.openTabById(
-                                savedTab.id,
-                                savedTab.active
-                            );
+                    for (const savedTab of savedTabs) {
+                        if (savedTab.id) {
+                            try {
+                                await this.openTabById(
+                                    savedTab.id,
+                                    savedTab.active
+                                );
+                            } catch (err) {
+                                console.error(err);
+                            }
                         }
+                    }
 
-                        if (this.tabs.length == 0) {
-                            this.openTabById("workbench", true);
-                        }
-                    } catch (err) {
-                        console.error(err);
+                    if (this.tabs.length == 0) {
+                        this.openTabById("workbench", true);
                     }
                 }
             }

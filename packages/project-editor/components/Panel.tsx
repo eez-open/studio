@@ -13,7 +13,7 @@ const PanelContainer = styled.div`
     .btn-toolbar input {
         border: 1px solid ${props => props.theme.borderColor};
         margin: 2px 0;
-        max-width: 200px;
+        width: 150px;
     }
 `;
 

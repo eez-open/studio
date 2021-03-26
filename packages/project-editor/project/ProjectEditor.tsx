@@ -1,6 +1,7 @@
 import React from "react";
 import { computed, action } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 import { TabsView } from "eez-studio-ui/tabs";
@@ -50,6 +51,14 @@ const ToolbarNav = styled.nav`
     select {
         height: 36px;
     }
+`;
+
+const SearchInput = styled.input`
+    width: 200px;
+    &.empty {
+        font-family: "Material Icons";
+    }
+    margin-right: 5px;
 `;
 
 @observer
@@ -181,11 +190,15 @@ class Toolbar extends React.Component {
 
                 <div>
                     <div className="btn-group">
-                        <input
-                            className="form-control"
+                        <SearchInput
+                            className={classNames("form-control", {
+                                empty: !this.context.UIStateStore.searchPattern
+                            })}
                             type="text"
-                            placeholder="search"
-                            value={this.context.UIStateStore.searchPattern}
+                            placeholder="&#xe8b6;"
+                            value={
+                                this.context.UIStateStore.searchPattern ?? ""
+                            }
                             onChange={this.onSearchPatternChange}
                         />
                         <div className="btn-group" role="group">
