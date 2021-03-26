@@ -1429,34 +1429,13 @@ export class DocumentStoreClass {
         return configuration;
     }
 
-    doSave(callback: (() => void) | undefined) {
-        if (this.filePath) {
-            save(this, this.filePath)
-                .then(() => {
-                    this.setModified(false);
-
-                    if (callback) {
-                        callback();
-                    }
-                })
-                .catch(error => console.error("Save", error));
-        }
+    async doSave() {
+        await save(this, this.filePath!);
+        this.saveUIState();
+        this.setModified(false);
     }
 
-    @action
-    savedAsFilePath(filePath: string, callback: (() => void) | undefined) {
-        if (filePath) {
-            this.filePath = filePath;
-            this.doSave(() => {
-                this.saveUIState();
-                if (callback) {
-                    callback();
-                }
-            });
-        }
-    }
-
-    async saveToFile(saveAs: boolean, callback: (() => void) | undefined) {
+    async saveToFile(saveAs: boolean) {
         if (this.project) {
             if (!this.filePath || saveAs) {
                 const result = await EEZStudio.remote.dialog.showSaveDialog(
@@ -1476,13 +1455,21 @@ export class DocumentStoreClass {
                     if (!filePath.toLowerCase().endsWith(".eez-project")) {
                         filePath += ".eez-project";
                     }
-
-                    this.savedAsFilePath(filePath, callback);
+                    runInAction(() => {
+                        this.filePath = filePath;
+                    });
+                    await this.doSave();
+                    return true;
+                } else {
+                    return false;
                 }
             } else {
-                this.doSave(callback);
+                await this.doSave();
+                return true;
             }
         }
+
+        return true;
     }
 
     getNewProject(): Project {
@@ -1560,32 +1547,30 @@ export class DocumentStoreClass {
         this.changeProject(filePath, project, uiState);
     }
 
-    saveModified(callback: any) {
+    async saveModified() {
         this.saveUIState();
 
         if (this.project && this.modified) {
-            confirmSave({
-                saveCallback: () => {
-                    this.saveToFile(false, callback);
-                },
-
-                dontSaveCallback: () => {
-                    callback();
-                },
-
-                cancelCallback: () => {}
+            return new Promise<boolean>(resolve => {
+                confirmSave({
+                    saveCallback: async () => {
+                        resolve(await this.saveToFile(false));
+                    },
+                    dontSaveCallback: () => resolve(true),
+                    cancelCallback: () => resolve(false)
+                });
             });
-        } else {
-            callback();
         }
+
+        return true;
     }
 
     save() {
-        this.saveToFile(false, undefined);
+        return this.saveToFile(false);
     }
 
     saveAs() {
-        this.saveToFile(true, undefined);
+        return this.saveToFile(true);
     }
 
     check() {
@@ -1600,21 +1585,11 @@ export class DocumentStoreClass {
         buildExtensions(this);
     }
 
-    closeWindow() {
-        return new Promise<void>(resolve => {
-            if (this.project) {
-                this.saveModified(() => {
-                    this.changeProject(undefined);
-                    resolve();
-                });
-            } else {
-                resolve();
-            }
-        });
-    }
-
-    noProject() {
-        this.changeProject(undefined);
+    async closeWindow() {
+        if (this.project) {
+            return await this.saveModified();
+        }
+        return true;
     }
 
     showMetrics() {

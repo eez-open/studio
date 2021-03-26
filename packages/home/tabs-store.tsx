@@ -41,7 +41,7 @@ export interface IHomeTab extends ITab {
     editor?: IEditor;
     render(): JSX.Element;
     attention?: boolean;
-    beforeAppClose?(): Promise<void>;
+    beforeAppClose?(): Promise<boolean>;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,8 +512,11 @@ export class ProjectEditorTab implements IHomeTab {
         this.tabs.makeActive(this);
     }
 
-    close() {
-        this.DocumentStore.saveModified(() => this.tabs.removeTab(this));
+    async close() {
+        if (await this.DocumentStore.saveModified()) {
+            this.tabs.removeTab(this);
+            this.DocumentStore.changeProject(undefined);
+        }
     }
 
     beforeAppClose() {

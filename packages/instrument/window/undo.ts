@@ -47,21 +47,21 @@ export class UndoManager {
     }
 
     confirmSave() {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<boolean>(resolve => {
             if (this.modified) {
                 confirmSave({
                     saveCallback: () => {
                         this.commit();
-                        resolve();
+                        resolve(true);
                     },
                     dontSaveCallback: () => {
                         this.rollback();
-                        resolve();
+                        resolve(true);
                     },
-                    cancelCallback: reject
+                    cancelCallback: () => resolve(false)
                 });
             } else {
-                resolve();
+                resolve(true);
             }
         });
     }

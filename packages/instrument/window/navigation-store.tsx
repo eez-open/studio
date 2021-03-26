@@ -10,7 +10,10 @@ import * as ShortcutsModule from "instrument/window/shortcuts";
 import * as TerminalModule from "instrument/window/terminal/terminal";
 
 import * as DeletedHistoryItemsModule from "instrument/window/history/deleted-history-items-view";
-import { HistoryView, showSessionsList } from "instrument/window/history/history-view";
+import {
+    HistoryView,
+    showSessionsList
+} from "instrument/window/history/history-view";
 
 import * as ListsModule from "instrument/window/lists/lists";
 
@@ -51,7 +54,11 @@ export class NavigationStore {
                 const {
                     renderToolbarButtons
                 } = require("instrument/window/terminal/terminal") as typeof TerminalModule;
-                return appStore.instrument ? renderToolbarButtons(this.appStore) : <div />;
+                return appStore.instrument ? (
+                    renderToolbarButtons(this.appStore)
+                ) : (
+                    <div />
+                );
             }
         };
 
@@ -84,7 +91,9 @@ export class NavigationStore {
             icon: "material:slideshow",
             title: "Scripts",
             renderContent: () => {
-                const { render } = require("instrument/window/scripts") as typeof ScriptsModule;
+                const {
+                    render
+                } = require("instrument/window/scripts") as typeof ScriptsModule;
                 return render(this.appStore);
             },
             renderToolbarButtons: () => {
@@ -100,7 +109,9 @@ export class NavigationStore {
             icon: "material:playlist_play",
             title: "Shortcuts and Groups",
             renderContent: () => {
-                const { render } = require("instrument/window/shortcuts") as typeof ShortcutsModule;
+                const {
+                    render
+                } = require("instrument/window/shortcuts") as typeof ShortcutsModule;
                 return render(this.appStore);
             },
             renderToolbarButtons: () => {
@@ -116,7 +127,9 @@ export class NavigationStore {
             icon: "material:timeline",
             title: "Lists",
             renderContent: () => {
-                const { render } = require("instrument/window/lists/lists") as typeof ListsModule;
+                const {
+                    render
+                } = require("instrument/window/lists/lists") as typeof ListsModule;
                 return appStore.instrument ? render(this.appStore) : <div />;
             },
             renderToolbarButtons: () => {
@@ -129,7 +142,8 @@ export class NavigationStore {
 
         autorun(() => {
             if (
-                this.mainNavigationSelectedItem === this.deletedHistoryItemsNavigationItem &&
+                this.mainNavigationSelectedItem ===
+                    this.deletedHistoryItemsNavigationItem &&
                 this.appStore.deletedItemsHistory.deletedCount === 0
             ) {
                 this.navigateToHistory();
@@ -151,11 +165,15 @@ export class NavigationStore {
                 icon: "material:dashboard",
                 title: "Start Page",
                 renderContent: () => {
-                    const { render } = require("instrument/bb3") as typeof Bb3Module;
+                    const {
+                        render
+                    } = require("instrument/bb3") as typeof Bb3Module;
                     return render(this.appStore);
                 },
                 renderToolbarButtons: () => {
-                    const { toolbarButtonsRender } = require("instrument/bb3") as typeof Bb3Module;
+                    const {
+                        toolbarButtonsRender
+                    } = require("instrument/bb3") as typeof Bb3Module;
                     return toolbarButtonsRender(this.appStore);
                 }
             };
@@ -177,7 +195,10 @@ export class NavigationStore {
         navigationItems.push(this.scriptsNavigationItem);
         navigationItems.push(this.shortcutsAndGroupsNavigationItem);
 
-        if (this.appStore.instrument && this.appStore.instrument.listsProperty) {
+        if (
+            this.appStore.instrument &&
+            this.appStore.instrument.listsProperty
+        ) {
             navigationItems.push(this.listsNavigationItem);
         }
 
@@ -197,14 +218,15 @@ export class NavigationStore {
         return this.terminalNavigationItem;
     }
 
-    async changeMainNavigationSelectedItem(value: IInstrumentWindowNavigationItem) {
-        try {
-            await this.appStore.undoManager.confirmSave();
+    async changeMainNavigationSelectedItem(
+        value: IInstrumentWindowNavigationItem
+    ) {
+        if (await this.appStore.undoManager.confirmSave()) {
             runInAction(() => {
                 this._mainNavigationSelectedItem = value;
-            })
+            });
             return true;
-        } catch (err) {
+        } else {
             return false;
         }
     }
@@ -216,12 +238,18 @@ export class NavigationStore {
 
     @action.bound
     navigateToDeletedHistoryItems() {
-        this.changeMainNavigationSelectedItem(this.deletedHistoryItemsNavigationItem);
+        this.changeMainNavigationSelectedItem(
+            this.deletedHistoryItemsNavigationItem
+        );
     }
 
     @action.bound
     async navigateToSessionsList() {
-        if (await this.changeMainNavigationSelectedItem(this.terminalNavigationItem)) {
+        if (
+            await this.changeMainNavigationSelectedItem(
+                this.terminalNavigationItem
+            )
+        ) {
             showSessionsList(this);
         }
     }
@@ -239,30 +267,28 @@ export class NavigationStore {
     }
 
     async changeSelectedListId(value: string | undefined) {
-        try {
-            await this.appStore.undoManager.confirmSave();
-
-            runInAction(() => {
-                if (this._mainNavigationSelectedItem !== this.listsNavigationItem) {
-                    // First switch to lists section ...
-                    this._selectedListId = undefined;
-                    this._mainNavigationSelectedItem = this.listsNavigationItem;
-                    window.requestAnimationFrame(
-                        action(() => {
-                            // ... and than select the list.
-                            // This way list chart view will be automatically in focus,
-                            // so keyboard shortcuts will work immediatelly (no need to
-                            // manually click on chart view).
-                            this._selectedListId = value;
-                        })
-                    );
-                } else {
-                    this._selectedListId = value;
-                }
-            });
-        } catch (err) {
-
+        if (!(await this.appStore.undoManager.confirmSave())) {
+            return;
         }
+
+        runInAction(() => {
+            if (this._mainNavigationSelectedItem !== this.listsNavigationItem) {
+                // First switch to lists section ...
+                this._selectedListId = undefined;
+                this._mainNavigationSelectedItem = this.listsNavigationItem;
+                window.requestAnimationFrame(
+                    action(() => {
+                        // ... and than select the list.
+                        // This way list chart view will be automatically in focus,
+                        // so keyboard shortcuts will work immediatelly (no need to
+                        // manually click on chart view).
+                        this._selectedListId = value;
+                    })
+                );
+            } else {
+                this._selectedListId = value;
+            }
+        });
     }
 
     //
@@ -273,15 +299,13 @@ export class NavigationStore {
     }
 
     async changeSelectedScriptId(value: string | undefined) {
-        try {
-            await this.appStore.undoManager.confirmSave();
-
-            runInAction(() => {
-                this._mainNavigationSelectedItem = this.scriptsNavigationItem;
-                this._selectedScriptId = value;
-            })
-        } catch (err) {
-
+        if (!(await this.appStore.undoManager.confirmSave())) {
+            return;
         }
+
+        runInAction(() => {
+            this._mainNavigationSelectedItem = this.scriptsNavigationItem;
+            this._selectedScriptId = value;
+        });
     }
 }

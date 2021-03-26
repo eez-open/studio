@@ -26,7 +26,9 @@ EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
 
     for (const tab of tabs.tabs) {
         if (tab.beforeAppClose) {
-            await tab.beforeAppClose();
+            if (!(await tab.beforeAppClose())) {
+                return;
+            }
         }
     }
 
