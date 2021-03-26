@@ -1728,37 +1728,15 @@ export class DocumentStoreClass {
             }
         }
 
-        return addObject(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            parentObject,
-            object
-        );
+        return addObject(parentObject, object);
     }
 
     addObjects(parentObject: IEezObject, objects: any[]) {
-        return addObjects(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            parentObject,
-            objects
-        );
+        return addObjects(parentObject, objects);
     }
 
     insertObject(parentObject: IEezObject, index: number, object: any) {
-        return insertObject(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            parentObject,
-            index,
-            object
-        );
+        return insertObject(parentObject, index, object);
     }
 
     updateObject(object: IEezObject, inputValues: any) {
@@ -1810,14 +1788,7 @@ export class DocumentStoreClass {
             }
         }
 
-        updateObject(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            object,
-            values
-        );
+        updateObject(object, values);
 
         const afterUpdateObjectHook = getClassInfo(object)
             .afterUpdateObjectHook;
@@ -1827,10 +1798,6 @@ export class DocumentStoreClass {
     }
 
     deleteObject(object: IEezObject) {
-        const commandContext = {
-            undoManager: this.UndoManager,
-            selectionManager: this.NavigationStore
-        };
         let closeCombineCommands = false;
 
         if (object instanceof Component) {
@@ -1840,10 +1807,10 @@ export class DocumentStoreClass {
             }
 
             const page = getAncestorOfType(object, Page.classInfo) as Page;
-            page.deleteConnectionLines(commandContext, object);
+            page.deleteConnectionLines(object);
         }
 
-        deleteObject(commandContext, object);
+        deleteObject(object);
 
         if (closeCombineCommands) {
             this.UndoManager.setCombineCommands(false);
@@ -1854,10 +1821,6 @@ export class DocumentStoreClass {
         if (objects.length === 1) {
             this.deleteObject(objects[0]);
         } else {
-            const commandContext = {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            };
             let closeCombineCommands = false;
 
             objects.forEach(object => {
@@ -1870,7 +1833,7 @@ export class DocumentStoreClass {
                         object,
                         Page.classInfo
                     ) as Page;
-                    page.deleteConnectionLines(commandContext, object);
+                    page.deleteConnectionLines(object);
                 }
             });
 
@@ -1885,13 +1848,7 @@ export class DocumentStoreClass {
                 return true;
             });
 
-            deleteObjects(
-                {
-                    undoManager: this.UndoManager,
-                    selectionManager: this.NavigationStore
-                },
-                objects
-            );
+            deleteObjects(objects);
 
             if (closeCombineCommands) {
                 this.UndoManager.setCombineCommands(false);
@@ -1904,14 +1861,7 @@ export class DocumentStoreClass {
             console.error("assert failed");
         }
 
-        return replaceObject(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            object,
-            replaceWithObject
-        );
+        return replaceObject(object, replaceWithObject);
     }
 
     replaceObjects(objects: IEezObject[], replaceWithObject: IEezObject) {
@@ -1919,36 +1869,15 @@ export class DocumentStoreClass {
             console.error("assert failed");
         }
 
-        return replaceObjects(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            objects,
-            replaceWithObject
-        );
+        return replaceObjects(objects, replaceWithObject);
     }
 
     insertObjectBefore(object: IEezObject, objectToInsert: any) {
-        return insertObjectBefore(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            object,
-            objectToInsert
-        );
+        return insertObjectBefore(object, objectToInsert);
     }
 
     insertObjectAfter(object: IEezObject, objectToInsert: any) {
-        return insertObjectAfter(
-            {
-                undoManager: this.UndoManager,
-                selectionManager: this.NavigationStore
-            },
-            object,
-            objectToInsert
-        );
+        return insertObjectAfter(object, objectToInsert);
     }
 
     objectsToClipboardData(objects: IEezObject[]) {

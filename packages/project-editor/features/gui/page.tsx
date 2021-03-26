@@ -46,7 +46,7 @@ import { Component } from "project-editor/features/gui/component";
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
 import { visitObjects } from "project-editor/core/search";
-import { deleteObject, ICommandContext } from "project-editor/core/commands";
+import { deleteObject } from "project-editor/core/commands";
 import { humanize } from "eez-studio-shared/string";
 import { objectToClipboardData } from "project-editor/core/clipboard";
 import { guid } from "eez-studio-shared/guid";
@@ -591,14 +591,14 @@ export class Page extends EezObject {
         }
     }
 
-    deleteConnectionLines(context: ICommandContext, widget: Component) {
+    deleteConnectionLines(widget: Component) {
         this.connectionLines
             .filter(
                 connectionLine =>
                     connectionLine.sourceComponent == widget ||
                     connectionLine.targetComponent == widget
             )
-            .forEach(connectionLine => deleteObject(context, connectionLine));
+            .forEach(connectionLine => deleteObject(connectionLine));
     }
 
     objectsToClipboardData(objects: IEezObject[]) {

@@ -14,20 +14,21 @@ import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-
 
 configure({ enforceActions: "observed" });
 
-EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
-    // make sure we store all the values waiting to be stored inside blur event handler
-    function blurAll() {
-        var tmp = document.createElement("input");
-        document.body.appendChild(tmp);
-        tmp.focus();
-        document.body.removeChild(tmp);
-    }
+// make sure we store all the values waiting to be stored inside blur event handler
+function blurAll() {
+    var tmp = document.createElement("input");
+    document.body.appendChild(tmp);
+    tmp.focus();
+    document.body.removeChild(tmp);
+}
+
+async function beforeAppClose() {
     blurAll();
 
     for (const tab of tabs.tabs) {
         if (tab.beforeAppClose) {
             if (!(await tab.beforeAppClose())) {
-                return;
+                return false;
             }
         }
     }
@@ -36,22 +37,20 @@ EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
         destroyExtensions
     } = require("eez-studio-shared/extensions/extensions");
     destroyExtensions();
-    EEZStudio.electron.ipcRenderer.send("readyToClose");
+
+    return true;
+}
+
+EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
+    if (await beforeAppClose()) {
+        EEZStudio.electron.ipcRenderer.send("readyToClose");
+    }
 });
 
 EEZStudio.electron.ipcRenderer.on("reload", async () => {
-    for (const tab of tabs.tabs) {
-        if (tab instanceof ProjectEditorTab) {
-            await tab.DocumentStore.saveUIState();
-        }
+    if (await beforeAppClose()) {
+        window.location.reload();
     }
-
-    const {
-        destroyExtensions
-    } = require("eez-studio-shared/extensions/extensions");
-    destroyExtensions();
-
-    window.location.reload();
 });
 
 EEZStudio.electron.ipcRenderer.on(

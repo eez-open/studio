@@ -31,15 +31,6 @@ export interface IUndoManager {
     commands: ICommand[];
 }
 
-export interface ISelectionManager {
-    setSelection(selection: IEezObject[] | undefined): void;
-}
-
-export interface ICommandContext {
-    undoManager: IUndoManager;
-    selectionManager: ISelectionManager;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 function getUniquePropertyValue(
@@ -95,11 +86,7 @@ function ensureUniqueProperties(
 ////////////////////////////////////////////////////////////////////////////////
 
 export let addObject = action(
-    (
-        context: ICommandContext,
-        parentObject: IEezObject,
-        object: IEezObject
-    ) => {
+    (parentObject: IEezObject, object: IEezObject) => {
         object = loadObject(
             getDocumentStore(parentObject),
             parentObject,
@@ -108,7 +95,7 @@ export let addObject = action(
         );
         ensureUniqueProperties(parentObject, [object]);
 
-        context.undoManager.executeCommand({
+        getDocumentStore(parentObject).UndoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).push(object);
             }),
@@ -127,11 +114,7 @@ export let addObject = action(
 );
 
 export let addObjects = action(
-    (
-        context: ICommandContext,
-        parentObject: IEezObject,
-        objects: IEezObject[]
-    ) => {
+    (parentObject: IEezObject, objects: IEezObject[]) => {
         objects = objects.map(object =>
             loadObject(
                 getDocumentStore(parentObject),
@@ -142,7 +125,7 @@ export let addObjects = action(
         );
         ensureUniqueProperties(parentObject, objects);
 
-        context.undoManager.executeCommand({
+        getDocumentStore(parentObject).UndoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).push(...objects);
             }),
@@ -168,12 +151,7 @@ export let addObjects = action(
 );
 
 export let insertObject = action(
-    (
-        context: ICommandContext,
-        parentObject: IEezObject,
-        index: number,
-        object: any
-    ) => {
+    (parentObject: IEezObject, index: number, object: any) => {
         object = loadObject(
             getDocumentStore(parentObject),
             parentObject,
@@ -182,7 +160,7 @@ export let insertObject = action(
         );
         ensureUniqueProperties(parentObject, [object]);
 
-        context.undoManager.executeCommand({
+        getDocumentStore(parentObject).UndoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).splice(index, 0, object);
             }),
@@ -267,40 +245,34 @@ class UpdateCommand implements ICommand {
     }
 }
 
-export let updateObject = action(
-    (context: ICommandContext, object: IEezObject, values: any) => {
-        let previousCommand;
+export let updateObject = action((object: IEezObject, values: any) => {
+    let previousCommand;
 
-        // TODO this should be moved to undoManager implementation
-        // merge with previous command
-        if (
-            context.undoManager.combineCommands &&
-            context.undoManager.commands.length > 0
-        ) {
-            let command =
-                context.undoManager.commands[
-                    context.undoManager.commands.length - 1
-                ];
-            if (command instanceof UpdateCommand && command.object == object) {
-                context.undoManager.commands.pop();
-                previousCommand = command;
-            }
+    const UndoManager = getDocumentStore(object).UndoManager;
+
+    // TODO this should be moved to undoManager implementation
+    // merge with previous command
+    if (UndoManager.combineCommands && UndoManager.commands.length > 0) {
+        let command = UndoManager.commands[UndoManager.commands.length - 1];
+        if (command instanceof UpdateCommand && command.object == object) {
+            UndoManager.commands.pop();
+            previousCommand = command;
         }
-
-        context.undoManager.executeCommand(
-            new UpdateCommand(object, values, previousCommand)
-        );
     }
-);
 
-export let deleteObject = action((context: ICommandContext, object: any) => {
+    UndoManager.executeCommand(
+        new UpdateCommand(object, values, previousCommand)
+    );
+});
+
+export let deleteObject = action((object: any) => {
     const parent = getParent(object);
 
     if (isArrayElement(object)) {
         const array = parent as IEezObject[];
         const index = array.indexOf(object);
 
-        context.undoManager.executeCommand({
+        getDocumentStore(object).UndoManager.executeCommand({
             execute: action(() => {
                 array.splice(index, 1);
             }),
@@ -314,74 +286,69 @@ export let deleteObject = action((context: ICommandContext, object: any) => {
             }
         });
     } else {
-        updateObject(context, parent, {
+        updateObject(parent, {
             [getKey(object)]: undefined
         });
     }
 });
 
-export let deleteObjects = action(
-    (context: ICommandContext, objects: IEezObject[]) => {
-        let undoIndexes: number[];
+export let deleteObjects = action((objects: IEezObject[]) => {
+    let undoIndexes: number[];
 
-        context.undoManager.executeCommand({
-            execute: action(() => {
-                undoIndexes = [];
-                for (let i = 0; i < objects.length; i++) {
-                    let object = objects[i];
-                    let parent = getParent(object);
+    getDocumentStore(objects[0]).UndoManager.executeCommand({
+        execute: action(() => {
+            undoIndexes = [];
+            for (let i = 0; i < objects.length; i++) {
+                let object = objects[i];
+                let parent = getParent(object);
 
-                    if (isArrayElement(object)) {
-                        const array = parent as IEezObject[];
-                        let index = array.indexOf(object);
-                        undoIndexes.push(index);
-                        array.splice(index, 1);
-                    } else {
-                        undoIndexes.push(-1);
-                        (parent as any)[getKey(object)] = undefined;
-                    }
+                if (isArrayElement(object)) {
+                    const array = parent as IEezObject[];
+                    let index = array.indexOf(object);
+                    undoIndexes.push(index);
+                    array.splice(index, 1);
+                } else {
+                    undoIndexes.push(-1);
+                    (parent as any)[getKey(object)] = undefined;
                 }
-            }),
-
-            undo: action(() => {
-                for (let i = objects.length - 1; i >= 0; i--) {
-                    let object = objects[i];
-                    let parent = getParent(object);
-                    if (isArrayElement(object)) {
-                        const array = parent as IEezObject[];
-                        let index = undoIndexes[i];
-                        array.splice(index, 0, object);
-                    } else {
-                        (parent as any)[getKey(object)] = object;
-                    }
-                }
-            }),
-
-            get description() {
-                return (
-                    "Deleted: " +
-                    objects
-                        .map(object => getHumanReadableObjectPath(object))
-                        .join(", ")
-                );
             }
-        });
-    }
-);
+        }),
+
+        undo: action(() => {
+            for (let i = objects.length - 1; i >= 0; i--) {
+                let object = objects[i];
+                let parent = getParent(object);
+                if (isArrayElement(object)) {
+                    const array = parent as IEezObject[];
+                    let index = undoIndexes[i];
+                    array.splice(index, 0, object);
+                } else {
+                    (parent as any)[getKey(object)] = object;
+                }
+            }
+        }),
+
+        get description() {
+            return (
+                "Deleted: " +
+                objects
+                    .map(object => getHumanReadableObjectPath(object))
+                    .join(", ")
+            );
+        }
+    });
+});
 
 export let replaceObject = action(
-    (
-        context: ICommandContext,
-        object: IEezObject,
-        replaceWithObject: IEezObject
-    ) => {
+    (object: IEezObject, replaceWithObject: IEezObject) => {
         let parent = getParent(object);
+        const UndoManager = getDocumentStore(parent).UndoManager;
         if (isArrayElement(object)) {
             const array = parent as IEezObject[];
 
             let index = array.indexOf(object);
 
-            context.undoManager.executeCommand({
+            UndoManager.executeCommand({
                 execute: action(() => {
                     array[index] = replaceWithObject;
                 }),
@@ -395,7 +362,7 @@ export let replaceObject = action(
                 }
             });
         } else {
-            updateObject(context, parent as any, {
+            updateObject(parent as any, {
                 [getKey(object)]: replaceWithObject
             });
         }
@@ -405,13 +372,9 @@ export let replaceObject = action(
 );
 
 export let replaceObjects = action(
-    (
-        context: ICommandContext,
-        objects: IEezObject[],
-        replaceWithObject: IEezObject
-    ) => {
+    (objects: IEezObject[], replaceWithObject: IEezObject) => {
         if (objects.length === 1) {
-            return replaceObject(context, objects[0], replaceWithObject);
+            return replaceObject(objects[0], replaceWithObject);
         }
 
         const parent = getParent(objects[0]);
@@ -420,7 +383,7 @@ export let replaceObjects = action(
 
         let undoIndexes: number[];
 
-        context.undoManager.executeCommand({
+        getDocumentStore(parent).UndoManager.executeCommand({
             execute: action(() => {
                 array[index] = replaceWithObject;
 
@@ -459,24 +422,16 @@ export let replaceObjects = action(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function insertObjectBefore(
-    context: ICommandContext,
-    object: IEezObject,
-    objectToInsert: any
-) {
+export function insertObjectBefore(object: IEezObject, objectToInsert: any) {
     const parent = getParent(object);
     const array = parent as IEezObject[];
     const index = array.indexOf(object);
-    return insertObject(context, parent, index, objectToInsert);
+    return insertObject(parent, index, objectToInsert);
 }
 
-export function insertObjectAfter(
-    context: ICommandContext,
-    object: IEezObject,
-    objectToInsert: any
-) {
+export function insertObjectAfter(object: IEezObject, objectToInsert: any) {
     const parent = getParent(object);
     const array = parent as IEezObject[];
     const index = array.indexOf(object);
-    return insertObject(context, parent, index + 1, objectToInsert);
+    return insertObject(parent, index + 1, objectToInsert);
 }

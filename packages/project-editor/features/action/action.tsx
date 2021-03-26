@@ -109,16 +109,23 @@ export class ActionsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
+    get NavigationStore() {
+        return this.props.navigationStore || this.context.NavigationStore;
+    }
+
     @computed
     get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
+        if (this.NavigationStore.selectedPanel) {
+            return this.NavigationStore.selectedPanel.selectedObject;
         }
-        return this.context.NavigationStore.selectedObject;
+        return this.NavigationStore.selectedObject;
     }
 
     @computed
     get widgetContainerDisplayItem() {
+        if (this.props.navigationStore) {
+            return undefined;
+        }
         if (!this.context.EditorsStore.activeEditor) {
             return undefined;
         }
@@ -182,7 +189,7 @@ export class ActionsNavigation extends NavigationComponent {
 
     @bind
     onFocus() {
-        this.context.NavigationStore.setSelectedPanel(this);
+        this.NavigationStore.setSelectedPanel(this);
     }
 
     render() {
