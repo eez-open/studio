@@ -296,6 +296,7 @@ export class DesignerContext implements IDesignerContext {
     @observable options: IDesignerOptions = {};
     filterSnapLines: ((node: ITreeObjectAdapter) => boolean) | undefined;
     @observable dragComponent: Component | undefined;
+    @observable frontFace: boolean;
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this.containerId);
@@ -309,7 +310,8 @@ export class DesignerContext implements IDesignerContext {
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
         options?: IDesignerOptions,
-        filterSnapLines?: (node: ITreeObjectAdapter) => boolean
+        filterSnapLines?: (node: ITreeObjectAdapter) => boolean,
+        frontFace?: boolean
     ) {
         const differentDocument = this.document !== document;
         this.document = document;
@@ -330,6 +332,8 @@ export class DesignerContext implements IDesignerContext {
         }
 
         this.filterSnapLines = filterSnapLines;
+
+        this.frontFace = frontFace ?? false;
     }
 
     destroy() {

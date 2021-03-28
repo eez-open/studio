@@ -190,7 +190,7 @@ function getClassFromType(type: string) {
 
 // Return immediate parent, which can be of type Page or Widget
 // (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
-export function getWidgetParent(widget: Component) {
+export function getWidgetParent(widget: Component | Page) {
     let parent = getParent(widget);
     if (isArray(parent)) {
         parent = getParent(parent);
@@ -361,7 +361,7 @@ export class Component extends EezObject {
 
         for (
             let parent = getWidgetParent(this);
-            parent && !(parent instanceof Page);
+            parent && (parent instanceof Page || parent instanceof Widget);
             parent = getWidgetParent(parent)
         ) {
             x += parent.left;
@@ -931,6 +931,11 @@ export class ActionComponent extends Component {
 
     get autoSize() {
         return true;
+    }
+
+    @computed
+    get absolutePositionPoint() {
+        return { x: this.left, y: this.top };
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {

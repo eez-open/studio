@@ -41,7 +41,7 @@ import {
     getProject
 } from "project-editor/project/project";
 
-import { Component } from "project-editor/features/gui/component";
+import { Component, Widget } from "project-editor/features/gui/component";
 
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
@@ -637,7 +637,13 @@ export class Page extends EezObject {
     render(designerContext: IDesignerContext, dataContext: IDataContext) {
         return (
             <ComponentsContainerEnclosure
-                components={this.components}
+                components={
+                    designerContext.frontFace
+                        ? this.components.filter(
+                              component => component instanceof Widget
+                          )
+                        : this.components
+                }
                 designerContext={designerContext}
                 dataContext={dataContext.create(
                     this.dataContextOverridesObject

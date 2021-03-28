@@ -411,6 +411,7 @@ export class Canvas extends React.Component<{
     style?: React.CSSProperties;
     pageRect?: Rect;
     dragAndDropActive: boolean;
+    transitionIsActive?: boolean;
 }> {
     div: HTMLDivElement;
     clientRectChangeDetectionAnimationFrameHandle: any;
@@ -466,7 +467,9 @@ export class Canvas extends React.Component<{
 
     @bind
     clientRectChangeDetection() {
-        if ($(this.div).is(":visible")) {
+        this.clientRectChangeDetectionAnimationFrameHandle = undefined;
+
+        if ($(this.div).is(":visible") && !this.props.transitionIsActive) {
             const transform = this.props.designerContext.viewState.transform;
 
             let clientRect = this.div.getBoundingClientRect();
@@ -916,6 +919,8 @@ const PageEditorCanvas = styled(Canvas)`
 interface PageEditorProps {
     widgetContainer: ITreeObjectAdapter;
     onFocus?: () => void;
+    transitionIsActive?: boolean;
+    frontFace?: boolean;
 }
 
 @observer
@@ -966,7 +971,8 @@ export class PageEditor
                 this.viewStatePersistantState,
                 this.onSavePersistantState,
                 this.options,
-                this.filterSnapLines
+                this.filterSnapLines,
+                this.props.frontFace
             );
         });
     }
@@ -1249,7 +1255,11 @@ export class PageEditor
     render() {
         const content = (
             <>
-                <AllConnectionLines designerContext={this.designerContext} />
+                {!this.props.frontFace && (
+                    <AllConnectionLines
+                        designerContext={this.designerContext}
+                    />
+                )}
                 <div
                     style={{
                         position: "absolute"
@@ -1283,6 +1293,7 @@ export class PageEditor
                 <PageEditorCanvas
                     designerContext={this.designerContext}
                     dragAndDropActive={!!DragAndDropManager.dragObject}
+                    transitionIsActive={this.props.transitionIsActive}
                 >
                     {this.designerContext.document && content}
                 </PageEditorCanvas>

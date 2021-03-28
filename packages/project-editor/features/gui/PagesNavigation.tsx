@@ -1,7 +1,8 @@
 import React from "react";
-import { computed, action } from "mobx";
+import { computed, action, observable } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
+import classNames from "classnames";
 
 import { _find } from "eez-studio-shared/algorithm";
 
@@ -35,13 +36,75 @@ import { ThemesSideView } from "project-editor/features/gui/theme";
 import { ProjectContext } from "project-editor/project/context";
 
 import { Page } from "project-editor/features/gui/page";
+import {
+    Body,
+    ToolbarHeader,
+    VerticalHeaderWithBody
+} from "eez-studio-ui/header-with-body";
+import { styled } from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const FlipCardDiv = styled.div`
+    perspective: 1000px;
+    flex-grow: 1;
+    overflow: hidden;
+    background-color: ${props => props.theme.panelHeaderColor};
+
+    .flip-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+    }
+
+    .flip-card-inner.show-back-face {
+        transform: rotateY(-180deg);
+    }
+
+    .flip-card-front,
+    .flip-card-back {
+        display: flex;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+
+    .flip-card-back {
+        transform: rotateY(-180deg);
+    }
+`;
 
 @observer
 export class PageEditor extends EditorComponent implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
+
+    @observable frontFace: boolean = true;
+    @observable transitionIsActive = false;
+
+    flipCardInnerRef = React.createRef<HTMLDivElement>();
+
+    componentDidMount() {
+        const el = this.flipCardInnerRef.current!;
+
+        console.log(el);
+
+        el.addEventListener(
+            "transitionstart",
+            action(() => (this.transitionIsActive = true)),
+            false
+        );
+
+        el.addEventListener(
+            "transitionend",
+            action(() => (this.transitionIsActive = false)),
+            false
+        );
+    }
 
     @bind
     focusHandler() {
@@ -90,9 +153,54 @@ export class PageEditor extends EditorComponent implements IPanel {
     render() {
         let pageTabState = this.props.editor.state as PageTabState;
         return (
-            <StudioPageEditor
-                widgetContainer={pageTabState.widgetContainerDisplayItem}
-            />
+            <VerticalHeaderWithBody>
+                <ToolbarHeader>
+                    <IconAction
+                        title="Show front face"
+                        icon="material:flip_to_front"
+                        iconSize={16}
+                        onClick={action(() => (this.frontFace = true))}
+                        selected={this.frontFace}
+                    />
+                    <IconAction
+                        title="Show back face"
+                        icon="material:flip_to_back"
+                        iconSize={16}
+                        onClick={action(() => (this.frontFace = false))}
+                        selected={!this.frontFace}
+                    />
+                    <div style={{ flexGrow: 1 }}></div>
+                </ToolbarHeader>
+                <Body>
+                    <FlipCardDiv>
+                        <div
+                            ref={this.flipCardInnerRef}
+                            className={classNames("flip-card-inner", {
+                                "show-back-face": !this.frontFace
+                            })}
+                        >
+                            <div className="flip-card-front">
+                                <StudioPageEditor
+                                    widgetContainer={
+                                        pageTabState.widgetContainerDisplayItem
+                                    }
+                                    transitionIsActive={this.transitionIsActive}
+                                    frontFace={true}
+                                />
+                            </div>
+                            <div className="flip-card-back">
+                                <StudioPageEditor
+                                    widgetContainer={
+                                        pageTabState.widgetContainerDisplayItem
+                                    }
+                                    transitionIsActive={this.transitionIsActive}
+                                    frontFace={false}
+                                />
+                            </div>
+                        </div>
+                    </FlipCardDiv>
+                </Body>
+            </VerticalHeaderWithBody>
         );
     }
 }

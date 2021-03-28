@@ -224,15 +224,13 @@ export const ComponentEnclosure = observer(
         designerContext,
         dataContext,
         left,
-        top,
-        onClick
+        top
     }: {
         component: Component | Page;
         designerContext: IDesignerContext;
         dataContext: IDataContext;
         left?: number;
         top?: number;
-        onClick?: () => void;
     }) => {
         const elRef = React.useRef<HTMLDivElement>(null);
 

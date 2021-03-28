@@ -122,6 +122,7 @@ export interface IDesignerContext {
     viewState: IViewState;
     options: IDesignerOptions;
     filterSnapLines?: (node: ITreeObjectAdapter) => boolean;
+    frontFace: boolean;
 }
 
 export interface IViewStatePersistantState {
