@@ -944,7 +944,9 @@ export class ActionComponent extends Component {
         return renderActionComponent(this, designerContext, dataContext);
     }
 
-    execute() {}
+    async execute(input: string): Promise<string | undefined> {
+        return undefined;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

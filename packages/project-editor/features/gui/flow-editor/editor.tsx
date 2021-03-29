@@ -586,6 +586,9 @@ export class Canvas extends React.Component<{
     createMouseHandler(event: MouseEvent) {
         const context = this.props.designerContext;
 
+        const isEditor = !context.document.DocumentStore.RuntimeStore
+            .isRuntimeMode;
+
         if (!event.altKey) {
             if (
                 closestByClass(
@@ -609,7 +612,7 @@ export class Canvas extends React.Component<{
                 return undefined;
             }
 
-            const isMoveable = isSelectionMoveable(context);
+            const isMoveable = isEditor && isSelectionMoveable(context);
 
             if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
                 return isMoveable ? new DragMouseHandler() : undefined;
@@ -628,15 +631,17 @@ export class Canvas extends React.Component<{
                             context.viewState.selectObject(object);
                         }
 
-                        if (result.connectionOutput) {
-                            return new ConnectionLineMouseHandler(
-                                object,
-                                result.connectionOutput
-                            );
-                        } else {
-                            return isMoveable
-                                ? new DragMouseHandler()
-                                : undefined;
+                        if (isEditor) {
+                            if (result.connectionOutput) {
+                                return new ConnectionLineMouseHandler(
+                                    object,
+                                    result.connectionOutput
+                                );
+                            } else {
+                                return isMoveable
+                                    ? new DragMouseHandler()
+                                    : undefined;
+                            }
                         }
                     }
                 }

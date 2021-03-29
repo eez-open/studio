@@ -306,8 +306,8 @@ export const ComponentEnclosure = observer(
                 ref={elRef}
                 className={classNames(className, {
                     "eez-flow-editor-capture-pointers":
-                        designerContext.document.DocumentStore.DebugStore
-                            .isActive
+                        designerContext.document.DocumentStore.RuntimeStore
+                            .isRuntimeMode
                 })}
                 style={style}
                 onClick={

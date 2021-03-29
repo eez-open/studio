@@ -37,6 +37,8 @@ export class DataItem extends EezObject {
     @observable defaultMaxValue: number;
     @observable usedIn?: string[];
 
+    @observable _value: any;
+
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -153,7 +155,19 @@ export class DataContext implements IDataContext {
         return new DataContext(this.project, this, defaultValueOverrides);
     }
 
-    @observable values = new Map<string, string>();
+    getValue(dataItemId: string): any {
+        let dataItem = findDataItem(this.project, dataItemId);
+        return dataItem && dataItem._value;
+    }
+
+    setValue(dataItemId: string, value: any) {
+        let dataItem = findDataItem(this.project, dataItemId);
+        if (dataItem) {
+            dataItem._value = value;
+        } else {
+            console.error(`data ${dataItemId} not found`);
+        }
+    }
 
     findDataItemDefaultValue(dataItemId: string): any {
         if (this.defaultValueOverrides) {
@@ -177,14 +191,6 @@ export class DataContext implements IDataContext {
             }
         }
         return dataItem;
-    }
-
-    getValue(dataItemId: string): string | undefined {
-        const value = this.values.get(dataItemId);
-        if (value) {
-            return value;
-        }
-        return this.parentDataContext?.getValue(dataItemId);
     }
 
     get(dataItemId: string): any {
@@ -332,11 +338,8 @@ export class DataContext implements IDataContext {
 
         return [];
     }
-
-    set(dataId: string, value: string) {
-        this.values.set(dataId, value);
-    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export default {

@@ -226,65 +226,79 @@ export class ActionsNavigation extends NavigationComponent {
             </Splitter>
         );
 
-        const buttons: JSX.Element[] = [];
+        if (this.context.RuntimeStore.isRuntimeMode) {
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/actions-runtime"`}
+                    sizes={`240px|100%`}
+                    childrenOverflow={`hidden|hidden`}
+                >
+                    {navigation}
+                    <Editors />
+                </Splitter>
+            );
+        } else {
+            const buttons: JSX.Element[] = [];
 
-        if (!this.context.UIStateStore.viewOptions.themesVisible) {
-            buttons.push(
-                <IconAction
-                    key="show-themes"
-                    icon="material:palette"
-                    iconSize={16}
-                    onClick={action(
-                        () =>
-                            (this.context.UIStateStore.viewOptions.themesVisible = true)
+            if (!this.context.UIStateStore.viewOptions.themesVisible) {
+                buttons.push(
+                    <IconAction
+                        key="show-themes"
+                        icon="material:palette"
+                        iconSize={16}
+                        onClick={action(
+                            () =>
+                                (this.context.UIStateStore.viewOptions.themesVisible = true)
+                        )}
+                        title="Show themes panel"
+                    ></IconAction>
+                );
+            }
+
+            const properties = (
+                <Splitter
+                    type="vertical"
+                    persistId="page-editor/properties-widgets-palette"
+                    sizes={`100%|200px`}
+                    childrenOverflow="hidden|hidden"
+                >
+                    <PropertiesPanel
+                        object={this.selectedObject}
+                        buttons={buttons}
+                    />
+                    <ComponentsPalette showOnlyActions={true} />
+                </Splitter>
+            );
+
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/actions${
+                        this.context.UIStateStore.viewOptions.themesVisible
+                            ? ""
+                            : "-without-themes"
+                    }`}
+                    sizes={`240px|100%|400px${
+                        this.context.UIStateStore.viewOptions.themesVisible
+                            ? "|240px"
+                            : ""
+                    }`}
+                    childrenOverflow={`hidden|hidden|hidden${
+                        this.context.UIStateStore.viewOptions.themesVisible
+                            ? "|hidden"
+                            : ""
+                    }`}
+                >
+                    {navigation}
+                    <Editors />
+                    {properties}
+                    {this.context.UIStateStore.viewOptions.themesVisible && (
+                        <ThemesSideView hasCloseButton={true} />
                     )}
-                    title="Show themes panel"
-                ></IconAction>
+                </Splitter>
             );
         }
-
-        const properties = (
-            <Splitter
-                type="vertical"
-                persistId="page-editor/properties-widgets-palette"
-                sizes={`100%|200px`}
-                childrenOverflow="hidden|hidden"
-            >
-                <PropertiesPanel
-                    object={this.selectedObject}
-                    buttons={buttons}
-                />
-                <ComponentsPalette showOnlyActions={true} />
-            </Splitter>
-        );
-
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={`project-editor/pages${
-                    this.context.UIStateStore.viewOptions.themesVisible
-                        ? ""
-                        : "-without-themes"
-                }`}
-                sizes={`240px|100%|400px${
-                    this.context.UIStateStore.viewOptions.themesVisible
-                        ? "|240px"
-                        : ""
-                }`}
-                childrenOverflow={`hidden|hidden|hidden${
-                    this.context.UIStateStore.viewOptions.themesVisible
-                        ? "|hidden"
-                        : ""
-                }`}
-            >
-                {navigation}
-                <Editors />
-                {properties}
-                {this.context.UIStateStore.viewOptions.themesVisible && (
-                    <ThemesSideView hasCloseButton={true} />
-                )}
-            </Splitter>
-        );
     }
 }
 

@@ -7,7 +7,7 @@ import { Icon } from "eez-studio-ui/icon";
 export interface IListNode<T = any> {
     id: string;
     label?: string;
-    data?: T;
+    data: T;
     selected: boolean;
 }
 
@@ -70,7 +70,7 @@ export class List extends React.Component<
     {
         nodes: IListNode[];
         selectNode?: (node: IListNode) => void;
-        renderNode?: (node: IListNode) => JSX.Element;
+        renderNode?: (node: IListNode) => React.ReactNode;
         tabIndex?: any;
         className?: string;
         style?: React.CSSProperties;
@@ -107,7 +107,11 @@ export class List extends React.Component<
         });
 
         return (
-            <div className={className} style={this.props.style} tabIndex={tabIndex}>
+            <div
+                className={className}
+                style={this.props.style}
+                tabIndex={tabIndex}
+            >
                 {nodes}
             </div>
         );

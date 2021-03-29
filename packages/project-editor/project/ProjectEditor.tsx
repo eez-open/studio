@@ -28,7 +28,10 @@ import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
-import { BuildConfiguration } from "project-editor/project/project";
+import {
+    BuildConfiguration,
+    ProjectType
+} from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { isViewer } from "eez-studio-shared/util-electron";
 
@@ -45,7 +48,7 @@ const ToolbarNav = styled.nav`
     border-bottom: 1px solid ${props => props.theme.borderColor};
 
     .btn-group:not(:last-child) {
-        margin-right: 10px;
+        margin-right: 20px;
     }
 
     select {
@@ -174,18 +177,47 @@ class Toolbar extends React.Component {
                         </div>
                     )}
 
-                    <div className="btn-group" role="group">
-                        <IconAction
-                            title="Check"
-                            icon="material:check"
-                            onClick={() => this.context.check()}
-                        />
-                        <IconAction
-                            title="Build"
-                            icon="material:build"
-                            onClick={() => this.context.build()}
-                        />
-                    </div>
+                    {this.context.project.settings.general.projectType !=
+                        ProjectType.DASHBOARD && (
+                        <div className="btn-group" role="group">
+                            <IconAction
+                                title="Check"
+                                icon="material:check"
+                                onClick={() => this.context.check()}
+                            />
+                            <IconAction
+                                title="Build"
+                                icon="material:build"
+                                onClick={() => this.context.build()}
+                            />
+                        </div>
+                    )}
+
+                    {this.context.project.settings.general.projectType ==
+                        ProjectType.DASHBOARD && (
+                        <div className="btn-group" role="group">
+                            <IconAction
+                                title="Run"
+                                icon="material:play_arrow"
+                                onClick={
+                                    this.context.RuntimeStore.setRuntimeMode
+                                }
+                                selected={
+                                    this.context.RuntimeStore.isRuntimeMode
+                                }
+                            />
+                            <IconAction
+                                title="Edit"
+                                icon="material:mode_edit"
+                                onClick={
+                                    this.context.RuntimeStore.setEditorMode
+                                }
+                                selected={
+                                    !this.context.RuntimeStore.isRuntimeMode
+                                }
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div>
@@ -400,12 +432,29 @@ class Content extends React.Component<{}, {}> {
         if (!this.context.project) {
             return <div />;
         }
-        return (
+
+        const menuNavigation = (
             <MenuNavigation
                 id="project"
                 navigationObject={this.context.project}
             />
         );
+
+        if (this.context.RuntimeStore.isRuntimeMode) {
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId={`project-editor/runtime"`}
+                    sizes={"100%|240px"}
+                    childrenOverflow={`hidden|hidden`}
+                >
+                    {menuNavigation}
+                    {this.context.RuntimeStore.render()}
+                </Splitter>
+            );
+        } else {
+            return menuNavigation;
+        }
     }
 }
 

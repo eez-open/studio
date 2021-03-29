@@ -1892,9 +1892,7 @@ export class ButtonWidget extends Widget {
     };
 
     onClick = () => {
-        if (this.action) {
-            getDocumentStore(this).DebugStore.executeAction(this.action);
-        }
+        getDocumentStore(this).RuntimeStore.executeWidgetAction(this);
     };
 }
 

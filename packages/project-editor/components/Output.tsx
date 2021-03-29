@@ -10,14 +10,11 @@ import { IconAction } from "eez-studio-ui/action";
 
 import {
     Message as OutputMessage,
-    Section,
     Type as MessageType
 } from "project-editor/core/output";
 
 import { ObjectPath } from "project-editor/components/ObjectPath";
 import { ProjectContext } from "project-editor/project/context";
-
-import { DebugPanel } from "project-editor/project/debug";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
@@ -134,12 +131,6 @@ class Messages extends React.Component {
     }
 
     render() {
-        if (
-            this.context.OutputSectionsStore.activeSection.id === Section.DEBUG
-        ) {
-            return <DebugPanel DebugStore={this.context.DebugStore} />;
-        }
-
         // TODO this is workaround because for some reason componentDidUpdate is not called
         setTimeout(() => this.scrollToBottom());
 

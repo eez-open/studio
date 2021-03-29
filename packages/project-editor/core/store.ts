@@ -54,7 +54,6 @@ import {
     isEezObject,
     getRootObject,
     getAncestorOfType,
-    getLabel,
     makeDerivedClassInfo,
     EezClass,
     registerClassByName
@@ -106,10 +105,6 @@ import {
     ActionComponent,
     Component
 } from "project-editor/features/gui/component";
-import {
-    InputActionComponent,
-    OutputActionComponent
-} from "project-editor/features/gui/action-components";
 import { Page } from "project-editor/features/gui/page";
 import {
     ConnectionLine,
@@ -118,8 +113,8 @@ import {
 } from "project-editor/features/gui/flow";
 
 import { Section } from "project-editor/core/output";
-import { findAction } from "project-editor/features/action/action";
 import { isViewer } from "eez-studio-shared/util-electron";
+import { RuntimeStoreClass } from "project-editor/project/runtime";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -1089,62 +1084,6 @@ export class UndoManagerClass {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DebugStoreClass {
-    @observable isActive = false;
-    flow: Flow | undefined;
-
-    constructor(public DocumentStore: DocumentStoreClass) {}
-
-    executeAction(actionName: string) {
-        const action = findAction(this.DocumentStore.project, actionName);
-        if (action) {
-            this.executeFlow(action);
-        }
-    }
-
-    executeFlow(flow: Flow) {
-        this.flow = flow;
-        const inputActionComponent = flow.components.find(
-            component => component instanceof InputActionComponent
-        ) as ActionComponent;
-        if (inputActionComponent) {
-            this.executeActionComponent(inputActionComponent);
-        }
-    }
-
-    executeActionComponent(actionNode: ActionComponent) {
-        console.log(`Execute action: ${getLabel(actionNode)}`);
-        actionNode.execute();
-        if (actionNode instanceof OutputActionComponent) {
-            console.log("Execute action done!");
-            this.flow = undefined;
-        }
-    }
-
-    getConnectionline(wireID: string) {
-        if (this.flow) {
-            return this.flow.connectionLines.find(
-                connectionLine => connectionLine.source === wireID
-            );
-        }
-        return undefined;
-    }
-
-    executeWire(wireID: string) {
-        if (this.flow) {
-            const connectionLine = this.getConnectionline(wireID);
-            if (connectionLine) {
-                const actionNode = this.flow.wiredComponents.get(
-                    connectionLine.target
-                ) as ActionComponent;
-                this.executeActionComponent(actionNode);
-            }
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 function getUIStateFilePath(projectFilePath: string) {
     return projectFilePath + "-ui-state";
 }
@@ -1221,7 +1160,7 @@ export class DocumentStoreClass {
     EditorsStore = new EditorsStoreClass(this);
     UIStateStore = new UIStateStoreClass(this);
     OutputSectionsStore = new OutputSections(this);
-    DebugStore = new DebugStoreClass(this);
+    RuntimeStore = new RuntimeStoreClass(this);
 
     @observable private _project: Project | undefined;
     @observable modified: boolean = false;

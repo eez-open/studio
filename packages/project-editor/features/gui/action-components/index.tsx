@@ -43,10 +43,8 @@ export class InputActionComponent extends ActionComponent {
         )
     });
 
-    execute() {
-        if (this.wireID) {
-            getDocumentStore(this).DebugStore.executeWire(this.wireID);
-        }
+    async execute(input: string) {
+        return "output";
     }
 }
 
@@ -136,12 +134,10 @@ export class SetVariableActionComponent extends ActionComponent {
     @observable value: string;
 
     @action
-    execute() {
+    async execute(input: string) {
         const DocumentStore = getDocumentStore(this);
-        DocumentStore.dataContext.set(this.variable, this.value);
-        if (this.wireID) {
-            getDocumentStore(this).DebugStore.executeWire(this.wireID);
-        }
+        DocumentStore.dataContext.setValue(this.variable, this.value);
+        return "output";
     }
 }
 

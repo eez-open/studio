@@ -22,8 +22,7 @@ export { MessageType as Type } from "project-editor/core/object";
 export enum Section {
     CHECKS,
     OUTPUT,
-    SEARCH,
-    DEBUG
+    SEARCH
 }
 
 export class Message implements IMessage {

@@ -13,15 +13,27 @@ import styled from "eez-studio-ui/styled-components";
 import { IListNode, List } from "eez-studio-ui/list";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Splitter } from "eez-studio-ui/splitter";
-import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    Header,
+    Body
+} from "eez-studio-ui/header-with-body";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
 
 import { IParameter, compareMnemonic } from "instrument/scpi";
-import { ICommandSyntax, IQuerySyntax, makeItShort, matchCommand } from "instrument/commands-tree";
+import {
+    ICommandSyntax,
+    IQuerySyntax,
+    makeItShort,
+    matchCommand
+} from "instrument/commands-tree";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
-import { insertScpiCommandIntoCode, insertScpiQueryIntoCode } from "instrument/window/scripts";
+import {
+    insertScpiCommandIntoCode,
+    insertScpiQueryIntoCode
+} from "instrument/window/scripts";
 
 export interface ICommandNode extends ITreeNode {
     commandSyntax?: ICommandSyntax;
@@ -49,7 +61,10 @@ export class CommandSyntax extends React.Component<
     {
         appStore: InstrumentAppStore;
         commandSyntax: ICommandSyntax | IQuerySyntax;
-        copyCommand: (command: ICommandSyntax | IQuerySyntax, commandParameters: string) => void;
+        copyCommand: (
+            command: ICommandSyntax | IQuerySyntax,
+            commandParameters: string
+        ) => void;
     },
     {}
 > {
@@ -90,11 +105,17 @@ export class CommandSyntax extends React.Component<
                 types.push("Boolean");
             } else if (type.type === "discrete") {
                 const enumeration = this.props.appStore.commandsTree.enums.find(
-                    enumeration => enumeration.name === parameter.type[i].enumeration
+                    enumeration =>
+                        enumeration.name === parameter.type[i].enumeration
                 );
                 if (enumeration) {
                     for (let j = 0; j < enumeration.members.length; ++j) {
-                        if (compareMnemonic(enumeration.members[j].name, parameterValue)) {
+                        if (
+                            compareMnemonic(
+                                enumeration.members[j].name,
+                                parameterValue
+                            )
+                        ) {
                             return [null, parameterValue];
                         }
                     }
@@ -142,7 +163,10 @@ export class CommandSyntax extends React.Component<
             }
 
             if (value) {
-                const [error, finalValue] = this.validateParameterValue(value, parameters[i]);
+                const [error, finalValue] = this.validateParameterValue(
+                    value,
+                    parameters[i]
+                );
                 if (error != null) {
                     this.addError(parameters[i].name, error);
                 } else {
@@ -150,15 +174,23 @@ export class CommandSyntax extends React.Component<
                 }
             } else {
                 if (!parameters[i].isOptional) {
-                    this.addError(parameters[i].name, VALIDATION_MESSAGE_REQUIRED);
+                    this.addError(
+                        parameters[i].name,
+                        VALIDATION_MESSAGE_REQUIRED
+                    );
                 } else {
                     for (let j = i + 1; j < parameters.length; ++j) {
-                        let value2 = this.parameterValues.get(parameters[j].name);
+                        let value2 = this.parameterValues.get(
+                            parameters[j].name
+                        );
                         if (value2) {
                             value2 = value2.trim();
                         }
                         if (value2) {
-                            this.addError(parameters[i].name, VALIDATION_MESSAGE_REQUIRED);
+                            this.addError(
+                                parameters[i].name,
+                                VALIDATION_MESSAGE_REQUIRED
+                            );
                             break;
                         }
                     }
@@ -211,7 +243,8 @@ export class CommandSyntax extends React.Component<
                                 if (parameter.type[i].type === "discrete") {
                                     const enumeration = this.props.appStore.commandsTree.enums.find(
                                         enumeration =>
-                                            enumeration.name === parameter.type[i].enumeration
+                                            enumeration.name ===
+                                            parameter.type[i].enumeration
                                     );
                                     if (enumeration) {
                                         enumeration.members.forEach(member =>
@@ -230,9 +263,16 @@ export class CommandSyntax extends React.Component<
                                             ? `[ ${parameter.name} ]`
                                             : parameter.name
                                     }
-                                    value={this.parameterValues.get(parameter.name) || ""}
+                                    value={
+                                        this.parameterValues.get(
+                                            parameter.name
+                                        ) || ""
+                                    }
                                     onChange={action((value: string) =>
-                                        this.parameterValues.set(parameter.name, value)
+                                        this.parameterValues.set(
+                                            parameter.name,
+                                            value
+                                        )
                                     )}
                                     suggestions={suggestions}
                                     errors={this.errors.get(parameter.name)}
@@ -242,11 +282,16 @@ export class CommandSyntax extends React.Component<
                     </PropertyList>
                 </ParametersDiv>
                 <div>
-                    <button className="btn btn-secondary btn-sm" onClick={this.copy}>
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={this.copy}
+                    >
                         Copy
                     </button>
-                    {this.props.appStore.navigationStore.mainNavigationSelectedItem ===
-                        this.props.appStore.navigationStore.scriptsNavigationItem &&
+                    {this.props.appStore.navigationStore
+                        .mainNavigationSelectedItem ===
+                        this.props.appStore.navigationStore
+                            .scriptsNavigationItem &&
                         this.props.appStore.scriptsModel.selectedScript && (
                             <button
                                 className="btn btn-secondary btn-sm ml-2"
@@ -319,6 +364,7 @@ export class CommandsBrowser extends React.Component<
                 foundNodes.push({
                     id: command,
                     label: command,
+                    data: undefined,
                     selected: node === selectedNode,
                     commandNode: node
                 });
@@ -366,7 +412,9 @@ export class CommandsBrowser extends React.Component<
     render() {
         let leftSideBody;
         if (this.searchText) {
-            leftSideBody = <List nodes={this.foundNodes} selectNode={this.selectNode} />;
+            leftSideBody = (
+                <List nodes={this.foundNodes} selectNode={this.selectNode} />
+            );
         } else {
             leftSideBody = (
                 <Tree
@@ -400,8 +448,10 @@ export class CommandsBrowser extends React.Component<
             );
 
             let helpLink =
-                (this.selectedNode.commandSyntax && this.selectedNode.commandSyntax.url) ||
-                (this.selectedNode.querySyntax && this.selectedNode.querySyntax.url);
+                (this.selectedNode.commandSyntax &&
+                    this.selectedNode.commandSyntax.url) ||
+                (this.selectedNode.querySyntax &&
+                    this.selectedNode.querySyntax.url);
             help = helpLink && <iframe src={helpLink} />;
         }
 
@@ -426,8 +476,12 @@ export class CommandsBrowser extends React.Component<
                     sizes="400px|100%"
                     persistId="instrument/window/commands-browser/splitter2"
                 >
-                    <CommandsBrowserSyntax className="">{syntax}</CommandsBrowserSyntax>
-                    <CommandsBrowserHelp className="">{help}</CommandsBrowserHelp>
+                    <CommandsBrowserSyntax className="">
+                        {syntax}
+                    </CommandsBrowserSyntax>
+                    <CommandsBrowserHelp className="">
+                        {help}
+                    </CommandsBrowserHelp>
                 </Splitter>
             </Splitter>
         );
