@@ -50,7 +50,7 @@ class HistoryItem {
         } else if (this.type == HistoryItemType.EXECUTE_ACTION_COMPONENT) {
             return `Execute action component: ${getLabel(this.object)}`;
         } else if (this.type == HistoryItemType.EXECUTE_WIDGET_ACTION) {
-            return `Execture widget action: ${getLabel(this.object)}`;
+            return `Execute widget action: ${getLabel(this.object)}`;
         } else if (this.type == HistoryItemType.WIDGET_ACTION_NOT_DEFINED) {
             return `Widget action not defined: ${getLabel(this.object)}`;
         } else if (this.type == HistoryItemType.WIDGET_ACTION_NOT_FOUND) {

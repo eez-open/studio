@@ -695,10 +695,6 @@ let builtinProjectProperties: PropertyInfo[] = [
         typeClass: Theme,
         hideInPropertyGrid: true,
         partOfNavigation: false
-    },
-    {
-        name: "storyboard",
-        type: PropertyType.JSON
     }
 ];
 let projectProperties = builtinProjectProperties;
@@ -810,7 +806,6 @@ export class Project extends EezObject {
     @observable extensionDefinitions: ExtensionDefinition[];
     @observable colors: Color[];
     @observable themes: Theme[];
-    @observable storyboard: string;
 
     @computed get projectName() {
         if (this._DocumentStore.project === this) {

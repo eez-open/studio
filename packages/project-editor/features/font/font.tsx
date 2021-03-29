@@ -2534,6 +2534,20 @@ export default {
                     propertyInfo: PropertyInfo
                 ) => {
                     return !getDocumentStore(object).masterProjectEnabled;
+                },
+                toJsHook: (jsObject: Project, project: Project) => {
+                    jsObject.fonts.forEach(font =>
+                        font.glyphs.forEach(glyph => {
+                            if (
+                                glyph.glyphBitmap &&
+                                glyph.glyphBitmap.pixelArray
+                            ) {
+                                (glyph.glyphBitmap as any).pixelArray = serializePixelArray(
+                                    glyph.glyphBitmap.pixelArray
+                                );
+                            }
+                        })
+                    );
                 }
             }
         }

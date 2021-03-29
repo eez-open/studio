@@ -27,7 +27,7 @@ import { Svg } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { guid } from "eez-studio-shared/guid";
 import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
-import { Selection } from "project-editor/flow/flow-editor/selection";
+import { Selection } from "project-editor/flow/flow-runtime/selection";
 
 ////////////////////////////////////////////////////////////////////////////////
 

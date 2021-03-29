@@ -1370,6 +1370,17 @@ export default {
                     propertyInfo: PropertyInfo
                 ) => {
                     return !getDocumentStore(object).masterProjectEnabled;
+                },
+                toJsHook: (jsObject: Project, project: Project) => {
+                    //
+                    jsObject.colors.forEach((color: any) => delete color.id);
+
+                    jsObject.themes.forEach((theme: any, i: number) => {
+                        delete theme.id;
+                        theme.colors = project.themes[i].colors;
+                    });
+
+                    delete (project as Partial<Project>).themeColors;
                 }
             }
         }
