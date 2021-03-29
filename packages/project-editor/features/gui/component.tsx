@@ -46,12 +46,12 @@ import type {
     IResizeHandler,
     IDesignerContext,
     IDataContext
-} from "project-editor/features/gui/page-editor/designer-interfaces";
-import { ComponentGeometry } from "project-editor/features/gui/page-editor/render";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { ComponentGeometry } from "project-editor/features/gui/flow-editor/render";
 import {
     IResizing,
     resizingProperty
-} from "project-editor/features/gui/page-editor/resizing-widget-property";
+} from "project-editor/features/gui/flow-editor/resizing-widget-property";
 
 import { onSelectItem } from "project-editor/components/SelectItem";
 
@@ -532,13 +532,7 @@ export class Widget extends Component {
         check: (object: Component) => {
             let messages: output.Message[] = [];
 
-            const parent = getWidgetParent(object);
-            if (
-                !(
-                    (parent instanceof Page && parent.isAction) ||
-                    object instanceof ActionComponent
-                )
-            ) {
+            if (!(object instanceof ActionComponent)) {
                 if (object.left < 0) {
                     messages.push(
                         new output.Message(

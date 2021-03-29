@@ -1,7 +1,7 @@
 import { Rect } from "eez-studio-shared/geometry";
 
-import type { IDesignerContext } from "project-editor/features/gui/page-editor/designer-interfaces";
-import { getObjectBoundingRect } from "project-editor/features/gui/page-editor/bounding-rects";
+import type { IDesignerContext } from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { getObjectBoundingRect } from "project-editor/features/gui/flow-editor/bounding-rects";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////

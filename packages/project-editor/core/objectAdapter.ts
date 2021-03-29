@@ -60,7 +60,7 @@ import {
 } from "project-editor/core/dd";
 import { objectToJson } from "project-editor/core/serialization";
 import { Rect } from "eez-studio-shared/geometry";
-import type { IResizeHandler } from "project-editor/features/gui/page-editor/designer-interfaces";
+import type { IResizeHandler } from "project-editor/features/gui/flow-editor/designer-interfaces";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -190,7 +190,7 @@ export interface ITreeObjectAdapter
 }
 
 export class TreeObjectAdapter implements ITreeObjectAdapter {
-    private transformer: (object: IEezObject) => ITreeObjectAdapter;
+    protected transformer: (object: IEezObject) => ITreeObjectAdapter;
 
     @observable selected: boolean;
     @observable expanded: boolean;
@@ -214,7 +214,9 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return getId(this.object);
     }
 
-    @computed
+    @computed({
+        keepAlive: true
+    })
     get children(): TreeObjectAdapterChildren {
         if (isArray(this.object)) {
             return this.object.map(child => this.transformer(child));

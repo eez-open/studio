@@ -4,10 +4,9 @@ import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
 import {
-    ClassInfo,
+    makeDerivedClassInfo,
     registerClass,
     IEezObject,
-    EezObject,
     PropertyType,
     NavigationComponent,
     EditorComponent
@@ -29,17 +28,18 @@ import {
     ListNavigationWithProperties
 } from "project-editor/components/ListNavigation";
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page-editor/editor";
+import { FlowEditor as StudioPageEditor } from "project-editor/features/gui/flow-editor/editor";
 import { IPanel } from "project-editor/core/store";
-import { Page } from "project-editor/features/gui/page";
-import { PageTabState } from "project-editor/features/gui/PagesNavigation";
-import { ComponentsPalette } from "project-editor/features/gui/page-editor/ComponentsPalette";
+import { ComponentsPalette } from "project-editor/features/gui/flow-editor/ComponentsPalette";
 import { ThemesSideView } from "project-editor/features/gui/theme";
 import { bind } from "bind-decorator";
 import { TreeAdapter } from "project-editor/core/objectAdapter";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 import { IconAction } from "eez-studio-ui/action";
+import { Flow, FlowTabState } from "project-editor/features/gui/flow";
+import { IDesignerContext } from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { ComponentsContainerEnclosure } from "project-editor/features/gui/flow-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,9 +55,9 @@ export class ActionEditor extends EditorComponent implements IPanel {
 
     @computed
     get treeAdapter() {
-        let pageTabState = this.props.editor.state as PageTabState;
+        let flowTabState = this.props.editor.state as FlowTabState;
         return new TreeAdapter(
-            pageTabState.widgetContainerDisplayItem,
+            flowTabState.componentContainerDisplayItem,
             undefined,
             undefined,
             true
@@ -66,14 +66,14 @@ export class ActionEditor extends EditorComponent implements IPanel {
 
     @computed
     get selectedObject() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return pageTabState.selectedObject;
+        let flowTabState = this.props.editor.state as FlowTabState;
+        return flowTabState.selectedObject;
     }
 
     @computed
     get selectedObjects() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return pageTabState.selectedObjects;
+        let flowTabState = this.props.editor.state as FlowTabState;
+        return flowTabState.selectedObjects;
     }
 
     cutSelection() {
@@ -93,10 +93,10 @@ export class ActionEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        let pageTabState = this.props.editor.state as PageTabState;
+        let flowTabState = this.props.editor.state as FlowTabState;
         return (
             <StudioPageEditor
-                widgetContainer={pageTabState.widgetContainerDisplayItem}
+                widgetContainer={flowTabState.componentContainerDisplayItem}
             />
         );
     }
@@ -122,28 +122,28 @@ export class ActionsNavigation extends NavigationComponent {
     }
 
     @computed
-    get widgetContainerDisplayItem() {
+    get flowContainerDisplayItem() {
         if (this.props.navigationStore) {
             return undefined;
         }
         if (!this.context.EditorsStore.activeEditor) {
             return undefined;
         }
-        let pageTabState = this.context.EditorsStore.activeEditor
-            .state as PageTabState;
-        if (!pageTabState) {
+        let flowTabState = this.context.EditorsStore.activeEditor
+            .state as FlowTabState;
+        if (!flowTabState) {
             return undefined;
         }
-        return pageTabState.widgetContainerDisplayItem;
+        return flowTabState.componentContainerDisplayItem;
     }
 
     @computed
     get treeAdapter() {
-        if (!this.widgetContainerDisplayItem) {
+        if (!this.flowContainerDisplayItem) {
             return null;
         }
         return new TreeAdapter(
-            this.widgetContainerDisplayItem,
+            this.flowContainerDisplayItem,
             undefined,
             undefined,
             true
@@ -172,16 +172,16 @@ export class ActionsNavigation extends NavigationComponent {
 
     get selectedObjects() {
         const selectedObjects =
-            this.widgetContainerDisplayItem &&
-            this.widgetContainerDisplayItem.selectedObjects;
+            this.flowContainerDisplayItem &&
+            this.flowContainerDisplayItem.selectedObjects;
         if (selectedObjects && selectedObjects.length > 0) {
             return selectedObjects;
         }
 
         if (this.context.EditorsStore.activeEditor) {
-            let pageTabState = this.context.EditorsStore.activeEditor
-                .state as PageTabState;
-            return [pageTabState.page];
+            let flowTabState = this.context.EditorsStore.activeEditor
+                .state as FlowTabState;
+            return [flowTabState.flow];
         }
 
         return [];
@@ -193,7 +193,7 @@ export class ActionsNavigation extends NavigationComponent {
     }
 
     render() {
-        if (!this.widgetContainerDisplayItem) {
+        if (!this.flowContainerDisplayItem) {
             return <ListNavigationWithProperties {...this.props} />;
         }
 
@@ -290,16 +290,14 @@ export class ActionsNavigation extends NavigationComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Action extends EezObject {
+export class Action extends Flow {
     @observable name: string;
     @observable description?: string;
-    @observable implementationType: "native";
+    @observable implementationType: "native" | "flow";
     @observable implementation?: string;
     @observable usedIn?: string[];
 
-    @observable page?: Page;
-
-    static classInfo: ClassInfo = {
+    static classInfo = makeDerivedClassInfo(Flow.classInfo, {
         properties: [
             {
                 name: "name",
@@ -332,15 +330,16 @@ export class Action extends EezObject {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations"
-            },
-            {
-                name: "page",
-                type: PropertyType.Object,
-                typeClass: Page,
-                hideInPropertyGrid: true,
-                isOptional: true
             }
         ],
+        beforeLoadHook: (action: Action, jsObject: any) => {
+            if (jsObject.page) {
+                jsObject.components = jsObject.page.components;
+                jsObject.connectionLines = jsObject.page.connectionLines;
+                delete jsObject.page;
+                jsObject.implementationType = "flow";
+            }
+        },
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
@@ -358,30 +357,47 @@ export class Action extends EezObject {
                 },
                 values: {}
             }).then(result => {
-                return Promise.resolve({
-                    name: result.values.name,
-                    page:
+                return Promise.resolve(
+                    Object.assign(
+                        {
+                            name: result.values.name
+                        },
                         getProject(parent).settings.general.projectType ===
-                        ProjectType.DASHBOARD
-                            ? {
-                                  widgets: [],
-                                  left: 0,
-                                  top: 0,
-                                  width: 0,
-                                  height: 0
-                              }
-                            : undefined
-                });
+                            ProjectType.DASHBOARD
+                            ? ({
+                                  implementationType: "native",
+                                  components: [],
+                                  connectionLine: []
+                              } as Partial<Action>)
+                            : {}
+                    )
+                );
             });
         },
         createEditorState: (action: Action) => {
-            return action.page ? new PageTabState(action.page) : undefined;
+            return action.implementationType === "flow"
+                ? new FlowTabState(action)
+                : undefined;
         },
         editorComponent: ActionEditor,
         navigationComponent: ActionsNavigation,
         navigationComponentId: "actions",
         icon: "code"
-    };
+    });
+
+    get pageRect() {
+        return { left: 0, top: 0, width: 0, height: 0 };
+    }
+
+    renderComponents(designerContext: IDesignerContext) {
+        return (
+            <ComponentsContainerEnclosure
+                components={this.components}
+                designerContext={designerContext}
+                dataContext={designerContext.document.DocumentStore.dataContext}
+            />
+        );
+    }
 }
 
 registerClass(Action);

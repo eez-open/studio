@@ -11,7 +11,7 @@ import { getId } from "project-editor/core/object";
 import type {
     IDesignerContext,
     IDataContext
-} from "project-editor/features/gui/page-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
 
 import { Page } from "project-editor/features/gui/page";
 import { Component } from "project-editor/features/gui/component";
@@ -305,7 +305,7 @@ export const ComponentEnclosure = observer(
                 data-designer-object-id={dataDesignerObjectId}
                 ref={elRef}
                 className={classNames(className, {
-                    "eez-page-editor-capture-pointers":
+                    "eez-flow-editor-capture-pointers":
                         designerContext.document.DocumentStore.DebugStore
                             .isActive
                 })}

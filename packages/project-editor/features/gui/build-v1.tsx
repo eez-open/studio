@@ -161,13 +161,13 @@ function isWidgetOpaque(widgetObj: Component) {
 }
 
 function getSelectedWidgetForSelectWidget(
-    widgetContainerDisplayItem: DisplayItem,
+    flowContainerDisplayItem: DisplayItem,
     item: DisplayItem
 ): DisplayItem | undefined {
     let widget = item.object as SelectWidget;
     if (widget.data && widget.widgets) {
         let index: number = getDocumentStore(
-            widgetContainerDisplayItem.object
+            flowContainerDisplayItem.object
         ).dataContext.getEnumValue(widget.data);
         if (index >= 0 && index < widget.widgets.length) {
             let widgetsItemChildren = item.children as DisplayItemChildrenArray;
@@ -179,7 +179,7 @@ function getSelectedWidgetForSelectWidget(
 }
 
 function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
-    function enumWidgets(widgetContainerDisplayItem: DisplayItem) {
+    function enumWidgets(flowContainerDisplayItem: DisplayItem) {
         function enumWidget(
             parentNode: TreeNode | undefined,
             item: DisplayItem,
@@ -238,7 +238,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                         ];
 
                         const dataValue = getDocumentStore(
-                            widgetContainerDisplayItem.object
+                            flowContainerDisplayItem.object
                         ).dataContext.get(widget.data as string);
                         if (dataValue && Array.isArray(dataValue)) {
                             for (let i = 0; i < dataValue.length; i++) {
@@ -254,7 +254,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                     }
                 } else if (object.type == "Select") {
                     let selectedWidgetItem = getSelectedWidgetForSelectWidget(
-                        widgetContainerDisplayItem,
+                        flowContainerDisplayItem,
                         item
                     );
                     if (selectedWidgetItem) {
@@ -266,7 +266,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
             return treeNode;
         }
 
-        return enumWidget(undefined, widgetContainerDisplayItem, 0, 0);
+        return enumWidget(undefined, flowContainerDisplayItem, 0, 0);
     }
 
     return enumWidgets(new TreeObjectAdapter(widgetContainer));

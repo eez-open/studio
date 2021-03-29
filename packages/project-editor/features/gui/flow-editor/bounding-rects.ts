@@ -8,10 +8,10 @@ import {
 import {
     IDocument,
     IViewState
-} from "project-editor/features/gui/page-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
 
 import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
-import { ConnectionLine } from "project-editor/features/gui/page";
+import { ConnectionLine } from "project-editor/features/gui/flow";
 import { Component } from "project-editor/features/gui/component";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
@@ -40,7 +40,7 @@ export function getSelectedObjectsBoundingRect(viewState: IViewState) {
 }
 
 export function getObjectIdFromPoint(
-    pageDocument: IDocument,
+    flowDocument: IDocument,
     viewState: IViewState,
     point: Point
 ) {
@@ -79,7 +79,7 @@ export function getObjectIdFromPoint(
         let node = elementAtPoint.closest("[data-designer-object-id]");
         if (node) {
             const id = node.getAttribute("data-designer-object-id");
-            if (id && pageDocument.findObjectById(id)) {
+            if (id && flowDocument.findObjectById(id)) {
                 const connectionInputNode = elementAtPoint.closest(
                     ".eez-connection-input"
                 );

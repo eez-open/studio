@@ -15,7 +15,7 @@ import { getDocumentStore } from "project-editor/core/store";
 import type {
     IDesignerContext,
     IDataContext
-} from "project-editor/features/gui/page-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
 
 import { styled } from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
@@ -400,7 +400,7 @@ const TrixEditor = observer(
 
         return (
             <TrixEditorDiv
-                className="eez-page-editor-capture-pointers"
+                className="eez-flow-editor-capture-pointers"
                 tabIndex={0}
             >
                 {React.createElement("trix-editor", attributes)}

@@ -62,7 +62,7 @@ export class Draggable {
 
         this.finishDragging(undefined, true);
 
-        if (closestBySelector(e.target, ".eez-page-editor-capture-pointers")) {
+        if (closestBySelector(e.target, ".eez-flow-editor-capture-pointers")) {
             return;
         }
 

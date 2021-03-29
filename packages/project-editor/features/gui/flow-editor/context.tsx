@@ -18,8 +18,8 @@ import type {
     IDesignerContext,
     IDesignerOptions,
     IResizeHandler
-} from "project-editor/features/gui/page-editor/designer-interfaces";
-import { Transform } from "project-editor/features/gui/page-editor/transform";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { Transform } from "project-editor/features/gui/flow-editor/transform";
 
 import {
     Component,
@@ -77,10 +77,6 @@ class ViewState implements IViewState {
             () => this.persistentState,
             viewState => onSavePersistantState(viewState)
         );
-    }
-
-    get selectedObjects() {
-        return this.document?.page.selectedItems ?? [];
     }
 
     @computed
@@ -163,6 +159,10 @@ class ViewState implements IViewState {
         ];
     }
 
+    get selectedObjects() {
+        return this.document?.flow.selectedItems ?? [];
+    }
+
     isObjectSelected(object: ITreeObjectAdapter): boolean {
         return this.selectedObjects.indexOf(object) !== -1;
     }
@@ -177,21 +177,21 @@ class ViewState implements IViewState {
 
     selectObject(object: ITreeObjectAdapter) {
         if (object.isSelectable) {
-            this.document && this.document.page.selectItem(object);
+            this.document && this.document.flow.selectItem(object);
         }
     }
 
     @action
     selectObjects(objects: ITreeObjectAdapter[]) {
         this.document &&
-            this.document.page.selectItems(
+            this.document.flow.selectItems(
                 objects.filter(object => object.isSelectable)
             );
     }
 
     @action
     deselectAllObjects(): void {
-        this.document && this.document.page.selectItems([]);
+        this.document && this.document.flow.selectItems([]);
     }
 
     moveSelection(
@@ -207,7 +207,7 @@ class ViewState implements IViewState {
     ) {
         const widgets =
             this.document &&
-            (this.document.page.selectedObjects.filter(
+            (this.document.flow.selectedObjects.filter(
                 object => object instanceof Component
             ) as Component[]);
 
@@ -313,7 +313,8 @@ export class DesignerContext implements IDesignerContext {
         filterSnapLines?: (node: ITreeObjectAdapter) => boolean,
         frontFace?: boolean
     ) {
-        const differentDocument = this.document !== document;
+        const deselectAllObjects =
+            this.document?.flow.object !== document?.flow.object;
         this.document = document;
 
         this.viewState.set(
@@ -322,7 +323,7 @@ export class DesignerContext implements IDesignerContext {
             onSavePersistantState
         );
 
-        if (differentDocument) {
+        if (deselectAllObjects) {
             this.viewState.deselectAllObjects();
         }
 

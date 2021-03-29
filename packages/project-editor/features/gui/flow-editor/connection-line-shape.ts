@@ -1,5 +1,5 @@
 import { getId } from "project-editor/core/object";
-import { ConnectionLine } from "project-editor/features/gui/page";
+import { ConnectionLine } from "project-editor/features/gui/flow";
 import { IDesignerContext } from "./designer-interfaces";
 
 export function getConnectionLineShape(

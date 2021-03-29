@@ -8,7 +8,7 @@ import {
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition,
     drawSnapLinesGeneric
-} from "project-editor/features/gui/page-editor/snap-lines";
+} from "project-editor/features/gui/flow-editor/snap-lines";
 import { addAlphaToColor } from "eez-studio-shared/color";
 
 import { theme } from "eez-studio-ui/theme";
@@ -17,14 +17,14 @@ import type {
     IDesignerContext,
     IMouseHandler,
     IPointerEvent
-} from "project-editor/features/gui/page-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
 import {
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect,
     getObjectIdFromPoint
-} from "project-editor/features/gui/page-editor/bounding-rects";
+} from "project-editor/features/gui/flow-editor/bounding-rects";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { Transform } from "project-editor/features/gui/page-editor/transform";
+import { Transform } from "project-editor/features/gui/flow-editor/transform";
 
 const SNAP_LINES_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
@@ -271,7 +271,7 @@ export class SnapLines {
             context,
             {
                 id: "",
-                children: [context.document.page]
+                children: [context.document.flow]
             } as ITreeObjectAdapter,
             filterSnapLines || context.filterSnapLines
         );
@@ -471,15 +471,15 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         if (!this.selectionNode) {
             const container = document.getElementById(
                 context.viewState.containerId
-            );
+            )!;
 
-            this.selectionNode = container?.querySelector(
+            this.selectionNode = container.querySelector(
                 ".EezStudio_DesignerSelection_Draggable"
             ) as HTMLElement;
 
             this.objectNodes = context.viewState.selectedObjects.map(
                 selectedObject =>
-                    container?.querySelector(
+                    container.querySelector(
                         `[data-designer-object-id="${selectedObject.id}"]`
                     ) as HTMLElement
             );

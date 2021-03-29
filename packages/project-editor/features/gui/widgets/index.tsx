@@ -34,11 +34,11 @@ import {
 import type {
     IDesignerContext,
     IDataContext
-} from "project-editor/features/gui/page-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
 import {
     ComponentsContainerEnclosure,
     ComponentEnclosure
-} from "project-editor/features/gui/page-editor/render";
+} from "project-editor/features/gui/flow-editor/render";
 
 import { Page, findPage } from "project-editor/features/gui/page";
 import { findBitmap } from "project-editor/features/gui/bitmap";

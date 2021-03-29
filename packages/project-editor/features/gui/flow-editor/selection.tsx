@@ -13,13 +13,13 @@ import styled from "eez-studio-ui/styled-components";
 import type {
     IDesignerContext,
     IMouseHandler
-} from "project-editor/features/gui/page-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
 import {
     RubberBandSelectionMouseHandler,
     isSelectionMoveable
-} from "project-editor/features/gui/page-editor/mouse-handler";
-import { getObjectBoundingRect } from "project-editor/features/gui/page-editor/bounding-rects";
-import { ConnectionLine } from "project-editor/features/gui/page";
+} from "project-editor/features/gui/flow-editor/mouse-handler";
+import { getObjectBoundingRect } from "project-editor/features/gui/flow-editor/bounding-rects";
+import { ConnectionLine } from "project-editor/features/gui/flow";
 import { ActionComponent } from "project-editor/features/gui/component";
 
 ////////////////////////////////////////////////////////////////////////////////

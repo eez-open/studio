@@ -6,12 +6,12 @@ import { DocumentStoreClass } from "project-editor/core/store";
 import type {
     ITransform,
     Transform
-} from "project-editor/features/gui/page-editor/transform";
+} from "project-editor/features/gui/flow-editor/transform";
 
 export interface IDocument {
     DocumentStore: DocumentStoreClass;
 
-    page: ITreeObjectAdapter;
+    flow: ITreeObjectAdapter;
 
     selectedConnectionLines: ITreeObjectAdapter[];
     nonSelectedConnectionLines: ITreeObjectAdapter[];

@@ -10,6 +10,7 @@ import {
     pointInRect,
     Rect
 } from "eez-studio-shared/geometry";
+import { closestByClass } from "eez-studio-shared/dom";
 
 import type {
     IDocument,
@@ -17,15 +18,15 @@ import type {
     IDesignerOptions,
     IDesignerContext,
     IMouseHandler
-} from "project-editor/features/gui/page-editor/designer-interfaces";
-import { ITransform } from "project-editor/features/gui/page-editor/transform";
-import { DesignerContext } from "project-editor/features/gui/page-editor/context";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { ITransform } from "project-editor/features/gui/flow-editor/transform";
+import { DesignerContext } from "project-editor/features/gui/flow-editor/context";
 
 import {
     getObjectIdFromPoint,
     getObjectIdsInsideRect,
     getSelectedObjectsBoundingRect
-} from "project-editor/features/gui/page-editor/bounding-rects";
+} from "project-editor/features/gui/flow-editor/bounding-rects";
 import styled from "eez-studio-ui/styled-components";
 
 import {
@@ -40,15 +41,15 @@ import { IPanel, getDocumentStore } from "project-editor/core/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { ConnectionLine, Page } from "project-editor/features/gui/page";
+import { ConnectionLine, Flow } from "project-editor/features/gui/flow";
 import { Component } from "project-editor/features/gui/component";
 import {
     Svg,
     ComponentEnclosure
-} from "project-editor/features/gui/page-editor/render";
+} from "project-editor/features/gui/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { guid } from "eez-studio-shared/guid";
-import { ConnectionLines } from "project-editor/features/gui/page-editor/ConnectionLineComponent";
+import { ConnectionLines } from "project-editor/features/gui/flow-editor/ConnectionLineComponent";
 import { Draggable } from "eez-studio-ui/draggable";
 import {
     PanMouseHandler,
@@ -58,9 +59,8 @@ import {
     ResizeMouseHandler,
     RubberBandSelectionMouseHandler,
     SnapLines
-} from "project-editor/features/gui/page-editor/mouse-handler";
-import { Selection } from "project-editor/features/gui/page-editor/selection";
-import { closestByClass } from "eez-studio-shared/dom";
+} from "project-editor/features/gui/flow-editor/mouse-handler";
+import { Selection } from "project-editor/features/gui/flow-editor/selection";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -72,12 +72,12 @@ class DragSnapLines {
     designerContext: DesignerContext | undefined;
     dragComponent: Component | undefined;
 
-    start(pageEditorContext: DesignerContext) {
+    start(context: DesignerContext) {
         this.snapLines = new SnapLines();
-        this.designerContext = pageEditorContext;
-        this.dragComponent = pageEditorContext.dragComponent;
+        this.designerContext = context;
+        this.dragComponent = context.dragComponent;
 
-        this.snapLines.find(pageEditorContext, () => true);
+        this.snapLines.find(context, () => true);
     }
 
     clear() {
@@ -96,8 +96,8 @@ class DragSnapLinesOverlay extends React.Component {
             return null;
         }
 
-        const page = dragSnapLines.designerContext!.document.page
-            .object as Page;
+        const flow = dragSnapLines.designerContext!.document.flow
+            .object as Flow;
         const dragComponent = dragSnapLines.dragComponent!;
 
         return (
@@ -105,8 +105,8 @@ class DragSnapLinesOverlay extends React.Component {
                 {dragSnapLines.snapLines.render(
                     dragSnapLines.designerContext!,
                     {
-                        left: page.left + dragComponent.left,
-                        top: page.top + dragComponent.top,
+                        left: flow.pageRect.left + dragComponent.left,
+                        top: flow.pageRect.top + dragComponent.top,
                         width:
                             dragComponent._geometry?.width ??
                             dragComponent.width,
@@ -124,17 +124,17 @@ class DragSnapLinesOverlay extends React.Component {
 
 const DragComponent = observer(
     ({
-        page,
+        flow,
         designerContext
     }: {
-        page: Page;
+        flow: Flow;
         designerContext: DesignerContext;
     }) => {
         return designerContext.dragComponent ? (
             <ComponentEnclosure
                 component={designerContext.dragComponent}
-                left={page.left + designerContext.dragComponent.left}
-                top={page.top + designerContext.dragComponent.top}
+                left={flow.pageRect.left + designerContext.dragComponent.left}
+                top={flow.pageRect.top + designerContext.dragComponent.top}
                 dataContext={designerContext.document.DocumentStore.dataContext}
                 designerContext={designerContext}
             />
@@ -144,14 +144,14 @@ const DragComponent = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class PageDocument implements IDocument {
+class FlowDocument implements IDocument {
     constructor(
-        public page: ITreeObjectAdapter,
+        public flow: ITreeObjectAdapter,
         private designerContext: DesignerContext
     ) {}
 
     @computed get connectionLines(): ITreeObjectAdapter[] {
-        return (this.page.children as ITreeObjectAdapter[]).filter(
+        return (this.flow.children as ITreeObjectAdapter[]).filter(
             editorObject => editorObject.object instanceof ConnectionLine
         );
     }
@@ -172,11 +172,11 @@ class PageDocument implements IDocument {
     }
 
     findObjectById(id: string) {
-        return this.page.getObjectAdapter(id);
+        return this.flow.getObjectAdapter(id);
     }
 
     findObjectParent(object: ITreeObjectAdapter) {
-        return this.page.getParent(object);
+        return this.flow.getParent(object);
     }
 
     objectFromPoint(
@@ -196,10 +196,10 @@ class PageDocument implements IDocument {
     }
 
     resetTransform(transform: ITransform) {
-        const page = this.page.object as Page;
+        const flow = this.flow.object as Flow;
         transform.translate = {
-            x: -page.width / 2,
-            y: -page.height / 2
+            x: -flow.pageRect.width / 2,
+            y: -flow.pageRect.height / 2
         };
         transform.scale = 1;
     }
@@ -220,11 +220,7 @@ class PageDocument implements IDocument {
             const editorObject = this.findObjectById(id);
             if (
                 editorObject &&
-                !(editorObject.object instanceof ConnectionLine) &&
-                !(
-                    editorObject.object instanceof Page &&
-                    editorObject.object.isAction
-                )
+                !(editorObject.object instanceof ConnectionLine)
             ) {
                 const parent = getParent(editorObject.object);
 
@@ -247,11 +243,11 @@ class PageDocument implements IDocument {
     }
 
     createContextMenu(objects: ITreeObjectAdapter[]) {
-        return this.page.createSelectionContextMenu();
+        return this.flow.createSelectionContextMenu();
     }
 
     @computed get DocumentStore() {
-        return getDocumentStore(this.page.object);
+        return getDocumentStore(this.flow.object);
     }
 
     onDragStart(): void {
@@ -268,7 +264,7 @@ class PageDocument implements IDocument {
         targetObjectId: string,
         connectionInput: string
     ): boolean {
-        const page = this.page.object as Page;
+        const flow = this.flow.object as Flow;
 
         const sourceObject = this.DocumentStore.getObjectFromObjectId(
             sourceObjectId
@@ -280,7 +276,7 @@ class PageDocument implements IDocument {
         return !!(
             sourceObject.wireID &&
             targetObject.wireID &&
-            page.connectionLines.find(
+            flow.connectionLines.find(
                 connectionLine =>
                     connectionLine.source == sourceObject.wireID &&
                     connectionLine.output == connectionOutput &&
@@ -296,7 +292,7 @@ class PageDocument implements IDocument {
         targetObjectId: string,
         connectionInput: string
     ) {
-        const page = this.page.object as Page;
+        const flow = this.flow.object as Flow;
 
         const sourceObject = this.DocumentStore.getObjectFromObjectId(
             sourceObjectId
@@ -317,7 +313,7 @@ class PageDocument implements IDocument {
             });
         }
 
-        this.DocumentStore.addObject(page.connectionLines, {
+        this.DocumentStore.addObject(flow.connectionLines, {
             source: sourceObject.wireID,
             output: connectionOutput,
             target: targetObject.wireID,
@@ -884,7 +880,7 @@ export class Canvas extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const PageEditorCanvasContainer = styled.div`
+const FlowEditorCanvasContainer = styled.div`
     flex-grow: 1;
     display: flex;
     position: relative;
@@ -910,13 +906,13 @@ const PageEditorCanvasContainer = styled.div`
     }
 `;
 
-const PageEditorCanvas = styled(Canvas)`
+const FlowEditorCanvas = styled(Canvas)`
     position: absolute;
     width: 100%;
     height: 100%;
 `;
 
-interface PageEditorProps {
+interface FlowEditorProps {
     widgetContainer: ITreeObjectAdapter;
     onFocus?: () => void;
     transitionIsActive?: boolean;
@@ -924,33 +920,33 @@ interface PageEditorProps {
 }
 
 @observer
-export class PageEditor
-    extends React.Component<PageEditorProps>
+export class FlowEditor
+    extends React.Component<FlowEditorProps>
     implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
     designerContext: DesignerContext = new DesignerContext(
-        "eez-page-editor-" + guid()
+        "eez-flow-editor-" + guid()
     );
     currentWidgetContainer?: ITreeObjectAdapter;
 
-    @observable pageDocument: PageDocument;
+    @observable flowDocument: FlowDocument;
 
     @observable options: IDesignerOptions;
 
-    constructor(props: PageEditorProps) {
+    constructor(props: FlowEditorProps) {
         super(props);
 
-        this.updatePageDocument();
+        this.updateFlowDocument();
     }
 
     @action
-    updatePageDocument() {
+    updateFlowDocument() {
         if (this.props.widgetContainer != this.currentWidgetContainer) {
             this.currentWidgetContainer = this.props.widgetContainer;
 
-            this.pageDocument = new PageDocument(
+            this.flowDocument = new FlowDocument(
                 this.props.widgetContainer,
                 this.designerContext
             );
@@ -967,7 +963,7 @@ export class PageEditor
     componentDidMount() {
         autorun(() => {
             this.designerContext.set(
-                this.pageDocument,
+                this.flowDocument,
                 this.viewStatePersistantState,
                 this.onSavePersistantState,
                 this.options,
@@ -978,7 +974,7 @@ export class PageEditor
     }
 
     componentDidUpdate() {
-        this.updatePageDocument();
+        this.updateFlowDocument();
     }
 
     @bind
@@ -1041,12 +1037,13 @@ export class PageEditor
     @computed
     get viewStatePersistantState(): IViewStatePersistantState {
         const uiState = this.context.UIStateStore.getObjectUIState(
-            this.props.widgetContainer.object
+            this.props.widgetContainer.object,
+            this.props.frontFace ? "front" : "back"
         );
 
         let transform: ITransform | undefined;
-        if (uiState && uiState.pageEditorCanvasViewState) {
-            transform = uiState.pageEditorCanvasViewState.transform;
+        if (uiState && uiState.flowEditorCanvasViewState) {
+            transform = uiState.flowEditorCanvasViewState.transform;
         }
 
         let viewState: IViewStatePersistantState = {
@@ -1070,20 +1067,22 @@ export class PageEditor
             this.savedViewState = viewState;
 
             const uiState = this.context.UIStateStore.getObjectUIState(
-                this.props.widgetContainer.object
+                this.props.widgetContainer.object,
+                this.props.frontFace ? "front" : "back"
             );
             if (
                 !uiState ||
-                !uiState.pageEditorCanvasViewState ||
+                !uiState.flowEditorCanvasViewState ||
                 !_isEqual(
-                    uiState.pageEditorCanvasViewState.transform,
+                    uiState.flowEditorCanvasViewState.transform,
                     viewState.transform
                 )
             ) {
                 this.context.UIStateStore.updateObjectUIState(
                     this.props.widgetContainer.object,
+                    this.props.frontFace ? "front" : "back",
                     {
-                        pageEditorCanvasViewState: {
+                        flowEditorCanvasViewState: {
                             transform: viewState.transform
                         }
                     }
@@ -1113,13 +1112,13 @@ export class PageEditor
             event.preventDefault();
             event.stopPropagation();
 
-            const page = this.props.widgetContainer.object as Page;
+            const flow = this.props.widgetContainer.object as Flow;
 
             const component = DragAndDropManager.dragObject as Component;
 
             if (!this.designerContext.dragComponent) {
                 this.designerContext.dragComponent = component;
-                setParent(this.designerContext.dragComponent, page.components);
+                setParent(this.designerContext.dragComponent, flow.components);
 
                 this.designerContext.viewState.selectObjects([]);
 
@@ -1146,18 +1145,18 @@ export class PageEditor
                 component.height
             );
 
-            component.left = Math.round(left - page.left);
-            component.top = Math.round(top - page.top);
+            component.left = Math.round(left - flow.pageRect.left);
+            component.top = Math.round(top - flow.pageRect.top);
         }
     }
 
     @action.bound
     onDrop(event: React.DragEvent) {
         if (this.designerContext.dragComponent) {
-            const page = this.props.widgetContainer.object as Page;
+            const flow = this.props.widgetContainer.object as Flow;
 
             const object = this.context.addObject(
-                page.components,
+                flow.components,
                 toJS(this.designerContext.dragComponent)
             );
 
@@ -1248,40 +1247,13 @@ export class PageEditor
         this.designerContext.destroy();
     }
 
-    get page() {
-        return this.pageDocument.page.object as Page;
+    get flow() {
+        return this.flowDocument.flow.object as Flow;
     }
 
     render() {
-        const content = (
-            <>
-                {!this.props.frontFace && (
-                    <AllConnectionLines
-                        designerContext={this.designerContext}
-                    />
-                )}
-                <div
-                    style={{
-                        position: "absolute"
-                    }}
-                >
-                    <ComponentEnclosure
-                        component={this.page}
-                        dataContext={
-                            this.pageDocument.DocumentStore.dataContext
-                        }
-                        designerContext={this.designerContext}
-                    />
-                </div>
-                <DragComponent
-                    page={this.page}
-                    designerContext={this.designerContext}
-                />
-            </>
-        );
-
         return (
-            <PageEditorCanvasContainer
+            <FlowEditorCanvasContainer
                 id={this.designerContext.containerId}
                 tabIndex={0}
                 onFocus={this.props.onFocus || this.focusHander}
@@ -1290,14 +1262,36 @@ export class PageEditor
                 onDragLeave={this.onDragLeave}
                 onKeyDown={this.onKeyDown}
             >
-                <PageEditorCanvas
+                <FlowEditorCanvas
                     designerContext={this.designerContext}
                     dragAndDropActive={!!DragAndDropManager.dragObject}
                     transitionIsActive={this.props.transitionIsActive}
                 >
-                    {this.designerContext.document && content}
-                </PageEditorCanvas>
-            </PageEditorCanvasContainer>
+                    {this.designerContext.document && (
+                        <>
+                            {!this.props.frontFace && (
+                                <AllConnectionLines
+                                    designerContext={this.designerContext}
+                                />
+                            )}
+                            <div
+                                style={{
+                                    position: "absolute"
+                                }}
+                            >
+                                {(this.designerContext.document.flow
+                                    .object as Flow).renderComponents(
+                                    this.designerContext
+                                )}
+                            </div>
+                            <DragComponent
+                                flow={this.flow}
+                                designerContext={this.designerContext}
+                            />
+                        </>
+                    )}
+                </FlowEditorCanvas>
+            </FlowEditorCanvasContainer>
         );
     }
 }

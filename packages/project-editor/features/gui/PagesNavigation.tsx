@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, action, observable } from "mobx";
+import { computed, action, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
@@ -10,38 +10,40 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { IconAction } from "eez-studio-ui/action";
 
 import {
-    IEezObject,
-    IEditorState,
     EditorComponent,
-    NavigationComponent,
-    getParent
+    getParent,
+    IEditorState,
+    IEezObject,
+    NavigationComponent
 } from "project-editor/core/object";
 import {
-    TreeObjectAdapter,
     ITreeObjectAdapter,
-    TreeAdapter
+    TreeAdapter,
+    TreeObjectAdapter,
+    TreeObjectAdapterChildren
 } from "project-editor/core/objectAdapter";
-import type { IPanel } from "project-editor/core/store";
+import { getDocumentStore, IPanel } from "project-editor/core/store";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
 
-import { PageEditor as StudioPageEditor } from "project-editor/features/gui/page-editor/editor";
-import { ComponentsPalette } from "project-editor/features/gui/page-editor/ComponentsPalette";
+import { FlowEditor as StudioPageEditor } from "project-editor/features/gui/flow-editor/editor";
+import { ComponentsPalette } from "project-editor/features/gui/flow-editor/ComponentsPalette";
 
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 
 import { ThemesSideView } from "project-editor/features/gui/theme";
 import { ProjectContext } from "project-editor/project/context";
 
-import { Page } from "project-editor/features/gui/page";
 import {
     Body,
     ToolbarHeader,
     VerticalHeaderWithBody
 } from "eez-studio-ui/header-with-body";
 import { styled } from "eez-studio-ui/styled-components";
+import { Page } from "project-editor/features/gui/page";
+import { Widget } from "project-editor/features/gui/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +76,7 @@ const FlipCardDiv = styled.div`
     }
 
     .flip-card-back {
-        transform: rotateY(-180deg);
+        transform: rotateY(180deg);
     }
 `;
 
@@ -83,10 +85,13 @@ export class PageEditor extends EditorComponent implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @observable frontFace: boolean = true;
     @observable transitionIsActive = false;
 
     flipCardInnerRef = React.createRef<HTMLDivElement>();
+
+    get pageTabState() {
+        return this.props.editor.state as PageTabState;
+    }
 
     componentDidMount() {
         const el = this.flipCardInnerRef.current!;
@@ -113,9 +118,8 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     @computed
     get treeAdapter() {
-        let pageTabState = this.props.editor.state as PageTabState;
         return new TreeAdapter(
-            pageTabState.widgetContainerDisplayItem,
+            this.pageTabState.componentContainerDisplayItem,
             undefined,
             undefined,
             true
@@ -124,14 +128,12 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     @computed
     get selectedObject() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return pageTabState.selectedObject;
+        return this.pageTabState.selectedObject;
     }
 
     @computed
     get selectedObjects() {
-        let pageTabState = this.props.editor.state as PageTabState;
-        return pageTabState.selectedObjects;
+        return this.pageTabState.selectedObjects;
     }
 
     cutSelection() {
@@ -151,7 +153,6 @@ export class PageEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        let pageTabState = this.props.editor.state as PageTabState;
         return (
             <VerticalHeaderWithBody>
                 <ToolbarHeader>
@@ -159,15 +160,19 @@ export class PageEditor extends EditorComponent implements IPanel {
                         title="Show front face"
                         icon="material:flip_to_front"
                         iconSize={16}
-                        onClick={action(() => (this.frontFace = true))}
-                        selected={this.frontFace}
+                        onClick={action(
+                            () => (this.pageTabState.frontFace = true)
+                        )}
+                        selected={this.pageTabState.frontFace}
                     />
                     <IconAction
                         title="Show back face"
                         icon="material:flip_to_back"
                         iconSize={16}
-                        onClick={action(() => (this.frontFace = false))}
-                        selected={!this.frontFace}
+                        onClick={action(
+                            () => (this.pageTabState.frontFace = false)
+                        )}
+                        selected={!this.pageTabState.frontFace}
                     />
                     <div style={{ flexGrow: 1 }}></div>
                 </ToolbarHeader>
@@ -176,13 +181,23 @@ export class PageEditor extends EditorComponent implements IPanel {
                         <div
                             ref={this.flipCardInnerRef}
                             className={classNames("flip-card-inner", {
-                                "show-back-face": !this.frontFace
+                                "show-back-face": !this.pageTabState.frontFace
                             })}
                         >
-                            <div className="flip-card-front">
+                            <div
+                                className="flip-card-front"
+                                style={{
+                                    display:
+                                        this.pageTabState.frontFace ||
+                                        this.transitionIsActive
+                                            ? "flex"
+                                            : "none"
+                                }}
+                            >
                                 <StudioPageEditor
                                     widgetContainer={
-                                        pageTabState.widgetContainerDisplayItem
+                                        this.pageTabState
+                                            .componentContainerDisplayItem
                                     }
                                     transitionIsActive={this.transitionIsActive}
                                     frontFace={true}
@@ -191,7 +206,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                             <div className="flip-card-back">
                                 <StudioPageEditor
                                     widgetContainer={
-                                        pageTabState.widgetContainerDisplayItem
+                                        this.pageTabState
+                                            .componentContainerDisplayItem
                                     }
                                     transitionIsActive={this.transitionIsActive}
                                     frontFace={false}
@@ -207,49 +223,96 @@ export class PageEditor extends EditorComponent implements IPanel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class PageTreeObjectAdapter extends TreeObjectAdapter {
+    constructor(private page: Page, private frontFace: boolean) {
+        super(page);
+    }
+
+    @computed({
+        keepAlive: true
+    })
+    get children(): TreeObjectAdapterChildren {
+        if (this.frontFace) {
+            return this.page.components
+                .filter(component => component instanceof Widget)
+                .map(child => this.transformer(child));
+        }
+
+        return [
+            ...this.page.components.map(child => this.transformer(child)),
+            ...this.page.connectionLines.map(child => this.transformer(child))
+        ];
+    }
+}
+
 export class PageTabState implements IEditorState {
     page: Page;
-    widgetContainerDisplayItem: ITreeObjectAdapter;
+    componentContainerDisplayItemFrontFace: ITreeObjectAdapter;
+    componentContainerDisplayItemBackFace: ITreeObjectAdapter;
+
+    @computed get frontFace() {
+        return getDocumentStore(this.page).UIStateStore.pageFrontFace;
+    }
+
+    set frontFace(frontFace: boolean) {
+        runInAction(
+            () =>
+                (getDocumentStore(
+                    this.page
+                ).UIStateStore.pageFrontFace = frontFace)
+        );
+    }
 
     constructor(object: IEezObject) {
         this.page = object as Page;
-        this.widgetContainerDisplayItem = new TreeObjectAdapter(this.page);
+        this.componentContainerDisplayItemFrontFace = new PageTreeObjectAdapter(
+            this.page,
+            true
+        );
+        this.componentContainerDisplayItemBackFace = new PageTreeObjectAdapter(
+            this.page,
+            false
+        );
+    }
+
+    @computed get componentContainerDisplayItem() {
+        return this.frontFace
+            ? this.componentContainerDisplayItemFrontFace
+            : this.componentContainerDisplayItemBackFace;
     }
 
     @computed
     get selectedObject(): IEezObject | undefined {
-        return this.widgetContainerDisplayItem.selectedObject || this.page;
+        return this.componentContainerDisplayItem.selectedObject || this.page;
     }
 
     @computed
     get selectedObjects() {
-        return this.widgetContainerDisplayItem.selectedObjects;
+        return this.componentContainerDisplayItem.selectedObjects;
     }
 
     loadState(state: any) {
-        this.widgetContainerDisplayItem.loadState(state);
+        this.componentContainerDisplayItem.loadState(state);
     }
 
     saveState() {
-        return this.widgetContainerDisplayItem.saveState();
+        return this.componentContainerDisplayItem.saveState();
     }
 
     @action
     selectObject(object: IEezObject) {
         let ancestor: IEezObject | undefined;
         for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-            let item = this.widgetContainerDisplayItem.getObjectAdapter(
+            let item = this.componentContainerDisplayItem.getObjectAdapter(
                 ancestor
             );
             if (item) {
-                this.widgetContainerDisplayItem.selectItems([item]);
+                this.componentContainerDisplayItem.selectItems([item]);
                 return;
             }
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class PagesNavigation extends NavigationComponent {
@@ -265,7 +328,7 @@ export class PagesNavigation extends NavigationComponent {
     }
 
     @computed
-    get widgetContainerDisplayItem() {
+    get componentContainerDisplayItem() {
         if (!this.context.EditorsStore.activeEditor) {
             return undefined;
         }
@@ -274,16 +337,16 @@ export class PagesNavigation extends NavigationComponent {
         if (!pageTabState) {
             return undefined;
         }
-        return pageTabState.widgetContainerDisplayItem;
+        return pageTabState.componentContainerDisplayItem;
     }
 
     @computed
     get treeAdapter() {
-        if (!this.widgetContainerDisplayItem) {
+        if (!this.componentContainerDisplayItem) {
             return null;
         }
         return new TreeAdapter(
-            this.widgetContainerDisplayItem,
+            this.componentContainerDisplayItem,
             undefined,
             undefined,
             true
@@ -312,8 +375,8 @@ export class PagesNavigation extends NavigationComponent {
 
     get selectedObjects() {
         const selectedObjects =
-            this.widgetContainerDisplayItem &&
-            this.widgetContainerDisplayItem.selectedObjects;
+            this.componentContainerDisplayItem &&
+            this.componentContainerDisplayItem.selectedObjects;
         if (selectedObjects && selectedObjects.length > 0) {
             return selectedObjects;
         }

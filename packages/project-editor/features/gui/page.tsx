@@ -17,10 +17,8 @@ import {
     styleGroup,
     specificGroup,
     getParent,
-    getClass,
-    getLabel,
-    cloneObject,
-    getId
+    getId,
+    makeDerivedClassInfo
 } from "project-editor/core/object";
 import { getDocumentStore } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
@@ -29,11 +27,12 @@ import type {
     IResizeHandler,
     IDesignerContext,
     IDataContext
-} from "project-editor/features/gui/page-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-editor/designer-interfaces";
 import {
     ComponentsContainerEnclosure,
-    ComponentGeometry
-} from "project-editor/features/gui/page-editor/render";
+    ComponentGeometry,
+    ComponentEnclosure
+} from "project-editor/features/gui/flow-editor/render";
 
 import {
     Project,
@@ -45,17 +44,14 @@ import { Component, Widget } from "project-editor/features/gui/component";
 
 import { findStyle } from "project-editor/features/gui/style";
 import { getThemedColor } from "project-editor/features/gui/theme";
-import { visitObjects } from "project-editor/core/search";
 import { deleteObject } from "project-editor/core/commands";
-import { humanize } from "eez-studio-shared/string";
-import { objectToClipboardData } from "project-editor/core/clipboard";
-import { guid } from "eez-studio-shared/guid";
 import {
     PageEditor,
     PagesNavigation,
     PageTabState
 } from "project-editor/features/gui/PagesNavigation";
 import { Rect } from "eez-studio-shared/geometry";
+import { Flow, FlowFragment } from "project-editor/features/gui/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -140,179 +136,10 @@ registerClass(PageOrientation);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ConnectionLine extends EezObject {
-    @observable source: string;
-    @observable output: string;
-    @observable target: string;
-    @observable input: string;
-
-    static classInfo: ClassInfo = {
-        label: (connectionLine: ConnectionLine) => {
-            return `${getLabel(connectionLine.sourceComponent!)}@${humanize(
-                connectionLine.output
-            )} ➝ ${getLabel(connectionLine.targetComponent!)}@${humanize(
-                connectionLine.input
-            )}`;
-        },
-
-        properties: [
-            {
-                name: "source",
-                type: PropertyType.String,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "output",
-                type: PropertyType.String,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "target",
-                type: PropertyType.String,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "input",
-                type: PropertyType.String,
-                hideInPropertyGrid: true
-            }
-        ],
-
-        isSelectable: () => true
-    };
-
-    @computed get sourceComponent() {
-        const page = getParent(getParent(this)) as Page;
-        return page.wiredComponents.get(this.source);
-    }
-
-    @computed get targetComponent() {
-        const page = getParent(getParent(this)) as Page;
-        return page.wiredComponents.get(this.target);
-    }
-
-    @computed get sourcePosition() {
-        if (!(this.sourceComponent && this.sourceComponent._geometry)) {
-            return undefined;
-        }
-
-        const outputGeometry = this.sourceComponent._geometry.outputs[
-            this.output
-        ];
-        if (!outputGeometry) {
-            return undefined;
-        }
-
-        return {
-            x: this.sourceComponent.left + outputGeometry.position.x,
-            y: this.sourceComponent.top + outputGeometry.position.y
-        };
-    }
-
-    @computed get targetPosition() {
-        if (!(this.targetComponent && this.targetComponent._geometry)) {
-            return undefined;
-        }
-        const inputGeometry = this.targetComponent._geometry.inputs[this.input];
-        if (!inputGeometry) {
-            return undefined;
-        }
-
-        return {
-            x: this.targetComponent.left + inputGeometry.position.x,
-            y: this.targetComponent.top + inputGeometry.position.y
-        };
-    }
-}
-
-registerClass(ConnectionLine);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class PageFragment extends EezObject {
-    components: Component[];
-    connectionLines: ConnectionLine[];
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "components",
-                type: PropertyType.Array,
-                typeClass: Component
-            },
-            {
-                name: "connectionLines",
-                type: PropertyType.Array,
-                typeClass: ConnectionLine
-            }
-        ],
-
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            if (jsObject.widgets) {
-                jsObject.components = jsObject.widgets;
-                delete jsObject.widgets;
-            }
-        }
-    };
-
-    addObjects(page: Page, objects: IEezObject[]) {
-        this.components = [];
-        this.connectionLines = [];
-
-        const DocumentStore = getDocumentStore(page);
-
-        const wireIDMap = new Map<string, string>();
-
-        objects.forEach((object: Component) => {
-            const clone = cloneObject(DocumentStore, object) as Component;
-            if (object.wireID) {
-                wireIDMap.set(object.wireID, object.wireID);
-            }
-            this.components.push(clone);
-        });
-
-        page.connectionLines.forEach(connectionLine => {
-            const source = wireIDMap.get(connectionLine.source);
-            const target = wireIDMap.get(connectionLine.target);
-            if (source && target) {
-                const clone = cloneObject(
-                    DocumentStore,
-                    connectionLine
-                ) as ConnectionLine;
-                this.connectionLines.push(clone);
-            }
-        });
-    }
-
-    rewire() {
-        const wireIDMap = new Map<string, string>();
-
-        this.components.forEach((object: Component) => {
-            if (object.wireID) {
-                const wireID = guid();
-                wireIDMap.set(object.wireID, wireID);
-                object.wireID = wireID;
-            }
-        });
-
-        this.connectionLines.forEach(connectionLine => {
-            const newSource = wireIDMap.get(connectionLine.source)!;
-            const newTarget = wireIDMap.get(connectionLine.target)!;
-            connectionLine.source = newSource;
-            connectionLine.target = newTarget;
-        });
-    }
-}
-
-registerClass(PageFragment);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class Page extends EezObject {
+export class Page extends Flow {
     @observable name: string;
     @observable description?: string;
     @observable style?: string;
-    @observable components: Component[];
     @observable usedIn?: string[];
     @observable closePageIfTouchedOutside: boolean;
 
@@ -327,11 +154,9 @@ export class Page extends EezObject {
 
     @observable dataContextOverrides: string;
 
-    @observable connectionLines: ConnectionLine[];
-
     @observable _geometry: ComponentGeometry;
 
-    static classInfo: ClassInfo = {
+    static classInfo = makeDerivedClassInfo(Flow.classInfo, {
         properties: [
             {
                 name: "name",
@@ -378,12 +203,6 @@ export class Page extends EezObject {
                 propertyGridGroup: styleGroup
             },
             {
-                name: "components",
-                type: PropertyType.Array,
-                typeClass: Component,
-                hideInPropertyGrid: true
-            },
-            {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
@@ -392,8 +211,7 @@ export class Page extends EezObject {
             {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (page: Page) => page.isAction
+                propertyGridGroup: specificGroup
             },
             {
                 name: "portrait",
@@ -407,12 +225,6 @@ export class Page extends EezObject {
                 name: "isUsedAsCustomWidget",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup
-            },
-            {
-                name: "connectionLines",
-                type: PropertyType.Array,
-                typeClass: ConnectionLine,
-                hideInPropertyGrid: true
             }
         ],
         beforeLoadHook: (page: Page, jsObject: any) => {
@@ -463,7 +275,7 @@ export class Page extends EezObject {
             if (object) {
                 if (isSubclassOf(classInfo, Component.classInfo)) {
                     return (object as Page).components;
-                } else if (classInfo === PageFragment.classInfo) {
+                } else if (classInfo === FlowFragment.classInfo) {
                     return object;
                 }
             }
@@ -521,45 +333,21 @@ export class Page extends EezObject {
             DocumentStore.updateObject(object, props);
         },
         isMoveable: (object: Page) => {
-            return !object.isAction;
+            return true;
         },
         isSelectable: (object: Page) => {
-            return !object.isAction;
+            return true;
         },
         showSelectedObjectsParent: (object: Page) => {
-            return !object.isAction;
+            return true;
         },
         getResizeHandlers(object: Page) {
             return object.getResizeHandlers();
         }
-    };
+    });
 
     get autoSize() {
         return false;
-    }
-
-    @computed get isAction() {
-        return getClass(getParent(this)).name == "Action";
-    }
-
-    @computed get wiredComponents() {
-        const widgets = new Map<string, Component>();
-
-        const v = visitObjects(this.components);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            if (visitResult.value instanceof Component) {
-                const widget = visitResult.value;
-                if (widget.wireID) {
-                    widgets.set(widget.wireID, widget);
-                }
-            }
-        }
-
-        return widgets;
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
@@ -601,49 +389,47 @@ export class Page extends EezObject {
             .forEach(connectionLine => deleteObject(connectionLine));
     }
 
-    objectsToClipboardData(objects: IEezObject[]) {
-        const pageFragment = new PageFragment();
-        pageFragment.addObjects(this, objects);
-        return objectToClipboardData(pageFragment);
+    get pageRect() {
+        return {
+            left: this.left,
+            top: this.top,
+            width: this.width,
+            height: this.height
+        };
     }
 
-    pastePageFragment(pageFragment: PageFragment) {
-        const DocumentStore = getDocumentStore(this);
+    renderComponents(designerContext: IDesignerContext) {
+        return (
+            <>
+                <ComponentEnclosure
+                    component={this}
+                    dataContext={
+                        designerContext.document.DocumentStore.dataContext
+                    }
+                    designerContext={designerContext}
+                />
 
-        DocumentStore.UndoManager.setCombineCommands(true);
-
-        pageFragment.rewire();
-
-        pageFragment.components.forEach(widget => {
-            widget.left += 20;
-            widget.top += 20;
-        });
-
-        DocumentStore.addObjects(
-            this.connectionLines,
-            pageFragment.connectionLines
+                {!designerContext.frontFace && (
+                    <ComponentsContainerEnclosure
+                        components={this.components.filter(
+                            component => !(component instanceof Widget)
+                        )}
+                        designerContext={designerContext}
+                        dataContext={
+                            designerContext.document.DocumentStore.dataContext
+                        }
+                    />
+                )}
+            </>
         );
-
-        const widgets = DocumentStore.addObjects(
-            this.components,
-            pageFragment.components
-        );
-
-        DocumentStore.UndoManager.setCombineCommands(false);
-
-        return widgets;
     }
 
     render(designerContext: IDesignerContext, dataContext: IDataContext) {
         return (
             <ComponentsContainerEnclosure
-                components={
-                    designerContext.frontFace
-                        ? this.components.filter(
-                              component => component instanceof Widget
-                          )
-                        : this.components
-                }
+                components={this.components.filter(
+                    component => component instanceof Widget
+                )}
                 designerContext={designerContext}
                 dataContext={dataContext.create(
                     this.dataContextOverridesObject

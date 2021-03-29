@@ -3,9 +3,9 @@ import React from "react";
 import classNames from "classnames";
 
 import { theme } from "eez-studio-ui/theme";
-import type { IDesignerContext } from "project-editor/features/gui/page-editor/designer-interfaces";
-import { ConnectionLine } from "project-editor/features/gui/page";
-import { getConnectionLineShape } from "project-editor/features/gui/page-editor/connection-line-shape";
+import type { IDesignerContext } from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { ConnectionLine } from "project-editor/features/gui/flow";
+import { getConnectionLineShape } from "project-editor/features/gui/flow-editor/connection-line-shape";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////

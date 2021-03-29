@@ -110,11 +110,12 @@ import {
     InputActionComponent,
     OutputActionComponent
 } from "project-editor/features/gui/action-components";
+import { Page } from "project-editor/features/gui/page";
 import {
     ConnectionLine,
-    Page,
-    PageFragment
-} from "project-editor/features/gui/page";
+    Flow,
+    FlowFragment
+} from "project-editor/features/gui/flow";
 
 import { Section } from "project-editor/core/output";
 import { findAction } from "project-editor/features/action/action";
@@ -793,12 +794,13 @@ class UIStateStoreClass {
     @observable viewOptions: ViewOptions = new ViewOptions();
     @observable selectedBuildConfiguration: string;
     @observable features: any;
-    @observable objects = new Map<string, any>();
+    @observable objectUIStates = new Map<string, any>();
     @observable savedState: any;
     @observable searchPattern: string;
     @observable searchMatchCase: boolean;
     @observable searchMatchWholeWord: boolean;
     @observable activeOutputSection = Section.CHECKS;
+    @observable pageFrontFace: boolean = true;
 
     constructor(public DocumentStore: DocumentStoreClass) {
         autorun(() => {
@@ -830,9 +832,9 @@ class UIStateStoreClass {
     }
 
     loadObjects(objects: any) {
-        this.objects.clear();
+        this.objectUIStates.clear();
         _each(objects, (value: any, objectPath: any) => {
-            this.objects.set(objectPath, value);
+            this.objectUIStates.set(objectPath, value);
         });
     }
 
@@ -847,6 +849,7 @@ class UIStateStoreClass {
         this.activeOutputSection =
             uiState.activeOutputSection ?? Section.CHECKS;
         this.loadObjects(uiState.objects);
+        this.pageFrontFace = uiState.pageFrontFace;
     }
 
     @computed
@@ -857,9 +860,16 @@ class UIStateStoreClass {
     @computed
     get objectsJS() {
         let map: any = {};
-        for (var [objectPath, value] of this.objects) {
+        for (let [key, value] of this.objectUIStates) {
+            const i = key.indexOf("[");
+            let objectPath;
+            if (i != -1) {
+                objectPath = key.substring(0, i);
+            } else {
+                objectPath = key;
+            }
             if (this.DocumentStore.getObjectFromStringPath(objectPath)) {
-                map[objectPath] = value;
+                map[key] = value;
             }
         }
         return map;
@@ -874,7 +884,8 @@ class UIStateStoreClass {
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
             objects: this.objectsJS,
-            activeOutputSection: this.activeOutputSection
+            activeOutputSection: this.activeOutputSection,
+            pageFrontFace: this.pageFrontFace
         };
     }
 
@@ -918,17 +929,18 @@ class UIStateStoreClass {
         this.selectedBuildConfiguration = selectedBuildConfiguration;
     }
 
-    getObjectUIState(object: IEezObject) {
-        return this.objects.get(getObjectPathAsString(object));
+    getObjectUIState(object: IEezObject, option: string) {
+        const key = getObjectPathAsString(object) + `[${option}]`;
+        return this.objectUIStates.get(key);
     }
 
-    updateObjectUIState(object: IEezObject, changes: any) {
-        const path = getObjectPathAsString(object);
-        let objectUIState = this.objects.get(path);
+    updateObjectUIState(object: IEezObject, option: string, changes: any) {
+        const key = getObjectPathAsString(object) + `[${option}]`;
+        let objectUIState = this.objectUIStates.get(key);
         if (objectUIState) {
             Object.assign(objectUIState, changes);
         } else {
-            this.objects.set(path, changes);
+            this.objectUIStates.set(key, changes);
         }
     }
 }
@@ -1079,21 +1091,21 @@ export class UndoManagerClass {
 
 export class DebugStoreClass {
     @observable isActive = false;
-    page: Page | undefined;
+    flow: Flow | undefined;
 
     constructor(public DocumentStore: DocumentStoreClass) {}
 
     executeAction(actionName: string) {
         const action = findAction(this.DocumentStore.project, actionName);
-        if (action && action.page) {
-            this.executePage(action.page);
+        if (action) {
+            this.executeFlow(action);
         }
     }
 
-    executePage(page: Page) {
-        this.page = page;
-        const inputActionComponent = page.components.find(
-            widget => widget instanceof InputActionComponent
+    executeFlow(flow: Flow) {
+        this.flow = flow;
+        const inputActionComponent = flow.components.find(
+            component => component instanceof InputActionComponent
         ) as ActionComponent;
         if (inputActionComponent) {
             this.executeActionComponent(inputActionComponent);
@@ -1105,13 +1117,13 @@ export class DebugStoreClass {
         actionNode.execute();
         if (actionNode instanceof OutputActionComponent) {
             console.log("Execute action done!");
-            this.page = undefined;
+            this.flow = undefined;
         }
     }
 
     getConnectionline(wireID: string) {
-        if (this.page) {
-            return this.page.connectionLines.find(
+        if (this.flow) {
+            return this.flow.connectionLines.find(
                 connectionLine => connectionLine.source === wireID
             );
         }
@@ -1119,10 +1131,10 @@ export class DebugStoreClass {
     }
 
     executeWire(wireID: string) {
-        if (this.page) {
+        if (this.flow) {
             const connectionLine = this.getConnectionline(wireID);
             if (connectionLine) {
-                const actionNode = this.page.wiredComponents.get(
+                const actionNode = this.flow.wiredComponents.get(
                     connectionLine.target
                 ) as ActionComponent;
                 this.executeActionComponent(actionNode);
@@ -2029,15 +2041,15 @@ export function pasteItem(object: IEezObject) {
                         );
                     } else {
                         if (
-                            c.serializedData.objectClassName == "PageFragment"
+                            c.serializedData.objectClassName == "FlowFragment"
                         ) {
-                            const page = getAncestorOfType(
+                            const flow = getAncestorOfType(
                                 c.pastePlace,
-                                Page.classInfo
-                            ) as Page;
-                            if (page) {
-                                return page.pastePageFragment(
-                                    c.serializedData.object as PageFragment
+                                Flow.classInfo
+                            ) as Flow;
+                            if (flow) {
+                                return flow.pasteFlowFragment(
+                                    c.serializedData.object as FlowFragment
                                 );
                             }
                         }
