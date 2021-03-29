@@ -16,7 +16,7 @@ import { findReferencedObject, Project } from "project-editor/project/project";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
-import type { IDataContext } from "project-editor/features/gui/flow-interfaces";
+import type { IDataContext } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 

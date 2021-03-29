@@ -28,19 +28,19 @@ import {
     ListNavigationWithProperties
 } from "project-editor/components/ListNavigation";
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { FlowEditor } from "project-editor/features/gui/flow-editor/editor";
-import { FlowRuntime } from "project-editor/features/gui/flow-runtime/runtime";
+import { FlowEditor } from "project-editor/flow/flow-editor/editor";
+import { FlowRuntime } from "project-editor/flow/flow-runtime/runtime";
 import { IPanel } from "project-editor/core/store";
-import { ComponentsPalette } from "project-editor/features/gui/flow-editor/ComponentsPalette";
-import { ThemesSideView } from "project-editor/features/gui/theme";
+import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
+import { ThemesSideView } from "project-editor/features/style/theme";
 import { bind } from "bind-decorator";
 import { TreeAdapter } from "project-editor/core/objectAdapter";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 import { IconAction } from "eez-studio-ui/action";
-import { Flow, FlowTabState } from "project-editor/features/gui/flow";
-import { IFlowContext } from "project-editor/features/gui/flow-interfaces";
-import { ComponentsContainerEnclosure } from "project-editor/features/gui/flow-editor/render";
+import { Flow, FlowTabState } from "project-editor/flow/flow";
+import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
 

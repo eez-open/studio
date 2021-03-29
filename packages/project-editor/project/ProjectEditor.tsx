@@ -106,7 +106,7 @@ class Toolbar extends React.Component {
 
     get isBuildConfigurationSelectorVisible() {
         return (
-            (this.context.project as any).gui ||
+            this.context.project.pages ||
             this.context.project.actions ||
             this.context.project.data
         );

@@ -12,7 +12,7 @@ import {
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { Rect } from "eez-studio-shared/geometry";
-import type { IResizeHandler } from "project-editor/features/gui/flow-interfaces";
+import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 

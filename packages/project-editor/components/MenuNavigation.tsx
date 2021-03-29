@@ -44,7 +44,7 @@ interface NavigationMenuItemProps {
 @observer
 class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     constructor(props: NavigationMenuItemProps) {
         super(props);
@@ -62,7 +62,9 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     render() {
         let className = classNames({
             selected: compareNavigationItem(
-                this.context.NavigationStore.getNavigationSelectedItem(this.props.navigationObject),
+                this.context.NavigationStore.getNavigationSelectedItem(
+                    this.props.navigationObject
+                ),
                 this.props.item
             )
         });
@@ -93,25 +95,25 @@ class Menu extends React.Component<{
     navigationObject: IEezObject;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     onFocus() {
         this.context.NavigationStore.setSelectedPanel(undefined);
     }
 
     render() {
-        let items = getChildren(this.props.navigationObject)
-            .filter(item => getClassInfo(item).icon)
-            .map(item => (
-                <NavigationMenuItem
-                    key={getId(item)}
-                    navigationObject={this.props.navigationObject}
-                    item={item}
-                />
-            ));
+        let items = getChildren(this.props.navigationObject);
+        items = items.filter(item => getClassInfo(item).icon);
+        const navigationItems = items.map(item => (
+            <NavigationMenuItem
+                key={getId(item)}
+                navigationObject={this.props.navigationObject}
+                item={item}
+            />
+        ));
         return (
             <MenuContainer tabIndex={0} onFocus={this.onFocus.bind(this)}>
-                {items}
+                {navigationItems}
             </MenuContainer>
         );
     }
@@ -135,7 +137,7 @@ export class MenuNavigation extends React.Component<
     {}
 > {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
         let subNavigation: JSX.Element | undefined;
@@ -143,11 +145,15 @@ export class MenuNavigation extends React.Component<
             this.props.navigationObject
         );
         if (selectedItem) {
-            let NavigationComponent = getClassInfo(selectedItem).navigationComponent;
+            let NavigationComponent = getClassInfo(selectedItem)
+                .navigationComponent;
             if (NavigationComponent) {
                 subNavigation = (
                     <NavigationComponent
-                        id={getClassInfo(selectedItem).navigationComponentId || this.props.id}
+                        id={
+                            getClassInfo(selectedItem).navigationComponentId ||
+                            this.props.id
+                        }
                         navigationObject={selectedItem}
                     />
                 );

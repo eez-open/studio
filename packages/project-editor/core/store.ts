@@ -101,16 +101,9 @@ import {
     buildExtensions
 } from "project-editor/project/build";
 import { getAllMetrics } from "project-editor/project/metrics";
-import {
-    ActionComponent,
-    Component
-} from "project-editor/features/gui/component";
-import { Page } from "project-editor/features/gui/page";
-import {
-    ConnectionLine,
-    Flow,
-    FlowFragment
-} from "project-editor/features/gui/flow";
+import { ActionComponent, Component } from "project-editor/flow/component";
+import { Page } from "project-editor/features/page/page";
+import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
 import { isViewer } from "eez-studio-shared/util-electron";
@@ -2264,6 +2257,6 @@ async function initExtensions() {
         }
 
         const extensionsModule = await import("project-editor/core/extensions");
-        await extensionsModule.loadExtensions();
+        extensionsModule.loadExtensions();
     }
 }

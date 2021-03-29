@@ -50,7 +50,6 @@ import "project-editor/project/builtInFeatures";
 
 import { Action } from "project-editor/features/action/action";
 import { DataItem } from "project-editor/features/data/data";
-import { Gui } from "project-editor/features/gui/gui";
 import { Scpi } from "project-editor/features/scpi/scpi";
 import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
@@ -62,6 +61,12 @@ import {
     startSearch,
     SearchCallbackMessage
 } from "project-editor/core/search";
+import { Color, Theme } from "project-editor/features/style/theme";
+import { guid } from "eez-studio-shared/guid";
+import { Page } from "project-editor/features/page/page";
+import { Style } from "project-editor/features/style/style";
+import { Font } from "project-editor/features/font/font";
+import { Bitmap } from "project-editor/features/bitmap/bitmap";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -172,7 +177,7 @@ registerClass(BuildFile);
 
 function isFilesPropertyEnumerable(object: IEezObject): boolean {
     const project: Project = getProject(object);
-    return !!(project.gui || project.actions || project.data);
+    return !!(project.pages || project.actions || project.data);
 }
 
 export class Build extends EezObject {
@@ -676,6 +681,24 @@ let builtinProjectProperties: PropertyInfo[] = [
         type: PropertyType.Object,
         typeClass: Settings,
         hideInPropertyGrid: true
+    },
+    {
+        name: "colors",
+        type: PropertyType.Array,
+        typeClass: Color,
+        hideInPropertyGrid: true,
+        partOfNavigation: false
+    },
+    {
+        name: "themes",
+        type: PropertyType.Array,
+        typeClass: Theme,
+        hideInPropertyGrid: true,
+        partOfNavigation: false
+    },
+    {
+        name: "storyboard",
+        type: PropertyType.JSON
     }
 ];
 let projectProperties = builtinProjectProperties;
@@ -685,6 +708,31 @@ function getProjectClassInfo() {
         projectClassInfo = {
             label: () => "Project",
             properties: projectProperties,
+            beforeLoadHook: (project: Project, projectJs: any) => {
+                if (projectJs.gui) {
+                    Object.assign(projectJs, projectJs.gui);
+                    delete projectJs.gui;
+                }
+
+                if (projectJs.colors) {
+                    for (const color of projectJs.colors) {
+                        color.id = guid();
+                    }
+                }
+                if (projectJs.themes) {
+                    for (const theme of projectJs.themes) {
+                        theme.id = guid();
+                        for (let i = 0; i < theme.colors.length; i++) {
+                            project.setThemeColor(
+                                theme.id,
+                                projectJs.colors[i].id,
+                                theme.colors[i]
+                            );
+                        }
+                        delete theme.colors;
+                    }
+                }
+            },
             navigationComponent: MenuNavigation,
             navigationComponentId: "project",
             defaultNavigationKey: "settings"
@@ -715,7 +763,10 @@ function getProjectClassInfo() {
                     hideInPropertyGrid: true,
                     check:
                         projectFeature.eezStudioExtension.implementation
-                            .projectFeature.check
+                            .projectFeature.check,
+                    enumerable:
+                        projectFeature.eezStudioExtension.implementation
+                            .projectFeature.enumerable
                 };
             }
         );
@@ -723,7 +774,7 @@ function getProjectClassInfo() {
         projectProperties.splice(
             0,
             projectProperties.length,
-            ...builtinProjectProperties.concat(projectFeatureProperties)
+            ...projectFeatureProperties.concat(builtinProjectProperties)
         );
     }
 
@@ -750,10 +801,16 @@ export class Project extends EezObject {
     @observable settings: Settings;
     @observable data: DataItem[];
     @observable actions: Action[];
-    @observable gui: Gui;
+    @observable pages: Page[];
+    @observable styles: Style[];
+    @observable fonts: Font[];
+    @observable bitmaps: Bitmap[];
     @observable scpi: Scpi;
     @observable shortcuts: Shortcuts;
     @observable extensionDefinitions: ExtensionDefinition[];
+    @observable colors: Color[];
+    @observable themes: Theme[];
+    @observable storyboard: string;
 
     @computed get projectName() {
         if (this._DocumentStore.project === this) {
@@ -820,11 +877,11 @@ export class Project extends EezObject {
         return [
             { path: "data", map: this.data && this.dataItemsMap },
             { path: "actions", map: this.actions && this.actionsMap },
-            { path: "gui/pages", map: this.gui && this.gui.pagesMap },
-            { path: "gui/styles", map: this.gui && this.gui.stylesMap },
-            { path: "gui/fonts", map: this.gui && this.gui.fontsMap },
-            { path: "gui/bitmaps", map: this.gui && this.gui.bitmapsMap },
-            { path: "gui/colors", map: this.gui && this.gui.colorsMap }
+            { path: "pages", map: this.pagesMap },
+            { path: "styles", map: this.stylesMap },
+            { path: "fonts", map: this.fontsMap },
+            { path: "bitmaps", map: this.bitmapsMap },
+            { path: "colors", map: this.colorsMap }
         ];
     }
 
@@ -926,6 +983,87 @@ export class Project extends EezObject {
                 ) as IEezObject[]) || []
             );
         }
+    }
+
+    @computed
+    get pagesMap() {
+        const map = new Map<String, Page>();
+        this.pages.forEach(page => map.set(page.name, page));
+        return map;
+    }
+
+    @computed
+    get stylesMap() {
+        const map = new Map<String, Style>();
+        this.styles.forEach(style => map.set(style.name, style));
+        return map;
+    }
+
+    @computed({ keepAlive: true })
+    get allStyleIdToStyleMap() {
+        const map = new Map<number, Style[]>();
+
+        this.stylesMap.forEach(style => {
+            if (style.id != undefined) {
+                map.set(style.id, (map.get(style.id) || []).concat([style]));
+            }
+        });
+
+        for (const importDirective of getProject(this).settings.general
+            .imports) {
+            const project = importDirective.project;
+            if (project) {
+                project.stylesMap.forEach(style => {
+                    if (style.id != undefined) {
+                        map.set(
+                            style.id,
+                            (map.get(style.id) || []).concat([style])
+                        );
+                    }
+                });
+            }
+        }
+
+        return map;
+    }
+
+    @computed
+    get fontsMap() {
+        const map = new Map<String, Font>();
+        this.fonts.forEach(font => map.set(font.name, font));
+        return map;
+    }
+
+    @computed
+    get bitmapsMap() {
+        const map = new Map<String, Bitmap>();
+        this.bitmaps.forEach(bitmap => map.set(bitmap.name, bitmap));
+        return map;
+    }
+
+    @observable themeColors = new Map<string, string>();
+
+    getThemeColor(themeId: string, colorId: string) {
+        return this.themeColors.get(themeId + colorId) || "#000000";
+    }
+
+    @action
+    setThemeColor(themeId: string, colorId: string, color: string) {
+        this.themeColors.set(themeId + colorId, color);
+    }
+
+    @computed
+    get colorToIndexMap() {
+        const map = new Map<String, number>();
+        this.colors.forEach((color, i) => map.set(color.name, i));
+        return map;
+    }
+
+    @computed
+    get colorsMap() {
+        const map = new Map<String, Color>();
+        this.colors.forEach((color, i) => map.set(color.name, color));
+        return map;
     }
 }
 

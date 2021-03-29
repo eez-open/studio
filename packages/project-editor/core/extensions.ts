@@ -1,4 +1,9 @@
-import { IEezObject, EezClass, PropertyType } from "project-editor/core/object";
+import {
+    IEezObject,
+    EezClass,
+    PropertyType,
+    PropertyInfo
+} from "project-editor/core/object";
 import { Message } from "project-editor/core/output";
 import { Project, BuildConfiguration } from "project-editor/project/project";
 
@@ -7,7 +12,10 @@ import { ExtensionDefinition } from "project-editor/features/extension-definitio
 import actionFeature from "project-editor/features/action/action";
 import dataFeature from "project-editor/features/data/data";
 import extensionDefinitionsFeature from "project-editor/features/extension-definitions/extension-definitions";
-import guiFeature from "project-editor/features/gui/gui";
+import pageFeature from "project-editor/features/page/page";
+import styleFeature from "project-editor/features/style/style";
+import fontFeature from "project-editor/features/font/font";
+import bitmapFeature from "project-editor/features/bitmap/bitmap";
 import scpiFeature from "project-editor/features/scpi/scpi";
 import shortcutsFeature from "project-editor/features/shortcuts/shortcuts";
 
@@ -35,6 +43,9 @@ export interface ExtensionImplementation {
         ) => void;
         metrics?: (project: Project) => { [key: string]: string | number };
         toJsHook?: (jsObject: any, object: IEezObject) => void;
+        enumerable?:
+            | boolean
+            | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     };
 }
 
@@ -56,41 +67,16 @@ let extensions: Extension[] = [];
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function loadExtensions(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        function sortExtensions() {
-            // sort project-feature extensions such that mandatory extensions are before optional extensions
-            extensions.sort((a, b) => {
-                var aMandatory =
-                    a.eezStudioExtension.implementation.projectFeature
-                        .mandatory;
-                var bMandatory =
-                    b.eezStudioExtension.implementation.projectFeature
-                        .mandatory;
-                if (aMandatory && !bMandatory) {
-                    return -1;
-                } else if (!aMandatory && bMandatory) {
-                    return 1;
-                }
-                return a.name.localeCompare(b.name);
-            });
-        }
-
-        function addExtension(extension: Extension) {
-            extensions.push(extension);
-        }
-
-        addExtension(actionFeature);
-        addExtension(dataFeature);
-        addExtension(extensionDefinitionsFeature);
-        addExtension(guiFeature);
-        addExtension(scpiFeature);
-        addExtension(shortcutsFeature);
-
-        sortExtensions();
-
-        resolve();
-    });
+export function loadExtensions() {
+    extensions.push(pageFeature);
+    extensions.push(actionFeature);
+    extensions.push(dataFeature);
+    extensions.push(styleFeature);
+    extensions.push(fontFeature);
+    extensions.push(bitmapFeature);
+    extensions.push(extensionDefinitionsFeature);
+    extensions.push(scpiFeature);
+    extensions.push(shortcutsFeature);
 }
 
 export function getProjectFeatures() {

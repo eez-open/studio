@@ -22,8 +22,8 @@ import {
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 
-import { Widget } from "project-editor/features/gui/component";
-import { Glyph } from "project-editor/features/gui/font";
+import { Widget } from "project-editor/flow/component";
+import { Glyph } from "project-editor/features/font/font";
 
 import {
     Project,

@@ -44,7 +44,7 @@ import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
 import { getDocumentStore } from "project-editor/core/store";
 
-import { getThemedColor } from "project-editor/features/gui/theme";
+import { getThemedColor } from "project-editor/features/style/theme";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
