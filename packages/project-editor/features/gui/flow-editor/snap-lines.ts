@@ -1,6 +1,6 @@
 import { Rect } from "eez-studio-shared/geometry";
 
-import type { IDesignerContext } from "project-editor/features/gui/flow-editor/designer-interfaces";
+import type { IFlowContext } from "project-editor/features/gui/flow-interfaces";
 import { getObjectBoundingRect } from "project-editor/features/gui/flow-editor/bounding-rects";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
@@ -29,7 +29,7 @@ export interface ISnapLines {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findSnapLines(
-    context: IDesignerContext,
+    context: IFlowContext,
     tree: ITreeObjectAdapter,
     filterCallback?: (node: ITreeObjectAdapter) => boolean
 ): ISnapLines {
@@ -181,7 +181,7 @@ function distanceToRect(
 }
 
 export function drawSnapLinesGeneric(
-    context: IDesignerContext,
+    context: IFlowContext,
     snapLines: ISnapLines,
     selectionRect: Rect,
     drawLine: (pos: number, horizontal: boolean, closest: boolean) => void

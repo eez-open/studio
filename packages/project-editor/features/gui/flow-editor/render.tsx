@@ -9,9 +9,9 @@ import { Point, Rect } from "eez-studio-shared/geometry";
 import { getId } from "project-editor/core/object";
 
 import type {
-    IDesignerContext,
+    IFlowContext,
     IDataContext
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-interfaces";
 
 import { Page } from "project-editor/features/gui/page";
 import { Component } from "project-editor/features/gui/component";
@@ -19,7 +19,7 @@ import { Component } from "project-editor/features/gui/component";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Svg: React.FunctionComponent<{
-    designerContext: IDesignerContext;
+    designerContext: IFlowContext;
     defs?: JSX.Element | null;
     className?: string;
     style?: React.CSSProperties;
@@ -62,7 +62,7 @@ export interface ComponentGeometry {
 function calcComponentGeometry(
     component: Component | Page,
     el: HTMLElement,
-    designerContext: IDesignerContext
+    designerContext: IFlowContext
 ): ComponentGeometry {
     const transform = designerContext.viewState.transform;
 
@@ -208,12 +208,6 @@ const ComponentEnclosureDiv = styled.div`
             .eez-connection-output {
                 text-align: right;
             }
-
-            .eez-connection-output:hover {
-                color: ${props => props.theme.selectionColor};
-                background-color: ${props =>
-                    props.theme.selectionBackgroundColor};
-            }
         }
     }
 `;
@@ -227,7 +221,7 @@ export const ComponentEnclosure = observer(
         top
     }: {
         component: Component | Page;
-        designerContext: IDesignerContext;
+        designerContext: IFlowContext;
         dataContext: IDataContext;
         left?: number;
         top?: number;
@@ -332,7 +326,7 @@ export const ComponentsContainerEnclosure = observer(
         dataContext
     }: {
         components: Component[];
-        designerContext: IDesignerContext;
+        designerContext: IFlowContext;
         dataContext: IDataContext;
     }) => {
         return (

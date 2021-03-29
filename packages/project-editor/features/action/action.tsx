@@ -28,7 +28,8 @@ import {
     ListNavigationWithProperties
 } from "project-editor/components/ListNavigation";
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
-import { FlowEditor as StudioPageEditor } from "project-editor/features/gui/flow-editor/editor";
+import { FlowEditor } from "project-editor/features/gui/flow-editor/editor";
+import { FlowRuntime } from "project-editor/features/gui/flow-runtime/runtime";
 import { IPanel } from "project-editor/core/store";
 import { ComponentsPalette } from "project-editor/features/gui/flow-editor/ComponentsPalette";
 import { ThemesSideView } from "project-editor/features/gui/theme";
@@ -38,7 +39,7 @@ import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 import { IconAction } from "eez-studio-ui/action";
 import { Flow, FlowTabState } from "project-editor/features/gui/flow";
-import { IDesignerContext } from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { IFlowContext } from "project-editor/features/gui/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/features/gui/flow-editor/render";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,11 +95,19 @@ export class ActionEditor extends EditorComponent implements IPanel {
 
     render() {
         let flowTabState = this.props.editor.state as FlowTabState;
-        return (
-            <StudioPageEditor
-                widgetContainer={flowTabState.componentContainerDisplayItem}
-            />
-        );
+        if (this.context.RuntimeStore.isRuntimeMode) {
+            return (
+                <FlowRuntime
+                    widgetContainer={flowTabState.componentContainerDisplayItem}
+                />
+            );
+        } else {
+            return (
+                <FlowEditor
+                    widgetContainer={flowTabState.componentContainerDisplayItem}
+                />
+            );
+        }
     }
 }
 
@@ -403,7 +412,7 @@ export class Action extends Flow {
         return { left: 0, top: 0, width: 0, height: 0 };
     }
 
-    renderComponents(designerContext: IDesignerContext) {
+    renderComponents(designerContext: IFlowContext) {
         return (
             <ComponentsContainerEnclosure
                 components={this.components}

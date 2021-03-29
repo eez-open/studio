@@ -1,9 +1,9 @@
 import { getId } from "project-editor/core/object";
 import { ConnectionLine } from "project-editor/features/gui/flow";
-import { IDesignerContext } from "./designer-interfaces";
+import { IFlowContext } from "project-editor/features/gui/flow-interfaces";
 
 export function getConnectionLineShape(
-    context: IDesignerContext,
+    context: IFlowContext,
     connectionLine: ConnectionLine
 ) {
     if (!connectionLine.sourcePosition || !connectionLine.targetPosition) {

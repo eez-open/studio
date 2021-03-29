@@ -44,9 +44,9 @@ import { checkObjectReference } from "project-editor/project/project";
 
 import type {
     IResizeHandler,
-    IDesignerContext,
+    IFlowContext,
     IDataContext
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-interfaces";
 import { ComponentGeometry } from "project-editor/features/gui/flow-editor/render";
 import {
     IResizing,
@@ -401,12 +401,12 @@ export class Component extends EezObject {
 
     draw?: (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => void;
 
     render(
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ): React.ReactNode {
         return undefined;
@@ -420,7 +420,7 @@ export class Component extends EezObject {
 
     styleHook(
         style: React.CSSProperties,
-        designerContext: IDesignerContext | undefined
+        designerContext: IFlowContext | undefined
     ) {}
 }
 
@@ -856,7 +856,7 @@ export class Widget extends Component {
 
     styleHook(
         style: React.CSSProperties,
-        designerContext: IDesignerContext | undefined
+        designerContext: IFlowContext | undefined
     ) {
         const backgroundColor = this.style.backgroundColorProperty;
         style.backgroundColor = to16bitsColor(backgroundColor);
@@ -867,7 +867,7 @@ export class Widget extends Component {
 
 function renderActionComponent(
     actionNode: ActionComponent,
-    designerContext: IDesignerContext,
+    designerContext: IFlowContext,
     dataContext: IDataContext,
     titleStyle?: React.CSSProperties
 ) {
@@ -940,7 +940,7 @@ export class ActionComponent extends Component {
         return "eez-action-node";
     }
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         return renderActionComponent(this, designerContext, dataContext);
     }
 
@@ -1004,7 +1004,7 @@ export class NotFoundComponent extends ActionComponent {
     }
 
     render(
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ): JSX.Element {
         return renderActionComponent(this, designerContext, dataContext, {

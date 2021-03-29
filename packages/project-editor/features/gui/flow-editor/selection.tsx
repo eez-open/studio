@@ -10,10 +10,8 @@ import {
 
 import styled from "eez-studio-ui/styled-components";
 
-import type {
-    IDesignerContext,
-    IMouseHandler
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+import type { IFlowContext } from "project-editor/features/gui/flow-interfaces";
+import type { IMouseHandler } from "project-editor/features/gui/flow-editor/mouse-handler";
 import {
     RubberBandSelectionMouseHandler,
     isSelectionMoveable
@@ -91,7 +89,7 @@ class SelectedObject extends React.Component<
 @observer
 export class Selection extends React.Component<
     {
-        context: IDesignerContext;
+        context: IFlowContext;
         mouseHandler?: IMouseHandler;
     },
     {}

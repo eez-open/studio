@@ -25,9 +25,9 @@ import * as output from "project-editor/core/output";
 
 import type {
     IResizeHandler,
-    IDesignerContext,
+    IFlowContext,
     IDataContext
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-interfaces";
 import {
     ComponentsContainerEnclosure,
     ComponentGeometry,
@@ -398,7 +398,7 @@ export class Page extends Flow {
         };
     }
 
-    renderComponents(designerContext: IDesignerContext) {
+    renderComponents(designerContext: IFlowContext) {
         return (
             <>
                 <ComponentEnclosure
@@ -424,7 +424,7 @@ export class Page extends Flow {
         );
     }
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         return (
             <ComponentsContainerEnclosure
                 components={this.components.filter(
@@ -444,7 +444,7 @@ export class Page extends Flow {
 
     styleHook(
         style: React.CSSProperties,
-        designerContext: IDesignerContext | undefined
+        designerContext: IFlowContext | undefined
     ) {
         const pageStyle = findStyle(getProject(this), this.style || "default");
         if (pageStyle && pageStyle.backgroundColorProperty) {

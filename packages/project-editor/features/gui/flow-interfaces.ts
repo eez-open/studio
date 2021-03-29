@@ -1,5 +1,5 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
-import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { DocumentStoreClass } from "project-editor/core/store";
 
@@ -7,6 +7,24 @@ import type {
     ITransform,
     Transform
 } from "project-editor/features/gui/flow-editor/transform";
+
+export interface IFlowContext {
+    document: IDocument;
+    viewState: IViewState;
+    editorOptions: IEditorOptions;
+    frontFace: boolean;
+}
+
+export interface IDataContext {
+    create(defaultValueOverrides: any): IDataContext;
+
+    get(dataItemId: string): any;
+    getEnumValue(dataItemId: string): number;
+    getBool(dataItemId: string): boolean;
+    getValueList(dataItemId: string): string[];
+    getMin(dataItemId: string): number;
+    getMax(dataItemId: string): number;
+}
 
 export interface IDocument {
     DocumentStore: DocumentStoreClass;
@@ -56,28 +74,6 @@ export interface IDocument {
     ): void;
 }
 
-export type HandleType =
-    | "nw-resize"
-    | "n-resize"
-    | "ne-resize"
-    | "w-resize"
-    | "e-resize"
-    | "sw-resize"
-    | "s-resize"
-    | "se-resize";
-
-export interface IResizeHandler {
-    // Top-left: 0, 0
-    // Bottom-right: 100, 100
-    // Left: 0 50
-    // ...
-    x: number;
-    y: number;
-    type: HandleType;
-    columnIndex?: number;
-    rowIndex?: number;
-}
-
 export interface IViewState {
     containerId: string;
 
@@ -113,48 +109,33 @@ export interface IViewState {
     dyMouseDrag: number | undefined;
 }
 
-export interface IDesignerOptions {
+export interface IEditorOptions {
     center?: Point;
-}
-
-export interface IDesignerContext {
-    document: IDocument;
-    viewState: IViewState;
-    options: IDesignerOptions;
     filterSnapLines?: (node: ITreeObjectAdapter) => boolean;
-    frontFace: boolean;
 }
 
 export interface IViewStatePersistantState {
     transform?: ITransform;
 }
 
-export interface IPointerEvent {
-    clientX: number;
-    clientY: number;
-    movementX: number;
-    movementY: number;
-    ctrlKey: boolean;
-    shiftKey: boolean;
-}
+export type HandleType =
+    | "nw-resize"
+    | "n-resize"
+    | "ne-resize"
+    | "w-resize"
+    | "e-resize"
+    | "sw-resize"
+    | "s-resize"
+    | "se-resize";
 
-export interface IMouseHandler {
-    cursor: string;
-    lastPointerEvent: IPointerEvent;
-    down(context: IDesignerContext, event: IPointerEvent): void;
-    move(context: IDesignerContext, event: IPointerEvent): void;
-    up(context: IDesignerContext): void;
-    render?(context: IDesignerContext): React.ReactNode;
-    onTransformChanged(context: IDesignerContext): void;
-}
-
-export interface IDataContext {
-    create(defaultValueOverrides: any): IDataContext;
-
-    get(dataItemId: string): any;
-    getEnumValue(dataItemId: string): number;
-    getBool(dataItemId: string): boolean;
-    getValueList(dataItemId: string): string[];
-    getMin(dataItemId: string): number;
-    getMax(dataItemId: string): number;
+export interface IResizeHandler {
+    // Top-left: 0, 0
+    // Bottom-right: 100, 100
+    // Left: 0 50
+    // ...
+    x: number;
+    y: number;
+    type: HandleType;
+    columnIndex?: number;
+    rowIndex?: number;
 }

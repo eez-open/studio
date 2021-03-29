@@ -60,7 +60,7 @@ import {
 } from "project-editor/core/dd";
 import { objectToJson } from "project-editor/core/serialization";
 import { Rect } from "eez-studio-shared/geometry";
-import type { IResizeHandler } from "project-editor/features/gui/flow-editor/designer-interfaces";
+import type { IResizeHandler } from "project-editor/features/gui/flow-interfaces";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 

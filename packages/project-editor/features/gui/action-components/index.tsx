@@ -13,9 +13,9 @@ import {
 import { getDocumentStore } from "project-editor/core/store";
 
 import type {
-    IDesignerContext,
+    IFlowContext,
     IDataContext
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-interfaces";
 
 import { styled } from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
@@ -423,7 +423,7 @@ export class CommentActionComponent extends ActionComponent {
 
     @observable text: string;
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         const classInfo = getClassInfo(this);
 
         return (

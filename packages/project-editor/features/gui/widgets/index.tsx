@@ -32,9 +32,9 @@ import {
 } from "project-editor/project/project";
 
 import type {
-    IDesignerContext,
+    IFlowContext,
     IDataContext
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-interfaces";
 import {
     ComponentsContainerEnclosure,
     ComponentEnclosure
@@ -133,7 +133,7 @@ export class ContainerWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         const w = this.width;
@@ -177,7 +177,7 @@ export class ContainerWidget extends Widget {
         }
     };
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         return (
             <ComponentsContainerEnclosure
                 components={this.widgets}
@@ -189,7 +189,7 @@ export class ContainerWidget extends Widget {
 
     styleHook(
         style: React.CSSProperties,
-        designerContext: IDesignerContext | undefined
+        designerContext: IFlowContext | undefined
     ) {
         super.styleHook(style, designerContext);
         if (this.overlay) {
@@ -279,7 +279,7 @@ export class ListWidget extends Widget {
         }
     });
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -388,7 +388,7 @@ export class GridWidget extends Widget {
         }
     });
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -614,7 +614,7 @@ export class SelectWidget extends Widget {
 
     getSelectedIndex(
         dataContext: IDataContext,
-        designerContext?: IDesignerContext
+        designerContext?: IFlowContext
     ) {
         if (designerContext) {
             const selectedObjects = designerContext.viewState.selectedObjects;
@@ -663,7 +663,7 @@ export class SelectWidget extends Widget {
         return -1;
     }
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         const index = this.getSelectedIndex(dataContext, designerContext);
         if (index === -1) {
             return null;
@@ -877,7 +877,7 @@ export class LayoutViewWidget extends Widget {
     }
 
     render(
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ): React.ReactNode {
         const layoutPage = this.getLayoutPage(dataContext);
@@ -1046,7 +1046,7 @@ export class DisplayDataWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let text = (this.data && (dataContext.get(this.data) as string)) || "";
@@ -1171,7 +1171,7 @@ export class TextWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let text = this.text
@@ -1496,7 +1496,7 @@ export class MultilineTextWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let text = this.text
@@ -1579,7 +1579,7 @@ export class RectangleWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         const w = this.width;
@@ -1762,7 +1762,7 @@ export class BitmapWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         const w = this.width;
@@ -1877,7 +1877,7 @@ export class ButtonWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let text = this.data && dataContext.get(this.data);
@@ -1948,7 +1948,7 @@ export class ToggleButtonWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         drawText(
@@ -1996,7 +1996,7 @@ export class ButtonGroupWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let buttonLabels =
@@ -2176,7 +2176,7 @@ export class BarGraphWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let barGraphWidget = this;
@@ -2379,7 +2379,7 @@ export class YTGraphWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let ytGraphWidget = this;
@@ -2477,7 +2477,7 @@ export class UpDownWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let upDownWidget = this;
@@ -2625,7 +2625,7 @@ export class ListGraphWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let listGraphWidget = this;
@@ -2695,7 +2695,7 @@ export class AppViewWidget extends Widget {
         }
     });
 
-    render(designerContext: IDesignerContext, dataContext: IDataContext) {
+    render(designerContext: IFlowContext, dataContext: IDataContext) {
         if (!this.data) {
             return null;
         }
@@ -2768,7 +2768,7 @@ export class ScrollBarWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let widget = this;
@@ -2884,7 +2884,7 @@ export class ProgressWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let widget = this;
@@ -2947,7 +2947,7 @@ export class CanvasWidget extends Widget {
 
     draw = (
         ctx: CanvasRenderingContext2D,
-        designerContext: IDesignerContext,
+        designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
         let widget = this;

@@ -5,11 +5,6 @@ import {
     reaction,
     IReactionDisposer
 } from "mobx";
-import stringify from "json-stable-stringify";
-
-import { BoundingRectBuilder } from "eez-studio-shared/geometry";
-
-import { getDocumentStore } from "project-editor/core/store";
 
 import type {
     IDocument,
@@ -21,10 +16,7 @@ import type {
 } from "project-editor/features/gui/flow-interfaces";
 import { Transform } from "project-editor/features/gui/flow-editor/transform";
 
-import {
-    Component,
-    getWidgetParent
-} from "project-editor/features/gui/component";
+import { Component } from "project-editor/features/gui/component";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,65 +95,7 @@ class ViewState implements IViewState {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined {
-        const isEditor =
-            this.document &&
-            !this.document.DocumentStore.RuntimeStore.isRuntimeMode;
-
-        if (
-            !isEditor ||
-            this.selectedObjects.length !== 1 ||
-            !this.selectedObjects[0].getResizeHandlers
-        ) {
-            return undefined;
-        }
-
-        const resizingHandlers = this.selectedObjects[0].getResizeHandlers();
-        if (resizingHandlers !== false) {
-            return resizingHandlers;
-        }
-
-        return [
-            {
-                x: 0,
-                y: 0,
-                type: "nw-resize"
-            },
-            {
-                x: 50,
-                y: 0,
-                type: "n-resize"
-            },
-            {
-                x: 100,
-                y: 0,
-                type: "ne-resize"
-            },
-            {
-                x: 0,
-                y: 50,
-                type: "w-resize"
-            },
-            {
-                x: 100,
-                y: 50,
-                type: "e-resize"
-            },
-            {
-                x: 0,
-                y: 100,
-                type: "sw-resize"
-            },
-            {
-                x: 50,
-                y: 100,
-                type: "s-resize"
-            },
-            {
-                x: 100,
-                y: 100,
-                type: "se-resize"
-            }
-        ];
+        return undefined;
     }
 
     get selectedObjects() {
@@ -209,84 +143,7 @@ class ViewState implements IViewState {
             | "end-x"
             | "home-y"
             | "end-y"
-    ) {
-        const widgets =
-            this.document &&
-            (this.document.flow.selectedObjects.filter(
-                object => object instanceof Component
-            ) as Component[]);
-
-        if (!widgets || widgets.length === 0) {
-            return;
-        }
-
-        const builder = new BoundingRectBuilder();
-        widgets.forEach(widget => {
-            builder.addRect({
-                left: widget.left,
-                top: widget.top,
-                width: widget.width,
-                height: widget.height
-            });
-        });
-        const boundingRect = builder.getRect();
-
-        const allWidgetsAreFromTheSameParent = !widgets.find(
-            widget => getWidgetParent(widget) !== getWidgetParent(widgets[0])
-        );
-
-        const DocumentStore = getDocumentStore(widgets[0]);
-
-        DocumentStore.UndoManager.setCombineCommands(true);
-
-        widgets.forEach(widget => {
-            if (where === "left") {
-                DocumentStore.updateObject(widget, {
-                    left: widget.left - 1
-                });
-            } else if (where === "up") {
-                DocumentStore.updateObject(widget, {
-                    top: widget.top - 1
-                });
-            } else if (where === "right") {
-                DocumentStore.updateObject(widget, {
-                    left: widget.left + 1
-                });
-            } else if (where === "down") {
-                DocumentStore.updateObject(widget, {
-                    top: widget.top + 1
-                });
-            } else if (allWidgetsAreFromTheSameParent) {
-                if (where === "home-x") {
-                    DocumentStore.updateObject(widget, {
-                        left: 0 + widget.left - boundingRect.left
-                    });
-                } else if (where === "end-x") {
-                    DocumentStore.updateObject(widget, {
-                        left:
-                            getWidgetParent(widget).width -
-                            boundingRect.width +
-                            widget.left -
-                            boundingRect.left
-                    });
-                } else if (where === "home-y") {
-                    DocumentStore.updateObject(widget, {
-                        top: 0 + widget.top - boundingRect.top
-                    });
-                } else if (where === "end-y") {
-                    DocumentStore.updateObject(widget, {
-                        top:
-                            getWidgetParent(widget).height -
-                            boundingRect.height +
-                            widget.top -
-                            boundingRect.top
-                    });
-                }
-            }
-        });
-
-        DocumentStore.UndoManager.setCombineCommands(false);
-    }
+    ) {}
 
     destroy() {
         this.persistentStateReactionDisposer();
@@ -313,8 +170,6 @@ export class DesignerContext implements IFlowContext {
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
-        options?: IEditorOptions,
-        filterSnapLines?: (node: ITreeObjectAdapter) => boolean,
         frontFace?: boolean
     ) {
         const deselectAllObjects =
@@ -331,12 +186,7 @@ export class DesignerContext implements IFlowContext {
             this.viewState.deselectAllObjects();
         }
 
-        const newOptions = options || {};
-        if (stringify(newOptions) !== stringify(this.editorOptions)) {
-            this.editorOptions = newOptions;
-        }
-
-        this.editorOptions.filterSnapLines = filterSnapLines;
+        this.editorOptions = {};
 
         this.frontFace = frontFace ?? false;
     }

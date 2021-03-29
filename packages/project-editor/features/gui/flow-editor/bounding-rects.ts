@@ -8,7 +8,7 @@ import {
 import {
     IDocument,
     IViewState
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+} from "project-editor/features/gui/flow-interfaces";
 
 import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
 import { ConnectionLine } from "project-editor/features/gui/flow";

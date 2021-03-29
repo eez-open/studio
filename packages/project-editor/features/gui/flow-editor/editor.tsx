@@ -15,10 +15,9 @@ import { closestByClass } from "eez-studio-shared/dom";
 import type {
     IDocument,
     IViewStatePersistantState,
-    IDesignerOptions,
-    IDesignerContext,
-    IMouseHandler
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+    IEditorOptions,
+    IFlowContext
+} from "project-editor/features/gui/flow-interfaces";
 import { ITransform } from "project-editor/features/gui/flow-editor/transform";
 import { DesignerContext } from "project-editor/features/gui/flow-editor/context";
 
@@ -52,6 +51,7 @@ import { guid } from "eez-studio-shared/guid";
 import { ConnectionLines } from "project-editor/features/gui/flow-editor/ConnectionLineComponent";
 import { Draggable } from "eez-studio-ui/draggable";
 import {
+    IMouseHandler,
     PanMouseHandler,
     ConnectionLineMouseHandler,
     DragMouseHandler,
@@ -61,6 +61,7 @@ import {
     SnapLines
 } from "project-editor/features/gui/flow-editor/mouse-handler";
 import { Selection } from "project-editor/features/gui/flow-editor/selection";
+import { setupDragScroll } from "project-editor/features/gui/flow-editor/drag-scroll";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -347,11 +348,7 @@ const AllConnectionLines = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function CenterLines({
-    designerContext
-}: {
-    designerContext: IDesignerContext;
-}) {
+function CenterLines({ designerContext }: { designerContext: IFlowContext }) {
     const transform = designerContext.viewState.transform;
 
     const CENTER_LINES_COLOR = "#ddd";
@@ -362,7 +359,7 @@ function CenterLines({
         strokeWidth: CENTER_LINES_WIDTH
     };
 
-    const center = designerContext.options.center!;
+    const center = designerContext.editorOptions.center!;
 
     const pageRect = transform.clientToPageRect(transform.clientRect);
 
@@ -403,7 +400,7 @@ const CanvasDiv = styled.div`
 
 @observer
 export class Canvas extends React.Component<{
-    designerContext: IDesignerContext;
+    designerContext: IFlowContext;
     style?: React.CSSProperties;
     pageRect?: Rect;
     dragAndDropActive: boolean;
@@ -586,9 +583,6 @@ export class Canvas extends React.Component<{
     createMouseHandler(event: MouseEvent) {
         const context = this.props.designerContext;
 
-        const isEditor = !context.document.DocumentStore.RuntimeStore
-            .isRuntimeMode;
-
         if (!event.altKey) {
             if (
                 closestByClass(
@@ -612,7 +606,7 @@ export class Canvas extends React.Component<{
                 return undefined;
             }
 
-            const isMoveable = isEditor && isSelectionMoveable(context);
+            const isMoveable = isSelectionMoveable(context);
 
             if (closestByClass(event.target, "EezStudio_DesignerSelection")) {
                 return isMoveable ? new DragMouseHandler() : undefined;
@@ -631,17 +625,15 @@ export class Canvas extends React.Component<{
                             context.viewState.selectObject(object);
                         }
 
-                        if (isEditor) {
-                            if (result.connectionOutput) {
-                                return new ConnectionLineMouseHandler(
-                                    object,
-                                    result.connectionOutput
-                                );
-                            } else {
-                                return isMoveable
-                                    ? new DragMouseHandler()
-                                    : undefined;
-                            }
+                        if (result.connectionOutput) {
+                            return new ConnectionLineMouseHandler(
+                                object,
+                                result.connectionOutput
+                            );
+                        } else {
+                            return isMoveable
+                                ? new DragMouseHandler()
+                                : undefined;
                         }
                     }
                 }
@@ -860,8 +852,8 @@ export class Canvas extends React.Component<{
                             : "auto"
                     }}
                 >
-                    {this.props.designerContext.options &&
-                        this.props.designerContext.options.center && (
+                    {this.props.designerContext.editorOptions &&
+                        this.props.designerContext.editorOptions.center && (
                             <CenterLines
                                 designerContext={this.props.designerContext}
                             />
@@ -903,6 +895,11 @@ const FlowEditorCanvasContainer = styled.div`
         background-color: rgba(0, 0, 0, 0.6);
     }
 
+    .eez-connection-output:hover {
+        color: ${props => props.theme.selectionColor};
+        background-color: ${props => props.theme.selectionBackgroundColor};
+    }
+
     .connection-line:hover > path:nth-child(3) {
         stroke: ${props => props.theme.selectedConnectionLineColor} !important;
         marker-start: url(#selectedLineStart) !important;
@@ -938,7 +935,7 @@ export class FlowEditor
 
     @observable flowDocument: FlowDocument;
 
-    @observable options: IDesignerOptions;
+    @observable options: IEditorOptions;
 
     constructor(props: FlowEditorProps) {
         super(props);
@@ -1299,114 +1296,4 @@ export class FlowEditor
             </FlowEditorCanvasContainer>
         );
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const DRAG_SCROLL_BORDER_THRESHOLD = 10;
-const DRAG_SCROLL_MIN_SPEED = 50; // px per second
-const DRAG_SCROLL_MAX_SPEED = 800; // px per second
-const DRAG_SCROLL_MAX_SPEED_AT_DISTANCE = 50; // px
-
-function calcDragScrollSpeed(distance: number, dt: number) {
-    if (distance === 0) {
-        return 0;
-    }
-
-    let sign = 1;
-
-    if (distance < 0) {
-        distance = -distance;
-        sign = -1;
-    }
-
-    const min = (DRAG_SCROLL_MIN_SPEED * dt) / 1000;
-    const max = (DRAG_SCROLL_MAX_SPEED * dt) / 1000;
-
-    distance = Math.min(distance, DRAG_SCROLL_MAX_SPEED_AT_DISTANCE);
-
-    return (
-        sign *
-        (min + (distance / DRAG_SCROLL_MAX_SPEED_AT_DISTANCE) * (max - min))
-    );
-}
-
-function setupDragScroll(
-    el: HTMLElement,
-    mouseHandler: IMouseHandler,
-    translateBy: (point: Point) => void
-) {
-    let dragScrollLastTime: number | undefined;
-
-    function onDragScroll() {
-        const lastPointerEvent = mouseHandler.lastPointerEvent;
-        const r = el.getBoundingClientRect();
-
-        let tx = 0;
-        let ty = 0;
-
-        if (
-            lastPointerEvent.clientX < r.left + DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementX < 0
-        ) {
-            tx =
-                r.left +
-                DRAG_SCROLL_BORDER_THRESHOLD -
-                lastPointerEvent.clientX;
-        } else if (
-            lastPointerEvent.clientX > r.right - DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementX > 0
-        ) {
-            tx = -(
-                lastPointerEvent.clientX -
-                (r.right - DRAG_SCROLL_BORDER_THRESHOLD)
-            );
-        }
-
-        if (
-            lastPointerEvent.clientY < r.top + DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementY < 0
-        ) {
-            ty =
-                r.top + DRAG_SCROLL_BORDER_THRESHOLD - lastPointerEvent.clientY;
-        } else if (
-            lastPointerEvent.clientY >
-                r.bottom - DRAG_SCROLL_BORDER_THRESHOLD &&
-            lastPointerEvent.movementY > 0
-        ) {
-            ty = -(
-                lastPointerEvent.clientY -
-                (r.bottom - DRAG_SCROLL_BORDER_THRESHOLD)
-            );
-        }
-
-        if (tx || ty) {
-            if (!dragScrollLastTime) {
-                dragScrollLastTime = new Date().getTime();
-            } else {
-                const currentTime = new Date().getTime();
-                const dt = currentTime - dragScrollLastTime;
-                dragScrollLastTime = currentTime;
-
-                translateBy({
-                    x: calcDragScrollSpeed(tx, dt),
-                    y: calcDragScrollSpeed(ty, dt)
-                });
-            }
-        } else {
-            dragScrollLastTime = undefined;
-        }
-
-        dragScrollAnimationFrameRequest = window.requestAnimationFrame(
-            onDragScroll
-        );
-    }
-
-    let dragScrollAnimationFrameRequest = window.requestAnimationFrame(
-        onDragScroll
-    );
-
-    return () => {
-        window.cancelAnimationFrame(dragScrollAnimationFrameRequest);
-    };
 }

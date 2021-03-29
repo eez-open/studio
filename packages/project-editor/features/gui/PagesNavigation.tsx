@@ -28,7 +28,8 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
 
-import { FlowEditor as StudioPageEditor } from "project-editor/features/gui/flow-editor/editor";
+import { FlowEditor } from "project-editor/features/gui/flow-editor/editor";
+import { FlowRuntime } from "project-editor/features/gui/flow-runtime/runtime";
 import { ComponentsPalette } from "project-editor/features/gui/flow-editor/ComponentsPalette";
 
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
@@ -194,24 +195,54 @@ export class PageEditor extends EditorComponent implements IPanel {
                                             : "none"
                                 }}
                             >
-                                <StudioPageEditor
-                                    widgetContainer={
-                                        this.pageTabState
-                                            .componentContainerDisplayItem
-                                    }
-                                    transitionIsActive={this.transitionIsActive}
-                                    frontFace={true}
-                                />
+                                {this.context.RuntimeStore.isRuntimeMode ? (
+                                    <FlowRuntime
+                                        widgetContainer={
+                                            this.pageTabState
+                                                .componentContainerDisplayItem
+                                        }
+                                        transitionIsActive={
+                                            this.transitionIsActive
+                                        }
+                                        frontFace={true}
+                                    />
+                                ) : (
+                                    <FlowEditor
+                                        widgetContainer={
+                                            this.pageTabState
+                                                .componentContainerDisplayItem
+                                        }
+                                        transitionIsActive={
+                                            this.transitionIsActive
+                                        }
+                                        frontFace={true}
+                                    />
+                                )}
                             </div>
                             <div className="flip-card-back">
-                                <StudioPageEditor
-                                    widgetContainer={
-                                        this.pageTabState
-                                            .componentContainerDisplayItem
-                                    }
-                                    transitionIsActive={this.transitionIsActive}
-                                    frontFace={false}
-                                />
+                                {this.context.RuntimeStore.isRuntimeMode ? (
+                                    <FlowRuntime
+                                        widgetContainer={
+                                            this.pageTabState
+                                                .componentContainerDisplayItem
+                                        }
+                                        transitionIsActive={
+                                            this.transitionIsActive
+                                        }
+                                        frontFace={false}
+                                    />
+                                ) : (
+                                    <FlowEditor
+                                        widgetContainer={
+                                            this.pageTabState
+                                                .componentContainerDisplayItem
+                                        }
+                                        transitionIsActive={
+                                            this.transitionIsActive
+                                        }
+                                        frontFace={false}
+                                    />
+                                )}
                             </div>
                         </div>
                     </FlipCardDiv>

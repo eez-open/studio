@@ -21,7 +21,7 @@ import {
 import { visitObjects } from "project-editor/core/search";
 import { getDocumentStore } from "project-editor/core/store";
 import { Component } from "project-editor/features/gui/component";
-import { IDesignerContext } from "project-editor/features/gui/flow-editor/designer-interfaces";
+import { IFlowContext } from "project-editor/features/gui/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,9 +191,7 @@ export abstract class Flow extends EezObject {
 
     abstract get pageRect(): Rect;
 
-    abstract renderComponents(
-        designerContext: IDesignerContext
-    ): React.ReactNode;
+    abstract renderComponents(designerContext: IFlowContext): React.ReactNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

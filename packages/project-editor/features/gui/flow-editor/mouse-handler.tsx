@@ -13,11 +13,7 @@ import { addAlphaToColor } from "eez-studio-shared/color";
 
 import { theme } from "eez-studio-ui/theme";
 
-import type {
-    IDesignerContext,
-    IMouseHandler,
-    IPointerEvent
-} from "project-editor/features/gui/flow-editor/designer-interfaces";
+import type { IFlowContext } from "project-editor/features/gui/flow-interfaces";
 import {
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect,
@@ -25,6 +21,8 @@ import {
 } from "project-editor/features/gui/flow-editor/bounding-rects";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/features/gui/flow-editor/transform";
+
+////////////////////////////////////////////////////////////////////////////////
 
 const SNAP_LINES_DRAW_THEME = {
     lineColor: "rgba(128, 128, 128, 1)",
@@ -40,6 +38,37 @@ const CONNECTION_LINE_DRAW_THEME = {
     connectedLineColor: "rgb(32, 192, 32)",
     connectedLineWidth: 2.0
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IMouseHandler {
+    cursor: string;
+    lastPointerEvent: IPointerEvent;
+    down(context: IFlowContext, event: IPointerEvent): void;
+    move(context: IFlowContext, event: IPointerEvent): void;
+    up(context: IFlowContext): void;
+    render?(context: IFlowContext): React.ReactNode;
+    onTransformChanged(context: IFlowContext): void;
+}
+
+export interface IPointerEvent {
+    clientX: number;
+    clientY: number;
+    movementX: number;
+    movementY: number;
+    ctrlKey: boolean;
+    shiftKey: boolean;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function isSelectionMoveable(context: IFlowContext) {
+    return !context.viewState.selectedObjects.find(
+        object => !object.isMoveable
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class MouseHandler implements IMouseHandler {
     constructor() {}
@@ -62,7 +91,7 @@ export class MouseHandler implements IMouseHandler {
 
     lastPointerEvent!: IPointerEvent;
 
-    down(context: IDesignerContext, event: IPointerEvent) {
+    down(context: IFlowContext, event: IPointerEvent) {
         this.transform = context.viewState.transform;
 
         this.timeAtDown = new Date().getTime();
@@ -77,7 +106,7 @@ export class MouseHandler implements IMouseHandler {
         this.modelPointAtDown = this.transform.pointerEventToPagePoint(event);
     }
 
-    move(context: IDesignerContext, event: IPointerEvent) {
+    move(context: IFlowContext, event: IPointerEvent) {
         this.transform = context.viewState.transform;
 
         this.elapsedTime = new Date().getTime() - this.timeAtDown;
@@ -104,9 +133,9 @@ export class MouseHandler implements IMouseHandler {
         this.lastModelPoint = this.transform.pointerEventToPagePoint(event);
     }
 
-    up(context: IDesignerContext) {}
+    up(context: IFlowContext) {}
 
-    onTransformChanged(context: IDesignerContext) {
+    onTransformChanged(context: IFlowContext) {
         const transform = context.viewState.transform;
 
         let point = this.transform.offsetToPagePoint(this.offsetPointAtDown);
@@ -153,6 +182,8 @@ export class MouseHandler implements IMouseHandler {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export class PanMouseHandler extends MouseHandler {
     totalMovement = {
         x: 0,
@@ -161,11 +192,11 @@ export class PanMouseHandler extends MouseHandler {
 
     cursor = "default";
 
-    down(context: IDesignerContext, event: IPointerEvent) {
+    down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
     }
 
-    move(context: IDesignerContext, event: IPointerEvent) {
+    move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
         context.viewState.transform.translateBy(this.movement);
         this.totalMovement.x += this.movement.x;
@@ -173,22 +204,18 @@ export class PanMouseHandler extends MouseHandler {
     }
 }
 
-export function isSelectionMoveable(context: IDesignerContext) {
-    return !context.viewState.selectedObjects.find(
-        object => !object.isMoveable
-    );
-}
+////////////////////////////////////////////////////////////////////////////////
 
 export class RubberBandSelectionMouseHandler extends MouseHandler {
     @observable rubberBendRect: Rect | undefined;
 
-    down(context: IDesignerContext, event: IPointerEvent) {
+    down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
         context.viewState.deselectAllObjects();
     }
 
     @action
-    move(context: IDesignerContext, event: IPointerEvent) {
+    move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
         let left;
@@ -228,7 +255,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
         );
     }
 
-    up(context: IDesignerContext) {
+    up(context: IFlowContext) {
         super.up(context);
 
         runInAction(() => {
@@ -236,7 +263,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
         });
     }
 
-    render(context: IDesignerContext) {
+    render(context: IFlowContext) {
         return (
             this.rubberBendRect && (
                 <div
@@ -259,12 +286,14 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export class SnapLines {
     lines: ISnapLines;
     enabled: boolean = false;
 
     find(
-        context: IDesignerContext,
+        context: IFlowContext,
         filterSnapLines?: (node: ITreeObjectAdapter) => boolean
     ) {
         this.lines = findSnapLines(
@@ -273,7 +302,7 @@ export class SnapLines {
                 id: "",
                 children: [context.document.flow]
             } as ITreeObjectAdapter,
-            filterSnapLines || context.filterSnapLines
+            filterSnapLines || context.editorOptions.filterSnapLines
         );
     }
 
@@ -313,7 +342,7 @@ export class SnapLines {
         };
     }
 
-    render(context: IDesignerContext, selectionRect: Rect) {
+    render(context: IFlowContext, selectionRect: Rect) {
         if (!this.enabled) {
             return null;
         }
@@ -390,13 +419,13 @@ export class SnapLines {
 class MouseHandlerWithSnapLines extends MouseHandler {
     snapLines = new SnapLines();
 
-    down(context: IDesignerContext, event: IPointerEvent) {
+    down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
         this.snapLines.find(context);
     }
 
-    move(context: IDesignerContext, event: IPointerEvent) {
+    move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
         this.snapLines.enabled =
@@ -404,13 +433,15 @@ class MouseHandlerWithSnapLines extends MouseHandler {
             this.elapsedTime > CONF_ACTIVATE_SNAP_TO_LINES_AFTER_TIME;
     }
 
-    render(context: IDesignerContext) {
+    render(context: IFlowContext) {
         const rect = getSelectedObjectsBoundingRect(context.viewState);
         rect.left += context.viewState.dxMouseDrag ?? 0;
         rect.top += context.viewState.dyMouseDrag ?? 0;
         return this.snapLines.render(context, rect);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class DragMouseHandler extends MouseHandlerWithSnapLines {
     changed: boolean = false;
@@ -425,7 +456,7 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     selectionNode: HTMLElement;
     objectNodes: HTMLElement[];
 
-    down(context: IDesignerContext, event: IPointerEvent) {
+    down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
         context.document.onDragStart();
@@ -446,7 +477,7 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     @action
-    move(context: IDesignerContext, event: IPointerEvent) {
+    move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
         if (this.elapsedTime < 100 && this.distance < 20) {
@@ -518,7 +549,7 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     @action
-    up(context: IDesignerContext) {
+    up(context: IFlowContext) {
         super.up(context);
 
         if (this.changed) {
@@ -541,6 +572,8 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         context.document.onDragEnd();
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 type ResizeHandleType =
     | "nw-resize"
@@ -566,7 +599,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         super();
     }
 
-    down(context: IDesignerContext, event: IPointerEvent) {
+    down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
         context.document.onDragStart();
@@ -615,7 +648,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    moveTop(context: IDesignerContext, savedRect: Rect, rect: Rect) {
+    moveTop(context: IFlowContext, savedRect: Rect, rect: Rect) {
         let bottom = rect.top + rect.height;
         rect.top = this.snapY(
             savedRect.top +
@@ -627,7 +660,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         rect.height = bottom - rect.top;
     }
 
-    moveLeft(context: IDesignerContext, savedRect: Rect, rect: Rect) {
+    moveLeft(context: IFlowContext, savedRect: Rect, rect: Rect) {
         let right = rect.left + rect.width;
         rect.left = this.snapX(
             savedRect.left +
@@ -639,7 +672,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         rect.width = right - rect.left;
     }
 
-    moveBottom(context: IDesignerContext, savedRect: Rect, rect: Rect) {
+    moveBottom(context: IFlowContext, savedRect: Rect, rect: Rect) {
         let bottom = this.snapY(
             savedRect.top +
                 savedRect.height +
@@ -651,7 +684,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         rect.height = bottom - rect.top;
     }
 
-    moveRight(context: IDesignerContext, savedRect: Rect, rect: Rect) {
+    moveRight(context: IFlowContext, savedRect: Rect, rect: Rect) {
         let right = this.snapX(
             savedRect.left +
                 savedRect.width +
@@ -694,7 +727,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         rect.height = height;
     }
 
-    resizeRect(context: IDesignerContext, savedRect: Rect, rect: Rect) {
+    resizeRect(context: IFlowContext, savedRect: Rect, rect: Rect) {
         if (this.handleType === "nw-resize") {
             this.moveTop(context, savedRect, rect);
             this.moveLeft(context, savedRect, rect);
@@ -723,7 +756,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
     }
 
     @action
-    move(context: IDesignerContext, event: IPointerEvent) {
+    move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
         this.resizeRect(context, this.savedBoundingRect, this.boundingRect);
@@ -761,12 +794,14 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    up(context: IDesignerContext) {
+    up(context: IFlowContext) {
         super.up(context);
 
         context.document.onDragEnd();
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class ConnectionLineMouseHandler extends MouseHandler {
     @observable startPoint: Point;
@@ -786,7 +821,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
     }
 
     @action
-    down(context: IDesignerContext, event: IPointerEvent) {
+    down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
         context.document.onDragStart();
@@ -815,7 +850,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
     }
 
     @action
-    move(context: IDesignerContext, event: IPointerEvent) {
+    move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
         const result = getObjectIdFromPoint(
@@ -860,7 +895,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
         }
     }
 
-    up(context: IDesignerContext) {
+    up(context: IFlowContext) {
         super.up(context);
 
         if (this.target) {
@@ -875,7 +910,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
         context.document.onDragEnd();
     }
 
-    render(context: IDesignerContext) {
+    render(context: IFlowContext) {
         const transform = context.viewState.transform;
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
@@ -916,7 +951,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
     }
 
     @action
-    onTransformChanged(context: IDesignerContext) {
+    onTransformChanged(context: IFlowContext) {
         const startClientPoint = this.transform.offsetToPagePoint(
             this.startPoint
         );
