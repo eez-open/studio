@@ -23,6 +23,7 @@ import { getDocumentStore } from "project-editor/core/store";
 import { Component } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
+import { deleteObject, updateObject } from "project-editor/core/commands";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -187,6 +188,72 @@ export abstract class Flow extends EezObject {
         DocumentStore.UndoManager.setCombineCommands(false);
 
         return widgets;
+    }
+
+    deleteConnectionLines(component: Component) {
+        this.connectionLines
+            .filter(
+                connectionLine =>
+                    connectionLine.sourceComponent == component ||
+                    connectionLine.targetComponent == component
+            )
+            .forEach(connectionLine => deleteObject(connectionLine));
+    }
+
+    deleteConnectionLinesToInput(component: Component, input: string) {
+        this.connectionLines
+            .filter(
+                connectionLine =>
+                    connectionLine.targetComponent == component &&
+                    connectionLine.input == input
+            )
+            .forEach(connectionLine => deleteObject(connectionLine));
+    }
+
+    deleteConnectionLinesFromOutput(component: Component, output: string) {
+        this.connectionLines
+            .filter(
+                connectionLine =>
+                    connectionLine.sourceComponent == component &&
+                    connectionLine.output == output
+            )
+            .forEach(connectionLine => deleteObject(connectionLine));
+    }
+
+    rerouteConnectionLinesInput(
+        component: Component,
+        inputBefore: string,
+        inputAfter: string
+    ) {
+        this.connectionLines
+            .filter(
+                connectionLine =>
+                    connectionLine.targetComponent == component &&
+                    connectionLine.input == inputBefore
+            )
+            .forEach(connectionLine =>
+                updateObject(connectionLine, {
+                    input: inputAfter
+                })
+            );
+    }
+
+    rerouteConnectionLinesOutput(
+        component: Component,
+        outputBefore: string,
+        outputAfter: string
+    ) {
+        this.connectionLines
+            .filter(
+                connectionLine =>
+                    connectionLine.sourceComponent == component &&
+                    connectionLine.output == outputBefore
+            )
+            .forEach(connectionLine =>
+                updateObject(connectionLine, {
+                    output: outputAfter
+                })
+            );
     }
 
     abstract get pageRect(): Rect;

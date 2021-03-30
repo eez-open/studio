@@ -195,25 +195,6 @@ class UpdateCommand implements ICommand {
             let propertyInfo = findPropertyByNameInObject(object, propertyName);
 
             if (propertyInfo) {
-                const updateObjectValueHook = getClassInfo(object)
-                    .updateObjectValueHook;
-                if (updateObjectValueHook) {
-                    const result = updateObjectValueHook(
-                        object,
-                        propertyName,
-                        values[propertyName]
-                    );
-
-                    if (result !== undefined) {
-                        if (!lastCommand) {
-                            this.oldValues[propertyName] = result.oldValue;
-                        }
-                        this.newValues[propertyName] = result.newValue;
-
-                        continue;
-                    }
-                }
-
                 if (!lastCommand) {
                     this.oldValues[propertyName] = getProperty(
                         object,
@@ -246,9 +227,21 @@ class UpdateCommand implements ICommand {
 }
 
 export let updateObject = action((object: IEezObject, values: any) => {
-    let previousCommand;
-
     const UndoManager = getDocumentStore(object).UndoManager;
+
+    let closeCombineCommands = false;
+
+    const updateObjectValueHook = getClassInfo(object).updateObjectValueHook;
+    if (updateObjectValueHook) {
+        if (!UndoManager.combineCommands) {
+            UndoManager.setCombineCommands(true);
+            closeCombineCommands = true;
+        }
+
+        updateObjectValueHook(object, values);
+    }
+
+    let previousCommand;
 
     // TODO this should be moved to undoManager implementation
     // merge with previous command
@@ -263,6 +256,10 @@ export let updateObject = action((object: IEezObject, values: any) => {
     UndoManager.executeCommand(
         new UpdateCommand(object, values, previousCommand)
     );
+
+    if (closeCombineCommands) {
+        UndoManager.setCombineCommands(false);
+    }
 });
 
 export let deleteObject = action((object: any) => {

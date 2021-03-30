@@ -52,8 +52,8 @@ export class InstrumentAppStore implements IEditor {
 
     commandsTree = new CommandsTree();
 
-    history: History = new History(this);
-    deletedItemsHistory: DeletedItemsHistory = new DeletedItemsHistory(this);
+    history: History;
+    deletedItemsHistory: DeletedItemsHistory;
 
     undoManager = new UndoManager();
 
@@ -79,6 +79,9 @@ export class InstrumentAppStore implements IEditor {
         }
         this._created = true;
 
+        this.history = new History(this);
+        this.deletedItemsHistory = new DeletedItemsHistory(this);
+
         scheduleTask(
             "Load instrument",
             Priority.High,
@@ -86,37 +89,47 @@ export class InstrumentAppStore implements IEditor {
                 this.instrument = instruments.get(this.instrumentId);
 
                 this.helpVisible =
-                    localStorage.getItem(`instrument/${this.instrumentId}/window/help-visible`) ===
-                        "1" || false;
+                    localStorage.getItem(
+                        `instrument/${this.instrumentId}/window/help-visible`
+                    ) === "1" || false;
 
                 this.filters = this.getFiltersFromLocalStorage();
 
                 scheduleTask("Load commands tree", Priority.Low, () =>
-                    this.commandsTree.load(this.instrument!.instrumentExtensionId)
+                    this.commandsTree.load(
+                        this.instrument!.instrumentExtensionId
+                    )
                 );
 
-                bindShortcuts(this.shortcutsStore.instrumentShortcuts, (shortcut: IShortcut) => {
-                    if (shortcut.action.type === "micropython") {
-                        return;
+                bindShortcuts(
+                    this.shortcutsStore.instrumentShortcuts,
+                    (shortcut: IShortcut) => {
+                        if (shortcut.action.type === "micropython") {
+                            return;
+                        }
+                        const {
+                            executeShortcut
+                        } = require("instrument/window/script") as typeof ScriptModule;
+                        executeShortcut(this, shortcut);
                     }
-                    const {
-                        executeShortcut
-                    } = require("instrument/window/script") as typeof ScriptModule;
-                    executeShortcut(this, shortcut);
-                });
+                );
 
                 // @todo
                 // this is autorun because instrument extension is loaded asynchronously,
                 // so getListsProperty would eventually become true
                 this.autorunDisposer = autorun(() => {
                     if (this.instrument!.listsProperty) {
-                        this.instrumentListStore = createInstrumentListStore(this);
+                        this.instrumentListStore = createInstrumentListStore(
+                            this
+                        );
 
                         const appStore = this;
 
                         this.instrumentListStore.watch({
                             createObject(object: any) {
-                                runInAction(() => appStore.instrumentLists.push(object));
+                                runInAction(() =>
+                                    appStore.instrumentLists.push(object)
+                                );
                             },
 
                             updateObject(changes: any) {
@@ -137,7 +150,9 @@ export class InstrumentAppStore implements IEditor {
                                 if (list) {
                                     runInAction(() => {
                                         appStore.instrumentLists.splice(
-                                            appStore.instrumentLists.indexOf(list),
+                                            appStore.instrumentLists.indexOf(
+                                                list
+                                            ),
                                             1
                                         );
                                     });
@@ -152,7 +167,10 @@ export class InstrumentAppStore implements IEditor {
         this.reactionDisposer = reaction(
             () => JSON.stringify(this.filters),
             filters => {
-                localStorage.setItem(`instrument/${this.instrumentId}/window/filters`, filters);
+                localStorage.setItem(
+                    `instrument/${this.instrumentId}/window/filters`,
+                    filters
+                );
             }
         );
     }
@@ -166,10 +184,19 @@ export class InstrumentAppStore implements IEditor {
     }
 
     onDeactivate() {
-        EEZStudio.electron.ipcRenderer.removeListener("undo", this.undoManager.undo);
-        EEZStudio.electron.ipcRenderer.removeListener("redo", this.undoManager.redo);
+        EEZStudio.electron.ipcRenderer.removeListener(
+            "undo",
+            this.undoManager.undo
+        );
+        EEZStudio.electron.ipcRenderer.removeListener(
+            "redo",
+            this.undoManager.redo
+        );
         EEZStudio.electron.ipcRenderer.removeListener("save", this.onSave);
-        EEZStudio.electron.ipcRenderer.removeListener("delete", this.onDeleteShortcut);
+        EEZStudio.electron.ipcRenderer.removeListener(
+            "delete",
+            this.onDeleteShortcut
+        );
         document.removeEventListener("keydown", this.onKeyDown);
     }
 
@@ -211,14 +238,22 @@ export class InstrumentAppStore implements IEditor {
     @bind
     onDeleteShortcut() {
         if (document.activeElement) {
-            if ($(document.activeElement).closest(".EezStudio_History_Container").length > 0) {
+            if (
+                $(document.activeElement).closest(
+                    ".EezStudio_History_Container"
+                ).length > 0
+            ) {
                 this.history.deleteSelectedHistoryItems();
             } else if (
-                $(document.activeElement).closest(".EezStudio_DeletedHistory_Container").length > 0
+                $(document.activeElement).closest(
+                    ".EezStudio_DeletedHistory_Container"
+                ).length > 0
             ) {
                 this.deletedItemsHistory.deleteSelectedHistoryItems();
             } else if (
-                $(document.activeElement).closest(".EezStudio_Scrapbook_Container").length > 0
+                $(document.activeElement).closest(
+                    ".EezStudio_Scrapbook_Container"
+                ).length > 0
             ) {
                 getScrapbookStore().deleteSelectedHistoryItems();
             }
@@ -239,17 +274,26 @@ export class InstrumentAppStore implements IEditor {
             }
 
             if (document.activeElement) {
-                if ($(document.activeElement).closest(".EezStudio_History_Container").length > 0) {
+                if (
+                    $(document.activeElement).closest(
+                        ".EezStudio_History_Container"
+                    ).length > 0
+                ) {
                     event.preventDefault();
                     this.history.selection.selectItems(this.history.items);
                 } else if (
-                    $(document.activeElement).closest(".EezStudio_DeletedHistory_Container")
-                        .length > 0
+                    $(document.activeElement).closest(
+                        ".EezStudio_DeletedHistory_Container"
+                    ).length > 0
                 ) {
                     event.preventDefault();
-                    this.deletedItemsHistory.selection.selectItems(this.deletedItemsHistory.items);
+                    this.deletedItemsHistory.selection.selectItems(
+                        this.deletedItemsHistory.items
+                    );
                 } else if (
-                    $(document.activeElement).closest(".EezStudio_Scrapbook_Container").length > 0
+                    $(document.activeElement).closest(
+                        ".EezStudio_Scrapbook_Container"
+                    ).length > 0
                 ) {
                     event.preventDefault();
                     getScrapbookStore().selectAllItems(this.history.appStore);
@@ -261,7 +305,9 @@ export class InstrumentAppStore implements IEditor {
     getFiltersFromLocalStorage(): Filters {
         const filters = new Filters();
 
-        let filtersJSON = localStorage.getItem(`instrument/${this.instrumentId}/window/filters`);
+        let filtersJSON = localStorage.getItem(
+            `instrument/${this.instrumentId}/window/filters`
+        );
         if (filtersJSON) {
             try {
                 Object.assign(filters, JSON.parse(filtersJSON));
@@ -283,7 +329,9 @@ export class InstrumentAppStore implements IEditor {
     }
 
     @action
-    selectHistoryItems(specification: SelectHistoryItemsSpecification | undefined) {
+    selectHistoryItems(
+        specification: SelectHistoryItemsSpecification | undefined
+    ) {
         this.selectHistoryItemsSpecification = specification;
         this.selectedHistoryItems.clear();
     }

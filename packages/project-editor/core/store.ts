@@ -107,7 +107,7 @@ import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
 import { isViewer } from "eez-studio-shared/util-electron";
-import { RuntimeStoreClass } from "project-editor/project/runtime";
+import { RuntimeStoreClass } from "project-editor/flow/runtime";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -1750,8 +1750,8 @@ export class DocumentStoreClass {
                 closeCombineCommands = true;
             }
 
-            const page = getAncestorOfType(object, Page.classInfo) as Page;
-            page.deleteConnectionLines(object);
+            const flow = getAncestorOfType(object, Flow.classInfo) as Flow;
+            flow.deleteConnectionLines(object);
         }
 
         deleteObject(object);

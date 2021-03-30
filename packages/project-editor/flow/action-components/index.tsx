@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action } from "mobx";
+import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -8,7 +8,9 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    getClassInfo
+    getClassInfo,
+    PropertyInfo,
+    specificGroup
 } from "project-editor/core/object";
 import { getDocumentStore } from "project-editor/core/store";
 
@@ -20,7 +22,14 @@ import type {
 import { styled } from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
 
-import { ActionComponent } from "project-editor/flow/component";
+import {
+    ActionComponent,
+    TogglePropertyToInputMenu
+} from "project-editor/flow/component";
+
+import { instruments } from "instrument/instrument-object";
+import { getConnection } from "instrument/window/connection";
+import { getFlow } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -112,11 +121,14 @@ export class SetVariableActionComponent extends ActionComponent {
             },
             {
                 name: "variable",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             },
             {
                 name: "value",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup,
+                propertyMenu: TogglePropertyToInputMenu
             }
         ],
         icon: (
@@ -136,7 +148,16 @@ export class SetVariableActionComponent extends ActionComponent {
     @action
     async execute(input: string) {
         const DocumentStore = getDocumentStore(this);
-        DocumentStore.dataContext.setValue(this.variable, this.value);
+        let value;
+        if (this.asInputProperties.indexOf("value") != -1) {
+            value = this._inputPropertyValues.get("value");
+            if (value == undefined) {
+                throw `missing value input`;
+            }
+        } else {
+            value = this.value;
+        }
+        DocumentStore.dataContext.setValue(this.variable, value);
         return "output";
     }
 }
@@ -183,9 +204,9 @@ export class ConstantActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             {
-                name: "output",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
+                name: "value",
+                type: PropertyType.JSON,
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (
@@ -194,6 +215,27 @@ export class ConstantActionComponent extends ActionComponent {
             </svg>
         )
     });
+
+    @observable value: string;
+
+    @computed get outputs(): PropertyInfo[] {
+        return [
+            {
+                name: "value",
+                displayName: this.value,
+                type: PropertyType.Any
+            }
+        ];
+    }
+
+    executePureFunction() {
+        const DocumentStore = getDocumentStore(this);
+        DocumentStore.RuntimeStore.propagateValue(
+            this,
+            "value",
+            JSON.parse(this.value)
+        );
+    }
 }
 
 registerClass(ConstantActionComponent);
@@ -212,14 +254,213 @@ export class ScpiActionComponent extends ActionComponent {
                 name: "output",
                 type: PropertyType.ConnectionOutput,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "instrument",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "scpi",
+                type: PropertyType.MultilineText,
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7">
                 <path d="M1.5 0C.67 0 0 .67 0 1.5S.67 3 1.5 3H2v1h-.5C.67 4 0 4.67 0 5.5S.67 7 1.5 7 3 6.33 3 5.5V5h1v.5C4 6.33 4.67 7 5.5 7S7 6.33 7 5.5 6.33 4 5.5 4H5V3h.5C6.33 3 7 2.33 7 1.5S6.33 0 5.5 0 4 .67 4 1.5V2H3v-.5C3 .67 2.33 0 1.5 0zm0 1c.28 0 .5.22.5.5V2h-.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5zm4 0c.28 0 .5.22.5.5s-.22.5-.5.5H5v-.5c0-.28.22-.5.5-.5zM3 3h1v1H3V3zM1.5 5H2v.5c0 .28-.22.5-.5.5S1 5.78 1 5.5s.22-.5.5-.5zM5 5h.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5V5z" />
             </svg>
-        )
+        ),
+        updateObjectValueHook: (object: ScpiActionComponent, values: any) => {
+            if (values.scpi) {
+                const {
+                    inputs: inputsBefore,
+                    outputs: outputsBefore
+                } = ScpiActionComponent.parse(object.scpi);
+
+                const {
+                    inputs: inputsAfter,
+                    outputs: outputsAfter
+                } = ScpiActionComponent.parse(values.scpi);
+
+                const flow = getFlow(object);
+
+                inputsBefore.forEach((inputBefore, i) => {
+                    if (inputsAfter.indexOf(inputBefore) === -1) {
+                        if (inputsBefore.length === inputsAfter.length) {
+                            flow.rerouteConnectionLinesInput(
+                                object,
+                                inputBefore,
+                                inputsAfter[i]
+                            );
+                        } else {
+                            flow.deleteConnectionLinesToInput(
+                                object,
+                                inputBefore
+                            );
+                        }
+                    }
+                });
+
+                outputsBefore.forEach((outputBefore, i) => {
+                    if (outputsAfter.indexOf(outputBefore) === -1) {
+                        if (outputsBefore.length === outputsAfter.length) {
+                            flow.rerouteConnectionLinesOutput(
+                                object,
+                                outputBefore,
+                                outputsAfter[i]
+                            );
+                        } else {
+                            flow.deleteConnectionLinesFromOutput(
+                                object,
+                                outputBefore
+                            );
+                        }
+                    }
+                });
+            }
+        }
     });
+
+    @observable instrument: string;
+    @observable scpi: string;
+
+    static readonly COMMAND_REGEXP = /\{([^\}]+)\}/;
+    static readonly QUERY_REGEXP = /(?<outputName>[^\s]+)\s*=\s*(?<query>.+\?)/;
+
+    static parse(scpi: string) {
+        const lines = scpi?.split("\n") ?? [];
+        const inputs: string[] = [];
+        const outputs: string[] = [];
+        lines.forEach(commandOrQueriesLine => {
+            const commandOrQueries = commandOrQueriesLine.split(";");
+            commandOrQueries.forEach(commandOrQuery => {
+                commandOrQuery = commandOrQuery.trim();
+                const matches = ScpiActionComponent.QUERY_REGEXP.exec(
+                    commandOrQuery
+                );
+                if (matches) {
+                    const output = matches.groups!.outputName.trim();
+                    outputs.push(output);
+                } else {
+                    ScpiActionComponent.COMMAND_REGEXP.lastIndex = 0;
+                    let str = commandOrQuery;
+                    while (true) {
+                        let matches = str.match(
+                            ScpiActionComponent.COMMAND_REGEXP
+                        );
+                        if (!matches) {
+                            break;
+                        }
+                        const input = matches[1].trim();
+                        inputs.push(input);
+                        str = str.substring(matches.index! + matches[1].length);
+                    }
+                }
+            });
+        });
+        return { inputs, outputs };
+    }
+
+    @computed get inputs() {
+        return [
+            ...super.inputProperties,
+            ...ScpiActionComponent.parse(this.scpi).inputs.map(input => ({
+                name: input,
+                displayName: input,
+                type: PropertyType.Any
+            }))
+        ];
+    }
+
+    @computed get outputs() {
+        return [
+            ...super.outputProperties,
+            ...ScpiActionComponent.parse(this.scpi).outputs.map(output => ({
+                name: output,
+                displayName: output,
+                type: PropertyType.Any
+            }))
+        ];
+    }
+
+    async execute(input: string) {
+        const instrument = instruments.get(this.instrument);
+        if (!instrument) {
+            throw "instrument not found";
+        }
+
+        const editor = instrument.getEditor();
+
+        if (!editor || !editor.instrument) {
+            throw "instrument not connected";
+        }
+
+        const connection = getConnection(editor);
+        if (!connection || !connection.isConnected) {
+            throw "instrument not connected";
+        }
+
+        connection.acquire(true);
+
+        try {
+            const DocumentStore = getDocumentStore(this);
+
+            const lines = this.scpi?.split("\n") ?? [];
+            for (let i = 0; i < lines.length; i++) {
+                const commandOrQueriesLine = lines[i];
+                const commandOrQueries = commandOrQueriesLine.split(";");
+                for (let j = 0; j < commandOrQueries.length; j++) {
+                    const commandOrQuery = commandOrQueries[j].trim();
+                    const matches = ScpiActionComponent.QUERY_REGEXP.exec(
+                        commandOrQuery
+                    );
+                    if (matches) {
+                        const output = matches.groups!.outputName.trim();
+                        const query = matches.groups!.query.trim();
+                        const result = await connection.query(query);
+                        DocumentStore.RuntimeStore.propagateValue(
+                            this,
+                            output,
+                            result
+                        );
+                    } else {
+                        let command = commandOrQuery;
+                        let str = command;
+                        ScpiActionComponent.COMMAND_REGEXP.lastIndex = 0;
+                        while (true) {
+                            let matches = str.match(
+                                ScpiActionComponent.COMMAND_REGEXP
+                            );
+                            if (!matches) {
+                                break;
+                            }
+
+                            const input = matches[1].trim();
+                            const value = this._inputPropertyValues.get(input);
+                            if (value == undefined) {
+                                throw `missing scpi parameter ${input}`;
+                            }
+
+                            const i = matches.index!;
+
+                            command =
+                                command.substring(0, i) +
+                                value +
+                                command.substring(i + matches[1].length + 2);
+                            str = command.substring(i + value.length);
+                        }
+
+                        connection.command(command);
+                    }
+                }
+            }
+        } finally {
+            connection.release();
+        }
+
+        return "output";
+    }
 }
 
 registerClass(ScpiActionComponent);
@@ -368,17 +609,17 @@ const TrixEditor = observer(
             const trixEditor = document.getElementById(editorId) as HTMLElement;
 
             if (value != trixEditor.innerHTML) {
-                console.log(
-                    `update trix "${value}" -> "${trixEditor.innerHTML}"`
-                );
+                // console.log(
+                //     `update trix "${value}" -> "${trixEditor.innerHTML}"`
+                // );
                 (trixEditor as any).editor.loadHTML(value);
             }
 
             const onBlur = (e: any) => {
                 if (trixEditor.innerHTML != value) {
-                    console.log(
-                        `fromTrix "${trixEditor.innerHTML}" -> "${value}"`
-                    );
+                    // console.log(
+                    //     `fromTrix "${trixEditor.innerHTML}" -> "${value}"`
+                    // );
                     setValue(trixEditor.innerHTML);
                 }
             };

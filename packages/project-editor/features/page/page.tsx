@@ -44,7 +44,6 @@ import { Component, Widget } from "project-editor/flow/component";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
-import { deleteObject } from "project-editor/core/commands";
 import {
     PageEditor,
     PagesNavigation,
@@ -379,16 +378,6 @@ export class Page extends Flow {
         } catch {
             return undefined;
         }
-    }
-
-    deleteConnectionLines(widget: Component) {
-        this.connectionLines
-            .filter(
-                connectionLine =>
-                    connectionLine.sourceComponent == widget ||
-                    connectionLine.targetComponent == widget
-            )
-            .forEach(connectionLine => deleteObject(connectionLine));
     }
 
     get pageRect() {

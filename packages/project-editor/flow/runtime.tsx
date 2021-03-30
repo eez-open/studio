@@ -1,5 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import styled from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
@@ -13,54 +14,141 @@ import { DocumentStoreClass } from "project-editor/core/store";
 import { Action, findAction } from "project-editor/features/action/action";
 import { Flow } from "project-editor/flow/flow";
 import { InputActionComponent } from "project-editor/flow/action-components";
-import { ActionComponent, Widget } from "project-editor/flow/component";
+import {
+    ActionComponent,
+    Component,
+    Widget
+} from "project-editor/flow/component";
 import { getLabel, IEezObject } from "project-editor/core/object";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum HistoryItemType {
-    ACTION_START,
-    ACTION_END,
-    EXECUTE_ACTION_COMPONENT,
-    EXECUTE_WIDGET_ACTION,
-    WIDGET_ACTION_NOT_DEFINED,
-    WIDGET_ACTION_NOT_FOUND,
-    NO_CONNECTION
-}
-
-class HistoryItem {
-    date: Date;
+abstract class HistoryItem {
+    date: Date = new Date();
     id = guid();
 
-    constructor(
-        public type: HistoryItemType,
-        public object: IEezObject,
-        public output?: string
-    ) {
-        this.date = new Date();
+    abstract get label(): string;
+    abstract get object(): IEezObject | undefined;
+    get isError() {
+        return false;
+    }
+}
+
+class ActionStartHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject) {
+        super();
     }
 
     get label() {
-        if (this.type == HistoryItemType.ACTION_START) {
-            return `Action start: ${getLabel(this.object)}`;
-        } else if (this.type == HistoryItemType.ACTION_END) {
-            return `Action end: ${getLabel(this.object)}`;
-        } else if (this.type == HistoryItemType.EXECUTE_ACTION_COMPONENT) {
-            return `Execute action component: ${getLabel(this.object)}`;
-        } else if (this.type == HistoryItemType.EXECUTE_WIDGET_ACTION) {
-            return `Execute widget action: ${getLabel(this.object)}`;
-        } else if (this.type == HistoryItemType.WIDGET_ACTION_NOT_DEFINED) {
-            return `Widget action not defined: ${getLabel(this.object)}`;
-        } else if (this.type == HistoryItemType.WIDGET_ACTION_NOT_FOUND) {
-            return `Widget action not found: ${(this.object as Widget).action}`;
-        } else if (this.type == HistoryItemType.NO_CONNECTION) {
-            return `Action ${getLabel(
-                this.object
-            )} has no connection from output ${this.output}`;
-        }
-        return "TODO...";
+        return `Action start: ${getLabel(this.object)}`;
+    }
+}
+
+class ActionEndHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject) {
+        super();
+    }
+
+    get label() {
+        return `Action end: ${getLabel(this.object)}`;
+    }
+}
+
+class ExecuteActionComponentHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject) {
+        super();
+    }
+
+    get label() {
+        return `Execute action component: ${getLabel(this.object)}`;
+    }
+}
+
+class ExecuteWidgetActionHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject) {
+        super();
+    }
+
+    get label() {
+        return `Execute widget action: ${getLabel(this.object)}`;
+    }
+}
+
+class WidgetActionNotDefinedHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject) {
+        super();
+    }
+
+    get label() {
+        return `Widget action not defined: ${getLabel(this.object)}`;
+    }
+
+    get isError() {
+        return true;
+    }
+}
+
+class WidgetActionNotFoundHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject) {
+        super();
+    }
+
+    get label() {
+        return `Widget action not found: ${(this.object as Widget).action}`;
+    }
+
+    get isError() {
+        return true;
+    }
+}
+
+class NoConnectionHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject, public output?: string) {
+        super();
+    }
+
+    get label() {
+        return `Action ${getLabel(this.object)} has no connection from output ${
+            this.output
+        }`;
+    }
+
+    get isError() {
+        return true;
+    }
+}
+
+class OutputValueHistoryItem extends HistoryItem {
+    constructor(
+        public object: IEezObject,
+        public output?: string,
+        public value?: any
+    ) {
+        super();
+    }
+
+    get label() {
+        return `Output value from [${getLabel(this.object)}/${
+            this.output
+        }]: ${this.value.toString()}`;
+    }
+}
+
+class ExecutionErrorHistoryItem extends HistoryItem {
+    constructor(public object: IEezObject, public error?: any) {
+        super();
+    }
+
+    get label() {
+        return `Execution error in ${getLabel(
+            this.object
+        )}: ${this.error.toString()}`;
+    }
+
+    get isError() {
+        return true;
     }
 }
 
@@ -85,12 +173,8 @@ export class RuntimeStoreClass {
         this.isRuntimeMode = false;
     }
 
-    @action addHistoryItem(
-        type: HistoryItemType,
-        object: IEezObject,
-        output?: string
-    ) {
-        this.history.push(new HistoryItem(type, object, output));
+    @action addHistoryItem(historyItem: HistoryItem) {
+        this.history.push(historyItem);
     }
 
     @action
@@ -101,38 +185,36 @@ export class RuntimeStoreClass {
                 widget.action
             );
             if (action) {
-                this.addHistoryItem(
-                    HistoryItemType.EXECUTE_WIDGET_ACTION,
-                    widget
-                );
+                this.addHistoryItem(new ExecuteWidgetActionHistoryItem(widget));
                 this.executeAction(action);
             } else {
                 this.addHistoryItem(
-                    HistoryItemType.WIDGET_ACTION_NOT_FOUND,
-                    widget
+                    new WidgetActionNotFoundHistoryItem(widget)
                 );
             }
         } else {
-            this.addHistoryItem(
-                HistoryItemType.WIDGET_ACTION_NOT_DEFINED,
-                widget
-            );
+            this.addHistoryItem(new WidgetActionNotDefinedHistoryItem(widget));
         }
     }
 
     @action
     executeAction(action: Action) {
-        this.addHistoryItem(HistoryItemType.ACTION_START, action);
+        this.addHistoryItem(new ActionStartHistoryItem(action));
         this.executeFlow(action);
     }
 
     executeFlow(flow: Flow) {
         this.flow = flow;
+
+        flow.components.forEach(component => component.executePureFunction());
+
         const inputActionComponent = flow.components.find(
             component => component instanceof InputActionComponent
         ) as ActionComponent;
         if (inputActionComponent) {
             this.executeActionComponent(inputActionComponent, "input");
+        } else {
+            // TODO report
         }
     }
 
@@ -144,36 +226,80 @@ export class RuntimeStoreClass {
         const flow = this.flow!;
 
         this.addHistoryItem(
-            HistoryItemType.EXECUTE_ACTION_COMPONENT,
-            actionComponent
+            new ExecuteActionComponentHistoryItem(actionComponent)
         );
 
-        const output = await actionComponent.execute(input);
+        try {
+            const output = await actionComponent.execute(input);
 
-        if (output) {
-            const connectionLine = flow.connectionLines.find(
-                connectionLine =>
-                    connectionLine.source === actionComponent.wireID &&
-                    connectionLine.output === output
-            );
-
-            if (connectionLine) {
-                const actionNode = flow.wiredComponents.get(
-                    connectionLine.target
-                ) as ActionComponent;
-                this.executeActionComponent(actionNode, connectionLine.input);
-                return;
-            } else {
-                this.addHistoryItem(
-                    HistoryItemType.NO_CONNECTION,
-                    actionComponent,
-                    output
+            if (output) {
+                const connectionLine = flow.connectionLines.find(
+                    connectionLine =>
+                        connectionLine.source === actionComponent.wireID &&
+                        connectionLine.output === output
                 );
+
+                if (connectionLine) {
+                    const actionNode = flow.wiredComponents.get(
+                        connectionLine.target
+                    ) as ActionComponent;
+                    this.executeActionComponent(
+                        actionNode,
+                        connectionLine.input
+                    );
+                    return;
+                } else {
+                    this.addHistoryItem(
+                        new NoConnectionHistoryItem(actionComponent, output)
+                    );
+                }
             }
+        } catch (err) {
+            this.addHistoryItem(
+                new ExecutionErrorHistoryItem(actionComponent, err)
+            );
         }
 
-        this.addHistoryItem(HistoryItemType.ACTION_END, flow);
+        this.addHistoryItem(new ActionEndHistoryItem(flow));
         this.flow = undefined;
+    }
+
+    propagateValue(sourceComponent: Component, output: string, value: any) {
+        const flow = this.flow;
+        if (!flow) {
+            return;
+        }
+
+        const connectionLine = flow.connectionLines.find(
+            connectionLine =>
+                connectionLine.source === sourceComponent.wireID &&
+                connectionLine.output === output
+        );
+
+        if (connectionLine) {
+            const targetComponent = flow.wiredComponents.get(
+                connectionLine.target
+            );
+
+            if (targetComponent) {
+                this.addHistoryItem(
+                    new OutputValueHistoryItem(
+                        sourceComponent,
+                        connectionLine.output,
+                        value
+                    )
+                );
+
+                targetComponent.setInputPropertyValue(
+                    connectionLine.input,
+                    value
+                );
+            } else {
+                // TODO report
+            }
+        } else {
+            // TODO report
+        }
     }
 
     render() {
@@ -213,6 +339,10 @@ const RuntimePanelDiv = styled.div`
 
         small {
             margin-right: 5px;
+        }
+
+        .error {
+            color: red;
         }
     }
 `;
@@ -287,7 +417,11 @@ class History extends React.Component {
     renderNode = (node: IListNode<HistoryItem>) => {
         const historyItem = node.data;
         return (
-            <div className="history-item">
+            <div
+                className={classNames("history-item", {
+                    error: historyItem.isError
+                })}
+            >
                 <small>{historyItem.date.toLocaleTimeString()}</small>
                 <span>{historyItem.label}</span>
             </div>

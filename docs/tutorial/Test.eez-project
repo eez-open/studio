@@ -31,43 +31,89 @@
       "components": [
         {
           "type": "InputActionComponent",
-          "left": -298,
-          "top": 76,
+          "left": -358,
+          "top": 1,
           "width": 0,
           "height": 0,
           "wireID": "e4ff49de-355e-4a41-e74d-17e8da29a308"
         },
         {
           "type": "OutputActionComponent",
-          "left": 213,
-          "top": 76,
+          "left": 165,
+          "top": 1,
           "width": 0,
           "height": 0,
           "wireID": "2730f1f7-0a28-48eb-974e-0cad03af6da1"
         },
         {
           "type": "SetVariableActionComponent",
-          "left": -55,
-          "top": 76,
+          "left": 0,
+          "top": 1,
           "width": 0,
           "height": 0,
           "wireID": "66e24c80-03c8-48cb-b6d0-2c020956c985",
+          "asInputProperties": [
+            "value"
+          ],
           "variable": "text",
           "value": "Hello, world!"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -170,
+          "top": 1,
+          "width": 0,
+          "height": 0,
+          "wireID": "9c0c3ad7-93e6-45c9-9100-963c2f6ec71b",
+          "instrument": "8",
+          "scpi": "inst {channel}\nvolt = volt?"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -306,
+          "top": 131,
+          "width": 0,
+          "height": 0,
+          "wireID": "9a69f7a0-f325-4a0b-f910-6c8df84fee05",
+          "value": "\"CH1\""
         }
       ],
       "connectionLines": [
-        {
-          "source": "e4ff49de-355e-4a41-e74d-17e8da29a308",
-          "output": "output",
-          "target": "66e24c80-03c8-48cb-b6d0-2c020956c985",
-          "input": "input"
-        },
         {
           "source": "66e24c80-03c8-48cb-b6d0-2c020956c985",
           "output": "output",
           "target": "2730f1f7-0a28-48eb-974e-0cad03af6da1",
           "input": "input"
+        },
+        {
+          "source": "e4ff49de-355e-4a41-e74d-17e8da29a308",
+          "output": "output",
+          "target": "9c0c3ad7-93e6-45c9-9100-963c2f6ec71b",
+          "input": "input"
+        },
+        {
+          "source": "9c0c3ad7-93e6-45c9-9100-963c2f6ec71b",
+          "output": "output",
+          "target": "66e24c80-03c8-48cb-b6d0-2c020956c985",
+          "input": "input"
+        },
+        {
+          "source": "9a69f7a0-f325-4a0b-f910-6c8df84fee05",
+          "output": "output",
+          "target": "9c0c3ad7-93e6-45c9-9100-963c2f6ec71b",
+          "input": "channel"
+        },
+        {
+          "source": "9a69f7a0-f325-4a0b-f910-6c8df84fee05",
+          "output": "value",
+          "target": "9c0c3ad7-93e6-45c9-9100-963c2f6ec71b",
+          "input": "channel"
+        },
+        {
+          "source": "9c0c3ad7-93e6-45c9-9100-963c2f6ec71b",
+          "output": "volt",
+          "target": "66e24c80-03c8-48cb-b6d0-2c020956c985",
+          "input": "value"
         }
       ],
       "name": "test1",
@@ -5071,10 +5117,5 @@
         "#b0b0b0"
       ]
     }
-  ],
-  "themeColors": {
-    "d676929b-5999-48f4-ec9d-a6832b2a7aaf301c5b3c-0bc2-4b75-ccc8-d630c036e367": "#303030",
-    "d676929b-5999-48f4-ec9d-a6832b2a7aafa6ce2fc0-3ec5-4cf7-d77b-f082552d462e": "#ffffff",
-    "d676929b-5999-48f4-ec9d-a6832b2a7aafa242093b-f014-479e-e5b9-27a3d89a4aa0": "#b0b0b0"
-  }
+  ]
 }

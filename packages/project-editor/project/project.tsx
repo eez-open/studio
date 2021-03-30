@@ -30,7 +30,8 @@ import {
     getObjectFromPath,
     getProperty,
     findPropertyByNameInObject,
-    getRootObject
+    getRootObject,
+    getAncestorOfType
 } from "project-editor/core/object";
 import {
     Message,
@@ -67,6 +68,7 @@ import { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import { Font } from "project-editor/features/font/font";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
+import { Flow } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1134,6 +1136,10 @@ export function checkObjectReference(
 
 export function getProject(object: IEezObject) {
     return getRootObject(object) as Project;
+}
+
+export function getFlow(object: IEezObject) {
+    return getAncestorOfType(object, Flow.classInfo) as Flow;
 }
 
 export function isObjectReadOnly(object: IEezObject) {

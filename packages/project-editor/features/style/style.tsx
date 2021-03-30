@@ -1380,7 +1380,7 @@ export default {
                         theme.colors = project.themes[i].colors;
                     });
 
-                    delete (project as Partial<Project>).themeColors;
+                    delete (jsObject as Partial<Project>).themeColors;
                 }
             }
         }

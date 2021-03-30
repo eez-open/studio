@@ -250,18 +250,9 @@ export interface ClassInfo {
 
     propertyGridTableComponent?: any;
 
-    beforeLoadHook?(object: IEezObject, jsObject: any): void;
+    beforeLoadHook?: (object: IEezObject, jsObject: any) => void;
 
-    updateObjectValueHook?: (
-        object: IEezObject,
-        propertyName: string,
-        value: any
-    ) =>
-        | {
-              oldValue: any;
-              newValue: any;
-          }
-        | undefined;
+    updateObjectValueHook?: (object: IEezObject, values: any) => void;
 
     afterUpdateObjectHook?: (
         object: IEezObject,

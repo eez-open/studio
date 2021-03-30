@@ -29,7 +29,7 @@ import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
 
 import { FlowEditor } from "project-editor/flow/flow-editor/editor";
-import { FlowRuntime } from "project-editor/flow/flow-runtime/runtime";
+import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
 
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
@@ -96,8 +96,6 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     componentDidMount() {
         const el = this.flipCardInnerRef.current!;
-
-        console.log(el);
 
         el.addEventListener(
             "transitionstart",
@@ -196,7 +194,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                 }}
                             >
                                 {this.context.RuntimeStore.isRuntimeMode ? (
-                                    <FlowRuntime
+                                    <FlowViewer
                                         widgetContainer={
                                             this.pageTabState
                                                 .componentContainerDisplayItem
@@ -221,7 +219,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                             </div>
                             <div className="flip-card-back">
                                 {this.context.RuntimeStore.isRuntimeMode ? (
-                                    <FlowRuntime
+                                    <FlowViewer
                                         widgetContainer={
                                             this.pageTabState
                                                 .componentContainerDisplayItem

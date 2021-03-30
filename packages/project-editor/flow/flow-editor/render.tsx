@@ -72,7 +72,7 @@ function calcComponentGeometry(
     const outputs: PortsGeometry = {};
 
     if (component instanceof Component) {
-        component.inputProperties.forEach(property => {
+        component.inputs.forEach(property => {
             const inputElement = el.querySelector(
                 `[data-connection-input-id="${property.name}"]`
             );
@@ -95,7 +95,7 @@ function calcComponentGeometry(
             }
         });
 
-        component.outputProperties.forEach(property => {
+        component.outputs.forEach(property => {
             const outputElement = el.querySelector(
                 `[data-connection-output-id="${property.name}"]`
             );

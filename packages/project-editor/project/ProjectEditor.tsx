@@ -576,7 +576,12 @@ export class ProjectEditor extends React.Component<{}, {}> {
         let mainContent;
 
         if (isViewer()) {
-            mainContent = <Content />;
+            mainContent = (
+                <MainContent>
+                    <Toolbar />
+                    <Content />
+                </MainContent>
+            );
         } else {
             mainContent = (
                 <MainContent>

@@ -30,8 +30,9 @@ import {
     getClassInfo,
     makeDerivedClassInfo,
     getLabel,
-    getAncestorOfType,
-    findPropertyByNameInObject
+    findPropertyByNameInObject,
+    findPropertyByNameInClassInfo,
+    PropertyProps
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
@@ -40,7 +41,7 @@ import {
 } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { checkObjectReference } from "project-editor/project/project";
+import { checkObjectReference, getFlow } from "project-editor/project/project";
 
 import type {
     IResizeHandler,
@@ -188,6 +189,40 @@ function getClassFromType(type: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const TogglePropertyToInputMenu = (props: PropertyProps) => {
+    let menuItems: Electron.MenuItem[] = [];
+
+    menuItems.push(
+        new MenuItem({
+            label: "Toggle input",
+            click: () => {
+                const DocumentStore = getDocumentStore(props.objects[0]);
+                props.objects.forEach((component: Component) => {
+                    let asInputProperties = (
+                        component.asInputProperties ?? []
+                    ).slice();
+                    const i = asInputProperties.indexOf(
+                        props.propertyInfo.name
+                    );
+                    if (i === -1) {
+                        asInputProperties.push(props.propertyInfo.name);
+                    } else {
+                        asInputProperties.splice(i, 1);
+                    }
+                    asInputProperties.sort();
+                    DocumentStore.updateObject(component, {
+                        asInputProperties
+                    });
+                });
+            }
+        })
+    );
+
+    return menuItems;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Return immediate parent, which can be of type Page or Widget
 // (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
 export function getWidgetParent(widget: Component | Page) {
@@ -209,6 +244,9 @@ export class Component extends EezObject {
     @observable height: number;
 
     @observable wireID?: string;
+
+    @observable asInputProperties: string[];
+    @observable _inputPropertyValues = new Map<string, any>();
 
     @observable _geometry: ComponentGeometry;
 
@@ -283,6 +321,12 @@ export class Component extends EezObject {
                 name: "wireID",
                 type: PropertyType.String,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "asInputProperties",
+                type: PropertyType.StringArray,
+                hideInPropertyGrid: true,
+                defaultValue: []
             }
         ],
 
@@ -378,20 +422,38 @@ export class Component extends EezObject {
         return `${point.x}, ${point.y}`;
     }
 
-    @computed get inputProperties() {
+    get inputProperties() {
         const classInfo = getClassInfo(this);
         const properties = classInfo.properties;
-        return properties.filter(
-            property => property.type == PropertyType.ConnectionInput
-        );
+        return [
+            ...properties.filter(
+                property => property.type == PropertyType.ConnectionInput
+            ),
+            ...((this.asInputProperties ?? [])
+                .map(inputPropertyName =>
+                    findPropertyByNameInClassInfo(
+                        getClassInfo(this),
+                        inputPropertyName
+                    )
+                )
+                .filter(propertyInfo => !!propertyInfo) as PropertyInfo[])
+        ];
     }
 
-    @computed get outputProperties() {
+    get outputProperties() {
         const classInfo = getClassInfo(this);
         const properties = classInfo.properties;
         return properties.filter(
             property => property.type == PropertyType.ConnectionOutput
         );
+    }
+
+    @computed get inputs() {
+        return this.inputProperties;
+    }
+
+    @computed get outputs() {
+        return this.outputProperties;
     }
 
     @computed
@@ -422,6 +484,16 @@ export class Component extends EezObject {
         style: React.CSSProperties,
         designerContext: IFlowContext | undefined
     ) {}
+
+    executePureFunction() {}
+
+    getInputPropertyValue(input: string) {
+        this._inputPropertyValues.get(input);
+    }
+
+    setInputPropertyValue(input: string, value: any) {
+        this._inputPropertyValues.set(input, value);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -873,8 +945,8 @@ function renderActionComponent(
 ) {
     const classInfo = getClassInfo(actionNode);
 
-    const inputs = actionNode.inputProperties;
-    const outputs = actionNode.outputProperties;
+    const inputs = actionNode.inputs;
+    const outputs = actionNode.outputs;
 
     return (
         <>
@@ -897,7 +969,8 @@ function renderActionComponent(
                                 className="eez-connection-input"
                                 data-connection-input-id={property.name}
                             >
-                                {humanize(property.name)}
+                                {property.displayName ??
+                                    humanize(property.name)}
                             </div>
                         ))}
                     </div>
@@ -908,7 +981,8 @@ function renderActionComponent(
                                 className="eez-connection-output"
                                 data-connection-output-id={property.name}
                             >
-                                {humanize(property.name)}
+                                {property.displayName ??
+                                    humanize(property.name)}
                             </div>
                         ))}
                     </div>
@@ -974,20 +1048,22 @@ export class NotFoundComponent extends ActionComponent {
         }
     });
 
-    @computed get inputProperties() {
-        const page = getAncestorOfType(this, Page.classInfo) as Page;
-        return page.connectionLines
-            .filter(connectionLine => connectionLine.target == this.wireID)
+    @computed get inputs() {
+        return getFlow(this)
+            .connectionLines.filter(
+                connectionLine => connectionLine.target == this.wireID
+            )
             .map(connectionLine => ({
                 name: connectionLine.input,
                 type: PropertyType.ConnectionInput
             }));
     }
 
-    @computed get outputProperties() {
-        const page = getAncestorOfType(this, Page.classInfo) as Page;
-        return page.connectionLines
-            .filter(connectionLine => connectionLine.source == this.wireID)
+    @computed get outputs() {
+        return getFlow(this)
+            .connectionLines.filter(
+                connectionLine => connectionLine.source == this.wireID
+            )
             .map(connectionLine => ({
                 name: connectionLine.output,
                 type: PropertyType.ConnectionOutput
@@ -996,8 +1072,8 @@ export class NotFoundComponent extends ActionComponent {
 
     get autoSize() {
         return (
-            this.inputProperties.length > 0 ||
-            this.outputProperties.length > 0 ||
+            this.inputs.length > 0 ||
+            this.outputs.length > 0 ||
             this.width === 0 ||
             this.height == 0
         );

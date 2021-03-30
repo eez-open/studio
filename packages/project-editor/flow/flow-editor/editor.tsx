@@ -10,7 +10,7 @@ import {
     pointInRect,
     Rect
 } from "eez-studio-shared/geometry";
-import { closestByClass } from "eez-studio-shared/dom";
+import { closestByClass, closestBySelector } from "eez-studio-shared/dom";
 
 import type {
     IDocument,
@@ -1193,6 +1193,12 @@ export class FlowEditor
 
     @bind
     onKeyDown(event: React.KeyboardEvent) {
+        if (
+            closestBySelector(event.target, ".eez-flow-editor-capture-pointers")
+        ) {
+            return;
+        }
+
         if (event.altKey) {
         } else if (event.shiftKey) {
             if (event.keyCode == 36) {

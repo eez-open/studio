@@ -384,7 +384,7 @@ export class Canvas extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const FlowRuntimeCanvasContainer = styled.div`
+const FlowViewerCanvasContainer = styled.div`
     flex-grow: 1;
     display: flex;
     position: relative;
@@ -403,13 +403,13 @@ const FlowRuntimeCanvasContainer = styled.div`
     }
 `;
 
-const FlowRuntimeCanvas = styled(Canvas)`
+const FlowViewerCanvas = styled(Canvas)`
     position: absolute;
     width: 100%;
     height: 100%;
 `;
 
-interface FlowRuntimeProps {
+interface FlowViewerProps {
     widgetContainer: ITreeObjectAdapter;
     onFocus?: () => void;
     transitionIsActive?: boolean;
@@ -417,8 +417,8 @@ interface FlowRuntimeProps {
 }
 
 @observer
-export class FlowRuntime
-    extends React.Component<FlowRuntimeProps>
+export class FlowViewer
+    extends React.Component<FlowViewerProps>
     implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
@@ -430,7 +430,7 @@ export class FlowRuntime
 
     @observable flowDocument: FlowDocument;
 
-    constructor(props: FlowRuntimeProps) {
+    constructor(props: FlowViewerProps) {
         super(props);
         this.updateFlowDocument();
     }
@@ -592,13 +592,13 @@ export class FlowRuntime
 
     render() {
         return (
-            <FlowRuntimeCanvasContainer
+            <FlowViewerCanvasContainer
                 id={this.designerContext.containerId}
                 tabIndex={0}
                 onFocus={this.props.onFocus || this.focusHander}
                 onKeyDown={this.onKeyDown}
             >
-                <FlowRuntimeCanvas
+                <FlowViewerCanvas
                     designerContext={this.designerContext}
                     dragAndDropActive={!!DragAndDropManager.dragObject}
                     transitionIsActive={this.props.transitionIsActive}
@@ -622,8 +622,8 @@ export class FlowRuntime
                             </div>
                         </>
                     )}
-                </FlowRuntimeCanvas>
-            </FlowRuntimeCanvasContainer>
+                </FlowViewerCanvas>
+            </FlowViewerCanvasContainer>
         );
     }
 }

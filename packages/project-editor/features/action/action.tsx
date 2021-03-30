@@ -29,7 +29,7 @@ import {
 } from "project-editor/components/ListNavigation";
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 import { FlowEditor } from "project-editor/flow/flow-editor/editor";
-import { FlowRuntime } from "project-editor/flow/flow-runtime/runtime";
+import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
 import { IPanel } from "project-editor/core/store";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
 import { ThemesSideView } from "project-editor/features/style/theme";
@@ -97,7 +97,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
         let flowTabState = this.props.editor.state as FlowTabState;
         if (this.context.RuntimeStore.isRuntimeMode) {
             return (
-                <FlowRuntime
+                <FlowViewer
                     widgetContainer={flowTabState.componentContainerDisplayItem}
                 />
             );

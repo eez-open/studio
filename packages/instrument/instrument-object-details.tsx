@@ -52,7 +52,12 @@ const PanelContentDiv = styled.div`
 export class Panel extends React.Component<
     {
         title?: string;
-        justify?: "flex-start" | "flex-end" | "center" | "space-between" | "space-around";
+        justify?:
+            | "flex-start"
+            | "flex-end"
+            | "center"
+            | "space-between"
+            | "space-around";
         scrollable?: boolean;
         grow?: number;
     },
@@ -110,16 +115,22 @@ class Properties extends React.Component<
                     name="Instrument"
                     value={extension!.displayName || extension!.name}
                 />
+                <StaticProperty name="ID" value={this.props.instrument.id} />
                 <TextInputProperty
                     name="Label"
                     value={this.props.instrument.label || ""}
                     onChange={value => this.props.instrument.setLabel(value)}
                 />
-                <StaticProperty name="IDN" value={this.props.instrument.idn || "Not found!"} />
+                <StaticProperty
+                    name="IDN"
+                    value={this.props.instrument.idn || "Not found!"}
+                />
                 <BooleanProperty
                     name="Auto connect"
                     value={this.props.instrument.autoConnect}
-                    onChange={value => this.props.instrument.setAutoConnect(value)}
+                    onChange={value =>
+                        this.props.instrument.setAutoConnect(value)
+                    }
                 />
             </PropertyList>
         );
@@ -150,22 +161,28 @@ class Connection extends React.Component<{
         if (connection) {
             if (connection.isIdle) {
                 error = connection.error && (
-                    <AlertDanger onDismiss={this.dismissError}>{connection.error}</AlertDanger>
+                    <AlertDanger onDismiss={this.dismissError}>
+                        {connection.error}
+                    </AlertDanger>
                 );
 
                 connectionParameters = (
                     <ConnectionProperties
-                        connectionParameters={instrument.getConnectionParameters([
-                            instrument.lastConnection,
-                            this.connectionParameters,
-                            instrument.defaultConnectionParameters
-                        ])}
+                        connectionParameters={instrument.getConnectionParameters(
+                            [
+                                instrument.lastConnection,
+                                this.connectionParameters,
+                                instrument.defaultConnectionParameters
+                            ]
+                        )}
                         onConnectionParametersChanged={(
                             connectionParameters: ConnectionParameters
                         ) => {
                             this.connectionParameters = connectionParameters;
                         }}
-                        availableConnections={this.props.instrument.availableConnections}
+                        availableConnections={
+                            this.props.instrument.availableConnections
+                        }
                         serialBaudRates={this.props.instrument.serialBaudRates}
                     />
                 );
@@ -199,13 +216,19 @@ class Connection extends React.Component<{
 
                 if (connection.isConnected) {
                     button = (
-                        <button className="btn btn-danger" onClick={() => connection!.disconnect()}>
+                        <button
+                            className="btn btn-danger"
+                            onClick={() => connection!.disconnect()}
+                        >
                             Disconnect
                         </button>
                     );
                 } else {
                     button = (
-                        <button className="btn btn-danger" onClick={() => connection!.disconnect()}>
+                        <button
+                            className="btn btn-danger"
+                            onClick={() => connection!.disconnect()}
+                        >
                             Abort
                         </button>
                     );
@@ -227,7 +250,10 @@ class Connection extends React.Component<{
 }
 
 @observer
-export class InstrumentDetails extends React.Component<{ instrument: InstrumentObject }, {}> {
+export class InstrumentDetails extends React.Component<
+    { instrument: InstrumentObject },
+    {}
+> {
     @bind
     onOpenInTab() {
         this.props.instrument.openEditor("tab");
@@ -256,14 +282,21 @@ export class InstrumentDetails extends React.Component<{ instrument: InstrumentO
         let { instrument } = this.props;
         return (
             <Panels>
-                <Panel title="Actions" justify="flex-start" scrollable={true} grow={1}>
+                <Panel
+                    title="Actions"
+                    justify="flex-start"
+                    scrollable={true}
+                    grow={1}
+                >
                     <Toolbar>
                         {this.props.instrument.isUnknownExtension && (
                             <ButtonAction
                                 text="Install Extension"
                                 title="Install extension for this instrument"
                                 className="btn btn-default btn-primary"
-                                onClick={() => this.props.instrument.installExtension()}
+                                onClick={() =>
+                                    this.props.instrument.installExtension()
+                                }
                             />
                         )}
                         <ButtonAction
@@ -287,11 +320,21 @@ export class InstrumentDetails extends React.Component<{ instrument: InstrumentO
                     </Toolbar>
                 </Panel>
 
-                <Panel title="Properties" justify="flex-start" scrollable={true} grow={1}>
+                <Panel
+                    title="Properties"
+                    justify="flex-start"
+                    scrollable={true}
+                    grow={1}
+                >
                     <Properties instrument={instrument} />
                 </Panel>
 
-                <Panel title="Connection" justify="flex-start" scrollable={true} grow={1}>
+                <Panel
+                    title="Connection"
+                    justify="flex-start"
+                    scrollable={true}
+                    grow={1}
+                >
                     <Connection instrument={instrument} />
                 </Panel>
             </Panels>
