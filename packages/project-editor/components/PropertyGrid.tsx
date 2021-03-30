@@ -38,7 +38,9 @@ import {
     getParent,
     getKey,
     getId,
-    getClassInfo
+    getClassInfo,
+    isPropertyReadOnly,
+    isAnyPropertyReadOnly
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -184,10 +186,6 @@ class PropertyMenu extends React.Component<PropertyProps> {
     }
 
     render() {
-        if (this.props.readOnly) {
-            return null;
-        }
-
         let title = humanize(this.sourceInfo.source);
         if (this.sourceInfo.inheritedFrom) {
             title += " from " + objectToString(this.sourceInfo.inheritedFrom);
@@ -448,7 +446,10 @@ class ArrayElementProperty extends React.Component<{
                     <Property
                         propertyInfo={propertyInfo}
                         objects={[this.props.object]}
-                        readOnly={this.props.readOnly}
+                        readOnly={
+                            this.props.readOnly ||
+                            isPropertyReadOnly(this.props.object, propertyInfo)
+                        }
                         updateObject={this.updateObject}
                     />
                 </td>
@@ -912,10 +913,6 @@ class Property extends React.Component<PropertyProps> {
             return;
         }
 
-        if (this.props.propertyInfo.readOnlyInPropertyGrid) {
-            return;
-        }
-
         this._value = newValue;
 
         if (this.props.propertyInfo.type === PropertyType.Number) {
@@ -1034,7 +1031,7 @@ class Property extends React.Component<PropertyProps> {
     render() {
         const { propertyInfo, readOnly } = this.props;
 
-        if (propertyInfo.readOnlyInPropertyGrid) {
+        if (readOnly) {
             const getPropertyValueAsStringResult = getPropertyValueAsString(
                 this.props.objects,
                 propertyInfo
@@ -1068,17 +1065,15 @@ class Property extends React.Component<PropertyProps> {
                         value={this._value || ""}
                         readOnly
                     />
-                    {!readOnly && (
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                onClick={this.onEditUnique}
-                            >
-                                &hellip;
-                            </button>
-                        </div>
-                    )}
+                    <div className="input-group-append">
+                        <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={this.onEditUnique}
+                        >
+                            &hellip;
+                        </button>
+                    </div>
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.MultilineText) {
@@ -2039,15 +2034,19 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                     ) ||
                         !propertyInfo.propertyGridCollapsableDefaultPropertyName));
 
+            const propertyReadOnly = isAnyPropertyReadOnly(
+                objects,
+                propertyInfo
+            );
+
             const propertyProps = {
                 propertyInfo,
                 objects,
                 updateObject: this.updateObject,
-                readOnly
+                readOnly: readOnly || propertyReadOnly
             };
 
             let propertyMenuEnabled =
-                !propertyInfo.readOnlyInPropertyGrid &&
                 !readOnly &&
                 (propertyInfo.inheritable ||
                     (propertyInfo.propertyMenu &&
@@ -2089,7 +2088,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                     property={property}
                     isPropertyMenuSupported={isPropertyMenuSupported}
                     propertyMenuEnabled={propertyMenuEnabled}
-                    readOnly={readOnly}
+                    readOnly={propertyProps.readOnly}
                     updateObject={this.updateObject}
                 />
             );

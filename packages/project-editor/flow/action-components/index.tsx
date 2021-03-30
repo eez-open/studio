@@ -24,7 +24,7 @@ import { guid } from "eez-studio-shared/guid";
 
 import {
     ActionComponent,
-    TogglePropertyToInputMenu
+    makeToggableProperty
 } from "project-editor/flow/component";
 
 import { instruments } from "instrument/instrument-object";
@@ -124,12 +124,11 @@ export class SetVariableActionComponent extends ActionComponent {
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
-            {
+            makeToggableProperty({
                 name: "value",
                 type: PropertyType.String,
-                propertyGridGroup: specificGroup,
-                propertyMenu: TogglePropertyToInputMenu
-            }
+                propertyGridGroup: specificGroup
+            })
         ],
         icon: (
             <svg

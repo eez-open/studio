@@ -189,37 +189,64 @@ function getClassFromType(type: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const TogglePropertyToInputMenu = (props: PropertyProps) => {
+function toggablePropertyMenu(props: PropertyProps) {
     let menuItems: Electron.MenuItem[] = [];
 
-    menuItems.push(
-        new MenuItem({
-            label: "Toggle input",
-            click: () => {
-                const DocumentStore = getDocumentStore(props.objects[0]);
-                props.objects.forEach((component: Component) => {
-                    let asInputProperties = (
-                        component.asInputProperties ?? []
-                    ).slice();
-                    const i = asInputProperties.indexOf(
-                        props.propertyInfo.name
-                    );
+    if (props.objects.length == 1) {
+        const component = props.objects[0] as Component;
+
+        let asInputProperties = (component.asInputProperties ?? []).slice();
+        const i = asInputProperties.indexOf(props.propertyInfo.name);
+
+        menuItems.push(
+            new MenuItem({
+                label: i === -1 ? "Convert to input" : "Convert to property",
+                click: () => {
+                    const DocumentStore = getDocumentStore(props.objects[0]);
+
+                    DocumentStore.UndoManager.setCombineCommands(true);
+
                     if (i === -1) {
                         asInputProperties.push(props.propertyInfo.name);
                     } else {
                         asInputProperties.splice(i, 1);
+
+                        getFlow(component).deleteConnectionLinesToInput(
+                            component,
+                            props.propertyInfo.name
+                        );
                     }
+
                     asInputProperties.sort();
+
                     DocumentStore.updateObject(component, {
                         asInputProperties
                     });
-                });
-            }
-        })
-    );
+
+                    DocumentStore.UndoManager.setCombineCommands(false);
+                }
+            })
+        );
+    }
 
     return menuItems;
-};
+}
+
+export function toggablePropertyReadOnlyInPropertyGrid(
+    component: Component,
+    propertyInfo: PropertyInfo
+) {
+    return (
+        (component.asInputProperties ?? []).indexOf(propertyInfo.name) !== -1
+    );
+}
+
+export function makeToggableProperty(propertyInfo: PropertyInfo): PropertyInfo {
+    return Object.assign(propertyInfo, {
+        propertyMenu: toggablePropertyMenu,
+        readOnlyInPropertyGrid: toggablePropertyReadOnlyInPropertyGrid
+    } as Partial<PropertyInfo>);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

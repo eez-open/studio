@@ -138,7 +138,9 @@ export interface PropertyInfo {
     hideInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
-    readOnlyInPropertyGrid?: boolean;
+    readOnlyInPropertyGrid?:
+        | boolean
+        | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     propertyGridGroup?: IPropertyGridGroupDefinition;
     propertyGridComponent?:
         | React.ComponentClass<PropertyProps>
@@ -669,6 +671,28 @@ export function isPropertyHidden(
     return propertyInfo.hideInPropertyGrid(object, propertyInfo);
 }
 
+export function isPropertyReadOnly(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    if (propertyInfo.readOnlyInPropertyGrid === undefined) {
+        return false;
+    }
+
+    if (typeof propertyInfo.readOnlyInPropertyGrid === "boolean") {
+        return propertyInfo.readOnlyInPropertyGrid;
+    }
+
+    return propertyInfo.readOnlyInPropertyGrid(object, propertyInfo);
+}
+
+export function isAnyPropertyReadOnly(
+    objects: IEezObject[],
+    propertyInfo: PropertyInfo
+) {
+    return !!objects.find(object => isPropertyReadOnly(object, propertyInfo));
+}
+
 export function isPropertyEnumerable(
     object: IEezObject,
     propertyInfo: PropertyInfo
@@ -698,6 +722,9 @@ export function getPropertyAsString(
     }
     if (typeof value === "string") {
         return value;
+    }
+    if (typeof value === "undefined") {
+        return "";
     }
     if (isArray(value)) {
         return (value as IEezObject[])
