@@ -12,6 +12,7 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 const lineColor = theme.connectionLineColor;
 const selectedLineColor = theme.selectedConnectionLineColor;
+const activeLineColor = theme.activeConnectionLineColor;
 
 const strokeWidth = 1.2;
 const strokeOutlineWidth = 1.5;
@@ -45,6 +46,38 @@ export const ConnectionLines = observer(
     }
 );
 
+const VisiblePath = observer(
+    ({
+        lineShape,
+        selected,
+        connectionLine,
+        context
+    }: {
+        lineShape: string;
+        selected: boolean;
+        connectionLine: ConnectionLine;
+        context: IFlowContext;
+    }) => {
+        return (
+            <path
+                d={lineShape}
+                style={{
+                    fill: "none",
+                    strokeWidth,
+                    strokeLinecap: "round"
+                }}
+                className={classNames("connection-line-path", {
+                    selected,
+                    active:
+                        connectionLine.active &&
+                        context.document.DocumentStore.RuntimeStore
+                            .isRuntimeMode
+                })}
+            ></path>
+        );
+    }
+);
+
 const ConnectionLineShape = observer(
     ({
         connectionLineAdapter,
@@ -57,7 +90,13 @@ const ConnectionLineShape = observer(
     }) => {
         const connectionLine = connectionLineAdapter.object as ConnectionLine;
         const lineShape = getConnectionLineShape(context, connectionLine);
+
+        if (!lineShape) {
+            return null;
+        }
+
         const scale = context.viewState.transform.scale;
+
         return (
             <g
                 className={classNames("connection-line", { selected })}
@@ -83,21 +122,12 @@ const ConnectionLineShape = observer(
                         strokeWidth: strokeOutlineWidth
                     }}
                 ></path>
-                <path
-                    d={lineShape}
-                    style={{
-                        fill: "none",
-                        stroke: selected ? selectedLineColor : lineColor,
-                        strokeWidth,
-                        markerStart: selected
-                            ? "url(#selectedLineStart)"
-                            : "url(#lineStart)",
-                        markerEnd: selected
-                            ? "url(#selectedLineEnd)"
-                            : "url(#lineEnd)",
-                        strokeLinecap: "round"
-                    }}
-                ></path>
+                <VisiblePath
+                    lineShape={lineShape}
+                    selected={selected}
+                    connectionLine={connectionLine}
+                    context={context}
+                />
             </g>
         );
     }
@@ -109,6 +139,8 @@ const LineMarkers = () => (
         <LineEndMarker id="lineEnd" color={lineColor} />
         <LineStartMarker id="selectedLineStart" color={selectedLineColor} />
         <LineEndMarker id="selectedLineEnd" color={selectedLineColor} />
+        <LineStartMarker id="activeLineStart" color={activeLineColor} />
+        <LineEndMarker id="activeLineEnd" color={activeLineColor} />
     </>
 );
 

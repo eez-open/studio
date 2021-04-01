@@ -35,10 +35,17 @@ export const Svg: React.FunctionComponent<{
     return (
         <svg
             className={className}
-            style={{ position: "absolute", ...svgRect, ...style }}
+            style={{
+                position: "absolute",
+                pointerEvents: "none",
+                ...svgRect,
+                ...style
+            }}
         >
             {defs && <defs>{defs}</defs>}
-            <g transform={gTransform}>{children}</g>
+            <g transform={gTransform} style={{ pointerEvents: "auto" }}>
+                {children}
+            </g>
         </svg>
     );
 });
@@ -133,7 +140,7 @@ const ComponentEnclosureDiv = styled.div`
     display: block;
     position: absolute;
 
-    &.eez-action-node {
+    &.eez-action-component {
         display: flex;
         flex-direction: column;
 
@@ -210,6 +217,44 @@ const ComponentEnclosureDiv = styled.div`
             }
         }
     }
+
+    &.eez-widget-component {
+        .body {
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+            background-color: #fffcf7;
+            border: 1px solid #dfdcd7;
+
+            .inports,
+            .outports {
+                padding: 2px;
+                font-size: 90%;
+                flex-grow: 1;
+            }
+
+            .inports {
+                text-align: left;
+            }
+
+            .outports {
+                text-align: right;
+            }
+
+            .eez-connection-input,
+            .eez-connection-output {
+                border: 1px solid #fffcf7;
+                padding: 2px 5px;
+                margin-bottom: 2px;
+
+                white-space: nowrap;
+            }
+
+            .eez-connection-output {
+                text-align: right;
+            }
+        }
+    }
 `;
 
 export const ComponentEnclosure = observer(
@@ -228,11 +273,12 @@ export const ComponentEnclosure = observer(
     }) => {
         const elRef = React.useRef<HTMLDivElement>(null);
 
-        React.useLayoutEffect(() => {
-            if (elRef.current) {
+        React.useEffect(() => {
+            const el = elRef.current;
+            if (el) {
                 const geometry = calcComponentGeometry(
                     component,
-                    elRef.current,
+                    el,
                     designerContext
                 );
                 runInAction(() => {
@@ -286,7 +332,12 @@ export const ComponentEnclosure = observer(
                 dataContext
             );
 
-            canvasDiv = <div ref={refDiv}></div>;
+            canvasDiv = (
+                <div
+                    ref={refDiv}
+                    style={{ width: component.width, height: component.height }}
+                ></div>
+            );
         }
 
         style.overflow = "visible";

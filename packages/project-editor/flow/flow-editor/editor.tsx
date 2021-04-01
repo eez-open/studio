@@ -900,7 +900,20 @@ const FlowEditorCanvasContainer = styled.div`
         background-color: ${props => props.theme.selectionBackgroundColor};
     }
 
-    .connection-line:hover > path:nth-child(3) {
+    .connection-line-path {
+        marker-start: url(#lineStart);
+        marker-end: url(#lineEnd);
+
+        stroke: ${props => props.theme.connectionLineColor};
+
+        &.selected {
+            stroke: ${props => props.theme.selectedConnectionLineColor};
+            marker-start: url(#selectedLineStart);
+            marker-end: url(#selectedLineEnd);
+        }
+    }
+
+    .connection-line:hover .connection-line-path {
         stroke: ${props => props.theme.selectedConnectionLineColor} !important;
         marker-start: url(#selectedLineStart) !important;
         marker-end: url(#selectedLineEnd) !important;
@@ -1277,11 +1290,6 @@ export class FlowEditor
                 >
                     {this.designerContext.document && (
                         <>
-                            {!this.props.frontFace && (
-                                <AllConnectionLines
-                                    designerContext={this.designerContext}
-                                />
-                            )}
                             <div
                                 style={{
                                     position: "absolute"
@@ -1292,6 +1300,11 @@ export class FlowEditor
                                     this.designerContext
                                 )}
                             </div>
+                            {!this.props.frontFace && (
+                                <AllConnectionLines
+                                    designerContext={this.designerContext}
+                                />
+                            )}
                             <DragComponent
                                 flow={this.flow}
                                 designerContext={this.designerContext}

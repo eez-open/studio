@@ -38,41 +38,40 @@ export function getConnectionLineShape(
         }
     }
 
+    const nodeHeight = Math.max(
+        connectionLine.sourceRect.height,
+        connectionLine.targetRect.height
+    );
+
     return generateNodeRedLinkPath(
         sourcePositionX,
         sourcePositionY,
         targetPositionX,
         targetPositionY,
-        1
+        1,
+        nodeHeight
     );
 }
 
 // Node-RED algorithm
-const lineCurveScale = 0.75;
-const node_width = 100;
-const node_height = 30;
+const LINE_CURVE_SCALE = 0.75;
+const NODE_WIDTH = 100;
 function generateNodeRedLinkPath(
     origX: number,
     origY: number,
     destX: number,
     destY: number,
-    sc: number
+    sc: number,
+    nodeHeight: number
 ) {
     var dy = destY - origY;
     var dx = destX - origX;
     var delta = Math.sqrt(dy * dy + dx * dx);
-    var scale = lineCurveScale;
+    var scale = LINE_CURVE_SCALE;
     var scaleY = 0;
     if (dx * sc > 0) {
-        if (delta < node_width) {
-            scale = 0.75 - 0.75 * ((node_width - delta) / node_width);
-            // scale += 2 * (Math.min(5 * node_width, Math.abs(dx)) / (5 * node_width));
-            // if (Math.abs(dy) < 3 * node_height) {
-            //     scaleY =
-            //         (dy > 0 ? 0.5 : -0.5) *
-            //         ((3 * node_height - Math.abs(dy)) / (3 * node_height)) *
-            //         (Math.min(node_width, Math.abs(dx)) / node_width);
-            // }
+        if (delta < NODE_WIDTH) {
+            scale = 0.75 - 0.75 * ((NODE_WIDTH - delta) / NODE_WIDTH);
         }
     } else {
         scale =
@@ -80,8 +79,8 @@ function generateNodeRedLinkPath(
             0.2 *
                 Math.max(
                     0,
-                    (node_width - Math.min(Math.abs(dx), Math.abs(dy))) /
-                        node_width
+                    (NODE_WIDTH - Math.min(Math.abs(dx), Math.abs(dy))) /
+                        NODE_WIDTH
                 );
     }
     if (dx * sc > 0) {
@@ -91,13 +90,13 @@ function generateNodeRedLinkPath(
             " " +
             origY +
             " C " +
-            (origX + sc * (node_width * scale)) +
+            (origX + sc * (NODE_WIDTH * scale)) +
             " " +
-            (origY + scaleY * node_height) +
+            (origY + scaleY * nodeHeight) +
             " " +
-            (destX - sc * scale * node_width) +
+            (destX - sc * scale * NODE_WIDTH) +
             " " +
-            (destY - scaleY * node_height) +
+            (destY - scaleY * nodeHeight) +
             " " +
             destX +
             " " +
@@ -108,16 +107,16 @@ function generateNodeRedLinkPath(
         var midY = Math.floor(destY - dy / 2);
         //
         if (dy === 0) {
-            midY = destY + node_height;
+            midY = destY + nodeHeight;
         }
-        var cp_height = node_height / 2;
+        var cp_height = nodeHeight / 2;
         var y1 = (destY + midY) / 2;
-        var topX = origX + sc * node_width * scale;
+        var topX = origX + sc * NODE_WIDTH * scale;
         var topY =
             dy > 0
                 ? Math.min(y1 - dy / 2, origY + cp_height)
                 : Math.max(y1 - dy / 2, origY - cp_height);
-        var bottomX = destX - sc * node_width * scale;
+        var bottomX = destX - sc * NODE_WIDTH * scale;
         var bottomY =
             dy > 0
                 ? Math.max(y1, destY - cp_height)

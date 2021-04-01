@@ -20,7 +20,11 @@ import { InstrumentObject } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function EditInstrumentLabelDialog({ instrument }: { instrument: InstrumentObject }) {
+function EditInstrumentLabelDialog({
+    instrument
+}: {
+    instrument: InstrumentObject;
+}) {
     const [label, setLabel] = React.useState(instrument.label || "");
 
     return (
@@ -32,7 +36,12 @@ function EditInstrumentLabelDialog({ instrument }: { instrument: InstrumentObjec
             }}
         >
             <PropertyList>
-                <TextInputProperty key="label" name="Label" value={label} onChange={setLabel} />
+                <TextInputProperty
+                    key="label"
+                    name="Label"
+                    value={label}
+                    onChange={setLabel}
+                />
             </PropertyList>
         </Dialog>
     );
@@ -132,7 +141,11 @@ export class AppBar extends React.Component<
 
     @bind
     onEditInstrumentLabel() {
-        showDialog(<EditInstrumentLabelDialog instrument={this.props.appStore.instrument!} />);
+        showDialog(
+            <EditInstrumentLabelDialog
+                instrument={this.props.appStore.instrument!}
+            />
+        );
     }
 
     render() {
@@ -140,7 +153,10 @@ export class AppBar extends React.Component<
         if (this.instrument.connection.isIdle) {
             connectionStatus = (
                 <div>
-                    <button className="btn btn-success btn-sm" onClick={this.handleConnectClick}>
+                    <button
+                        className="btn btn-success btn-sm"
+                        onClick={this.handleConnectClick}
+                    >
                         Connect
                     </button>
                 </div>
@@ -149,7 +165,10 @@ export class AppBar extends React.Component<
             connectionStatus = (
                 <div>
                     <div>{this.connection.interfaceInfo}</div>
-                    <button className="btn btn-danger btn-sm" onClick={this.handleDisconnectClick}>
+                    <button
+                        className="btn btn-danger btn-sm"
+                        onClick={this.handleDisconnectClick}
+                    >
                         Disconnect
                     </button>
                 </div>
@@ -160,7 +179,10 @@ export class AppBar extends React.Component<
                     <div style={{ display: "inline-block" }}>
                         <Loader size={25} />
                     </div>
-                    <button className="btn btn-danger btn-sm" onClick={this.handleDisconnectClick}>
+                    <button
+                        className="btn btn-danger btn-sm"
+                        onClick={this.handleDisconnectClick}
+                    >
                         Abort
                     </button>
                 </div>
@@ -168,12 +190,20 @@ export class AppBar extends React.Component<
         }
 
         let sendFile;
-        if (this.instrument.sendFileToInstrumentHandler && this.instrument.connection.isConnected) {
+        if (
+            this.instrument.sendFileToInstrumentHandler &&
+            this.instrument.connection.isConnected
+        ) {
             if (this.props.appStore.history.sendFileStatus) {
                 if (
-                    this.props.appStore.navigationStore.mainNavigationSelectedItem !=
-                    this.props.appStore.navigationStore.terminalNavigationItem && this.props.appStore.navigationStore.mainNavigationSelectedItem !=
-                    this.props.appStore.navigationStore.startPageNavigationItem
+                    this.props.appStore.navigationStore
+                        .mainNavigationSelectedItem !=
+                        this.props.appStore.navigationStore
+                            .terminalNavigationItem &&
+                    this.props.appStore.navigationStore
+                        .mainNavigationSelectedItem !=
+                        this.props.appStore.navigationStore
+                            .startPageNavigationItem
                 ) {
                     sendFile = this.props.appStore.history.sendFileStatus;
                 }
@@ -191,7 +221,8 @@ export class AppBar extends React.Component<
         }
 
         let toolbarButtons =
-            this.props.selectedItem && this.props.selectedItem.renderToolbarButtons();
+            this.props.selectedItem &&
+            this.props.selectedItem.renderToolbarButtons();
 
         return (
             <ConnectionBar>
@@ -201,7 +232,9 @@ export class AppBar extends React.Component<
 
                 <div>
                     <div>
-                        <span>{this.instrument.name}</span>
+                        <span>
+                            [{this.instrument.id}] {this.instrument.name}
+                        </span>
                         <IconAction
                             icon="material:edit"
                             onClick={this.onEditInstrumentLabel}
@@ -229,7 +262,9 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
 
     @bind
     onSelectionChange(item: IInstrumentWindowNavigationItem) {
-        this.props.appStore.navigationStore.changeMainNavigationSelectedItem(item);
+        this.props.appStore.navigationStore.changeMainNavigationSelectedItem(
+            item
+        );
     }
 
     @computed
@@ -253,7 +288,8 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
                     <AppBar
                         appStore={this.props.appStore}
                         selectedItem={
-                            this.props.appStore.navigationStore.mainNavigationSelectedItem
+                            this.props.appStore.navigationStore
+                                .mainNavigationSelectedItem
                         }
                     />
                 }
@@ -264,9 +300,14 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
     render() {
         return (
             <AppRootComponent
-                navigationItems={this.props.appStore.navigationStore.navigationItems}
+                navigationItems={
+                    this.props.appStore.navigationStore.navigationItems
+                }
                 appBar={this.appBar}
-                selectedItem={this.props.appStore.navigationStore.mainNavigationSelectedItem}
+                selectedItem={
+                    this.props.appStore.navigationStore
+                        .mainNavigationSelectedItem
+                }
                 onSelectionChange={this.onSelectionChange}
             />
         );

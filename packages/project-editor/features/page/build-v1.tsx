@@ -26,7 +26,11 @@ import {
 import { Font } from "project-editor/features/font/font";
 import { Style } from "project-editor/features/style/style";
 import { Page, PageOrientation } from "project-editor/features/page/page";
-import { Widget, Component } from "project-editor/flow/component";
+import {
+    Widget,
+    Component,
+    EmbeddedWidget
+} from "project-editor/flow/component";
 import {
     BarGraphWidget,
     BitmapWidget,
@@ -1210,7 +1214,7 @@ function buildWidget(object: Widget | Page) {
 
     // style
     let style: number;
-    if (object.style) {
+    if (object instanceof EmbeddedWidget && object.style) {
         style = getStyleIndex(object, "style");
     } else {
         style = getDefaultStyleIndex(object);

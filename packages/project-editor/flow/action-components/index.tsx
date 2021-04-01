@@ -24,12 +24,13 @@ import { guid } from "eez-studio-shared/guid";
 
 import {
     ActionComponent,
-    makeToggableProperty
+    makeToggablePropertyToInput
 } from "project-editor/flow/component";
 
 import { instruments } from "instrument/instrument-object";
 import { getConnection } from "instrument/window/connection";
 import { getFlow } from "project-editor/project/project";
+import { RunningFlow } from "../runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +53,7 @@ export class InputActionComponent extends ActionComponent {
         )
     });
 
-    async execute(input: string) {
+    async execute(runningFlow: RunningFlow, input: string) {
         return "output";
     }
 }
@@ -124,7 +125,7 @@ export class SetVariableActionComponent extends ActionComponent {
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
-            makeToggableProperty({
+            makeToggablePropertyToInput({
                 name: "value",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -145,11 +146,11 @@ export class SetVariableActionComponent extends ActionComponent {
     @observable value: string;
 
     @action
-    async execute(input: string) {
+    async execute(runningFlow: RunningFlow, input: string) {
         const DocumentStore = getDocumentStore(this);
         let value;
-        if (this.asInputProperties.indexOf("value") != -1) {
-            value = this._inputPropertyValues.get("value");
+        if (this.isInputProperty("value")) {
+            value = this.getInputPropertyValue("value");
             if (value == undefined) {
                 throw `missing value input`;
             }
@@ -227,13 +228,8 @@ export class ConstantActionComponent extends ActionComponent {
         ];
     }
 
-    executePureFunction() {
-        const DocumentStore = getDocumentStore(this);
-        DocumentStore.RuntimeStore.propagateValue(
-            this,
-            "value",
-            JSON.parse(this.value)
-        );
+    executePureFunction(runningFlow: RunningFlow) {
+        runningFlow.propagateValue(this, "value", JSON.parse(this.value));
     }
 }
 
@@ -383,7 +379,7 @@ export class ScpiActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(input: string) {
+    async execute(runningFlow: RunningFlow, input: string) {
         const instrument = instruments.get(this.instrument);
         if (!instrument) {
             throw "instrument not found";
@@ -400,11 +396,9 @@ export class ScpiActionComponent extends ActionComponent {
             throw "instrument not connected";
         }
 
-        connection.acquire(true);
+        connection.acquire(false);
 
         try {
-            const DocumentStore = getDocumentStore(this);
-
             const lines = this.scpi?.split("\n") ?? [];
             for (let i = 0; i < lines.length; i++) {
                 const commandOrQueriesLine = lines[i];
@@ -418,11 +412,7 @@ export class ScpiActionComponent extends ActionComponent {
                         const output = matches.groups!.outputName.trim();
                         const query = matches.groups!.query.trim();
                         const result = await connection.query(query);
-                        DocumentStore.RuntimeStore.propagateValue(
-                            this,
-                            output,
-                            result
-                        );
+                        runningFlow.propagateValue(this, output, result);
                     } else {
                         let command = commandOrQuery;
                         let str = command;
@@ -436,18 +426,27 @@ export class ScpiActionComponent extends ActionComponent {
                             }
 
                             const input = matches[1].trim();
-                            const value = this._inputPropertyValues.get(input);
-                            if (value == undefined) {
+                            const inputPropertyValue = this.getInputPropertyValue(
+                                input
+                            );
+                            if (
+                                inputPropertyValue &&
+                                inputPropertyValue.value != undefined
+                            ) {
+                                const value = inputPropertyValue.value;
+
+                                const i = matches.index!;
+
+                                command =
+                                    command.substring(0, i) +
+                                    value +
+                                    command.substring(
+                                        i + matches[1].length + 2
+                                    );
+                                str = command.substring(i + value.length);
+                            } else {
                                 throw `missing scpi parameter ${input}`;
                             }
-
-                            const i = matches.index!;
-
-                            command =
-                                command.substring(0, i) +
-                                value +
-                                command.substring(i + matches[1].length + 2);
-                            str = command.substring(i + value.length);
                         }
 
                         connection.command(command);

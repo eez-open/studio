@@ -1530,6 +1530,8 @@ export class DocumentStoreClass {
     }
 
     async closeWindow() {
+        await this.RuntimeStore.stopAllRunningFlows();
+
         if (this.project) {
             return await this.saveModified();
         }
@@ -1773,11 +1775,11 @@ export class DocumentStoreClass {
                         this.UndoManager.setCombineCommands(true);
                         closeCombineCommands = true;
                     }
-                    const page = getAncestorOfType(
+                    const flow = getAncestorOfType(
                         object,
-                        Page.classInfo
-                    ) as Page;
-                    page.deleteConnectionLines(object);
+                        Flow.classInfo
+                    ) as Flow;
+                    flow.deleteConnectionLines(object);
                 }
             });
 
@@ -1825,9 +1827,9 @@ export class DocumentStoreClass {
     }
 
     objectsToClipboardData(objects: IEezObject[]) {
-        const page = getAncestorOfType(objects[0], Page.classInfo) as Page;
-        if (page) {
-            return page.objectsToClipboardData(objects);
+        const flow = getAncestorOfType(objects[0], Flow.classInfo) as Flow;
+        if (flow) {
+            return flow.objectsToClipboardData(objects);
         }
         return objectsToClipboardData(objects);
     }

@@ -1,7 +1,7 @@
 import React from "react";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
-import { action, computed, observable } from "mobx";
+import { action, computed, observable, runInAction } from "mobx";
 import { objectToClipboardData } from "project-editor/core/clipboard";
 import {
     ClassInfo,
@@ -11,6 +11,8 @@ import {
     getParent,
     IEditorState,
     IEezObject,
+    isSubclassOf,
+    PropertyInfo,
     PropertyType,
     registerClass
 } from "project-editor/core/object";
@@ -32,6 +34,8 @@ export class ConnectionLine extends EezObject {
     @observable output: string;
     @observable target: string;
     @observable input: string;
+
+    @observable _active: boolean;
 
     static classInfo: ClassInfo = {
         label: (connectionLine: ConnectionLine) => {
@@ -110,6 +114,52 @@ export class ConnectionLine extends EezObject {
             y: this.targetComponent.top + inputGeometry.position.y
         };
     }
+
+    @computed get sourceRect() {
+        if (!(this.sourceComponent && this.sourceComponent._geometry)) {
+            return {
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0
+            };
+        }
+
+        return this.sourceComponent._geometry;
+    }
+
+    @computed get targetRect() {
+        if (!(this.targetComponent && this.targetComponent._geometry)) {
+            return {
+                left: 0,
+                top: 0,
+                width: 0,
+                height: 0
+            };
+        }
+
+        return this.targetComponent._geometry;
+    }
+
+    get active() {
+        return this._active;
+    }
+
+    _setActiveTimeoutId: any;
+
+    @action
+    setActive() {
+        this._active = true;
+
+        if (this._setActiveTimeoutId) {
+            clearTimeout(this._setActiveTimeoutId);
+        }
+
+        this._setActiveTimeoutId = setTimeout(() => {
+            this._setActiveTimeoutId = undefined;
+            runInAction(() => (this._active = false));
+        }, 100);
+    }
 }
 
 registerClass(ConnectionLine);
@@ -131,7 +181,21 @@ export abstract class Flow extends EezObject {
                 typeClass: ConnectionLine,
                 hideInPropertyGrid: true
             }
-        ]
+        ],
+        findPastePlaceInside: (
+            flow: Flow,
+            classInfo: ClassInfo,
+            isSingleObject: boolean
+        ): IEezObject | PropertyInfo | undefined => {
+            if (flow) {
+                if (isSubclassOf(classInfo, Component.classInfo)) {
+                    return flow.components;
+                } else if (classInfo === FlowFragment.classInfo) {
+                    return flow;
+                }
+            }
+            return undefined;
+        }
     };
 
     components: Component[];

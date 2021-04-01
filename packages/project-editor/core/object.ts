@@ -13,6 +13,7 @@ import {
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { Rect } from "eez-studio-shared/geometry";
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
+import { observable } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1102,3 +1103,41 @@ export function isAnyPropertyModified(props: PropertyProps) {
     }
     return false;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class RectObject extends EezObject {
+    static classInfo = {
+        properties: [
+            {
+                name: "top",
+                type: PropertyType.Number
+            },
+            {
+                name: "right",
+                type: PropertyType.Number
+            },
+            {
+                name: "bottom",
+                type: PropertyType.Number
+            },
+            {
+                name: "left",
+                type: PropertyType.Number
+            }
+        ],
+        defaultValue: {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0
+        }
+    };
+
+    @observable top: number;
+    @observable right: number;
+    @observable bottom: number;
+    @observable left: number;
+}
+
+registerClass(RectObject);

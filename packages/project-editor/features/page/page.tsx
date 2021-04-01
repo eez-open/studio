@@ -8,10 +8,8 @@ import {
     IEezObject,
     EezObject,
     ClassInfo,
-    PropertyInfo,
     registerClass,
     PropertyType,
-    isSubclassOf,
     generalGroup,
     geometryGroup,
     styleGroup,
@@ -50,7 +48,7 @@ import {
     PageTabState
 } from "project-editor/features/page/PagesNavigation";
 import { Rect } from "eez-studio-shared/geometry";
-import { Flow, FlowFragment } from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
 import { build } from "project-editor/features/page/build";
 
@@ -268,20 +266,6 @@ export class Page extends Flow {
             return new PageTabState(page);
         },
         navigationComponentId: "pages",
-        findPastePlaceInside: (
-            object: IEezObject,
-            classInfo: ClassInfo,
-            isSingleObject: boolean
-        ): IEezObject | PropertyInfo | undefined => {
-            if (object) {
-                if (isSubclassOf(classInfo, Component.classInfo)) {
-                    return (object as Page).components;
-                } else if (classInfo === FlowFragment.classInfo) {
-                    return object;
-                }
-            }
-            return undefined;
-        },
         editorComponent: PageEditor,
         navigationComponent: PagesNavigation,
         icon: "filter",

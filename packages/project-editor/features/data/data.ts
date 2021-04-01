@@ -165,7 +165,7 @@ export class DataContext implements IDataContext {
         if (dataItem) {
             dataItem._value = value;
         } else {
-            console.error(`data ${dataItemId} not found`);
+            throw `data ${dataItemId} not found`;
         }
     }
 
@@ -199,7 +199,7 @@ export class DataContext implements IDataContext {
         }
 
         const value = this.getValue(dataItemId);
-        if (value) {
+        if (value != undefined) {
             return value;
         }
 

@@ -401,6 +401,36 @@ const FlowViewerCanvasContainer = styled.div`
     .EezStudio_DesignerSelection_ResizeHandle {
         background-color: rgba(0, 0, 0, 0.6);
     }
+
+    .connection-line-path {
+        marker-start: url(#lineStart);
+        marker-end: url(#lineEnd);
+
+        stroke: ${props => props.theme.connectionLineColor};
+
+        &.selected {
+            stroke: ${props => props.theme.selectedConnectionLineColor};
+            marker-start: url(#selectedLineStart);
+            marker-end: url(#selectedLineEnd);
+        }
+
+        &.active {
+            stroke: ${props => props.theme.activeConnectionLineColor};
+            stroke-dasharray: 10;
+            animation: dash 10s linear infinite;
+            marker-start: url(#activeLineStart);
+            marker-end: url(#activeLineEnd);
+        }
+    }
+
+    @keyframes dash {
+        from {
+            stroke-dashoffset: 0;
+        }
+        to {
+            stroke-dashoffset: -600;
+        }
+    }
 `;
 
 const FlowViewerCanvas = styled(Canvas)`
@@ -574,6 +604,11 @@ export class FlowViewer
         }
     }
 
+    @bind
+    onDoubleClick() {
+        this.designerContext.viewState.resetTransform();
+    }
+
     static getDerivedStateFromError(error: any) {
         return { hasError: true };
     }
@@ -597,6 +632,7 @@ export class FlowViewer
                 tabIndex={0}
                 onFocus={this.props.onFocus || this.focusHander}
                 onKeyDown={this.onKeyDown}
+                onDoubleClick={this.onDoubleClick}
             >
                 <FlowViewerCanvas
                     designerContext={this.designerContext}
@@ -605,11 +641,6 @@ export class FlowViewer
                 >
                     {this.designerContext.document && (
                         <>
-                            {!this.props.frontFace && (
-                                <AllConnectionLines
-                                    designerContext={this.designerContext}
-                                />
-                            )}
                             <div
                                 style={{
                                     position: "absolute"
@@ -620,6 +651,11 @@ export class FlowViewer
                                     this.designerContext
                                 )}
                             </div>
+                            {!this.props.frontFace && (
+                                <AllConnectionLines
+                                    designerContext={this.designerContext}
+                                />
+                            )}
                         </>
                     )}
                 </FlowViewerCanvas>

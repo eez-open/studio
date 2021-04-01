@@ -22,7 +22,10 @@ import type {
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import {
+    ITreeObjectAdapter,
+    TreeObjectAdapter
+} from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +42,10 @@ class ViewState implements IViewState {
 
     persistentStateReactionDisposer: IReactionDisposer;
 
-    constructor(public containerId: string) {}
+    constructor(
+        public designerContext: DesignerContext,
+        public containerId: string
+    ) {}
 
     @action
     set(
@@ -161,8 +167,10 @@ class ViewState implements IViewState {
         ];
     }
 
-    get selectedObjects() {
-        return this.document?.flow.selectedItems ?? [];
+    @computed get selectedObjects(): ITreeObjectAdapter[] {
+        return this.designerContext.dragComponent
+            ? [new TreeObjectAdapter(this.designerContext.dragComponent)]
+            : this.document?.flow.selectedItems ?? [];
     }
 
     isObjectSelected(object: ITreeObjectAdapter): boolean {
@@ -300,7 +308,7 @@ export class DesignerContext implements IFlowContext {
     @observable frontFace: boolean;
 
     constructor(public containerId: string) {
-        this.viewState = new ViewState(this.containerId);
+        this.viewState = new ViewState(this, this.containerId);
     }
 
     @action

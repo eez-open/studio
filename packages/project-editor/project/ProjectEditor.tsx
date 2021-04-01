@@ -495,7 +495,7 @@ class StatusBar extends React.Component<{}, {}> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @action
+    @action.bound
     onChecksClicked() {
         this.context.UIStateStore.viewOptions.outputVisible = !this.context
             .UIStateStore.viewOptions.outputVisible;

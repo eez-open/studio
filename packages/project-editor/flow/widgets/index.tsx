@@ -64,20 +64,21 @@ import {
     makeDataPropertyInfo,
     makeStylePropertyInfo,
     makeTextPropertyInfo,
-    migrateStyleProperty
+    migrateStyleProperty,
+    EmbeddedWidget
 } from "project-editor/flow/component";
 
 const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ContainerWidget extends Widget {
+export class ContainerWidget extends EmbeddedWidget {
     @observable name?: string;
     @observable widgets: Widget[];
     @observable overlay?: string;
     @observable shadow?: boolean;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         label: (widget: ContainerWidget) => {
             if (widget.name) {
                 return `${humanize(widget.type)}: ${widget.name}`;
@@ -205,12 +206,12 @@ registerClass(ContainerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ListWidget extends Widget {
+export class ListWidget extends EmbeddedWidget {
     @observable itemWidget?: Widget;
     @observable listType?: string;
     @observable gap?: number;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "itemWidget",
@@ -321,11 +322,11 @@ registerClass(ListWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GridWidget extends Widget {
+export class GridWidget extends EmbeddedWidget {
     @observable itemWidget?: Widget;
     @observable gridFlow?: string;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "itemWidget",
@@ -447,12 +448,12 @@ export function htmlEncode(value: string) {
     return el.innerHTML;
 }
 
-export class SelectWidget extends Widget {
+export class SelectWidget extends EmbeddedWidget {
     @observable widgets: Widget[];
 
     _lastSelectedIndexInSelectWidget: number | undefined;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "widgets",
@@ -710,11 +711,11 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LayoutViewWidget extends Widget {
+export class LayoutViewWidget extends EmbeddedWidget {
     @observable layout: string;
     @observable context?: string;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "layout",
@@ -966,11 +967,11 @@ const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
         getProject(object).settings.general.projectVersion !== "v1"
 };
 
-export class DisplayDataWidget extends Widget {
+export class DisplayDataWidget extends EmbeddedWidget {
     @observable focusStyle: Style;
     @observable displayOption: DisplayOption;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             Object.assign(
                 makeStylePropertyInfo("focusStyle"),
@@ -1113,12 +1114,12 @@ registerClass(DisplayDataWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class TextWidget extends Widget {
+export class TextWidget extends EmbeddedWidget {
     @observable text?: string;
     @observable ignoreLuminocity: boolean;
     @observable focusStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         label: (widget: TextWidget) => {
             if (widget.text) {
                 return `${humanize(widget.type)}: ${widget.text}`;
@@ -1161,7 +1162,11 @@ export class TextWidget extends Widget {
         check: (object: TextWidget) => {
             let messages: output.Message[] = [];
 
-            if (!object.text && !object.data) {
+            if (
+                !object.text &&
+                !object.data &&
+                !object.isInputProperty("data")
+            ) {
                 messages.push(output.propertyNotSetMessage(object, "text"));
             }
 
@@ -1174,11 +1179,21 @@ export class TextWidget extends Widget {
         designerContext: IFlowContext,
         dataContext: IDataContext
     ) => {
-        let text = this.text
-            ? this.text
-            : this.data
-            ? (dataContext.get(this.data) as string)
-            : "";
+        let text = "";
+        if (this.text) {
+            text = this.text;
+        } else {
+            if (this.isInputProperty("data")) {
+                const value = this.getInputPropertyValue("data");
+                if (value !== undefined) {
+                    text = value.toString();
+                }
+            } else {
+                if (this.data) {
+                    text = dataContext.get(this.data) as string;
+                }
+            }
+        }
         drawText(ctx, text, 0, 0, this.width, this.height, this.style, false);
     };
 }
@@ -1437,12 +1452,12 @@ export const indentationGroup: IPropertyGridGroupDefinition = {
     position: 5
 };
 
-export class MultilineTextWidget extends Widget {
+export class MultilineTextWidget extends EmbeddedWidget {
     @observable text?: string;
     @observable firstLineIndent: number;
     @observable hangingIndent: number;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         label: (widget: TextWidget) => {
             if (widget.text) {
                 return `${humanize(widget.type)}: ${widget.text}`;
@@ -1535,11 +1550,11 @@ registerClass(MultilineTextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class RectangleWidget extends Widget {
+export class RectangleWidget extends EmbeddedWidget {
     @observable ignoreLuminocity: boolean;
     @observable invertColors: boolean;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "invertColors",
@@ -1678,14 +1693,14 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BitmapWidget extends Widget {
+export class BitmapWidget extends EmbeddedWidget {
     @observable bitmap?: string;
 
     get label() {
         return this.bitmap ? `${this.type}: ${this.bitmap}` : this.type;
     }
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "bitmap",
@@ -1837,12 +1852,12 @@ registerClass(BitmapWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ButtonWidget extends Widget {
+export class ButtonWidget extends EmbeddedWidget {
     @observable text?: string;
     @observable enabled?: string;
     @observable disabledStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             makeTextPropertyInfo("text"),
             makeDataPropertyInfo("enabled"),
@@ -1900,11 +1915,11 @@ registerClass(ButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ToggleButtonWidget extends Widget {
+export class ToggleButtonWidget extends EmbeddedWidget {
     @observable text1?: string;
     @observable text2?: string;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "text1",
@@ -1968,10 +1983,10 @@ registerClass(ToggleButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ButtonGroupWidget extends Widget {
+export class ButtonGroupWidget extends EmbeddedWidget {
     @observable selectedStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [makeStylePropertyInfo("selectedStyle")],
 
         defaultValue: {
@@ -2085,7 +2100,7 @@ registerClass(ButtonGroupWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BarGraphWidget extends Widget {
+export class BarGraphWidget extends EmbeddedWidget {
     @observable orientation?: string;
     @observable textStyle: Style;
     @observable line1Data?: string;
@@ -2093,7 +2108,7 @@ export class BarGraphWidget extends Widget {
     @observable line2Data?: string;
     @observable line2Style: Style;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             {
                 name: "orientation",
@@ -2315,12 +2330,12 @@ registerClass(BarGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class YTGraphWidget extends Widget {
+export class YTGraphWidget extends EmbeddedWidget {
     @observable y1Style: Style;
     @observable y2Data?: string;
     @observable y2Style: Style;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             Object.assign(
                 makeStylePropertyInfo("y1Style"),
@@ -2425,12 +2440,12 @@ registerClass(YTGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class UpDownWidget extends Widget {
+export class UpDownWidget extends EmbeddedWidget {
     @observable buttonsStyle: Style;
     @observable downButtonText?: string;
     @observable upButtonText?: string;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             makeStylePropertyInfo("buttonsStyle"),
             makeTextPropertyInfo("downButtonText", undefined, specificGroup),
@@ -2531,7 +2546,7 @@ registerClass(UpDownWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ListGraphWidget extends Widget {
+export class ListGraphWidget extends EmbeddedWidget {
     @observable dwellData?: string;
     @observable y1Data?: string;
     @observable y1Style: Style;
@@ -2540,7 +2555,7 @@ export class ListGraphWidget extends Widget {
     @observable cursorData?: string;
     @observable cursorStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             makeDataPropertyInfo("dwellData"),
             makeDataPropertyInfo("y1Data"),
@@ -2671,10 +2686,10 @@ registerClass(ListGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class AppViewWidget extends Widget {
+export class AppViewWidget extends EmbeddedWidget {
     @observable page: string;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         defaultValue: {
             left: 0,
             top: 0,
@@ -2718,13 +2733,13 @@ registerClass(AppViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScrollBarWidget extends Widget {
+export class ScrollBarWidget extends EmbeddedWidget {
     @observable thumbStyle: Style;
     @observable buttonsStyle: Style;
     @observable leftButtonText?: string;
     @observable rightButtonText?: string;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         properties: [
             makeStylePropertyInfo("thumbStyle"),
             makeStylePropertyInfo("buttonsStyle"),
@@ -2870,8 +2885,8 @@ registerClass(ScrollBarWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ProgressWidget extends Widget {
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+export class ProgressWidget extends EmbeddedWidget {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         defaultValue: {
             left: 0,
             top: 0,
@@ -2923,8 +2938,8 @@ registerClass(ProgressWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class CanvasWidget extends Widget {
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+export class CanvasWidget extends EmbeddedWidget {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         defaultValue: {
             left: 0,
             top: 0,
@@ -2934,7 +2949,7 @@ export class CanvasWidget extends Widget {
 
         icon: "../home/_images/widgets/Canvas.png",
 
-        check: (object: DisplayDataWidget) => {
+        check: (object: CanvasWidget) => {
             let messages: output.Message[] = [];
 
             if (!object.data) {
@@ -2964,3 +2979,5 @@ export class CanvasWidget extends Widget {
 }
 
 registerClass(CanvasWidget);
+
+import "project-editor/flow/widgets/plotly";

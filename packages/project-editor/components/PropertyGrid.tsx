@@ -681,11 +681,13 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
 
         if (!propertyInfo.propertyGridCollapsable) {
             return (
-                <PropertyGrid
-                    objects={this.props.objects.map(
-                        object => (object as any)[propertyInfo.name]
-                    )}
-                />
+                <div className="embedded-non-collapsable-property-grid">
+                    <PropertyGrid
+                        objects={this.props.objects.map(
+                            object => (object as any)[propertyInfo.name]
+                        )}
+                    />
+                </div>
             );
         }
 
@@ -1926,6 +1928,12 @@ const PropertyGridDiv = styled.div`
                 padding: 0;
             }
         }
+    }
+
+    .embedded-non-collapsable-property-grid > div {
+        padding: 0;
+        overflow: hidden;
+        font-size: 90%;
     }
 `;
 

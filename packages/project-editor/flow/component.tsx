@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
@@ -59,6 +59,7 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 import { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import { ContainerWidget } from "project-editor/flow/widgets";
+import { RunningFlow } from "./runtime";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -69,7 +70,7 @@ export function makeDataPropertyInfo(
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ): PropertyInfo {
-    return {
+    return makeToggablePropertyToInput({
         name,
         displayName,
         type: PropertyType.ObjectReference,
@@ -81,7 +82,7 @@ export function makeDataPropertyInfo(
                 width: 800
             }),
         onSelectTitle: "Select Data"
-    };
+    });
 }
 
 function makeActionPropertyInfo(
@@ -89,7 +90,7 @@ function makeActionPropertyInfo(
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ): PropertyInfo {
-    return {
+    return makeToggablePropertyToOutput({
         name,
         displayName,
         type: PropertyType.ObjectReference,
@@ -101,7 +102,7 @@ function makeActionPropertyInfo(
                 width: 800
             }),
         onSelectTitle: "Select Action"
-    };
+    });
 }
 
 export function makeStylePropertyInfo(
@@ -189,62 +190,139 @@ function getClassFromType(type: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function toggablePropertyMenu(props: PropertyProps) {
-    let menuItems: Electron.MenuItem[] = [];
-
-    if (props.objects.length == 1) {
-        const component = props.objects[0] as Component;
-
-        let asInputProperties = (component.asInputProperties ?? []).slice();
-        const i = asInputProperties.indexOf(props.propertyInfo.name);
-
-        menuItems.push(
-            new MenuItem({
-                label: i === -1 ? "Convert to input" : "Convert to property",
-                click: () => {
-                    const DocumentStore = getDocumentStore(props.objects[0]);
-
-                    DocumentStore.UndoManager.setCombineCommands(true);
-
-                    if (i === -1) {
-                        asInputProperties.push(props.propertyInfo.name);
-                    } else {
-                        asInputProperties.splice(i, 1);
-
-                        getFlow(component).deleteConnectionLinesToInput(
-                            component,
-                            props.propertyInfo.name
-                        );
-                    }
-
-                    asInputProperties.sort();
-
-                    DocumentStore.updateObject(component, {
-                        asInputProperties
-                    });
-
-                    DocumentStore.UndoManager.setCombineCommands(false);
-                }
-            })
-        );
-    }
-
-    return menuItems;
-}
-
-export function toggablePropertyReadOnlyInPropertyGrid(
-    component: Component,
+export function makeToggablePropertyToInput(
     propertyInfo: PropertyInfo
-) {
-    return (
-        (component.asInputProperties ?? []).indexOf(propertyInfo.name) !== -1
-    );
+): PropertyInfo {
+    return Object.assign(propertyInfo, {
+        propertyMenu(props: PropertyProps) {
+            let menuItems: Electron.MenuItem[] = [];
+
+            if (props.objects.length == 1) {
+                const component = props.objects[0] as Component;
+
+                let asInputProperties = (
+                    component.asInputProperties ?? []
+                ).slice();
+                const i = asInputProperties.indexOf(props.propertyInfo.name);
+
+                menuItems.push(
+                    new MenuItem({
+                        label:
+                            i === -1
+                                ? "Convert to input"
+                                : "Convert to property",
+                        click: () => {
+                            const DocumentStore = getDocumentStore(
+                                props.objects[0]
+                            );
+
+                            DocumentStore.UndoManager.setCombineCommands(true);
+
+                            if (i === -1) {
+                                asInputProperties.push(props.propertyInfo.name);
+                            } else {
+                                asInputProperties.splice(i, 1);
+
+                                getFlow(component).deleteConnectionLinesToInput(
+                                    component,
+                                    props.propertyInfo.name
+                                );
+                            }
+
+                            asInputProperties.sort();
+
+                            DocumentStore.updateObject(component, {
+                                asInputProperties
+                            });
+
+                            DocumentStore.UndoManager.setCombineCommands(false);
+                        }
+                    })
+                );
+            }
+
+            return menuItems;
+        },
+
+        readOnlyInPropertyGrid(
+            component: Component,
+            propertyInfo: PropertyInfo
+        ) {
+            return (
+                component.isInputProperty(propertyInfo) ||
+                component.isOutputProperty(propertyInfo)
+            );
+        }
+    } as Partial<PropertyInfo>);
 }
 
-export function makeToggableProperty(propertyInfo: PropertyInfo): PropertyInfo {
+export function makeToggablePropertyToOutput(
+    propertyInfo: PropertyInfo
+): PropertyInfo {
     return Object.assign(propertyInfo, {
-        propertyMenu: toggablePropertyMenu,
-        readOnlyInPropertyGrid: toggablePropertyReadOnlyInPropertyGrid
+        propertyMenu(props: PropertyProps) {
+            let menuItems: Electron.MenuItem[] = [];
+
+            if (props.objects.length == 1) {
+                const component = props.objects[0] as Component;
+
+                let asOutputProperties = (
+                    component.asOutputProperties ?? []
+                ).slice();
+                const i = asOutputProperties.indexOf(props.propertyInfo.name);
+
+                menuItems.push(
+                    new MenuItem({
+                        label:
+                            i === -1
+                                ? "Convert to output"
+                                : "Convert to property",
+                        click: () => {
+                            const DocumentStore = getDocumentStore(
+                                props.objects[0]
+                            );
+
+                            DocumentStore.UndoManager.setCombineCommands(true);
+
+                            if (i === -1) {
+                                asOutputProperties.push(
+                                    props.propertyInfo.name
+                                );
+                            } else {
+                                asOutputProperties.splice(i, 1);
+
+                                getFlow(
+                                    component
+                                ).deleteConnectionLinesFromOutput(
+                                    component,
+                                    props.propertyInfo.name
+                                );
+                            }
+
+                            asOutputProperties.sort();
+
+                            DocumentStore.updateObject(component, {
+                                asOutputProperties
+                            });
+
+                            DocumentStore.UndoManager.setCombineCommands(false);
+                        }
+                    })
+                );
+            }
+
+            return menuItems;
+        },
+        readOnlyInPropertyGrid(
+            component: Component,
+            propertyInfo: PropertyInfo
+        ) {
+            return (
+                (component.asOutputProperties ?? []).indexOf(
+                    propertyInfo.name
+                ) !== -1
+            );
+        }
     } as Partial<PropertyInfo>);
 }
 
@@ -273,7 +351,12 @@ export class Component extends EezObject {
     @observable wireID?: string;
 
     @observable asInputProperties: string[];
-    @observable _inputPropertyValues = new Map<string, any>();
+    @observable _inputPropertyValues = new Map<
+        string,
+        { date: Date; value: any }
+    >();
+
+    @observable asOutputProperties: string[];
 
     @observable _geometry: ComponentGeometry;
 
@@ -351,6 +434,12 @@ export class Component extends EezObject {
             },
             {
                 name: "asInputProperties",
+                type: PropertyType.StringArray,
+                hideInPropertyGrid: true,
+                defaultValue: []
+            },
+            {
+                name: "asOutputProperties",
                 type: PropertyType.StringArray,
                 hideInPropertyGrid: true,
                 defaultValue: []
@@ -449,6 +538,30 @@ export class Component extends EezObject {
         return `${point.x}, ${point.y}`;
     }
 
+    isInputProperty(property: PropertyInfo | string) {
+        if (!this.asInputProperties) {
+            return false;
+        }
+
+        return (
+            this.asInputProperties.indexOf(
+                typeof property === "string" ? property : property.name
+            ) !== -1
+        );
+    }
+
+    isOutputProperty(property: PropertyInfo | string) {
+        if (!this.asOutputProperties) {
+            return false;
+        }
+
+        return (
+            this.asOutputProperties.indexOf(
+                typeof property === "string" ? property : property.name
+            ) !== -1
+        );
+    }
+
     get inputProperties() {
         const classInfo = getClassInfo(this);
         const properties = classInfo.properties;
@@ -470,9 +583,19 @@ export class Component extends EezObject {
     get outputProperties() {
         const classInfo = getClassInfo(this);
         const properties = classInfo.properties;
-        return properties.filter(
-            property => property.type == PropertyType.ConnectionOutput
-        );
+        return [
+            ...properties.filter(
+                property => property.type == PropertyType.ConnectionOutput
+            ),
+            ...((this.asOutputProperties ?? [])
+                .map(outputPropertyName =>
+                    findPropertyByNameInClassInfo(
+                        getClassInfo(this),
+                        outputPropertyName
+                    )
+                )
+                .filter(propertyInfo => !!propertyInfo) as PropertyInfo[])
+        ];
     }
 
     @computed get inputs() {
@@ -498,7 +621,7 @@ export class Component extends EezObject {
         designerContext: IFlowContext,
         dataContext: IDataContext
     ): React.ReactNode {
-        return undefined;
+        return null;
     }
 
     getClassName() {
@@ -512,21 +635,24 @@ export class Component extends EezObject {
         designerContext: IFlowContext | undefined
     ) {}
 
-    executePureFunction() {}
+    executePureFunction(runningFlow: RunningFlow) {}
 
     getInputPropertyValue(input: string) {
-        this._inputPropertyValues.get(input);
+        return this._inputPropertyValues.get(input);
     }
 
+    @action
     setInputPropertyValue(input: string, value: any) {
-        this._inputPropertyValues.set(input, value);
+        this._inputPropertyValues.set(input, {
+            date: new Date(),
+            value
+        });
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Widget extends Component {
-    @observable style: Style;
     @observable data?: string;
     @observable action?: string;
 
@@ -536,8 +662,7 @@ export class Widget extends Component {
         properties: [
             resizingProperty,
             makeDataPropertyInfo("data"),
-            makeActionPropertyInfo("action"),
-            makeStylePropertyInfo("style", "Normal style")
+            makeActionPropertyInfo("action")
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -545,14 +670,6 @@ export class Widget extends Component {
                 jsObject.layout = jsObject.type.substring("Local.".length);
                 jsObject.type = "LayoutView";
             }
-
-            migrateStyleProperty(jsObject, "style");
-
-            if (jsObject.style && typeof jsObject.style.padding === "number") {
-                delete jsObject.style.padding;
-            }
-
-            delete jsObject.activeStyle;
         },
 
         extendContextMenu: (
@@ -691,11 +808,6 @@ export class Widget extends Component {
             return object.getResizeHandlers();
         }
     });
-
-    @computed
-    get styleObject() {
-        return this.style;
-    }
 
     putInSelect() {
         let thisWidgetJsObject = objectToJS(this);
@@ -953,6 +1065,78 @@ export class Widget extends Component {
         ];
     }
 
+    getClassName() {
+        return "eez-widget-component";
+    }
+
+    render(
+        designerContext: IFlowContext,
+        dataContext: IDataContext
+    ): React.ReactNode {
+        if (designerContext.frontFace) {
+            return null;
+        }
+
+        const inputs = this.inputs;
+        const outputs = this.outputs;
+
+        if (inputs.length === 0 && outputs.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="body">
+                <div className="inports">
+                    {inputs.map(property => (
+                        <div
+                            key={property.name}
+                            className="eez-connection-input"
+                            data-connection-input-id={property.name}
+                        >
+                            {property.displayName ?? humanize(property.name)}
+                        </div>
+                    ))}
+                </div>
+                <div className="outports">
+                    {outputs.map(property => (
+                        <div
+                            key={property.name}
+                            className="eez-connection-output"
+                            data-connection-output-id={property.name}
+                        >
+                            {property.displayName ?? humanize(property.name)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class EmbeddedWidget extends Widget {
+    @observable style: Style;
+
+    static classInfo: ClassInfo = makeDerivedClassInfo(Widget.classInfo, {
+        properties: [makeStylePropertyInfo("style", "Normal style")],
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateStyleProperty(jsObject, "style");
+
+            if (jsObject.style && typeof jsObject.style.padding === "number") {
+                delete jsObject.style.padding;
+            }
+
+            delete jsObject.activeStyle;
+        }
+    });
+
+    @computed
+    get styleObject() {
+        return this.style;
+    }
+
     styleHook(
         style: React.CSSProperties,
         designerContext: IFlowContext | undefined
@@ -1038,14 +1222,17 @@ export class ActionComponent extends Component {
     }
 
     getClassName() {
-        return "eez-action-node";
+        return "eez-action-component";
     }
 
     render(designerContext: IFlowContext, dataContext: IDataContext) {
         return renderActionComponent(this, designerContext, dataContext);
     }
 
-    async execute(input: string): Promise<string | undefined> {
+    async execute(
+        runningFlow: RunningFlow,
+        input: string
+    ): Promise<string | undefined> {
         return undefined;
     }
 }

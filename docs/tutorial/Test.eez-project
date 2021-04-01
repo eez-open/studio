@@ -21,9 +21,14 @@
       "defaultValue": "1"
     },
     {
-      "name": "text",
-      "type": "string",
-      "defaultValue": "placeholder"
+      "name": "voltage",
+      "type": "float",
+      "defaultValue": "0"
+    },
+    {
+      "name": "current",
+      "type": "float",
+      "defaultValue": "0"
     }
   ],
   "actions": [
@@ -3149,112 +3154,186 @@
     {
       "components": [
         {
-          "type": "CommentActionComponent",
-          "left": 19,
-          "top": -246,
-          "width": 0,
-          "height": 0,
-          "text": "<ul><li><!--block-->Ovo je description ...</li><li><!--block-->sfsdf</li><li><!--block-->sdf</li><li><!--block-->sd</li><li><!--block-->f</li></ul><div><!--block--><br></div>"
+          "type": "Text",
+          "left": 323,
+          "top": 92,
+          "width": 80,
+          "height": 32,
+          "asInputProperties": [],
+          "asOutputProperties": [],
+          "style": {
+            "inheritFrom": "default",
+            "alignHorizontal": "right"
+          },
+          "data": "voltage",
+          "text": ""
         },
         {
           "type": "Text",
-          "left": 230,
-          "top": 89,
-          "width": 217,
+          "left": 323,
+          "top": 143,
+          "width": 80,
           "height": 32,
+          "asInputProperties": [],
+          "asOutputProperties": [],
           "style": {
-            "inheritFrom": "default"
+            "inheritFrom": "default",
+            "alignHorizontal": "right"
           },
-          "data": "text",
+          "data": "current",
           "text": ""
         },
         {
           "type": "Button",
-          "left": 44,
-          "top": 89,
+          "left": 19,
+          "top": 92,
           "width": 103,
           "height": 32,
+          "wireID": "1d754635-f142-4065-9158-92202234ec48",
+          "asOutputProperties": [
+            "action"
+          ],
           "style": {
             "inheritFrom": "button"
           },
           "action": "test1",
-          "text": "Click me!",
+          "text": "Start",
           "enabled": "clickme_button_enabled",
           "disabledStyle": {
             "inheritFrom": "disabled_button"
           }
         },
         {
-          "type": "InputActionComponent",
-          "left": 55,
-          "top": 374,
+          "type": "SetVariableActionComponent",
+          "left": 265,
+          "top": 291,
           "width": 0,
           "height": 0,
-          "wireID": "961c1313-b202-46aa-aeb1-138ba728c276"
+          "wireID": "49cae626-d24e-489e-dc08-40d3e2ebe1d4",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "voltage",
+          "value": ""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 84,
+          "top": 340,
+          "width": 0,
+          "height": 0,
+          "wireID": "8eb51d4b-12ad-4c2a-94f3-0ca102056a8c",
+          "instrument": "65",
+          "scpi": "syst:del {delay}\nvoltage = meas:volt?\ncurrent = meas:curr?"
         },
         {
           "type": "SetVariableActionComponent",
-          "left": 272,
-          "top": 304,
+          "left": 403,
+          "top": 340,
           "width": 0,
           "height": 0,
-          "wireID": "d0dfbbd3-f35d-4bb0-c9f4-d6463cf2a2ed"
+          "wireID": "5e6cd4ce-8c1d-46c9-9bc7-772beb99cb58",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "current"
         },
         {
-          "type": "OutputActionComponent",
-          "left": 447,
-          "top": 374,
-          "width": 0,
-          "height": 0,
-          "wireID": "acdaf194-76b7-4f4a-cd2d-2d1d01a7aaa9"
+          "type": "TextWidget",
+          "left": 259,
+          "top": 92,
+          "width": 64,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "Voltage:"
         },
         {
-          "type": "CompareActionComponent",
-          "left": 242,
-          "top": 419,
-          "width": 0,
-          "height": 0,
-          "wireID": "8e010852-442c-47fb-8400-720aa310f7a7"
+          "type": "TextWidget",
+          "left": 259,
+          "top": 143,
+          "width": 64,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "Current:"
         },
         {
-          "type": "OutputActionComponent",
-          "left": 447,
-          "top": 480,
+          "type": "TextWidget",
+          "left": 403,
+          "top": 92,
+          "width": 39,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "[V]"
+        },
+        {
+          "type": "TextWidget",
+          "left": 403,
+          "top": 143,
+          "width": 39,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "[A]"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -74,
+          "top": 396,
           "width": 0,
           "height": 0,
-          "wireID": "1023dc10-4668-4cef-e082-4c95069c534b"
+          "wireID": "c8cb649a-0fb5-4823-dc6b-57fc61333987",
+          "value": "500"
         }
       ],
       "connectionLines": [
         {
-          "source": "961c1313-b202-46aa-aeb1-138ba728c276",
+          "source": "8eb51d4b-12ad-4c2a-94f3-0ca102056a8c",
           "output": "output",
-          "target": "d0dfbbd3-f35d-4bb0-c9f4-d6463cf2a2ed",
+          "target": "49cae626-d24e-489e-dc08-40d3e2ebe1d4",
           "input": "input"
         },
         {
-          "source": "d0dfbbd3-f35d-4bb0-c9f4-d6463cf2a2ed",
+          "source": "1d754635-f142-4065-9158-92202234ec48",
+          "output": "action",
+          "target": "8eb51d4b-12ad-4c2a-94f3-0ca102056a8c",
+          "input": "input"
+        },
+        {
+          "source": "49cae626-d24e-489e-dc08-40d3e2ebe1d4",
           "output": "output",
-          "target": "acdaf194-76b7-4f4a-cd2d-2d1d01a7aaa9",
+          "target": "5e6cd4ce-8c1d-46c9-9bc7-772beb99cb58",
           "input": "input"
         },
         {
-          "source": "961c1313-b202-46aa-aeb1-138ba728c276",
+          "source": "5e6cd4ce-8c1d-46c9-9bc7-772beb99cb58",
           "output": "output",
-          "target": "8e010852-442c-47fb-8400-720aa310f7a7",
+          "target": "8eb51d4b-12ad-4c2a-94f3-0ca102056a8c",
           "input": "input"
         },
         {
-          "source": "8e010852-442c-47fb-8400-720aa310f7a7",
-          "output": "True",
-          "target": "acdaf194-76b7-4f4a-cd2d-2d1d01a7aaa9",
-          "input": "input"
+          "source": "8eb51d4b-12ad-4c2a-94f3-0ca102056a8c",
+          "output": "voltage",
+          "target": "49cae626-d24e-489e-dc08-40d3e2ebe1d4",
+          "input": "value"
         },
         {
-          "source": "8e010852-442c-47fb-8400-720aa310f7a7",
-          "output": "False",
-          "target": "1023dc10-4668-4cef-e082-4c95069c534b",
-          "input": "input"
+          "source": "8eb51d4b-12ad-4c2a-94f3-0ca102056a8c",
+          "output": "current",
+          "target": "5e6cd4ce-8c1d-46c9-9bc7-772beb99cb58",
+          "input": "value"
+        },
+        {
+          "source": "c8cb649a-0fb5-4823-dc6b-57fc61333987",
+          "output": "value",
+          "target": "8eb51d4b-12ad-4c2a-94f3-0ca102056a8c",
+          "input": "delay"
         }
       ],
       "name": "main",
@@ -3266,58 +3345,326 @@
     {
       "components": [
         {
-          "type": "Rectangle",
-          "left": 114,
-          "top": 75,
-          "width": 64,
+          "type": "Button",
+          "left": 23,
+          "top": 207,
+          "width": 103,
           "height": 32,
+          "wireID": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
+          "asOutputProperties": [
+            "action"
+          ],
           "style": {
-            "inheritFrom": "default"
-          }
-        }
-      ],
-      "connectionLines": [],
-      "name": "page1",
-      "left": 0,
-      "top": 0,
-      "width": 480,
-      "height": 272
-    },
-    {
-      "components": [
-        {
-          "type": "Rectangle",
-          "left": 371,
-          "top": 195,
-          "width": 64,
-          "height": 32,
-          "style": {
-            "inheritFrom": "default"
+            "inheritFrom": "button"
+          },
+          "action": "test1",
+          "text": "Start",
+          "enabled": "clickme_button_enabled",
+          "disabledStyle": {
+            "inheritFrom": "disabled_button"
           }
         },
         {
-          "type": "InputActionComponent",
-          "left": 49,
-          "top": -149,
+          "type": "ScpiActionComponent",
+          "left": 45,
+          "top": 407,
           "width": 0,
           "height": 0,
-          "wireID": "62cf330f-bae8-42a3-8346-eead9a58d365"
+          "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "instrument": "65",
+          "scpi": "syst:delay {delay}\nvoltage = meas:volt?\ncurrent = meas:curr?"
         },
         {
-          "type": "OutputActionComponent",
-          "left": 361,
-          "top": -149,
+          "type": "LineChart",
+          "left": 471,
+          "top": 17,
+          "width": 479,
+          "height": 190,
+          "wireID": "85873f52-29f9-4c3c-e1f9-fdd8a2ba4e94",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "title": "Voltage",
+          "maxPoints": 100,
+          "color": "#0000ff",
+          "margin": {
+            "top": 50,
+            "right": 25,
+            "bottom": 25,
+            "left": 25
+          }
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -90,
+          "top": 407,
           "width": 0,
           "height": 0,
-          "wireID": "41696e32-91f5-4e31-d70f-6c2ee3212258"
+          "wireID": "dacb4d9d-04e2-47d6-876d-44be32382828",
+          "value": "50"
+        },
+        {
+          "type": "Gauge",
+          "left": 220,
+          "top": 17,
+          "width": 233,
+          "height": 190,
+          "wireID": "e09a754c-f52c-41c3-e5cb-091fc475b670",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "title": "Voltage",
+          "minRange": 0,
+          "maxRange": 40,
+          "color": "#0000ff",
+          "margin": {
+            "top": 50,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        {
+          "type": "Gauge",
+          "left": 220,
+          "top": 254,
+          "width": 233,
+          "height": 190,
+          "wireID": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "title": "Current",
+          "minRange": 0,
+          "maxRange": 5,
+          "color": "#ff0000",
+          "margin": {
+            "top": 50,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        {
+          "type": "LineChart",
+          "left": 471,
+          "top": 254,
+          "width": 479,
+          "height": 190,
+          "wireID": "72b6face-cd0f-40cf-cbd0-51e4c30b5123",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "title": "Current",
+          "maxPoints": 100,
+          "color": "#ff0000",
+          "margin": {
+            "top": 50,
+            "right": 25,
+            "bottom": 25,
+            "left": 25
+          }
         }
       ],
       "connectionLines": [
         {
-          "source": "62cf330f-bae8-42a3-8346-eead9a58d365",
-          "output": "output",
-          "target": "41696e32-91f5-4e31-d70f-6c2ee3212258",
+          "source": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
+          "output": "action",
+          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "input": "input"
+        },
+        {
+          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "output": "output",
+          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "input": "input"
+        },
+        {
+          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "output": "voltage",
+          "target": "85873f52-29f9-4c3c-e1f9-fdd8a2ba4e94",
+          "input": "data"
+        },
+        {
+          "source": "dacb4d9d-04e2-47d6-876d-44be32382828",
+          "output": "value",
+          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "input": "delay"
+        },
+        {
+          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "output": "current",
+          "target": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
+          "input": "data"
+        },
+        {
+          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "output": "current",
+          "target": "72b6face-cd0f-40cf-cbd0-51e4c30b5123",
+          "input": "data"
+        },
+        {
+          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "output": "voltage",
+          "target": "e09a754c-f52c-41c3-e5cb-091fc475b670",
+          "input": "data"
+        }
+      ],
+      "name": "plotly",
+      "left": 0,
+      "top": 0,
+      "width": 969,
+      "height": 496
+    },
+    {
+      "components": [
+        {
+          "type": "Text",
+          "left": 363,
+          "top": 100,
+          "width": 80,
+          "height": 32,
+          "wireID": "a0a81adc-6855-467c-e905-91e4a4cd2bad",
+          "asInputProperties": [
+            "data"
+          ],
+          "asOutputProperties": [],
+          "style": {
+            "inheritFrom": "default",
+            "alignHorizontal": "right"
+          },
+          "data": "",
+          "text": ""
+        },
+        {
+          "type": "Text",
+          "left": 363,
+          "top": 183,
+          "width": 80,
+          "height": 32,
+          "wireID": "32eb31f2-16d9-40c5-a8cd-c297d88f27c6",
+          "asInputProperties": [
+            "data"
+          ],
+          "asOutputProperties": [],
+          "style": {
+            "inheritFrom": "default",
+            "alignHorizontal": "right"
+          },
+          "data": "",
+          "text": ""
+        },
+        {
+          "type": "Button",
+          "left": 59,
+          "top": 132,
+          "width": 103,
+          "height": 32,
+          "wireID": "1e61334e-dc6d-43ae-d66c-b794298c9c44",
+          "asOutputProperties": [
+            "action"
+          ],
+          "style": {
+            "inheritFrom": "button"
+          },
+          "action": "test1",
+          "text": "Start",
+          "enabled": "clickme_button_enabled",
+          "disabledStyle": {
+            "inheritFrom": "disabled_button"
+          }
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 162,
+          "top": 315,
+          "width": 0,
+          "height": 0,
+          "wireID": "f4043449-0ea8-4cc3-abad-de5209273d2c",
+          "instrument": "65",
+          "scpi": "voltage = meas:volt?\ncurrent = meas:curr?"
+        },
+        {
+          "type": "TextWidget",
+          "left": 299,
+          "top": 100,
+          "width": 64,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "Voltage:"
+        },
+        {
+          "type": "TextWidget",
+          "left": 299,
+          "top": 183,
+          "width": 64,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "Current:"
+        },
+        {
+          "type": "TextWidget",
+          "left": 441,
+          "top": 100,
+          "width": 39,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "[V]"
+        },
+        {
+          "type": "TextWidget",
+          "left": 441,
+          "top": 183,
+          "width": 39,
+          "height": 32,
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "[A]"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "1e61334e-dc6d-43ae-d66c-b794298c9c44",
+          "output": "action",
+          "target": "f4043449-0ea8-4cc3-abad-de5209273d2c",
+          "input": "input"
+        },
+        {
+          "source": "f4043449-0ea8-4cc3-abad-de5209273d2c",
+          "output": "output",
+          "target": "f4043449-0ea8-4cc3-abad-de5209273d2c",
+          "input": "input"
+        },
+        {
+          "source": "f4043449-0ea8-4cc3-abad-de5209273d2c",
+          "output": "voltage",
+          "target": "a0a81adc-6855-467c-e905-91e4a4cd2bad",
+          "input": "data"
+        },
+        {
+          "source": "f4043449-0ea8-4cc3-abad-de5209273d2c",
+          "output": "current",
+          "target": "32eb31f2-16d9-40c5-a8cd-c297d88f27c6",
+          "input": "data"
         }
       ],
       "name": "page2",
@@ -3325,6 +3672,15 @@
       "top": 0,
       "width": 480,
       "height": 272
+    },
+    {
+      "components": [],
+      "connectionLines": [],
+      "name": "page3",
+      "left": 0,
+      "top": 0,
+      "width": 640,
+      "height": 480
     }
   ],
   "styles": [

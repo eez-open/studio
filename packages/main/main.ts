@@ -20,6 +20,8 @@ configure({ enforceActions: "observed" });
 let setupFinished: boolean = false;
 let projectFilePath: string | undefined;
 
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+
 app.allowRendererProcessReuse = false;
 
 app.on("ready", async function () {

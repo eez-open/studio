@@ -22,7 +22,7 @@ import {
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 
-import { Widget } from "project-editor/flow/component";
+import { EmbeddedWidget } from "project-editor/flow/component";
 import { Glyph } from "project-editor/features/font/font";
 
 import {
@@ -96,7 +96,9 @@ class SelectItemDialog extends React.Component<{
 
         const name =
             propertyInfo.type === PropertyType.String
-                ? (object as Widget).style.fontName
+                ? object instanceof EmbeddedWidget
+                    ? object.style.fontName
+                    : ""
                 : getProperty(object, propertyInfo.name);
 
         return findReferencedObject(
