@@ -167,20 +167,23 @@ export class RunningFlow {
         return getLabel(this.flow);
     }
 
-    startFromWidgetAction(widget: Component) {
-        this.flow.components.forEach(component =>
-            component.executePureFunction(this)
-        );
+    onStart() {
+        this.flow.components.forEach(component => component.onStart(this));
+    }
 
+    onEnd() {
+        this.flow.components.forEach(component => component.onEnd(this));
+    }
+
+    startFromWidgetAction(widget: Component) {
+        this.onStart();
         this.executeWire(widget, "action");
     }
 
     startAction() {
         this.RuntimeStore.addHistoryItem(new ActionStartHistoryItem(action));
 
-        this.flow.components.forEach(component =>
-            component.executePureFunction(this)
-        );
+        this.onStart();
 
         const inputActionComponent = this.flow.components.find(
             component => component instanceof InputActionComponent
@@ -295,6 +298,7 @@ export class RunningFlow {
 
     @action
     endFlow() {
+        this.onEnd();
         this.RuntimeStore.addHistoryItem(new ActionEndHistoryItem(this.flow!));
         this.RuntimeStore.endRunningFlow(this);
     }
@@ -588,8 +592,8 @@ class History extends React.Component {
 
     @computed get nodes(): IListNode<HistoryItem>[] {
         return this.context.RuntimeStore.history
-            .reverse()
             .slice()
+            .reverse()
             .map(historyItem => ({
                 id: historyItem.id,
                 data: historyItem,

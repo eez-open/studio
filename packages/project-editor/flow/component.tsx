@@ -340,6 +340,11 @@ export function getWidgetParent(widget: Component | Page) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface InputPropertyValue {
+    date: Date;
+    value: any;
+}
+
 export class Component extends EezObject {
     @observable type: string;
 
@@ -351,10 +356,7 @@ export class Component extends EezObject {
     @observable wireID?: string;
 
     @observable asInputProperties: string[];
-    @observable _inputPropertyValues = new Map<
-        string,
-        { date: Date; value: any }
-    >();
+    @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
 
     @observable asOutputProperties: string[];
 
@@ -635,7 +637,8 @@ export class Component extends EezObject {
         designerContext: IFlowContext | undefined
     ) {}
 
-    executePureFunction(runningFlow: RunningFlow) {}
+    onStart(runningFlow: RunningFlow) {}
+    onEnd(runningFlow: RunningFlow) {}
 
     getInputPropertyValue(input: string) {
         return this._inputPropertyValues.get(input);

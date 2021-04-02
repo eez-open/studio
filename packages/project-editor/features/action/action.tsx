@@ -206,17 +206,22 @@ export class ActionsNavigation extends NavigationComponent {
             return <ListNavigationWithProperties {...this.props} />;
         }
 
-        const navigation = (
+        const listNavigation = (
+            <ListNavigation
+                id={this.props.id}
+                navigationObject={this.props.navigationObject}
+            />
+        );
+        const navigation = this.context.RuntimeStore.isRuntimeMode ? (
+            listNavigation
+        ) : (
             <Splitter
                 type="vertical"
                 persistId="page-editor/navigation-structure"
                 sizes={`50%|50%`}
                 childrenOverflow="hidden|hidden"
             >
-                <ListNavigation
-                    id={this.props.id}
-                    navigationObject={this.props.navigationObject}
-                />
+                {listNavigation}
                 <Panel
                     id="page-structure"
                     title="Action Structure"

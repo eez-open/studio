@@ -3161,11 +3161,11 @@
           "height": 32,
           "asInputProperties": [],
           "asOutputProperties": [],
+          "data": "voltage",
           "style": {
             "inheritFrom": "default",
             "alignHorizontal": "right"
           },
-          "data": "voltage",
           "text": ""
         },
         {
@@ -3176,11 +3176,11 @@
           "height": 32,
           "asInputProperties": [],
           "asOutputProperties": [],
+          "data": "current",
           "style": {
             "inheritFrom": "default",
             "alignHorizontal": "right"
           },
-          "data": "current",
           "text": ""
         },
         {
@@ -3193,10 +3193,10 @@
           "asOutputProperties": [
             "action"
           ],
+          "action": "test1",
           "style": {
             "inheritFrom": "button"
           },
-          "action": "test1",
           "text": "Start",
           "enabled": "clickme_button_enabled",
           "disabledStyle": {
@@ -3354,10 +3354,10 @@
           "asOutputProperties": [
             "action"
           ],
+          "action": "test1",
           "style": {
             "inheritFrom": "button"
           },
-          "action": "test1",
           "text": "Start",
           "enabled": "clickme_button_enabled",
           "disabledStyle": {
@@ -3384,16 +3384,13 @@
           "asInputProperties": [
             "data"
           ],
-          "style": {
-            "inheritFrom": "default"
-          },
           "title": "Voltage",
           "maxPoints": 100,
           "color": "#0000ff",
           "margin": {
             "top": 50,
             "right": 25,
-            "bottom": 25,
+            "bottom": 40,
             "left": 25
           }
         },
@@ -3416,9 +3413,6 @@
           "asInputProperties": [
             "data"
           ],
-          "style": {
-            "inheritFrom": "default"
-          },
           "title": "Voltage",
           "minRange": 0,
           "maxRange": 40,
@@ -3440,9 +3434,6 @@
           "asInputProperties": [
             "data"
           ],
-          "style": {
-            "inheritFrom": "default"
-          },
           "title": "Current",
           "minRange": 0,
           "maxRange": 5,
@@ -3464,16 +3455,13 @@
           "asInputProperties": [
             "data"
           ],
-          "style": {
-            "inheritFrom": "default"
-          },
           "title": "Current",
           "maxPoints": 100,
           "color": "#ff0000",
           "margin": {
             "top": 50,
             "right": 25,
-            "bottom": 25,
+            "bottom": 40,
             "left": 25
           }
         }
@@ -3498,12 +3486,6 @@
           "input": "data"
         },
         {
-          "source": "dacb4d9d-04e2-47d6-876d-44be32382828",
-          "output": "value",
-          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
-          "input": "delay"
-        },
-        {
           "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "output": "current",
           "target": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
@@ -3520,6 +3502,12 @@
           "output": "voltage",
           "target": "e09a754c-f52c-41c3-e5cb-091fc475b670",
           "input": "data"
+        },
+        {
+          "source": "dacb4d9d-04e2-47d6-876d-44be32382828",
+          "output": "value",
+          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "input": "delay"
         }
       ],
       "name": "plotly",
@@ -3541,11 +3529,11 @@
             "data"
           ],
           "asOutputProperties": [],
+          "data": "",
           "style": {
             "inheritFrom": "default",
             "alignHorizontal": "right"
           },
-          "data": "",
           "text": ""
         },
         {
@@ -3559,11 +3547,11 @@
             "data"
           ],
           "asOutputProperties": [],
+          "data": "",
           "style": {
             "inheritFrom": "default",
             "alignHorizontal": "right"
           },
-          "data": "",
           "text": ""
         },
         {
@@ -3576,10 +3564,10 @@
           "asOutputProperties": [
             "action"
           ],
+          "action": "test1",
           "style": {
             "inheritFrom": "button"
           },
-          "action": "test1",
           "text": "Start",
           "enabled": "clickme_button_enabled",
           "disabledStyle": {

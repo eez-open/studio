@@ -1184,9 +1184,12 @@ export class TextWidget extends EmbeddedWidget {
             text = this.text;
         } else {
             if (this.isInputProperty("data")) {
-                const value = this.getInputPropertyValue("data");
-                if (value !== undefined) {
-                    text = value.toString();
+                const inputPropertyValue = this.getInputPropertyValue("data");
+                if (
+                    inputPropertyValue !== undefined &&
+                    inputPropertyValue.value != undefined
+                ) {
+                    text = inputPropertyValue.value.toString();
                 }
             } else {
                 if (this.data) {

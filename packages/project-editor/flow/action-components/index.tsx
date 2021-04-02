@@ -150,10 +150,14 @@ export class SetVariableActionComponent extends ActionComponent {
         const DocumentStore = getDocumentStore(this);
         let value;
         if (this.isInputProperty("value")) {
-            value = this.getInputPropertyValue("value");
-            if (value == undefined) {
+            const inputPropertyValue = this.getInputPropertyValue("value");
+            if (
+                inputPropertyValue == undefined ||
+                inputPropertyValue.value == undefined
+            ) {
                 throw `missing value input`;
             }
+            value = inputPropertyValue.value;
         } else {
             value = this.value;
         }
@@ -228,7 +232,7 @@ export class ConstantActionComponent extends ActionComponent {
         ];
     }
 
-    executePureFunction(runningFlow: RunningFlow) {
+    onStart(runningFlow: RunningFlow) {
         runningFlow.propagateValue(this, "value", JSON.parse(this.value));
     }
 }

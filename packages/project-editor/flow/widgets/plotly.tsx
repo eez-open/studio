@@ -8,7 +8,7 @@ import {
     RectObject
 } from "project-editor/core/object";
 
-import { Widget } from "project-editor/flow/component";
+import { InputPropertyValue, Widget } from "project-editor/flow/component";
 import {
     IDataContext,
     IFlowContext
@@ -18,7 +18,8 @@ import { observer } from "mobx-react";
 import * as PlotlyModule from "plotly.js";
 import styled from "eez-studio-ui/styled-components";
 import classNames from "classnames";
-import { observable, reaction } from "mobx";
+import { observable, reaction, runInAction } from "mobx";
+import { RunningFlow } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,6 +35,103 @@ const PlotlyDiv = styled.div`
         pointer-events: none !important;
     }
 `;
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface ILineChart {
+    type: "lineChart";
+    data: {
+        x: Date[][];
+        y: number[][];
+    };
+    maxPoints: number;
+}
+
+interface IGauge {
+    type: "gauge";
+    value: number;
+}
+
+type IChart = ILineChart | IGauge;
+
+const charts = new Map<HTMLElement, IChart>();
+const queue: HTMLElement[] = [];
+let doUpdateChartTimeoutId: any = undefined;
+
+function doUpdateChart() {
+    doUpdateChartTimeoutId = undefined;
+
+    const el = queue.shift()!;
+    const chart = charts.get(el)!;
+    charts.delete(el);
+    if (chart.type === "lineChart") {
+        Plotly().extendTraces(el, chart.data, [0], chart.maxPoints);
+    } else {
+        Plotly().update(el, { value: chart.value }, {});
+    }
+
+    if (queue.length > 0) {
+        doUpdateChartTimeoutId = setTimeout(doUpdateChart);
+    }
+}
+
+function updateLineChart(
+    el: HTMLElement,
+    inputPropertyValue: InputPropertyValue,
+    maxPoints: number
+) {
+    let chart = charts.get(el) as ILineChart | undefined;
+    if (!chart) {
+        chart = {
+            type: "lineChart",
+            data: {
+                x: [[inputPropertyValue.date]],
+                y: [[inputPropertyValue.value]]
+            },
+            maxPoints
+        };
+        charts.set(el, chart);
+        queue.push(el);
+
+        if (!doUpdateChartTimeoutId) {
+            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
+        }
+    } else {
+        chart.data.x[0].push(inputPropertyValue.date);
+        chart.data.y[0].push(inputPropertyValue.value);
+    }
+}
+
+function updateGauge(el: HTMLElement, value: number) {
+    let chart = charts.get(el) as IGauge | undefined;
+    if (!chart) {
+        chart = {
+            type: "gauge",
+            value
+        };
+        charts.set(el, chart);
+        queue.push(el);
+
+        if (!doUpdateChartTimeoutId) {
+            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
+        }
+    } else {
+        chart.value = value;
+    }
+}
+
+function removeChart(el: HTMLElement) {
+    if (charts.get(el)) {
+        charts.delete(el);
+        queue.splice(queue.indexOf(el), 1);
+    }
+
+    if (charts.size === 0) {
+        if (doUpdateChartTimeoutId) {
+            clearTimeout(doUpdateChartTimeoutId);
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,11 +155,15 @@ const LineChartElement = observer(
                 {
                     x: designerContext.document.DocumentStore.RuntimeStore
                         .isRuntimeMode
-                        ? []
+                        ? widget._values.map(
+                              inputPropertyValue => inputPropertyValue.date
+                          )
                         : [1, 2, 3, 4],
                     y: designerContext.document.DocumentStore.RuntimeStore
                         .isRuntimeMode
-                        ? []
+                        ? widget._values.map(
+                              inputPropertyValue => inputPropertyValue.value
+                          )
                         : [2, 6, 4, 8],
                     type: "scatter",
                     line: {
@@ -80,6 +182,12 @@ const LineChartElement = observer(
                     b: widget.margin.bottom,
                     l: widget.margin.left
                 }
+            };
+        }
+
+        function getConfig(): Partial<PlotlyModule.Config> {
+            return {
+                autosizable: false
             };
         }
 
@@ -108,13 +216,9 @@ const LineChartElement = observer(
                             },
                             inputPropertyValue => {
                                 if (inputPropertyValue) {
-                                    Plotly().extendTraces(
+                                    updateLineChart(
                                         el,
-                                        {
-                                            x: [[inputPropertyValue.date]],
-                                            y: [[inputPropertyValue.value]]
-                                        },
-                                        [0],
+                                        inputPropertyValue,
                                         widget.maxPoints
                                     );
                                 }
@@ -128,6 +232,9 @@ const LineChartElement = observer(
                 if (disposeReaction) {
                     disposeReaction();
                 }
+                if (el) {
+                    removeChart(el);
+                }
                 disposed = true;
             };
         }, [ref.current]);
@@ -140,7 +247,7 @@ const LineChartElement = observer(
 
         React.useEffect(() => {
             if (plotly) {
-                Plotly().react(plotly, getData(), getLayout());
+                Plotly().react(plotly, getData(), getLayout(), getConfig());
             }
         }, [
             plotly,
@@ -149,7 +256,8 @@ const LineChartElement = observer(
             widget.margin.top,
             widget.margin.right,
             widget.margin.bottom,
-            widget.margin.left
+            widget.margin.left,
+            widget._values
         ]);
 
         return (
@@ -225,6 +333,39 @@ export class LineChartWidget extends Widget {
     @observable maxPoints: number;
     @observable color: string;
     @observable margin: RectObject;
+
+    _disposeReaction: any;
+    @observable _values: InputPropertyValue[] = [];
+
+    onStart(runningFlow: RunningFlow) {
+        console.log("start");
+        runInAction(() => {
+            this._values = [];
+        });
+
+        this._disposeReaction = reaction(
+            () => {
+                if (this.isInputProperty("data")) {
+                    return this.getInputPropertyValue("data");
+                }
+                return undefined;
+            },
+            inputPropertyValue => {
+                if (inputPropertyValue) {
+                    runInAction(() => {
+                        this._values.push(inputPropertyValue);
+                        if (this._values.length == this.maxPoints) {
+                            this._values.shift();
+                        }
+                    });
+                }
+            }
+        );
+    }
+
+    onEnd(runningFlow: RunningFlow) {
+        this._disposeReaction();
+    }
 
     render(
         designerContext: IFlowContext,
@@ -320,11 +461,7 @@ const GaugeElement = observer(
                             },
                             inputPropertyValue => {
                                 if (inputPropertyValue) {
-                                    Plotly().update(
-                                        el,
-                                        { value: inputPropertyValue.value },
-                                        {}
-                                    );
+                                    updateGauge(el, inputPropertyValue.value);
                                 }
                             }
                         );
