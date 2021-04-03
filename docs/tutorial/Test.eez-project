@@ -165,21 +165,6 @@
           "width": 0,
           "height": 0,
           "wireID": "5b57a34c-de5b-494d-fbf1-1a163b2e8eee"
-        },
-        {
-          "type": "eez-flow-ext-postgres/PostgresActionComponent",
-          "left": -68,
-          "top": 0,
-          "width": 0,
-          "height": 0,
-          "wireID": "462dfead-02c4-42b0-c3aa-bd0c26ea03bb"
-        },
-        {
-          "type": "eez-flow-ext-postgres/PostgresActionComponent",
-          "left": 213,
-          "top": 0,
-          "width": 0,
-          "height": 0
         }
       ],
       "connectionLines": [
@@ -212,18 +197,6 @@
           "output": "output",
           "target": "5b57a34c-de5b-494d-fbf1-1a163b2e8eee",
           "input": "input3"
-        },
-        {
-          "source": "82af934b-8e46-4f79-b578-e29443686fe2",
-          "output": "output",
-          "target": "462dfead-02c4-42b0-c3aa-bd0c26ea03bb",
-          "input": "input"
-        },
-        {
-          "source": "462dfead-02c4-42b0-c3aa-bd0c26ea03bb",
-          "output": "output",
-          "target": "128f136c-c915-491b-81ef-9792b6269690",
-          "input": "input"
         },
         {
           "source": "82af934b-8e46-4f79-b578-e29443686fe2",

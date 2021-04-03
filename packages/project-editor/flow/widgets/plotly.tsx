@@ -38,6 +38,45 @@ const PlotlyDiv = styled.div`
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Creating plotly charts is slow, so do it one at the time.
+
+const newPlotQueue: {
+    root: PlotlyModule.Root;
+    data: PlotlyModule.Data[];
+    layout?: Partial<PlotlyModule.Layout>;
+    config?: Partial<PlotlyModule.Config>;
+    resolve: (el: PlotlyModule.PlotlyHTMLElement) => void;
+}[] = [];
+let doNewPlotTimeoutId: any = undefined;
+
+export function newPlot(
+    root: PlotlyModule.Root,
+    data: PlotlyModule.Data[],
+    layout?: Partial<PlotlyModule.Layout>,
+    config?: Partial<PlotlyModule.Config>
+): Promise<PlotlyModule.PlotlyHTMLElement> {
+    return new Promise<PlotlyModule.PlotlyHTMLElement>(resolve => {
+        newPlotQueue.push({ root, data, layout, config, resolve });
+        if (!doNewPlotTimeoutId) {
+            doNewPlotTimeoutId = setTimeout(doNewPlot);
+        }
+    });
+}
+
+async function doNewPlot() {
+    const { root, data, layout, config, resolve } = newPlotQueue.shift()!;
+    resolve(await Plotly().newPlot(root, data, layout, config));
+    if (newPlotQueue.length > 0) {
+        setTimeout(doNewPlot);
+    } else {
+        doNewPlotTimeoutId = undefined;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Updating plotly charts is slow, so do it one at the time.
+
 interface ILineChart {
     type: "lineChart";
     data: {
@@ -55,13 +94,13 @@ interface IGauge {
 type IChart = ILineChart | IGauge;
 
 const charts = new Map<HTMLElement, IChart>();
-const queue: HTMLElement[] = [];
+const updateQueue: HTMLElement[] = [];
 let doUpdateChartTimeoutId: any = undefined;
 
 function doUpdateChart() {
     doUpdateChartTimeoutId = undefined;
 
-    const el = queue.shift()!;
+    const el = updateQueue.shift()!;
     const chart = charts.get(el)!;
     charts.delete(el);
     if (chart.type === "lineChart") {
@@ -70,7 +109,7 @@ function doUpdateChart() {
         Plotly().update(el, { value: chart.value }, {});
     }
 
-    if (queue.length > 0) {
+    if (updateQueue.length > 0) {
         doUpdateChartTimeoutId = setTimeout(doUpdateChart);
     }
 }
@@ -91,7 +130,7 @@ function updateLineChart(
             maxPoints
         };
         charts.set(el, chart);
-        queue.push(el);
+        updateQueue.push(el);
 
         if (!doUpdateChartTimeoutId) {
             doUpdateChartTimeoutId = setTimeout(doUpdateChart);
@@ -110,7 +149,7 @@ function updateGauge(el: HTMLElement, value: number) {
             value
         };
         charts.set(el, chart);
-        queue.push(el);
+        updateQueue.push(el);
 
         if (!doUpdateChartTimeoutId) {
             doUpdateChartTimeoutId = setTimeout(doUpdateChart);
@@ -123,7 +162,7 @@ function updateGauge(el: HTMLElement, value: number) {
 function removeChart(el: HTMLElement) {
     if (charts.get(el)) {
         charts.delete(el);
-        queue.splice(queue.indexOf(el), 1);
+        updateQueue.splice(updateQueue.indexOf(el), 1);
     }
 
     if (charts.size === 0) {
@@ -198,11 +237,7 @@ const LineChartElement = observer(
             const el = ref.current;
             if (el) {
                 (async () => {
-                    const plotly = await Plotly().newPlot(
-                        el,
-                        getData(),
-                        getLayout()
-                    );
+                    const plotly = await newPlot(el, getData(), getLayout());
 
                     if (!disposed) {
                         setPlotly(plotly);
@@ -338,7 +373,6 @@ export class LineChartWidget extends Widget {
     @observable _values: InputPropertyValue[] = [];
 
     onStart(runningFlow: RunningFlow) {
-        console.log("start");
         runInAction(() => {
             this._values = [];
         });
@@ -442,12 +476,9 @@ const GaugeElement = observer(
             const el = ref.current;
             if (el) {
                 (async () => {
-                    const plotly = await Plotly().newPlot(
-                        el,
-                        getData(),
-                        getLayout(),
-                        { displayModeBar: false }
-                    );
+                    const plotly = await newPlot(el, getData(), getLayout(), {
+                        displayModeBar: false
+                    });
 
                     if (!disposed) {
                         setPlotly(plotly);

@@ -19,6 +19,7 @@ import {
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { firstWord } from "eez-studio-shared/string";
+import { _difference } from "eez-studio-shared/algorithm";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 
@@ -26,6 +27,7 @@ import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import * as notification from "eez-studio-ui/notification";
 import { IToolbarButton } from "home/designer/designer-interfaces";
+import { confirm } from "eez-studio-ui/dialog-electron";
 
 import {
     IExtension,
@@ -175,69 +177,85 @@ async function loadAndRegisterExtension(folder: string) {
     }
 }
 
-async function getNodeModuleFolders() {
+////////////////////////////////////////////////////////////////////////////////
+
+function yarnFn(args: string[]) {
     const yarn = resolve(__dirname, "../../../libs/yarn-1.22.10.js");
     const cp = require("child_process");
     const queue = require("queue");
     const spawnQueue = queue({ concurrency: 1 });
 
-    async function yarnFn(args: string[]) {
-        return new Promise<void>((resolve, reject) => {
-            const env = {
-                NODE_ENV: "production",
-                ELECTRON_RUN_AS_NODE: "true"
-            };
+    return new Promise<void>((resolve, reject) => {
+        const env = {
+            NODE_ENV: "production",
+            ELECTRON_RUN_AS_NODE: "true"
+        };
 
-            spawnQueue.push((end: any) => {
-                const cmd = [process.execPath, yarn].concat(args).join(" ");
+        spawnQueue.push((end: any) => {
+            const cmd = [process.execPath, yarn].concat(args).join(" ");
 
-                console.log("Launching yarn:", cmd);
+            console.log("Launching yarn:", cmd);
 
-                cp.execFile(
-                    process.execPath,
-                    [yarn].concat(args),
-                    {
-                        cwd: extensionsFolderPath,
-                        env,
-                        timeout: 10 * 1000, // 10 seconds
-                        maxBuffer: 1024 * 1024
-                    },
-                    (err: any, stdout: any, stderr: any) => {
-                        if (err) {
-                            reject(stderr);
-                        } else {
-                            console.log("yarn", stdout);
-                            resolve();
-                        }
-                        end?.();
-                        spawnQueue.start();
+            cp.execFile(
+                process.execPath,
+                [yarn].concat(args),
+                {
+                    cwd: extensionsFolderPath,
+                    env,
+                    timeout: 10 * 1000, // 10 seconds
+                    maxBuffer: 1024 * 1024
+                },
+                (err: any, stdout: any, stderr: any) => {
+                    if (err) {
+                        reject(stderr);
+                    } else {
+                        console.log("yarn", stdout);
+                        resolve();
                     }
-                );
-            });
-
-            spawnQueue.start();
+                    end?.();
+                    spawnQueue.start();
+                }
+            );
         });
+
+        spawnQueue.start();
+    });
+}
+
+async function yarnInstall(foldersBefore: string[]) {
+    const cacheFolderPath = `${extensionsFolderPath}/cache`;
+    await makeFolder(cacheFolderPath);
+
+    try {
+        await yarnFn([
+            "install",
+            "--no-emoji",
+            "--no-lockfile",
+            "--cache-folder",
+            cacheFolderPath
+        ]);
+    } catch (err) {
+        console.log("yarn", err);
     }
 
+    const foldersAfter = await getFoldersFromPackageJson();
+
+    const newFolders = _difference(foldersBefore, foldersAfter);
+
+    if (newFolders.length > 0) {
+        confirm("New extensions detected.", newFolders.join(", "), () => {
+            EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
+                window.webContents.send("reload");
+            });
+        });
+    }
+}
+
+async function getFoldersFromPackageJson() {
     const packageJsonPath = `${extensionsFolderPath}/package.json`;
     if (!(await fileExists(packageJsonPath))) {
         try {
             await yarnFn(["init", "-y"]);
-        } catch (err) {
-            console.log("yarn", err);
-        }
-    } else {
-        const cacheFolderPath = `${extensionsFolderPath}/cache`;
-        await makeFolder(cacheFolderPath);
-
-        try {
-            await yarnFn([
-                "install",
-                "--no-emoji",
-                "--no-lockfile",
-                "--cache-folder",
-                cacheFolderPath
-            ]);
         } catch (err) {
             console.log("yarn", err);
         }
@@ -249,6 +267,14 @@ async function getNodeModuleFolders() {
         resolve(extensionsFolderPath, "node_modules", plugin.split("#")[0])
     );
 }
+
+async function getNodeModuleFolders() {
+    const folders = await getFoldersFromPackageJson();
+    yarnInstall(folders);
+    return folders;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export async function loadExtensions() {
     let preinstalledExtensionFolders = await readFolder(
