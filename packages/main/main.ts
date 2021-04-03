@@ -1,6 +1,6 @@
 import "./fix-path";
 
-import { app, session } from "electron";
+import { app, session, ipcMain, powerSaveBlocker } from "electron";
 import { configure } from "mobx";
 
 require("@electron/remote/main").initialize();
@@ -110,4 +110,20 @@ app.on("will-finish-launching", function () {
             }
         }
     });
+});
+
+let powerSaveBlockerId: number | undefined = undefined;
+ipcMain.on("preventAppSuspension", (event: any, on: boolean) => {
+    if (on) {
+        if (powerSaveBlockerId == undefined) {
+            powerSaveBlockerId = powerSaveBlocker.start(
+                "prevent-app-suspension"
+            );
+        }
+    } else {
+        if (powerSaveBlockerId != undefined) {
+            powerSaveBlocker.stop(powerSaveBlockerId);
+            powerSaveBlockerId = undefined;
+        }
+    }
 });

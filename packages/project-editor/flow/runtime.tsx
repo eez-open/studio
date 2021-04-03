@@ -343,6 +343,11 @@ export class RuntimeStoreClass {
         }
     };
 
+    addRunningFlow(runningFlow: RunningFlow) {
+        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
+        this.runningFlows.push(runningFlow);
+    }
+
     pumpQueue = async () => {
         this.pumpTimeoutId = undefined;
 
@@ -389,7 +394,7 @@ export class RuntimeStoreClass {
             const flow = getFlow(widget);
 
             const runningFlow = new RunningFlow(this, flow);
-            this.runningFlows.push(runningFlow);
+            this.addRunningFlow(runningFlow);
             runningFlow.startFromWidgetAction(widget);
         } else if (widget.action) {
             const action = findAction(
@@ -399,9 +404,8 @@ export class RuntimeStoreClass {
 
             if (action) {
                 this.addHistoryItem(new ExecuteWidgetActionHistoryItem(widget));
-
                 const runningFlow = new RunningFlow(this, action);
-                this.runningFlows.push(runningFlow);
+                this.addRunningFlow(runningFlow);
                 runningFlow.startAction();
             } else {
                 this.addHistoryItem(
@@ -415,6 +419,9 @@ export class RuntimeStoreClass {
 
     endRunningFlow(runningFlow: RunningFlow) {
         this.runningFlows.splice(this.runningFlows.indexOf(runningFlow), 1);
+        if (this.runningFlows.length === 0) {
+            EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
+        }
     }
 
     async stopAllRunningFlows() {
