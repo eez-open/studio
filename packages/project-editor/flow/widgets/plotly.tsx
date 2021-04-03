@@ -168,6 +168,7 @@ function removeChart(el: HTMLElement) {
     if (charts.size === 0) {
         if (doUpdateChartTimeoutId) {
             clearTimeout(doUpdateChartTimeoutId);
+            doUpdateChartTimeoutId = undefined;
         }
     }
 }
