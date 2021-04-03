@@ -1,7 +1,7 @@
 import { observable, computed, action, runInAction, values } from "mobx";
 const EventEmitter = require("events");
 const fs = require("fs");
-const { resolve } = require("path");
+const path = require("path");
 
 import { delay } from "eez-studio-shared/util";
 import {
@@ -180,7 +180,7 @@ async function loadAndRegisterExtension(folder: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function yarnFn(args: string[]) {
-    const yarn = resolve(__dirname, "../../../libs/yarn-1.22.10.js");
+    const yarn = path.resolve(__dirname, "../../../libs/yarn-1.22.10.js");
     const cp = require("child_process");
     const queue = require("queue");
     const spawnQueue = queue({ concurrency: 1 });
@@ -222,7 +222,7 @@ function yarnFn(args: string[]) {
     });
 }
 
-async function yarnInstall(foldersBefore: string[]) {
+async function yarnInstall() {
     const cacheFolderPath = `${extensionsFolderPath}/cache`;
     await makeFolder(cacheFolderPath);
 
@@ -234,24 +234,66 @@ async function yarnInstall(foldersBefore: string[]) {
             "--cache-folder",
             cacheFolderPath
         ]);
+
+        const packageJsonPath = `${extensionsFolderPath}/package.json`;
+        const packageJson = require(packageJsonPath);
+
+        const folders = Object.keys(packageJson.dependencies).map(plugin =>
+            path.resolve(
+                extensionsFolderPath,
+                "node_modules",
+                plugin.split("#")[0]
+            )
+        );
+
+        const newExtensions = [];
+
+        for (let i = 0; i < folders.length; i++) {
+            const folder = folders[i];
+            let packageJsonFilePath = folder + "/" + "package.json";
+            if (await fileExists(packageJsonFilePath)) {
+                try {
+                    const packageJson = await readJsObjectFromFile(
+                        packageJsonFilePath
+                    );
+                    const packageJsonEezStudio =
+                        packageJson[CONF_EEZ_STUDIO_PROPERTY_NAME];
+                    if (packageJsonEezStudio) {
+                        const extension = extensions.get(packageJson.name);
+                        if (
+                            !extension ||
+                            packageJson.version != extension.version
+                        ) {
+                            newExtensions.push(path.basename(folder));
+                        }
+                    }
+                } catch (err) {
+                    console.log(err);
+                }
+            }
+        }
+
+        if (newExtensions.length > 0) {
+            confirm(
+                "New extensions detected. Reload?",
+                newExtensions.join(", "),
+                () => {
+                    EEZStudio.remote.BrowserWindow.getAllWindows().forEach(
+                        window => {
+                            window.webContents.send("reload");
+                        }
+                    );
+                }
+            );
+        }
     } catch (err) {
         console.log("yarn", err);
     }
-
-    const foldersAfter = await getFoldersFromPackageJson();
-
-    const newFolders = _difference(foldersBefore, foldersAfter);
-
-    if (newFolders.length > 0) {
-        confirm("New extensions detected.", newFolders.join(", "), () => {
-            EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
-                window.webContents.send("reload");
-            });
-        });
-    }
 }
 
-async function getFoldersFromPackageJson() {
+async function getNodeModuleFolders() {
+    yarnInstall();
+
     const packageJsonPath = `${extensionsFolderPath}/package.json`;
     if (!(await fileExists(packageJsonPath))) {
         try {
@@ -264,14 +306,8 @@ async function getFoldersFromPackageJson() {
     const packageJson = require(packageJsonPath);
 
     return Object.keys(packageJson.dependencies).map(plugin =>
-        resolve(extensionsFolderPath, "node_modules", plugin.split("#")[0])
+        path.resolve(extensionsFolderPath, "node_modules", plugin.split("#")[0])
     );
-}
-
-async function getNodeModuleFolders() {
-    const folders = await getFoldersFromPackageJson();
-    yarnInstall(folders);
-    return folders;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
