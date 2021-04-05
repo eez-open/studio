@@ -34,11 +34,6 @@ interface IDraggableParams {
 
 @observer
 export class Splitter extends React.Component<SplitterProps, {}> {
-    constructor(props: any) {
-        super(props);
-        this.calcSizes(this.props);
-    }
-
     element: HTMLDivElement | null;
 
     @observable width: number = 0;
@@ -49,11 +44,19 @@ export class Splitter extends React.Component<SplitterProps, {}> {
     @observable idealSizes: number[];
     @observable childIsFixed: boolean[];
 
-    animationFrameRequestId: any;
+    resizeObserver: ResizeObserver;
+
+    constructor(props: any) {
+        super(props);
+
+        this.calcSizes(this.props);
+        this.resizeObserver = new ResizeObserver(this.resizeObserverCallback);
+    }
 
     componentDidMount() {
-        this.animationFrameCallback = this.animationFrameCallback.bind(this);
-        this.animationFrameCallback();
+        if (this.element) {
+            this.resizeObserver.observe(this.element);
+        }
     }
 
     UNSAFE_componentWillReceiveProps(nextProps: SplitterProps) {
@@ -61,26 +64,32 @@ export class Splitter extends React.Component<SplitterProps, {}> {
     }
 
     componentWillUnmount() {
-        window.cancelAnimationFrame(this.animationFrameRequestId);
+        if (this.element) {
+            this.resizeObserver.unobserve(this.element);
+        }
     }
 
-    @action
-    animationFrameCallback() {
+    resizeObserverCallback = action(() => {
         if (this.element) {
             let rect = this.element.getBoundingClientRect();
 
-            const diff = (this.props.type === "horizontal" ? rect.width : rect.height) - (this.offsets[this.offsets.length-1] + this.sizes[this.sizes.length-1]);
+            const diff =
+                (this.props.type === "horizontal" ? rect.width : rect.height) -
+                (this.offsets[this.offsets.length - 1] +
+                    this.sizes[this.sizes.length - 1]);
 
-            if (rect.width !== this.width || rect.height !== this.height || diff > 0) {
+            if (
+                rect.width !== this.width ||
+                rect.height !== this.height ||
+                diff > 0
+            ) {
                 this.width = rect.width;
                 this.height = rect.height;
 
                 this.resize();
             }
         }
-
-        this.animationFrameRequestId = window.requestAnimationFrame(this.animationFrameCallback);
-    }
+    });
 
     @action
     calcSizes(props: SplitterProps) {
@@ -133,14 +142,17 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         if (totalSizeOfFixedChildren <= totalSize) {
             stretchFactorForFixedChildren = 1;
         } else {
-            stretchFactorForFixedChildren = totalSize / totalSizeOfFixedChildren;
+            stretchFactorForFixedChildren =
+                totalSize / totalSizeOfFixedChildren;
         }
 
         let availableSize = totalSize;
 
         for (let i = 0; i < this.sizes.length; i++) {
             if (this.childIsFixed[i]) {
-                this.sizes[i] = Math.floor(this.idealSizes[i] * stretchFactorForFixedChildren);
+                this.sizes[i] = Math.floor(
+                    this.idealSizes[i] * stretchFactorForFixedChildren
+                );
                 availableSize -= this.sizes[i];
             }
         }
@@ -149,7 +161,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         for (let i = 0; i < this.sizes.length; i++) {
             if (!this.childIsFixed[i]) {
                 this.sizes[i] = Math.floor(
-                    (this.idealSizes[i] * availableSizeForStretchableChildren) / 100
+                    (this.idealSizes[i] * availableSizeForStretchableChildren) /
+                        100
                 );
                 availableSize -= this.sizes[i];
             }
@@ -177,7 +190,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         this.offsets[0] = 0;
         for (let i = 1; i < this.sizes.length; i++) {
-            this.offsets[i] = this.offsets[i - 1] + this.sizes[i - 1] + SPLITTER_SIZE;
+            this.offsets[i] =
+                this.offsets[i - 1] + this.sizes[i - 1] + SPLITTER_SIZE;
         }
     }
 
@@ -191,10 +205,12 @@ export class Splitter extends React.Component<SplitterProps, {}> {
             position = this.offsets[iSplitter] + 50;
         }
 
-        let size2 = this.offsets[iSplitter + 1] + this.sizes[iSplitter + 1] - position;
+        let size2 =
+            this.offsets[iSplitter + 1] + this.sizes[iSplitter + 1] - position;
         if (size2 < 50) {
             size2 = 50;
-            position = this.offsets[iSplitter + 1] + this.sizes[iSplitter + 1] - 50;
+            position =
+                this.offsets[iSplitter + 1] + this.sizes[iSplitter + 1] - 50;
 
             size1 = position - this.offsets[iSplitter];
             if (size1 < 50) {
@@ -219,7 +235,9 @@ export class Splitter extends React.Component<SplitterProps, {}> {
             if (this.childIsFixed[i]) {
                 this.idealSizes[i] = this.sizes[i];
             } else {
-                this.idealSizes[i] = Math.round((100 * this.sizes[i]) / sizeStretchable);
+                this.idealSizes[i] = Math.round(
+                    (100 * this.sizes[i]) / sizeStretchable
+                );
             }
         }
 
@@ -240,8 +258,17 @@ export class Splitter extends React.Component<SplitterProps, {}> {
     }
 
     @bind
-    onDragMove(e: PointerEvent, x: number, y: number, params: IDraggableParams) {
-        this.onSplitterMove(params.iSplitter, params.xOffset + x, params.yOffset + y);
+    onDragMove(
+        e: PointerEvent,
+        x: number,
+        y: number,
+        params: IDraggableParams
+    ) {
+        this.onSplitterMove(
+            params.iSplitter,
+            params.xOffset + x,
+            params.yOffset + y
+        );
     }
 
     render() {
@@ -254,17 +281,28 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         let childStyles: React.CSSProperties[] = [];
 
         let childrenOverflow =
-            this.props.childrenOverflow && this.props.childrenOverflow.split("|");
+            this.props.childrenOverflow &&
+            this.props.childrenOverflow.split("|");
 
         for (let i = 0; i < children.length; i++) {
             let style: React.CSSProperties = {
                 position: "absolute",
                 overflow: (childrenOverflow && childrenOverflow[i]) || "auto",
                 boxSizing: "border-box",
-                left: (this.props.type === "horizontal" ? this.offsets[i] : 0) + "px",
-                top: (this.props.type === "vertical" ? this.offsets[i] : 0) + "px",
-                width: (this.props.type === "horizontal" ? this.sizes[i] : this.width) + "px",
-                height: (this.props.type === "vertical" ? this.sizes[i] : this.height) + "px",
+                left:
+                    (this.props.type === "horizontal" ? this.offsets[i] : 0) +
+                    "px",
+                top:
+                    (this.props.type === "vertical" ? this.offsets[i] : 0) +
+                    "px",
+                width:
+                    (this.props.type === "horizontal"
+                        ? this.sizes[i]
+                        : this.width) + "px",
+                height:
+                    (this.props.type === "vertical"
+                        ? this.sizes[i]
+                        : this.height) + "px",
                 display: "flex",
                 flexDirection: "column"
             };
@@ -344,8 +382,14 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                         onDragStart={() => {
                             return {
                                 iSplitter: i,
-                                xOffset: this.props.type === "horizontal" ? this.offsets[i + 1] : 0,
-                                yOffset: this.props.type === "vertical" ? this.offsets[i + 1] : 0
+                                xOffset:
+                                    this.props.type === "horizontal"
+                                        ? this.offsets[i + 1]
+                                        : 0,
+                                yOffset:
+                                    this.props.type === "vertical"
+                                        ? this.offsets[i + 1]
+                                        : 0
                             } as IDraggableParams;
                         }}
                         onDragMove={this.onDragMove}
@@ -383,6 +427,12 @@ class SplitterThumb extends React.Component<
     render() {
         const { cursor, className, style } = this.props;
         this.draggable.cursor = cursor;
-        return <div ref={ref => this.draggable.attach(ref)} className={className} style={style} />;
+        return (
+            <div
+                ref={ref => this.draggable.attach(ref)}
+                className={className}
+                style={style}
+            />
+        );
     }
 }

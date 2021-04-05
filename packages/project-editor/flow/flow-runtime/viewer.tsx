@@ -210,7 +210,7 @@ export class Canvas extends React.Component<{
     transitionIsActive?: boolean;
 }> {
     div: HTMLDivElement;
-    clientRectChangeDetectionAnimationFrameHandle: any;
+    resizeObserver: ResizeObserver;
     deltaY = 0;
 
     dragScrollDispose: (() => void) | undefined;
@@ -219,10 +219,13 @@ export class Canvas extends React.Component<{
     lastMouseUpPosition: Point;
     lastMouseUpTime: number | undefined;
 
-    @bind
-    clientRectChangeDetection() {
-        this.clientRectChangeDetectionAnimationFrameHandle = undefined;
+    constructor(props: any) {
+        super(props);
 
+        this.resizeObserver = new ResizeObserver(this.resizeObserverCallback);
+    }
+
+    resizeObserverCallback = () => {
         if ($(this.div).is(":visible") && !this.props.transitionIsActive) {
             const transform = this.props.designerContext.viewState.transform;
 
@@ -240,29 +243,24 @@ export class Canvas extends React.Component<{
                 });
             }
         }
-
-        this.clientRectChangeDetectionAnimationFrameHandle = requestAnimationFrame(
-            this.clientRectChangeDetection
-        );
-    }
+    };
 
     componentDidMount() {
-        this.clientRectChangeDetection();
-
         this.div.addEventListener("wheel", this.onWheel, {
             passive: false
         });
+
+        if (this.div) {
+            this.resizeObserver.observe(this.div);
+        }
     }
 
     componentWillUnmount() {
-        if (this.clientRectChangeDetectionAnimationFrameHandle) {
-            cancelAnimationFrame(
-                this.clientRectChangeDetectionAnimationFrameHandle
-            );
-            this.clientRectChangeDetectionAnimationFrameHandle = undefined;
-        }
-
         this.div.removeEventListener("wheel", this.onWheel);
+
+        if (this.div) {
+            this.resizeObserver.unobserve(this.div);
+        }
     }
 
     @bind

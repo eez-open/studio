@@ -46,28 +46,50 @@ const newPlotQueue: {
     layout?: Partial<PlotlyModule.Layout>;
     config?: Partial<PlotlyModule.Config>;
     resolve: (el: PlotlyModule.PlotlyHTMLElement) => void;
+    createNewPlot: boolean;
 }[] = [];
 let doNewPlotTimeoutId: any = undefined;
 
-export function newPlot(
+export function newPlotOrReact(
     root: PlotlyModule.Root,
     data: PlotlyModule.Data[],
-    layout?: Partial<PlotlyModule.Layout>,
-    config?: Partial<PlotlyModule.Config>
+    layout: Partial<PlotlyModule.Layout>,
+    config: Partial<PlotlyModule.Config>,
+    createNewPlot: boolean
 ): Promise<PlotlyModule.PlotlyHTMLElement> {
     return new Promise<PlotlyModule.PlotlyHTMLElement>(resolve => {
-        newPlotQueue.push({ root, data, layout, config, resolve });
+        newPlotQueue.push({
+            root,
+            data,
+            layout,
+            config,
+            resolve,
+            createNewPlot
+        });
         if (!doNewPlotTimeoutId) {
-            doNewPlotTimeoutId = setTimeout(doNewPlot);
+            doNewPlotTimeoutId = setTimeout(doNewPlotOrReact);
         }
     });
 }
 
-async function doNewPlot() {
-    const { root, data, layout, config, resolve } = newPlotQueue.shift()!;
-    resolve(await Plotly().newPlot(root, data, layout, config));
+async function doNewPlotOrReact() {
+    const {
+        root,
+        data,
+        layout,
+        config,
+        resolve,
+        createNewPlot
+    } = newPlotQueue.shift()!;
+
+    if (createNewPlot) {
+        resolve(await Plotly().newPlot(root, data, layout, config));
+    } else {
+        resolve(await Plotly().react(root, data, layout, config));
+    }
+
     if (newPlotQueue.length > 0) {
-        setTimeout(doNewPlot);
+        setTimeout(doNewPlotOrReact);
     } else {
         doNewPlotTimeoutId = undefined;
     }
@@ -238,7 +260,13 @@ const LineChartElement = observer(
             const el = ref.current;
             if (el) {
                 (async () => {
-                    const plotly = await newPlot(el, getData(), getLayout());
+                    const plotly = await newPlotOrReact(
+                        el,
+                        getData(),
+                        getLayout(),
+                        getConfig(),
+                        true
+                    );
 
                     if (!disposed) {
                         setPlotly(plotly);
@@ -283,7 +311,13 @@ const LineChartElement = observer(
 
         React.useEffect(() => {
             if (plotly) {
-                Plotly().react(plotly, getData(), getLayout(), getConfig());
+                newPlotOrReact(
+                    plotly,
+                    getData(),
+                    getLayout(),
+                    getConfig(),
+                    false
+                );
             }
         }, [
             plotly,
@@ -470,6 +504,13 @@ const GaugeElement = observer(
             };
         }
 
+        function getConfig(): Partial<PlotlyModule.Config> {
+            return {
+                displayModeBar: false,
+                autosizable: false
+            };
+        }
+
         React.useEffect(() => {
             let disposed = false;
             let disposeReaction: any;
@@ -477,9 +518,13 @@ const GaugeElement = observer(
             const el = ref.current;
             if (el) {
                 (async () => {
-                    const plotly = await newPlot(el, getData(), getLayout(), {
-                        displayModeBar: false
-                    });
+                    const plotly = await newPlotOrReact(
+                        el,
+                        getData(),
+                        getLayout(),
+                        getConfig(),
+                        true
+                    );
 
                     if (!disposed) {
                         setPlotly(plotly);
@@ -517,7 +562,13 @@ const GaugeElement = observer(
 
         React.useEffect(() => {
             if (plotly) {
-                Plotly().react(plotly, getData(), getLayout());
+                newPlotOrReact(
+                    plotly,
+                    getData(),
+                    getLayout(),
+                    getConfig(),
+                    false
+                );
             }
         }, [
             plotly,

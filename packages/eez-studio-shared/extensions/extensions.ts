@@ -238,7 +238,9 @@ async function yarnInstall() {
         const packageJsonPath = `${extensionsFolderPath}/package.json`;
         const packageJson = require(packageJsonPath);
 
-        const folders = Object.keys(packageJson.dependencies).map(plugin =>
+        const folders = Object.keys(
+            packageJson.dependencies ?? []
+        ).map(plugin =>
             path.resolve(
                 extensionsFolderPath,
                 "node_modules",
