@@ -542,9 +542,12 @@ export class Editor implements IEditor {
 class EditorsStoreClass {
     @observable editors: Editor[] = [];
 
+    dispose1: mobx.IReactionDisposer;
+    dispose2: mobx.IReactionDisposer;
+
     constructor(public DocumentStore: DocumentStoreClass) {
         // open editor when navigation selection has changed
-        autorun(() => {
+        this.dispose1 = autorun(() => {
             let object = DocumentStore.NavigationStore.selectedObject;
             while (object) {
                 let navigationItem = DocumentStore.NavigationStore.getNavigationSelectedItem(
@@ -600,13 +603,18 @@ class EditorsStoreClass {
         // });
 
         // close editor if editor object doesn't exists anymore
-        autorun(() => {
+        this.dispose2 = autorun(() => {
             this.editors.slice().forEach(editor => {
                 if (!isObjectExists(editor.object)) {
                     this.closeEditor(editor);
                 }
             });
         });
+    }
+
+    unmount() {
+        this.dispose1();
+        this.dispose2();
     }
 
     load(editors: any[]) {
@@ -790,13 +798,16 @@ class UIStateStoreClass {
     @observable activeOutputSection = Section.CHECKS;
     @observable pageFrontFace: boolean = true;
 
+    dispose1: mobx.IReactionDisposer;
+    dispose2: mobx.IReactionDisposer;
+
     constructor(public DocumentStore: DocumentStoreClass) {
-        autorun(() => {
+        this.dispose1 = autorun(() => {
             this.savedState = this.toJS;
         });
 
         // react when selected panel or selected message in output window has changed
-        reaction(
+        this.dispose2 = reaction(
             () => ({
                 message: this.DocumentStore.OutputSectionsStore?.activeSection
                     .selectedMessage,
@@ -817,6 +828,11 @@ class UIStateStoreClass {
                 delay: 100
             }
         );
+    }
+
+    unmount() {
+        this.dispose1();
+        this.dispose2();
     }
 
     loadObjects(objects: any) {
@@ -1172,13 +1188,20 @@ export class DocumentStoreClass {
     @observable mapExternalProjectToAbsolutePath = new Map<Project, string>();
     externalProjectsLoading = new Map<string, boolean>();
 
+    dispose1: mobx.IReactionDisposer;
+    dispose2: mobx.IReactionDisposer;
+    dispose3: mobx.IReactionDisposer;
+    dispose4: mobx.IReactionDisposer;
+
+    watcher: FSWatcher | undefined = undefined;
+
     static async create() {
         await initExtensions();
         return new DocumentStoreClass();
     }
 
     constructor() {
-        autorun(
+        this.dispose1 = autorun(
             () => {
                 this.updateProjectWindowState();
             },
@@ -1187,7 +1210,7 @@ export class DocumentStoreClass {
             }
         );
 
-        autorun(
+        this.dispose2 = autorun(
             () => {
                 if (this.filePath) {
                     this.updateMruFilePath();
@@ -1206,10 +1229,9 @@ export class DocumentStoreClass {
     async watch() {
         const chokidarModuleName = "chokidar";
         const { watch } = await import(chokidarModuleName);
-        let watcher: FSWatcher | undefined = undefined;
-        autorun(() => {
-            if (watcher) {
-                watcher.close();
+        this.dispose3 = autorun(() => {
+            if (this.watcher) {
+                this.watcher.close();
             }
             if (this.project) {
                 const importedProjectFiles = this.project.settings.general.imports
@@ -1221,8 +1243,8 @@ export class DocumentStoreClass {
                             importDirective.projectFilePath
                         )
                     );
-                watcher = watch(importedProjectFiles) as FSWatcher;
-                watcher!.on("change", path => {
+                this.watcher = watch(importedProjectFiles) as FSWatcher;
+                this.watcher.on("change", path => {
                     const project = this.externalProjects.get(path);
                     if (project) {
                         runInAction(() => {
@@ -1235,6 +1257,20 @@ export class DocumentStoreClass {
                 });
             }
         });
+    }
+
+    unmount() {
+        this.dispose1();
+        this.dispose2();
+        if (this.dispose3) {
+            this.dispose3();
+        }
+        if (this.watcher) {
+            this.watcher.close();
+        }
+        if (this.dispose4) {
+            this.dispose4();
+        }
     }
 
     async waitUntilready() {
@@ -1258,7 +1294,7 @@ export class DocumentStoreClass {
             await new Promise(resolve => setTimeout(resolve, 10));
         }
 
-        autorun(() => {
+        this.dispose4 = autorun(() => {
             // check the project in the background
             if (
                 this.project &&
@@ -1657,6 +1693,12 @@ export class DocumentStoreClass {
         }
         this.UIStateStore.load(uiState || {});
         this.UndoManager.clear();
+
+        if (!project) {
+            this.EditorsStore.unmount();
+            this.UIStateStore.unmount();
+            this.unmount();
+        }
     }
 
     canSave() {

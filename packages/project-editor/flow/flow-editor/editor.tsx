@@ -1,6 +1,14 @@
 import React from "react";
-import { observable, computed, action, toJS, autorun, runInAction } from "mobx";
-import { observer } from "mobx-react";
+import {
+    observable,
+    computed,
+    action,
+    toJS,
+    autorun,
+    runInAction,
+    IReactionDisposer
+} from "mobx";
+import { disposeOnUnmount, observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
@@ -950,6 +958,8 @@ export class FlowEditor
 
     @observable options: IEditorOptions;
 
+    @disposeOnUnmount dispose: IReactionDisposer;
+
     constructor(props: FlowEditorProps) {
         super(props);
 
@@ -976,7 +986,7 @@ export class FlowEditor
     }
 
     componentDidMount() {
-        autorun(() => {
+        this.dispose = autorun(() => {
             this.designerContext.set(
                 this.flowDocument,
                 this.viewStatePersistantState,

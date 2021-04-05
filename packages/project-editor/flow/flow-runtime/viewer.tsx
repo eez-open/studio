@@ -1,6 +1,13 @@
 import React from "react";
-import { observable, computed, action, autorun, runInAction } from "mobx";
-import { observer } from "mobx-react";
+import {
+    observable,
+    computed,
+    action,
+    autorun,
+    runInAction,
+    IReactionDisposer
+} from "mobx";
+import { disposeOnUnmount, observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
@@ -457,6 +464,8 @@ export class FlowViewer
     currentWidgetContainer?: ITreeObjectAdapter;
 
     @observable flowDocument: FlowDocument;
+
+    @disposeOnUnmount dispose: IReactionDisposer;
 
     constructor(props: FlowViewerProps) {
         super(props);

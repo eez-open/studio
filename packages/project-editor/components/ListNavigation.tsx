@@ -1,6 +1,12 @@
 import React from "react";
-import { computed, observable, action, reaction } from "mobx";
-import { observer } from "mobx-react";
+import {
+    computed,
+    observable,
+    action,
+    reaction,
+    IReactionDisposer
+} from "mobx";
+import { disposeOnUnmount, observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
@@ -15,7 +21,10 @@ import {
     isPartOfNavigation,
     NavigationComponent
 } from "project-editor/core/object";
-import { ListAdapter, SortDirectionType } from "project-editor/core/objectAdapter";
+import {
+    ListAdapter,
+    SortDirectionType
+} from "project-editor/core/objectAdapter";
 import {
     INavigationStore,
     addItem,
@@ -84,7 +93,10 @@ export class SortableTitle extends React.Component<{
         const { title, direction } = this.props;
 
         return (
-            <SortableTitleDiv className={"sort-" + direction} onClick={this.onClicked}>
+            <SortableTitleDiv
+                className={"sort-" + direction}
+                onClick={this.onClicked}
+            >
                 {title}
             </SortableTitleDiv>
         );
@@ -114,7 +126,10 @@ class AddButton extends React.Component<{
                 icon="material:add"
                 iconSize={16}
                 onClick={this.onAdd.bind(this)}
-                enabled={this.props.navigationObject && canAdd(this.props.navigationObject)}
+                enabled={
+                    this.props.navigationObject &&
+                    canAdd(this.props.navigationObject)
+                }
             />
         );
     }
@@ -128,23 +143,29 @@ class DeleteButton extends React.Component<{
     navigationStore?: INavigationStore;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     onDelete() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
         let selectedItem =
             this.props.navigationObject &&
-            navigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
+            navigationStore.getNavigationSelectedItemAsObject(
+                this.props.navigationObject
+            );
         if (selectedItem) {
             deleteItem(selectedItem);
         }
     }
 
     render() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
         let selectedItem =
             this.props.navigationObject &&
-            navigationStore.getNavigationSelectedItemAsObject(this.props.navigationObject);
+            navigationStore.getNavigationSelectedItemAsObject(
+                this.props.navigationObject
+            );
 
         return (
             <IconAction
@@ -186,12 +207,16 @@ interface ListNavigationProps {
 }
 
 @observer
-export class ListNavigation extends React.Component<ListNavigationProps> implements IPanel {
+export class ListNavigation
+    extends React.Component<ListNavigationProps>
+    implements IPanel {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @observable sortDirection: SortDirectionType = "none";
     @observable searchText: string = "";
+
+    @disposeOnUnmount dispose: IReactionDisposer;
 
     constructor(props: any) {
         super(props);
@@ -203,16 +228,20 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             this.sortDirection = sortDirectionStr as SortDirectionType;
         }
 
-        reaction(
+        this.dispose = reaction(
             () => this.sortDirection,
             sortDirection =>
-                localStorage.setItem("ListNavigationSortDirection" + this.props.id, sortDirection)
+                localStorage.setItem(
+                    "ListNavigationSortDirection" + this.props.id,
+                    sortDirection
+                )
         );
     }
 
     @computed
     get editable() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
         return this.props.editable != false && navigationStore.editable;
     }
 
@@ -220,19 +249,24 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
     onDoubleClickItem(object: IEezObject) {
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
-        } else if (this.context.EditorsStore.activeEditor && this.context.EditorsStore.activeEditor.object == object) {
+        } else if (
+            this.context.EditorsStore.activeEditor &&
+            this.context.EditorsStore.activeEditor.object == object
+        ) {
             this.context.EditorsStore.activeEditor.makePermanent();
         }
     }
 
     @computed
     get selectedObject() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
         const navigationSelectedItem = navigationStore.getNavigationSelectedItem(
             this.props.navigationObject
         );
         return (
-            getObjectFromNavigationItem(navigationSelectedItem) || navigationStore.selectedObject
+            getObjectFromNavigationItem(navigationSelectedItem) ||
+            navigationStore.selectedObject
         );
     }
 
@@ -271,8 +305,13 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
         );
     }
 
+    componentWillUnmount() {
+        this.listAdapter.unmount();
+    }
+
     onFocus() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
         if (isPartOfNavigation(this.props.navigationObject)) {
             navigationStore.setSelectedPanel(this);
         }
@@ -287,10 +326,14 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
         const { onEditItem, renderItem } = this.props;
         const title = (
             <SortableTitle
-                title={this.props.title || objectToString(this.props.navigationObject)}
+                title={
+                    this.props.title ||
+                    objectToString(this.props.navigationObject)
+                }
                 direction={this.sortDirection}
                 onDirectionChanged={action(
-                    (direction: SortDirectionType) => (this.sortDirection = direction)
+                    (direction: SortDirectionType) =>
+                        (this.sortDirection = direction)
                 )}
             />
         );
@@ -354,7 +397,14 @@ export class ListNavigation extends React.Component<ListNavigationProps> impleme
             );
         }
 
-        return <Panel id="navigation" title={title} buttons={buttons} body={body} />;
+        return (
+            <Panel
+                id="navigation"
+                title={title}
+                buttons={buttons}
+                body={body}
+            />
+        );
     }
 }
 
@@ -372,7 +422,10 @@ interface ListNavigationWithContentProps extends NavigationComponentProps {
 }
 
 @observer
-export class ListNavigationWithContent extends React.Component<ListNavigationWithContentProps, {}> {
+export class ListNavigationWithContent extends React.Component<
+    ListNavigationWithContentProps,
+    {}
+> {
     render() {
         const { onEditItem, renderItem } = this.props;
         return (
@@ -403,13 +456,15 @@ export class ListNavigationWithContent extends React.Component<ListNavigationWit
 @observer
 export class ListNavigationWithProperties extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @computed
     get object() {
-        const navigationStore = this.props.navigationStore || this.context.NavigationStore;
+        const navigationStore =
+            this.props.navigationStore || this.context.NavigationStore;
         return (
-            (navigationStore.selectedPanel && navigationStore.selectedPanel.selectedObject) ||
+            (navigationStore.selectedPanel &&
+                navigationStore.selectedPanel.selectedObject) ||
             navigationStore.selectedObject
         );
     }

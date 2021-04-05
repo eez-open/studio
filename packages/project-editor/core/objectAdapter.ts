@@ -1,4 +1,11 @@
-import { observable, action, computed, runInAction, autorun } from "mobx";
+import {
+    observable,
+    action,
+    computed,
+    runInAction,
+    autorun,
+    IReactionDisposer
+} from "mobx";
 import { createTransformer } from "mobx-utils";
 
 import {
@@ -1260,6 +1267,8 @@ export class ListAdapter implements ITreeAdapter {
     navigationStore: INavigationStore;
     dragAndDropManager: DragAndDropManagerClass;
 
+    dispose: IReactionDisposer;
+
     constructor(
         private object: IEezObject,
         public sortDirection?: SortDirectionType,
@@ -1276,7 +1285,7 @@ export class ListAdapter implements ITreeAdapter {
         this.navigationStore = navigationStore || DocumentStore.NavigationStore;
         this.dragAndDropManager = dragAndDropManager || DragAndDropManager;
 
-        autorun(() => {
+        this.dispose = autorun(() => {
             const selectedItem = this.selectedItem;
             if (selectedItem && !selectedItem.selected) {
                 runInAction(() => {
@@ -1290,6 +1299,10 @@ export class ListAdapter implements ITreeAdapter {
                 });
             }
         });
+    }
+
+    unmount() {
+        this.dispose();
     }
 
     onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
