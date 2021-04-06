@@ -68,6 +68,11 @@ import {
     EmbeddedWidget
 } from "project-editor/flow/component";
 
+import {
+    InputActionComponent,
+    OutputActionComponent
+} from "project-editor/flow/action-components";
+
 const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -869,6 +874,42 @@ export class LayoutViewWidget extends EmbeddedWidget {
         return layout;
     }
 
+    @computed get inputs() {
+        const page = findPage(getProject(this), this.layout);
+        if (!page) {
+            return super.inputProperties;
+        }
+
+        return [
+            ...super.inputProperties,
+            ...page.components
+                .filter(component => component instanceof InputActionComponent)
+                .map((inputActionComponent: InputActionComponent) => ({
+                    name: inputActionComponent.wireID,
+                    displayName: inputActionComponent.name,
+                    type: PropertyType.Any
+                }))
+        ];
+    }
+
+    @computed get outputs() {
+        const page = findPage(getProject(this), this.layout);
+        if (!page) {
+            return super.outputProperties;
+        }
+
+        return [
+            ...super.outputProperties,
+            ...page.components
+                .filter(component => component instanceof OutputActionComponent)
+                .map((outputActionComponent: OutputActionComponent) => ({
+                    name: outputActionComponent.wireID,
+                    displayName: outputActionComponent.name,
+                    type: PropertyType.Any
+                }))
+        ];
+    }
+
     // This is for prevention of circular rendering of layouts, i.e Layout A is using Layout B and Layout B is using Layout A.
     static renderedLayoutPages: Page[] = [];
     static clearRenderedLayoutPagesFrameRequestId: number | undefined;
@@ -908,7 +949,12 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
         LayoutViewWidget.renderedLayoutPages.pop();
 
-        return element;
+        return (
+            <>
+                {element}
+                {super.render(designerContext, dataContext)}
+            </>
+        );
     }
 
     open() {

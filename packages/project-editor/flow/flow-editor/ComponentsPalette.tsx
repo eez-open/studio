@@ -24,6 +24,7 @@ import styled from "eez-studio-ui/styled-components";
 import { ProjectContext } from "project-editor/project/context";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { Panel } from "project-editor/components/Panel";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +76,8 @@ class PaletteItem extends React.Component<{
             defaultValue,
             this.props.componentClass.objectClass
         ) as Component;
+
+        object.wireID = guid();
 
         if (object.left == undefined) {
             object.left = 0;

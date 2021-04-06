@@ -60,6 +60,7 @@ import { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import { ContainerWidget } from "project-editor/flow/widgets";
 import { RunningFlow } from "./runtime";
+import { guid } from "eez-studio-shared/guid";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -353,7 +354,7 @@ export class Component extends EezObject {
     @observable width: number;
     @observable height: number;
 
-    @observable wireID?: string;
+    @observable wireID: string;
 
     @observable asInputProperties: string[];
     @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
@@ -449,6 +450,10 @@ export class Component extends EezObject {
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (!jsObject.wireID) {
+                jsObject.wireID = guid();
+            }
+
             if (jsObject["x"] !== undefined) {
                 jsObject["left"] = jsObject["x"];
                 delete jsObject["x"];
@@ -565,12 +570,7 @@ export class Component extends EezObject {
     }
 
     get inputProperties() {
-        const classInfo = getClassInfo(this);
-        const properties = classInfo.properties;
         return [
-            ...properties.filter(
-                property => property.type == PropertyType.ConnectionInput
-            ),
             ...((this.asInputProperties ?? [])
                 .map(inputPropertyName =>
                     findPropertyByNameInClassInfo(
@@ -583,12 +583,7 @@ export class Component extends EezObject {
     }
 
     get outputProperties() {
-        const classInfo = getClassInfo(this);
-        const properties = classInfo.properties;
         return [
-            ...properties.filter(
-                property => property.type == PropertyType.ConnectionOutput
-            ),
             ...((this.asOutputProperties ?? [])
                 .map(outputPropertyName =>
                     findPropertyByNameInClassInfo(
@@ -1080,6 +1075,10 @@ export class Widget extends Component {
             return null;
         }
 
+        if (designerContext.document.flow.object !== getFlow(this)) {
+            return null;
+        }
+
         const inputs = this.inputs;
         const outputs = this.outputs;
 
@@ -1088,23 +1087,21 @@ export class Widget extends Component {
         }
 
         return (
-            <div className="body">
-                <div className="inports">
+            <div className="inputs-outputs">
+                <div className="inputs">
                     {inputs.map(property => (
                         <div
                             key={property.name}
-                            className="eez-connection-input"
                             data-connection-input-id={property.name}
                         >
                             {property.displayName ?? humanize(property.name)}
                         </div>
                     ))}
                 </div>
-                <div className="outports">
+                <div className="outputs">
                     {outputs.map(property => (
                         <div
                             key={property.name}
-                            className="eez-connection-output"
                             data-connection-output-id={property.name}
                         >
                             {property.displayName ?? humanize(property.name)}
@@ -1166,21 +1163,27 @@ function renderActionComponent(
         <>
             <div className="title-enclosure">
                 <div className="title" style={titleStyle}>
-                    {typeof classInfo.icon == "string" ? (
-                        <img src={classInfo.icon} />
-                    ) : (
-                        classInfo.icon
-                    )}
-                    <span>{getLabel(actionNode)}</span>
+                    <span
+                        className="title-image"
+                        data-connection-input-id="@seqin"
+                    >
+                        {typeof classInfo.icon == "string" ? (
+                            <img src={classInfo.icon} />
+                        ) : (
+                            classInfo.icon
+                        )}
+                    </span>
+                    <span className="title-text">{getLabel(actionNode)}</span>
+                    <span data-connection-output-id="@seqout"></span>
                 </div>
             </div>
+            {actionNode.body}
             {(inputs.length > 0 || outputs.length > 0) && (
-                <div className="body">
-                    <div className="inports">
+                <div className="inputs-outputs">
+                    <div className="inputs">
                         {inputs.map(property => (
                             <div
                                 key={property.name}
-                                className="eez-connection-input"
                                 data-connection-input-id={property.name}
                             >
                                 {property.displayName ??
@@ -1188,11 +1191,10 @@ function renderActionComponent(
                             </div>
                         ))}
                     </div>
-                    <div className="outports">
+                    <div className="outputs">
                         {outputs.map(property => (
                             <div
                                 key={property.name}
-                                className="eez-connection-output"
                                 data-connection-output-id={property.name}
                             >
                                 {property.displayName ??
@@ -1226,6 +1228,10 @@ export class ActionComponent extends Component {
 
     getClassName() {
         return "eez-action-component";
+    }
+
+    get body(): React.ReactNode {
+        return null;
     }
 
     render(designerContext: IFlowContext, dataContext: IDataContext) {
@@ -1272,7 +1278,7 @@ export class NotFoundComponent extends ActionComponent {
             )
             .map(connectionLine => ({
                 name: connectionLine.input,
-                type: PropertyType.ConnectionInput
+                type: PropertyType.Any
             }));
     }
 
@@ -1283,7 +1289,7 @@ export class NotFoundComponent extends ActionComponent {
             )
             .map(connectionLine => ({
                 name: connectionLine.output,
-                type: PropertyType.ConnectionOutput
+                type: PropertyType.Any
             }));
     }
 

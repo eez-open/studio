@@ -38,9 +38,9 @@ export class InputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             {
-                name: "output",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
+                name: "name",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (
@@ -52,6 +52,8 @@ export class InputActionComponent extends ActionComponent {
             </svg>
         )
     });
+
+    @observable name: string;
 
     async execute(runningFlow: RunningFlow, input: string) {
         return "output";
@@ -66,9 +68,9 @@ export class OutputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             {
-                name: "input",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
+                name: "name",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (
@@ -77,19 +79,26 @@ export class OutputActionComponent extends ActionComponent {
             </svg>
         )
     });
+
+    @observable name: string;
 }
 
 registerClass(OutputActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const GetVariableBody = styled.div`
+    text-align: center;
+    background-color: #fffcf7 !important;
+`;
+
 export class GetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             {
-                name: "output",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
+                name: "variable",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (
@@ -101,25 +110,32 @@ export class GetVariableActionComponent extends ActionComponent {
             </svg>
         )
     });
+
+    @observable variable: string;
+
+    @computed get body(): React.ReactNode {
+        return (
+            <GetVariableBody
+                className="body"
+                data-connection-output-id="variable"
+            >
+                <pre>{this.variable}</pre>
+            </GetVariableBody>
+        );
+    }
 }
 
 registerClass(GetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SetVariableBody = styled.div`
+    display: flex;
+`;
+
 export class SetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            {
-                name: "input",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "output",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            },
             {
                 name: "variable",
                 type: PropertyType.String,
@@ -127,7 +143,7 @@ export class SetVariableActionComponent extends ActionComponent {
             },
             makeToggablePropertyToInput({
                 name: "value",
-                type: PropertyType.String,
+                type: PropertyType.JSON,
                 propertyGridGroup: specificGroup
             })
         ],
@@ -144,6 +160,20 @@ export class SetVariableActionComponent extends ActionComponent {
 
     @observable variable: string;
     @observable value: string;
+
+    @computed get body(): React.ReactNode {
+        return (
+            <SetVariableBody className="body">
+                <div>
+                    <pre>{this.variable}</pre>
+                </div>
+                <div style={{ padding: "0 10px" }}>🠔</div>
+                <div style={{ textAlign: "left" }}>
+                    <pre>{this.value}</pre>
+                </div>
+            </SetVariableBody>
+        );
+    }
 
     @action
     async execute(runningFlow: RunningFlow, input: string) {
@@ -170,25 +200,83 @@ registerClass(SetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class CompareActionComponent extends ActionComponent {
+const DeclareVariableBody = styled.div`
+    display: flex;
+`;
+
+export class DeclareVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             {
-                name: "input",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
+                name: "variable",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             },
-            {
-                name: "True",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "False",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            }
+            makeToggablePropertyToInput({
+                name: "value",
+                type: PropertyType.JSON,
+                propertyGridGroup: specificGroup
+            })
         ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                version="1.2"
+                viewBox="0 0 16 11"
+            >
+                <path d="M14 0H2a2 2 0 0 0 0 4h12a2 2 0 0 0 0-4zm0 7H2a2 2 0 0 0 0 4h12a2 2 0 0 0 0-4z" />
+            </svg>
+        )
+    });
+
+    @observable variable: string;
+    @observable value: string;
+
+    @computed get body(): React.ReactNode {
+        return (
+            <DeclareVariableBody className="body">
+                <div>
+                    <pre>{this.variable}</pre>
+                </div>
+                {!this.isInputProperty("value") && (
+                    <>
+                        <div style={{ padding: "0 10px" }}>🠔</div>
+                        <div style={{ textAlign: "left" }}>
+                            <pre>{this.value}</pre>
+                        </div>
+                    </>
+                )}
+            </DeclareVariableBody>
+        );
+    }
+
+    @action
+    async execute(runningFlow: RunningFlow, input: string) {
+        const DocumentStore = getDocumentStore(this);
+        let value;
+        if (this.isInputProperty("value")) {
+            const inputPropertyValue = this.getInputPropertyValue("value");
+            if (
+                inputPropertyValue == undefined ||
+                inputPropertyValue.value == undefined
+            ) {
+                throw `missing value input`;
+            }
+            value = inputPropertyValue.value;
+        } else {
+            value = this.value;
+        }
+        DocumentStore.dataContext.setValue(this.variable, value);
+        return "output";
+    }
+}
+
+registerClass(DeclareVariableActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class CompareActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -241,19 +329,11 @@ registerClass(ConstantActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ScpiBody = styled.div``;
+
 export class ScpiActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            {
-                name: "input",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "output",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            },
             {
                 name: "instrument",
                 type: PropertyType.String,
@@ -463,6 +543,15 @@ export class ScpiActionComponent extends ActionComponent {
 
         return "output";
     }
+
+    @computed get body(): React.ReactNode {
+        return (
+            <ScpiBody className="body">
+                <p>[{this.instrument}]</p>
+                <pre>{this.scpi}</pre>
+            </ScpiBody>
+        );
+    }
 }
 
 registerClass(ScpiActionComponent);
@@ -471,18 +560,7 @@ registerClass(ScpiActionComponent);
 
 export class OpenPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        properties: [
-            {
-                name: "input",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "output",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            }
-        ],
+        properties: [],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
                 <path d="M0 0h40v30H0V0zm36 8H4v18h32V8z" />
@@ -497,18 +575,7 @@ registerClass(OpenPageActionComponent);
 
 export class ClosePageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        properties: [
-            {
-                name: "input",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "output",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            }
-        ],
+        properties: [],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
                 <path d="M0 0h40v30H0V0zm36 8H4v18h32V8zm-23.273 4.96l3.232-3.233L20 13.767l4.04-4.04 3.233 3.232L23.233 17l4.04 4.04-3.232 3.233L20 20.233l-4.04 4.04-3.233-3.232L16.767 17l-4.04-4.04z" />
@@ -518,54 +585,6 @@ export class ClosePageActionComponent extends ActionComponent {
 }
 
 registerClass(ClosePageActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class Test1ActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        properties: [
-            {
-                name: "input1",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "input2",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "input3",
-                type: PropertyType.ConnectionInput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "output1",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "output2",
-                type: PropertyType.ConnectionOutput,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "filePath",
-                type: PropertyType.String
-            }
-        ],
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 14.049999237060547 14.005000114440918"
-            >
-                <path d="M11.964 6.349c-.514 0-1.006.192-1.406.555v-1.64a1.77 1.77 0 0 0-1.76-1.767V3.49l-1.631.001c.348-.381.547-.881.547-1.406A2.088 2.088 0 0 0 5.628 0a2.088 2.088 0 0 0-2.084 2.085c0 .514.191 1.004.555 1.406H1.787V3.5C.826 3.516.049 4.3.049 5.264h.005l.005 1.82C0 7.519.152 8.032.624 8.2c.199.072.588.117.951-.395a1.086 1.086 0 0 1 1.971.626c0 .6-.487 1.086-1.086 1.086-.354 0-.688-.176-.896-.475-.348-.504-.756-.422-.914-.363-.466.168-.611.684-.596 1.053v2.506H.049a1.77 1.77 0 0 0 1.769 1.767h6.973a1.77 1.77 0 0 0 1.768-1.768V9.971c.381.348.881.547 1.406.547a2.088 2.088 0 0 0 2.085-2.086 2.09 2.09 0 0 0-2.086-2.083zm0 3.17c-.355 0-.688-.176-.896-.475-.348-.506-.757-.424-.915-.365-.466.168-.61.684-.595 1.053v2.506a.768.768 0 0 1-.768.768H1.818a.77.77 0 0 1-.769-.769h.005V9.971a2.085 2.085 0 0 0 3.492-1.539A2.088 2.088 0 0 0 2.46 6.348a2.08 2.08 0 0 0-1.406.555v-1.64h-.005a.77.77 0 0 1 .769-.768V4.49l2.46-.005c.059.008.119.013.18.013.389 0 .793-.169.938-.579.071-.199.116-.587-.396-.949a1.086 1.086 0 1 1 1.714-.885c0 .355-.176.688-.477.898-.501.346-.421.753-.363.913.168.467.673.613 1.053.595H8.79v.006c.424 0 .768.345.768.768l.004 1.82c-.059.435.094.949.566 1.117.199.072.588.117.95-.395a1.084 1.084 0 1 1 .886 1.712z" />
-            </svg>
-        )
-    });
-}
-
-registerClass(Test1ActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 

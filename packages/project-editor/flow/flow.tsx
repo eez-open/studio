@@ -212,9 +212,7 @@ export abstract class Flow extends EezObject {
             }
             if (visitResult.value instanceof Component) {
                 const widget = visitResult.value;
-                if (widget.wireID) {
-                    widgets.set(widget.wireID, widget);
-                }
+                widgets.set(widget.wireID, widget);
             }
         }
 
@@ -363,9 +361,7 @@ export class FlowFragment extends EezObject {
 
         objects.forEach((object: Component) => {
             const clone = cloneObject(DocumentStore, object) as Component;
-            if (object.wireID) {
-                wireIDMap.set(object.wireID, object.wireID);
-            }
+            wireIDMap.set(object.wireID, object.wireID);
             this.components.push(clone);
         });
 
@@ -386,11 +382,9 @@ export class FlowFragment extends EezObject {
         const wireIDMap = new Map<string, string>();
 
         this.components.forEach((object: Component) => {
-            if (object.wireID) {
-                const wireID = guid();
-                wireIDMap.set(object.wireID, wireID);
-                object.wireID = wireID;
-            }
+            const wireID = guid();
+            wireIDMap.set(object.wireID, wireID);
+            object.wireID = wireID;
         });
 
         this.connectionLines.forEach(connectionLine => {

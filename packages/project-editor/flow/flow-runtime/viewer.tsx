@@ -112,26 +112,7 @@ class FlowDocument implements IDocument {
         targetObjectId: string,
         connectionInput: string
     ): boolean {
-        const flow = this.flow.object as Flow;
-
-        const sourceObject = this.DocumentStore.getObjectFromObjectId(
-            sourceObjectId
-        ) as Component;
-        const targetObject = this.DocumentStore.getObjectFromObjectId(
-            targetObjectId
-        ) as Component;
-
-        return !!(
-            sourceObject.wireID &&
-            targetObject.wireID &&
-            flow.connectionLines.find(
-                connectionLine =>
-                    connectionLine.source == sourceObject.wireID &&
-                    connectionLine.output == connectionOutput &&
-                    connectionLine.target == targetObject.wireID &&
-                    connectionLine.input == connectionInput
-            )
-        );
+        return false;
     }
 
     connect(
@@ -139,35 +120,7 @@ class FlowDocument implements IDocument {
         connectionOutput: string,
         targetObjectId: string,
         connectionInput: string
-    ) {
-        const flow = this.flow.object as Flow;
-
-        const sourceObject = this.DocumentStore.getObjectFromObjectId(
-            sourceObjectId
-        ) as Component;
-        const targetObject = this.DocumentStore.getObjectFromObjectId(
-            targetObjectId
-        ) as Component;
-
-        if (!sourceObject.wireID) {
-            this.DocumentStore.updateObject(sourceObject, {
-                wireID: guid()
-            });
-        }
-
-        if (!targetObject.wireID) {
-            this.DocumentStore.updateObject(targetObject, {
-                wireID: guid()
-            });
-        }
-
-        this.DocumentStore.addObject(flow.connectionLines, {
-            source: sourceObject.wireID,
-            output: connectionOutput,
-            target: targetObject.wireID,
-            input: connectionInput
-        });
-    }
+    ) {}
 }
 
 const AllConnectionLines = observer(
@@ -195,23 +148,9 @@ const AllConnectionLines = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const CanvasDiv = styled.div`
-    cursor: default;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: white;
-    & > * {
-        user-select: none;
-    }
-`;
-
 @observer
 export class Canvas extends React.Component<{
     designerContext: IFlowContext;
-    style?: React.CSSProperties;
     pageRect?: Rect;
     dragAndDropActive: boolean;
     transitionIsActive?: boolean;
@@ -219,8 +158,6 @@ export class Canvas extends React.Component<{
     div: HTMLDivElement;
     resizeObserver: ResizeObserver;
     deltaY = 0;
-
-    dragScrollDispose: (() => void) | undefined;
 
     buttonsAtDown: number;
     lastMouseUpPosition: Point;
@@ -334,15 +271,7 @@ export class Canvas extends React.Component<{
     }
 
     render() {
-        let style: React.CSSProperties = {
-            position: "absolute",
-            overflow: "hidden",
-            width: "100%",
-            height: "100%"
-        };
-        if (this.props.style) {
-            Object.assign(style, this.props.style);
-        }
+        let style: React.CSSProperties = {};
 
         const transform = this.props.designerContext.viewState.transform;
 
@@ -361,7 +290,7 @@ export class Canvas extends React.Component<{
         }
 
         return (
-            <CanvasDiv
+            <div
                 ref={(ref: any) => (this.div = ref!)}
                 style={style}
                 onContextMenu={this.onContextMenu}
@@ -382,7 +311,7 @@ export class Canvas extends React.Component<{
                     context={this.props.designerContext}
                     mouseHandler={undefined}
                 />
-            </CanvasDiv>
+            </div>
         );
     }
 }
@@ -390,9 +319,37 @@ export class Canvas extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 const FlowViewerCanvasContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    position: relative;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+
+    cursor: default;
+
+    & > * {
+        user-select: none;
+    }
+
+    & > div {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    &:focus {
+        left: 2px;
+        top: 2px;
+        width: calc(100% - 4px);
+        height: calc(100% - 4px);
+
+        & > div {
+            left: 1px;
+            top: 1px;
+            width: calc(100% - 2px);
+            height: calc(100% - 2px);
+        }
+    }
 
     .EezStudio_DesignerSelection_SelectedObject {
         border: 1px solid #333;
@@ -438,22 +395,14 @@ const FlowViewerCanvasContainer = styled.div`
     }
 `;
 
-const FlowViewerCanvas = styled(Canvas)`
-    position: absolute;
-    width: 100%;
-    height: 100%;
-`;
-
-interface FlowViewerProps {
-    widgetContainer: ITreeObjectAdapter;
-    onFocus?: () => void;
-    transitionIsActive?: boolean;
-    frontFace?: boolean;
-}
-
 @observer
 export class FlowViewer
-    extends React.Component<FlowViewerProps>
+    extends React.Component<{
+        widgetContainer: ITreeObjectAdapter;
+        onFocus?: () => void;
+        transitionIsActive?: boolean;
+        frontFace?: boolean;
+    }>
     implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
@@ -467,7 +416,7 @@ export class FlowViewer
 
     @disposeOnUnmount dispose: IReactionDisposer;
 
-    constructor(props: FlowViewerProps) {
+    constructor(props: any) {
         super(props);
         this.updateFlowDocument();
     }
@@ -485,7 +434,7 @@ export class FlowViewer
     }
 
     componentDidMount() {
-        autorun(() => {
+        this.dispose = autorun(() => {
             this.designerContext.set(
                 this.flowDocument,
                 this.viewStatePersistantState,
@@ -626,6 +575,7 @@ export class FlowViewer
 
     componentWillUnmount() {
         this.designerContext.destroy();
+        this.dispose();
     }
 
     get flow() {
@@ -641,7 +591,7 @@ export class FlowViewer
                 onKeyDown={this.onKeyDown}
                 onDoubleClick={this.onDoubleClick}
             >
-                <FlowViewerCanvas
+                <Canvas
                     designerContext={this.designerContext}
                     dragAndDropActive={!!DragAndDropManager.dragObject}
                     transitionIsActive={this.props.transitionIsActive}
@@ -665,7 +615,7 @@ export class FlowViewer
                             )}
                         </>
                     )}
-                </FlowViewerCanvas>
+                </Canvas>
             </FlowViewerCanvasContainer>
         );
     }

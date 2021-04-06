@@ -37,9 +37,7 @@ export enum PropertyType {
     ConfigurationReference,
     Boolean,
     GUID,
-    Any,
-    ConnectionInput,
-    ConnectionOutput
+    Any
 }
 
 export interface EnumItem {

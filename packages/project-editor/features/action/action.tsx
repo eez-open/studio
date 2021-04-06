@@ -393,7 +393,7 @@ export class Action extends Flow {
                         getProject(parent).settings.general.projectType ===
                             ProjectType.DASHBOARD
                             ? ({
-                                  implementationType: "native",
+                                  implementationType: "flow",
                                   components: [],
                                   connectionLine: []
                               } as Partial<Action>)

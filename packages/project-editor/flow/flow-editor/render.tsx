@@ -79,15 +79,14 @@ function calcComponentGeometry(
     const outputs: PortsGeometry = {};
 
     if (component instanceof Component) {
-        component.inputs.forEach(property => {
-            const inputElement = el.querySelector(
-                `[data-connection-input-id="${property.name}"]`
-            );
-            if (inputElement) {
+        el.querySelectorAll(`[data-connection-input-id]`).forEach(
+            inputElement => {
                 const rectPort = transform.clientToPageRect(
                     inputElement.getBoundingClientRect()
                 );
-                inputs[property.name] = {
+                inputs[
+                    inputElement.getAttribute("data-connection-input-id")!
+                ] = {
                     rect: {
                         left: rectPort.left - rect.left,
                         top: rectPort.top - rect.top,
@@ -100,17 +99,16 @@ function calcComponentGeometry(
                     }
                 };
             }
-        });
+        );
 
-        component.outputs.forEach(property => {
-            const outputElement = el.querySelector(
-                `[data-connection-output-id="${property.name}"]`
-            );
-            if (outputElement) {
+        el.querySelectorAll(`[data-connection-output-id]`).forEach(
+            outputElement => {
                 const rectPort = transform.clientToPageRect(
                     outputElement.getBoundingClientRect()
                 );
-                outputs[property.name] = {
+                outputs[
+                    outputElement.getAttribute("data-connection-output-id")!
+                ] = {
                     rect: {
                         left: rectPort.left - rect.left,
                         top: rectPort.top - rect.top,
@@ -123,7 +121,7 @@ function calcComponentGeometry(
                     }
                 };
             }
-        });
+        );
     }
 
     return {
@@ -159,7 +157,7 @@ const ComponentEnclosureDiv = styled.div`
 
             .title {
                 flex-grow: 1;
-                padding: 4px 7px;
+                padding: 7px 0;
                 background-color: #43786d;
                 color: white;
                 display: flex;
@@ -167,44 +165,59 @@ const ComponentEnclosureDiv = styled.div`
                 align-items: center;
                 white-space: nowrap;
 
-                svg {
-                    fill: white;
-                    margin-right: 5px;
-                    height: 14px;
+                span {
+                    padding-left: 4px;
                 }
 
-                img {
-                    margin-right: 5px;
-                    width: 48px;
-                    object-fit: contain;
+                .title-image {
+                    display: flex;
+
+                    svg {
+                        vertical-align: baseline;
+                        fill: white;
+                        height: 16px;
+                    }
+
+                    img {
+                        margin-right: 5px;
+                        width: 48px;
+                        object-fit: contain;
+                    }
                 }
-                span {
+
+                .title-text {
+                    flex-grow: 1;
                     white-space: nowrap;
+                }
+
+                [data-connection-output-id] {
+                    width: 21px;
+                    height: 21px;
                 }
             }
         }
 
-        .body {
+        .inputs-outputs {
             display: flex;
             flex-direction: row;
 
-            .inports,
-            .outports {
+            .inputs,
+            .outputs {
                 padding: 2px;
                 font-size: 90%;
                 flex-grow: 1;
             }
 
-            .inports {
+            .inputs {
                 text-align: left;
             }
 
-            .outports {
+            .outputs {
                 text-align: right;
             }
 
-            .eez-connection-input,
-            .eez-connection-output {
+            [data-connection-input-id],
+            [data-connection-output-id] {
                 border: 1px solid #fffcf7;
                 padding: 2px 5px;
                 margin-bottom: 2px;
@@ -212,37 +225,49 @@ const ComponentEnclosureDiv = styled.div`
                 white-space: nowrap;
             }
 
-            .eez-connection-output {
+            [data-connection-output-id] {
                 text-align: right;
+            }
+        }
+
+        .body {
+            padding: 4px;
+            background-color: white;
+            pre {
+                margin-bottom: 0;
             }
         }
     }
 
     &.eez-widget-component {
-        .body {
+        .inputs-outputs {
+            position: absolute;
+            bottom: -32px;
+            width: 100%;
+
             overflow: hidden;
             display: flex;
             flex-direction: row;
             background-color: #fffcf7;
             border: 1px solid #dfdcd7;
 
-            .inports,
-            .outports {
+            .inputs,
+            .outputs {
                 padding: 2px;
                 font-size: 90%;
                 flex-grow: 1;
             }
 
-            .inports {
+            .inputs {
                 text-align: left;
             }
 
-            .outports {
+            .outputs {
                 text-align: right;
             }
 
-            .eez-connection-input,
-            .eez-connection-output {
+            [data-connection-input-id],
+            [data-connection-output-id] {
                 border: 1px solid #fffcf7;
                 padding: 2px 5px;
                 margin-bottom: 2px;
@@ -250,7 +275,7 @@ const ComponentEnclosureDiv = styled.div`
                 white-space: nowrap;
             }
 
-            .eez-connection-output {
+            [data-connection-output-id] {
                 text-align: right;
             }
         }

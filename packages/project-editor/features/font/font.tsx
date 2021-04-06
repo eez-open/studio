@@ -2536,7 +2536,7 @@ export default {
                     return !getDocumentStore(object).masterProjectEnabled;
                 },
                 toJsHook: (jsObject: Project, project: Project) => {
-                    jsObject.fonts.forEach(font =>
+                    jsObject.fonts?.forEach(font =>
                         font.glyphs.forEach(glyph => {
                             if (
                                 glyph.glyphBitmap &&

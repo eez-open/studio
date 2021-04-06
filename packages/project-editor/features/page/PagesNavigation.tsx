@@ -68,7 +68,6 @@ const FlipCardDiv = styled.div`
 
     .flip-card-front,
     .flip-card-back {
-        display: flex;
         position: absolute;
         width: 100%;
         height: 100%;

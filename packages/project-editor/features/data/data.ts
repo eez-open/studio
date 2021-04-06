@@ -29,7 +29,8 @@ export class DataItem extends EezObject {
         | "boolean"
         | "string"
         | "enum"
-        | "list";
+        | "list"
+        | "struct";
     @observable enumItems: string;
     @observable defaultValue: string;
     @observable defaultValueList: string;
@@ -72,6 +73,9 @@ export class DataItem extends EezObject {
                     },
                     {
                         id: "list"
+                    },
+                    {
+                        id: "struct"
                     }
                 ]
             },

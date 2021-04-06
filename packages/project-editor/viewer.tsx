@@ -11,6 +11,7 @@ import { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
 import { isViewer } from "eez-studio-shared/util-electron";
+import { LineMarkers } from "./flow/flow-editor/ConnectionLineComponent";
 
 configure({ enforceActions: "observed" });
 
@@ -49,6 +50,7 @@ async function main() {
                 <ProjectEditor />
             </ProjectContext.Provider>
             {notification.container}
+            <LineMarkers />
         </ThemeProvider>,
         document.getElementById("EezStudio_Content")
     );

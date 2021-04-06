@@ -282,16 +282,12 @@ class FlowDocument implements IDocument {
             targetObjectId
         ) as Component;
 
-        return !!(
-            sourceObject.wireID &&
-            targetObject.wireID &&
-            flow.connectionLines.find(
-                connectionLine =>
-                    connectionLine.source == sourceObject.wireID &&
-                    connectionLine.output == connectionOutput &&
-                    connectionLine.target == targetObject.wireID &&
-                    connectionLine.input == connectionInput
-            )
+        return !!flow.connectionLines.find(
+            connectionLine =>
+                connectionLine.source == sourceObject.wireID &&
+                connectionLine.output == connectionOutput &&
+                connectionLine.target == targetObject.wireID &&
+                connectionLine.input == connectionInput
         );
     }
 
@@ -309,18 +305,6 @@ class FlowDocument implements IDocument {
         const targetObject = this.DocumentStore.getObjectFromObjectId(
             targetObjectId
         ) as Component;
-
-        if (!sourceObject.wireID) {
-            this.DocumentStore.updateObject(sourceObject, {
-                wireID: guid()
-            });
-        }
-
-        if (!targetObject.wireID) {
-            this.DocumentStore.updateObject(targetObject, {
-                wireID: guid()
-            });
-        }
 
         this.DocumentStore.addObject(flow.connectionLines, {
             source: sourceObject.wireID,
@@ -393,32 +377,31 @@ function CenterLines({ designerContext }: { designerContext: IFlowContext }) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const CanvasDiv = styled.div`
-    cursor: default;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: white;
-    & > * {
-        user-select: none;
-    }
-`;
-
 @observer
 export class Canvas extends React.Component<{
     designerContext: IFlowContext;
-    style?: React.CSSProperties;
     pageRect?: Rect;
     dragAndDropActive: boolean;
     transitionIsActive?: boolean;
 }> {
     div: HTMLDivElement;
+    resizeObserver: ResizeObserver;
     clientRectChangeDetectionAnimationFrameHandle: any;
     deltaY = 0;
 
     dragScrollDispose: (() => void) | undefined;
+
+    buttonsAtDown: number;
+    lastMouseUpPosition: Point;
+    lastMouseUpTime: number | undefined;
+
+    draggable = new Draggable(this);
+
+    constructor(props: any) {
+        super(props);
+
+        this.resizeObserver = new ResizeObserver(this.resizeObserverCallback);
+    }
 
     @observable _mouseHandler: IMouseHandler | undefined;
     get mouseHandler() {
@@ -460,14 +443,7 @@ export class Canvas extends React.Component<{
         }
     }
 
-    buttonsAtDown: number;
-    lastMouseUpPosition: Point;
-    lastMouseUpTime: number | undefined;
-
-    draggable = new Draggable(this);
-
-    @bind
-    clientRectChangeDetection() {
+    resizeObserverCallback = () => {
         this.clientRectChangeDetectionAnimationFrameHandle = undefined;
 
         if ($(this.div).is(":visible") && !this.props.transitionIsActive) {
@@ -487,32 +463,28 @@ export class Canvas extends React.Component<{
                 });
             }
         }
-
-        this.clientRectChangeDetectionAnimationFrameHandle = requestAnimationFrame(
-            this.clientRectChangeDetection
-        );
-    }
+    };
 
     componentDidMount() {
         this.draggable.attach(this.div);
-        this.clientRectChangeDetection();
 
         this.div.addEventListener("wheel", this.onWheel, {
             passive: false
         });
+
+        if (this.div) {
+            this.resizeObserver.observe(this.div);
+        }
     }
 
     componentWillUnmount() {
         this.draggable.attach(null);
 
-        if (this.clientRectChangeDetectionAnimationFrameHandle) {
-            cancelAnimationFrame(
-                this.clientRectChangeDetectionAnimationFrameHandle
-            );
-            this.clientRectChangeDetectionAnimationFrameHandle = undefined;
-        }
-
         this.div.removeEventListener("wheel", this.onWheel);
+
+        if (this.div) {
+            this.resizeObserver.unobserve(this.div);
+        }
     }
 
     @bind
@@ -813,17 +785,10 @@ export class Canvas extends React.Component<{
     }
 
     render() {
-        let style: React.CSSProperties = {
-            position: "absolute",
-            overflow: "hidden",
-            width: "100%",
-            height: "100%"
-        };
+        let style: React.CSSProperties = {};
+
         if (this.mouseHandler) {
             style.cursor = this.mouseHandler.cursor;
-        }
-        if (this.props.style) {
-            Object.assign(style, this.props.style);
         }
 
         this.draggable.cursor = style.cursor;
@@ -845,7 +810,7 @@ export class Canvas extends React.Component<{
         }
 
         return (
-            <CanvasDiv
+            <div
                 ref={(ref: any) => (this.div = ref!)}
                 style={style}
                 onContextMenu={this.onContextMenu}
@@ -878,7 +843,7 @@ export class Canvas extends React.Component<{
                     this.mouseHandler.render(this.props.designerContext)}
 
                 <DragSnapLinesOverlay />
-            </CanvasDiv>
+            </div>
         );
     }
 }
@@ -886,9 +851,37 @@ export class Canvas extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 const FlowEditorCanvasContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    position: relative;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+
+    cursor: default;
+
+    & > * {
+        user-select: none;
+    }
+
+    & > div {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    &:focus {
+        left: 2px;
+        top: 2px;
+        width: calc(100% - 4px);
+        height: calc(100% - 4px);
+
+        & > div {
+            left: 1px;
+            top: 1px;
+            width: calc(100% - 2px);
+            height: calc(100% - 2px);
+        }
+    }
 
     .EezStudio_DesignerSelection_SelectedObject {
         border: 1px solid #333;
@@ -903,7 +896,7 @@ const FlowEditorCanvasContainer = styled.div`
         background-color: rgba(0, 0, 0, 0.6);
     }
 
-    .eez-connection-output:hover {
+    [data-connection-output-id]:hover {
         color: ${props => props.theme.selectionColor};
         background-color: ${props => props.theme.selectionBackgroundColor};
     }
@@ -929,25 +922,19 @@ const FlowEditorCanvasContainer = styled.div`
     }
 `;
 
-const FlowEditorCanvas = styled(Canvas)`
-    position: absolute;
-    width: 100%;
-    height: 100%;
-`;
-
-interface FlowEditorProps {
-    widgetContainer: ITreeObjectAdapter;
-    onFocus?: () => void;
-    transitionIsActive?: boolean;
-    frontFace?: boolean;
-}
-
 @observer
 export class FlowEditor
-    extends React.Component<FlowEditorProps>
+    extends React.Component<{
+        widgetContainer: ITreeObjectAdapter;
+        onFocus?: () => void;
+        transitionIsActive?: boolean;
+        frontFace?: boolean;
+    }>
     implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
+
+    div: HTMLDivElement;
 
     designerContext: DesignerContext = new DesignerContext(
         "eez-flow-editor-" + guid()
@@ -960,7 +947,7 @@ export class FlowEditor
 
     @disposeOnUnmount dispose: IReactionDisposer;
 
-    constructor(props: FlowEditorProps) {
+    constructor(props: any) {
         super(props);
 
         this.updateFlowDocument();
@@ -1195,6 +1182,7 @@ export class FlowEditor
                 if (objectAdapter) {
                     const viewState = this.designerContext.viewState;
                     viewState.selectObjects([objectAdapter]);
+                    this.div.focus();
                 }
             }, 0);
         }
@@ -1276,6 +1264,7 @@ export class FlowEditor
 
     componentWillUnmount() {
         this.designerContext.destroy();
+        this.dispose();
     }
 
     get flow() {
@@ -1285,6 +1274,7 @@ export class FlowEditor
     render() {
         return (
             <FlowEditorCanvasContainer
+                ref={(ref: any) => (this.div = ref!)}
                 id={this.designerContext.containerId}
                 tabIndex={0}
                 onFocus={this.props.onFocus || this.focusHander}
@@ -1293,7 +1283,7 @@ export class FlowEditor
                 onDragLeave={this.onDragLeave}
                 onKeyDown={this.onKeyDown}
             >
-                <FlowEditorCanvas
+                <Canvas
                     designerContext={this.designerContext}
                     dragAndDropActive={!!DragAndDropManager.dragObject}
                     transitionIsActive={this.props.transitionIsActive}
@@ -1321,7 +1311,7 @@ export class FlowEditor
                             />
                         </>
                     )}
-                </FlowEditorCanvas>
+                </Canvas>
             </FlowEditorCanvasContainer>
         );
     }

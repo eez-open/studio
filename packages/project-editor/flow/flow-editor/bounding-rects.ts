@@ -81,7 +81,7 @@ export function getObjectIdFromPoint(
             const id = node.getAttribute("data-designer-object-id");
             if (id && flowDocument.findObjectById(id)) {
                 const connectionInputNode = elementAtPoint.closest(
-                    ".eez-connection-input"
+                    "[data-connection-input-id]"
                 );
                 const connectionInput =
                     (connectionInputNode &&
@@ -91,7 +91,7 @@ export function getObjectIdFromPoint(
                     undefined;
 
                 const connectionOutputNode = elementAtPoint.closest(
-                    ".eez-connection-output"
+                    "[data-connection-output-id]"
                 );
                 const connectionOutput =
                     (connectionOutputNode &&

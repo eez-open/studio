@@ -610,15 +610,13 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
     copySelection() {
         if (this.canCopy()) {
             let objects = this.selectedItems.map(item => item.object);
-            if (objects.length == 1) {
-                copyItem(objects[0]);
-            } else {
-                copyToClipboard(
-                    getDocumentStore(this.object).objectsToClipboardData(
-                        objects
-                    )
-                );
-            }
+            // if (objects.length == 1) {
+            //     copyItem(objects[0]);
+            // } else {
+            copyToClipboard(
+                getDocumentStore(this.object).objectsToClipboardData(objects)
+            );
+            // }
         }
     }
 

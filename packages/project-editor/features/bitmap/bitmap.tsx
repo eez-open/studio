@@ -13,8 +13,6 @@ import {
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
 
@@ -22,6 +20,8 @@ import { getDocumentStore } from "project-editor/core/store";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
+
+import { showGenericDialog } from "project-editor/core/util";
 
 import { ProjectContext } from "project-editor/project/context";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
@@ -169,7 +169,9 @@ export class Bitmap extends EezObject {
             }
         ],
         newItem: (parent: IEezObject) => {
-            return showGenericDialog({
+            const DocumentStore = getDocumentStore(parent);
+
+            return showGenericDialog(DocumentStore, {
                 dialogDefinition: {
                     title: "New Bitmap",
                     fields: [

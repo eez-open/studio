@@ -32,7 +32,6 @@ export const ConnectionLines = observer(
     }) => {
         return (
             <>
-                <defs>{<LineMarkers />}</defs>
                 {connectionLines.map(connectionLineAdapter => (
                     <ConnectionLineShape
                         key={connectionLineAdapter.id}
@@ -133,15 +132,17 @@ const ConnectionLineShape = observer(
     }
 );
 
-const LineMarkers = () => (
-    <>
-        <LineStartMarker id="lineStart" color={lineColor} />
-        <LineEndMarker id="lineEnd" color={lineColor} />
-        <LineStartMarker id="selectedLineStart" color={selectedLineColor} />
-        <LineEndMarker id="selectedLineEnd" color={selectedLineColor} />
-        <LineStartMarker id="activeLineStart" color={activeLineColor} />
-        <LineEndMarker id="activeLineEnd" color={activeLineColor} />
-    </>
+export const LineMarkers = () => (
+    <svg style={{ width: 0, height: 0 }}>
+        <defs>
+            <LineStartMarker id="lineStart" color={lineColor} />
+            <LineEndMarker id="lineEnd" color={lineColor} />
+            <LineStartMarker id="selectedLineStart" color={selectedLineColor} />
+            <LineEndMarker id="selectedLineEnd" color={selectedLineColor} />
+            <LineStartMarker id="activeLineStart" color={activeLineColor} />
+            <LineEndMarker id="activeLineEnd" color={activeLineColor} />
+        </defs>
+    </svg>
 );
 
 function LineStartMarker({ id, color }: { id: string; color: string }) {

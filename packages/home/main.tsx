@@ -11,6 +11,7 @@ import { handleDragAndDrop } from "home/drag-and-drop";
 import { loadTabs, ProjectEditorTab, tabs } from "home/tabs-store";
 
 import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
+import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 
 configure({ enforceActions: "observed" });
 
@@ -112,6 +113,7 @@ async function main() {
         <ThemeProvider theme={theme}>
             <App />
             {notification.container}
+            <LineMarkers />
         </ThemeProvider>,
         document.getElementById("EezStudio_Content")
     );
