@@ -35,6 +35,7 @@ import type {
     IFlowContext,
     IDataContext
 } from "project-editor/flow/flow-interfaces";
+import { overrideDataContextInFlowContext } from "project-editor/flow/flow";
 import {
     ComponentsContainerEnclosure,
     ComponentEnclosure
@@ -137,11 +138,7 @@ export class ContainerWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         const w = this.width;
         const h = this.height;
         const style = this.style;
@@ -183,21 +180,18 @@ export class ContainerWidget extends EmbeddedWidget {
         }
     };
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
+    render(flowContext: IFlowContext) {
         return (
             <ComponentsContainerEnclosure
                 components={this.widgets}
-                designerContext={designerContext}
-                dataContext={dataContext}
+                flowContext={flowContext}
             />
         );
     }
 
-    styleHook(
-        style: React.CSSProperties,
-        designerContext: IFlowContext | undefined
-    ) {
-        super.styleHook(style, designerContext);
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        super.styleHook(style, flowContext);
+
         if (this.overlay) {
             if (this.shadow) {
                 style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
@@ -285,13 +279,15 @@ export class ListWidget extends EmbeddedWidget {
         }
     });
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
+    render(flowContext: IFlowContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
         }
 
-        const dataValue = this.data ? dataContext.get(this.data) : 0;
+        const dataValue = this.data
+            ? flowContext.dataContext.get(this.data)
+            : 0;
 
         if (!dataValue || !Array.isArray(dataValue)) {
             return null;
@@ -313,8 +309,10 @@ export class ListWidget extends EmbeddedWidget {
                 <ComponentEnclosure
                     key={i}
                     component={itemWidget}
-                    designerContext={designerContext}
-                    dataContext={dataContext.create(dataValue[i])}
+                    flowContext={overrideDataContextInFlowContext(
+                        flowContext,
+                        dataValue[i]
+                    )}
                     left={xListItem}
                     top={yListItem}
                 />
@@ -394,13 +392,15 @@ export class GridWidget extends EmbeddedWidget {
         }
     });
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
+    render(flowContext: IFlowContext) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
         }
 
-        const dataValue = this.data ? dataContext.get(this.data) : 0;
+        const dataValue = this.data
+            ? flowContext.dataContext.get(this.data)
+            : 0;
 
         if (!dataValue || !Array.isArray(dataValue)) {
             return null;
@@ -433,8 +433,10 @@ export class GridWidget extends EmbeddedWidget {
                 <ComponentEnclosure
                     key={i}
                     component={itemWidget}
-                    designerContext={designerContext}
-                    dataContext={dataContext.create(dataValue[i])}
+                    flowContext={overrideDataContextInFlowContext(
+                        flowContext,
+                        dataValue[i]
+                    )}
                     left={xListItem}
                     top={yListItem}
                 />
@@ -618,59 +620,42 @@ export class SelectWidget extends EmbeddedWidget {
         return undefined;
     }
 
-    getSelectedIndex(
-        dataContext: IDataContext,
-        designerContext?: IFlowContext
-    ) {
-        if (designerContext) {
-            const selectedObjects = designerContext.viewState.selectedObjects;
+    getSelectedIndex(flowContext: IFlowContext) {
+        const selectedObjects = flowContext.viewState.selectedObjects;
 
-            for (let i = 0; i < this.widgets.length; ++i) {
-                if (
-                    selectedObjects.find(selectedObject =>
-                        isAncestor(selectedObject.object, this.widgets[i])
-                    )
-                ) {
-                    this._lastSelectedIndexInSelectWidget = i;
-                    return i;
-                }
-            }
-
+        for (let i = 0; i < this.widgets.length; ++i) {
             if (
-                this._lastSelectedIndexInSelectWidget !== undefined &&
-                this._lastSelectedIndexInSelectWidget < this.widgets.length
+                selectedObjects.find(selectedObject =>
+                    isAncestor(selectedObject.object, this.widgets[i])
+                )
             ) {
-                return this._lastSelectedIndexInSelectWidget;
+                this._lastSelectedIndexInSelectWidget = i;
+                return i;
             }
+        }
 
-            const selectedWidget = this.getSelectedWidget(dataContext);
-            if (selectedWidget) {
-                return this.widgets.indexOf(selectedWidget);
-            }
+        if (
+            this._lastSelectedIndexInSelectWidget !== undefined &&
+            this._lastSelectedIndexInSelectWidget < this.widgets.length
+        ) {
+            return this._lastSelectedIndexInSelectWidget;
+        }
 
-            if (this.widgets.length > 0) {
-                this._lastSelectedIndexInSelectWidget = 0;
-                return this._lastSelectedIndexInSelectWidget;
-            }
-        } else {
-            if (
-                this._lastSelectedIndexInSelectWidget !== undefined &&
-                this._lastSelectedIndexInSelectWidget < this.widgets.length
-            ) {
-                return this._lastSelectedIndexInSelectWidget;
-            }
+        const selectedWidget = this.getSelectedWidget(flowContext.dataContext);
+        if (selectedWidget) {
+            return this.widgets.indexOf(selectedWidget);
+        }
 
-            const selectedWidget = this.getSelectedWidget(dataContext);
-            if (selectedWidget) {
-                return this.widgets.indexOf(selectedWidget);
-            }
+        if (this.widgets.length > 0) {
+            this._lastSelectedIndexInSelectWidget = 0;
+            return this._lastSelectedIndexInSelectWidget;
         }
 
         return -1;
     }
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
-        const index = this.getSelectedIndex(dataContext, designerContext);
+    render(flowContext: IFlowContext) {
+        const index = this.getSelectedIndex(flowContext);
         if (index === -1) {
             return null;
         }
@@ -680,8 +665,7 @@ export class SelectWidget extends EmbeddedWidget {
         return (
             <ComponentsContainerEnclosure
                 components={[selectedWidget]}
-                designerContext={designerContext}
-                dataContext={dataContext}
+                flowContext={flowContext}
             />
         );
     }
@@ -918,11 +902,8 @@ export class LayoutViewWidget extends EmbeddedWidget {
         LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = undefined;
     }
 
-    render(
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ): React.ReactNode {
-        const layoutPage = this.getLayoutPage(dataContext);
+    render(flowContext: IFlowContext): React.ReactNode {
+        const layoutPage = this.getLayoutPage(flowContext.dataContext);
         if (!layoutPage) {
             return null;
         }
@@ -942,8 +923,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
         const element = (
             <ComponentEnclosure
                 component={layoutPage}
-                designerContext={designerContext}
-                dataContext={dataContext}
+                flowContext={flowContext}
             />
         );
 
@@ -952,7 +932,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
         return (
             <>
                 {element}
-                {super.render(designerContext, dataContext)}
+                {super.render(flowContext)}
             </>
         );
     }
@@ -1091,12 +1071,10 @@ export class DisplayDataWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
-        let text = (this.data && (dataContext.get(this.data) as string)) || "";
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
+        let text =
+            (this.data && (flowContext.dataContext.get(this.data) as string)) ||
+            "";
 
         function findStartOfFraction() {
             let i;
@@ -1220,11 +1198,7 @@ export class TextWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let text = "";
         if (this.text) {
             text = this.text;
@@ -1239,7 +1213,7 @@ export class TextWidget extends EmbeddedWidget {
                 }
             } else {
                 if (this.data) {
-                    text = dataContext.get(this.data) as string;
+                    text = flowContext.dataContext.get(this.data) as string;
                 }
             }
         }
@@ -1558,15 +1532,11 @@ export class MultilineTextWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let text = this.text
             ? this.text
             : this.data
-            ? (dataContext.get(this.data) as string)
+            ? (flowContext.dataContext.get(this.data) as string)
             : "";
 
         const w = this.width;
@@ -1641,11 +1611,7 @@ export class RectangleWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         const w = this.width;
         const h = this.height;
         const style = this.style;
@@ -1824,16 +1790,12 @@ export class BitmapWidget extends EmbeddedWidget {
             : undefined;
     }
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         const w = this.width;
         const h = this.height;
         const style = this.style;
 
-        const bitmap = this.getBitmapObject(dataContext);
+        const bitmap = this.getBitmapObject(flowContext.dataContext);
 
         const inverse = false;
 
@@ -1939,17 +1901,13 @@ export class ButtonWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
-        let text = this.data && dataContext.get(this.data);
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
+        let text = this.data && flowContext.dataContext.get(this.data);
         if (!text) {
             text = this.text;
         }
         let style =
-            this.enabled && dataContext.getBool(this.enabled)
+            this.enabled && flowContext.dataContext.getBool(this.enabled)
                 ? this.style
                 : this.disabledStyle;
         drawText(ctx, text, 0, 0, this.width, this.height, style, false);
@@ -2010,11 +1968,7 @@ export class ToggleButtonWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         drawText(
             ctx,
             this.text1 || "",
@@ -2058,14 +2012,12 @@ export class ButtonGroupWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let buttonLabels =
-            (this.data && dataContext.getValueList(this.data)) || [];
-        let selectedButton = (this.data && dataContext.get(this.data)) || 0;
+            (this.data && flowContext.dataContext.getValueList(this.data)) ||
+            [];
+        let selectedButton =
+            (this.data && flowContext.dataContext.get(this.data)) || 0;
 
         let x = 0;
         let y = 0;
@@ -2238,22 +2190,21 @@ export class BarGraphWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let barGraphWidget = this;
         let style = barGraphWidget.style;
 
         let min =
-            (barGraphWidget.data && dataContext.getMin(barGraphWidget.data)) ||
+            (barGraphWidget.data &&
+                flowContext.dataContext.getMin(barGraphWidget.data)) ||
             0;
         let max =
-            (barGraphWidget.data && dataContext.getMax(barGraphWidget.data)) ||
+            (barGraphWidget.data &&
+                flowContext.dataContext.getMax(barGraphWidget.data)) ||
             0;
         let valueText =
-            (barGraphWidget.data && dataContext.get(barGraphWidget.data)) ||
+            (barGraphWidget.data &&
+                flowContext.dataContext.get(barGraphWidget.data)) ||
             "0";
         let value = parseFloat(valueText);
         if (isNaN(value)) {
@@ -2348,7 +2299,9 @@ export class BarGraphWidget extends EmbeddedWidget {
 
         function drawLine(lineData: string | undefined, lineStyle: Style) {
             let value =
-                (lineData && parseFloat(dataContext.get(lineData))) || 0;
+                (lineData &&
+                    parseFloat(flowContext.dataContext.get(lineData))) ||
+                0;
             if (isNaN(value)) {
                 value = 0;
             }
@@ -2441,11 +2394,7 @@ export class YTGraphWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let ytGraphWidget = this;
         let style = ytGraphWidget.style;
 
@@ -2539,11 +2488,7 @@ export class UpDownWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let upDownWidget = this;
         let style = upDownWidget.style;
         let buttonsStyle = upDownWidget.buttonsStyle;
@@ -2565,7 +2510,7 @@ export class UpDownWidget extends EmbeddedWidget {
         );
 
         let text = upDownWidget.data
-            ? (dataContext.get(upDownWidget.data) as string)
+            ? (flowContext.dataContext.get(upDownWidget.data) as string)
             : "";
         drawText(
             ctx,
@@ -2687,11 +2632,7 @@ export class ListGraphWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let listGraphWidget = this;
         let style = listGraphWidget.style;
 
@@ -2759,12 +2700,12 @@ export class AppViewWidget extends EmbeddedWidget {
         }
     });
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
+    render(flowContext: IFlowContext) {
         if (!this.data) {
             return null;
         }
 
-        const pageName = dataContext.get(this.data);
+        const pageName = flowContext.dataContext.get(this.data);
         if (!pageName) {
             return null;
         }
@@ -2774,7 +2715,7 @@ export class AppViewWidget extends EmbeddedWidget {
             return null;
         }
 
-        return page.render(designerContext, dataContext);
+        return page.render(flowContext);
     }
 }
 
@@ -2830,11 +2771,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let widget = this;
 
         const buttonsFont = styleGetFont(widget.buttonsStyle);
@@ -2881,7 +2818,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
 
         // draw thumb
         const [size, position, pageSize] = (widget.data &&
-            dataContext.get(widget.data)) || [100, 25, 20];
+            flowContext.dataContext.get(widget.data)) || [100, 25, 20];
 
         let xThumb;
         let widthThumb;
@@ -2946,11 +2883,7 @@ export class ProgressWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Progress.png"
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let widget = this;
 
         let isHorizontal = this.width > this.height;
@@ -2959,7 +2892,8 @@ export class ProgressWidget extends EmbeddedWidget {
         draw.fillRect(ctx, 0, 0, this.width - 1, this.height - 1, 0);
 
         // draw thumb
-        const percent = (widget.data && dataContext.get(widget.data)) || 25;
+        const percent =
+            (widget.data && flowContext.dataContext.get(widget.data)) || 25;
         draw.setColor(this.style.colorProperty);
         if (isHorizontal) {
             draw.fillRect(
@@ -3009,11 +2943,7 @@ export class CanvasWidget extends EmbeddedWidget {
         }
     });
 
-    draw = (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => {
+    draw = (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => {
         let widget = this;
         let style = widget.style;
 

@@ -43,7 +43,7 @@ class ViewState implements IViewState {
     persistentStateReactionDisposer: IReactionDisposer;
 
     constructor(
-        public designerContext: DesignerContext,
+        public flowContext: EditorFlowContext,
         public containerId: string
     ) {}
 
@@ -168,8 +168,8 @@ class ViewState implements IViewState {
     }
 
     @computed get selectedObjects(): ITreeObjectAdapter[] {
-        return this.designerContext.dragComponent
-            ? [new TreeObjectAdapter(this.designerContext.dragComponent)]
+        return this.flowContext.dragComponent
+            ? [new TreeObjectAdapter(this.flowContext.dragComponent)]
             : this.document?.flow.selectedItems ?? [];
     }
 
@@ -300,7 +300,7 @@ class ViewState implements IViewState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DesignerContext implements IFlowContext {
+export class EditorFlowContext implements IFlowContext {
     @observable document: IDocument;
     viewState: ViewState;
     @observable editorOptions: IEditorOptions = {};
@@ -309,6 +309,10 @@ export class DesignerContext implements IFlowContext {
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this, this.containerId);
+    }
+
+    get dataContext() {
+        return this.document.DocumentStore.dataContext;
     }
 
     @action

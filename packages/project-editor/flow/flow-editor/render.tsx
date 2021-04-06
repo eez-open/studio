@@ -8,10 +8,7 @@ import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { getId } from "project-editor/core/object";
 
-import type {
-    IFlowContext,
-    IDataContext
-} from "project-editor/flow/flow-interfaces";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import { Page } from "project-editor/features/page/page";
 import { Component } from "project-editor/flow/component";
@@ -19,12 +16,12 @@ import { Component } from "project-editor/flow/component";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Svg: React.FunctionComponent<{
-    designerContext: IFlowContext;
+    flowContext: IFlowContext;
     defs?: JSX.Element | null;
     className?: string;
     style?: React.CSSProperties;
-}> = observer(({ designerContext, defs, className, style, children }) => {
-    const transform = designerContext.viewState.transform;
+}> = observer(({ flowContext, defs, className, style, children }) => {
+    const transform = flowContext.viewState.transform;
     let svgRect;
     let gTransform;
     if (transform) {
@@ -69,9 +66,9 @@ export interface ComponentGeometry {
 function calcComponentGeometry(
     component: Component | Page,
     el: HTMLElement,
-    designerContext: IFlowContext
+    flowContext: IFlowContext
 ): ComponentGeometry {
-    const transform = designerContext.viewState.transform;
+    const transform = flowContext.viewState.transform;
 
     const rect = transform.clientToPageRect(el.getBoundingClientRect());
 
@@ -285,14 +282,12 @@ const ComponentEnclosureDiv = styled.div`
 export const ComponentEnclosure = observer(
     ({
         component,
-        designerContext,
-        dataContext,
+        flowContext,
         left,
         top
     }: {
         component: Component | Page;
-        designerContext: IFlowContext;
-        dataContext: IDataContext;
+        flowContext: IFlowContext;
         left?: number;
         top?: number;
     }) => {
@@ -304,7 +299,7 @@ export const ComponentEnclosure = observer(
                 const geometry = calcComponentGeometry(
                     component,
                     el,
-                    designerContext
+                    flowContext
                 );
                 runInAction(() => {
                     component._geometry = geometry;
@@ -322,9 +317,7 @@ export const ComponentEnclosure = observer(
             style.height = component.height;
         }
 
-        const dataDesignerObjectId = designerContext
-            ? getId(component)
-            : undefined;
+        const dataFlowObjectId = getId(component);
 
         const refDiv = React.useRef<HTMLDivElement>(null);
 
@@ -351,11 +344,7 @@ export const ComponentEnclosure = observer(
             canvas.height = component.height;
             canvas.style.imageRendering = "pixelated";
             canvas.style.display = "block";
-            component.draw!(
-                canvas.getContext("2d")!,
-                designerContext,
-                dataContext
-            );
+            component.draw!(canvas.getContext("2d")!, flowContext);
 
             canvasDiv = (
                 <div
@@ -366,17 +355,17 @@ export const ComponentEnclosure = observer(
         }
 
         style.overflow = "visible";
-        component.styleHook(style, designerContext);
+        component.styleHook(style, flowContext);
 
         const className = component.getClassName();
 
         return (
             <ComponentEnclosureDiv
-                data-designer-object-id={dataDesignerObjectId}
+                data-eez-flow-object-id={dataFlowObjectId}
                 ref={elRef}
                 className={classNames(className, {
                     "eez-flow-editor-capture-pointers":
-                        designerContext.document.DocumentStore.RuntimeStore
+                        flowContext.document.DocumentStore.RuntimeStore
                             .isRuntimeMode
                 })}
                 style={style}
@@ -387,7 +376,7 @@ export const ComponentEnclosure = observer(
                 }
             >
                 {canvasDiv}
-                {component.render(designerContext, dataContext)}
+                {component.render(flowContext)}
             </ComponentEnclosureDiv>
         );
     }
@@ -398,12 +387,10 @@ export const ComponentEnclosure = observer(
 export const ComponentsContainerEnclosure = observer(
     ({
         components,
-        designerContext,
-        dataContext
+        flowContext
     }: {
         components: Component[];
-        designerContext: IFlowContext;
-        dataContext: IDataContext;
+        flowContext: IFlowContext;
     }) => {
         return (
             <>
@@ -412,8 +399,7 @@ export const ComponentsContainerEnclosure = observer(
                         <ComponentEnclosure
                             key={getId(component)}
                             component={component}
-                            designerContext={designerContext}
-                            dataContext={dataContext}
+                            flowContext={flowContext}
                         />
                     );
                 })}

@@ -320,7 +320,7 @@ export abstract class Flow extends EezObject {
 
     abstract get pageRect(): Rect;
 
-    abstract renderComponents(designerContext: IFlowContext): React.ReactNode;
+    abstract renderComponents(flowContext: IFlowContext): React.ReactNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -440,4 +440,15 @@ export class FlowTabState implements IEditorState {
             }
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function overrideDataContextInFlowContext(
+    flowContext: IFlowContext,
+    dataContextOverridesObject: any
+): IFlowContext {
+    return Object.assign({}, flowContext, {
+        dataContext: flowContext.dataContext.create(dataContextOverridesObject)
+    });
 }

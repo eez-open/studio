@@ -417,12 +417,11 @@ export class Action extends Flow {
         return { left: 0, top: 0, width: 0, height: 0 };
     }
 
-    renderComponents(designerContext: IFlowContext) {
+    renderComponents(flowContext: IFlowContext) {
         return (
             <ComponentsContainerEnclosure
                 components={this.components}
-                designerContext={designerContext}
-                dataContext={designerContext.document.DocumentStore.dataContext}
+                flowContext={flowContext}
             />
         );
     }

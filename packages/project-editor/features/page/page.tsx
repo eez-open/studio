@@ -23,8 +23,7 @@ import * as output from "project-editor/core/output";
 
 import type {
     IResizeHandler,
-    IFlowContext,
-    IDataContext
+    IFlowContext
 } from "project-editor/flow/flow-interfaces";
 import {
     ComponentsContainerEnclosure,
@@ -48,7 +47,10 @@ import {
     PageTabState
 } from "project-editor/features/page/PagesNavigation";
 import { Rect } from "eez-studio-shared/geometry";
-import { Flow } from "project-editor/flow/flow";
+import {
+    Flow,
+    overrideDataContextInFlowContext
+} from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
 import { build } from "project-editor/features/page/build";
 
@@ -373,40 +375,34 @@ export class Page extends Flow {
         };
     }
 
-    renderComponents(designerContext: IFlowContext) {
+    renderComponents(flowContext: IFlowContext) {
         return (
             <>
                 <ComponentEnclosure
                     component={this}
-                    dataContext={
-                        designerContext.document.DocumentStore.dataContext
-                    }
-                    designerContext={designerContext}
+                    flowContext={flowContext}
                 />
 
-                {!designerContext.frontFace && (
+                {!flowContext.frontFace && (
                     <ComponentsContainerEnclosure
                         components={this.components.filter(
                             component => !(component instanceof Widget)
                         )}
-                        designerContext={designerContext}
-                        dataContext={
-                            designerContext.document.DocumentStore.dataContext
-                        }
+                        flowContext={flowContext}
                     />
                 )}
             </>
         );
     }
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
+    render(flowContext: IFlowContext) {
         return (
             <ComponentsContainerEnclosure
                 components={this.components.filter(
                     component => component instanceof Widget
                 )}
-                designerContext={designerContext}
-                dataContext={dataContext.create(
+                flowContext={overrideDataContextInFlowContext(
+                    flowContext,
                     this.dataContextOverridesObject
                 )}
             />
@@ -417,10 +413,7 @@ export class Page extends Flow {
         return "";
     }
 
-    styleHook(
-        style: React.CSSProperties,
-        designerContext: IFlowContext | undefined
-    ) {
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         const pageStyle = findStyle(getProject(this), this.style || "default");
         if (pageStyle && pageStyle.backgroundColorProperty) {
             style.backgroundColor = to16bitsColor(
@@ -431,7 +424,7 @@ export class Page extends Flow {
             );
         }
 
-        if (!designerContext?.document.findObjectById(getId(this))) {
+        if (!flowContext.document.findObjectById(getId(this))) {
             // this is layout widget page,
             // forbid interaction with the content
             style.pointerEvents = "none";

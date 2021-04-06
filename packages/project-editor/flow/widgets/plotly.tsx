@@ -9,10 +9,7 @@ import {
 } from "project-editor/core/object";
 
 import { InputPropertyValue, Widget } from "project-editor/flow/component";
-import {
-    IDataContext,
-    IFlowContext
-} from "project-editor/flow/flow-interfaces";
+import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
 import * as PlotlyModule from "plotly.js";
@@ -200,12 +197,10 @@ function removeChart(el: HTMLElement) {
 const LineChartElement = observer(
     ({
         widget,
-        designerContext,
-        dataContext
+        flowContext
     }: {
         widget: LineChartWidget;
-        designerContext: IFlowContext;
-        dataContext: IDataContext;
+        flowContext: IFlowContext;
     }) => {
         const ref = React.useRef<HTMLDivElement>(null);
         const [plotly, setPlotly] = React.useState<
@@ -215,13 +210,13 @@ const LineChartElement = observer(
         function getData(): PlotlyModule.Data[] {
             return [
                 {
-                    x: designerContext.document.DocumentStore.RuntimeStore
+                    x: flowContext.document.DocumentStore.RuntimeStore
                         .isRuntimeMode
                         ? widget._values.map(
                               inputPropertyValue => inputPropertyValue.date
                           )
                         : [1, 2, 3, 4],
-                    y: designerContext.document.DocumentStore.RuntimeStore
+                    y: flowContext.document.DocumentStore.RuntimeStore
                         .isRuntimeMode
                         ? widget._values.map(
                               inputPropertyValue => inputPropertyValue.value
@@ -339,7 +334,7 @@ const LineChartElement = observer(
                 }}
                 className={classNames({
                     interactive:
-                        designerContext.document.DocumentStore.RuntimeStore
+                        flowContext.document.DocumentStore.RuntimeStore
                             .isRuntimeMode
                 })}
             ></PlotlyDiv>
@@ -436,18 +431,11 @@ export class LineChartWidget extends Widget {
         this._disposeReaction();
     }
 
-    render(
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ): React.ReactNode {
+    render(flowContext: IFlowContext): React.ReactNode {
         return (
             <>
-                <LineChartElement
-                    widget={this}
-                    designerContext={designerContext}
-                    dataContext={dataContext}
-                />
-                {super.render(designerContext, dataContext)}
+                <LineChartElement widget={this} flowContext={flowContext} />
+                {super.render(flowContext)}
             </>
         );
     }
@@ -460,12 +448,10 @@ registerClass(LineChartWidget);
 const GaugeElement = observer(
     ({
         widget,
-        designerContext,
-        dataContext
+        flowContext
     }: {
         widget: GaugeWidget;
-        designerContext: IFlowContext;
-        dataContext: IDataContext;
+        flowContext: IFlowContext;
     }) => {
         const ref = React.useRef<HTMLDivElement>(null);
         const [plotly, setPlotly] = React.useState<
@@ -591,7 +577,7 @@ const GaugeElement = observer(
                 }}
                 className={classNames({
                     interactive:
-                        designerContext.document.DocumentStore.RuntimeStore
+                        flowContext.document.DocumentStore.RuntimeStore
                             .isRuntimeMode
                 })}
             ></PlotlyDiv>
@@ -661,18 +647,11 @@ export class GaugeWidget extends Widget {
     @observable color: string;
     @observable margin: RectObject;
 
-    render(
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ): React.ReactNode {
+    render(flowContext: IFlowContext): React.ReactNode {
         return (
             <>
-                <GaugeElement
-                    widget={this}
-                    designerContext={designerContext}
-                    dataContext={dataContext}
-                />
-                {super.render(designerContext, dataContext)}
+                <GaugeElement widget={this} flowContext={flowContext} />
+                {super.render(flowContext)}
             </>
         );
     }

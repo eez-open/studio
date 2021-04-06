@@ -21,7 +21,7 @@ import type {
     IFlowContext
 } from "project-editor/flow/flow-interfaces";
 import { ITransform } from "project-editor/flow/flow-editor/transform";
-import { DesignerContext } from "project-editor/flow/flow-runtime/context";
+import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
 
 import { isObjectInstanceOf } from "project-editor/core/object";
 import { IPanel, getDocumentStore } from "project-editor/core/store";
@@ -41,7 +41,7 @@ import { Selection } from "project-editor/flow/flow-runtime/selection";
 class FlowDocument implements IDocument {
     constructor(
         public flow: ITreeObjectAdapter,
-        private designerContext: DesignerContext
+        private flowContext: RuntimeFlowContext
     ) {}
 
     @computed get connectionLines(): ITreeObjectAdapter[] {
@@ -52,14 +52,14 @@ class FlowDocument implements IDocument {
 
     @computed get selectedConnectionLines() {
         return this.connectionLines.filter(connectionLine =>
-            this.designerContext.viewState.isObjectIdSelected(connectionLine.id)
+            this.flowContext.viewState.isObjectIdSelected(connectionLine.id)
         );
     }
 
     @computed get nonSelectedConnectionLines() {
         return this.connectionLines.filter(
             connectionLine =>
-                !this.designerContext.viewState.isObjectIdSelected(
+                !this.flowContext.viewState.isObjectIdSelected(
                     connectionLine.id
                 )
         );
@@ -124,21 +124,21 @@ class FlowDocument implements IDocument {
 }
 
 const AllConnectionLines = observer(
-    ({ designerContext }: { designerContext: DesignerContext }) => {
+    ({ flowContext }: { flowContext: IFlowContext }) => {
         return (
-            <Svg designerContext={designerContext}>
+            <Svg flowContext={flowContext}>
                 <ConnectionLines
                     connectionLines={
-                        designerContext.document.nonSelectedConnectionLines
+                        flowContext.document.nonSelectedConnectionLines
                     }
-                    context={designerContext}
+                    context={flowContext}
                     selected={false}
                 />
                 <ConnectionLines
                     connectionLines={
-                        designerContext.document.selectedConnectionLines
+                        flowContext.document.selectedConnectionLines
                     }
-                    context={designerContext}
+                    context={flowContext}
                     selected={true}
                 />
             </Svg>
@@ -150,7 +150,7 @@ const AllConnectionLines = observer(
 
 @observer
 export class Canvas extends React.Component<{
-    designerContext: IFlowContext;
+    flowContext: IFlowContext;
     pageRect?: Rect;
     dragAndDropActive: boolean;
     transitionIsActive?: boolean;
@@ -171,7 +171,7 @@ export class Canvas extends React.Component<{
 
     resizeObserverCallback = () => {
         if ($(this.div).is(":visible") && !this.props.transitionIsActive) {
-            const transform = this.props.designerContext.viewState.transform;
+            const transform = this.props.flowContext.viewState.transform;
 
             let clientRect = this.div.getBoundingClientRect();
             if (
@@ -214,7 +214,7 @@ export class Canvas extends React.Component<{
             return;
         }
 
-        const transform = this.props.designerContext.viewState.transform.clone();
+        const transform = this.props.flowContext.viewState.transform.clone();
 
         if (event.ctrlKey) {
             this.deltaY += event.deltaY;
@@ -243,7 +243,7 @@ export class Canvas extends React.Component<{
                 transform.translate = { x: tx, y: ty };
 
                 runInAction(() => {
-                    this.props.designerContext.viewState.transform = transform;
+                    this.props.flowContext.viewState.transform = transform;
                 });
             }
         } else {
@@ -257,7 +257,7 @@ export class Canvas extends React.Component<{
             };
 
             runInAction(() => {
-                this.props.designerContext.viewState.transform = transform;
+                this.props.flowContext.viewState.transform = transform;
             });
         }
 
@@ -273,7 +273,7 @@ export class Canvas extends React.Component<{
     render() {
         let style: React.CSSProperties = {};
 
-        const transform = this.props.designerContext.viewState.transform;
+        const transform = this.props.flowContext.viewState.transform;
 
         const xt = Math.round(
             transform.translate.x + transform.clientRect.width / 2
@@ -308,7 +308,7 @@ export class Canvas extends React.Component<{
                     {this.props.children}
                 </div>
                 <Selection
-                    context={this.props.designerContext}
+                    context={this.props.flowContext}
                     mouseHandler={undefined}
                 />
             </div>
@@ -351,16 +351,16 @@ const FlowViewerCanvasContainer = styled.div`
         }
     }
 
-    .EezStudio_DesignerSelection_SelectedObject {
+    .EezStudio_FlowRuntimeSelection_SelectedObject {
         border: 1px solid #333;
     }
 
-    .EezStudio_DesignerSelection_BoundingRect {
+    .EezStudio_FlowRuntimeSelection_BoundingRect {
         border: 2px solid black;
         background-color: rgba(255, 255, 255, 0.3);
     }
 
-    .EezStudio_DesignerSelection_ResizeHandle {
+    .EezStudio_FlowRuntimeSelection_ResizeHandle {
         background-color: rgba(0, 0, 0, 0.6);
     }
 
@@ -407,7 +407,7 @@ export class FlowViewer
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    designerContext: DesignerContext = new DesignerContext(
+    flowContext: RuntimeFlowContext = new RuntimeFlowContext(
         "eez-flow-editor-" + guid()
     );
     currentWidgetContainer?: ITreeObjectAdapter;
@@ -428,14 +428,14 @@ export class FlowViewer
 
             this.flowDocument = new FlowDocument(
                 this.props.widgetContainer,
-                this.designerContext
+                this.flowContext
             );
         }
     }
 
     componentDidMount() {
         this.dispose = autorun(() => {
-            this.designerContext.set(
+            this.flowContext.set(
                 this.flowDocument,
                 this.viewStatePersistantState,
                 this.onSavePersistantState,
@@ -510,7 +510,7 @@ export class FlowViewer
 
     @bind
     onSavePersistantState(viewState: IViewStatePersistantState) {
-        if (!this.designerContext.dragComponent) {
+        if (!this.flowContext.dragComponent) {
             this.savedViewState = viewState;
 
             const uiState = this.context.UIStateStore.getObjectUIState(
@@ -556,13 +556,13 @@ export class FlowViewer
     onKeyDown(event: React.KeyboardEvent) {
         if (event.keyCode == 27) {
             // esc
-            this.designerContext.viewState.deselectAllObjects();
+            this.flowContext.viewState.deselectAllObjects();
         }
     }
 
     @bind
     onDoubleClick() {
-        this.designerContext.viewState.resetTransform();
+        this.flowContext.viewState.resetTransform();
     }
 
     static getDerivedStateFromError(error: any) {
@@ -574,7 +574,7 @@ export class FlowViewer
     }
 
     componentWillUnmount() {
-        this.designerContext.destroy();
+        this.flowContext.destroy();
         this.dispose();
     }
 
@@ -585,32 +585,32 @@ export class FlowViewer
     render() {
         return (
             <FlowViewerCanvasContainer
-                id={this.designerContext.containerId}
+                id={this.flowContext.containerId}
                 tabIndex={0}
                 onFocus={this.props.onFocus || this.focusHander}
                 onKeyDown={this.onKeyDown}
                 onDoubleClick={this.onDoubleClick}
             >
                 <Canvas
-                    designerContext={this.designerContext}
+                    flowContext={this.flowContext}
                     dragAndDropActive={!!DragAndDropManager.dragObject}
                     transitionIsActive={this.props.transitionIsActive}
                 >
-                    {this.designerContext.document && (
+                    {this.flowContext.document && (
                         <>
                             <div
                                 style={{
                                     position: "absolute"
                                 }}
                             >
-                                {(this.designerContext.document.flow
+                                {(this.flowContext.document.flow
                                     .object as Flow).renderComponents(
-                                    this.designerContext
+                                    this.flowContext
                                 )}
                             </div>
                             {!this.props.frontFace && (
                                 <AllConnectionLines
-                                    designerContext={this.designerContext}
+                                    flowContext={this.flowContext}
                                 />
                             )}
                         </>

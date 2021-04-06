@@ -217,7 +217,7 @@ export class RunningFlow {
         );
 
         try {
-            const output = await actionComponent.execute(this, input);
+            const output = await actionComponent.execute(this);
             if (output) {
                 this.executeWire(actionComponent, output);
                 return;

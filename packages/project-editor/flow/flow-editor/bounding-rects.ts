@@ -76,9 +76,9 @@ export function getObjectIdFromPoint(
     }
 
     if (elementAtPoint) {
-        let node = elementAtPoint.closest("[data-designer-object-id]");
+        let node = elementAtPoint.closest("[data-eez-flow-object-id]");
         if (node) {
-            const id = node.getAttribute("data-designer-object-id");
+            const id = node.getAttribute("data-eez-flow-object-id");
             if (id && flowDocument.findObjectById(id)) {
                 const connectionInputNode = elementAtPoint.closest(
                     "[data-connection-input-id]"
@@ -115,9 +115,9 @@ export function getObjectIdFromPoint(
 export function getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
     const ids: string[] = [];
     const container = document.getElementById(viewState.containerId);
-    const blocks = container!.querySelectorAll("[data-designer-object-id]");
+    const blocks = container!.querySelectorAll("[data-eez-flow-object-id]");
     blocks.forEach(node => {
-        const id = node.getAttribute("data-designer-object-id");
+        const id = node.getAttribute("data-eez-flow-object-id");
         if (id) {
             const boundingClientRect = node.getBoundingClientRect();
             const pageRect = viewState.transform.clientToPageRect(

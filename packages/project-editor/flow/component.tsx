@@ -45,8 +45,7 @@ import { checkObjectReference, getFlow } from "project-editor/project/project";
 
 import type {
     IResizeHandler,
-    IFlowContext,
-    IDataContext
+    IFlowContext
 } from "project-editor/flow/flow-interfaces";
 import { ComponentGeometry } from "project-editor/flow/flow-editor/render";
 import {
@@ -608,16 +607,9 @@ export class Component extends EezObject {
         return true;
     }
 
-    draw?: (
-        ctx: CanvasRenderingContext2D,
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ) => void;
+    draw?: (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => void;
 
-    render(
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ): React.ReactNode {
+    render(flowContext: IFlowContext): React.ReactNode {
         return null;
     }
 
@@ -627,10 +619,7 @@ export class Component extends EezObject {
 
     onClick?: () => void = undefined;
 
-    styleHook(
-        style: React.CSSProperties,
-        designerContext: IFlowContext | undefined
-    ) {}
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
 
     onStart(runningFlow: RunningFlow) {}
     onEnd(runningFlow: RunningFlow) {}
@@ -1067,15 +1056,12 @@ export class Widget extends Component {
         return "eez-widget-component";
     }
 
-    render(
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ): React.ReactNode {
-        if (designerContext.frontFace) {
+    render(flowContext: IFlowContext): React.ReactNode {
+        if (flowContext.frontFace) {
             return null;
         }
 
-        if (designerContext.document.flow.object !== getFlow(this)) {
+        if (flowContext.document.flow.object !== getFlow(this)) {
             return null;
         }
 
@@ -1139,7 +1125,7 @@ export class EmbeddedWidget extends Widget {
 
     styleHook(
         style: React.CSSProperties,
-        designerContext: IFlowContext | undefined
+        flowContext: IFlowContext | undefined
     ) {
         const backgroundColor = this.style.backgroundColorProperty;
         style.backgroundColor = to16bitsColor(backgroundColor);
@@ -1150,8 +1136,7 @@ export class EmbeddedWidget extends Widget {
 
 function renderActionComponent(
     actionNode: ActionComponent,
-    designerContext: IFlowContext,
-    dataContext: IDataContext,
+    flowContext: IFlowContext,
     titleStyle?: React.CSSProperties
 ) {
     const classInfo = getClassInfo(actionNode);
@@ -1234,14 +1219,11 @@ export class ActionComponent extends Component {
         return null;
     }
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
-        return renderActionComponent(this, designerContext, dataContext);
+    render(flowContext: IFlowContext) {
+        return renderActionComponent(this, flowContext);
     }
 
-    async execute(
-        runningFlow: RunningFlow,
-        input: string
-    ): Promise<string | undefined> {
+    async execute(runningFlow: RunningFlow): Promise<string | undefined> {
         return undefined;
     }
 }
@@ -1302,11 +1284,8 @@ export class NotFoundComponent extends ActionComponent {
         );
     }
 
-    render(
-        designerContext: IFlowContext,
-        dataContext: IDataContext
-    ): JSX.Element {
-        return renderActionComponent(this, designerContext, dataContext, {
+    render(flowContext: IFlowContext): JSX.Element {
+        return renderActionComponent(this, flowContext, {
             backgroundColor: "red"
         });
     }

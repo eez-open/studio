@@ -9,6 +9,7 @@ import type {
 } from "project-editor/flow/flow-editor/transform";
 
 export interface IFlowContext {
+    dataContext: IDataContext;
     document: IDocument;
     viewState: IViewState;
     editorOptions: IEditorOptions;

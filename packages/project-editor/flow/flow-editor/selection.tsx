@@ -27,21 +27,21 @@ const SelectionDiv = styled.div`
     position: absolute;
     cursor: move;
 
-    .EezStudio_DesignerSelection_BoundingRect {
+    .EezStudio_FlowEditorSelection_BoundingRect {
         border: 2px solid ${props => props.theme.selectionBackgroundColor};
     }
 
-    .EezStudio_DesignerSelection_SelectedObject {
+    .EezStudio_FlowEditorSelection_SelectedObject {
         pointer-events: none;
         border: 2px solid ${props => props.theme.selectionBackgroundColor};
     }
 
-    .EezStudio_DesignerSelection_SelectedObjectsParent {
+    .EezStudio_FlowEditorSelection_SelectedObjectsParent {
         pointer-events: none;
         border: 2px dotted magenta;
     }
 
-    .EezStudio_DesignerSelection_ResizeHandle {
+    .EezStudio_FlowEditorSelection_ResizeHandle {
         position: absolute;
         background-color: rgba(0, 0, 255, 0.8);
     }
@@ -65,7 +65,9 @@ class SelectedObject extends React.Component<
             return null;
         }
 
-        if (className === "EezStudio_DesignerSelection_SelectedObjectsParent") {
+        if (
+            className === "EezStudio_FlowEditorSelection_SelectedObjectsParent"
+        ) {
             rect = rectExpand(rect, 2);
         }
 
@@ -195,7 +197,7 @@ export class Selection extends React.Component<
             return (
                 <div
                     key={`${resizeHandler.x}-${resizeHandler.y}-${resizeHandler.type}`}
-                    className="EezStudio_DesignerSelection_ResizeHandle"
+                    className="EezStudio_FlowEditorSelection_ResizeHandle"
                     style={style}
                     data-column-index={resizeHandler.columnIndex}
                     data-row-index={resizeHandler.rowIndex}
@@ -222,8 +224,8 @@ export class Selection extends React.Component<
             // build selectedObjectRectsElement
             const selectedObjectClassName =
                 selectedObjects.length > 1
-                    ? "EezStudio_DesignerSelection_SelectedObject"
-                    : "EezStudio_DesignerSelection_BoundingRect";
+                    ? "EezStudio_FlowEditorSelection_SelectedObject"
+                    : "EezStudio_FlowEditorSelection_BoundingRect";
 
             selectedObjectRectsElement = selectedObjects.map((object, i) => (
                 <SelectedObject
@@ -249,7 +251,7 @@ export class Selection extends React.Component<
 
                 selectedObjectsBoundingRectElement = (
                     <div
-                        className="EezStudio_DesignerSelection_BoundingRect"
+                        className="EezStudio_FlowEditorSelection_BoundingRect"
                         style={style}
                     />
                 );
@@ -270,7 +272,7 @@ export class Selection extends React.Component<
             if (this.selectedObjectsParentRect) {
                 selectedObjectsParentElement = (
                     <SelectedObject
-                        className="EezStudio_DesignerSelection_SelectedObjectsParent"
+                        className="EezStudio_FlowEditorSelection_SelectedObjectsParent"
                         rect={this.selectedObjectsParentRect}
                     />
                 );
@@ -288,11 +290,14 @@ export class Selection extends React.Component<
         }
 
         return (
-            <SelectionDiv className="EezStudio_DesignerSelection" style={style}>
+            <SelectionDiv
+                className="EezStudio_FlowEditorSelection"
+                style={style}
+            >
                 {isSelectionVisible && (
                     <React.Fragment>
                         {selectedObjectsParentElement}
-                        <div className="EezStudio_DesignerSelection_Draggable">
+                        <div className="EezStudio_FlowEditorSelection_Draggable">
                             {selectedObjectRectsElement}
                             {selectedObjectsBoundingRectElement}
                             {resizeHandlersElement}

@@ -14,10 +14,7 @@ import {
 } from "project-editor/core/object";
 import { getDocumentStore } from "project-editor/core/store";
 
-import type {
-    IFlowContext,
-    IDataContext
-} from "project-editor/flow/flow-interfaces";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import { styled } from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
@@ -55,8 +52,8 @@ export class InputActionComponent extends ActionComponent {
 
     @observable name: string;
 
-    async execute(runningFlow: RunningFlow, input: string) {
-        return "output";
+    async execute(runningFlow: RunningFlow) {
+        return "@seqout";
     }
 }
 
@@ -176,7 +173,7 @@ export class SetVariableActionComponent extends ActionComponent {
     }
 
     @action
-    async execute(runningFlow: RunningFlow, input: string) {
+    async execute(runningFlow: RunningFlow) {
         const DocumentStore = getDocumentStore(this);
         let value;
         if (this.isInputProperty("value")) {
@@ -192,7 +189,7 @@ export class SetVariableActionComponent extends ActionComponent {
             value = this.value;
         }
         DocumentStore.dataContext.setValue(this.variable, value);
-        return "output";
+        return "@seqout";
     }
 }
 
@@ -251,7 +248,7 @@ export class DeclareVariableActionComponent extends ActionComponent {
     }
 
     @action
-    async execute(runningFlow: RunningFlow, input: string) {
+    async execute(runningFlow: RunningFlow) {
         const DocumentStore = getDocumentStore(this);
         let value;
         if (this.isInputProperty("value")) {
@@ -267,7 +264,7 @@ export class DeclareVariableActionComponent extends ActionComponent {
             value = this.value;
         }
         DocumentStore.dataContext.setValue(this.variable, value);
-        return "output";
+        return "@seqout";
     }
 }
 
@@ -463,7 +460,7 @@ export class ScpiActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow, input: string) {
+    async execute(runningFlow: RunningFlow) {
         const instrument = instruments.get(this.instrument);
         if (!instrument) {
             throw "instrument not found";
@@ -541,7 +538,7 @@ export class ScpiActionComponent extends ActionComponent {
             connection.release();
         }
 
-        return "output";
+        return "@seqout";
     }
 
     @computed get body(): React.ReactNode {
@@ -685,7 +682,7 @@ export class CommentActionComponent extends ActionComponent {
 
     @observable text: string;
 
-    render(designerContext: IFlowContext, dataContext: IDataContext) {
+    render(flowContext: IFlowContext) {
         const classInfo = getClassInfo(this);
 
         return (

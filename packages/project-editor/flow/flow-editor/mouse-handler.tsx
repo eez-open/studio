@@ -267,7 +267,7 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
         return (
             this.rubberBendRect && (
                 <div
-                    className="EezStudio_DesignerSelection_RubberBend"
+                    className="EezStudio_FlowEditorSelection_RubberBend"
                     style={{
                         position: "absolute",
                         left: this.rubberBendRect.left,
@@ -342,12 +342,12 @@ export class SnapLines {
         };
     }
 
-    render(context: IFlowContext, selectionRect: Rect) {
+    render(flowContext: IFlowContext, selectionRect: Rect) {
         if (!this.enabled) {
             return null;
         }
 
-        const transform = context.viewState.transform;
+        const transform = flowContext.viewState.transform;
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
@@ -363,7 +363,7 @@ export class SnapLines {
         };
 
         drawSnapLinesGeneric(
-            context,
+            flowContext,
             this.lines,
             selectionRect,
             (pos: number, horizontal: boolean, closest: boolean) => {
@@ -505,13 +505,13 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             )!;
 
             this.selectionNode = container.querySelector(
-                ".EezStudio_DesignerSelection_Draggable"
+                ".EezStudio_FlowEditorSelection_Draggable"
             ) as HTMLElement;
 
             this.objectNodes = context.viewState.selectedObjects.map(
                 selectedObject =>
                     container.querySelector(
-                        `[data-designer-object-id="${selectedObject.id}"]`
+                        `[data-eez-flow-object-id="${selectedObject.id}"]`
                     ) as HTMLElement
             );
         }
@@ -832,7 +832,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
             context.viewState.containerId
         )!;
         const node = container!.querySelector(
-            `[data-designer-object-id="${this.sourceObject.id}"] [data-connection-output-id="${this.connectionOutput}"]`
+            `[data-eez-flow-object-id="${this.sourceObject.id}"] [data-connection-output-id="${this.connectionOutput}"]`
         )!;
 
         const boundingClientRect = node.getBoundingClientRect();
@@ -873,7 +873,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
                 context.viewState.containerId
             )!;
             const node = container!.querySelector(
-                `[data-designer-object-id="${result.id}"] [data-connection-input-id="${result.connectionInput}"]`
+                `[data-eez-flow-object-id="${result.id}"] [data-connection-input-id="${result.connectionInput}"]`
             )!;
 
             const boundingClientRect = node.getBoundingClientRect();

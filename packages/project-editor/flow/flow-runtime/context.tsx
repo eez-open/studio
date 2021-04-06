@@ -152,7 +152,7 @@ class ViewState implements IViewState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DesignerContext implements IFlowContext {
+export class RuntimeFlowContext implements IFlowContext {
     @observable document: IDocument;
     viewState: ViewState;
     @observable editorOptions: IEditorOptions = {};
@@ -161,6 +161,10 @@ export class DesignerContext implements IFlowContext {
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this.containerId);
+    }
+
+    get dataContext() {
+        return this.document.DocumentStore.dataContext;
     }
 
     @action

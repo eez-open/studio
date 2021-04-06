@@ -22,11 +22,11 @@ const SelectionDiv = styled.div`
     position: absolute;
     cursor: move;
 
-    .EezStudio_DesignerSelection_BoundingRect {
+    .EezStudio_FlowRuntimeSelection_BoundingRect {
         border: 2px solid ${props => props.theme.selectionBackgroundColor};
     }
 
-    .EezStudio_DesignerSelection_SelectedObject {
+    .EezStudio_FlowRuntimeSelection_SelectedObject {
         pointer-events: none;
         border: 2px solid ${props => props.theme.selectionBackgroundColor};
     }
@@ -50,7 +50,9 @@ class SelectedObject extends React.Component<
             return null;
         }
 
-        if (className === "EezStudio_DesignerSelection_SelectedObjectsParent") {
+        if (
+            className === "EezStudio_FlowRuntimeSelection_SelectedObjectsParent"
+        ) {
             rect = rectExpand(rect, 2);
         }
 
@@ -117,8 +119,8 @@ export class Selection extends React.Component<
             // build selectedObjectRectsElement
             const selectedObjectClassName =
                 selectedObjects.length > 1
-                    ? "EezStudio_DesignerSelection_SelectedObject"
-                    : "EezStudio_DesignerSelection_BoundingRect";
+                    ? "EezStudio_FlowRuntimeSelection_SelectedObject"
+                    : "EezStudio_FlowRuntimeSelection_BoundingRect";
 
             selectedObjectRectsElement = selectedObjects.map((object, i) => (
                 <SelectedObject
@@ -144,7 +146,7 @@ export class Selection extends React.Component<
 
                 selectedObjectsBoundingRectElement = (
                     <div
-                        className="EezStudio_DesignerSelection_BoundingRect"
+                        className="EezStudio_FlowRuntimeSelection_BoundingRect"
                         style={style}
                     />
                 );
@@ -152,10 +154,10 @@ export class Selection extends React.Component<
         }
 
         return (
-            <SelectionDiv className="EezStudio_DesignerSelection">
+            <SelectionDiv className="EezStudio_FlowRuntimeSelection">
                 {isSelectionVisible && (
                     <React.Fragment>
-                        <div className="EezStudio_DesignerSelection_Draggable">
+                        <div className="EezStudio_FlowRuntimeSelection_Draggable">
                             {selectedObjectRectsElement}
                             {selectedObjectsBoundingRectElement}
                         </div>

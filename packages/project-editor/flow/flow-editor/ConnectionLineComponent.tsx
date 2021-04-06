@@ -99,7 +99,7 @@ const ConnectionLineShape = observer(
         return (
             <g
                 className={classNames("connection-line", { selected })}
-                data-designer-object-id={connectionLineAdapter.id}
+                data-eez-flow-object-id={connectionLineAdapter.id}
             >
                 <path
                     d={lineShape}
