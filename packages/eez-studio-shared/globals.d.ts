@@ -2,7 +2,7 @@
 
 declare const EEZStudio: {
     title: string;
-    isViewer?: boolean;
+    isWebStudio?: boolean;
     electron: typeof Electron;
     require: any;
     windowType: string;

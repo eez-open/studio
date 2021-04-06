@@ -1,4 +1,4 @@
-import { isViewer, isRenderer } from "eez-studio-shared/util-electron";
+import { isWebStudio, isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { BrowserWindow } from "electron";
 
@@ -91,7 +91,7 @@ export function watch(
     filterSpecification: any,
     callback: (message: any) => void
 ) {
-    if (isViewer()) {
+    if (isWebStudio()) {
         return "";
     }
 
@@ -176,7 +176,7 @@ function sendSendMessage(
     target.send("notify/send-message", args);
 }
 
-if (!isViewer()) {
+if (!isWebStudio()) {
     let ipc: Electron.IpcRenderer | Electron.IpcMain;
     if (isRenderer()) {
         ipc = EEZStudio.electron.ipcRenderer;

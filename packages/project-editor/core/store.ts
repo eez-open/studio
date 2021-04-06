@@ -106,7 +106,7 @@ import { Page } from "project-editor/features/page/page";
 import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
-import { isViewer } from "eez-studio-shared/util-electron";
+import { isWebStudio } from "eez-studio-shared/util-electron";
 import { RuntimeStoreClass } from "project-editor/flow/runtime";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
@@ -1221,7 +1221,7 @@ export class DocumentStoreClass {
             }
         );
 
-        if (!isViewer()) {
+        if (!isWebStudio()) {
             this.watch();
         }
     }
@@ -1306,7 +1306,7 @@ export class DocumentStoreClass {
     }
 
     updateProjectWindowState() {
-        if (isViewer()) {
+        if (isWebStudio()) {
             return;
         }
 
@@ -1366,7 +1366,7 @@ export class DocumentStoreClass {
     }
 
     getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
-        if (isViewer()) {
+        if (isWebStudio()) {
             return relativeFilePath;
         }
 
@@ -1480,7 +1480,7 @@ export class DocumentStoreClass {
     }
 
     loadUIState(projectFilePath: string) {
-        if (isViewer()) {
+        if (isWebStudio()) {
             return {} as any;
         }
 

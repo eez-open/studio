@@ -5,7 +5,7 @@ export let app: Electron.App;
 let fs: any;
 let path: any;
 
-if (isViewer()) {
+if (isWebStudio()) {
 } else {
     fs = require("fs");
     path = require("path");
@@ -21,9 +21,9 @@ export const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(
     process.execPath
 );
 
-export function isViewer() {
+export function isWebStudio() {
     try {
-        return EEZStudio.isViewer;
+        return EEZStudio.isWebStudio;
     } catch (err) {
         return false;
     }
@@ -49,7 +49,9 @@ export function isRenderer() {
 }
 
 export function getUserDataPath(relativePath: string) {
-    return isViewer() ? "" : app.getPath("userData") + path.sep + relativePath;
+    return isWebStudio()
+        ? ""
+        : app.getPath("userData") + path.sep + relativePath;
 }
 
 export function localPathToFileUrl(localPath: string) {

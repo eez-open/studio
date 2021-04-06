@@ -10,26 +10,9 @@ import * as notification from "eez-studio-ui/notification";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
-import { isViewer } from "eez-studio-shared/util-electron";
 import { LineMarkers } from "./flow/flow-editor/ConnectionLineComponent";
 
 configure({ enforceActions: "observed" });
-
-if (isViewer()) {
-} else {
-    EEZStudio.electron.ipcRenderer?.on("beforeClose", async () => {
-        EEZStudio.electron.ipcRenderer.send("readyToClose");
-    });
-
-    EEZStudio.electron.ipcRenderer?.on("reload", async () => {
-        window.location.reload();
-    });
-
-    EEZStudio.electron.ipcRenderer?.on("show-about-box", async () => {
-        const { showAboutBox } = await import("eez-studio-ui/about-box");
-        showAboutBox();
-    });
-}
 
 async function main() {
     const params = new URLSearchParams(location.search);

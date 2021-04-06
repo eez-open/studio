@@ -33,7 +33,7 @@ import {
     ProjectType
 } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
-import { isViewer } from "eez-studio-shared/util-electron";
+import { isWebStudio } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -575,7 +575,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
 
         let mainContent;
 
-        if (isViewer()) {
+        if (isWebStudio()) {
             mainContent = (
                 <MainContent>
                     <Toolbar />

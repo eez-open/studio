@@ -1,11 +1,11 @@
 import Database from "better-sqlite3";
-import { isRenderer, isViewer } from "eez-studio-shared/util-electron";
+import { isRenderer, isWebStudio } from "eez-studio-shared/util-electron";
 
 import * as MainSettingsModule from "main/settings";
 
 export let getDbPath: () => string;
 export let setDbPath: (dbPath: string) => void;
-if (isViewer()) {
+if (isWebStudio()) {
     getDbPath = function () {
         return "";
     };
@@ -13,16 +13,11 @@ if (isViewer()) {
     setDbPath = function (dbPath: string) {};
 } else if (isRenderer()) {
     getDbPath = function () {
-        return EEZStudio.isViewer
-            ? ""
-            : EEZStudio.electron.ipcRenderer.sendSync("getDbPath");
+        return EEZStudio.electron.ipcRenderer.sendSync("getDbPath");
     };
 
     setDbPath = function (dbPath: string) {
-        if (!EEZStudio.isViewer) {
-            EEZStudio.electron.ipcRenderer.send("setDbPath", dbPath);
-        }
-        EEZStudio.isViewer;
+        EEZStudio.electron.ipcRenderer.send("setDbPath", dbPath);
     };
 } else {
     ({

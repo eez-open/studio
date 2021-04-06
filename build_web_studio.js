@@ -5,8 +5,8 @@ var b = browserify({
     paths: ["./dist/"]
 });
 
-b.add("./dist/project-editor/viewer.js");
+b.add("./dist/project-editor/webstudio.js");
 
-var myFile = fs.createWriteStream("./dist/project-editor/viewer-bundle.js");
+var myFile = fs.createWriteStream("./dist/project-editor/webstudio-bundle.js");
 
 b.bundle().pipe(myFile);
