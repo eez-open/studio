@@ -242,6 +242,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
             id: "undo",
             label: "Undo",
             accelerator: "CmdOrCtrl+Z",
+            role: "undo",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     const win = findWindowByBrowserWindow(focusedWindow);
@@ -258,6 +259,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
             id: "redo",
             label: "Redo",
             accelerator: "Shift+CmdOrCtrl+Z",
+            role: "redo",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     const win = findWindowByBrowserWindow(focusedWindow);
@@ -276,6 +278,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Cut",
             accelerator: "CmdOrCtrl+X",
+            role: "cut",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("cut");
@@ -285,6 +288,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Copy",
             accelerator: "CmdOrCtrl+C",
+            role: "copy",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("copy");
@@ -294,6 +298,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Paste",
             accelerator: "CmdOrCtrl+V",
+            role: "paste",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("paste");
@@ -303,6 +308,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Delete",
             accelerator: "Delete",
+            role: "delete",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("delete");
@@ -314,7 +320,8 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         },
         {
             label: "Select All",
-            accelerator: "CmdOrCtrl+A"
+            accelerator: "CmdOrCtrl+A",
+            role: "selectAll"
         }
     ]
 };
