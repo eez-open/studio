@@ -8,7 +8,7 @@ import {
     RectObject
 } from "project-editor/core/object";
 
-import { InputPropertyValue, Widget } from "project-editor/flow/component";
+import { Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
@@ -16,7 +16,7 @@ import * as PlotlyModule from "plotly.js";
 import styled from "eez-studio-ui/styled-components";
 import classNames from "classnames";
 import { observable, reaction, runInAction } from "mobx";
-import { RunningFlow } from "project-editor/flow/runtime";
+import { InputPropertyValue, RunningFlow } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -143,7 +143,7 @@ function updateLineChart(
         chart = {
             type: "lineChart",
             data: {
-                x: [[inputPropertyValue.date]],
+                x: [[new Date(inputPropertyValue.time)]],
                 y: [[inputPropertyValue.value]]
             },
             maxPoints
@@ -155,7 +155,7 @@ function updateLineChart(
             doUpdateChartTimeoutId = setTimeout(doUpdateChart);
         }
     } else {
-        chart.data.x[0].push(inputPropertyValue.date);
+        chart.data.x[0].push(new Date(inputPropertyValue.time));
         chart.data.y[0].push(inputPropertyValue.value);
     }
 }
@@ -202,6 +202,10 @@ const LineChartElement = observer(
         widget: LineChartWidget;
         flowContext: IFlowContext;
     }) => {
+        const runningState = flowContext.runningFlow?.getComponentRunningState<RunningState>(
+            widget
+        );
+
         const ref = React.useRef<HTMLDivElement>(null);
         const [plotly, setPlotly] = React.useState<
             PlotlyModule.PlotlyHTMLElement | undefined
@@ -210,15 +214,14 @@ const LineChartElement = observer(
         function getData(): PlotlyModule.Data[] {
             return [
                 {
-                    x: flowContext.document.DocumentStore.RuntimeStore
-                        .isRuntimeMode
-                        ? widget._values.map(
-                              inputPropertyValue => inputPropertyValue.date
+                    x: runningState
+                        ? runningState.values.map(
+                              inputPropertyValue =>
+                                  new Date(inputPropertyValue.time)
                           )
                         : [1, 2, 3, 4],
-                    y: flowContext.document.DocumentStore.RuntimeStore
-                        .isRuntimeMode
-                        ? widget._values.map(
+                    y: runningState
+                        ? runningState.values.map(
                               inputPropertyValue => inputPropertyValue.value
                           )
                         : [2, 6, 4, 8],
@@ -268,8 +271,14 @@ const LineChartElement = observer(
 
                         disposeReaction = reaction(
                             () => {
-                                if (widget.isInputProperty("data")) {
-                                    return widget.getInputPropertyValue("data");
+                                if (
+                                    widget.isInputProperty("data") &&
+                                    flowContext.runningFlow
+                                ) {
+                                    return flowContext.runningFlow.getInputPropertyValue(
+                                        widget,
+                                        "data"
+                                    );
                                 }
                                 return undefined;
                             },
@@ -322,7 +331,7 @@ const LineChartElement = observer(
             widget.margin.right,
             widget.margin.bottom,
             widget.margin.left,
-            widget._values
+            runningState
         ]);
 
         return (
@@ -341,6 +350,11 @@ const LineChartElement = observer(
         );
     }
 );
+
+class RunningState {
+    disposeReaction: any;
+    @observable values: InputPropertyValue[] = [];
+}
 
 export class LineChartWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -399,27 +413,24 @@ export class LineChartWidget extends Widget {
     @observable color: string;
     @observable margin: RectObject;
 
-    _disposeReaction: any;
-    @observable _values: InputPropertyValue[] = [];
-
     onStart(runningFlow: RunningFlow) {
-        runInAction(() => {
-            this._values = [];
-        });
+        const runningState = new RunningState();
 
-        this._disposeReaction = reaction(
+        runningFlow.setComponentRunningState(this, runningState);
+
+        runningState.disposeReaction = reaction(
             () => {
                 if (this.isInputProperty("data")) {
-                    return this.getInputPropertyValue("data");
+                    return runningFlow.getInputPropertyValue(this, "data");
                 }
                 return undefined;
             },
             inputPropertyValue => {
                 if (inputPropertyValue) {
                     runInAction(() => {
-                        this._values.push(inputPropertyValue);
-                        if (this._values.length == this.maxPoints) {
-                            this._values.shift();
+                        runningState.values.push(inputPropertyValue);
+                        if (runningState.values.length == this.maxPoints) {
+                            runningState.values.shift();
                         }
                     });
                 }
@@ -427,8 +438,10 @@ export class LineChartWidget extends Widget {
         );
     }
 
-    onEnd(runningFlow: RunningFlow) {
-        this._disposeReaction();
+    onFinish(runningFlow: RunningFlow) {
+        runningFlow
+            .getComponentRunningState<RunningState>(this)
+            .disposeReaction();
     }
 
     render(flowContext: IFlowContext): React.ReactNode {
@@ -517,8 +530,14 @@ const GaugeElement = observer(
 
                         disposeReaction = reaction(
                             () => {
-                                if (widget.isInputProperty("data")) {
-                                    return widget.getInputPropertyValue("data");
+                                if (
+                                    widget.isInputProperty("data") &&
+                                    flowContext.runningFlow
+                                ) {
+                                    return flowContext.runningFlow.getInputPropertyValue(
+                                        widget,
+                                        "data"
+                                    );
                                 }
                                 return undefined;
                             },

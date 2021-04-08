@@ -47,10 +47,7 @@ import {
     PageTabState
 } from "project-editor/features/page/PagesNavigation";
 import { Rect } from "eez-studio-shared/geometry";
-import {
-    Flow,
-    overrideDataContextInFlowContext
-} from "project-editor/flow/flow";
+import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
 import { build } from "project-editor/features/page/build";
 
@@ -401,8 +398,7 @@ export class Page extends Flow {
                 components={this.components.filter(
                     component => component instanceof Widget
                 )}
-                flowContext={overrideDataContextInFlowContext(
-                    flowContext,
+                flowContext={flowContext.overrideDataContext(
                     this.dataContextOverridesObject
                 )}
             />
@@ -424,7 +420,10 @@ export class Page extends Flow {
             );
         }
 
-        if (!flowContext.document.findObjectById(getId(this))) {
+        if (
+            !flowContext.document.findObjectById(getId(this)) &&
+            !flowContext.document.DocumentStore.RuntimeStore.isRuntimeMode
+        ) {
             // this is layout widget page,
             // forbid interaction with the content
             style.pointerEvents = "none";

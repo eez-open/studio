@@ -3348,8 +3348,8 @@
         },
         {
           "type": "ScpiActionComponent",
-          "left": 36,
-          "top": 444,
+          "left": 54,
+          "top": 550,
           "width": 0,
           "height": 0,
           "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",

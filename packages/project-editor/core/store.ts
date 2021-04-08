@@ -1566,7 +1566,7 @@ export class DocumentStoreClass {
     }
 
     async closeWindow() {
-        await this.RuntimeStore.stopAllRunningFlows();
+        await this.RuntimeStore.stop();
 
         if (this.project) {
             return await this.saveModified();

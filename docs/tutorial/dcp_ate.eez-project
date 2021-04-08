@@ -54,8 +54,8 @@
         },
         {
           "type": "SetVariableActionComponent",
-          "left": -429,
-          "top": 354,
+          "left": -248,
+          "top": 185,
           "width": 0,
           "height": 0,
           "wireID": "f4529b1a-0e6b-4669-cb00-6646a7620428",
@@ -64,8 +64,8 @@
         },
         {
           "type": "SetVariableActionComponent",
-          "left": -429,
-          "top": 740,
+          "left": -247,
+          "top": 570,
           "width": 0,
           "height": 0,
           "wireID": "6e70c90b-e971-4f63-ebde-692741e04178",
@@ -74,8 +74,8 @@
         },
         {
           "type": "GetVariableActionComponent",
-          "left": -149,
-          "top": 354,
+          "left": -150,
+          "top": 320,
           "width": 0,
           "height": 0,
           "wireID": "3f522e17-eded-4d78-b979-4055794540ac",
@@ -84,7 +84,7 @@
         {
           "type": "GetVariableActionComponent",
           "left": -149,
-          "top": 740,
+          "top": 706,
           "width": 0,
           "height": 0,
           "wireID": "acf3462c-ab06-4806-9111-e2a1bf5e58f8",
@@ -187,8 +187,8 @@
         },
         {
           "type": "InputActionComponent",
-          "left": -294,
-          "top": -119,
+          "left": 0,
+          "top": -149,
           "width": 0,
           "height": 0,
           "wireID": "1822c69c-70b6-441e-ff68-92bc5f5cca72",
@@ -211,8 +211,8 @@
         },
         {
           "type": "GetVariableActionComponent",
-          "left": -198,
-          "top": 19,
+          "left": -147,
+          "top": -9,
           "width": 0,
           "height": 0,
           "wireID": "4953b9cc-3702-49d7-a51c-856b64516a91",
@@ -220,8 +220,8 @@
         },
         {
           "type": "DeclareVariableActionComponent",
-          "left": -104,
-          "top": -144,
+          "left": 138,
+          "top": -149,
           "width": 0,
           "height": 0,
           "wireID": "1512245a-33e4-45c5-b47e-1b5f951a9571",
@@ -233,23 +233,24 @@
       ],
       "connectionLines": [
         {
-          "source": "4953b9cc-3702-49d7-a51c-856b64516a91",
-          "output": "@seqout",
-          "target": "ad1f6bcf-5a2b-4578-82cd-f7ef112e9058",
-          "input": "data"
-        },
-        {
           "source": "1822c69c-70b6-441e-ff68-92bc5f5cca72",
           "output": "@seqout",
           "target": "1512245a-33e4-45c5-b47e-1b5f951a9571",
           "input": "value"
+        },
+        {
+          "source": "4953b9cc-3702-49d7-a51c-856b64516a91",
+          "output": "variable",
+          "target": "ad1f6bcf-5a2b-4578-82cd-f7ef112e9058",
+          "input": "data"
         }
       ],
       "name": "bb3",
       "left": 0,
       "top": 0,
       "width": 1164,
-      "height": 354
+      "height": 354,
+      "isUsedAsCustomWidget": true
     },
     {
       "components": [
@@ -433,7 +434,8 @@
       "left": 0,
       "top": 0,
       "width": 388,
-      "height": 272
+      "height": 272,
+      "isUsedAsCustomWidget": true
     }
   ],
   "styles": [

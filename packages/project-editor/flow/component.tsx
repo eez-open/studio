@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
@@ -41,7 +41,12 @@ import {
 } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import { checkObjectReference, getFlow } from "project-editor/project/project";
+import {
+    checkObjectReference,
+    getFlow,
+    getProject,
+    ProjectType
+} from "project-editor/project/project";
 
 import type {
     IResizeHandler,
@@ -119,7 +124,10 @@ export function makeStylePropertyInfo(
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
         propertyGridCollapsableEnabled: (object: IEezObject) =>
             !getDocumentStore(object).masterProjectEnabled,
-        enumerable: false
+        enumerable: false,
+        hideInPropertyGrid: (object: IEezObject) =>
+            getProject(object).settings.general.projectType ===
+            ProjectType.DASHBOARD
     };
 }
 
@@ -340,11 +348,6 @@ export function getWidgetParent(widget: Component | Page) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface InputPropertyValue {
-    date: Date;
-    value: any;
-}
-
 export class Component extends EezObject {
     @observable type: string;
 
@@ -356,7 +359,6 @@ export class Component extends EezObject {
     @observable wireID: string;
 
     @observable asInputProperties: string[];
-    @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
 
     @observable asOutputProperties: string[];
 
@@ -607,7 +609,7 @@ export class Component extends EezObject {
         return true;
     }
 
-    draw?: (ctx: CanvasRenderingContext2D, flowContext: IFlowContext) => void;
+    draw?: (ctx: CanvasRenderingContext2D) => void;
 
     render(flowContext: IFlowContext): React.ReactNode {
         return null;
@@ -617,24 +619,12 @@ export class Component extends EezObject {
         return "";
     }
 
-    onClick?: () => void = undefined;
+    onClick?: (flowContext: IFlowContext) => void = undefined;
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
 
     onStart(runningFlow: RunningFlow) {}
-    onEnd(runningFlow: RunningFlow) {}
-
-    getInputPropertyValue(input: string) {
-        return this._inputPropertyValues.get(input);
-    }
-
-    @action
-    setInputPropertyValue(input: string, value: any) {
-        this._inputPropertyValues.set(input, {
-            date: new Date(),
-            value
-        });
-    }
+    onFinish(runningFlow: RunningFlow) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1073,7 +1063,7 @@ export class Widget extends Component {
         }
 
         return (
-            <div className="inputs-outputs">
+            <div className="content">
                 <div className="inputs">
                     {inputs.map(property => (
                         <div
@@ -1103,9 +1093,20 @@ export class Widget extends Component {
 
 export class EmbeddedWidget extends Widget {
     @observable style: Style;
+    @observable className: string;
 
     static classInfo: ClassInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [makeStylePropertyInfo("style", "Normal style")],
+        properties: [
+            makeStylePropertyInfo("style", "Normal style"),
+            {
+                name: "className",
+                type: PropertyType.String,
+                propertyGridGroup: styleGroup,
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType !==
+                    ProjectType.DASHBOARD
+            }
+        ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "style");
@@ -1123,12 +1124,14 @@ export class EmbeddedWidget extends Widget {
         return this.style;
     }
 
-    styleHook(
-        style: React.CSSProperties,
-        flowContext: IFlowContext | undefined
-    ) {
-        const backgroundColor = this.style.backgroundColorProperty;
-        style.backgroundColor = to16bitsColor(backgroundColor);
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        if (
+            flowContext.document.DocumentStore.project.settings.general
+                .projectType !== ProjectType.DASHBOARD
+        ) {
+            const backgroundColor = this.style.backgroundColorProperty;
+            style.backgroundColor = to16bitsColor(backgroundColor);
+        }
     }
 }
 
@@ -1162,9 +1165,8 @@ function renderActionComponent(
                     <span data-connection-output-id="@seqout"></span>
                 </div>
             </div>
-            {actionNode.body}
-            {(inputs.length > 0 || outputs.length > 0) && (
-                <div className="inputs-outputs">
+            <div className="content">
+                {inputs.length > 0 && (
                     <div className="inputs">
                         {inputs.map(property => (
                             <div
@@ -1176,6 +1178,9 @@ function renderActionComponent(
                             </div>
                         ))}
                     </div>
+                )}
+                {actionNode.body}
+                {outputs.length > 0 && (
                     <div className="outputs">
                         {outputs.map(property => (
                             <div
@@ -1187,8 +1192,8 @@ function renderActionComponent(
                             </div>
                         ))}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </>
     );
 }
@@ -1223,9 +1228,7 @@ export class ActionComponent extends Component {
         return renderActionComponent(this, flowContext);
     }
 
-    async execute(runningFlow: RunningFlow): Promise<string | undefined> {
-        return undefined;
-    }
+    async execute(runningFlow: RunningFlow): Promise<void> {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

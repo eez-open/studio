@@ -1,14 +1,6 @@
 import React from "react";
-import {
-    observable,
-    computed,
-    action,
-    toJS,
-    autorun,
-    runInAction,
-    IReactionDisposer
-} from "mobx";
-import { disposeOnUnmount, observer } from "mobx-react";
+import { observable, computed, action, toJS, runInAction } from "mobx";
+import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
@@ -875,8 +867,15 @@ const FlowEditorCanvasContainer = styled.div`
     }
 
     [data-connection-output-id]:hover {
-        color: ${props => props.theme.selectionColor};
-        background-color: ${props => props.theme.selectionBackgroundColor};
+        color: ${props => props.theme.selectionColor}!important;
+        background-color: ${props =>
+            props.theme.selectionBackgroundColor}!important;
+    }
+
+    .title [data-connection-output-id]:hover {
+        color: ${props => props.theme.lightSelectionColor}!important;
+        background-color: ${props =>
+            props.theme.lightSelectionBackgroundColor}!important;
     }
 
     .connection-line-path {
@@ -919,26 +918,20 @@ export class FlowEditor
     );
     currentWidgetContainer?: ITreeObjectAdapter;
 
-    @observable flowDocument: FlowDocument;
-
     @observable options: IEditorOptions;
-
-    @disposeOnUnmount dispose: IReactionDisposer;
-
-    constructor(props: any) {
-        super(props);
-
-        this.updateFlowDocument();
-    }
 
     @action
     updateFlowDocument() {
         if (this.props.widgetContainer != this.currentWidgetContainer) {
             this.currentWidgetContainer = this.props.widgetContainer;
 
-            this.flowDocument = new FlowDocument(
-                this.props.widgetContainer,
-                this.flowContext
+            this.flowContext.set(
+                new FlowDocument(this.props.widgetContainer, this.flowContext),
+                this.viewStatePersistantState,
+                this.onSavePersistantState,
+                this.options,
+                this.filterSnapLines,
+                this.props.frontFace
             );
 
             this.options = {
@@ -951,20 +944,19 @@ export class FlowEditor
     }
 
     componentDidMount() {
-        this.dispose = autorun(() => {
-            this.flowContext.set(
-                this.flowDocument,
-                this.viewStatePersistantState,
-                this.onSavePersistantState,
-                this.options,
-                this.filterSnapLines,
-                this.props.frontFace
-            );
-        });
+        this.updateFlowDocument();
     }
 
     componentDidUpdate() {
         this.updateFlowDocument();
+    }
+
+    componentDidCatch(error: any, info: any) {
+        console.error(error, info);
+    }
+
+    componentWillUnmount() {
+        this.flowContext.destroy();
     }
 
     @bind
@@ -1236,20 +1228,9 @@ export class FlowEditor
         return { hasError: true };
     }
 
-    componentDidCatch(error: any, info: any) {
-        console.error(error, info);
-    }
-
-    componentWillUnmount() {
-        this.flowContext.destroy();
-        this.dispose();
-    }
-
-    get flow() {
-        return this.flowDocument.flow.object as Flow;
-    }
-
     render() {
+        const flow = this.props.widgetContainer.object as Flow;
+
         return (
             <FlowEditorCanvasContainer
                 ref={(ref: any) => (this.div = ref!)}
@@ -1273,10 +1254,7 @@ export class FlowEditor
                                     position: "absolute"
                                 }}
                             >
-                                {(this.flowContext.document.flow
-                                    .object as Flow).renderComponents(
-                                    this.flowContext
-                                )}
+                                {flow.renderComponents(this.flowContext)}
                             </div>
                             {!this.props.frontFace && (
                                 <AllConnectionLines
@@ -1284,7 +1262,7 @@ export class FlowEditor
                                 />
                             )}
                             <DragComponent
-                                flow={this.flow}
+                                flow={flow}
                                 flowContext={this.flowContext}
                             />
                         </>

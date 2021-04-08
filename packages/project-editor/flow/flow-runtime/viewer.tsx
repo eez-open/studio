@@ -1,13 +1,6 @@
 import React from "react";
-import {
-    observable,
-    computed,
-    action,
-    autorun,
-    runInAction,
-    IReactionDisposer
-} from "mobx";
-import { disposeOnUnmount, observer } from "mobx-react";
+import { computed, action, runInAction } from "mobx";
+import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
@@ -412,36 +405,22 @@ export class FlowViewer
     );
     currentWidgetContainer?: ITreeObjectAdapter;
 
-    @observable flowDocument: FlowDocument;
-
-    @disposeOnUnmount dispose: IReactionDisposer;
-
-    constructor(props: any) {
-        super(props);
-        this.updateFlowDocument();
-    }
-
     @action
     updateFlowDocument() {
         if (this.props.widgetContainer != this.currentWidgetContainer) {
             this.currentWidgetContainer = this.props.widgetContainer;
 
-            this.flowDocument = new FlowDocument(
-                this.props.widgetContainer,
-                this.flowContext
+            this.flowContext.set(
+                new FlowDocument(this.props.widgetContainer, this.flowContext),
+                this.viewStatePersistantState,
+                this.onSavePersistantState,
+                this.props.frontFace
             );
         }
     }
 
     componentDidMount() {
-        this.dispose = autorun(() => {
-            this.flowContext.set(
-                this.flowDocument,
-                this.viewStatePersistantState,
-                this.onSavePersistantState,
-                this.props.frontFace
-            );
-        });
+        this.updateFlowDocument();
     }
 
     componentDidUpdate() {
@@ -575,14 +554,11 @@ export class FlowViewer
 
     componentWillUnmount() {
         this.flowContext.destroy();
-        this.dispose();
-    }
-
-    get flow() {
-        return this.flowDocument.flow.object as Flow;
     }
 
     render() {
+        const flow = this.props.widgetContainer.object as Flow;
+
         return (
             <FlowViewerCanvasContainer
                 id={this.flowContext.containerId}
@@ -596,17 +572,14 @@ export class FlowViewer
                     dragAndDropActive={!!DragAndDropManager.dragObject}
                     transitionIsActive={this.props.transitionIsActive}
                 >
-                    {this.flowContext.document && (
+                    {this.flowContext.document?.flow.object === flow && (
                         <>
                             <div
                                 style={{
                                     position: "absolute"
                                 }}
                             >
-                                {(this.flowContext.document.flow
-                                    .object as Flow).renderComponents(
-                                    this.flowContext
-                                )}
+                                {flow.renderComponents(this.flowContext)}
                             </div>
                             {!this.props.frontFace && (
                                 <AllConnectionLines

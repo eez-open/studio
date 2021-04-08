@@ -48,7 +48,8 @@ export function createWindow(params: IWindowParams) {
             nodeIntegrationInWorker: true,
             plugins: true,
             contextIsolation: false,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            backgroundThrottling: false
         },
         show: false
     };

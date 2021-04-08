@@ -6,18 +6,22 @@ import {
     IReactionDisposer
 } from "mobx";
 
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+
 import type {
     IDocument,
     IViewState,
     IViewStatePersistantState,
     IFlowContext,
     IEditorOptions,
-    IResizeHandler
+    IResizeHandler,
+    IRunningFlow,
+    IDataContext
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component } from "project-editor/flow/component";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { Flow } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -158,13 +162,25 @@ export class RuntimeFlowContext implements IFlowContext {
     @observable editorOptions: IEditorOptions = {};
     @observable dragComponent: Component | undefined;
     @observable frontFace: boolean;
+    dataContext: IDataContext;
+    @observable runningFlow: IRunningFlow;
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this.containerId);
     }
 
-    get dataContext() {
-        return this.document.DocumentStore.dataContext;
+    overrideDataContext(dataContextOverridesObject: any): IFlowContext {
+        return Object.assign(new RuntimeFlowContext(this.containerId), this, {
+            dataContext: this.dataContext.createWithDefaultValueOverrides(
+                dataContextOverridesObject
+            )
+        });
+    }
+
+    overrideRunningFlow(component: Component): IFlowContext {
+        return Object.assign(new RuntimeFlowContext(this.containerId), this, {
+            runningFlow: this.runningFlow.getRunningFlowByComponent(component)
+        });
     }
 
     @action
@@ -178,6 +194,7 @@ export class RuntimeFlowContext implements IFlowContext {
     ) {
         const deselectAllObjects =
             this.document?.flow.object !== document?.flow.object;
+
         this.document = document;
 
         this.viewState.set(
@@ -193,6 +210,17 @@ export class RuntimeFlowContext implements IFlowContext {
         this.editorOptions = {};
 
         this.frontFace = frontFace ?? false;
+
+        const runningFlow = this.document.DocumentStore.RuntimeStore.getRunningFlow(
+            this.document.flow.object as Flow
+        );
+        if (runningFlow) {
+            this.runningFlow = runningFlow;
+        } else {
+            console.log(this.document.flow.object);
+        }
+
+        this.dataContext = this.document.DocumentStore.dataContext;
     }
 
     destroy() {

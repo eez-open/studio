@@ -7,24 +7,56 @@ import type {
     ITransform,
     Transform
 } from "project-editor/flow/flow-editor/transform";
+import type { InputPropertyValue } from "project-editor/flow/runtime";
+import { Component } from "project-editor/flow/component";
 
 export interface IFlowContext {
     dataContext: IDataContext;
+    runningFlow?: IRunningFlow;
     document: IDocument;
     viewState: IViewState;
     editorOptions: IEditorOptions;
     frontFace: boolean;
+
+    overrideDataContext(dataContextOverridesObject: any): IFlowContext;
+    overrideRunningFlow(component: Component): IFlowContext;
 }
 
 export interface IDataContext {
-    create(defaultValueOverrides: any): IDataContext;
+    createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext;
+    createWithLocalVariables(): IDataContext;
 
     get(dataItemId: string): any;
+    set(dataItemId: string, value: any): void;
+    declare(dataItemId: string, value: any): void;
+
     getEnumValue(dataItemId: string): number;
     getBool(dataItemId: string): boolean;
     getValueList(dataItemId: string): string[];
     getMin(dataItemId: string): number;
     getMax(dataItemId: string): number;
+}
+
+export interface IRunningFlow {
+    getRunningFlowByComponent(component: Component): IRunningFlow | undefined;
+
+    getInputPropertyValue(
+        component: Component,
+        input: string
+    ): InputPropertyValue | undefined;
+
+    getComponentRunningState<T>(component: Component): T;
+    setComponentRunningState<T>(component: Component, runningState: T): void;
+
+    dataContext: IDataContext;
+
+    getVariable(component: Component, variableName: string): any;
+    setVariable(component: Component, variableName: string, value: any): void;
+    declareVariable(
+        component: Component,
+        variableName: string,
+        value: any
+    ): void;
 }
 
 export interface IDocument {

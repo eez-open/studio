@@ -11,21 +11,23 @@ import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
 import { getDocumentStore } from "project-editor/core/store";
 
+import {
+    ITreeObjectAdapter,
+    TreeObjectAdapter
+} from "project-editor/core/objectAdapter";
+
 import type {
     IDocument,
     IViewState,
     IViewStatePersistantState,
     IFlowContext,
     IEditorOptions,
-    IResizeHandler
+    IResizeHandler,
+    IDataContext
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
-import {
-    ITreeObjectAdapter,
-    TreeObjectAdapter
-} from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -306,13 +308,22 @@ export class EditorFlowContext implements IFlowContext {
     @observable editorOptions: IEditorOptions = {};
     @observable dragComponent: Component | undefined;
     @observable frontFace: boolean;
+    dataContext: IDataContext;
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this, this.containerId);
     }
 
-    get dataContext() {
-        return this.document.DocumentStore.dataContext;
+    overrideDataContext(dataContextOverridesObject: any): IFlowContext {
+        return Object.assign(new EditorFlowContext(this.containerId), this, {
+            dataContext: this.dataContext.createWithDefaultValueOverrides(
+                dataContextOverridesObject
+            )
+        });
+    }
+
+    overrideRunningFlow(component: Component): IFlowContext {
+        return this;
     }
 
     @action
@@ -348,6 +359,8 @@ export class EditorFlowContext implements IFlowContext {
         this.editorOptions.filterSnapLines = filterSnapLines;
 
         this.frontFace = frontFace ?? false;
+
+        this.dataContext = this.document.DocumentStore.dataContext;
     }
 
     destroy() {

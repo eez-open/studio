@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { action, observable } from "mobx";
 
 import { validators } from "eez-studio-shared/validation";
 
@@ -149,28 +149,53 @@ export function findDataItem(project: Project, dataItemName: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DataContext implements IDataContext {
+    @observable localVariables: Map<string, any> | undefined = undefined;
+
     constructor(
         public project: Project,
         public parentDataContext?: DataContext,
-        public defaultValueOverrides?: any
-    ) {}
+        public defaultValueOverrides?: any,
+        localVariables?: Map<string, any>
+    ) {
+        this.localVariables = localVariables;
+    }
 
-    create(defaultValueOverrides: any): IDataContext {
+    createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext {
         return new DataContext(this.project, this, defaultValueOverrides);
     }
 
-    getValue(dataItemId: string): any {
-        let dataItem = findDataItem(this.project, dataItemId);
-        return dataItem && dataItem._value;
+    createWithLocalVariables() {
+        return new DataContext(
+            this.project,
+            this,
+            undefined,
+            new Map<string, any>()
+        );
     }
 
-    setValue(dataItemId: string, value: any) {
-        let dataItem = findDataItem(this.project, dataItemId);
-        if (dataItem) {
-            dataItem._value = value;
+    @action
+    set(dataItemId: string, value: any) {
+        if (this.localVariables && this.localVariables.has(dataItemId)) {
+            this.localVariables.set(dataItemId, value);
         } else {
-            throw `data ${dataItemId} not found`;
+            const dataItem = findDataItem(this.project, dataItemId);
+            if (dataItem) {
+                dataItem._value = value;
+            } else {
+                throw `1variable "${dataItemId}" not found`;
+            }
         }
+    }
+
+    @action
+    declare(variableName: string, value: any) {
+        const localVariables = this.localVariables;
+
+        if (!localVariables) {
+            throw "data context without local variables";
+        }
+
+        localVariables.set(variableName, value);
     }
 
     findDataItemDefaultValue(dataItemId: string): any {
@@ -198,80 +223,102 @@ export class DataContext implements IDataContext {
     }
 
     get(dataItemId: string): any {
+        const parts = dataItemId.split(".");
+        dataItemId = parts[0];
+
         if (dataItemId === undefined) {
             return undefined;
         }
 
-        const value = this.getValue(dataItemId);
-        if (value != undefined) {
-            return value;
+        let value: any = undefined;
+
+        if (this.localVariables && this.localVariables.has(dataItemId)) {
+            value = this.localVariables.get(dataItemId);
+        } else {
+            let dataItem = this.findDataItem(dataItemId);
+
+            if (dataItem) {
+                if (dataItem._value) {
+                    value = dataItem._value;
+                } else {
+                    if (dataItem.defaultValue !== undefined) {
+                        if (
+                            dataItem.type == "integer" ||
+                            dataItem.type == "enum"
+                        ) {
+                            value = parseInt(dataItem.defaultValue);
+                            if (isNaN(value)) {
+                                value = dataItem.defaultValue;
+                                if (dataItem.enumItems.indexOf(value) == -1) {
+                                    console.error(
+                                        "Invalid integer default value",
+                                        dataItem
+                                    );
+                                }
+                            }
+                        } else if (dataItem.type == "float") {
+                            value = parseFloat(dataItem.defaultValue);
+                            if (isNaN(value)) {
+                                value = dataItem.defaultValue;
+                                console.error(
+                                    "Invalid float default value",
+                                    dataItem
+                                );
+                            } else {
+                                value = dataItem.defaultValue;
+                            }
+                        } else if (dataItem.type == "boolean") {
+                            let defaultValue = dataItem.defaultValue
+                                .toString()
+                                .trim()
+                                .toLowerCase();
+                            if (defaultValue == "1" || defaultValue == "true") {
+                                value = true;
+                            } else if (
+                                defaultValue == "0" ||
+                                defaultValue == "false"
+                            ) {
+                                value = false;
+                            } else {
+                                value = false;
+                                console.error(
+                                    "Invalid boolean default value",
+                                    dataItem
+                                );
+                            }
+                        } else if (dataItem.type == "list") {
+                            try {
+                                value =
+                                    typeof dataItem.defaultValue === "string"
+                                        ? JSON.parse(dataItem.defaultValue)
+                                        : dataItem.defaultValue;
+                            } catch (err) {
+                                value = [];
+                                console.error(
+                                    "Invalid list default value",
+                                    dataItem,
+                                    err
+                                );
+                            }
+                        } else {
+                            value = dataItem.defaultValue;
+                        }
+                    } else {
+                        value = undefined;
+                    }
+                }
+            }
         }
 
-        let dataItem = this.findDataItem(dataItemId);
-        if (dataItem) {
-            let value: any;
-
-            if (dataItem.defaultValue !== undefined) {
-                if (dataItem.type == "integer" || dataItem.type == "enum") {
-                    value = parseInt(dataItem.defaultValue);
-                    if (isNaN(value)) {
-                        value = dataItem.defaultValue;
-                        if (dataItem.enumItems.indexOf(value) == -1) {
-                            console.error(
-                                "Invalid integer default value",
-                                dataItem
-                            );
-                        }
-                    }
-                } else if (dataItem.type == "float") {
-                    value = parseFloat(dataItem.defaultValue);
-                    if (isNaN(value)) {
-                        value = dataItem.defaultValue;
-                        console.error("Invalid float default value", dataItem);
-                    } else {
-                        value = dataItem.defaultValue;
-                    }
-                } else if (dataItem.type == "boolean") {
-                    let defaultValue = dataItem.defaultValue
-                        .toString()
-                        .trim()
-                        .toLowerCase();
-                    if (defaultValue == "1" || defaultValue == "true") {
-                        value = true;
-                    } else if (defaultValue == "0" || defaultValue == "false") {
-                        value = false;
-                    } else {
-                        value = false;
-                        console.error(
-                            "Invalid boolean default value",
-                            dataItem
-                        );
-                    }
-                } else if (dataItem.type == "list") {
-                    try {
-                        value =
-                            typeof dataItem.defaultValue === "string"
-                                ? JSON.parse(dataItem.defaultValue)
-                                : dataItem.defaultValue;
-                    } catch (err) {
-                        value = [];
-                        console.error(
-                            "Invalid list default value",
-                            dataItem,
-                            err
-                        );
-                    }
-                } else {
-                    value = dataItem.defaultValue;
-                }
-            } else {
-                console.error("Undefined default value", dataItem);
+        for (let i = 1; i < parts.length; i++) {
+            if (value == undefined) {
+                return value;
             }
 
-            return value;
+            value = value[parts[i]];
         }
 
-        return "ERR!";
+        return value;
     }
 
     getBool(dataItemId: string): boolean {

@@ -441,14 +441,3 @@ export class FlowTabState implements IEditorState {
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function overrideDataContextInFlowContext(
-    flowContext: IFlowContext,
-    dataContextOverridesObject: any
-): IFlowContext {
-    return Object.assign({}, flowContext, {
-        dataContext: flowContext.dataContext.create(dataContextOverridesObject)
-    });
-}

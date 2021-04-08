@@ -4,6 +4,8 @@ export interface ThemeInterface {
     panelHeaderColor: string;
     selectionBackgroundColor: string;
     selectionColor: string;
+    lightSelectionBackgroundColor: string;
+    lightSelectionColor: string;
     tableBorderColor: string;
     nonFocusedSelectionBackgroundColor: string;
     nonFocusedSelectionColor: string;
@@ -34,6 +36,8 @@ export const theme: ThemeInterface = {
     panelHeaderColor: "#f0f0f0",
     selectionBackgroundColor: "#337bb7",
     selectionColor: "white",
+    lightSelectionBackgroundColor: "#93bde0",
+    lightSelectionColor: "white",
     tableBorderColor: "#e0e0e0",
     nonFocusedSelectionBackgroundColor: "#c5c5c5",
     nonFocusedSelectionColor: "black",

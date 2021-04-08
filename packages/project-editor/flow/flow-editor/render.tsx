@@ -154,7 +154,7 @@ const ComponentEnclosureDiv = styled.div`
 
             .title {
                 flex-grow: 1;
-                padding: 7px 0;
+                padding: 4px 0;
                 background-color: #43786d;
                 color: white;
                 display: flex;
@@ -163,7 +163,11 @@ const ComponentEnclosureDiv = styled.div`
                 white-space: nowrap;
 
                 span {
-                    padding-left: 4px;
+                    padding-left: 6px;
+                }
+
+                span:last-child {
+                    padding-right: 6px;
                 }
 
                 .title-image {
@@ -176,7 +180,6 @@ const ComponentEnclosureDiv = styled.div`
                     }
 
                     img {
-                        margin-right: 5px;
                         width: 48px;
                         object-fit: contain;
                     }
@@ -194,7 +197,7 @@ const ComponentEnclosureDiv = styled.div`
             }
         }
 
-        .inputs-outputs {
+        .content {
             display: flex;
             flex-direction: row;
 
@@ -225,11 +228,14 @@ const ComponentEnclosureDiv = styled.div`
             [data-connection-output-id] {
                 text-align: right;
             }
-        }
 
-        .body {
-            padding: 4px;
-            background-color: white;
+            .body {
+                margin: 4px;
+                border: 1px solid ${props => props.theme.borderColor};
+                padding: 4px;
+                background-color: white;
+            }
+
             pre {
                 margin-bottom: 0;
             }
@@ -237,7 +243,7 @@ const ComponentEnclosureDiv = styled.div`
     }
 
     &.eez-widget-component {
-        .inputs-outputs {
+        .content {
             position: absolute;
             bottom: -32px;
             width: 100%;
@@ -279,6 +285,49 @@ const ComponentEnclosureDiv = styled.div`
     }
 `;
 
+export const ComponentCanvas = observer(
+    ({
+        component,
+        flowContext,
+        draw
+    }: {
+        component: Component;
+        flowContext: IFlowContext;
+        draw: (ctx: CanvasRenderingContext2D) => void;
+    }) => {
+        const refDiv = React.useRef<HTMLDivElement>(null);
+
+        let canvas: HTMLCanvasElement;
+
+        React.useEffect(() => {
+            if (refDiv.current) {
+                if (refDiv.current.children[0]) {
+                    refDiv.current.replaceChild(
+                        canvas,
+                        refDiv.current.children[0]
+                    );
+                } else {
+                    refDiv.current.appendChild(canvas);
+                }
+            }
+        });
+
+        canvas = document.createElement("canvas");
+        canvas.width = component.width;
+        canvas.height = component.height;
+        canvas.style.imageRendering = "pixelated";
+        canvas.style.display = "block";
+        draw(canvas.getContext("2d")!);
+
+        return (
+            <div
+                ref={refDiv}
+                style={{ width: component.width, height: component.height }}
+            ></div>
+        );
+    }
+);
+
 export const ComponentEnclosure = observer(
     ({
         component,
@@ -319,45 +368,12 @@ export const ComponentEnclosure = observer(
 
         const dataFlowObjectId = getId(component);
 
-        const refDiv = React.useRef<HTMLDivElement>(null);
-
-        let canvas: HTMLCanvasElement;
-
-        React.useEffect(() => {
-            if (refDiv.current) {
-                if (refDiv.current.children[0]) {
-                    refDiv.current.replaceChild(
-                        canvas,
-                        refDiv.current.children[0]
-                    );
-                } else {
-                    refDiv.current.appendChild(canvas);
-                }
-            }
-        });
-
-        let canvasDiv;
-
-        if (component instanceof Component && component.draw) {
-            canvas = document.createElement("canvas");
-            canvas.width = component.width;
-            canvas.height = component.height;
-            canvas.style.imageRendering = "pixelated";
-            canvas.style.display = "block";
-            component.draw!(canvas.getContext("2d")!, flowContext);
-
-            canvasDiv = (
-                <div
-                    ref={refDiv}
-                    style={{ width: component.width, height: component.height }}
-                ></div>
-            );
-        }
-
         style.overflow = "visible";
         component.styleHook(style, flowContext);
 
         const className = component.getClassName();
+
+        const onClick = component instanceof Component && component.onClick;
 
         return (
             <ComponentEnclosureDiv
@@ -369,13 +385,8 @@ export const ComponentEnclosure = observer(
                             .isRuntimeMode
                 })}
                 style={style}
-                onClick={
-                    component instanceof Component
-                        ? component.onClick
-                        : undefined
-                }
+                onClick={onClick ? () => onClick(flowContext) : undefined}
             >
-                {canvasDiv}
                 {component.render(flowContext)}
             </ComponentEnclosureDiv>
         );

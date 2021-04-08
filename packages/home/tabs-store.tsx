@@ -513,7 +513,7 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async close() {
-        if (await this.DocumentStore.saveModified()) {
+        if (await this.DocumentStore.closeWindow()) {
             this.tabs.removeTab(this);
             this.DocumentStore.changeProject(undefined);
         }

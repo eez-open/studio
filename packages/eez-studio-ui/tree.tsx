@@ -5,12 +5,13 @@ import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
 
-export interface ITreeNode {
+export interface ITreeNode<T = any> {
     id: string;
     label: string;
     children: ITreeNode[];
     selected: boolean;
     expanded: boolean;
+    data?: T;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,18 +79,26 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
             let triangle: JSX.Element | undefined;
 
             if (this.props.node.children.length > 0) {
-                let triangleClassName = classNames("EezStudio_TreeRowTriangle", {
-                    EezStudio_Expanded: this.props.node.expanded
-                });
+                let triangleClassName = classNames(
+                    "EezStudio_TreeRowTriangle",
+                    {
+                        EezStudio_Expanded: this.props.node.expanded
+                    }
+                );
 
                 triangle = (
-                    <span className={triangleClassName} onClick={this.onTriangleClick.bind(this)}>
+                    <span
+                        className={triangleClassName}
+                        onClick={this.onTriangleClick.bind(this)}
+                    >
                         <Icon icon="material:keyboard_arrow_right" size={18} />
                     </span>
                 );
                 label = <span>{labelText}</span>;
             } else {
-                label = <span className="EezStudio_TreeRowLabel">{labelText}</span>;
+                label = (
+                    <span className="EezStudio_TreeRowLabel">{labelText}</span>
+                );
             }
 
             row = (

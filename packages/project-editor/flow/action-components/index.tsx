@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, computed } from "mobx";
+import { observable, action, computed, IReactionDisposer, autorun } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -52,9 +52,7 @@ export class InputActionComponent extends ActionComponent {
 
     @observable name: string;
 
-    async execute(runningFlow: RunningFlow) {
-        return "@seqout";
-    }
+    async execute(runningFlow: RunningFlow) {}
 }
 
 registerClass(InputActionComponent);
@@ -84,10 +82,9 @@ registerClass(OutputActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const GetVariableBody = styled.div`
-    text-align: center;
-    background-color: #fffcf7 !important;
-`;
+class GetVariableActionComponentRunningState {
+    disposeReaction: IReactionDisposer;
+}
 
 export class GetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -112,13 +109,32 @@ export class GetVariableActionComponent extends ActionComponent {
 
     @computed get body(): React.ReactNode {
         return (
-            <GetVariableBody
-                className="body"
-                data-connection-output-id="variable"
-            >
+            <div className="outputs" data-connection-output-id="variable">
                 <pre>{this.variable}</pre>
-            </GetVariableBody>
+            </div>
         );
+    }
+
+    onStart(runningFlow: RunningFlow) {
+        const runningState = new GetVariableActionComponentRunningState();
+
+        runningFlow.setComponentRunningState(this, runningState);
+
+        runningState.disposeReaction = autorun(() =>
+            runningFlow.propagateValue(
+                this,
+                "variable",
+                runningFlow.getVariable(this, this.variable)
+            )
+        );
+    }
+
+    onFinish(runningFlow: RunningFlow) {
+        runningFlow
+            .getComponentRunningState<GetVariableActionComponentRunningState>(
+                this
+            )
+            .disposeReaction();
     }
 }
 
@@ -128,6 +144,11 @@ registerClass(GetVariableActionComponent);
 
 const SetVariableBody = styled.div`
     display: flex;
+    align-items: baseline;
+    pre.single {
+        flex-grow: 1;
+        text-align: center;
+    }
 `;
 
 export class SetVariableActionComponent extends ActionComponent {
@@ -159,12 +180,19 @@ export class SetVariableActionComponent extends ActionComponent {
     @observable value: string;
 
     @computed get body(): React.ReactNode {
+        if (this.isInputProperty("value")) {
+            return (
+                <SetVariableBody className="body">
+                    <pre className="single">{this.variable}</pre>
+                </SetVariableBody>
+            );
+        }
         return (
             <SetVariableBody className="body">
                 <div>
                     <pre>{this.variable}</pre>
                 </div>
-                <div style={{ padding: "0 10px" }}>🠔</div>
+                <div style={{ padding: "0 10px" }}>🡨</div>
                 <div style={{ textAlign: "left" }}>
                     <pre>{this.value}</pre>
                 </div>
@@ -172,24 +200,25 @@ export class SetVariableActionComponent extends ActionComponent {
         );
     }
 
-    @action
     async execute(runningFlow: RunningFlow) {
-        const DocumentStore = getDocumentStore(this);
         let value;
         if (this.isInputProperty("value")) {
-            const inputPropertyValue = this.getInputPropertyValue("value");
+            const inputPropertyValue = runningFlow.getInputPropertyValue(
+                this,
+                "value"
+            );
             if (
                 inputPropertyValue == undefined ||
                 inputPropertyValue.value == undefined
             ) {
                 throw `missing value input`;
             }
-            value = inputPropertyValue.value;
+            value = JSON.parse(inputPropertyValue.value);
         } else {
             value = this.value;
         }
-        DocumentStore.dataContext.setValue(this.variable, value);
-        return "@seqout";
+
+        runningFlow.setVariable(this, this.variable, value);
     }
 }
 
@@ -199,6 +228,10 @@ registerClass(SetVariableActionComponent);
 
 const DeclareVariableBody = styled.div`
     display: flex;
+    pre.single {
+        flex-grow: 1;
+        text-align: center;
+    }
 `;
 
 export class DeclareVariableActionComponent extends ActionComponent {
@@ -230,41 +263,45 @@ export class DeclareVariableActionComponent extends ActionComponent {
     @observable value: string;
 
     @computed get body(): React.ReactNode {
+        if (this.isInputProperty("value")) {
+            return (
+                <DeclareVariableBody className="body">
+                    <pre className="single">{this.variable}</pre>
+                </DeclareVariableBody>
+            );
+        }
         return (
             <DeclareVariableBody className="body">
                 <div>
                     <pre>{this.variable}</pre>
                 </div>
-                {!this.isInputProperty("value") && (
-                    <>
-                        <div style={{ padding: "0 10px" }}>🠔</div>
-                        <div style={{ textAlign: "left" }}>
-                            <pre>{this.value}</pre>
-                        </div>
-                    </>
-                )}
+                <div style={{ padding: "0 10px" }}>🡨</div>
+                <div style={{ textAlign: "left" }}>
+                    <pre>{this.value}</pre>
+                </div>
             </DeclareVariableBody>
         );
     }
 
-    @action
     async execute(runningFlow: RunningFlow) {
-        const DocumentStore = getDocumentStore(this);
         let value;
         if (this.isInputProperty("value")) {
-            const inputPropertyValue = this.getInputPropertyValue("value");
+            const inputPropertyValue = runningFlow.getInputPropertyValue(
+                this,
+                "value"
+            );
             if (
                 inputPropertyValue == undefined ||
                 inputPropertyValue.value == undefined
             ) {
                 throw `missing value input`;
             }
-            value = inputPropertyValue.value;
+            value = JSON.parse(inputPropertyValue.value);
         } else {
             value = this.value;
         }
-        DocumentStore.dataContext.setValue(this.variable, value);
-        return "@seqout";
+
+        runningFlow.declareVariable(this, this.variable, value);
     }
 }
 
@@ -317,7 +354,7 @@ export class ConstantActionComponent extends ActionComponent {
         ];
     }
 
-    onStart(runningFlow: RunningFlow) {
+    async execute(runningFlow: RunningFlow) {
         runningFlow.propagateValue(this, "value", JSON.parse(this.value));
     }
 }
@@ -326,7 +363,13 @@ registerClass(ConstantActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ScpiBody = styled.div``;
+const ScpiDiv = styled.div`
+    padding-top: 0 !important;
+    & > div:first-child {
+        white-space: nowrap;
+        border-bottom: 1px solid ${props => props.theme.borderColor};
+    }
+`;
 
 export class ScpiActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -507,7 +550,8 @@ export class ScpiActionComponent extends ActionComponent {
                             }
 
                             const input = matches[1].trim();
-                            const inputPropertyValue = this.getInputPropertyValue(
+                            const inputPropertyValue = runningFlow.getInputPropertyValue(
+                                this,
                                 input
                             );
                             if (
@@ -537,16 +581,14 @@ export class ScpiActionComponent extends ActionComponent {
         } finally {
             connection.release();
         }
-
-        return "@seqout";
     }
 
     @computed get body(): React.ReactNode {
         return (
-            <ScpiBody className="body">
-                <p>[{this.instrument}]</p>
+            <ScpiDiv className="body">
+                <div>Instrument: [{this.instrument}]</div>
                 <pre>{this.scpi}</pre>
-            </ScpiBody>
+            </ScpiDiv>
         );
     }
 }

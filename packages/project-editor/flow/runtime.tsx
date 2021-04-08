@@ -5,6 +5,7 @@ import classNames from "classnames";
 import styled from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
 
+import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { IListNode, List } from "eez-studio-ui/list";
 
 import { ProjectContext } from "project-editor/project/context";
@@ -12,7 +13,7 @@ import { Panel } from "project-editor/components/Panel";
 import { action, computed, observable, runInAction } from "mobx";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { findAction } from "project-editor/features/action/action";
-import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { InputActionComponent } from "project-editor/flow/action-components";
 import {
     ActionComponent,
@@ -22,9 +23,640 @@ import {
 import { getLabel, IEezObject } from "project-editor/core/object";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
-import { getFlow } from "project-editor/project/project";
+import type {
+    IDataContext,
+    IFlowContext
+} from "project-editor/flow//flow-interfaces";
+import { LayoutViewWidget } from "./widgets";
+
+////////////////////////////////////////////////////////////////////////////////
 
 const MAX_HISTORY_ITEMS = 1000;
+
+////////////////////////////////////////////////////////////////////////////////
+
+/*
+
+system inputs: @start, @seqin
+system outputs: @seqout
+
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface InputData {
+    time: number;
+    value: any;
+}
+
+interface QueueTask {
+    runningFlow: RunningFlow;
+    component: Component;
+    input: string;
+    inputData: InputData;
+    connectionLine?: ConnectionLine;
+}
+
+export class RuntimeStoreClass {
+    constructor(public DocumentStore: DocumentStoreClass) {}
+
+    ////////////////////////////////////////
+
+    @observable isRuntimeMode = false;
+
+    isStopped = false;
+
+    @action.bound
+    setRuntimeMode() {
+        if (!this.isRuntimeMode) {
+            this.isRuntimeMode = true;
+            this.start();
+        }
+    }
+
+    setEditorMode = async () => {
+        if (this.isRuntimeMode) {
+            this.stop();
+
+            this.queue = [];
+            runInAction(() => {
+                this.runningFlows = [];
+                this.history = [];
+            });
+
+            runInAction(() => (this.isRuntimeMode = false));
+        }
+    };
+
+    start() {
+        this.startSpeedCalculation();
+
+        this.queue = [];
+
+        this.runningFlows = this.DocumentStore.project.pages
+            .filter(page => !page.isUsedAsCustomWidget)
+            .map(page => new RunningFlow(this, page));
+
+        this.runningFlows.forEach(runningFlow => runningFlow.start());
+
+        this.pumpQueue();
+
+        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
+    }
+
+    async stop() {
+        if (this.pumpTimeoutId) {
+            clearTimeout(this.pumpTimeoutId);
+        }
+
+        while (this.isRunning) {
+            await new Promise(resolve => setTimeout(resolve));
+        }
+
+        this.runningFlows.forEach(runningFlow => runningFlow.finish());
+        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
+
+        this.stopSpeedCalculation();
+
+        this.isStopped = true;
+    }
+
+    get isRunning() {
+        return (
+            this.runningFlows.find(runningFlow => runningFlow.isRunning) !=
+            undefined
+        );
+    }
+
+    ////////////////////////////////////////
+
+    queue: QueueTask[] = [];
+    pumpTimeoutId: any;
+
+    @observable runningFlows: RunningFlow[] = [];
+
+    getRunningFlow(flow: Flow) {
+        for (let runningFlow of this.runningFlows) {
+            if (runningFlow.flow === flow) {
+                return runningFlow;
+            }
+        }
+
+        for (let runningFlow of this.runningFlows) {
+            const childRunningFlow = runningFlow.getRunningFlow(flow);
+            if (childRunningFlow) {
+                return childRunningFlow;
+            }
+        }
+
+        return undefined;
+    }
+
+    pumpQueue = async () => {
+        this.pumpTimeoutId = undefined;
+
+        this.calculateSpeed();
+
+        while (true) {
+            const task = this.queue.shift();
+            if (!task) {
+                break;
+            }
+
+            const {
+                runningFlow,
+                component,
+                input,
+                inputData,
+                connectionLine
+            } = task;
+
+            const componentState = runningFlow.getComponentState(component);
+
+            componentState.setInputData(input, inputData);
+
+            if (componentState.isReadyToRun()) {
+                componentState.run();
+            }
+
+            if (connectionLine) {
+                connectionLine.setActive();
+            }
+        }
+
+        this.pumpTimeoutId = setTimeout(this.pumpQueue);
+    };
+
+    isComponentReadyToRun(runningFlow: RunningFlow, component: Component) {
+        return false;
+    }
+
+    @action
+    executeWidgetAction(flowContext: IFlowContext, widget: Widget) {
+        if (this.isStopped) {
+            this.start();
+        }
+
+        if (widget.isOutputProperty("action")) {
+            (flowContext.runningFlow as RunningFlow).startFromWidgetAction(
+                widget
+            );
+        } else if (widget.action) {
+            const action = findAction(
+                this.DocumentStore.project,
+                widget.action
+            );
+
+            if (action) {
+                this.addHistoryItem(new ExecuteWidgetActionHistoryItem(widget));
+                const runningFlow = new RunningFlow(this, action);
+                this.addRunningFlow(runningFlow);
+                runningFlow.startAction();
+            } else {
+                this.addHistoryItem(
+                    new WidgetActionNotFoundHistoryItem(widget)
+                );
+            }
+        } else {
+            this.addHistoryItem(new WidgetActionNotDefinedHistoryItem(widget));
+        }
+    }
+
+    addRunningFlow(runningFlow: RunningFlow) {
+        runInAction(() => {
+            this.runningFlows.push(runningFlow);
+        });
+    }
+
+    removeRunningFlow(runningFlow: RunningFlow) {
+        runInAction(() => {
+            this.runningFlows.splice(this.runningFlows.indexOf(runningFlow), 1);
+        });
+    }
+
+    ////////////////////////////////////////
+    // SPEED CALCULATION
+
+    numExecutedTasks: number = 0;
+    measureSpeedTime: number;
+    @observable speed: number;
+
+    startSpeedCalculation() {
+        this.measureSpeedTime = new Date().getTime();
+        this.numExecutedTasks = 0;
+    }
+
+    onTaskExecuted() {
+        this.numExecutedTasks++;
+    }
+
+    calculateSpeed() {
+        const time = new Date().getTime();
+        if (time - this.measureSpeedTime >= 1000) {
+            runInAction(() => {
+                this.speed = this.numExecutedTasks;
+            });
+            this.numExecutedTasks = 0;
+            this.measureSpeedTime = time;
+        }
+    }
+
+    stopSpeedCalculation() {
+        runInAction(() => {
+            this.speed = 0;
+        });
+    }
+
+    ////////////////////////////////////////
+    // HISTORY
+
+    @observable history: HistoryItem[] = [];
+    @observable selectedHistoryItem: HistoryItem | undefined;
+
+    addHistoryItem(historyItem: HistoryItem) {
+        runInAction(() => {
+            this.history.push(historyItem);
+            if (this.history.length > MAX_HISTORY_ITEMS) {
+                this.history.shift();
+            }
+        });
+    }
+
+    @action.bound
+    clearHistory() {
+        this.history = [];
+    }
+
+    ////////////////////////////////////////
+
+    render() {
+        return <RuntimePanel />;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type InputPropertyValue = InputData;
+
+class ComponentState {
+    inputsData = new Map<string, InputData>();
+
+    @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
+
+    runningState: any;
+
+    isRunning: boolean = false;
+
+    getInputPropertyValue(input: string) {
+        return this._inputPropertyValues.get(input);
+    }
+
+    constructor(public runningFlow: RunningFlow, public component: Component) {}
+
+    setInputData(input: string, inputData: InputData) {
+        this.inputsData.set(input, inputData);
+    }
+
+    isReadyToRun() {
+        if (this.isRunning) {
+            return false;
+        }
+
+        if (
+            this.runningFlow.flow.connectionLines.find(
+                connectionLine =>
+                    connectionLine.targetComponent == this.component &&
+                    connectionLine.input === "@seqin"
+            ) &&
+            !this.inputsData.has("@seqin")
+        ) {
+            return false;
+        }
+
+        if (
+            this.component.inputs.find(
+                input => !this.inputsData.has(input.name)
+            )
+        ) {
+            return false;
+        }
+
+        if (this.component instanceof InputActionComponent) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @action
+    async run() {
+        for (let [key, value] of this.inputsData) {
+            this._inputPropertyValues.set(key, value);
+        }
+
+        this.inputsData.delete("@seqin");
+
+        if (this.component instanceof ActionComponent) {
+            this.runningFlow.RuntimeStore.addHistoryItem(
+                new ExecuteActionComponentHistoryItem(this.component)
+            );
+
+            this.isRunning = true;
+
+            try {
+                await this.component.execute(this.runningFlow);
+            } catch (err) {
+                this.runningFlow.RuntimeStore.addHistoryItem(
+                    new ExecutionErrorHistoryItem(this.component, err)
+                );
+
+                this.runningFlow.RuntimeStore.stop();
+            } finally {
+                this.isRunning = false;
+            }
+
+            this.runningFlow.RuntimeStore.onTaskExecuted();
+
+            const connectionLine = this.runningFlow.flow.connectionLines.find(
+                connectionLine =>
+                    connectionLine.sourceComponent == this.component &&
+                    connectionLine.output === "@seqout"
+            );
+
+            if (connectionLine && connectionLine.targetComponent) {
+                this.runningFlow.RuntimeStore.queue.push({
+                    runningFlow: this.runningFlow,
+                    component: connectionLine.targetComponent,
+                    input: connectionLine.input,
+                    inputData: {
+                        time: Date.now(),
+                        value: null
+                    },
+                    connectionLine
+                });
+            }
+        } else if (this.component instanceof LayoutViewWidget) {
+            const page = this.component.getLayoutPage(
+                this.runningFlow.RuntimeStore.DocumentStore.dataContext
+            );
+            if (page) {
+                const runningFlow = this.runningFlow.getRunningFlowByComponent(
+                    this.component
+                );
+                if (runningFlow) {
+                    for (let [input, inputData] of this.inputsData) {
+                        for (let component of page.components) {
+                            if (component instanceof InputActionComponent) {
+                                if (component.wireID === input) {
+                                    runningFlow?.propagateValue(
+                                        component,
+                                        "@seqout",
+                                        inputData.value
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export class RunningFlow {
+    id = guid();
+
+    componentStates = new Map<Component, ComponentState>();
+
+    runningFlows: RunningFlow[] = [];
+
+    dataContext: IDataContext;
+
+    constructor(
+        public RuntimeStore: RuntimeStoreClass,
+        public flow: Flow,
+        public parentRunningFlow?: RunningFlow,
+        public component?: Component
+    ) {
+        this.dataContext = this.RuntimeStore.DocumentStore.dataContext.createWithLocalVariables();
+    }
+
+    get label() {
+        return getLabel(this.flow);
+    }
+
+    getRunningFlow(flow: Flow): RunningFlow | undefined {
+        for (let runningFlow of this.runningFlows) {
+            if (runningFlow.flow === flow) {
+                return runningFlow;
+            }
+        }
+
+        for (let runningFlow of this.runningFlows) {
+            const childRunningFlow = runningFlow.getRunningFlow(flow);
+            if (childRunningFlow) {
+                return childRunningFlow;
+            }
+        }
+
+        return undefined;
+    }
+
+    getRunningFlowByComponent(component: Component): RunningFlow | undefined {
+        for (let runningFlow of this.runningFlows) {
+            if (runningFlow.component === component) {
+                return runningFlow;
+            }
+        }
+
+        return undefined;
+    }
+
+    getComponentState(component: Component) {
+        let componentState = this.componentStates.get(component);
+        if (!componentState) {
+            componentState = new ComponentState(this, component);
+            this.componentStates.set(component, componentState);
+        }
+        return componentState;
+    }
+
+    getInputPropertyValue(component: Component, input: string) {
+        return this.getComponentState(component).getInputPropertyValue(input);
+    }
+
+    getComponentRunningState<T>(component: Component): T {
+        return this.getComponentState(component).runningState;
+    }
+
+    getVariable(component: Component, variableName: string): any {
+        return this.dataContext.get(variableName);
+    }
+
+    setVariable(component: Component, variableName: string, value: any) {
+        return this.dataContext.set(variableName, value);
+    }
+
+    declareVariable(component: Component, variableName: string, value: any) {
+        return this.dataContext.declare(variableName, value);
+    }
+
+    setComponentRunningState<T>(component: Component, runningState: T) {
+        this.getComponentState(component).runningState = runningState;
+    }
+
+    get isRunning(): boolean {
+        for (let [_, componentState] of this.componentStates) {
+            if (componentState.isRunning) {
+                return true;
+            }
+        }
+
+        return (
+            this.runningFlows.find(runningFlow => runningFlow.isRunning) !=
+            undefined
+        );
+    }
+
+    start() {
+        this.flow.components.forEach(component => component.onStart(this));
+
+        this.flow.components.forEach(component => {
+            this.RuntimeStore.queue.push({
+                runningFlow: this,
+                component,
+                input: "@start",
+                inputData: {
+                    time: Date.now(),
+                    value: null
+                }
+            });
+
+            if (component instanceof LayoutViewWidget) {
+                const page = component.getLayoutPage(
+                    this.RuntimeStore.DocumentStore.dataContext
+                );
+
+                if (page) {
+                    const runningFlow = new RunningFlow(
+                        this.RuntimeStore,
+                        page,
+                        this,
+                        component
+                    );
+                    this.runningFlows.push(runningFlow);
+
+                    runningFlow.start();
+                }
+            }
+        });
+    }
+
+    finish() {
+        this.runningFlows.forEach(runningFlow => runningFlow.finish());
+
+        this.flow.components.forEach(component => component.onFinish(this));
+
+        this.RuntimeStore.addHistoryItem(new ActionEndHistoryItem(this.flow!));
+    }
+
+    startFromWidgetAction(widget: Component) {
+        this.executeWire(widget, "action");
+    }
+
+    startAction() {
+        this.RuntimeStore.addHistoryItem(new ActionStartHistoryItem(action));
+
+        const inputActionComponent = this.flow.components.find(
+            component => component instanceof InputActionComponent
+        ) as ActionComponent;
+
+        if (inputActionComponent) {
+            this.RuntimeStore.queue.push({
+                runningFlow: this,
+                component: inputActionComponent,
+                input: "input",
+                inputData: {
+                    time: Date.now(),
+                    value: null
+                }
+            });
+        } else {
+            // TODO report
+        }
+    }
+
+    executeWire(component: Component, output: string) {
+        const flow = this.flow!;
+
+        const connectionLine = flow.connectionLines.find(
+            connectionLine =>
+                connectionLine.source === component.wireID &&
+                connectionLine.output === output
+        );
+
+        if (connectionLine) {
+            connectionLine.setActive();
+
+            const actionNode = flow.wiredComponents.get(
+                connectionLine.target
+            ) as ActionComponent;
+
+            this.RuntimeStore.queue.push({
+                runningFlow: this,
+                component: actionNode,
+                input: connectionLine.input,
+                inputData: {
+                    time: Date.now(),
+                    value: null
+                },
+                connectionLine
+            });
+        } else {
+            this.RuntimeStore.addHistoryItem(
+                new NoConnectionHistoryItem(component, output)
+            );
+        }
+    }
+
+    propagateValue(sourceComponent: Component, output: string, value: any) {
+        this.flow.connectionLines.forEach(connectionLine => {
+            if (
+                connectionLine.source === sourceComponent.wireID &&
+                connectionLine.output === output
+            ) {
+                const targetComponent = this.flow.wiredComponents.get(
+                    connectionLine.target
+                );
+
+                if (!targetComponent) {
+                    return;
+                }
+
+                connectionLine.setActive();
+
+                this.RuntimeStore.addHistoryItem(
+                    new OutputValueHistoryItem(
+                        sourceComponent,
+                        connectionLine.output,
+                        value
+                    )
+                );
+
+                this.RuntimeStore.queue.push({
+                    runningFlow: this,
+                    component: targetComponent,
+                    input: connectionLine.input,
+                    inputData: {
+                        time: Date.now(),
+                        value
+                    },
+                    connectionLine
+                });
+            }
+        });
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,9 +765,9 @@ class OutputValueHistoryItem extends HistoryItem {
     }
 
     get label() {
-        return `Output value from [${getLabel(this.object)}/${
-            this.output
-        }]: ${this.value.toString()}`;
+        return `Output value from [${getLabel(this.object)}/${this.output}]: ${
+            this.value?.toString() ?? "NULL"
+        }`;
     }
 }
 
@@ -157,299 +789,6 @@ class ExecutionErrorHistoryItem extends HistoryItem {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class RunningFlow {
-    id = guid();
-    interrupt = false;
-
-    constructor(public RuntimeStore: RuntimeStoreClass, public flow: Flow) {}
-
-    get label() {
-        return getLabel(this.flow);
-    }
-
-    onStart() {
-        this.flow.components.forEach(component => component.onStart(this));
-    }
-
-    onEnd() {
-        this.flow.components.forEach(component => component.onEnd(this));
-    }
-
-    startFromWidgetAction(widget: Component) {
-        this.onStart();
-        this.executeWire(widget, "action");
-    }
-
-    startAction() {
-        this.RuntimeStore.addHistoryItem(new ActionStartHistoryItem(action));
-
-        this.onStart();
-
-        const inputActionComponent = this.flow.components.find(
-            component => component instanceof InputActionComponent
-        ) as ActionComponent;
-
-        if (inputActionComponent) {
-            this.executeActionComponent(inputActionComponent, "input");
-        } else {
-            // TODO report
-        }
-    }
-
-    stop() {
-        this.interrupt = true;
-    }
-
-    executeActionComponent(actionComponent: ActionComponent, input: string) {
-        this.RuntimeStore.queue.push({
-            runningFlow: this,
-            actionComponent,
-            input
-        });
-    }
-
-    async doExecuteActionComponent(
-        actionComponent: ActionComponent,
-        input: string
-    ) {
-        this.RuntimeStore.addHistoryItem(
-            new ExecuteActionComponentHistoryItem(actionComponent)
-        );
-
-        try {
-            const output = await actionComponent.execute(this);
-            if (output) {
-                this.executeWire(actionComponent, output);
-                return;
-            }
-        } catch (err) {
-            this.RuntimeStore.addHistoryItem(
-                new ExecutionErrorHistoryItem(actionComponent, err)
-            );
-        }
-
-        this.endFlow();
-    }
-
-    executeWire(component: Component, output: string) {
-        if (this.interrupt) {
-            this.endFlow();
-            return;
-        }
-
-        const flow = this.flow!;
-
-        const connectionLine = flow.connectionLines.find(
-            connectionLine =>
-                connectionLine.source === component.wireID &&
-                connectionLine.output === output
-        );
-
-        if (connectionLine) {
-            connectionLine.setActive();
-            const actionNode = flow.wiredComponents.get(
-                connectionLine.target
-            ) as ActionComponent;
-            this.executeActionComponent(actionNode, connectionLine.input);
-        } else {
-            this.RuntimeStore.addHistoryItem(
-                new NoConnectionHistoryItem(component, output)
-            );
-            this.endFlow();
-        }
-    }
-
-    propagateValue(sourceComponent: Component, output: string, value: any) {
-        const flow = this.flow;
-        if (!flow) {
-            return;
-        }
-
-        flow.connectionLines.forEach(connectionLine => {
-            if (
-                connectionLine.source === sourceComponent.wireID &&
-                connectionLine.output === output
-            ) {
-                const targetComponent = flow.wiredComponents.get(
-                    connectionLine.target
-                );
-
-                if (targetComponent) {
-                    connectionLine.setActive();
-
-                    this.RuntimeStore.addHistoryItem(
-                        new OutputValueHistoryItem(
-                            sourceComponent,
-                            connectionLine.output,
-                            value
-                        )
-                    );
-
-                    targetComponent.setInputPropertyValue(
-                        connectionLine.input,
-                        value
-                    );
-                } else {
-                    // TODO report
-                }
-            }
-        });
-    }
-
-    @action
-    endFlow() {
-        this.onEnd();
-        this.RuntimeStore.addHistoryItem(new ActionEndHistoryItem(this.flow!));
-        this.RuntimeStore.endRunningFlow(this);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class RuntimeStoreClass {
-    @observable isRuntimeMode = false;
-
-    queue: {
-        runningFlow: RunningFlow;
-        actionComponent: ActionComponent;
-        input: string;
-    }[] = [];
-    pumpTimeoutId: any;
-    numExecutedTasks: number = 0;
-    measureSpeedTime: number;
-    @observable speed: number;
-
-    @observable runningFlows: RunningFlow[] = [];
-
-    @observable history: HistoryItem[] = [];
-    @observable selectedHistoryItem: HistoryItem | undefined;
-
-    constructor(public DocumentStore: DocumentStoreClass) {}
-
-    @action.bound
-    setRuntimeMode() {
-        if (!this.isRuntimeMode) {
-            this.isRuntimeMode = true;
-            this.measureSpeedTime = new Date().getTime();
-            this.numExecutedTasks = 0;
-            this.pumpQueue();
-        }
-    }
-
-    setEditorMode = async () => {
-        if (this.isRuntimeMode) {
-            await this.stopAllRunningFlows();
-            runInAction(() => (this.isRuntimeMode = false));
-        }
-    };
-
-    addRunningFlow(runningFlow: RunningFlow) {
-        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
-        this.runningFlows.push(runningFlow);
-    }
-
-    pumpQueue = async () => {
-        this.pumpTimeoutId = undefined;
-
-        const time = new Date().getTime();
-
-        if (time - this.measureSpeedTime >= 1000) {
-            runInAction(() => {
-                this.speed = this.numExecutedTasks;
-            });
-            this.numExecutedTasks = 0;
-            this.measureSpeedTime = time;
-        }
-
-        while (await this.executeNextTask()) {
-            this.numExecutedTasks++;
-            if (new Date().getTime() - time > 100) {
-                break;
-            }
-        }
-
-        this.pumpTimeoutId = setTimeout(this.pumpQueue);
-    };
-
-    async executeNextTask() {
-        const task = this.queue.shift();
-        if (task) {
-            const { runningFlow, actionComponent, input } = task;
-            await runningFlow.doExecuteActionComponent(actionComponent, input);
-            return true;
-        }
-        return false;
-    }
-
-    @action addHistoryItem(historyItem: HistoryItem) {
-        this.history.push(historyItem);
-        if (this.history.length > MAX_HISTORY_ITEMS) {
-            this.history.shift();
-        }
-    }
-
-    @action
-    executeWidgetAction(widget: Widget) {
-        if (widget.isOutputProperty("action")) {
-            const flow = getFlow(widget);
-
-            const runningFlow = new RunningFlow(this, flow);
-            this.addRunningFlow(runningFlow);
-            runningFlow.startFromWidgetAction(widget);
-        } else if (widget.action) {
-            const action = findAction(
-                this.DocumentStore.project,
-                widget.action
-            );
-
-            if (action) {
-                this.addHistoryItem(new ExecuteWidgetActionHistoryItem(widget));
-                const runningFlow = new RunningFlow(this, action);
-                this.addRunningFlow(runningFlow);
-                runningFlow.startAction();
-            } else {
-                this.addHistoryItem(
-                    new WidgetActionNotFoundHistoryItem(widget)
-                );
-            }
-        } else {
-            this.addHistoryItem(new WidgetActionNotDefinedHistoryItem(widget));
-        }
-    }
-
-    endRunningFlow(runningFlow: RunningFlow) {
-        this.runningFlows.splice(this.runningFlows.indexOf(runningFlow), 1);
-        if (this.runningFlows.length === 0) {
-            EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
-        }
-    }
-
-    async stopAllRunningFlows() {
-        if (this.pumpTimeoutId) {
-            clearTimeout(this.pumpTimeoutId);
-            this.pumpTimeoutId = undefined;
-        }
-
-        this.runningFlows.forEach(runningFlow => runningFlow.stop());
-
-        while (this.runningFlows.length > 0) {
-            await this.executeNextTask();
-            await new Promise<void>(resolve => setTimeout(resolve));
-        }
-    }
-
-    render() {
-        return <RuntimePanel />;
-    }
-
-    @action.bound
-    clearHistory() {
-        this.history = [];
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 const RuntimePanelDiv = styled.div`
     flex-grow: 1;
     background-color: ${props => props.theme.panelHeaderColor};
@@ -464,7 +803,6 @@ const RuntimePanelDiv = styled.div`
     }
 
     .running-flows {
-        height: 150px;
     }
 
     .running-flow {
@@ -508,43 +846,11 @@ class RuntimePanel extends React.Component {
                 title={"Runtime Info"}
                 body={
                     <RuntimePanelDiv>
-                        {this.context.RuntimeStore.runningFlows.length > 0 && (
-                            <>
-                                <div>
-                                    Speed: {this.context.RuntimeStore.speed}{" "}
-                                    actions per second
-                                </div>
-                                <div>
-                                    <label>Running flows:</label>
-                                </div>
-                                <div className="running-flows">
-                                    <RunningFlows />
-                                </div>
-                            </>
-                        )}
+                        <SpeedPane />
+                        <RunningFlowsPane />
 
-                        {this.context.RuntimeStore.runningFlows.length == 0 && (
-                            <>
-                                <div className="history-label">
-                                    <label>History:</label>
-                                    <Toolbar>
-                                        {this.context.RuntimeStore.history
-                                            .length > 0 && (
-                                            <IconAction
-                                                icon="material:clear"
-                                                title="Clear history"
-                                                onClick={
-                                                    this.context.RuntimeStore
-                                                        .clearHistory
-                                                }
-                                            ></IconAction>
-                                        )}
-                                    </Toolbar>
-                                </div>
-                                <div className="history">
-                                    <History />
-                                </div>
-                            </>
+                        {this.context.RuntimeStore.speed === 0 && (
+                            <HistoryPane />
                         )}
                     </RuntimePanelDiv>
                 }
@@ -556,37 +862,106 @@ class RuntimePanel extends React.Component {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
+class SpeedPane extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        return (
+            <div>
+                Speed: {this.context.RuntimeStore.speed} actions per second
+            </div>
+        );
+    }
+}
+
+@observer
+class RunningFlowsPane extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        return (
+            <>
+                <div>
+                    <label>Running flows:</label>
+                </div>
+                <div className="running-flows">
+                    <RunningFlows />
+                </div>
+            </>
+        );
+    }
+}
+
+@observer
+class HistoryPane extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        return (
+            <>
+                <div className="history-label">
+                    <label>History:</label>
+                    <Toolbar>
+                        {this.context.RuntimeStore.history.length > 0 && (
+                            <IconAction
+                                icon="material:clear"
+                                title="Clear history"
+                                onClick={this.context.RuntimeStore.clearHistory}
+                            ></IconAction>
+                        )}
+                    </Toolbar>
+                </div>
+                <div className="history">
+                    <History />
+                </div>
+            </>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
 class RunningFlows extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed get nodes(): IListNode<RunningFlow>[] {
-        return this.context.RuntimeStore.runningFlows
-            .slice()
-            .reverse()
-            .map(runningFlow => ({
+    @computed get rootNode(): ITreeNode<RunningFlow> {
+        function getChildren(
+            runningFlows: RunningFlow[]
+        ): ITreeNode<RunningFlow>[] {
+            return runningFlows.map(runningFlow => ({
                 id: runningFlow.id,
-                data: runningFlow,
-                selected: false
+                label: getLabel(runningFlow.flow),
+                children: getChildren(runningFlow.runningFlows),
+                selected: false,
+                expanded: true,
+                data: runningFlow
             }));
+        }
+
+        return {
+            id: "root",
+            label: "",
+            children: getChildren(this.context.RuntimeStore.runningFlows),
+            selected: false,
+            expanded: true
+        };
     }
 
-    renderNode = (node: IListNode<RunningFlow>) => {
-        const runningFlow = node.data;
-        return (
-            <div className="running-flow">
-                <span>{runningFlow.label}</span>
-                <IconAction
-                    icon="material:stop"
-                    title="Stop"
-                    onClick={() => runningFlow.stop()}
-                ></IconAction>
-            </div>
-        );
-    };
+    selectNode() {}
 
     render() {
-        return <List nodes={this.nodes} renderNode={this.renderNode} />;
+        return (
+            <Tree
+                showOnlyChildren={true}
+                rootNode={this.rootNode}
+                selectNode={this.selectNode}
+            />
+        );
     }
 }
 
