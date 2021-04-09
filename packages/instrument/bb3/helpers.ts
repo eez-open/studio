@@ -67,7 +67,7 @@ export async function useConnection(
 
     obj.setBusy(true);
     try {
-        connection.acquire(traceEnabled);
+        await connection.acquire(traceEnabled);
         try {
             await callback(connection);
         } finally {

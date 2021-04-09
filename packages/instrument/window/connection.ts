@@ -13,7 +13,9 @@ import { InstrumentAppStore } from "instrument/window/app-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getConnectionParametersInfo(connectionParameters: ConnectionParameters) {
+export function getConnectionParametersInfo(
+    connectionParameters: ConnectionParameters
+) {
     if (!connectionParameters) {
         return "";
     }
@@ -53,7 +55,10 @@ export class Connection {
     get interfaceInfo() {
         let connectionParameters = this.instrument.lastConnection;
         if (connectionParameters) {
-            return "Connected to " + getConnectionParametersInfo(connectionParameters);
+            return (
+                "Connected to " +
+                getConnectionParametersInfo(connectionParameters)
+            );
         } else {
             return undefined;
         }
@@ -79,14 +84,11 @@ export class Connection {
         );
     }
 
-    acquire(traceEnabled: boolean = false) {
-        const result = this.instrument.connection.acquire(
+    async acquire(traceEnabled: boolean = false) {
+        await this.instrument.connection.acquire(
             EEZStudio.remote.getCurrentWindow().id,
             traceEnabled
         );
-        if (result) {
-            throw new Error(result);
-        }
     }
 
     command(command: string) {

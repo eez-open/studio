@@ -70,6 +70,7 @@ export class RuntimeStoreClass {
     setRuntimeMode() {
         if (!this.isRuntimeMode) {
             this.isRuntimeMode = true;
+            this.isStopped = false;
             this.start();
         }
     }
@@ -157,6 +158,8 @@ export class RuntimeStoreClass {
 
         this.calculateSpeed();
 
+        const runningComponents = [];
+
         while (true) {
             const task = this.queue.shift();
             if (!task) {
@@ -173,16 +176,22 @@ export class RuntimeStoreClass {
 
             const componentState = runningFlow.getComponentState(component);
 
-            componentState.setInputData(input, inputData);
+            if (componentState.isRunning) {
+                runningComponents.push(task);
+            } else {
+                componentState.setInputData(input, inputData);
 
-            if (componentState.isReadyToRun()) {
-                componentState.run();
-            }
+                if (componentState.isReadyToRun()) {
+                    componentState.run();
+                }
 
-            if (connectionLine) {
-                connectionLine.setActive();
+                if (connectionLine) {
+                    connectionLine.setActive();
+                }
             }
         }
+
+        this.queue.unshift(...runningComponents);
 
         this.pumpTimeoutId = setTimeout(this.pumpQueue);
     };
@@ -318,10 +327,6 @@ class ComponentState {
     }
 
     isReadyToRun() {
-        if (this.isRunning) {
-            return false;
-        }
-
         if (
             this.runningFlow.flow.connectionLines.find(
                 connectionLine =>
@@ -353,8 +358,6 @@ class ComponentState {
         for (let [key, value] of this.inputsData) {
             this._inputPropertyValues.set(key, value);
         }
-
-        this.inputsData.delete("@seqin");
 
         if (this.component instanceof ActionComponent) {
             this.runningFlow.RuntimeStore.addHistoryItem(
@@ -420,6 +423,8 @@ class ComponentState {
                 }
             }
         }
+
+        this.inputsData.delete("@seqin");
     }
 }
 
@@ -973,16 +978,12 @@ class History extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     @computed get nodes(): IListNode<HistoryItem>[] {
-        return this.context.RuntimeStore.history
-            .slice()
-            .reverse()
-            .map(historyItem => ({
-                id: historyItem.id,
-                data: historyItem,
-                selected:
-                    this.context.RuntimeStore.selectedHistoryItem ===
-                    historyItem
-            }));
+        return this.context.RuntimeStore.history.map(historyItem => ({
+            id: historyItem.id,
+            data: historyItem,
+            selected:
+                this.context.RuntimeStore.selectedHistoryItem === historyItem
+        }));
     }
 
     @action.bound

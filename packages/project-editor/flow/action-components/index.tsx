@@ -24,9 +24,6 @@ import {
     makeToggablePropertyToInput
 } from "project-editor/flow/component";
 
-import { instruments } from "instrument/instrument-object";
-import { getConnection } from "instrument/window/connection";
-import { getFlow } from "project-editor/project/project";
 import { RunningFlow } from "../runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +104,7 @@ export class GetVariableActionComponent extends ActionComponent {
 
     @observable variable: string;
 
-    @computed get body(): React.ReactNode {
+    getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="outputs" data-connection-output-id="variable">
                 <pre>{this.variable}</pre>
@@ -179,7 +176,7 @@ export class SetVariableActionComponent extends ActionComponent {
     @observable variable: string;
     @observable value: string;
 
-    @computed get body(): React.ReactNode {
+    getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.isInputProperty("value")) {
             return (
                 <SetVariableBody className="body">
@@ -207,15 +204,12 @@ export class SetVariableActionComponent extends ActionComponent {
                 this,
                 "value"
             );
-            if (
-                inputPropertyValue == undefined ||
-                inputPropertyValue.value == undefined
-            ) {
+            if (inputPropertyValue == undefined) {
                 throw `missing value input`;
             }
-            value = JSON.parse(inputPropertyValue.value);
+            value = inputPropertyValue.value;
         } else {
-            value = this.value;
+            value = JSON.parse(this.value);
         }
 
         runningFlow.setVariable(this, this.variable, value);
@@ -262,7 +256,7 @@ export class DeclareVariableActionComponent extends ActionComponent {
     @observable variable: string;
     @observable value: string;
 
-    @computed get body(): React.ReactNode {
+    getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.isInputProperty("value")) {
             return (
                 <DeclareVariableBody className="body">
@@ -290,15 +284,12 @@ export class DeclareVariableActionComponent extends ActionComponent {
                 this,
                 "value"
             );
-            if (
-                inputPropertyValue == undefined ||
-                inputPropertyValue.value == undefined
-            ) {
+            if (inputPropertyValue == undefined) {
                 throw `missing value input`;
             }
-            value = JSON.parse(inputPropertyValue.value);
+            value = inputPropertyValue.value;
         } else {
-            value = this.value;
+            value = JSON.parse(this.value);
         }
 
         runningFlow.declareVariable(this, this.variable, value);
@@ -309,8 +300,40 @@ registerClass(DeclareVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const CompareActionComponentDiv = styled.div`
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+`;
+
 export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeToggablePropertyToInput({
+                name: "A",
+                displayName: "A",
+                type: PropertyType.JSON,
+                propertyGridGroup: specificGroup
+            }),
+            makeToggablePropertyToInput({
+                name: "B",
+                displayName: "B",
+                type: PropertyType.JSON,
+                propertyGridGroup: specificGroup
+            }),
+            {
+                name: "operator",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "=", label: "=" },
+                    { id: "<", label: "<" },
+                    { id: ">", label: ">" },
+                    { id: "<=", label: "<=" },
+                    { id: ">=", label: ">=" },
+                    { id: "<>", label: "<>" }
+                ]
+            }
+        ],
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -318,8 +341,82 @@ export class CompareActionComponent extends ActionComponent {
             >
                 <path d="M285.206.234C188.053 0 11.212 93.504 5.606 176.634c-5.606 83.13 11.325 88.253 19.2 92.8h91.2c20.839-47.054 46.22-74.561 112.8-74s139.612 83.846 108.8 157.6c-30.813 73.754-59.285 99.443-97.2 179.2-37.914 79.757-50.579 200.231-.8 300.4l112.4 2c-27.82-142.988 119.44-270.381 178-358.4 58.559-88.019 64.125-121.567 64.8-194.4-.516-69.114-25.544-138.181-80-194.4S382.358.468 285.206.234zm5.599 927.601c-75.174 0-136 60.825-136 135.999 0 75.175 60.826 136.4 136 136.4 75.175 0 136-61.226 136-136.4s-60.825-135.999-136-135.999z" />
             </svg>
-        )
+        ),
+        defaultValue: {
+            operator: "="
+        }
     });
+
+    @observable A: string;
+    @observable B: string;
+    @observable operator: string;
+
+    @computed get outputs() {
+        return [
+            ...super.outputProperties,
+            {
+                name: "True",
+                type: PropertyType.Null
+            },
+            {
+                name: "False",
+                type: PropertyType.Null
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <CompareActionComponentDiv className="body">
+                A {this.operator} B
+            </CompareActionComponentDiv>
+        );
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        let A;
+        if (this.isInputProperty("A")) {
+            const inputPropertyValue = runningFlow.getInputPropertyValue(
+                this,
+                "A"
+            );
+            A = inputPropertyValue?.value;
+        } else {
+            A = JSON.parse(this.A);
+        }
+
+        let B;
+        if (this.isInputProperty("B")) {
+            const inputPropertyValue = runningFlow.getInputPropertyValue(
+                this,
+                "B"
+            );
+            B = inputPropertyValue?.value;
+        } else {
+            B = JSON.parse(this.B);
+        }
+
+        let result;
+        if (this.operator === "=") {
+            result = A === B;
+        } else if (this.operator === "<") {
+            result = A < B;
+        } else if (this.operator === ">") {
+            result = A > B;
+        } else if (this.operator === "<=") {
+            result = A <= B;
+        } else if (this.operator === ">=") {
+            result = A >= B;
+        } else if (this.operator === "<>") {
+            result = A !== B;
+        }
+
+        if (result) {
+            runningFlow.propagateValue(this, "True", null);
+        } else {
+            runningFlow.propagateValue(this, "False", null);
+        }
+    }
 }
 
 registerClass(CompareActionComponent);
@@ -360,240 +457,6 @@ export class ConstantActionComponent extends ActionComponent {
 }
 
 registerClass(ConstantActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
-const ScpiDiv = styled.div`
-    padding-top: 0 !important;
-    & > div:first-child {
-        white-space: nowrap;
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-    }
-`;
-
-export class ScpiActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        properties: [
-            {
-                name: "instrument",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            },
-            {
-                name: "scpi",
-                type: PropertyType.MultilineText,
-                propertyGridGroup: specificGroup
-            }
-        ],
-        icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7">
-                <path d="M1.5 0C.67 0 0 .67 0 1.5S.67 3 1.5 3H2v1h-.5C.67 4 0 4.67 0 5.5S.67 7 1.5 7 3 6.33 3 5.5V5h1v.5C4 6.33 4.67 7 5.5 7S7 6.33 7 5.5 6.33 4 5.5 4H5V3h.5C6.33 3 7 2.33 7 1.5S6.33 0 5.5 0 4 .67 4 1.5V2H3v-.5C3 .67 2.33 0 1.5 0zm0 1c.28 0 .5.22.5.5V2h-.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5zm4 0c.28 0 .5.22.5.5s-.22.5-.5.5H5v-.5c0-.28.22-.5.5-.5zM3 3h1v1H3V3zM1.5 5H2v.5c0 .28-.22.5-.5.5S1 5.78 1 5.5s.22-.5.5-.5zM5 5h.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5V5z" />
-            </svg>
-        ),
-        updateObjectValueHook: (object: ScpiActionComponent, values: any) => {
-            if (values.scpi) {
-                const {
-                    inputs: inputsBefore,
-                    outputs: outputsBefore
-                } = ScpiActionComponent.parse(object.scpi);
-
-                const {
-                    inputs: inputsAfter,
-                    outputs: outputsAfter
-                } = ScpiActionComponent.parse(values.scpi);
-
-                const flow = getFlow(object);
-
-                inputsBefore.forEach((inputBefore, i) => {
-                    if (inputsAfter.indexOf(inputBefore) === -1) {
-                        if (inputsBefore.length === inputsAfter.length) {
-                            flow.rerouteConnectionLinesInput(
-                                object,
-                                inputBefore,
-                                inputsAfter[i]
-                            );
-                        } else {
-                            flow.deleteConnectionLinesToInput(
-                                object,
-                                inputBefore
-                            );
-                        }
-                    }
-                });
-
-                outputsBefore.forEach((outputBefore, i) => {
-                    if (outputsAfter.indexOf(outputBefore) === -1) {
-                        if (outputsBefore.length === outputsAfter.length) {
-                            flow.rerouteConnectionLinesOutput(
-                                object,
-                                outputBefore,
-                                outputsAfter[i]
-                            );
-                        } else {
-                            flow.deleteConnectionLinesFromOutput(
-                                object,
-                                outputBefore
-                            );
-                        }
-                    }
-                });
-            }
-        }
-    });
-
-    @observable instrument: string;
-    @observable scpi: string;
-
-    static readonly COMMAND_REGEXP = /\{([^\}]+)\}/;
-    static readonly QUERY_REGEXP = /(?<outputName>[^\s]+)\s*=\s*(?<query>.+\?)/;
-
-    static parse(scpi: string) {
-        const lines = scpi?.split("\n") ?? [];
-        const inputs: string[] = [];
-        const outputs: string[] = [];
-        lines.forEach(commandOrQueriesLine => {
-            const commandOrQueries = commandOrQueriesLine.split(";");
-            commandOrQueries.forEach(commandOrQuery => {
-                commandOrQuery = commandOrQuery.trim();
-                const matches = ScpiActionComponent.QUERY_REGEXP.exec(
-                    commandOrQuery
-                );
-                if (matches) {
-                    const output = matches.groups!.outputName.trim();
-                    outputs.push(output);
-                } else {
-                    ScpiActionComponent.COMMAND_REGEXP.lastIndex = 0;
-                    let str = commandOrQuery;
-                    while (true) {
-                        let matches = str.match(
-                            ScpiActionComponent.COMMAND_REGEXP
-                        );
-                        if (!matches) {
-                            break;
-                        }
-                        const input = matches[1].trim();
-                        inputs.push(input);
-                        str = str.substring(matches.index! + matches[1].length);
-                    }
-                }
-            });
-        });
-        return { inputs, outputs };
-    }
-
-    @computed get inputs() {
-        return [
-            ...super.inputProperties,
-            ...ScpiActionComponent.parse(this.scpi).inputs.map(input => ({
-                name: input,
-                displayName: input,
-                type: PropertyType.Any
-            }))
-        ];
-    }
-
-    @computed get outputs() {
-        return [
-            ...super.outputProperties,
-            ...ScpiActionComponent.parse(this.scpi).outputs.map(output => ({
-                name: output,
-                displayName: output,
-                type: PropertyType.Any
-            }))
-        ];
-    }
-
-    async execute(runningFlow: RunningFlow) {
-        const instrument = instruments.get(this.instrument);
-        if (!instrument) {
-            throw "instrument not found";
-        }
-
-        const editor = instrument.getEditor();
-
-        if (!editor || !editor.instrument) {
-            throw "instrument not connected";
-        }
-
-        const connection = getConnection(editor);
-        if (!connection || !connection.isConnected) {
-            throw "instrument not connected";
-        }
-
-        connection.acquire(false);
-
-        try {
-            const lines = this.scpi?.split("\n") ?? [];
-            for (let i = 0; i < lines.length; i++) {
-                const commandOrQueriesLine = lines[i];
-                const commandOrQueries = commandOrQueriesLine.split(";");
-                for (let j = 0; j < commandOrQueries.length; j++) {
-                    const commandOrQuery = commandOrQueries[j].trim();
-                    const matches = ScpiActionComponent.QUERY_REGEXP.exec(
-                        commandOrQuery
-                    );
-                    if (matches) {
-                        const output = matches.groups!.outputName.trim();
-                        const query = matches.groups!.query.trim();
-                        const result = await connection.query(query);
-                        runningFlow.propagateValue(this, output, result);
-                    } else {
-                        let command = commandOrQuery;
-                        let str = command;
-                        ScpiActionComponent.COMMAND_REGEXP.lastIndex = 0;
-                        while (true) {
-                            let matches = str.match(
-                                ScpiActionComponent.COMMAND_REGEXP
-                            );
-                            if (!matches) {
-                                break;
-                            }
-
-                            const input = matches[1].trim();
-                            const inputPropertyValue = runningFlow.getInputPropertyValue(
-                                this,
-                                input
-                            );
-                            if (
-                                inputPropertyValue &&
-                                inputPropertyValue.value != undefined
-                            ) {
-                                const value = inputPropertyValue.value;
-
-                                const i = matches.index!;
-
-                                command =
-                                    command.substring(0, i) +
-                                    value +
-                                    command.substring(
-                                        i + matches[1].length + 2
-                                    );
-                                str = command.substring(i + value.length);
-                            } else {
-                                throw `missing scpi parameter ${input}`;
-                            }
-                        }
-
-                        connection.command(command);
-                    }
-                }
-            }
-        } finally {
-            connection.release();
-        }
-    }
-
-    @computed get body(): React.ReactNode {
-        return (
-            <ScpiDiv className="body">
-                <div>Instrument: [{this.instrument}]</div>
-                <pre>{this.scpi}</pre>
-            </ScpiDiv>
-        );
-    }
-}
-
-registerClass(ScpiActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -755,3 +618,7 @@ export class CommentActionComponent extends ActionComponent {
 }
 
 registerClass(CommentActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+import "project-editor/flow/action-components/instrument";

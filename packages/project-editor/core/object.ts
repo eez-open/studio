@@ -37,7 +37,8 @@ export enum PropertyType {
     ConfigurationReference,
     Boolean,
     GUID,
-    Any
+    Any,
+    Null
 }
 
 export interface EnumItem {
@@ -225,6 +226,7 @@ export interface ClassInfo {
 
     parentClassInfo?: ClassInfo;
 
+    paletteGroupName?: string;
     showInNavigation?: boolean;
     hideInProperties?: boolean;
     isPropertyMenuSupported?: boolean;

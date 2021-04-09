@@ -1063,15 +1063,16 @@ export class Widget extends Component {
         }
 
         return (
-            <div className="content">
+            <>
                 <div className="inputs">
                     {inputs.map(property => (
                         <div
                             key={property.name}
                             data-connection-input-id={property.name}
-                        >
-                            {property.displayName ?? humanize(property.name)}
-                        </div>
+                            title={
+                                property.displayName ?? humanize(property.name)
+                            }
+                        ></div>
                     ))}
                 </div>
                 <div className="outputs">
@@ -1079,12 +1080,13 @@ export class Widget extends Component {
                         <div
                             key={property.name}
                             data-connection-output-id={property.name}
-                        >
-                            {property.displayName ?? humanize(property.name)}
-                        </div>
+                            title={
+                                property.displayName ?? humanize(property.name)
+                            }
+                        ></div>
                     ))}
                 </div>
-            </div>
+            </>
         );
     }
 }
@@ -1179,7 +1181,7 @@ function renderActionComponent(
                         ))}
                     </div>
                 )}
-                {actionNode.body}
+                {actionNode.getBody(flowContext)}
                 {outputs.length > 0 && (
                     <div className="outputs">
                         {outputs.map(property => (
@@ -1220,7 +1222,7 @@ export class ActionComponent extends Component {
         return "eez-action-component";
     }
 
-    get body(): React.ReactNode {
+    getBody(flowContext: IFlowContext): React.ReactNode {
         return null;
     }
 

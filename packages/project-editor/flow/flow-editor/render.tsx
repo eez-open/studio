@@ -243,44 +243,42 @@ const ComponentEnclosureDiv = styled.div`
     }
 
     &.eez-widget-component {
-        .content {
-            position: absolute;
-            bottom: -32px;
-            width: 100%;
+        --width: 12px;
+        --height: 12px;
 
-            overflow: hidden;
+        .inputs,
+        .outputs {
+            position: absolute;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
+            justify-content: center;
+            top: 0;
+            width: var(--width);
+            height: 100%;
+        }
+
+        .inputs {
+            left: 0;
+        }
+
+        .outputs {
+            right: 0;
+        }
+
+        [data-connection-input-id],
+        [data-connection-output-id] {
             background-color: #fffcf7;
             border: 1px solid #dfdcd7;
 
-            .inputs,
-            .outputs {
-                padding: 2px;
-                font-size: 90%;
-                flex-grow: 1;
-            }
+            margin-bottom: calc(var(--height) / 2);
 
-            .inputs {
-                text-align: left;
-            }
+            width: var(--width);
+            height: var(--height);
+        }
 
-            .outputs {
-                text-align: right;
-            }
-
-            [data-connection-input-id],
-            [data-connection-output-id] {
-                border: 1px solid #fffcf7;
-                padding: 2px 5px;
-                margin-bottom: 2px;
-
-                white-space: nowrap;
-            }
-
-            [data-connection-output-id] {
-                text-align: right;
-            }
+        [data-connection-input-id]:last-child,
+        [data-connection-output-id]:last-child {
+            margin-bottom: 0;
         }
     }
 `;

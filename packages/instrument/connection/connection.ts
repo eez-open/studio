@@ -1,8 +1,17 @@
 import { observable, computed, action, autorun, toJS } from "mobx";
 import { bind } from "bind-decorator";
 
-import { IActivityLogEntry, activityLogStore, log } from "eez-studio-shared/activity-log";
-import { registerSource, unregisterSource, sendMessage, watch } from "eez-studio-shared/notify";
+import {
+    IActivityLogEntry,
+    activityLogStore,
+    log
+} from "eez-studio-shared/activity-log";
+import {
+    registerSource,
+    unregisterSource,
+    sendMessage,
+    watch
+} from "eez-studio-shared/notify";
 import { isRenderer } from "eez-studio-shared/util-electron";
 
 import { InstrumentObject } from "instrument/instrument-object";
@@ -16,7 +25,10 @@ import {
     ConnectionParameters
 } from "instrument/connection/interface";
 import { FileDownload } from "instrument/connection/file-download";
-import { IFileUploadInstructions, FileUpload } from "instrument/connection/file-upload";
+import {
+    IFileUploadInstructions,
+    FileUpload
+} from "instrument/connection/file-upload";
 import { parseScpiValue, IResponseTypeType } from "instrument/scpi";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +99,7 @@ abstract class ConnectionBase {
     ): void;
     abstract abortLongOperation(): void;
 
-    abstract acquire(callbackWindowId: number, traceEnabled: boolean): string | null;
+    abstract acquire(callbackWindowId: number, traceEnabled: boolean): void;
     abstract release(): void;
 }
 
@@ -103,7 +115,9 @@ export interface LongOperation {
     isQuery: boolean;
 }
 
-export class Connection extends ConnectionBase implements CommunicationInterfaceHost {
+export class Connection
+    extends ConnectionBase
+    implements CommunicationInterfaceHost {
     @observable _state: ConnectionState = ConnectionState.IDLE;
     get state() {
         return this._state;
@@ -164,7 +178,11 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
         this.notifySource = {
             id: "instrument/" + this.instrument.id + "/connection",
-            onNewTarget: (targetId: string, filterSpecification: any, inProcessTarget: boolean) => {
+            onNewTarget: (
+                targetId: string,
+                filterSpecification: any,
+                inProcessTarget: boolean
+            ) => {
                 this.sendConnectionStatusMessage(targetId);
             }
         };
@@ -204,7 +222,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         this.errorCode = ConnectionErrorCode.NONE;
         this.error = undefined;
 
-        this.connectionParameters = this.instrument.lastConnection as ConnectionParameters;
+        this.connectionParameters = this.instrument
+            .lastConnection as ConnectionParameters;
 
         if (this.connectionParameters.type === "ethernet") {
             this.communicationInterface = new EthernetInterface(this);
@@ -239,7 +258,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
         this.sendIdn();
 
-        this.housekeepingIntervalId = setInterval(this.housekeeping, CONF_HOUSEKEEPING_INTERVAL);
+        this.housekeepingIntervalId = setInterval(
+            this.housekeeping,
+            CONF_HOUSEKEEPING_INTERVAL
+        );
     }
 
     logRequest(data: string) {
@@ -276,8 +298,13 @@ export class Connection extends ConnectionBase implements CommunicationInterface
 
     sendValue(value: any) {
         if (this.callbackWindowId) {
-            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
-            browserWindow.webContents.send("instrument/connection/value", value);
+            let browserWindow = require("electron").BrowserWindow.fromId(
+                this.callbackWindowId
+            )!;
+            browserWindow.webContents.send(
+                "instrument/connection/value",
+                value
+            );
         }
     }
 
@@ -305,7 +332,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
                 this.idnExpected = false;
 
                 if (typeof value !== "string") {
-                    this.setError(ConnectionErrorCode.NONE, "Invalid IDN value.");
+                    this.setError(
+                        ConnectionErrorCode.NONE,
+                        "Invalid IDN value."
+                    );
                     this.disconnect();
                 } else {
                     this.instrument.setIdn(value);
@@ -341,7 +371,12 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             this.data = dataSurplus;
         }
 
-        if (!(this.communicationInterface && this.communicationInterface.isConnected())) {
+        if (
+            !(
+                this.communicationInterface &&
+                this.communicationInterface.isConnected()
+            )
+        ) {
             this.disconnect();
         }
     }
@@ -355,7 +390,8 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             this.longOperation.onData(data);
         } else if (
             this.data === undefined &&
-            (data.startsWith("#") || this.expectedResponseType === "non-standard-data-block")
+            (data.startsWith("#") ||
+                this.expectedResponseType === "non-standard-data-block")
         ) {
             this.longOperation = new FileDownload(
                 this,
@@ -447,7 +483,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             const err = doSend();
             if (err) {
                 const currentTime = new Date().getTime();
-                if (currentTime - startTime > CONF_START_LONG_OPERATION_TIMEOUT) {
+                if (
+                    currentTime - startTime >
+                    CONF_START_LONG_OPERATION_TIMEOUT
+                ) {
                     throw err;
                 } else {
                     setTimeout(callDoSendUntilTimeout, 0);
@@ -459,7 +498,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     sendIdn() {
-        if (this.state !== ConnectionState.TESTING && this.state !== ConnectionState.CONNECTED) {
+        if (
+            this.state !== ConnectionState.TESTING &&
+            this.state !== ConnectionState.CONNECTED
+        ) {
             console.error(
                 "invalid state (this.state !== ConnectionState.TESTING && this.state !== ConnectionState.CONNECTED)"
             );
@@ -467,7 +509,9 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         }
 
         if (!this.communicationInterface) {
-            console.error("invalid state (!this.connectionInterfaceImplementation)");
+            console.error(
+                "invalid state (!this.connectionInterfaceImplementation)"
+            );
             return;
         }
 
@@ -475,7 +519,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         this.flushData();
         this.idnExpected = true;
         this.idnExpectedTimeout = setTimeout(() => {
-            this.setError(ConnectionErrorCode.NONE, "Timeout (no response to IDN query).");
+            this.setError(
+                ConnectionErrorCode.NONE,
+                "Timeout (no response to IDN query)."
+            );
             this.disconnect();
         }, CONF_IDN_EXPECTED_TIMEOUT);
     }
@@ -483,8 +530,13 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     startLongOperation(createLongOperation: () => LongOperation) {
         const startTime = new Date().getTime();
 
-        const doStartLongOperation = (createLongOperation: () => LongOperation) => {
-            if (this.state !== ConnectionState.CONNECTED || !this.communicationInterface) {
+        const doStartLongOperation = (
+            createLongOperation: () => LongOperation
+        ) => {
+            if (
+                this.state !== ConnectionState.CONNECTED ||
+                !this.communicationInterface
+            ) {
                 return "not connected";
             }
 
@@ -507,7 +559,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
             const err = doStartLongOperation(createLongOperation);
             if (err) {
                 const currentTime = new Date().getTime();
-                if (currentTime - startTime > CONF_START_LONG_OPERATION_TIMEOUT) {
+                if (
+                    currentTime - startTime >
+                    CONF_START_LONG_OPERATION_TIMEOUT
+                ) {
                     throw err;
                 } else {
                     setTimeout(callDoStartLongOperationUntilTimeout, 0);
@@ -524,7 +579,9 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         onError?: (error: any) => void
     ) {
         try {
-            this.startLongOperation(() => new FileUpload(this, instructions, onSuccess, onError));
+            this.startLongOperation(
+                () => new FileUpload(this, instructions, onSuccess, onError)
+            );
         } catch (err) {
             this.logAnswer(`**ERROR: ${err}\n`);
         }
@@ -537,7 +594,10 @@ export class Connection extends ConnectionBase implements CommunicationInterface
     }
 
     disconnect() {
-        if (this.state === ConnectionState.IDLE || !this.communicationInterface) {
+        if (
+            this.state === ConnectionState.IDLE ||
+            !this.communicationInterface
+        ) {
             console.error("invalid state (disconnect)");
             return;
         }
@@ -546,7 +606,9 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         this.communicationInterface.disconnect();
 
         if (this.callbackWindowId) {
-            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
+            let browserWindow = require("electron").BrowserWindow.fromId(
+                this.callbackWindowId
+            )!;
             browserWindow.webContents.send("instrument/connection/value", {
                 error: "connection is diconnected"
             });
@@ -600,21 +662,55 @@ export class Connection extends ConnectionBase implements CommunicationInterface
         }
     }
 
-    acquire(callbackWindowId: number, traceEnabled: true) {
-        if (!this.isConnected) {
-            return "not connected";
+    acquireQueue: {
+        callbackWindowId: number;
+        traceEnabled: boolean;
+    }[] = [];
+
+    async acquire(callbackWindowId: number, traceEnabled: boolean) {
+        let browserWindow = require("electron").BrowserWindow.fromId(
+            callbackWindowId
+        )!;
+
+        if (this.isConnected) {
+            if (this.callbackWindowId) {
+                this.acquireQueue.push({
+                    callbackWindowId,
+                    traceEnabled
+                });
+            } else {
+                this.callbackWindowId = callbackWindowId;
+                this.traceEnabled = traceEnabled;
+
+                browserWindow.webContents.send(
+                    "instrument/connection/acquire-result",
+                    {
+                        callbackWindowId
+                    }
+                );
+            }
+        } else {
+            browserWindow.webContents.send(
+                "instrument/connection/acquire-result",
+                {
+                    callbackWindowId,
+                    rejectReason: "not connected"
+                }
+            );
         }
-        if (this.callbackWindowId) {
-            return "connection resource is not available";
-        }
-        this.callbackWindowId = callbackWindowId;
-        this.traceEnabled = traceEnabled;
-        return null;
     }
 
     release() {
         this.callbackWindowId = undefined;
         this.traceEnabled = true;
+
+        const acquireTask = this.acquireQueue.shift();
+        if (acquireTask) {
+            this.acquire(
+                acquireTask.callbackWindowId,
+                acquireTask.traceEnabled
+            );
+        }
     }
 }
 
@@ -655,12 +751,17 @@ export class IpcConnection extends ConnectionBase {
                 this.onSuccess = undefined;
             }
         );
+
+        this.setupAcquireResultListener();
     }
 
     dismissError() {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/dismiss-error", {
-            instrumentId: this.instrument.id
-        });
+        EEZStudio.electron.ipcRenderer.send(
+            "instrument/connection/dismiss-error",
+            {
+                instrumentId: this.instrument.id
+            }
+        );
     }
 
     connect(connectionParameters?: ConnectionParameters) {
@@ -671,9 +772,12 @@ export class IpcConnection extends ConnectionBase {
     }
 
     disconnect() {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/disconnect", {
-            instrumentId: this.instrument.id
-        });
+        EEZStudio.electron.ipcRenderer.send(
+            "instrument/connection/disconnect",
+            {
+                instrumentId: this.instrument.id
+            }
+        );
     }
 
     destroy() {
@@ -698,7 +802,9 @@ export class IpcConnection extends ConnectionBase {
         if (commandName.endsWith("?")) {
             // get expected query response
             options = {
-                queryResponseType: this.instrument.getQueryResponseType(commandName)
+                queryResponseType: this.instrument.getQueryResponseType(
+                    commandName
+                )
             };
         } else {
             if (this.instrument.isCommandSendsBackDataBlock(commandName)) {
@@ -731,176 +837,265 @@ export class IpcConnection extends ConnectionBase {
     }
 
     async isLongOperationInProgress() {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/abort-long-operation", {
-            instrumentId: this.instrument.id
-        });
+        EEZStudio.electron.ipcRenderer.send(
+            "instrument/connection/abort-long-operation",
+            {
+                instrumentId: this.instrument.id
+            }
+        );
     }
 
     abortLongOperation() {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/abort-long-operation", {
-            instrumentId: this.instrument.id
-        });
+        EEZStudio.electron.ipcRenderer.send(
+            "instrument/connection/abort-long-operation",
+            {
+                instrumentId: this.instrument.id
+            }
+        );
     }
 
-    acquire(callbackWindowId: number, traceEnabled: boolean) {
-        return EEZStudio.electron.ipcRenderer.sendSync("instrument/connection/acquire", {
-            instrumentId: this.instrument.id,
-            callbackWindowId,
-            traceEnabled
+    acquireQueue: {
+        callbackWindowId: number;
+        resolve: () => void;
+        reject: (reason?: any) => void;
+    }[] = [];
+
+    setupAcquireResultListener() {
+        EEZStudio.electron.ipcRenderer.on(
+            "instrument/connection/acquire-result",
+            (
+                event: any,
+                args: {
+                    callbackWindowId: number;
+                    rejectReason?: any;
+                }
+            ) => {
+                for (let i = 0; i < this.acquireQueue.length; i++) {
+                    const acquireTask = this.acquireQueue[i];
+                    if (acquireTask.callbackWindowId == args.callbackWindowId) {
+                        this.acquireQueue.splice(i, 1);
+                        if (args.rejectReason) {
+                            acquireTask.reject(args.rejectReason);
+                        } else {
+                            acquireTask.resolve();
+                        }
+                        break;
+                    }
+                }
+            }
+        );
+    }
+
+    async acquire(callbackWindowId: number, traceEnabled: boolean) {
+        return new Promise<void>((resolve, reject) => {
+            this.acquireQueue.push({
+                callbackWindowId,
+                resolve,
+                reject
+            });
+
+            EEZStudio.electron.ipcRenderer.send(
+                "instrument/connection/acquire",
+                {
+                    instrumentId: this.instrument.id,
+                    callbackWindowId,
+                    traceEnabled
+                }
+            );
         });
     }
 
     release() {
-        EEZStudio.electron.ipcRenderer.sendSync("instrument/connection/release", {
-            instrumentId: this.instrument.id
-        });
+        EEZStudio.electron.ipcRenderer.sendSync(
+            "instrument/connection/release",
+            {
+                instrumentId: this.instrument.id
+            }
+        );
     }
 }
 
 export function setupIpcServer() {
     const { ipcMain } = require("electron");
 
-    ipcMain.on("instrument/connection/connect", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-            connectionParameters: any;
-        }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            if (arg.connectionParameters) {
-                connection.instrument.setConnectionParameters(arg.connectionParameters);
+    ipcMain.on(
+        "instrument/connection/connect",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                connectionParameters: any;
             }
-            connection.connect();
-        }
-    });
-
-    ipcMain.on("instrument/connection/disconnect", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-        }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            connection.disconnect();
-        }
-    });
-
-    ipcMain.on("instrument/connection/destroy", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-        }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            connection.destroy();
-        }
-    });
-
-    ipcMain.on("instrument/connection/send", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-            command: string;
-            options?: ISendOptions;
-        }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            connection.send(arg.command, arg.options);
-        }
-    });
-
-    ipcMain.on("instrument/connection/upload", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-            instructions: IFileUploadInstructions;
-            callbackWindowId: number;
-        }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            connection.instrument.setLastFileUploadInstructions(arg.instructions);
-
-            connection.upload(
-                arg.instructions,
-                () => {
-                    let browserWindow = require("electron").BrowserWindow.fromId(
-                        arg.callbackWindowId
-                    )!;
-                    browserWindow.webContents.send(
-                        "instrument/connection/long-operation-result",
-                        {}
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                if (arg.connectionParameters) {
+                    connection.instrument.setConnectionParameters(
+                        arg.connectionParameters
                     );
-                },
-                error => {
-                    let browserWindow = require("electron").BrowserWindow.fromId(
-                        arg.callbackWindowId
-                    )!;
-                    browserWindow.webContents.send("instrument/connection/long-operation-result", {
-                        error
-                    });
                 }
-            );
+                connection.connect();
+            }
         }
-    });
+    );
 
-    ipcMain.on("instrument/connection/abort-long-operation", function (
-        event: any,
-        arg: {
-            instrumentId: string;
+    ipcMain.on(
+        "instrument/connection/disconnect",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.disconnect();
+            }
         }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            connection.abortLongOperation();
-        }
-    });
+    );
 
-    ipcMain.on("instrument/connection/dismiss-error", function (
-        event: any,
-        arg: {
-            instrumentId: string;
+    ipcMain.on(
+        "instrument/connection/destroy",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.destroy();
+            }
         }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            connection.dismissError();
-        }
-    });
+    );
 
-    ipcMain.on("instrument/connection/acquire", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-            callbackWindowId: number;
-            traceEnabled: boolean;
+    ipcMain.on(
+        "instrument/connection/send",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                command: string;
+                options?: ISendOptions;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.send(arg.command, arg.options);
+            }
         }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            event.returnValue = connection.acquire(arg.callbackWindowId, arg.traceEnabled);
-        } else {
-            event.returnValue = false;
-        }
-    });
+    );
 
-    ipcMain.on("instrument/connection/release", function (
-        event: any,
-        arg: {
-            instrumentId: string;
+    ipcMain.on(
+        "instrument/connection/upload",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                instructions: IFileUploadInstructions;
+                callbackWindowId: number;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.instrument.setLastFileUploadInstructions(
+                    arg.instructions
+                );
+
+                connection.upload(
+                    arg.instructions,
+                    () => {
+                        let browserWindow = require("electron").BrowserWindow.fromId(
+                            arg.callbackWindowId
+                        )!;
+                        browserWindow.webContents.send(
+                            "instrument/connection/long-operation-result",
+                            {}
+                        );
+                    },
+                    error => {
+                        let browserWindow = require("electron").BrowserWindow.fromId(
+                            arg.callbackWindowId
+                        )!;
+                        browserWindow.webContents.send(
+                            "instrument/connection/long-operation-result",
+                            {
+                                error
+                            }
+                        );
+                    }
+                );
+            }
         }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            connection.release();
+    );
+
+    ipcMain.on(
+        "instrument/connection/abort-long-operation",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.abortLongOperation();
+            }
         }
-        event.returnValue = true;
-    });
+    );
+
+    ipcMain.on(
+        "instrument/connection/dismiss-error",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.dismissError();
+            }
+        }
+    );
+
+    ipcMain.on(
+        "instrument/connection/acquire",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                callbackWindowId: number;
+                traceEnabled: boolean;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                event.returnValue = connection.acquire(
+                    arg.callbackWindowId,
+                    arg.traceEnabled
+                );
+            } else {
+                event.returnValue = false;
+            }
+        }
+    );
+
+    ipcMain.on(
+        "instrument/connection/release",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.release();
+            }
+            event.returnValue = true;
+        }
+    );
 }
 
 export const connections = observable(new Map<string, IConnection>());

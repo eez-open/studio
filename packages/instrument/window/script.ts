@@ -48,15 +48,15 @@ function input(dialogDefinition: any, defaultValues: any): any {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ScpiSession {
-    constructor(shortcut: IShortcut) { }
+    constructor(shortcut: IShortcut) {}
 
-    set _scriptDone(value: boolean) { }
+    set _scriptDone(value: boolean) {}
 
     set scriptError(value: string) {
         NotificationModule.error(value);
     }
 
-    _stop() { }
+    _stop() {}
 }
 
 function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
@@ -66,8 +66,8 @@ function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
         session: new ScpiSession(shortcut),
 
         connection: {
-            acquire() {
-                connection.acquire(true);
+            async acquire() {
+                await connection.acquire(true);
             },
             release() {
                 connection.release();
@@ -93,8 +93,8 @@ class JavaScriptSession {
                 shortcut.action.type === "scpi-commands"
                     ? "SCPI"
                     : shortcut.action.type === "javascript"
-                        ? "JavaScript"
-                        : "MicroPython",
+                    ? "JavaScript"
+                    : "MicroPython",
             done: false
         };
 
@@ -266,7 +266,10 @@ class JavaScriptSession {
     }
 }
 
-function prepareJavaScriptModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
+function prepareJavaScriptModules(
+    appStore: InstrumentAppStore,
+    shortcut: IShortcut
+) {
     const instrument = appStore.instrument!;
 
     return {
@@ -297,7 +300,7 @@ function prepareJavaScriptModules(appStore: InstrumentAppStore, shortcut: IShort
                     if (jsonValue) {
                         return JSON.parse(jsonValue);
                     }
-                } catch (err) { }
+                } catch (err) {}
                 return defaultValue;
             },
 
@@ -364,7 +367,13 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
             modules.session._scriptDone = true;
 
             if (shortcut.action.type === "javascript") {
-                showScriptError(appStore, shortcut, err.message, lineNumber, columnNumber);
+                showScriptError(
+                    appStore,
+                    shortcut,
+                    err.message,
+                    lineNumber,
+                    columnNumber
+                );
             }
 
             runInAction(() => {
@@ -373,7 +382,10 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
         });
 }
 
-export function executeShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
+export function executeShortcut(
+    appStore: InstrumentAppStore,
+    shortcut: IShortcut
+) {
     if (isShorcutRunning()) {
         error("Shortcut is running!", undefined);
         return;
@@ -385,8 +397,10 @@ export function executeShortcut(appStore: InstrumentAppStore, shortcut: IShortcu
     }
 
     if (shortcut.requiresConfirmation) {
-        confirm(`Do you want to execute "${shortcut.name}" shortcut?`, undefined, () =>
-            doExecuteShortcut(appStore, shortcut)
+        confirm(
+            `Do you want to execute "${shortcut.name}" shortcut?`,
+            undefined,
+            () => doExecuteShortcut(appStore, shortcut)
         );
     } else {
         doExecuteShortcut(appStore, shortcut);

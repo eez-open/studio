@@ -1197,6 +1197,7 @@ registerClass(DisplayDataWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TextWidget extends EmbeddedWidget {
+    @observable name: string;
     @observable text?: string;
     @observable ignoreLuminocity: boolean;
     @observable focusStyle: Style;
@@ -1211,10 +1212,19 @@ export class TextWidget extends EmbeddedWidget {
                 return `${humanize(widget.type)}: ${widget.data}`;
             }
 
+            if (widget.name) {
+                return `${humanize(widget.type)}: ${widget.name}`;
+            }
+
             return humanize(widget.type);
         },
 
         properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup
+            },
             makeTextPropertyInfo("text"),
             {
                 name: "ignoreLuminocity",
@@ -1275,6 +1285,8 @@ export class TextWidget extends EmbeddedWidget {
             } else {
                 if (this.data) {
                     text = flowContext.dataContext.get(this.data) as string;
+                } else {
+                    text = this.name;
                 }
             }
         }

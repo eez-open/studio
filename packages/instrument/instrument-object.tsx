@@ -9,8 +9,15 @@ import {
     commitTransaction
 } from "eez-studio-shared/store";
 import { IExtension } from "eez-studio-shared/extensions/extension";
-import { loadExtensionById, extensions } from "eez-studio-shared/extensions/extensions";
-import { activityLogStore, log, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import {
+    loadExtensionById,
+    extensions
+} from "eez-studio-shared/extensions/extensions";
+import {
+    activityLogStore,
+    log,
+    IActivityLogEntry
+} from "eez-studio-shared/activity-log";
 import { objectEqual } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { IUnit } from "eez-studio-shared/units";
@@ -34,7 +41,10 @@ import { ICommandSyntax, IQuerySyntax } from "instrument/commands-tree";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IConnection } from "instrument/connection/connection";
 import { createConnection } from "instrument/connection/connection";
-import { ConnectionErrorCode, ConnectionParameters } from "instrument/connection/interface";
+import {
+    ConnectionErrorCode,
+    ConnectionParameters
+} from "instrument/connection/interface";
 import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 import * as UiPropertiesModule from "eez-studio-ui/properties";
@@ -208,9 +218,13 @@ export class InstrumentObject {
                         .catch(
                             action(() => {
                                 this._loadingExtension = false;
-                                this._extension = Object.assign({}, UNKNOWN_INSTRUMENT_EXTENSION, {
-                                    id: this.instrumentExtensionId
-                                });
+                                this._extension = Object.assign(
+                                    {},
+                                    UNKNOWN_INSTRUMENT_EXTENSION,
+                                    {
+                                        id: this.instrumentExtensionId
+                                    }
+                                );
                             })
                         );
                 });
@@ -235,7 +249,8 @@ export class InstrumentObject {
         if (!this.extension) {
             return undefined;
         }
-        return (this.extension.properties as IInstrumentExtensionProperties).properties;
+        return (this.extension.properties as IInstrumentExtensionProperties)
+            .properties;
     }
 
     @computed
@@ -386,11 +401,13 @@ export class InstrumentObject {
         }
 
         if (ethernetPort === undefined) {
-            ethernetPort = DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.ethernet!.port;
+            ethernetPort = DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!
+                .ethernet!.port;
         }
 
         if (baudRate === undefined) {
-            baudRate = DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!.defaultBaudRate;
+            baudRate = DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!
+                .serial!.defaultBaudRate;
         }
 
         if (idVendor === undefined) {
@@ -452,7 +469,8 @@ export class InstrumentObject {
         ) {
             return connection.serial.baudRates;
         }
-        return DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!.baudRates;
+        return DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!
+            .baudRates;
     }
 
     getFileDownloadProperty() {
@@ -467,18 +485,25 @@ export class InstrumentObject {
                 destinationFileName: "",
                 destinationFolderPath: "/",
                 shortFileName:
-                    instructions.shortFileName !== undefined ? instructions.shortFileName : true,
+                    instructions.shortFileName !== undefined
+                        ? instructions.shortFileName
+                        : true,
                 startCommandTemplate: instructions.startCommand || "",
                 fileSizeCommandTemplate: instructions.fileSizeCommand || "",
                 sendChunkCommandTemplate: instructions.sendChunkCommand || "",
                 finishCommandTemplate: instructions.finishCommand || "",
                 abortCommandTemplate: instructions.abortCommand || "",
                 chunkSize: instructions.chunkSize || 1024,
-                favoriteDestinationPaths: instructions.favoriteDestinationPaths || undefined
+                favoriteDestinationPaths:
+                    instructions.favoriteDestinationPaths || undefined
             };
         } else {
             return undefined;
         }
+    }
+
+    get isConnected() {
+        return this.connection.isConnected;
     }
 
     get connectionState(): {
@@ -498,12 +523,16 @@ export class InstrumentObject {
                     label: "Connected"
                 };
             } else {
-                if (this.connection.errorCode === ConnectionErrorCode.NOT_FOUND) {
+                if (
+                    this.connection.errorCode === ConnectionErrorCode.NOT_FOUND
+                ) {
                     return {
                         color: "#ccc",
                         label: "Not found"
                     };
-                } else if (this.connection.errorCode !== ConnectionErrorCode.NONE) {
+                } else if (
+                    this.connection.errorCode !== ConnectionErrorCode.NONE
+                ) {
                     return {
                         color: "#ccc",
                         label: "Disconnected",
@@ -532,7 +561,9 @@ export class InstrumentObject {
                         <StaticProperty name="Interface" value="Ethernet" />
                         <StaticProperty
                             name="Server address"
-                            value={this.lastConnection.ethernetParameters.address}
+                            value={
+                                this.lastConnection.ethernetParameters.address
+                            }
                         />
                         <StaticProperty
                             name="Port"
@@ -561,13 +592,19 @@ export class InstrumentObject {
                         <StaticProperty
                             name="Vendor ID"
                             value={
-                                "0x" + this.lastConnection.usbtmcParameters.idVendor.toString(16)
+                                "0x" +
+                                this.lastConnection.usbtmcParameters.idVendor.toString(
+                                    16
+                                )
                             }
                         />
                         <StaticProperty
                             name="Product ID"
                             value={
-                                "0x" + this.lastConnection.usbtmcParameters.idProduct.toString(16)
+                                "0x" +
+                                this.lastConnection.usbtmcParameters.idProduct.toString(
+                                    16
+                                )
                             }
                         />
                     </PropertyList>
@@ -586,7 +623,8 @@ export class InstrumentObject {
         return (
             this.label ||
             this.idn ||
-            (this.extension && (this.extension.displayName || this.extension.name)) ||
+            (this.extension &&
+                (this.extension.displayName || this.extension.name)) ||
             ""
         );
     }
@@ -650,7 +688,9 @@ export class InstrumentObject {
 
     @computed
     get details() {
-        const { InstrumentDetails } = require("instrument/instrument-object-details");
+        const {
+            InstrumentDetails
+        } = require("instrument/instrument-object-details");
         return <InstrumentDetails instrument={this} />;
     }
 
@@ -699,7 +739,9 @@ export class InstrumentObject {
                 }
             );
 
-            const { closeWindow } = require("main/window") as typeof MainWindowModule;
+            const {
+                closeWindow
+            } = require("main/window") as typeof MainWindowModule;
             closeWindow(this.getEditorWindowArgs());
         }
     }
@@ -777,8 +819,15 @@ export class InstrumentObject {
     }
 
     @action
-    setLastFileUploadInstructions(fileUploadInstructions: IFileUploadInstructions) {
-        if (!objectEqual(fileUploadInstructions, this.lastFileUploadInstructions)) {
+    setLastFileUploadInstructions(
+        fileUploadInstructions: IFileUploadInstructions
+    ) {
+        if (
+            !objectEqual(
+                fileUploadInstructions,
+                this.lastFileUploadInstructions
+            )
+        ) {
             beginTransaction("Change instrument upload settings");
             store.updateObject({
                 id: this.id,
@@ -802,7 +851,9 @@ export class InstrumentObject {
 
     addShortcutGroupToInstrument(groupName: string) {
         if (this.selectedShortcutGroups.indexOf(groupName) === -1) {
-            let selectedShortcutGroups = this.selectedShortcutGroups.concat([groupName]);
+            let selectedShortcutGroups = this.selectedShortcutGroups.concat([
+                groupName
+            ]);
             store.updateObject({
                 id: this.id,
                 selectedShortcutGroups
@@ -832,8 +883,14 @@ export class InstrumentObject {
     }
 
     deletePermanently() {
-        workbenchObjectsStore.deleteObject({ oid: this.id }, { deletePermanently: true });
-        activityLogStore.deleteObject({ oid: this.id }, { deletePermanently: true });
+        workbenchObjectsStore.deleteObject(
+            { oid: this.id },
+            { deletePermanently: true }
+        );
+        activityLogStore.deleteObject(
+            { oid: this.id },
+            { deletePermanently: true }
+        );
         store.deleteObject(this, { deletePermanently: true });
     }
 
@@ -890,7 +947,9 @@ export class InstrumentObject {
     }
 
     getQueryResponseType(query: string) {
-        const command = this._instrumentAppStore.commandsTree.findCommand(query);
+        const command = this._instrumentAppStore.commandsTree.findCommand(
+            query
+        );
         const response = command && (command as IQuerySyntax).response;
         if (response && response.type && response.type.length > 0) {
             return response.type[0].type;
@@ -899,7 +958,9 @@ export class InstrumentObject {
     }
 
     isCommandSendsBackDataBlock(commandName: string) {
-        const command = this._instrumentAppStore.commandsTree.findCommand(commandName);
+        const command = this._instrumentAppStore.commandsTree.findCommand(
+            commandName
+        );
         return command && (command as ICommandSyntax).sendsBackDataBlock;
     }
 
@@ -907,7 +968,8 @@ export class InstrumentObject {
     get sendFileToInstrumentHandler() {
         if (this.getFileDownloadProperty()) {
             const fileUploadInstructions =
-                this.lastFileUploadInstructions || this.defaultFileUploadInstructions;
+                this.lastFileUploadInstructions ||
+                this.defaultFileUploadInstructions;
 
             if (fileUploadInstructions) {
                 if (this.defaultFileUploadInstructions) {
@@ -917,9 +979,12 @@ export class InstrumentObject {
                 const instrument = this;
 
                 return () => {
-                    showFileUploadDialog(fileUploadInstructions, instructions => {
-                        instrument.connection.upload(instructions);
-                    });
+                    showFileUploadDialog(
+                        fileUploadInstructions,
+                        instructions => {
+                            instrument.connection.upload(instructions);
+                        }
+                    );
                 };
             }
         }
@@ -929,13 +994,15 @@ export class InstrumentObject {
 
     @action
     setCustomProperty(customPropertyName: string, customPropertyValue: any) {
-        beginTransaction(`Change instrument ${customPropertyName} custom property`);
+        beginTransaction(
+            `Change instrument ${customPropertyName} custom property`
+        );
         store.updateObject({
             id: this.id,
             custom: toJS(
                 Object.assign(this.custom, {
-                        [customPropertyName]: customPropertyValue
-                    })
+                    [customPropertyName]: customPropertyValue
+                })
             )
         });
         commitTransaction();
@@ -948,15 +1015,21 @@ export class InstrumentObject {
     @computed
     get isBB3() {
         return (
-            this.instrumentExtensionId == "687b6dee-2093-4c36-afb7-cfc7ea2bf262" ||
+            this.instrumentExtensionId ==
+                "687b6dee-2093-4c36-afb7-cfc7ea2bf262" ||
             this.instrumentExtensionId == "7cab6860-e593-4ba2-ee68-57fe84460fa4"
         );
     }
 
     terminate() {
         if (this.isBB3) {
-            const { getBB3Instrument } = require("instrument/bb3") as typeof Bb3Module;
-            const bb3Instrument = getBB3Instrument(this._instrumentAppStore, false);
+            const {
+                getBB3Instrument
+            } = require("instrument/bb3") as typeof Bb3Module;
+            const bb3Instrument = getBB3Instrument(
+                this._instrumentAppStore,
+                false
+            );
             if (bb3Instrument) {
                 bb3Instrument.terminate();
             }
@@ -1068,7 +1141,10 @@ const instrumentCollection = createStoreObjectsCollection<InstrumentObject>();
 store.watch(instrumentCollection);
 export const instruments = instrumentCollection.objects;
 
-export function changeGroupNameInInstruments(oldName: string, newName?: string) {
+export function changeGroupNameInInstruments(
+    oldName: string,
+    newName?: string
+) {
     instruments.forEach((instrument: InstrumentObject) => {
         let i = instrument.selectedShortcutGroups.indexOf(oldName);
         if (i !== -1) {

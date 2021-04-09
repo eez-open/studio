@@ -303,12 +303,18 @@ export class ComponentsPalette extends React.Component<{
             const parts = componentClass.name.split("/");
             let groupName;
             if (parts.length == 1) {
-                if (componentClass.name.endsWith("Widget")) {
-                    groupName = "!1Common Widgets";
-                } else if (componentClass.name.endsWith("ActionComponent")) {
-                    groupName = "!2Common Actions";
-                } else {
-                    groupName = "Other components";
+                groupName =
+                    componentClass.objectClass.classInfo.paletteGroupName;
+                if (!groupName) {
+                    if (componentClass.name.endsWith("Widget")) {
+                        groupName = "!1Common Widgets";
+                    } else if (
+                        componentClass.name.endsWith("ActionComponent")
+                    ) {
+                        groupName = "!2Common Actions";
+                    } else {
+                        groupName = "Other components";
+                    }
                 }
             } else if (parts.length == 2) {
                 groupName = parts[0];

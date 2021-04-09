@@ -53,56 +53,36 @@
           "layout": "bb3"
         },
         {
-          "type": "SetVariableActionComponent",
-          "left": -248,
-          "top": 185,
+          "type": "ConstantActionComponent",
+          "left": -172,
+          "top": 117,
           "width": 0,
           "height": 0,
-          "wireID": "f4529b1a-0e6b-4669-cb00-6646a7620428",
-          "variable": "bb3_1",
-          "value": "{\n    \"id\": 61,\n    \"name\": \"BB3 #1\"\n}"
+          "wireID": "2876fa0b-4c99-42c6-db9e-ab80488d5ee1",
+          "value": "null"
         },
         {
-          "type": "SetVariableActionComponent",
-          "left": -247,
-          "top": 570,
+          "type": "ConstantActionComponent",
+          "left": -188,
+          "top": 513,
           "width": 0,
           "height": 0,
-          "wireID": "6e70c90b-e971-4f63-ebde-692741e04178",
-          "variable": "bb3_2",
-          "value": "{\n    \"id\": 65,\n    \"name\": \"BB3 #2\"\n}"
-        },
-        {
-          "type": "GetVariableActionComponent",
-          "left": -150,
-          "top": 320,
-          "width": 0,
-          "height": 0,
-          "wireID": "3f522e17-eded-4d78-b979-4055794540ac",
-          "variable": "bb3_1"
-        },
-        {
-          "type": "GetVariableActionComponent",
-          "left": -149,
-          "top": 706,
-          "width": 0,
-          "height": 0,
-          "wireID": "acf3462c-ab06-4806-9111-e2a1bf5e58f8",
-          "variable": "bb3_2"
+          "wireID": "60e9bf03-56fc-4d8b-eaea-5d32de505814",
+          "value": "null"
         }
       ],
       "connectionLines": [
         {
-          "source": "3f522e17-eded-4d78-b979-4055794540ac",
-          "output": "variable",
+          "source": "2876fa0b-4c99-42c6-db9e-ab80488d5ee1",
+          "output": "value",
           "target": "3f1e1df9-2a64-4ab9-c745-52d1d907de2f",
-          "input": "1822c69c-70b6-441e-ff68-92bc5f5cca72"
+          "input": "3d1a9dff-fb3f-4837-f702-660c8aba903b"
         },
         {
-          "source": "acf3462c-ab06-4806-9111-e2a1bf5e58f8",
-          "output": "variable",
+          "source": "60e9bf03-56fc-4d8b-eaea-5d32de505814",
+          "output": "value",
           "target": "eceb8986-94a1-449f-e9bd-3d61ad3bd489",
-          "input": "1822c69c-70b6-441e-ff68-92bc5f5cca72"
+          "input": "3d1a9dff-fb3f-4837-f702-660c8aba903b"
         }
       ],
       "name": "main",
@@ -116,9 +96,9 @@
         {
           "type": "LayoutViewWidget",
           "left": 0,
-          "top": 82,
+          "top": 46,
           "width": 388,
-          "height": 272,
+          "height": 308,
           "wireID": "c6821be5-141a-41a2-84f8-8802ccee52e0",
           "style": {
             "inheritFrom": "default"
@@ -126,23 +106,11 @@
           "layout": "slot"
         },
         {
-          "type": "TextWidget",
-          "left": 0,
-          "top": 46,
-          "width": 64,
-          "height": 32,
-          "wireID": "4596d6ee-1f5c-48bb-9ceb-6a20e8f1dd4f",
-          "style": {
-            "inheritFrom": "h2"
-          },
-          "text": "Slot #1"
-        },
-        {
           "type": "LayoutViewWidget",
           "left": 388,
-          "top": 82,
+          "top": 46,
           "width": 388,
-          "height": 272,
+          "height": 308,
           "wireID": "67d71a34-0f68-46ec-d392-a4be6c4aed30",
           "style": {
             "inheritFrom": "default"
@@ -150,49 +118,16 @@
           "layout": "slot"
         },
         {
-          "type": "TextWidget",
-          "left": 388,
-          "top": 46,
-          "width": 64,
-          "height": 32,
-          "wireID": "4abb1263-0270-43f6-dbc5-b590f7f05feb",
-          "style": {
-            "inheritFrom": "h2"
-          },
-          "text": "Slot #2"
-        },
-        {
           "type": "LayoutViewWidget",
           "left": 776,
-          "top": 82,
+          "top": 46,
           "width": 388,
-          "height": 272,
+          "height": 308,
           "wireID": "619b5066-f260-4931-a2ae-e93284ef21f3",
           "style": {
             "inheritFrom": "default"
           },
           "layout": "slot"
-        },
-        {
-          "type": "TextWidget",
-          "left": 776,
-          "top": 46,
-          "width": 64,
-          "height": 32,
-          "wireID": "f764431e-a2b6-44b4-e12b-11a58d626d7f",
-          "style": {
-            "inheritFrom": "h2"
-          },
-          "text": "Slot #3"
-        },
-        {
-          "type": "InputActionComponent",
-          "left": 0,
-          "top": -149,
-          "width": 0,
-          "height": 0,
-          "wireID": "1822c69c-70b6-441e-ff68-92bc5f5cca72",
-          "name": "instrument"
         },
         {
           "type": "TextWidget",
@@ -211,20 +146,113 @@
         },
         {
           "type": "GetVariableActionComponent",
-          "left": -147,
-          "top": -9,
+          "left": -191,
+          "top": -23,
           "width": 0,
           "height": 0,
           "wireID": "4953b9cc-3702-49d7-a51c-856b64516a91",
           "variable": "instrument.name"
         },
         {
-          "type": "DeclareVariableActionComponent",
-          "left": 138,
-          "top": -149,
+          "type": "ConstantActionComponent",
+          "left": -174,
+          "top": 371,
           "width": 0,
           "height": 0,
-          "wireID": "1512245a-33e4-45c5-b47e-1b5f951a9571",
+          "wireID": "cd3cc276-6785-4b2a-fc1e-c237b6f73508",
+          "value": "1"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 247,
+          "top": 371,
+          "width": 0,
+          "height": 0,
+          "wireID": "d8e04051-1f7b-4a69-cbc1-574f0f7cada6",
+          "value": "2"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 622,
+          "top": 371,
+          "width": 0,
+          "height": 0,
+          "wireID": "963944a3-de42-4d68-fc56-3754545a52f6",
+          "value": "3"
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -191,
+          "top": 227,
+          "width": 0,
+          "height": 0,
+          "wireID": "cbf9650c-e82b-4e16-b7c2-35827c0e9f8f",
+          "variable": "instrument"
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 223,
+          "top": 0,
+          "width": 130,
+          "height": 32,
+          "wireID": "2f070acf-92f0-46b0-860f-f844cc9351dc",
+          "asInputProperties": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "Select Instrument",
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "SelectInstrumentActionComponent",
+          "left": 312,
+          "top": -173,
+          "width": 0,
+          "height": 0,
+          "wireID": "02cebc66-80fe-4283-f896-a0407550c61b"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 557,
+          "top": -179,
+          "width": 0,
+          "height": 0,
+          "wireID": "bada8498-bd54-4227-f3a2-5aa5ef0bc68a",
+          "name": "instrument"
+        },
+        {
+          "type": "InputActionComponent",
+          "left": -97,
+          "top": -215,
+          "width": 0,
+          "height": 0,
+          "wireID": "3d1a9dff-fb3f-4837-f702-660c8aba903b",
+          "name": "instrument"
+        },
+        {
+          "type": "DeclareVariableActionComponent",
+          "left": 26,
+          "top": -215,
+          "width": 0,
+          "height": 0,
+          "wireID": "fb873f95-16de-4689-c090-36136038b744",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "instrument"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": 557,
+          "top": -125,
+          "width": 0,
+          "height": 0,
+          "wireID": "acae171d-93cf-4db2-82fa-969c4e99bcff",
           "asInputProperties": [
             "value"
           ],
@@ -233,16 +261,70 @@
       ],
       "connectionLines": [
         {
-          "source": "1822c69c-70b6-441e-ff68-92bc5f5cca72",
-          "output": "@seqout",
-          "target": "1512245a-33e4-45c5-b47e-1b5f951a9571",
-          "input": "value"
-        },
-        {
           "source": "4953b9cc-3702-49d7-a51c-856b64516a91",
           "output": "variable",
           "target": "ad1f6bcf-5a2b-4578-82cd-f7ef112e9058",
           "input": "data"
+        },
+        {
+          "source": "cd3cc276-6785-4b2a-fc1e-c237b6f73508",
+          "output": "value",
+          "target": "c6821be5-141a-41a2-84f8-8802ccee52e0",
+          "input": "5adcc403-21ad-487b-fba6-aad6a3bf6a22"
+        },
+        {
+          "source": "cbf9650c-e82b-4e16-b7c2-35827c0e9f8f",
+          "output": "variable",
+          "target": "c6821be5-141a-41a2-84f8-8802ccee52e0",
+          "input": "55ee11df-296f-4fe3-d5e4-c6d92e958edb"
+        },
+        {
+          "source": "2f070acf-92f0-46b0-860f-f844cc9351dc",
+          "output": "action",
+          "target": "02cebc66-80fe-4283-f896-a0407550c61b",
+          "input": "@seqin"
+        },
+        {
+          "source": "02cebc66-80fe-4283-f896-a0407550c61b",
+          "output": "instrument",
+          "target": "bada8498-bd54-4227-f3a2-5aa5ef0bc68a",
+          "input": "@seqin"
+        },
+        {
+          "source": "3d1a9dff-fb3f-4837-f702-660c8aba903b",
+          "output": "@seqout",
+          "target": "fb873f95-16de-4689-c090-36136038b744",
+          "input": "value"
+        },
+        {
+          "source": "02cebc66-80fe-4283-f896-a0407550c61b",
+          "output": "instrument",
+          "target": "acae171d-93cf-4db2-82fa-969c4e99bcff",
+          "input": "value"
+        },
+        {
+          "source": "cbf9650c-e82b-4e16-b7c2-35827c0e9f8f",
+          "output": "variable",
+          "target": "67d71a34-0f68-46ec-d392-a4be6c4aed30",
+          "input": "5adcc403-21ad-487b-fba6-aad6a3bf6a22"
+        },
+        {
+          "source": "cbf9650c-e82b-4e16-b7c2-35827c0e9f8f",
+          "output": "variable",
+          "target": "619b5066-f260-4931-a2ae-e93284ef21f3",
+          "input": "5adcc403-21ad-487b-fba6-aad6a3bf6a22"
+        },
+        {
+          "source": "d8e04051-1f7b-4a69-cbc1-574f0f7cada6",
+          "output": "value",
+          "target": "67d71a34-0f68-46ec-d392-a4be6c4aed30",
+          "input": "55ee11df-296f-4fe3-d5e4-c6d92e958edb"
+        },
+        {
+          "source": "963944a3-de42-4d68-fc56-3754545a52f6",
+          "output": "value",
+          "target": "619b5066-f260-4931-a2ae-e93284ef21f3",
+          "input": "55ee11df-296f-4fe3-d5e4-c6d92e958edb"
         }
       ],
       "name": "bb3",
@@ -256,11 +338,40 @@
       "components": [
         {
           "type": "TextWidget",
-          "left": 0,
+          "left": 46,
           "top": 0,
-          "width": 140,
+          "width": 37,
+          "height": 32,
+          "wireID": "82b7bf17-b193-48d1-b1b9-6aff992aa41a",
+          "asInputProperties": [],
+          "style": {
+            "inheritFrom": "text_left"
+          },
+          "text": "Slot #"
+        },
+        {
+          "type": "TextWidget",
+          "left": 83,
+          "top": 0,
+          "width": 67,
           "height": 32,
           "wireID": "98d16fdd-9b44-4bf4-d962-6f521ea32c10",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "text_left"
+          },
+          "name": "slot",
+          "text": ""
+        },
+        {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 34,
+          "width": 140,
+          "height": 32,
+          "wireID": "b3ad83f7-32c0-43bf-bfa9-2d5eddbdca3b",
           "style": {
             "inheritFrom": "text_left"
           },
@@ -269,19 +380,23 @@
         {
           "type": "TextWidget",
           "left": 140,
-          "top": 0,
+          "top": 36,
           "width": 248,
           "height": 32,
           "wireID": "bfe76ef9-0e5d-40cf-efa1-47c340e900c4",
+          "asInputProperties": [
+            "data"
+          ],
           "style": {
             "inheritFrom": "text_left"
           },
-          "text": "Model:"
+          "name": "model",
+          "text": ""
         },
         {
           "type": "TextWidget",
           "left": 0,
-          "top": 32,
+          "top": 68,
           "width": 140,
           "height": 32,
           "wireID": "0375eb21-05e5-4317-d697-56aaa6a0aab0",
@@ -292,8 +407,24 @@
         },
         {
           "type": "TextWidget",
+          "left": 140,
+          "top": 68,
+          "width": 248,
+          "height": 32,
+          "wireID": "540340b9-06db-4885-c474-08993b80966d",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "text_left"
+          },
+          "name": "version",
+          "text": ""
+        },
+        {
+          "type": "TextWidget",
           "left": 0,
-          "top": 64,
+          "top": 100,
           "width": 140,
           "height": 32,
           "wireID": "15499c53-599a-4181-ac2b-3c198c45e411",
@@ -304,8 +435,24 @@
         },
         {
           "type": "TextWidget",
+          "left": 140,
+          "top": 100,
+          "width": 248,
+          "height": 32,
+          "wireID": "8acce150-6cbf-4685-e045-4e8ddf69da36",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "text_left"
+          },
+          "name": "firmware",
+          "text": ""
+        },
+        {
+          "type": "TextWidget",
           "left": 0,
-          "top": 96,
+          "top": 132,
           "width": 140,
           "height": 32,
           "wireID": "9cbaf609-8c33-40c9-80fb-f44c905fbb62",
@@ -316,8 +463,24 @@
         },
         {
           "type": "TextWidget",
+          "left": 140,
+          "top": 132,
+          "width": 248,
+          "height": 32,
+          "wireID": "6614f1ac-1e4a-4a29-918c-c8ab5fe76a60",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "text_left"
+          },
+          "name": "serial",
+          "text": ""
+        },
+        {
+          "type": "TextWidget",
           "left": 0,
-          "top": 128,
+          "top": 164,
           "width": 140,
           "height": 32,
           "wireID": "74f3dffa-4f28-4233-8eca-fcb6eb1394c7",
@@ -328,20 +491,24 @@
         },
         {
           "type": "TextWidget",
-          "left": 0,
-          "top": 200,
-          "width": 140,
+          "left": 140,
+          "top": 164,
+          "width": 248,
           "height": 32,
-          "wireID": "76611140-8f39-4b42-e2f0-e64815801853",
+          "wireID": "5d95eebf-213b-45a8-ef85-3a53108088ee",
+          "asInputProperties": [
+            "data"
+          ],
           "style": {
             "inheritFrom": "text_left"
           },
-          "text": "Calibration saved:"
+          "name": "registered",
+          "text": ""
         },
         {
           "type": "ButtonWidget",
           "left": 140,
-          "top": 160,
+          "top": 196,
           "width": 131,
           "height": 40,
           "wireID": "d13ecafe-dc54-474c-c7eb-e18526a5a0c1",
@@ -354,9 +521,37 @@
           }
         },
         {
+          "type": "TextWidget",
+          "left": 0,
+          "top": 236,
+          "width": 140,
+          "height": 32,
+          "wireID": "76611140-8f39-4b42-e2f0-e64815801853",
+          "style": {
+            "inheritFrom": "text_left"
+          },
+          "text": "Calibration saved:"
+        },
+        {
+          "type": "TextWidget",
+          "left": 140,
+          "top": 236,
+          "width": 248,
+          "height": 32,
+          "wireID": "2883c7ab-5904-42e6-83c5-c07d09d41d9e",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "text_left"
+          },
+          "name": "calibration_saved",
+          "text": ""
+        },
+        {
           "type": "ButtonWidget",
           "left": 140,
-          "top": 232,
+          "top": 268,
           "width": 131,
           "height": 40,
           "wireID": "1a105ac7-e6cb-4732-a721-eff5875a934c",
@@ -369,72 +564,188 @@
           }
         },
         {
-          "type": "TextWidget",
-          "left": 140,
-          "top": 32,
-          "width": 248,
-          "height": 32,
-          "wireID": "540340b9-06db-4885-c474-08993b80966d",
-          "style": {
-            "inheritFrom": "text_left"
-          },
-          "text": "Model:"
+          "type": "InputActionComponent",
+          "left": -98,
+          "top": -172,
+          "width": 0,
+          "height": 0,
+          "wireID": "5adcc403-21ad-487b-fba6-aad6a3bf6a22",
+          "name": "slot"
         },
         {
-          "type": "TextWidget",
-          "left": 140,
-          "top": 64,
-          "width": 248,
-          "height": 32,
-          "wireID": "8acce150-6cbf-4685-e045-4e8ddf69da36",
-          "style": {
-            "inheritFrom": "text_left"
-          },
-          "text": "Model:"
+          "type": "DeclareVariableActionComponent",
+          "left": 54,
+          "top": -172,
+          "width": 0,
+          "height": 0,
+          "wireID": "b88e4bf3-9c5a-44dc-d67a-14d59a9768b4",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "slot"
         },
         {
-          "type": "TextWidget",
-          "left": 140,
-          "top": 96,
-          "width": 248,
-          "height": 32,
-          "wireID": "6614f1ac-1e4a-4a29-918c-c8ab5fe76a60",
-          "style": {
-            "inheritFrom": "text_left"
-          },
-          "text": "000100045953510720393737"
+          "type": "GetVariableActionComponent",
+          "left": -363,
+          "top": -118,
+          "width": 0,
+          "height": 0,
+          "wireID": "092d9185-ac4a-4a3c-fad5-778ed3a1c0b8",
+          "variable": "slot"
         },
         {
-          "type": "TextWidget",
-          "left": 140,
-          "top": 128,
-          "width": 248,
-          "height": 32,
-          "wireID": "5d95eebf-213b-45a8-ef85-3a53108088ee",
-          "style": {
-            "inheritFrom": "text_left"
-          },
-          "text": "Model:"
+          "type": "InputActionComponent",
+          "left": -98,
+          "top": -221,
+          "width": 0,
+          "height": 0,
+          "wireID": "55ee11df-296f-4fe3-d5e4-c6d92e958edb",
+          "name": "instrument"
         },
         {
-          "type": "TextWidget",
-          "left": 140,
-          "top": 200,
-          "width": 248,
-          "height": 32,
-          "wireID": "2883c7ab-5904-42e6-83c5-c07d09d41d9e",
-          "style": {
-            "inheritFrom": "text_left"
-          },
-          "text": "Model:"
+          "type": "DeclareVariableActionComponent",
+          "left": 54,
+          "top": -257,
+          "width": 0,
+          "height": 0,
+          "wireID": "e45eb6c0-0702-408e-dfd9-1a71f2c9d917",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "instrument"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -441,
+          "top": 25,
+          "width": 0,
+          "height": 0,
+          "wireID": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "asInputProperties": [
+            "instrument"
+          ],
+          "scpi": "model = SYST:SLOT:MOD? {slot}\nversion = SYSTem:SLOT:VERSion? {slot}\nfirmware = SYST:SLOT:FIRM? {slot}\nserial = SYSTem:SLOT:SNO? {slot}"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -606,
+          "top": -51,
+          "width": 0,
+          "height": 0,
+          "wireID": "da243f81-5b38-444c-dcc3-a7e642da8728",
+          "asInputProperties": [
+            "A",
+            "B"
+          ],
+          "operator": "="
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -792,
+          "top": -58,
+          "width": 0,
+          "height": 0,
+          "wireID": "0192e4c5-a460-4de9-97fc-1f7ff131c018",
+          "variable": "instrument.isConnected"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -779,
+          "top": 17,
+          "width": 0,
+          "height": 0,
+          "wireID": "f2976c3e-8e9f-4126-c6e2-6113941ec60d",
+          "value": "true"
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -626,
+          "top": 78,
+          "width": 0,
+          "height": 0,
+          "wireID": "1a0f5c2a-419b-4972-d21e-d319276e8a22",
+          "variable": "instrument"
         }
       ],
-      "connectionLines": [],
+      "connectionLines": [
+        {
+          "source": "5adcc403-21ad-487b-fba6-aad6a3bf6a22",
+          "output": "@seqout",
+          "target": "b88e4bf3-9c5a-44dc-d67a-14d59a9768b4",
+          "input": "value"
+        },
+        {
+          "source": "092d9185-ac4a-4a3c-fad5-778ed3a1c0b8",
+          "output": "variable",
+          "target": "98d16fdd-9b44-4bf4-d962-6f521ea32c10",
+          "input": "data"
+        },
+        {
+          "source": "55ee11df-296f-4fe3-d5e4-c6d92e958edb",
+          "output": "@seqout",
+          "target": "e45eb6c0-0702-408e-dfd9-1a71f2c9d917",
+          "input": "value"
+        },
+        {
+          "source": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "output": "model",
+          "target": "bfe76ef9-0e5d-40cf-efa1-47c340e900c4",
+          "input": "data"
+        },
+        {
+          "source": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "output": "version",
+          "target": "540340b9-06db-4885-c474-08993b80966d",
+          "input": "data"
+        },
+        {
+          "source": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "output": "firmware",
+          "target": "8acce150-6cbf-4685-e045-4e8ddf69da36",
+          "input": "data"
+        },
+        {
+          "source": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "output": "serial",
+          "target": "6614f1ac-1e4a-4a29-918c-c8ab5fe76a60",
+          "input": "data"
+        },
+        {
+          "source": "092d9185-ac4a-4a3c-fad5-778ed3a1c0b8",
+          "output": "variable",
+          "target": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "input": "slot"
+        },
+        {
+          "source": "0192e4c5-a460-4de9-97fc-1f7ff131c018",
+          "output": "variable",
+          "target": "da243f81-5b38-444c-dcc3-a7e642da8728",
+          "input": "A"
+        },
+        {
+          "source": "f2976c3e-8e9f-4126-c6e2-6113941ec60d",
+          "output": "value",
+          "target": "da243f81-5b38-444c-dcc3-a7e642da8728",
+          "input": "B"
+        },
+        {
+          "source": "da243f81-5b38-444c-dcc3-a7e642da8728",
+          "output": "True",
+          "target": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "input": "@seqin"
+        },
+        {
+          "source": "1a0f5c2a-419b-4972-d21e-d319276e8a22",
+          "output": "variable",
+          "target": "ccf6ccb8-7f1a-4d82-85c5-1a5a2bb90356",
+          "input": "instrument"
+        }
+      ],
       "name": "slot",
       "left": 0,
       "top": 0,
       "width": 388,
-      "height": 272,
+      "height": 308,
       "isUsedAsCustomWidget": true
     }
   ],
