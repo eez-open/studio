@@ -119,7 +119,7 @@ class FlowDocument implements IDocument {
 const AllConnectionLines = observer(
     ({ flowContext }: { flowContext: IFlowContext }) => {
         return (
-            <Svg flowContext={flowContext} style={{ zIndex: 3 }}>
+            <Svg flowContext={flowContext}>
                 <ConnectionLines
                     connectionLines={
                         flowContext.document.nonSelectedConnectionLines

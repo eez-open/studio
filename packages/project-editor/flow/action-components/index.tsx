@@ -139,6 +139,73 @@ registerClass(GetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class AccessorActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            {
+                name: "accessor",
+                type: PropertyType.MultilineText,
+                propertyGridGroup: specificGroup
+            }
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 33.94000244140625 36.08000183105469"
+            >
+                <path d="M18.4 28h-5.306l-3.42-9.119c-.127-.337-.26-.962-.4-1.875h-.057l-.457 1.956L5.327 28H0l6.325-14L.558 0H5.99l2.831 8.394c.22.666.418 1.454.592 2.362h.057l.614-2.437L13.204 0h4.917L12.28 13.881 18.4 28zm15.54-10.667l-5.11 13.775c-1.22 3.315-3.055 4.972-5.506 4.972-.934 0-1.702-.169-2.304-.507v-3.04a2.917 2.917 0 0 0 1.65.507c.98 0 1.662-.476 2.047-1.429l.65-1.58-5.107-12.698h4.327l2.33 7.75c.146.484.26 1.052.341 1.707h.048l.404-1.678 2.355-7.779h3.875z" />
+            </svg>
+        )
+    });
+
+    @observable accessor: string;
+
+    @computed get inputs() {
+        return [
+            ...super.inputProperties,
+            {
+                name: "value",
+                type: PropertyType.Any
+            }
+        ];
+    }
+
+    @computed get outputs() {
+        return [
+            ...super.outputProperties,
+            {
+                name: "result",
+                type: PropertyType.Any
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.accessor}</pre>
+            </div>
+        );
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        const inputValue = runningFlow.getInputValue(this, "value");
+        let value = inputValue?.value;
+        value;
+        try {
+            let result = eval(this.accessor);
+            runningFlow.propagateValue(this, "result", result);
+        } catch (err) {
+            console.error(err);
+            runningFlow.propagateValue(this, "result", undefined);
+        }
+    }
+}
+
+registerClass(AccessorActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const SetVariableBody = styled.div`
     display: flex;
     align-items: baseline;
@@ -198,20 +265,7 @@ export class SetVariableActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
-        let value;
-        if (this.isInputProperty("value")) {
-            const inputPropertyValue = runningFlow.getInputPropertyValue(
-                this,
-                "value"
-            );
-            if (inputPropertyValue == undefined) {
-                throw `missing value input`;
-            }
-            value = inputPropertyValue.value;
-        } else {
-            value = JSON.parse(this.value);
-        }
-
+        let value = runningFlow.getPropertyValue(this, "value");
         runningFlow.setVariable(this, this.variable, value);
     }
 }
@@ -278,20 +332,7 @@ export class DeclareVariableActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
-        let value;
-        if (this.isInputProperty("value")) {
-            const inputPropertyValue = runningFlow.getInputPropertyValue(
-                this,
-                "value"
-            );
-            if (inputPropertyValue == undefined) {
-                throw `missing value input`;
-            }
-            value = inputPropertyValue.value;
-        } else {
-            value = JSON.parse(this.value);
-        }
-
+        let value = runningFlow.getPropertyValue(this, "value");
         runningFlow.declareVariable(this, this.variable, value);
     }
 }
@@ -374,27 +415,8 @@ export class CompareActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
-        let A;
-        if (this.isInputProperty("A")) {
-            const inputPropertyValue = runningFlow.getInputPropertyValue(
-                this,
-                "A"
-            );
-            A = inputPropertyValue?.value;
-        } else {
-            A = JSON.parse(this.A);
-        }
-
-        let B;
-        if (this.isInputProperty("B")) {
-            const inputPropertyValue = runningFlow.getInputPropertyValue(
-                this,
-                "B"
-            );
-            B = inputPropertyValue?.value;
-        } else {
-            B = JSON.parse(this.B);
-        }
+        let A = runningFlow.getPropertyValue(this, "A");
+        let B = runningFlow.getPropertyValue(this, "B");
 
         let result;
         if (this.operator === "=") {
@@ -420,6 +442,59 @@ export class CompareActionComponent extends ActionComponent {
 }
 
 registerClass(CompareActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class IsTrueActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeToggablePropertyToInput({
+                name: "value",
+                type: PropertyType.Any,
+                propertyGridGroup: specificGroup
+            })
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 594.8059692382812 1200.2340087890625"
+            >
+                <path d="M285.206.234C188.053 0 11.212 93.504 5.606 176.634c-5.606 83.13 11.325 88.253 19.2 92.8h91.2c20.839-47.054 46.22-74.561 112.8-74s139.612 83.846 108.8 157.6c-30.813 73.754-59.285 99.443-97.2 179.2-37.914 79.757-50.579 200.231-.8 300.4l112.4 2c-27.82-142.988 119.44-270.381 178-358.4 58.559-88.019 64.125-121.567 64.8-194.4-.516-69.114-25.544-138.181-80-194.4S382.358.468 285.206.234zm5.599 927.601c-75.174 0-136 60.825-136 135.999 0 75.175 60.826 136.4 136 136.4 75.175 0 136-61.226 136-136.4s-60.825-135.999-136-135.999z" />
+            </svg>
+        ),
+        defaultValue: {
+            asInputProperties: ["value"]
+        }
+    });
+
+    @observable value: any;
+
+    @computed get outputs() {
+        return [
+            ...super.outputProperties,
+            {
+                name: "True",
+                type: PropertyType.Null
+            },
+            {
+                name: "False",
+                type: PropertyType.Null
+            }
+        ];
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        let value = runningFlow.getPropertyValue(this, "value");
+
+        if (value) {
+            runningFlow.propagateValue(this, "True", null);
+        } else {
+            runningFlow.propagateValue(this, "False", null);
+        }
+    }
+}
+
+registerClass(IsTrueActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 

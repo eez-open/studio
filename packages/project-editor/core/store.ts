@@ -26,6 +26,7 @@ import { confirmSave } from "eez-studio-shared/util";
 import { confirm } from "project-editor/core/util";
 
 import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
+import { styled } from "eez-studio-ui/styled-components";
 
 import {
     IEezObject,
@@ -2286,6 +2287,7 @@ async function initExtensions() {
                     extension.eezFlowExtensionInit({
                         React,
                         mobx,
+                        styled,
                         registerClass(aClass: EezClass) {
                             registerClassByName(
                                 `${extension.name}/${aClass.name}`,

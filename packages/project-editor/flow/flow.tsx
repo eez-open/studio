@@ -202,7 +202,7 @@ export abstract class Flow extends EezObject {
     connectionLines: ConnectionLine[];
 
     @computed get wiredComponents() {
-        const widgets = new Map<string, Component>();
+        const components = new Map<string, Component>();
 
         const v = visitObjects(this.components);
         while (true) {
@@ -211,12 +211,12 @@ export abstract class Flow extends EezObject {
                 break;
             }
             if (visitResult.value instanceof Component) {
-                const widget = visitResult.value;
-                widgets.set(widget.wireID, widget);
+                const component = visitResult.value;
+                components.set(component.wireID, component);
             }
         }
 
-        return widgets;
+        return components;
     }
 
     objectsToClipboardData(objects: IEezObject[]) {

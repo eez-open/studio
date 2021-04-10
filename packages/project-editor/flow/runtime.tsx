@@ -28,6 +28,7 @@ import type {
     IFlowContext
 } from "project-editor/flow//flow-interfaces";
 import { LayoutViewWidget } from "./widgets";
+import { visitObjects } from "project-editor/core/search";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -316,6 +317,10 @@ class ComponentState {
 
     isRunning: boolean = false;
 
+    getInputValue(input: string) {
+        return this.inputsData.get(input);
+    }
+
     getInputPropertyValue(input: string) {
         return this._inputPropertyValues.get(input);
     }
@@ -486,6 +491,22 @@ export class RunningFlow {
         return componentState;
     }
 
+    getPropertyValue(component: Component, propertyName: string) {
+        if (component.isInputProperty(propertyName)) {
+            const inputPropertyValue = this.getInputPropertyValue(
+                component,
+                propertyName
+            );
+            return inputPropertyValue && inputPropertyValue.value;
+        } else {
+            return JSON.parse((component as any)[propertyName]);
+        }
+    }
+
+    getInputValue(component: Component, input: string) {
+        return this.getComponentState(component).getInputValue(input);
+    }
+
     getInputPropertyValue(component: Component, input: string) {
         return this.getComponentState(component).getInputPropertyValue(input);
     }
@@ -524,9 +545,22 @@ export class RunningFlow {
     }
 
     start() {
-        this.flow.components.forEach(component => component.onStart(this));
+        const components = [];
 
-        this.flow.components.forEach(component => {
+        const v = visitObjects(this.flow);
+        while (true) {
+            let visitResult = v.next();
+            if (visitResult.done) {
+                break;
+            }
+            if (visitResult.value instanceof Component) {
+                components.push(visitResult.value);
+            }
+        }
+
+        components.forEach(component => component.onStart(this));
+
+        components.forEach(component => {
             this.RuntimeStore.queue.push({
                 runningFlow: this,
                 component,

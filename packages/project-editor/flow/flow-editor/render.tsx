@@ -91,7 +91,7 @@ function calcComponentGeometry(
                         height: rectPort.height
                     },
                     position: {
-                        x: -1,
+                        x: rectPort.left - rect.left - 1,
                         y: rectPort.top - rect.top + rectPort.height / 2
                     }
                 };
@@ -113,7 +113,7 @@ function calcComponentGeometry(
                         height: rectPort.height
                     },
                     position: {
-                        x: rect.width + 1,
+                        x: rectPort.left - rect.left + rectPort.width + 1,
                         y: rectPort.top - rect.top + rectPort.height / 2
                     }
                 };
@@ -243,8 +243,7 @@ const ComponentEnclosureDiv = styled.div`
     }
 
     &.eez-widget-component {
-        --width: 12px;
-        --height: 12px;
+        --size: 6px;
 
         .inputs,
         .outputs {
@@ -267,13 +266,27 @@ const ComponentEnclosureDiv = styled.div`
 
         [data-connection-input-id],
         [data-connection-output-id] {
-            background-color: #fffcf7;
-            border: 1px solid #dfdcd7;
+            background-color: #999;
 
-            margin-bottom: calc(var(--height) / 2);
+            margin-left: calc(var(--size) / -1);
+            margin-bottom: var(--size);
 
-            width: var(--width);
-            height: var(--height);
+            width: var(--size);
+            height: calc(var(--size) * 2);
+        }
+
+        [data-connection-input-id] {
+            border-bottom-left-radius: calc(var(--size) * 2 - 2px);
+            border-top-left-radius: calc(var(--size) * 2 - 2px);
+            border-bottom-right-radius: 2px;
+            border-top-right-radius: 2px;
+        }
+
+        [data-connection-output-id] {
+            border-bottom-left-radius: 2px;
+            border-top-left-radius: 2px;
+            border-bottom-right-radius: calc(var(--size) * 2 - 2px);
+            border-top-right-radius: calc(var(--size) * 2 - 2px);
         }
 
         [data-connection-input-id]:last-child,

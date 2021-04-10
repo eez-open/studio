@@ -639,6 +639,17 @@ export class SelectWidget extends EmbeddedWidget {
     }
 
     getSelectedIndex(flowContext: IFlowContext) {
+        if (flowContext.runningFlow) {
+            let value = flowContext.runningFlow.getPropertyValue(this, "data");
+            if (typeof value === "boolean") {
+                return value ? 1 : 0;
+            }
+            if (typeof value === "number") {
+                return value;
+            }
+            return -1;
+        }
+
         const selectedObjects = flowContext.viewState.selectedObjects;
 
         for (let i = 0; i < this.widgets.length; ++i) {
@@ -681,10 +692,13 @@ export class SelectWidget extends EmbeddedWidget {
         const selectedWidget = this.widgets[index];
 
         return (
-            <ComponentsContainerEnclosure
-                components={[selectedWidget]}
-                flowContext={flowContext}
-            />
+            <>
+                <ComponentsContainerEnclosure
+                    components={[selectedWidget]}
+                    flowContext={flowContext}
+                />
+                {super.render(flowContext)}
+            </>
         );
     }
 }
@@ -2083,11 +2097,22 @@ export class ButtonWidget extends EmbeddedWidget {
                 ? this.style
                 : this.disabledStyle;
 
+        let buttonEnabled = false;
+        if (flowContext.runningFlow) {
+            const value = flowContext.runningFlow.getInputPropertyValue(
+                this,
+                "enabled"
+            );
+            if (value == undefined || value.value) {
+                buttonEnabled = true;
+            }
+        }
+
         return (
             <>
                 {flowContext.document.DocumentStore.project.settings.general
                     .projectType === ProjectType.DASHBOARD ? (
-                    <button>{text}</button>
+                    <button disabled={!buttonEnabled}>{text}</button>
                 ) : (
                     <ComponentCanvas
                         flowContext={flowContext}

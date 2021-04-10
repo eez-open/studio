@@ -271,9 +271,19 @@ export class ScpiActionComponent extends ActionComponent {
                         const output = matches.groups!.outputName.trim();
                         const query = matches.groups!.query.trim();
                         const params = matches.groups!.params.trim();
-                        const result = await connection.query(
+                        let result = await connection.query(
                             `${query} ${params}`
                         );
+
+                        if (
+                            result &&
+                            result.length >= 2 &&
+                            result[0] === '"' &&
+                            result.slice(-1) === '"'
+                        ) {
+                            result = result.slice(1, -1);
+                        }
+
                         runningFlow.propagateValue(this, output, result);
                     } else {
                         connection.command(command);
@@ -387,7 +397,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                 viewBox="0 0 38.26620101928711 38.26569747924805"
             >
                 <path
-                    fill-opacity=".404"
+                    fillOpacity=".404"
                     d="M38.266 0v7h-7V0h7zm-9 0v7h-7V0h7zm-9 0v7h-7V0h7zm18 9v7h-7V9h7zm-9 0v7h-7V9h7zm-9 0v7h-7V9h7zm18 9v7h-7v-7h7zm-9 0v7h-7v-7h7zm-9 0v7h-7v-7h7z"
                 />
                 <path d="M4.916 37.202a2.724 2.724 0 1 1-3.852-3.853l7.874-7.874A11.446 11.446 0 0 1 7.266 19.5c0-6.351 5.15-11.5 11.5-11.5s11.5 5.149 11.5 11.5S25.117 31 18.766 31c-2.188 0-4.234-.611-5.975-1.672l-7.874 7.874zM18.766 12a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15z" />

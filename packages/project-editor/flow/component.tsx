@@ -50,7 +50,8 @@ import {
 
 import type {
     IResizeHandler,
-    IFlowContext
+    IFlowContext,
+    IRunningFlow
 } from "project-editor/flow/flow-interfaces";
 import { ComponentGeometry } from "project-editor/flow/flow-editor/render";
 import {
@@ -63,7 +64,6 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 import { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import { ContainerWidget } from "project-editor/flow/widgets";
-import { RunningFlow } from "./runtime";
 import { guid } from "eez-studio-shared/guid";
 
 const { MenuItem } = EEZStudio.remote || {};
@@ -596,11 +596,11 @@ export class Component extends EezObject {
         ];
     }
 
-    @computed get inputs() {
+    get inputs() {
         return this.inputProperties;
     }
 
-    @computed get outputs() {
+    get outputs() {
         return this.outputProperties;
     }
 
@@ -623,8 +623,8 @@ export class Component extends EezObject {
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
 
-    onStart(runningFlow: RunningFlow) {}
-    onFinish(runningFlow: RunningFlow) {}
+    onStart(runningFlow: IRunningFlow) {}
+    onFinish(runningFlow: IRunningFlow) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1230,7 +1230,7 @@ export class ActionComponent extends Component {
         return renderActionComponent(this, flowContext);
     }
 
-    async execute(runningFlow: RunningFlow): Promise<void> {}
+    async execute(runningFlow: IRunningFlow): Promise<void> {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

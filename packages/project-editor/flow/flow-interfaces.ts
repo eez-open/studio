@@ -40,6 +40,8 @@ export interface IDataContext {
 export interface IRunningFlow {
     getRunningFlowByComponent(component: Component): IRunningFlow | undefined;
 
+    getInputValue(component: Component, input: string): any;
+    getPropertyValue(component: Component, propertyName: string): any;
     getInputPropertyValue(
         component: Component,
         input: string
