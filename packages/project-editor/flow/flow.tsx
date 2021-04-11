@@ -95,8 +95,12 @@ export class ConnectionLine extends EezObject {
         }
 
         return {
-            x: this.sourceComponent.left + outputGeometry.position.x,
-            y: this.sourceComponent.top + outputGeometry.position.y
+            x:
+                this.sourceComponent.absolutePositionPoint.x +
+                outputGeometry.position.x,
+            y:
+                this.sourceComponent.absolutePositionPoint.y +
+                outputGeometry.position.y
         };
     }
 
@@ -110,8 +114,12 @@ export class ConnectionLine extends EezObject {
         }
 
         return {
-            x: this.targetComponent.left + inputGeometry.position.x,
-            y: this.targetComponent.top + inputGeometry.position.y
+            x:
+                this.targetComponent.absolutePositionPoint.x +
+                inputGeometry.position.x,
+            y:
+                this.targetComponent.absolutePositionPoint.y +
+                inputGeometry.position.y
         };
     }
 

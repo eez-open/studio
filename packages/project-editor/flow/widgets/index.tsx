@@ -106,6 +106,7 @@ export class ContainerWidget extends EmbeddedWidget {
                 propertyGridGroup: generalGroup
             },
             makeDataPropertyInfo("overlay"),
+            makeDataPropertyInfo("visible"),
             {
                 name: "shadow",
                 type: PropertyType.Boolean,
@@ -140,6 +141,22 @@ export class ContainerWidget extends EmbeddedWidget {
     });
 
     render(flowContext: IFlowContext) {
+        let visible = true;
+
+        if (flowContext.runningFlow) {
+            let value = flowContext.runningFlow.getPropertyValue(
+                this,
+                "visible"
+            );
+            if (typeof value === "boolean") {
+                visible = value;
+            } else if (typeof value === "number") {
+                visible = value != 0;
+            } else {
+                visible = false;
+            }
+        }
+
         return (
             <>
                 {flowContext.document.DocumentStore.project.settings.general
@@ -205,10 +222,13 @@ export class ContainerWidget extends EmbeddedWidget {
                         }}
                     />
                 )}
-                <ComponentsContainerEnclosure
-                    components={this.widgets}
-                    flowContext={flowContext}
-                />
+                {visible && (
+                    <ComponentsContainerEnclosure
+                        components={this.widgets}
+                        flowContext={flowContext}
+                    />
+                )}
+                {super.render(flowContext)}
             </>
         );
     }

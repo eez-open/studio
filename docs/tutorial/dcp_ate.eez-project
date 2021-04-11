@@ -71,19 +71,19 @@
           "value": "null"
         },
         {
-          "type": "eez-flow-ext-postgres/PostgresConnectionActionComponent",
-          "left": 56,
-          "top": -132,
-          "width": 0,
-          "height": 0,
-          "wireID": "6f2c97c8-73cc-4b75-b253-b9fb97a01bbd",
           "connection": "envox.hr",
           "user": "martin",
           "password": "3WHVdvf2",
           "host": "envox.hr",
           "port": 5432,
           "database": "bb3_ate",
-          "ssl": false
+          "ssl": false,
+          "type": "eez-flow-ext-postgres/PostgresConnectionActionComponent",
+          "left": 56,
+          "top": -132,
+          "width": 0,
+          "height": 0,
+          "wireID": "6f2c97c8-73cc-4b75-b253-b9fb97a01bbd"
         }
       ],
       "connectionLines": [
@@ -109,79 +109,54 @@
     {
       "components": [
         {
-          "type": "Select",
+          "type": "Container",
           "left": 0,
-          "top": 46,
+          "top": 32,
           "width": 1164,
           "height": 308,
-          "wireID": "e29be7a9-8114-4162-9eb8-dfe35d2403d3",
+          "wireID": "ce4017ad-3710-4224-d611-f629b2e58d70",
           "asInputProperties": [
-            "data"
+            "visible"
           ],
           "style": {
             "inheritFrom": "default"
           },
           "widgets": [
             {
-              "type": "RectangleWidget",
+              "type": "LayoutViewWidget",
               "left": 0,
               "top": 0,
-              "width": 1164,
+              "width": 388,
               "height": 308,
-              "wireID": "02ce5ace-663b-4cfb-fd08-2739cd45b516",
-              "style": {
-                "inheritFrom": "default"
-              }
-            },
-            {
-              "type": "Container",
-              "left": 0,
-              "top": 0,
-              "width": 1164,
-              "height": 308,
-              "wireID": "ce4017ad-3710-4224-d611-f629b2e58d70",
-              "asInputProperties": [],
+              "wireID": "c6821be5-141a-41a2-84f8-8802ccee52e0",
               "style": {
                 "inheritFrom": "default"
               },
-              "widgets": [
-                {
-                  "type": "LayoutViewWidget",
-                  "left": 0,
-                  "top": 0,
-                  "width": 388,
-                  "height": 308,
-                  "wireID": "c6821be5-141a-41a2-84f8-8802ccee52e0",
-                  "style": {
-                    "inheritFrom": "default"
-                  },
-                  "layout": "slot"
-                },
-                {
-                  "type": "LayoutViewWidget",
-                  "left": 388,
-                  "top": 0,
-                  "width": 388,
-                  "height": 308,
-                  "wireID": "67d71a34-0f68-46ec-d392-a4be6c4aed30",
-                  "style": {
-                    "inheritFrom": "default"
-                  },
-                  "layout": "slot"
-                },
-                {
-                  "type": "LayoutViewWidget",
-                  "left": 776,
-                  "top": 0,
-                  "width": 388,
-                  "height": 308,
-                  "wireID": "619b5066-f260-4931-a2ae-e93284ef21f3",
-                  "style": {
-                    "inheritFrom": "default"
-                  },
-                  "layout": "slot"
-                }
-              ]
+              "layout": "slot"
+            },
+            {
+              "type": "LayoutViewWidget",
+              "left": 388,
+              "top": 0,
+              "width": 388,
+              "height": 308,
+              "wireID": "67d71a34-0f68-46ec-d392-a4be6c4aed30",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "layout": "slot"
+            },
+            {
+              "type": "LayoutViewWidget",
+              "left": 776,
+              "top": 0,
+              "width": 388,
+              "height": 308,
+              "wireID": "619b5066-f260-4931-a2ae-e93284ef21f3",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "layout": "slot"
             }
           ]
         },
@@ -212,8 +187,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": -148,
-          "top": 360,
+          "left": -173,
+          "top": 323,
           "width": 0,
           "height": 0,
           "wireID": "cd3cc276-6785-4b2a-fc1e-c237b6f73508",
@@ -239,8 +214,8 @@
         },
         {
           "type": "GetVariableActionComponent",
-          "left": -189,
-          "top": 211,
+          "left": -200,
+          "top": 154,
           "width": 0,
           "height": 0,
           "wireID": "cbf9650c-e82b-4e16-b7c2-35827c0e9f8f",
@@ -317,11 +292,11 @@
         },
         {
           "type": "GetVariableActionComponent",
-          "left": -201,
-          "top": 99,
+          "left": -214,
+          "top": 80,
           "width": 0,
           "height": 0,
-          "wireID": "88626a5a-1f84-445f-f22b-744f25490379",
+          "wireID": "d363844c-7850-4e61-93f0-fa678e7f0b9b",
           "variable": "instrument.isConnected"
         }
       ],
@@ -393,10 +368,10 @@
           "input": "5adcc403-21ad-487b-fba6-aad6a3bf6a22"
         },
         {
-          "source": "88626a5a-1f84-445f-f22b-744f25490379",
+          "source": "d363844c-7850-4e61-93f0-fa678e7f0b9b",
           "output": "variable",
-          "target": "e29be7a9-8114-4162-9eb8-dfe35d2403d3",
-          "input": "data"
+          "target": "ce4017ad-3710-4224-d611-f629b2e58d70",
+          "input": "visible"
         }
       ],
       "name": "bb3",
@@ -731,14 +706,14 @@
           ]
         },
         {
+          "connection": "envox.hr",
+          "sql": "SELECT * FROM modules \nWHERE serial = '{serial}'",
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": -591,
           "top": 208,
           "width": 0,
           "height": 0,
-          "wireID": "833c66f2-7aad-496f-9fc0-ea10431ab5a7",
-          "connection": "envox.hr",
-          "sql": "SELECT * FROM modules \nWHERE serial = '{serial}'"
+          "wireID": "833c66f2-7aad-496f-9fc0-ea10431ab5a7"
         },
         {
           "type": "AccessorActionComponent",
@@ -759,14 +734,14 @@
           "accessor": "!value"
         },
         {
+          "connection": "envox.hr",
+          "sql": "SELECT params AS cal_params\nFROM cal_params \nWHERE module_id = {module_id} \n  AND channel = 1",
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": -668,
           "top": 474,
           "width": 0,
           "height": 0,
-          "wireID": "1ea73503-971b-48d7-b9c3-6982c809a35b",
-          "connection": "envox.hr",
-          "sql": "SELECT params AS cal_params\nFROM cal_params \nWHERE module_id = {module_id} \n  AND channel = 1"
+          "wireID": "1ea73503-971b-48d7-b9c3-6982c809a35b"
         },
         {
           "type": "IsTrueActionComponent",

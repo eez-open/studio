@@ -62,7 +62,7 @@ export function getObjectIdFromPoint(
     }
 
     const clientPoint = viewState.transform.pageToClientPoint(point);
-    const elementAtPoint = document.elementFromPoint(
+    const elementsAtPoint = document.elementsFromPoint(
         clientPoint.x,
         clientPoint.y
     );
@@ -75,41 +75,52 @@ export function getObjectIdFromPoint(
         canvas.style.pointerEvents = "none";
     }
 
-    if (elementAtPoint) {
+    let result;
+
+    for (let elementAtPoint of elementsAtPoint) {
         let node = elementAtPoint.closest("[data-eez-flow-object-id]");
         if (node) {
             const id = node.getAttribute("data-eez-flow-object-id");
-            if (id && flowDocument.findObjectById(id)) {
-                const connectionInputNode = elementAtPoint.closest(
-                    "[data-connection-input-id]"
-                );
-                const connectionInput =
-                    (connectionInputNode &&
-                        connectionInputNode.getAttribute(
-                            "data-connection-input-id"
-                        )) ||
-                    undefined;
+            if (id) {
+                const object = flowDocument.findObjectById(id);
+                if (object) {
+                    if (result) {
+                        if (!object.selected) {
+                            continue;
+                        }
+                    }
 
-                const connectionOutputNode = elementAtPoint.closest(
-                    "[data-connection-output-id]"
-                );
-                const connectionOutput =
-                    (connectionOutputNode &&
-                        connectionOutputNode.getAttribute(
-                            "data-connection-output-id"
-                        )) ||
-                    undefined;
+                    const connectionInputNode = elementAtPoint.closest(
+                        "[data-connection-input-id]"
+                    );
+                    const connectionInput =
+                        (connectionInputNode &&
+                            connectionInputNode.getAttribute(
+                                "data-connection-input-id"
+                            )) ||
+                        undefined;
 
-                return {
-                    id,
-                    connectionInput,
-                    connectionOutput
-                };
+                    const connectionOutputNode = elementAtPoint.closest(
+                        "[data-connection-output-id]"
+                    );
+                    const connectionOutput =
+                        (connectionOutputNode &&
+                            connectionOutputNode.getAttribute(
+                                "data-connection-output-id"
+                            )) ||
+                        undefined;
+
+                    result = {
+                        id,
+                        connectionInput,
+                        connectionOutput
+                    };
+                }
             }
         }
     }
 
-    return undefined;
+    return result;
 }
 
 export function getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
