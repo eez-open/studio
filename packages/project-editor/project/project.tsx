@@ -660,7 +660,12 @@ export class Settings extends EezObject {
                     object: IEezObject,
                     propertyInfo: PropertyInfo
                 ) => {
-                    return !getDocumentStore(object).masterProjectEnabled;
+                    const DocumentStore = getDocumentStore(object);
+                    return (
+                        DocumentStore.project.settings.general.projectType !==
+                            ProjectType.DASHBOARD &&
+                        !DocumentStore.masterProjectEnabled
+                    );
                 }
             }
         ],
@@ -992,7 +997,9 @@ export class Project extends EezObject {
     @computed
     get stylesMap() {
         const map = new Map<String, Style>();
-        this.styles.forEach(style => map.set(style.name, style));
+        if (this.styles) {
+            this.styles.forEach(style => map.set(style.name, style));
+        }
         return map;
     }
 
@@ -1027,14 +1034,18 @@ export class Project extends EezObject {
     @computed
     get fontsMap() {
         const map = new Map<String, Font>();
-        this.fonts.forEach(font => map.set(font.name, font));
+        if (this.fonts) {
+            this.fonts.forEach(font => map.set(font.name, font));
+        }
         return map;
     }
 
     @computed
     get bitmapsMap() {
         const map = new Map<String, Bitmap>();
-        this.bitmaps.forEach(bitmap => map.set(bitmap.name, bitmap));
+        if (this.bitmaps) {
+            this.bitmaps.forEach(bitmap => map.set(bitmap.name, bitmap));
+        }
         return map;
     }
 

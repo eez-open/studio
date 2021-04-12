@@ -21,6 +21,7 @@ import { guid } from "eez-studio-shared/guid";
 
 import {
     ActionComponent,
+    makeActionPropertyInfo,
     makeToggablePropertyToInput
 } from "project-editor/flow/component";
 
@@ -37,6 +38,12 @@ export class InputActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
+        label: (component: InputActionComponent) => {
+            if (!component.name) {
+                return ActionComponent.classInfo.label!(component);
+            }
+            return component.name;
+        },
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -65,6 +72,12 @@ export class OutputActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
+        label: (component: OutputActionComponent) => {
+            if (!component.name) {
+                return ActionComponent.classInfo.label!(component);
+            }
+            return component.name;
+        },
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900">
                 <path d="M900 50v800q0 21-14.5 35.5T850 900H50q-21 0-35.5-14.5T0 850V50q0-21 14.5-35.5T50 0h800q21 0 35.5 14.5T900 50z" />
@@ -73,6 +86,23 @@ export class OutputActionComponent extends ActionComponent {
     });
 
     @observable name: string;
+
+    async execute(runningFlow: RunningFlow) {
+        const componentState = runningFlow.getComponentState(this);
+        const value = componentState.getInputValue("@seqin");
+        if (
+            value &&
+            runningFlow.parentRunningFlow &&
+            runningFlow.component &&
+            this.name
+        ) {
+            runningFlow.parentRunningFlow.propagateValue(
+                runningFlow.component,
+                this.wireID,
+                value.value
+            );
+        }
+    }
 }
 
 registerClass(OutputActionComponent);
@@ -139,34 +169,107 @@ registerClass(GetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class AccessorActionComponent extends ActionComponent {
+export class EvalActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             {
-                name: "accessor",
+                name: "expression",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup
             }
         ],
         icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 33.94000244140625 36.08000183105469"
-            >
-                <path d="M18.4 28h-5.306l-3.42-9.119c-.127-.337-.26-.962-.4-1.875h-.057l-.457 1.956L5.327 28H0l6.325-14L.558 0H5.99l2.831 8.394c.22.666.418 1.454.592 2.362h.057l.614-2.437L13.204 0h4.917L12.28 13.881 18.4 28zm15.54-10.667l-5.11 13.775c-1.22 3.315-3.055 4.972-5.506 4.972-.934 0-1.702-.169-2.304-.507v-3.04a2.917 2.917 0 0 0 1.65.507c.98 0 1.662-.476 2.047-1.429l.65-1.58-5.107-12.698h4.327l2.33 7.75c.146.484.26 1.052.341 1.707h.048l.404-1.678 2.355-7.779h3.875z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
+                <path d="M384 1536q0-53-37.5-90.5T256 1408t-90.5 37.5T128 1536t37.5 90.5T256 1664t90.5-37.5T384 1536zm384 0q0-53-37.5-90.5T640 1408t-90.5 37.5T512 1536t37.5 90.5T640 1664t90.5-37.5T768 1536zm-384-384q0-53-37.5-90.5T256 1024t-90.5 37.5T128 1152t37.5 90.5T256 1280t90.5-37.5T384 1152zm768 384q0-53-37.5-90.5T1024 1408t-90.5 37.5T896 1536t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm-384-384q0-53-37.5-90.5T640 1024t-90.5 37.5T512 1152t37.5 90.5T640 1280t90.5-37.5T768 1152zM384 768q0-53-37.5-90.5T256 640t-90.5 37.5T128 768t37.5 90.5T256 896t90.5-37.5T384 768zm768 384q0-53-37.5-90.5T1024 1024t-90.5 37.5T896 1152t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zM768 768q0-53-37.5-90.5T640 640t-90.5 37.5T512 768t37.5 90.5T640 896t90.5-37.5T768 768zm768 768v-384q0-52-38-90t-90-38-90 38-38 90v384q0 52 38 90t90 38 90-38 38-90zm-384-768q0-53-37.5-90.5T1024 640t-90.5 37.5T896 768t37.5 90.5T1024 896t90.5-37.5T1152 768zm384-320V192q0-26-19-45t-45-19H192q-26 0-45 19t-19 45v256q0 26 19 45t45 19h1280q26 0 45-19t19-45zm0 320q0-53-37.5-90.5T1408 640t-90.5 37.5T1280 768t37.5 90.5T1408 896t90.5-37.5T1536 768zm128-640v1536q0 52-38 90t-90 38H128q-52 0-90-38t-38-90V128q0-52 38-90t90-38h1408q52 0 90 38t38 90z" />
             </svg>
-        )
+        ),
+        updateObjectValueHook: (object: EvalActionComponent, values: any) => {
+            if (values.expression) {
+                const {
+                    inputs: inputsBefore,
+                    outputs: outputsBefore
+                } = EvalActionComponent.parse(object.expression);
+
+                const {
+                    inputs: inputsAfter,
+                    outputs: outputsAfter
+                } = EvalActionComponent.parse(values.expression);
+
+                const flow = getFlow(object);
+
+                inputsBefore.forEach((inputBefore, i) => {
+                    if (inputsAfter.indexOf(inputBefore) === -1) {
+                        if (inputsBefore.length === inputsAfter.length) {
+                            flow.rerouteConnectionLinesInput(
+                                object,
+                                inputBefore,
+                                inputsAfter[i]
+                            );
+                        } else {
+                            flow.deleteConnectionLinesToInput(
+                                object,
+                                inputBefore
+                            );
+                        }
+                    }
+                });
+
+                outputsBefore.forEach((outputBefore, i) => {
+                    if (outputsAfter.indexOf(outputBefore) === -1) {
+                        if (outputsBefore.length === outputsAfter.length) {
+                            flow.rerouteConnectionLinesOutput(
+                                object,
+                                outputBefore,
+                                outputsAfter[i]
+                            );
+                        } else {
+                            flow.deleteConnectionLinesFromOutput(
+                                object,
+                                outputBefore
+                            );
+                        }
+                    }
+                });
+            }
+        }
     });
 
-    @observable accessor: string;
+    @observable expression: string;
+
+    static readonly PARAMS_REGEXP = /\{([^\}]+)\}/;
+
+    static parse(expression: string) {
+        const inputs = new Set<string>();
+        const outputs = new Set<string>();
+
+        if (expression) {
+            EvalActionComponent.PARAMS_REGEXP.lastIndex = 0;
+            let str = expression;
+            while (true) {
+                let matches = str.match(EvalActionComponent.PARAMS_REGEXP);
+                if (!matches) {
+                    break;
+                }
+                const input = matches[1].trim();
+                inputs.add(input);
+                str = str.substring(matches.index! + matches[1].length);
+            }
+        }
+
+        return {
+            inputs: Array.from(inputs.keys()),
+            outputs: Array.from(outputs.keys())
+        };
+    }
 
     @computed get inputs() {
         return [
             ...super.inputProperties,
-            {
-                name: "value",
+            ...EvalActionComponent.parse(this.expression).inputs.map(input => ({
+                name: input,
+                displayName: input,
                 type: PropertyType.Any
-            }
+            }))
         ];
     }
 
@@ -183,17 +286,35 @@ export class AccessorActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                <pre>{this.accessor}</pre>
+                <pre>{this.expression}</pre>
             </div>
         );
     }
 
+    expandExpression(runningFlow: RunningFlow) {
+        let expression = this.expression;
+        let values: any = {};
+
+        EvalActionComponent.parse(expression).inputs.forEach(input => {
+            const inputPropertyValue = runningFlow.getInputPropertyValue(
+                this,
+                input
+            );
+            values[input] = inputPropertyValue && inputPropertyValue.value;
+            expression = expression.replace(
+                new RegExp(`\{${input}\}`, "g"),
+                `values.${input}`
+            );
+        });
+
+        return { expression, values };
+    }
+
     async execute(runningFlow: RunningFlow) {
-        const inputValue = runningFlow.getInputValue(this, "value");
-        let value = inputValue?.value;
-        value;
         try {
-            let result = eval(this.accessor);
+            const { expression, values } = this.expandExpression(runningFlow);
+            values;
+            let result = eval(expression);
             runningFlow.propagateValue(this, "result", result);
         } catch (err) {
             console.error(err);
@@ -202,7 +323,7 @@ export class AccessorActionComponent extends ActionComponent {
     }
 }
 
-registerClass(AccessorActionComponent);
+registerClass(EvalActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -300,9 +421,10 @@ export class DeclareVariableActionComponent extends ActionComponent {
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 version="1.2"
-                viewBox="0 0 16 11"
+                overflow="inherit"
+                viewBox="0 0 32 46"
             >
-                <path d="M14 0H2a2 2 0 0 0 0 4h12a2 2 0 0 0 0-4zm0 7H2a2 2 0 0 0 0 4h12a2 2 0 0 0 0-4z" />
+                <path d="M32 38V4c0-2.2-1.8-4-4-4H4C1.8 0 0 1.8 0 4v38c0 2.2 1.8 4 4 4h24c1.858 0 4 0 4-2v-1H5c-1.1 0-2-.9-2-2v-3h29zM5 8c0-.55.45-1 1-1h20c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1V8zm0 8c0-.55.45-1 1-1h20c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1v-2z" />
             </svg>
         )
     });
@@ -434,9 +556,9 @@ export class CompareActionComponent extends ActionComponent {
         }
 
         if (result) {
-            runningFlow.propagateValue(this, "True", null);
+            runningFlow.propagateValue(this, "True", true);
         } else {
-            runningFlow.propagateValue(this, "False", null);
+            runningFlow.propagateValue(this, "False", false);
         }
     }
 }
@@ -487,9 +609,9 @@ export class IsTrueActionComponent extends ActionComponent {
         let value = runningFlow.getPropertyValue(this, "value");
 
         if (value) {
-            runningFlow.propagateValue(this, "True", null);
+            runningFlow.propagateValue(this, "True", true);
         } else {
-            runningFlow.propagateValue(this, "False", null);
+            runningFlow.propagateValue(this, "False", false);
         }
     }
 }
@@ -562,6 +684,89 @@ export class ClosePageActionComponent extends ActionComponent {
 }
 
 registerClass(ClosePageActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class CallActionActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [makeActionPropertyInfo("action")],
+        label: (component: CallActionActionComponent) => {
+            if (!component.action) {
+                return ActionComponent.classInfo.label!(component);
+            }
+            return component.action;
+        },
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 36">
+                <path d="M40 0H4C1.8 0 0 1.8 0 4v28c0 2.2 1.8 4 4 4h36c2.2 0 4-1.8 4-4V4c0-2.2-1.8-4-4-4zm0 32H4v-6h36v6z" />
+            </svg>
+        )
+    });
+
+    @observable action: string;
+
+    @computed get inputs() {
+        const action = findAction(getProject(this), this.action);
+        if (!action) {
+            return super.inputProperties;
+        }
+
+        const inputs = action.components
+            .filter(component => component instanceof InputActionComponent)
+            .sort((a, b) => a.top - b.top)
+            .map((inputActionComponent: InputActionComponent) => ({
+                name: inputActionComponent.wireID,
+                displayName: inputActionComponent.name,
+                type: PropertyType.Any
+            }));
+
+        return [...super.inputProperties, ...inputs];
+    }
+
+    @computed get outputs() {
+        const action = findAction(getProject(this), this.action);
+        if (!action) {
+            return super.outputProperties;
+        }
+
+        const outputs = action.components
+            .filter(component => component instanceof OutputActionComponent)
+            .sort((a, b) => a.top - b.top)
+            .map((outputActionComponent: OutputActionComponent) => ({
+                name: outputActionComponent.wireID,
+                displayName: outputActionComponent.name,
+                type: PropertyType.Any
+            }));
+
+        return [...super.outputProperties, ...outputs];
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        const action = findAction(getProject(this), this.action);
+        if (!action) {
+            return;
+        }
+
+        const actionRunningFlow = runningFlow.executeAction(this, action);
+
+        const componentState = runningFlow.getComponentState(this);
+        for (let [input, inputData] of componentState.inputsData) {
+            for (let component of action.components) {
+                if (component instanceof InputActionComponent) {
+                    if (component.wireID === input) {
+                        actionRunningFlow.propagateValue(
+                            component,
+                            "@seqout",
+                            inputData.value
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+registerClass(CallActionActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -697,3 +902,5 @@ registerClass(CommentActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 import "project-editor/flow/action-components/instrument";
+import { findAction } from "project-editor/features/action/action";
+import { getFlow, getProject } from "project-editor/project/project";

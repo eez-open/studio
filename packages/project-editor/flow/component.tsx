@@ -90,7 +90,7 @@ export function makeDataPropertyInfo(
     });
 }
 
-function makeActionPropertyInfo(
+export function makeActionPropertyInfo(
     name: string,
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition

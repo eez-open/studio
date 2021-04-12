@@ -357,7 +357,10 @@ export class Action extends Flow {
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
-                referencedObjectCollectionPath: "settings/build/configurations"
+                referencedObjectCollectionPath: "settings/build/configurations",
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType ===
+                    ProjectType.DASHBOARD
             }
         ],
         beforeLoadHook: (action: Action, jsObject: any) => {

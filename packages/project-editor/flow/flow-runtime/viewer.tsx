@@ -319,6 +319,10 @@ const FlowViewerCanvasContainer = styled.div`
 
     cursor: default;
 
+    * {
+        user-select: text;
+    }
+
     & > * {
         user-select: none;
     }

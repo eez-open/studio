@@ -34,7 +34,8 @@ import {
 import {
     Project,
     findReferencedObject,
-    getProject
+    getProject,
+    ProjectType
 } from "project-editor/project/project";
 
 import { Component, Widget } from "project-editor/flow/component";
@@ -198,18 +199,27 @@ export class Page extends Flow {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "styles",
-                propertyGridGroup: styleGroup
+                propertyGridGroup: styleGroup,
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType ===
+                    ProjectType.DASHBOARD
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType ===
+                    ProjectType.DASHBOARD
             },
             {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType ===
+                    ProjectType.DASHBOARD
             },
             {
                 name: "portrait",

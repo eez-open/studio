@@ -99,7 +99,11 @@ abstract class ConnectionBase {
     ): void;
     abstract abortLongOperation(): void;
 
-    abstract acquire(callbackWindowId: number, traceEnabled: boolean): void;
+    abstract acquire(
+        acquireId: string,
+        callbackWindowId: number,
+        traceEnabled: boolean
+    ): void;
     abstract release(): void;
 }
 
@@ -169,6 +173,7 @@ export class Connection
     longOperation: LongOperation | undefined;
     connectionParameters: ConnectionParameters;
     housekeepingIntervalId: any;
+    acquireId: string | undefined;
     callbackWindowId: number | undefined;
     traceEnabled: boolean = true;
     expectedResponseType: IResponseTypeType | undefined;
@@ -301,10 +306,10 @@ export class Connection
             let browserWindow = require("electron").BrowserWindow.fromId(
                 this.callbackWindowId
             )!;
-            browserWindow.webContents.send(
-                "instrument/connection/value",
+            browserWindow.webContents.send("instrument/connection/value", {
+                acquireId: this.acquireId,
                 value
-            );
+            });
         }
     }
 
@@ -610,6 +615,7 @@ export class Connection
                 this.callbackWindowId
             )!;
             browserWindow.webContents.send("instrument/connection/value", {
+                acquireId: this.acquireId,
                 error: "connection is diconnected"
             });
         }
@@ -663,29 +669,36 @@ export class Connection
     }
 
     acquireQueue: {
+        acquireId: string;
         callbackWindowId: number;
         traceEnabled: boolean;
     }[] = [];
 
-    async acquire(callbackWindowId: number, traceEnabled: boolean) {
+    async acquire(
+        acquireId: string,
+        callbackWindowId: number,
+        traceEnabled: boolean
+    ) {
         let browserWindow = require("electron").BrowserWindow.fromId(
             callbackWindowId
         )!;
 
         if (this.isConnected) {
-            if (this.callbackWindowId) {
+            if (this.callbackWindowId != undefined) {
                 this.acquireQueue.push({
+                    acquireId,
                     callbackWindowId,
                     traceEnabled
                 });
             } else {
+                this.acquireId = acquireId;
                 this.callbackWindowId = callbackWindowId;
                 this.traceEnabled = traceEnabled;
 
                 browserWindow.webContents.send(
                     "instrument/connection/acquire-result",
                     {
-                        callbackWindowId
+                        acquireId
                     }
                 );
             }
@@ -693,7 +706,7 @@ export class Connection
             browserWindow.webContents.send(
                 "instrument/connection/acquire-result",
                 {
-                    callbackWindowId,
+                    acquireId,
                     rejectReason: "not connected"
                 }
             );
@@ -702,11 +715,13 @@ export class Connection
 
     release() {
         this.callbackWindowId = undefined;
+        this.acquireId = undefined;
         this.traceEnabled = true;
 
         const acquireTask = this.acquireQueue.shift();
         if (acquireTask) {
             this.acquire(
+                acquireTask.acquireId,
                 acquireTask.callbackWindowId,
                 acquireTask.traceEnabled
             );
@@ -855,7 +870,7 @@ export class IpcConnection extends ConnectionBase {
     }
 
     acquireQueue: {
-        callbackWindowId: number;
+        acquireId: string;
         resolve: () => void;
         reject: (reason?: any) => void;
     }[] = [];
@@ -866,13 +881,13 @@ export class IpcConnection extends ConnectionBase {
             (
                 event: any,
                 args: {
-                    callbackWindowId: number;
+                    acquireId: string;
                     rejectReason?: any;
                 }
             ) => {
                 for (let i = 0; i < this.acquireQueue.length; i++) {
                     const acquireTask = this.acquireQueue[i];
-                    if (acquireTask.callbackWindowId == args.callbackWindowId) {
+                    if (acquireTask.acquireId === args.acquireId) {
                         this.acquireQueue.splice(i, 1);
                         if (args.rejectReason) {
                             acquireTask.reject(args.rejectReason);
@@ -886,10 +901,14 @@ export class IpcConnection extends ConnectionBase {
         );
     }
 
-    async acquire(callbackWindowId: number, traceEnabled: boolean) {
+    async acquire(
+        acquireId: string,
+        callbackWindowId: number,
+        traceEnabled: boolean
+    ) {
         return new Promise<void>((resolve, reject) => {
             this.acquireQueue.push({
-                callbackWindowId,
+                acquireId,
                 resolve,
                 reject
             });
@@ -898,6 +917,7 @@ export class IpcConnection extends ConnectionBase {
                 "instrument/connection/acquire",
                 {
                     instrumentId: this.instrument.id,
+                    acquireId,
                     callbackWindowId,
                     traceEnabled
                 }
@@ -1065,18 +1085,29 @@ export function setupIpcServer() {
             event: any,
             arg: {
                 instrumentId: string;
+                acquireId: string;
                 callbackWindowId: number;
                 traceEnabled: boolean;
             }
         ) {
             let connection = connections.get(arg.instrumentId);
             if (connection) {
-                event.returnValue = connection.acquire(
+                connection.acquire(
+                    arg.acquireId,
                     arg.callbackWindowId,
                     arg.traceEnabled
                 );
             } else {
-                event.returnValue = false;
+                let browserWindow = require("electron").BrowserWindow.fromId(
+                    arg.callbackWindowId
+                )!;
+                browserWindow.webContents.send(
+                    "instrument/connection/acquire-result",
+                    {
+                        acquireId: arg.acquireId,
+                        rejectReason: "not connected"
+                    }
+                );
             }
         }
     );

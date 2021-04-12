@@ -84,12 +84,6 @@ export function getObjectIdFromPoint(
             if (id) {
                 const object = flowDocument.findObjectById(id);
                 if (object) {
-                    if (result) {
-                        if (!object.selected) {
-                            continue;
-                        }
-                    }
-
                     const connectionInputNode = elementAtPoint.closest(
                         "[data-connection-input-id]"
                     );
@@ -109,6 +103,15 @@ export function getObjectIdFromPoint(
                                 "data-connection-output-id"
                             )) ||
                         undefined;
+
+                    if (result) {
+                        if (
+                            !object.selected ||
+                            (result.connectionOutput && !connectionOutput)
+                        ) {
+                            continue;
+                        }
+                    }
 
                     result = {
                         id,

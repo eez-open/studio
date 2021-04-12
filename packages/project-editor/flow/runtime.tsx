@@ -12,7 +12,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, observable, runInAction } from "mobx";
 import { DocumentStoreClass } from "project-editor/core/store";
-import { findAction } from "project-editor/features/action/action";
+import { Action, findAction } from "project-editor/features/action/action";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { InputActionComponent } from "project-editor/flow/action-components";
 import {
@@ -218,17 +218,21 @@ export class RuntimeStoreClass {
             );
 
             if (action) {
-                this.addHistoryItem(new ExecuteWidgetActionHistoryItem(widget));
                 const runningFlow = new RunningFlow(this, action);
+                this.addHistoryItem(
+                    new ExecuteWidgetActionHistoryItem(runningFlow, widget)
+                );
                 this.addRunningFlow(runningFlow);
                 runningFlow.startAction();
             } else {
                 this.addHistoryItem(
-                    new WidgetActionNotFoundHistoryItem(widget)
+                    new WidgetActionNotFoundHistoryItem(undefined, widget)
                 );
             }
         } else {
-            this.addHistoryItem(new WidgetActionNotDefinedHistoryItem(widget));
+            this.addHistoryItem(
+                new WidgetActionNotDefinedHistoryItem(undefined, widget)
+            );
         }
     }
 
@@ -278,7 +282,12 @@ export class RuntimeStoreClass {
     }
 
     ////////////////////////////////////////
-    // HISTORY
+    // RUNNING FLOWS PANE
+
+    @observable selectedRunningFlow: RunningFlow | undefined;
+
+    ////////////////////////////////////////
+    // HISTORY PANE
 
     @observable history: HistoryItem[] = [];
     @observable selectedHistoryItem: HistoryItem | undefined;
@@ -366,7 +375,10 @@ class ComponentState {
 
         if (this.component instanceof ActionComponent) {
             this.runningFlow.RuntimeStore.addHistoryItem(
-                new ExecuteActionComponentHistoryItem(this.component)
+                new ExecuteActionComponentHistoryItem(
+                    this.runningFlow,
+                    this.component
+                )
             );
 
             this.isRunning = true;
@@ -375,7 +387,11 @@ class ComponentState {
                 await this.component.execute(this.runningFlow);
             } catch (err) {
                 this.runningFlow.RuntimeStore.addHistoryItem(
-                    new ExecutionErrorHistoryItem(this.component, err)
+                    new ExecutionErrorHistoryItem(
+                        this.runningFlow,
+                        this.component,
+                        err
+                    )
                 );
 
                 this.runningFlow.RuntimeStore.stop();
@@ -499,7 +515,8 @@ export class RunningFlow {
             );
             return inputPropertyValue && inputPropertyValue.value;
         } else {
-            return JSON.parse((component as any)[propertyName]);
+            const value = (component as any)[propertyName];
+            return value != undefined ? JSON.parse(value) : undefined;
         }
     }
 
@@ -596,7 +613,9 @@ export class RunningFlow {
 
         this.flow.components.forEach(component => component.onFinish(this));
 
-        this.RuntimeStore.addHistoryItem(new ActionEndHistoryItem(this.flow!));
+        this.RuntimeStore.addHistoryItem(
+            new ActionEndHistoryItem(this, this.flow!)
+        );
     }
 
     startFromWidgetAction(widget: Component) {
@@ -604,7 +623,9 @@ export class RunningFlow {
     }
 
     startAction() {
-        this.RuntimeStore.addHistoryItem(new ActionStartHistoryItem(action));
+        this.RuntimeStore.addHistoryItem(
+            new ActionStartHistoryItem(this, action)
+        );
 
         const inputActionComponent = this.flow.components.find(
             component => component instanceof InputActionComponent
@@ -623,6 +644,19 @@ export class RunningFlow {
         } else {
             // TODO report
         }
+    }
+
+    @action
+    executeAction(component: Component, action: Action) {
+        const runningFlow = new RunningFlow(
+            this.RuntimeStore,
+            action,
+            this,
+            component
+        );
+        this.RuntimeStore.addRunningFlow(runningFlow);
+        runningFlow.start();
+        return runningFlow;
     }
 
     executeWire(component: Component, output: string) {
@@ -653,7 +687,7 @@ export class RunningFlow {
             });
         } else {
             this.RuntimeStore.addHistoryItem(
-                new NoConnectionHistoryItem(component, output)
+                new NoConnectionHistoryItem(this, component, output)
             );
         }
     }
@@ -676,6 +710,7 @@ export class RunningFlow {
 
                 this.RuntimeStore.addHistoryItem(
                     new OutputValueHistoryItem(
+                        this,
                         sourceComponent,
                         connectionLine.output,
                         value
@@ -703,6 +738,8 @@ abstract class HistoryItem {
     date: Date = new Date();
     id = guid();
 
+    constructor(public runningFlow: RunningFlow | undefined) {}
+
     abstract get label(): string;
     abstract get object(): IEezObject | undefined;
     get isError() {
@@ -711,8 +748,11 @@ abstract class HistoryItem {
 }
 
 class ActionStartHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -721,8 +761,11 @@ class ActionStartHistoryItem extends HistoryItem {
 }
 
 class ActionEndHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -731,8 +774,11 @@ class ActionEndHistoryItem extends HistoryItem {
 }
 
 class ExecuteActionComponentHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -741,8 +787,11 @@ class ExecuteActionComponentHistoryItem extends HistoryItem {
 }
 
 class ExecuteWidgetActionHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -751,8 +800,11 @@ class ExecuteWidgetActionHistoryItem extends HistoryItem {
 }
 
 class WidgetActionNotDefinedHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -765,8 +817,11 @@ class WidgetActionNotDefinedHistoryItem extends HistoryItem {
 }
 
 class WidgetActionNotFoundHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -779,8 +834,12 @@ class WidgetActionNotFoundHistoryItem extends HistoryItem {
 }
 
 class NoConnectionHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject, public output?: string) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject,
+        public output?: string
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -796,23 +855,41 @@ class NoConnectionHistoryItem extends HistoryItem {
 
 class OutputValueHistoryItem extends HistoryItem {
     constructor(
+        public runningFlow: RunningFlow | undefined,
         public object: IEezObject,
         public output?: string,
         public value?: any
     ) {
-        super();
+        super(runningFlow);
     }
 
     get label() {
-        return `Output value from [${getLabel(this.object)}/${this.output}]: ${
-            this.value?.toString() ?? "NULL"
-        }`;
+        let value = this.value ?? null;
+        if (value) {
+            try {
+                value = JSON.stringify(value);
+            } catch (err) {
+                try {
+                    value = value?.toString();
+                } catch (err) {
+                    console.error(err, value);
+                }
+            }
+        }
+
+        return `Output value from [${getLabel(this.object)}/${
+            this.output
+        }]: ${value}`;
     }
 }
 
 class ExecutionErrorHistoryItem extends HistoryItem {
-    constructor(public object: IEezObject, public error?: any) {
-        super();
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public object: IEezObject,
+        public error?: any
+    ) {
+        super(runningFlow);
     }
 
     get label() {
@@ -969,6 +1046,9 @@ class RunningFlows extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     @computed get rootNode(): ITreeNode<RunningFlow> {
+        const selectedRunningFlow = this.context.RuntimeStore
+            .selectedRunningFlow;
+
         function getChildren(
             runningFlows: RunningFlow[]
         ): ITreeNode<RunningFlow>[] {
@@ -976,7 +1056,7 @@ class RunningFlows extends React.Component {
                 id: runningFlow.id,
                 label: getLabel(runningFlow.flow),
                 children: getChildren(runningFlow.runningFlows),
-                selected: false,
+                selected: runningFlow === selectedRunningFlow,
                 expanded: true,
                 data: runningFlow
             }));
@@ -991,7 +1071,10 @@ class RunningFlows extends React.Component {
         };
     }
 
-    selectNode() {}
+    @action.bound
+    selectNode(node: ITreeNode<RunningFlow>) {
+        this.context.RuntimeStore.selectedRunningFlow = node.data;
+    }
 
     render() {
         return (
@@ -1012,12 +1095,19 @@ class History extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     @computed get nodes(): IListNode<HistoryItem>[] {
-        return this.context.RuntimeStore.history.map(historyItem => ({
-            id: historyItem.id,
-            data: historyItem,
-            selected:
-                this.context.RuntimeStore.selectedHistoryItem === historyItem
-        }));
+        return this.context.RuntimeStore.history
+            .filter(
+                historyItem =>
+                    historyItem.runningFlow ===
+                    this.context.RuntimeStore.selectedRunningFlow
+            )
+            .map(historyItem => ({
+                id: historyItem.id,
+                data: historyItem,
+                selected:
+                    this.context.RuntimeStore.selectedHistoryItem ===
+                    historyItem
+            }));
     }
 
     @action.bound

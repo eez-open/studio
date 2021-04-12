@@ -556,7 +556,7 @@ export class Canvas extends React.Component<{
                 return undefined;
             }
 
-            const isMoveable = isSelectionMoveable(flowContext);
+            let isMoveable = isSelectionMoveable(flowContext);
 
             if (closestByClass(event.target, "EezStudio_FlowEditorSelection")) {
                 return isMoveable ? new DragMouseHandler() : undefined;
@@ -576,6 +576,8 @@ export class Canvas extends React.Component<{
                             }
                             flowContext.viewState.selectObject(object);
                         }
+
+                        isMoveable = isSelectionMoveable(flowContext);
 
                         if (result.connectionOutput) {
                             return new ConnectionLineMouseHandler(

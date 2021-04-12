@@ -16,6 +16,7 @@ interface PropertyInfo {
 interface ClassInfo {
     properties: PropertyInfo[];
     icon?: React.ReactNode;
+    updateObjectValueHook?: (object: IEezObject, values: any) => void;
 }
 
 declare class Component {
@@ -132,6 +133,21 @@ interface ThemeInterface {
     connectionLineInTheMakingColor: string;
 }
 
+interface IFlow {
+    deleteConnectionLinesToInput(component: Component, input: string): void;
+    deleteConnectionLinesFromOutput(component: Component, output: string): void;
+    rerouteConnectionLinesInput(
+        component: Component,
+        inputBefore: string,
+        inputAfter: string
+    ): void;
+    rerouteConnectionLinesOutput(
+        component: Component,
+        outputBefore: string,
+        outputAfter: string
+    ): void;
+}
+
 interface IEezStudio {
     React: typeof React;
     mobx: typeof mobx;
@@ -143,4 +159,5 @@ interface IEezStudio {
         derivedClassInfoProperties: Partial<ClassInfo>
     ) => ClassInfo;
     ActionComponent: typeof ActionComponent;
+    getFlow(object: IEezObject): IFlow;
 }

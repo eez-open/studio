@@ -46,7 +46,7 @@ export class ScpiActionComponent extends ActionComponent {
         properties: [
             makeToggablePropertyToInput({
                 name: "instrument",
-                type: PropertyType.Any,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             }),
             {

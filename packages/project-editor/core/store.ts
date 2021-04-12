@@ -94,7 +94,7 @@ import { getProjectFeatures } from "project-editor/core/extensions";
 import * as SearchModule from "project-editor/core/search";
 import { DataContext } from "project-editor/features/data/data";
 import { CurrentSearch } from "project-editor/core/search";
-import { Project } from "project-editor/project/project";
+import { Project, getFlow } from "project-editor/project/project";
 
 import {
     build as buildProject,
@@ -2296,7 +2296,8 @@ async function initExtensions() {
                         },
                         PropertyType,
                         makeDerivedClassInfo,
-                        ActionComponent
+                        ActionComponent,
+                        getFlow
                     });
                 }
             });

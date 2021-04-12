@@ -12,7 +12,12 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
-import { findReferencedObject, Project } from "project-editor/project/project";
+import {
+    findReferencedObject,
+    getProject,
+    Project,
+    ProjectType
+} from "project-editor/project/project";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
@@ -105,7 +110,10 @@ export class DataItem extends EezObject {
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
-                referencedObjectCollectionPath: "settings/build/configurations"
+                referencedObjectCollectionPath: "settings/build/configurations",
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType ===
+                    ProjectType.DASHBOARD
             }
         ],
         newItem: (parent: IEezObject) => {
@@ -223,6 +231,10 @@ export class DataContext implements IDataContext {
     }
 
     get(dataItemId: string): any {
+        if (!dataItemId) {
+            return undefined;
+        }
+
         const parts = dataItemId.split(".");
         dataItemId = parts[0];
 

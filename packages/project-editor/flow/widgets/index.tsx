@@ -765,6 +765,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                 referencedObjectCollectionPath: "pages"
             },
             makeDataPropertyInfo("context"),
+            makeDataPropertyInfo("visible"),
             {
                 name: "customUI",
                 type: PropertyType.Any,
@@ -955,35 +956,56 @@ export class LayoutViewWidget extends EmbeddedWidget {
     }
 
     render(flowContext: IFlowContext): React.ReactNode {
-        const layoutPage = this.getLayoutPage(flowContext.dataContext);
-        if (!layoutPage) {
-            return null;
-        }
+        let visible = true;
 
-        if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
-            LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = window.requestAnimationFrame(
-                LayoutViewWidget.clearRenderedLayoutPages
+        if (flowContext.runningFlow) {
+            let value = flowContext.runningFlow.getPropertyValue(
+                this,
+                "visible"
             );
-        }
-        if (LayoutViewWidget.renderedLayoutPages.indexOf(layoutPage) != -1) {
-            // circular rendering prevented
-            return null;
+            if (typeof value === "boolean") {
+                visible = value;
+            } else if (typeof value === "number") {
+                visible = value != 0;
+            } else if (typeof value === "undefined") {
+                visible = true;
+            } else {
+                visible = false;
+            }
         }
 
-        LayoutViewWidget.renderedLayoutPages.push(layoutPage);
+        let element;
 
-        const element = (
-            <ComponentEnclosure
-                component={layoutPage}
-                flowContext={
-                    flowContext.runningFlow
-                        ? flowContext.overrideRunningFlow(this)
-                        : flowContext
+        if (visible) {
+            const layoutPage = this.getLayoutPage(flowContext.dataContext);
+            if (layoutPage) {
+                if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
+                    LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = window.requestAnimationFrame(
+                        LayoutViewWidget.clearRenderedLayoutPages
+                    );
                 }
-            />
-        );
 
-        LayoutViewWidget.renderedLayoutPages.pop();
+                if (
+                    LayoutViewWidget.renderedLayoutPages.indexOf(layoutPage) ===
+                    -1
+                ) {
+                    LayoutViewWidget.renderedLayoutPages.push(layoutPage);
+
+                    element = (
+                        <ComponentEnclosure
+                            component={layoutPage}
+                            flowContext={
+                                flowContext.runningFlow
+                                    ? flowContext.overrideRunningFlow(this)
+                                    : flowContext
+                            }
+                        />
+                    );
+
+                    LayoutViewWidget.renderedLayoutPages.pop();
+                }
+            }
+        }
 
         return (
             <>
@@ -2101,7 +2123,12 @@ export class ButtonWidget extends EmbeddedWidget {
                 messages.push(output.propertyNotSetMessage(object, "text"));
             }
 
-            checkObjectReference(object, "enabled", messages, true);
+            if (
+                getProject(object).settings.general.projectType !==
+                ProjectType.DASHBOARD
+            ) {
+                checkObjectReference(object, "enabled", messages, true);
+            }
 
             return messages;
         }

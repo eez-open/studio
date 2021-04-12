@@ -10,6 +10,7 @@ import { showConnectionDialog } from "instrument/window/connection-dialog";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,14 +33,24 @@ export function getConnectionParametersInfo(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Connection {
+    acquireId = guid();
     resolveCallback: ((result: any) => void) | undefined;
     rejectCallback: ((result: any) => void) | undefined;
 
     constructor(private appStore: InstrumentAppStore) {
         EEZStudio.electron.ipcRenderer.on(
             "instrument/connection/value",
-            (event: any, value: any) => {
-                this.onValue(value);
+            (
+                event: any,
+                args: {
+                    acquireId: string;
+                    value: any;
+                    error: any;
+                }
+            ) => {
+                if (this.acquireId === args.acquireId) {
+                    this.onValue(args.value, args.error);
+                }
             }
         );
     }
@@ -86,6 +97,7 @@ export class Connection {
 
     async acquire(traceEnabled: boolean = false) {
         await this.instrument.connection.acquire(
+            this.acquireId,
             EEZStudio.remote.getCurrentWindow().id,
             traceEnabled
         );
@@ -115,16 +127,16 @@ export class Connection {
         this.instrument.connection.upload(instructions, onSuccess, onError);
     }
 
-    onValue(value: any) {
-        if (value.logEntry !== undefined) {
-            value = createHistoryItem(value.logEntry, this.appStore);
-        }
-
-        if (value.error) {
+    onValue(value: any, error: any) {
+        if (error) {
             if (this.rejectCallback) {
-                this.rejectCallback(new Error(value.error));
+                this.rejectCallback(new Error(error));
             }
         } else {
+            if (value.logEntry !== undefined) {
+                value = createHistoryItem(value.logEntry, this.appStore);
+            }
+
             if (this.resolveCallback) {
                 this.resolveCallback(value);
             }
