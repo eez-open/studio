@@ -100,6 +100,12 @@ EEZStudio.electron.ipcRenderer.on(
     }
 );
 
+EEZStudio.electron.ipcRenderer.on("command-palette", () => {
+    if (tabs.activeTab && tabs.activeTab.showCommandPalette) {
+        tabs.activeTab.showCommandPalette();
+    }
+});
+
 async function main() {
     const { loadExtensions } = await import(
         "eez-studio-shared/extensions/extensions"

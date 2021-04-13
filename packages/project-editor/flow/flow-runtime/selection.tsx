@@ -20,14 +20,12 @@ import { Action } from "project-editor/features/action/action";
 
 const SelectionDiv = styled.div`
     position: absolute;
-    cursor: move;
 
     .EezStudio_FlowRuntimeSelection_BoundingRect {
         border: 2px solid ${props => props.theme.selectionBackgroundColor};
     }
 
     .EezStudio_FlowRuntimeSelection_SelectedObject {
-        pointer-events: none;
         border: 2px solid ${props => props.theme.selectionBackgroundColor};
     }
 `;
@@ -61,7 +59,6 @@ class SelectedObject extends React.Component<
                 className={className}
                 style={{
                     position: "absolute",
-                    pointerEvents: "none",
                     left: rect.left + "px",
                     top: rect.top + "px",
                     width: rect.width + "px",

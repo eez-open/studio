@@ -45,6 +45,7 @@ import {
 import { styled } from "eez-studio-ui/styled-components";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
+import { ProjectType } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,20 +94,38 @@ export class PageEditor extends EditorComponent implements IPanel {
         return this.props.editor.state as PageTabState;
     }
 
+    @action.bound
+    onTransitionStart(event: TransitionEvent) {
+        if (event.target === this.flipCardInnerRef.current) {
+            this.transitionIsActive = true;
+        }
+    }
+
+    @action.bound
+    onTransitionEnd(event: TransitionEvent) {
+        if (event.target === this.flipCardInnerRef.current) {
+            this.transitionIsActive = false;
+        }
+    }
+
     componentDidMount() {
         const el = this.flipCardInnerRef.current!;
 
-        el.addEventListener(
+        el.addEventListener("transitionstart", this.onTransitionStart, false);
+
+        el.addEventListener("transitionend", this.onTransitionEnd, false);
+    }
+
+    componentWillUnmount() {
+        const el = this.flipCardInnerRef.current!;
+
+        el.removeEventListener(
             "transitionstart",
-            action(() => (this.transitionIsActive = true)),
+            this.onTransitionStart,
             false
         );
 
-        el.addEventListener(
-            "transitionend",
-            action(() => (this.transitionIsActive = false)),
-            false
-        );
+        el.removeEventListener("transitionend", this.onTransitionEnd, false);
     }
 
     @bind
@@ -196,7 +215,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     <FlowViewer
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItem
+                                                .componentContainerDisplayItemFrontFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -207,7 +226,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     <FlowEditor
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItem
+                                                .componentContainerDisplayItemFrontFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -216,12 +235,21 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     />
                                 )}
                             </div>
-                            <div className="flip-card-back">
+                            <div
+                                className="flip-card-back"
+                                style={{
+                                    display:
+                                        !this.pageTabState.frontFace ||
+                                        this.transitionIsActive
+                                            ? "flex"
+                                            : "none"
+                                }}
+                            >
                                 {this.context.RuntimeStore.isRuntimeMode ? (
                                     <FlowViewer
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItem
+                                                .componentContainerDisplayItemBackFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -232,7 +260,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     <FlowEditor
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItem
+                                                .componentContainerDisplayItemBackFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -475,7 +503,14 @@ export class PagesNavigation extends NavigationComponent {
         } else {
             const buttons: JSX.Element[] = [];
 
-            if (!this.context.UIStateStore.viewOptions.themesVisible) {
+            const hasThemes =
+                this.context.project.settings.general.projectType !==
+                ProjectType.DASHBOARD;
+
+            if (
+                hasThemes &&
+                !this.context.UIStateStore.viewOptions.themesVisible
+            ) {
                 buttons.push(
                     <IconAction
                         key="show-themes"
@@ -511,16 +546,19 @@ export class PagesNavigation extends NavigationComponent {
                 <Splitter
                     type="horizontal"
                     persistId={`project-editor/pages${
+                        hasThemes &&
                         this.context.UIStateStore.viewOptions.themesVisible
                             ? ""
                             : "-without-themes"
                     }`}
                     sizes={`240px|100%|400px${
+                        hasThemes &&
                         this.context.UIStateStore.viewOptions.themesVisible
                             ? "|240px"
                             : ""
                     }`}
                     childrenOverflow={`hidden|hidden|hidden${
+                        hasThemes &&
                         this.context.UIStateStore.viewOptions.themesVisible
                             ? "|hidden"
                             : ""
@@ -529,9 +567,10 @@ export class PagesNavigation extends NavigationComponent {
                     {navigation}
                     {editors}
                     {properties}
-                    {this.context.UIStateStore.viewOptions.themesVisible && (
-                        <ThemesSideView hasCloseButton={true} />
-                    )}
+                    {hasThemes &&
+                        this.context.UIStateStore.viewOptions.themesVisible && (
+                            <ThemesSideView hasCloseButton={true} />
+                        )}
                 </Splitter>
             );
         }

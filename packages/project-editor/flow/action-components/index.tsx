@@ -657,33 +657,115 @@ registerClass(ConstantActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class OpenPageActionComponent extends ActionComponent {
+export class ReadSettingActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        properties: [],
+        properties: [
+            makeToggablePropertyToInput({
+                name: "key",
+                type: PropertyType.String
+            })
+        ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
-                <path d="M0 0h40v30H0V0zm36 8H4v18h32V8z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1179">
+                <path d="M135 156L277 14q14-14 35-14t35 14l77 77-212 212-77-76q-14-15-14-36t14-35zm520 168l210-210q14-14 24.5-10t10.5 25l-2 599q-1 20-15.5 35T847 778l-597 1q-21 0-25-10.5t10-24.5l208-208-154-155 212-212zM50 879h1000q21 0 35.5 14.5T1100 929v250H0V929q0-21 14.5-35.5T50 879zm850 100v50h100v-50H900z" />
             </svg>
         )
     });
+
+    @observable key: string;
+
+    @computed get outputs() {
+        return [
+            ...super.outputProperties,
+            {
+                name: "value",
+                type: PropertyType.Any
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        let key;
+        if (flowContext.runningFlow) {
+            key = flowContext.runningFlow.getPropertyValue(this, "key");
+        } else {
+            key = this.key;
+        }
+
+        return key ? (
+            <div className="body">
+                <pre>{key}</pre>
+            </div>
+        ) : null;
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        let key = runningFlow.getPropertyValue(this, "key");
+        runningFlow.propagateValue(
+            this,
+            "value",
+            runningFlow.RuntimeStore.readSettings(key)
+        );
+    }
 }
 
-registerClass(OpenPageActionComponent);
+registerClass(ReadSettingActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ClosePageActionComponent extends ActionComponent {
+export class WriteSettingsActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        properties: [],
+        properties: [
+            makeToggablePropertyToInput({
+                name: "key",
+                type: PropertyType.String
+            })
+        ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
-                <path d="M0 0h40v30H0V0zm36 8H4v18h32V8zm-23.273 4.96l3.232-3.233L20 13.767l4.04-4.04 3.233 3.232L23.233 17l4.04 4.04-3.232 3.233L20 20.233l-4.04 4.04-3.233-3.232L16.767 17l-4.04-4.04z" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1200">
+                <path d="M350 0l599 2q20 1 35 15.5T999 53l1 597q0 21-10.5 25T965 665L757 457 602 611 390 399l155-154L335 35q-14-14-10-24.5T350 0zm174 688l-76 77q-15 14-36 14t-35-14L235 623q-14-14-14-35t14-35l77-77zM50 900h1000q21 0 35.5 14.5T1100 950v250H0V950q0-21 14.5-35.5T50 900zm850 100v50h100v-50H900z" />
             </svg>
         )
     });
+
+    @observable key: string;
+
+    @computed get inputs() {
+        return [
+            ...super.inputProperties,
+            {
+                name: "value",
+                type: PropertyType.Any
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        let key;
+        if (flowContext.runningFlow) {
+            key = flowContext.runningFlow.getPropertyValue(this, "key");
+        } else {
+            key = this.key;
+        }
+
+        return key ? (
+            <div className="body">
+                <pre>{key}</pre>
+            </div>
+        ) : null;
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        let key = runningFlow.getPropertyValue(this, "key");
+        const inputPropertyValue = runningFlow.getInputPropertyValue(
+            this,
+            "value"
+        );
+        runningFlow.RuntimeStore.writeSettings(key, inputPropertyValue?.value);
+    }
 }
 
-registerClass(ClosePageActionComponent);
+registerClass(WriteSettingsActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 

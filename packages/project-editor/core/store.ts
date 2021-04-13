@@ -798,6 +798,7 @@ class UIStateStoreClass {
     @observable searchMatchWholeWord: boolean;
     @observable activeOutputSection = Section.CHECKS;
     @observable pageFrontFace: boolean = true;
+    @observable showCommandPalette: boolean = false;
 
     dispose1: mobx.IReactionDisposer;
     dispose2: mobx.IReactionDisposer;

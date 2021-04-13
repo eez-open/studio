@@ -21,7 +21,7 @@ import type {
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component } from "project-editor/flow/component";
-import { Flow } from "project-editor/flow/flow";
+import { RunningFlow } from "../runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,24 +118,13 @@ class ViewState implements IViewState {
         );
     }
 
-    selectObject(object: ITreeObjectAdapter) {
-        if (object.isSelectable) {
-            this.document && this.document.flow.selectItem(object);
-        }
-    }
+    selectObject(object: ITreeObjectAdapter) {}
 
     @action
-    selectObjects(objects: ITreeObjectAdapter[]) {
-        this.document &&
-            this.document.flow.selectItems(
-                objects.filter(object => object.isSelectable)
-            );
-    }
+    selectObjects(objects: ITreeObjectAdapter[]) {}
 
     @action
-    deselectAllObjects(): void {
-        this.document && this.document.flow.selectItems([]);
-    }
+    deselectAllObjects(): void {}
 
     moveSelection(
         where:
@@ -158,12 +147,12 @@ class ViewState implements IViewState {
 
 export class RuntimeFlowContext implements IFlowContext {
     @observable document: IDocument;
-    viewState: ViewState;
+    @observable viewState: ViewState;
     @observable editorOptions: IEditorOptions = {};
     @observable dragComponent: Component | undefined;
     @observable frontFace: boolean;
-    dataContext: IDataContext;
-    @observable runningFlow: IRunningFlow;
+    @observable dataContext: IDataContext;
+    @observable runningFlow: IRunningFlow | undefined;
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this.containerId);
@@ -179,7 +168,7 @@ export class RuntimeFlowContext implements IFlowContext {
 
     overrideRunningFlow(component: Component): IFlowContext {
         return Object.assign(new RuntimeFlowContext(this.containerId), this, {
-            runningFlow: this.runningFlow.getRunningFlowByComponent(component)
+            runningFlow: this.runningFlow?.getRunningFlowByComponent(component)
         });
     }
 
@@ -190,7 +179,8 @@ export class RuntimeFlowContext implements IFlowContext {
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
-        frontFace?: boolean
+        frontFace: boolean,
+        runningFlow: RunningFlow | undefined
     ) {
         const deselectAllObjects =
             this.document?.flow.object !== document?.flow.object;
@@ -211,14 +201,7 @@ export class RuntimeFlowContext implements IFlowContext {
 
         this.frontFace = frontFace ?? false;
 
-        const runningFlow = this.document.DocumentStore.RuntimeStore.getRunningFlow(
-            this.document.flow.object as Flow
-        );
-        if (runningFlow) {
-            this.runningFlow = runningFlow;
-        } else {
-            console.log(this.document.flow.object);
-        }
+        this.runningFlow = runningFlow;
 
         this.dataContext = this.document.DocumentStore.dataContext;
     }

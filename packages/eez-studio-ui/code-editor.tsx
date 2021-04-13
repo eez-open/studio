@@ -122,7 +122,8 @@ export type CodeEditorMode =
     | "javascript"
     | "json"
     | "scpi"
-    | "python";
+    | "python"
+    | "css";
 
 interface CodeEditorProps {
     mode: CodeEditorMode;

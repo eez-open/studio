@@ -3,6 +3,8 @@ import { computed, action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
+import { isWebStudio } from "eez-studio-shared/util-electron";
+
 import styled from "eez-studio-ui/styled-components";
 import { TabsView } from "eez-studio-ui/tabs";
 import { Splitter } from "eez-studio-ui/splitter";
@@ -22,7 +24,7 @@ import { startSearch } from "project-editor/core/search";
 import { Section } from "project-editor/core/output";
 import { INavigationStore } from "project-editor/core/store";
 
-import { IconAction } from "eez-studio-ui/action";
+import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { Panel } from "project-editor/components/Panel";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
@@ -33,7 +35,7 @@ import {
     ProjectType
 } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
-import { isWebStudio } from "eez-studio-shared/util-electron";
+import { CommandPalette } from "project-editor/project/command-palette";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -196,8 +198,9 @@ class Toolbar extends React.Component {
                     {this.context.project.settings.general.projectType ==
                         ProjectType.DASHBOARD && (
                         <div className="btn-group" role="group">
-                            <IconAction
-                                title="Run"
+                            <ButtonAction
+                                text="Run"
+                                title="Enter run mode"
                                 icon="material:play_arrow"
                                 onClick={
                                     this.context.RuntimeStore.setRuntimeMode
@@ -206,8 +209,9 @@ class Toolbar extends React.Component {
                                     this.context.RuntimeStore.isRuntimeMode
                                 }
                             />
-                            <IconAction
-                                title="Edit"
+                            <ButtonAction
+                                text="Edit"
+                                title="Enter edit mode"
                                 icon="material:mode_edit"
                                 onClick={
                                     this.context.RuntimeStore.setEditorMode
@@ -604,6 +608,13 @@ export class ProjectEditor extends React.Component<{}, {}> {
             );
         }
 
-        return <ProjectEditorContainer>{mainContent}</ProjectEditorContainer>;
+        return (
+            <ProjectEditorContainer>
+                {mainContent}
+                {this.context.UIStateStore.showCommandPalette && (
+                    <CommandPalette />
+                )}
+            </ProjectEditorContainer>
+        );
     }
 }

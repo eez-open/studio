@@ -575,6 +575,7 @@ export class Canvas extends React.Component<{
                                 flowContext.viewState.deselectAllObjects();
                             }
                             flowContext.viewState.selectObject(object);
+                            event.preventDefault();
                         }
 
                         isMoveable = isSelectionMoveable(flowContext);
@@ -822,7 +823,11 @@ export class Canvas extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const FlowEditorCanvasContainer = styled.div`
+interface FlowEditorCanvasContainerParams {
+    projectCss: string;
+}
+
+const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
     position: absolute;
     width: 100%;
     height: 100%;
@@ -899,15 +904,16 @@ const FlowEditorCanvasContainer = styled.div`
         marker-end: url(#selectedLineEnd) !important;
         fill: none;
     }
+
+    ${props => props.projectCss}
 `;
 
 @observer
 export class FlowEditor
     extends React.Component<{
         widgetContainer: ITreeObjectAdapter;
-        onFocus?: () => void;
         transitionIsActive?: boolean;
-        frontFace?: boolean;
+        frontFace: boolean;
     }>
     implements IPanel {
     static contextType = ProjectContext;
@@ -924,24 +930,32 @@ export class FlowEditor
 
     @action
     updateFlowDocument() {
-        if (this.props.widgetContainer != this.currentWidgetContainer) {
-            this.currentWidgetContainer = this.props.widgetContainer;
+        let document = this.flowContext.document;
+
+        const runningFlow = document?.DocumentStore.RuntimeStore.getRunningFlow(
+            document.flow.object as Flow
+        );
+
+        const documentChanged =
+            !document || document.flow != this.props.widgetContainer;
+
+        if (documentChanged || this.flowContext.runningFlow != runningFlow) {
+            if (documentChanged) {
+                document = new FlowDocument(
+                    this.props.widgetContainer,
+                    this.flowContext
+                );
+            }
 
             this.flowContext.set(
-                new FlowDocument(this.props.widgetContainer, this.flowContext),
+                document,
                 this.viewStatePersistantState,
                 this.onSavePersistantState,
+                this.props.frontFace,
+                runningFlow,
                 this.options,
-                this.filterSnapLines,
-                this.props.frontFace
+                this.filterSnapLines
             );
-
-            this.options = {
-                center: {
-                    x: 0,
-                    y: 0
-                }
-            };
         }
     }
 
@@ -1238,11 +1252,12 @@ export class FlowEditor
                 ref={(ref: any) => (this.div = ref!)}
                 id={this.flowContext.containerId}
                 tabIndex={0}
-                onFocus={this.props.onFocus || this.focusHander}
+                onFocus={this.focusHander}
                 onDragOver={this.onDragOver}
                 onDrop={this.onDrop}
                 onDragLeave={this.onDragLeave}
                 onKeyDown={this.onKeyDown}
+                projectCss={this.context.project.settings.general.css}
             >
                 <Canvas
                     flowContext={this.flowContext}

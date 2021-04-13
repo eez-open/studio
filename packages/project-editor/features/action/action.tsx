@@ -99,12 +99,14 @@ export class ActionEditor extends EditorComponent implements IPanel {
             return (
                 <FlowViewer
                     widgetContainer={flowTabState.componentContainerDisplayItem}
+                    frontFace={false}
                 />
             );
         } else {
             return (
                 <FlowEditor
                     widgetContainer={flowTabState.componentContainerDisplayItem}
+                    frontFace={false}
                 />
             );
         }
@@ -350,7 +352,7 @@ export class Action extends Flow {
             },
             {
                 name: "implementation",
-                type: PropertyType.Cpp,
+                type: PropertyType.CPP,
                 hideInPropertyGrid: (object: IEezObject) =>
                     getProject(object).settings.general.projectVersion !== "v1"
             },

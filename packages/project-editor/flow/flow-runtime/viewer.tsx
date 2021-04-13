@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, action, runInAction } from "mobx";
+import { computed, action, runInAction, observable } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -16,13 +16,10 @@ import type {
 import { ITransform } from "project-editor/flow/flow-editor/transform";
 import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
 
-import { isObjectInstanceOf } from "project-editor/core/object";
 import { IPanel, getDocumentStore } from "project-editor/core/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { DragAndDropManager } from "project-editor/core/dd";
 
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
-import { Component } from "project-editor/flow/component";
 import { Svg } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { guid } from "eez-studio-shared/guid";
@@ -84,20 +81,16 @@ class FlowDocument implements IDocument {
     }
 
     createContextMenu(objects: ITreeObjectAdapter[]) {
-        return this.flow.createSelectionContextMenu();
+        return undefined;
     }
 
     @computed get DocumentStore() {
         return getDocumentStore(this.flow.object);
     }
 
-    onDragStart(): void {
-        this.DocumentStore.UndoManager.setCombineCommands(true);
-    }
+    onDragStart(): void {}
 
-    onDragEnd(): void {
-        this.DocumentStore.UndoManager.setCombineCommands(false);
-    }
+    onDragEnd(): void {}
 
     connectionExists(
         sourceObjectId: string,
@@ -145,7 +138,6 @@ const AllConnectionLines = observer(
 export class Canvas extends React.Component<{
     flowContext: IFlowContext;
     pageRect?: Rect;
-    dragAndDropActive: boolean;
     transitionIsActive?: boolean;
 }> {
     div: HTMLDivElement;
@@ -258,11 +250,6 @@ export class Canvas extends React.Component<{
         event.stopPropagation();
     }
 
-    @bind
-    onContextMenu(event: React.MouseEvent) {
-        event.preventDefault();
-    }
-
     render() {
         let style: React.CSSProperties = {};
 
@@ -283,19 +270,12 @@ export class Canvas extends React.Component<{
         }
 
         return (
-            <div
-                ref={(ref: any) => (this.div = ref!)}
-                style={style}
-                onContextMenu={this.onContextMenu}
-            >
+            <div ref={(ref: any) => (this.div = ref!)} style={style}>
                 <div
                     className="eez-canvas"
                     style={{
                         position: "absolute",
-                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
-                        pointerEvents: this.props.dragAndDropActive
-                            ? "none"
-                            : "auto"
+                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`
                     }}
                 >
                     {this.props.children}
@@ -311,13 +291,15 @@ export class Canvas extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const FlowViewerCanvasContainer = styled.div`
+interface FlowViewerCanvasContainerParams {
+    projectCss: string;
+}
+
+const FlowViewerCanvasContainer = styled.div<FlowViewerCanvasContainerParams>`
     position: absolute;
     width: 100%;
     height: 100%;
     background-color: white;
-
-    cursor: default;
 
     * {
         user-select: text;
@@ -390,35 +372,55 @@ const FlowViewerCanvasContainer = styled.div`
             stroke-dashoffset: -600;
         }
     }
+
+    ${props => props.projectCss}
 `;
 
 @observer
 export class FlowViewer
     extends React.Component<{
         widgetContainer: ITreeObjectAdapter;
-        onFocus?: () => void;
         transitionIsActive?: boolean;
-        frontFace?: boolean;
+        frontFace: boolean;
     }>
     implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    flowContext: RuntimeFlowContext = new RuntimeFlowContext(
+    @observable flowContext: RuntimeFlowContext = new RuntimeFlowContext(
         "eez-flow-editor-" + guid()
     );
-    currentWidgetContainer?: ITreeObjectAdapter;
+
+    get runningFlow() {
+        return this.context.RuntimeStore.getRunningFlow(
+            this.props.widgetContainer.object as Flow
+        );
+    }
 
     @action
     updateFlowDocument() {
-        if (this.props.widgetContainer != this.currentWidgetContainer) {
-            this.currentWidgetContainer = this.props.widgetContainer;
+        let document = this.flowContext.document;
 
+        const documentChanged =
+            !document || document.flow != this.props.widgetContainer;
+
+        if (documentChanged) {
+            document = new FlowDocument(
+                this.props.widgetContainer,
+                this.flowContext
+            );
+        }
+
+        if (
+            documentChanged ||
+            this.flowContext.runningFlow != this.runningFlow
+        ) {
             this.flowContext.set(
-                new FlowDocument(this.props.widgetContainer, this.flowContext),
+                document,
                 this.viewStatePersistantState,
                 this.onSavePersistantState,
-                this.props.frontFace
+                this.props.frontFace,
+                this.runningFlow
             );
         }
     }
@@ -441,21 +443,13 @@ export class FlowViewer
         return this.props.widgetContainer.selectedObjects;
     }
 
-    cutSelection() {
-        this.props.widgetContainer.cutSelection();
-    }
+    cutSelection() {}
 
-    copySelection() {
-        this.props.widgetContainer.copySelection();
-    }
+    copySelection() {}
 
-    pasteSelection() {
-        this.props.widgetContainer.pasteSelection();
-    }
+    pasteSelection() {}
 
-    deleteSelection() {
-        this.props.widgetContainer.deleteSelection();
-    }
+    deleteSelection() {}
 
     @bind
     focusHander() {
@@ -522,25 +516,7 @@ export class FlowViewer
     }
 
     getDragComponent(event: React.DragEvent) {
-        if (
-            DragAndDropManager.dragObject &&
-            isObjectInstanceOf(
-                DragAndDropManager.dragObject,
-                Component.classInfo
-            ) &&
-            event.dataTransfer.effectAllowed === "copy"
-        ) {
-            return DragAndDropManager.dragObject as Component;
-        }
         return undefined;
-    }
-
-    @bind
-    onKeyDown(event: React.KeyboardEvent) {
-        if (event.keyCode == 27) {
-            // esc
-            this.flowContext.viewState.deselectAllObjects();
-        }
     }
 
     @bind
@@ -567,31 +543,31 @@ export class FlowViewer
             <FlowViewerCanvasContainer
                 id={this.flowContext.containerId}
                 tabIndex={0}
-                onFocus={this.props.onFocus || this.focusHander}
-                onKeyDown={this.onKeyDown}
+                onFocus={this.focusHander}
                 onDoubleClick={this.onDoubleClick}
+                projectCss={this.context.project.settings.general.css}
             >
                 <Canvas
                     flowContext={this.flowContext}
-                    dragAndDropActive={!!DragAndDropManager.dragObject}
                     transitionIsActive={this.props.transitionIsActive}
                 >
-                    {this.flowContext.document?.flow.object === flow && (
-                        <>
-                            <div
-                                style={{
-                                    position: "absolute"
-                                }}
-                            >
-                                {flow.renderComponents(this.flowContext)}
-                            </div>
-                            {!this.props.frontFace && (
-                                <AllConnectionLines
-                                    flowContext={this.flowContext}
-                                />
-                            )}
-                        </>
-                    )}
+                    {this.flowContext.document?.flow.object === flow &&
+                        this.runningFlow && (
+                            <>
+                                <div
+                                    style={{
+                                        position: "absolute"
+                                    }}
+                                >
+                                    {flow.renderComponents(this.flowContext)}
+                                </div>
+                                {!this.props.frontFace && (
+                                    <AllConnectionLines
+                                        flowContext={this.flowContext}
+                                    />
+                                )}
+                            </>
+                        )}
                 </Canvas>
             </FlowViewerCanvasContainer>
         );

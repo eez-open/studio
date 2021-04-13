@@ -294,6 +294,16 @@ const ComponentEnclosureDiv = styled.div`
             margin-bottom: 0;
         }
     }
+
+    &.ButtonWidget button {
+        width: 100%;
+        height: 100%;
+    }
+
+    &.TextWidget {
+        display: flex;
+        align-items: center;
+    }
 `;
 
 export const ComponentCanvas = observer(
@@ -354,16 +364,30 @@ export const ComponentEnclosure = observer(
         const elRef = React.useRef<HTMLDivElement>(null);
 
         React.useEffect(() => {
-            const el = elRef.current;
-            if (el) {
-                const geometry = calcComponentGeometry(
-                    component,
-                    el,
-                    flowContext
-                );
-                runInAction(() => {
-                    component._geometry = geometry;
-                });
+            if (!flowContext.frontFace) {
+                const el = elRef.current;
+                if (el) {
+                    const flipCardBack = el.closest(
+                        ".flip-card-inner:not(.show-back-face)>.flip-card-back"
+                    ) as HTMLElement;
+                    if (flipCardBack) {
+                        flipCardBack.style.transform = "rotateY(0)";
+                    }
+
+                    const geometry = calcComponentGeometry(
+                        component,
+                        el,
+                        flowContext
+                    );
+
+                    if (flipCardBack) {
+                        flipCardBack.style.transform = "rotateY(180deg)";
+                    }
+
+                    runInAction(() => {
+                        component._geometry = geometry;
+                    });
+                }
             }
         });
 
@@ -384,8 +408,6 @@ export const ComponentEnclosure = observer(
 
         const className = component.getClassName();
 
-        const onClick = component instanceof Component && component.onClick;
-
         return (
             <ComponentEnclosureDiv
                 data-eez-flow-object-id={dataFlowObjectId}
@@ -396,7 +418,6 @@ export const ComponentEnclosure = observer(
                             .isRuntimeMode
                 })}
                 style={style}
-                onClick={onClick ? () => onClick(flowContext) : undefined}
             >
                 {component.render(flowContext)}
             </ComponentEnclosureDiv>

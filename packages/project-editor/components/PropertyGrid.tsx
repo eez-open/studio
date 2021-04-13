@@ -1097,7 +1097,15 @@ class Property extends React.Component<PropertyProps> {
                     showLabel={false}
                 />
             );
-        } else if (propertyInfo.type === PropertyType.Cpp) {
+        } else if (propertyInfo.type === PropertyType.CSS) {
+            return (
+                <CodeEditorProperty
+                    {...this.props}
+                    mode="css"
+                    showLabel={false}
+                />
+            );
+        } else if (propertyInfo.type === PropertyType.CPP) {
             return (
                 <CodeEditorProperty
                     {...this.props}

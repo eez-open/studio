@@ -441,6 +441,18 @@ function buildViewMenu() {
 
     viewSubmenu.push(
         {
+            label: "Command Palette...",
+            accelerator: "CmdOrCtrl+Shift+P",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("command-palette");
+                }
+            }
+        },
+        {
+            type: "separator"
+        },
+        {
             label: "Workbench",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {

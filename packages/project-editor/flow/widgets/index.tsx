@@ -143,7 +143,7 @@ export class ContainerWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         let visible = true;
 
-        if (flowContext.runningFlow) {
+        if (flowContext.runningFlow && this.isInputProperty("visible")) {
             let value = flowContext.runningFlow.getPropertyValue(
                 this,
                 "visible"
@@ -958,7 +958,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext): React.ReactNode {
         let visible = true;
 
-        if (flowContext.runningFlow) {
+        if (flowContext.runningFlow && this.isInputProperty("visible")) {
             let value = flowContext.runningFlow.getPropertyValue(
                 this,
                 "visible"
@@ -967,8 +967,6 @@ export class LayoutViewWidget extends EmbeddedWidget {
                 visible = value;
             } else if (typeof value === "number") {
                 visible = value != 0;
-            } else if (typeof value === "undefined") {
-                visible = true;
             } else {
                 visible = false;
             }
@@ -2159,7 +2157,23 @@ export class ButtonWidget extends EmbeddedWidget {
             <>
                 {flowContext.document.DocumentStore.project.settings.general
                     .projectType === ProjectType.DASHBOARD ? (
-                    <button disabled={!buttonEnabled}>{text}</button>
+                    <button
+                        className="btn btn-secondary"
+                        disabled={!buttonEnabled}
+                        onClick={event => {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            getDocumentStore(
+                                this
+                            ).RuntimeStore.executeWidgetAction(
+                                flowContext,
+                                this
+                            );
+                        }}
+                    >
+                        {text}
+                    </button>
                 ) : (
                     <ComponentCanvas
                         flowContext={flowContext}
@@ -2182,13 +2196,6 @@ export class ButtonWidget extends EmbeddedWidget {
             </>
         );
     }
-
-    onClick = (flowContext: IFlowContext) => {
-        getDocumentStore(this).RuntimeStore.executeWidgetAction(
-            flowContext,
-            this
-        );
-    };
 }
 
 registerClass(ButtonWidget);

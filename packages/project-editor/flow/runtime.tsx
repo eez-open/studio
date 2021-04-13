@@ -10,7 +10,7 @@ import { IListNode, List } from "eez-studio-ui/list";
 
 import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
-import { action, computed, observable, runInAction } from "mobx";
+import { action, computed, observable, runInAction, toJS } from "mobx";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { Action, findAction } from "project-editor/features/action/action";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
@@ -20,7 +20,12 @@ import {
     Component,
     Widget
 } from "project-editor/flow/component";
-import { getLabel, IEezObject } from "project-editor/core/object";
+import {
+    findPropertyByNameInObject,
+    getLabel,
+    IEezObject,
+    PropertyType
+} from "project-editor/core/object";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import type {
@@ -29,6 +34,8 @@ import type {
 } from "project-editor/flow//flow-interfaces";
 import { LayoutViewWidget } from "./widgets";
 import { visitObjects } from "project-editor/core/search";
+import { isWebStudio } from "eez-studio-shared/util-electron";
+import { values } from "lodash";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,14 +97,18 @@ export class RuntimeStoreClass {
         }
     };
 
-    start() {
+    async start() {
+        await this.loadSettings();
+
         this.startSpeedCalculation();
 
-        this.queue = [];
+        runInAction(() => {
+            this.queue = [];
 
-        this.runningFlows = this.DocumentStore.project.pages
-            .filter(page => !page.isUsedAsCustomWidget)
-            .map(page => new RunningFlow(this, page));
+            this.runningFlows = this.DocumentStore.project.pages
+                .filter(page => !page.isUsedAsCustomWidget)
+                .map(page => new RunningFlow(this, page));
+        });
 
         this.runningFlows.forEach(runningFlow => runningFlow.start());
 
@@ -121,6 +132,8 @@ export class RuntimeStoreClass {
         this.stopSpeedCalculation();
 
         this.isStopped = true;
+
+        await this.saveSettings();
     }
 
     get isRunning() {
@@ -311,6 +324,86 @@ export class RuntimeStoreClass {
     render() {
         return <RuntimePanel />;
     }
+
+    ////////////////////////////////////////
+    // RUNTIME SETTINGS
+
+    @observable settings: any = {};
+
+    readSettings(key: string) {
+        return this.settings[key];
+    }
+
+    @action
+    writeSettings(key: string, value: any) {
+        this.settings[key] = value;
+    }
+
+    getSettingsFilePath() {
+        if (this.DocumentStore.filePath) {
+            return this.DocumentStore.filePath + "-runtime-settings";
+        }
+        return undefined;
+    }
+
+    async loadSettings() {
+        if (isWebStudio()) {
+            return;
+        }
+
+        const filePath = this.getSettingsFilePath();
+        if (!filePath) {
+            return;
+        }
+
+        const fs = EEZStudio.remote.require("fs");
+
+        return new Promise<void>(resolve => {
+            fs.readFile(filePath, "utf8", (err: any, data: string) => {
+                if (err) {
+                    // TODO
+                    console.error(err);
+                } else {
+                    runInAction(() => {
+                        this.settings = JSON.parse(data);
+                    });
+                    console.log("Runtime settings loaded");
+                }
+                resolve();
+            });
+        });
+    }
+
+    async saveSettings() {
+        if (isWebStudio()) {
+            return;
+        }
+
+        const filePath = this.getSettingsFilePath();
+        if (!filePath) {
+            return;
+        }
+
+        const fs = EEZStudio.remote.require("fs");
+
+        return new Promise<void>(resolve => {
+            fs.writeFile(
+                this.getSettingsFilePath(),
+                JSON.stringify(toJS(this.settings), undefined, "  "),
+                "utf8",
+                (err: any) => {
+                    if (err) {
+                        // TODO
+                        console.error(err);
+                    } else {
+                        console.log("Runtime settings saved");
+                    }
+
+                    resolve();
+                }
+            );
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,7 +547,7 @@ export class RunningFlow {
 
     componentStates = new Map<Component, ComponentState>();
 
-    runningFlows: RunningFlow[] = [];
+    @observable runningFlows: RunningFlow[] = [];
 
     dataContext: IDataContext;
 
@@ -516,7 +609,21 @@ export class RunningFlow {
             return inputPropertyValue && inputPropertyValue.value;
         } else {
             const value = (component as any)[propertyName];
-            return value != undefined ? JSON.parse(value) : undefined;
+
+            if (value == undefined) {
+                return value;
+            }
+
+            let propertyInfo = findPropertyByNameInObject(
+                component,
+                propertyName
+            );
+
+            if (propertyInfo && propertyInfo.type === PropertyType.JSON) {
+                return JSON.parse(value);
+            } else {
+                return values;
+            }
         }
     }
 
@@ -600,7 +707,10 @@ export class RunningFlow {
                         this,
                         component
                     );
-                    this.runningFlows.push(runningFlow);
+
+                    runInAction(() => {
+                        this.runningFlows.push(runningFlow);
+                    });
 
                     runningFlow.start();
                 }

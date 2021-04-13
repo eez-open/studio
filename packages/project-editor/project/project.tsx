@@ -6,7 +6,7 @@ import {
     fileExistsSync,
     getFileNameWithoutExtension
 } from "eez-studio-shared/util-electron";
-import { _map, _keys, _filter } from "eez-studio-shared/algorithm";
+import { _map, _keys, _filter, _max, _min } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import {
@@ -31,7 +31,8 @@ import {
     getProperty,
     findPropertyByNameInObject,
     getRootObject,
-    getAncestorOfType
+    getAncestorOfType,
+    getParent
 } from "project-editor/core/object";
 import {
     Message,
@@ -69,6 +70,10 @@ import { Style } from "project-editor/features/style/style";
 import { Font } from "project-editor/features/font/font";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Flow } from "project-editor/flow/flow";
+import { FlowEditor } from "project-editor/flow/flow-editor/editor";
+import { ContainerWidget, LayoutViewWidget } from "project-editor/flow/widgets";
+import { Widget } from "project-editor/flow/component";
+import { PagesNavigation } from "project-editor/features/page/PagesNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -537,6 +542,7 @@ export class General extends EezObject {
     @observable namespace: string;
     @observable masterProject: string;
     @observable imports: ImportDirective[];
+    @observable css: string;
 
     static classInfo: ClassInfo = {
         label: () => "General",
@@ -586,6 +592,13 @@ export class General extends EezObject {
                 defaultValue: [],
                 hideInPropertyGrid: (object: IEezObject) =>
                     !!getProject(object).masterProject
+            },
+            {
+                name: "css",
+                type: PropertyType.CSS,
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType !==
+                    ProjectType.DASHBOARD
             }
         ],
         showInNavigation: true,
@@ -1169,3 +1182,287 @@ export function getNameProperty(object: IEezObject) {
     }
     return name;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class Command {
+    constructor(
+        public name: string,
+        public callback: (DocumentStore: DocumentStoreClass) => void
+    ) {}
+}
+
+export const commands = [
+    new Command("Padding", (DocumentStore: DocumentStoreClass) => {
+        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        if (
+            !(selectedPanel instanceof FlowEditor) &&
+            !(selectedPanel instanceof PagesNavigation)
+        ) {
+            return;
+        }
+
+        const selectedObject =
+            selectedPanel.selectedObject ||
+            (selectedPanel instanceof FlowEditor &&
+                selectedPanel.flowContext.document.flow.object);
+
+        if (
+            selectedObject instanceof Page ||
+            selectedObject instanceof ContainerWidget
+        ) {
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "padding",
+                            type: "number"
+                        }
+                    ]
+                },
+
+                values: {
+                    padding: 10
+                }
+            })
+                .then(result => {
+                    const padding = result.values.padding;
+
+                    let widgets;
+
+                    if (selectedObject instanceof Page) {
+                        widgets = selectedObject.components.filter(
+                            component => component instanceof Widget
+                        );
+                    } else {
+                        widgets = selectedObject.widgets;
+                    }
+
+                    if (widgets.length > 0) {
+                        const left = _min(widgets.map(widget => widget.left));
+
+                        const top = _min(widgets.map(widget => widget.top));
+
+                        const right = _max(
+                            widgets.map(widget => widget.left + widget.width)
+                        );
+
+                        const bottom = _max(
+                            widgets.map(widget => widget.top + widget.height)
+                        );
+
+                        if (
+                            typeof left === "number" &&
+                            typeof top === "number" &&
+                            typeof right === "number" &&
+                            typeof bottom === "number"
+                        ) {
+                            DocumentStore.UndoManager.setCombineCommands(true);
+
+                            widgets.forEach(widget => {
+                                DocumentStore.updateObject(widget, {
+                                    left: widget.left + padding - left,
+                                    top: widget.top + padding - top
+                                });
+                            });
+
+                            DocumentStore.updateObject(selectedObject, {
+                                width: right - left + 2 * padding,
+                                height: bottom - top + 2 * padding
+                            });
+
+                            DocumentStore.UndoManager.setCombineCommands(false);
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+    }),
+
+    new Command("Fit Size", (DocumentStore: DocumentStoreClass) => {
+        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        if (
+            !(selectedPanel instanceof FlowEditor) &&
+            !(selectedPanel instanceof PagesNavigation)
+        ) {
+            return;
+        }
+
+        const selectedObject =
+            selectedPanel.selectedObject ||
+            (selectedPanel instanceof FlowEditor &&
+                selectedPanel.flowContext.document.flow.object);
+
+        if (selectedObject instanceof LayoutViewWidget) {
+            if (!selectedObject.layoutPage) {
+                return;
+            }
+
+            DocumentStore.updateObject(selectedObject, {
+                width: selectedObject.layoutPage.width,
+                height: selectedObject.layoutPage.height
+            });
+        } else if (
+            selectedObject instanceof Page ||
+            selectedObject instanceof ContainerWidget
+        ) {
+            let widgets;
+
+            if (selectedObject instanceof Page) {
+                widgets = selectedObject.components.filter(
+                    component => component instanceof Widget
+                );
+            } else {
+                widgets = selectedObject.widgets;
+            }
+
+            if (widgets.length > 0) {
+                const width = _max(
+                    widgets.map(widget => widget.left + widget.width)
+                );
+                const height = _max(
+                    widgets.map(widget => widget.top + widget.height)
+                );
+
+                DocumentStore.updateObject(selectedObject, {
+                    width: width,
+                    height: height
+                });
+            }
+        }
+    }),
+
+    new Command("Horizontal Align", (DocumentStore: DocumentStoreClass) => {
+        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        if (
+            !(selectedPanel instanceof FlowEditor) &&
+            !(selectedPanel instanceof PagesNavigation)
+        ) {
+            return;
+        }
+
+        const selectedObjects = selectedPanel.selectedObjects;
+        if (selectedObjects.length === 0) {
+            return;
+        }
+
+        const parent = getParent(selectedObjects[0]);
+
+        if (
+            !selectedObjects.find(
+                selectedObject =>
+                    !(selectedObject instanceof Widget) ||
+                    getParent(selectedObject) != parent
+            )
+        ) {
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "gap",
+                            type: "number"
+                        }
+                    ]
+                },
+
+                values: {
+                    gap: 10
+                }
+            })
+                .then(result => {
+                    const gap = result.values.gap;
+
+                    let widgets = selectedObjects as Widget[];
+
+                    let left = _min(widgets.map(widget => widget.left));
+
+                    const top = _min(widgets.map(widget => widget.top));
+
+                    if (typeof left === "number" && typeof top === "number") {
+                        DocumentStore.UndoManager.setCombineCommands(true);
+
+                        widgets
+                            .slice()
+                            .sort((a, b) => a.left - b.left)
+                            .forEach(widget => {
+                                DocumentStore.updateObject(widget, {
+                                    left: left,
+                                    top: top
+                                });
+                                left += widget.width + gap;
+                            });
+
+                        DocumentStore.UndoManager.setCombineCommands(false);
+                    }
+                })
+                .catch(() => {});
+        }
+    }),
+
+    new Command("Vertical Align", (DocumentStore: DocumentStoreClass) => {
+        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        if (
+            !(selectedPanel instanceof FlowEditor) &&
+            !(selectedPanel instanceof PagesNavigation)
+        ) {
+            return;
+        }
+
+        const selectedObjects = selectedPanel.selectedObjects;
+        if (selectedObjects.length === 0) {
+            return;
+        }
+
+        const parent = getParent(selectedObjects[0]);
+
+        if (
+            !selectedObjects.find(
+                selectedObject =>
+                    !(selectedObject instanceof Widget) ||
+                    getParent(selectedObject) != parent
+            )
+        ) {
+            showGenericDialog({
+                dialogDefinition: {
+                    fields: [
+                        {
+                            name: "gap",
+                            type: "number"
+                        }
+                    ]
+                },
+
+                values: {
+                    gap: 10
+                }
+            })
+                .then(result => {
+                    const gap = result.values.gap;
+
+                    let widgets = selectedObjects as Widget[];
+
+                    const left = _min(widgets.map(widget => widget.left));
+
+                    let top = _min(widgets.map(widget => widget.top));
+
+                    if (typeof left === "number" && typeof top === "number") {
+                        DocumentStore.UndoManager.setCombineCommands(true);
+
+                        widgets
+                            .slice()
+                            .sort((a, b) => a.top - b.top)
+                            .forEach(widget => {
+                                DocumentStore.updateObject(widget, {
+                                    left: left,
+                                    top: top
+                                });
+                                top += widget.height + gap;
+                            });
+
+                        DocumentStore.UndoManager.setCombineCommands(false);
+                    }
+                })
+                .catch(() => {});
+        }
+    })
+];

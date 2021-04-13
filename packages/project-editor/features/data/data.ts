@@ -43,8 +43,6 @@ export class DataItem extends EezObject {
     @observable defaultMaxValue: number;
     @observable usedIn?: string[];
 
-    @observable _value: any;
-
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -158,6 +156,7 @@ export function findDataItem(project: Project, dataItemName: string) {
 
 export class DataContext implements IDataContext {
     @observable localVariables: Map<string, any> | undefined = undefined;
+    @observable dataItemValues: Map<string, any>;
 
     constructor(
         public project: Project,
@@ -166,6 +165,9 @@ export class DataContext implements IDataContext {
         localVariables?: Map<string, any>
     ) {
         this.localVariables = localVariables;
+        if (!parentDataContext) {
+            this.dataItemValues = new Map<string, any>();
+        }
     }
 
     createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext {
@@ -181,17 +183,49 @@ export class DataContext implements IDataContext {
         );
     }
 
+    getDataItemValue(
+        dataItemId: string
+    ): {
+        dataItem: DataItem | undefined;
+        hasValue: boolean;
+        value: any;
+    } {
+        if (this.parentDataContext) {
+            return this.parentDataContext.getDataItemValue(dataItemId);
+        }
+
+        const dataItem = findDataItem(this.project, dataItemId);
+        if (dataItem) {
+            return {
+                dataItem,
+                hasValue: this.dataItemValues.has(dataItemId),
+                value: this.dataItemValues.get(dataItemId)
+            };
+        } else {
+            return { dataItem: undefined, hasValue: false, value: undefined };
+        }
+    }
+
+    @action
+    setDataItemValue(dataItemId: string, value: any) {
+        if (this.parentDataContext) {
+            this.parentDataContext.setDataItemValue(dataItemId, value);
+        } else {
+            const dataItem = findDataItem(this.project, dataItemId);
+            if (dataItem) {
+                this.dataItemValues.set(dataItemId, value);
+            } else {
+                throw `variable "${dataItemId}" not found`;
+            }
+        }
+    }
+
     @action
     set(dataItemId: string, value: any) {
         if (this.localVariables && this.localVariables.has(dataItemId)) {
             this.localVariables.set(dataItemId, value);
         } else {
-            const dataItem = findDataItem(this.project, dataItemId);
-            if (dataItem) {
-                dataItem._value = value;
-            } else {
-                throw `1variable "${dataItemId}" not found`;
-            }
+            this.setDataItemValue(dataItemId, value);
         }
     }
 
@@ -247,11 +281,13 @@ export class DataContext implements IDataContext {
         if (this.localVariables && this.localVariables.has(dataItemId)) {
             value = this.localVariables.get(dataItemId);
         } else {
-            let dataItem = this.findDataItem(dataItemId);
+            const { dataItem, hasValue, value: value_ } = this.getDataItemValue(
+                dataItemId
+            );
 
             if (dataItem) {
-                if (dataItem._value) {
-                    value = dataItem._value;
+                if (hasValue) {
+                    value = value_;
                 } else {
                     if (dataItem.defaultValue !== undefined) {
                         if (

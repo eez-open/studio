@@ -19,6 +19,7 @@ export const _uniqWith = _.uniqWith;
 export const _uniqBy = _.uniqBy;
 export const _zipObject = _.zipObject;
 export const _max = _.max;
+export const _min = _.min;
 export const _difference = _.difference;
 export const _flatten = _.flatten;
 export const _debounce = _.debounce;

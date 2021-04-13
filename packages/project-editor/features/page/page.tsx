@@ -153,6 +153,8 @@ export class Page extends Flow {
 
     @observable dataContextOverrides: string;
 
+    @observable css: string;
+
     @observable _geometry: ComponentGeometry;
 
     static classInfo = makeDerivedClassInfo(Flow.classInfo, {
@@ -233,6 +235,14 @@ export class Page extends Flow {
                 name: "isUsedAsCustomWidget",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup
+            },
+            {
+                name: "css",
+                type: PropertyType.String,
+                propertyGridGroup: styleGroup,
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType !==
+                    ProjectType.DASHBOARD
             }
         ],
         beforeLoadHook: (page: Page, jsObject: any) => {
@@ -416,7 +426,10 @@ export class Page extends Flow {
     }
 
     getClassName() {
-        return "";
+        return getProject(this).settings.general.projectType ===
+            ProjectType.DASHBOARD
+            ? this.css
+            : "";
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {

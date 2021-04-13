@@ -23,7 +23,8 @@ import type {
     IFlowContext,
     IEditorOptions,
     IResizeHandler,
-    IDataContext
+    IDataContext,
+    IRunningFlow
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
@@ -304,11 +305,12 @@ class ViewState implements IViewState {
 
 export class EditorFlowContext implements IFlowContext {
     @observable document: IDocument;
-    viewState: ViewState;
+    @observable viewState: ViewState;
     @observable editorOptions: IEditorOptions = {};
     @observable dragComponent: Component | undefined;
     @observable frontFace: boolean;
-    dataContext: IDataContext;
+    @observable dataContext: IDataContext;
+    @observable runningFlow: IRunningFlow | undefined;
 
     constructor(public containerId: string) {
         this.viewState = new ViewState(this, this.containerId);
@@ -333,9 +335,10 @@ export class EditorFlowContext implements IFlowContext {
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
+        frontFace: boolean,
+        runningFlow: IRunningFlow | undefined,
         options?: IEditorOptions,
-        filterSnapLines?: (node: ITreeObjectAdapter) => boolean,
-        frontFace?: boolean
+        filterSnapLines?: (node: ITreeObjectAdapter) => boolean
     ) {
         const deselectAllObjects =
             this.document?.flow.object !== document?.flow.object;
@@ -351,14 +354,15 @@ export class EditorFlowContext implements IFlowContext {
             this.viewState.deselectAllObjects();
         }
 
+        this.frontFace = frontFace;
+        this.runningFlow = runningFlow;
+
         const newOptions = options || {};
         if (stringify(newOptions) !== stringify(this.editorOptions)) {
             this.editorOptions = newOptions;
         }
 
         this.editorOptions.filterSnapLines = filterSnapLines;
-
-        this.frontFace = frontFace ?? false;
 
         this.dataContext = this.document.DocumentStore.dataContext;
     }

@@ -42,6 +42,7 @@ export interface IHomeTab extends ITab {
     render(): JSX.Element;
     attention?: boolean;
     beforeAppClose?(): Promise<boolean>;
+    showCommandPalette?(): void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,6 +522,11 @@ export class ProjectEditorTab implements IHomeTab {
 
     beforeAppClose() {
         return this.DocumentStore.closeWindow();
+    }
+
+    @action
+    showCommandPalette() {
+        this.DocumentStore.UIStateStore.showCommandPalette = true;
     }
 }
 

@@ -65,6 +65,7 @@ import { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import { ContainerWidget } from "project-editor/flow/widgets";
 import { guid } from "eez-studio-shared/guid";
+import classNames from "classnames";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -619,8 +620,6 @@ export class Component extends EezObject {
         return "";
     }
 
-    onClick?: (flowContext: IFlowContext) => void = undefined;
-
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
 
     onStart(runningFlow: IRunningFlow) {}
@@ -632,14 +631,22 @@ export class Component extends EezObject {
 export class Widget extends Component {
     @observable data?: string;
     @observable action?: string;
-
     @observable resizing: IResizing;
+    @observable className: string;
 
     static classInfo: ClassInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
             makeDataPropertyInfo("data"),
-            makeActionPropertyInfo("action")
+            makeActionPropertyInfo("action"),
+            {
+                name: "className",
+                type: PropertyType.String,
+                propertyGridGroup: styleGroup,
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getProject(object).settings.general.projectType !==
+                    ProjectType.DASHBOARD
+            }
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -1043,7 +1050,7 @@ export class Widget extends Component {
     }
 
     getClassName() {
-        return "eez-widget-component";
+        return classNames("eez-widget-component", this.type, this.className);
     }
 
     render(flowContext: IFlowContext): React.ReactNode {
@@ -1095,20 +1102,9 @@ export class Widget extends Component {
 
 export class EmbeddedWidget extends Widget {
     @observable style: Style;
-    @observable className: string;
 
     static classInfo: ClassInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [
-            makeStylePropertyInfo("style", "Normal style"),
-            {
-                name: "className",
-                type: PropertyType.String,
-                propertyGridGroup: styleGroup,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType !==
-                    ProjectType.DASHBOARD
-            }
-        ],
+        properties: [makeStylePropertyInfo("style", "Normal style")],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "style");

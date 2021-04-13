@@ -118,6 +118,7 @@ export class ButtonAction extends React.Component<{
     iconSize?: number;
     title: string;
     onClick?: (event: any) => void;
+    selected?: boolean;
     enabled?: boolean;
     className?: string;
     style?: React.CSSProperties;
