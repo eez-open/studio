@@ -154,19 +154,27 @@ export class PageEditor extends EditorComponent implements IPanel {
     }
 
     cutSelection() {
-        this.treeAdapter.cutSelection();
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.cutSelection();
+        }
     }
 
     copySelection() {
-        this.treeAdapter.copySelection();
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.copySelection();
+        }
     }
 
     pasteSelection() {
-        this.treeAdapter.pasteSelection();
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.pasteSelection();
+        }
     }
 
     deleteSelection() {
-        this.treeAdapter.deleteSelection();
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.deleteSelection();
+        }
     }
 
     render() {
@@ -211,11 +219,11 @@ export class PageEditor extends EditorComponent implements IPanel {
                                             : "none"
                                 }}
                             >
-                                {this.context.RuntimeStore.isRuntimeMode ? (
+                                {this.pageTabState.isRuntime ? (
                                     <FlowViewer
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItemFrontFace
+                                                .componentContainerDisplayItemRuntimeFrontFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -226,7 +234,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     <FlowEditor
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItemFrontFace
+                                                .componentContainerDisplayItemEditorFrontFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -245,11 +253,11 @@ export class PageEditor extends EditorComponent implements IPanel {
                                             : "none"
                                 }}
                             >
-                                {this.context.RuntimeStore.isRuntimeMode ? (
+                                {this.pageTabState.isRuntime ? (
                                     <FlowViewer
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItemBackFace
+                                                .componentContainerDisplayItemRuntimeBackFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -260,7 +268,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     <FlowEditor
                                         widgetContainer={
                                             this.pageTabState
-                                                .componentContainerDisplayItemBackFace
+                                                .componentContainerDisplayItemEditorBackFace
                                         }
                                         transitionIsActive={
                                             this.transitionIsActive
@@ -303,38 +311,69 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
 
 export class PageTabState implements IEditorState {
     page: Page;
-    componentContainerDisplayItemFrontFace: ITreeObjectAdapter;
-    componentContainerDisplayItemBackFace: ITreeObjectAdapter;
+    componentContainerDisplayItemEditorFrontFace: ITreeObjectAdapter;
+    componentContainerDisplayItemEditorBackFace: ITreeObjectAdapter;
+    componentContainerDisplayItemRuntimeFrontFace: ITreeObjectAdapter;
+    componentContainerDisplayItemRuntimeBackFace: ITreeObjectAdapter;
+
+    @computed get DocumentStore() {
+        return getDocumentStore(this.page);
+    }
+
+    @computed get isRuntime() {
+        return this.DocumentStore.RuntimeStore.isRuntimeMode;
+    }
 
     @computed get frontFace() {
-        return getDocumentStore(this.page).UIStateStore.pageFrontFace;
+        return this.isRuntime
+            ? this.DocumentStore.UIStateStore.pageRuntimeFrontFace
+            : this.DocumentStore.UIStateStore.pageEditorFrontFace;
     }
 
     set frontFace(frontFace: boolean) {
-        runInAction(
-            () =>
-                (getDocumentStore(
-                    this.page
-                ).UIStateStore.pageFrontFace = frontFace)
-        );
+        runInAction(() => {
+            if (this.isRuntime) {
+                this.DocumentStore.UIStateStore.pageRuntimeFrontFace = frontFace;
+            } else {
+                this.DocumentStore.UIStateStore.pageEditorFrontFace = frontFace;
+            }
+        });
     }
 
     constructor(object: IEezObject) {
         this.page = object as Page;
-        this.componentContainerDisplayItemFrontFace = new PageTreeObjectAdapter(
+
+        this.componentContainerDisplayItemEditorFrontFace = new PageTreeObjectAdapter(
             this.page,
             true
         );
-        this.componentContainerDisplayItemBackFace = new PageTreeObjectAdapter(
+
+        this.componentContainerDisplayItemEditorBackFace = new PageTreeObjectAdapter(
+            this.page,
+            false
+        );
+
+        this.componentContainerDisplayItemRuntimeFrontFace = new PageTreeObjectAdapter(
+            this.page,
+            true
+        );
+
+        this.componentContainerDisplayItemRuntimeBackFace = new PageTreeObjectAdapter(
             this.page,
             false
         );
     }
 
     @computed get componentContainerDisplayItem() {
+        if (this.isRuntime) {
+            return this.frontFace
+                ? this.componentContainerDisplayItemRuntimeFrontFace
+                : this.componentContainerDisplayItemRuntimeBackFace;
+        }
+
         return this.frontFace
-            ? this.componentContainerDisplayItemFrontFace
-            : this.componentContainerDisplayItemBackFace;
+            ? this.componentContainerDisplayItemEditorFrontFace
+            : this.componentContainerDisplayItemEditorBackFace;
     }
 
     @computed
@@ -348,11 +387,27 @@ export class PageTabState implements IEditorState {
     }
 
     loadState(state: any) {
-        this.componentContainerDisplayItem.loadState(state);
+        this.componentContainerDisplayItemEditorFrontFace.loadState(
+            state.editorFront
+        );
+        this.componentContainerDisplayItemEditorBackFace.loadState(
+            state.editorBack
+        );
+        this.componentContainerDisplayItemRuntimeFrontFace.loadState(
+            state.runtimeFront
+        );
+        this.componentContainerDisplayItemRuntimeBackFace.loadState(
+            state.runtimeBack
+        );
     }
 
     saveState() {
-        return this.componentContainerDisplayItem.saveState();
+        return {
+            editorFront: this.componentContainerDisplayItemEditorFrontFace.saveState(),
+            editorBack: this.componentContainerDisplayItemEditorBackFace.saveState(),
+            runtimeFront: this.componentContainerDisplayItemRuntimeFrontFace.saveState(),
+            runtimeBack: this.componentContainerDisplayItemRuntimeBackFace.saveState()
+        };
     }
 
     @action
@@ -456,8 +511,14 @@ export class PagesNavigation extends NavigationComponent {
             <ListNavigation
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
+                editable={!this.context.RuntimeStore.isRuntimeMode}
+                filter={(page: Page) =>
+                    !this.context.RuntimeStore.isRuntimeMode ||
+                    !page.isUsedAsCustomWidget
+                }
             />
         );
+
         const navigation = this.context.RuntimeStore.isRuntimeMode ? (
             listNavigation
         ) : (

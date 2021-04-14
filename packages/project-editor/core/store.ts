@@ -797,7 +797,8 @@ class UIStateStoreClass {
     @observable searchMatchCase: boolean;
     @observable searchMatchWholeWord: boolean;
     @observable activeOutputSection = Section.CHECKS;
-    @observable pageFrontFace: boolean = true;
+    @observable pageEditorFrontFace: boolean = false;
+    @observable pageRuntimeFrontFace: boolean = true;
     @observable showCommandPalette: boolean = false;
 
     dispose1: mobx.IReactionDisposer;
@@ -855,7 +856,8 @@ class UIStateStoreClass {
         this.activeOutputSection =
             uiState.activeOutputSection ?? Section.CHECKS;
         this.loadObjects(uiState.objects);
-        this.pageFrontFace = uiState.pageFrontFace;
+        this.pageEditorFrontFace = uiState.pageEditorFrontFace;
+        this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
     }
 
     @computed
@@ -891,7 +893,8 @@ class UIStateStoreClass {
             features: this.featuresJS,
             objects: this.objectsJS,
             activeOutputSection: this.activeOutputSection,
-            pageFrontFace: this.pageFrontFace
+            pageEditorFrontFace: this.pageEditorFrontFace,
+            pageRuntimeFrontFace: this.pageRuntimeFrontFace
         };
     }
 
