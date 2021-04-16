@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed } from "mobx";
+import { observable, computed, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -1027,25 +1027,39 @@ export class LayoutViewWidget extends EmbeddedWidget {
         );
 
         if (page) {
-            const layoutRunningFlow = runningFlow.getRunningFlowByComponent(
-                this
-            );
-            if (layoutRunningFlow) {
-                const componentState = runningFlow.getComponentState(this);
-                for (let [input, inputData] of componentState.inputsData) {
-                    for (let component of page.components) {
-                        if (component instanceof InputActionComponent) {
-                            if (component.wireID === input) {
-                                layoutRunningFlow?.propagateValue(
-                                    component,
-                                    "@seqout",
-                                    inputData.value
-                                );
-                            }
+            let layoutRunningFlow = runningFlow.getRunningFlowByComponent(this);
+
+            if (!layoutRunningFlow) {
+                runInAction(() => {
+                    layoutRunningFlow = new RunningFlow(
+                        runningFlow.RuntimeStore,
+                        page,
+                        runningFlow,
+                        this
+                    );
+
+                    runningFlow.runningFlows.push(layoutRunningFlow);
+
+                    layoutRunningFlow.start();
+                });
+            }
+
+            const componentState = runningFlow.getComponentState(this);
+            for (let [input, inputData] of componentState.inputsData) {
+                for (let component of page.components) {
+                    if (component instanceof InputActionComponent) {
+                        if (component.wireID === input) {
+                            layoutRunningFlow?.propagateValue(
+                                component,
+                                "@seqout",
+                                inputData.value
+                            );
                         }
                     }
                 }
             }
+
+            componentState.inputsData.clear();
         }
 
         return undefined;

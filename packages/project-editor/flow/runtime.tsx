@@ -215,10 +215,6 @@ export class RuntimeStoreClass {
         this.pumpTimeoutId = setTimeout(this.pumpQueue);
     };
 
-    isComponentReadyToRun(runningFlow: RunningFlow, component: Component) {
-        return false;
-    }
-
     @action
     executeWidgetAction(flowContext: IFlowContext, widget: Widget) {
         if (this.isStopped) {
@@ -462,30 +458,13 @@ class ComponentState {
                 value: null
             }
         });
-
-        if (this.component instanceof LayoutViewWidget) {
-            const page = this.component.getLayoutPage(
-                this.runningFlow.RuntimeStore.DocumentStore.dataContext
-            );
-
-            if (page) {
-                const runningFlow = new RunningFlow(
-                    this.runningFlow.RuntimeStore,
-                    page,
-                    this.runningFlow,
-                    this.component
-                );
-
-                runInAction(() => {
-                    this.runningFlow.runningFlows.push(runningFlow);
-                });
-
-                runningFlow.start();
-            }
-        }
     }
 
     isReadyToRun() {
+        if (this.component instanceof LayoutViewWidget) {
+            return this.inputsData.size > 0;
+        }
+
         if (
             this.runningFlow.flow.connectionLines.find(
                 connectionLine =>
@@ -577,9 +556,10 @@ class ComponentState {
 
         this.runningFlow.RuntimeStore.onTaskExecuted();
 
-        if (this.component instanceof LayoutViewWidget) {
-        } else if (this.component instanceof CallActionActionComponent) {
-        } else {
+        if (
+            !(this.component instanceof LayoutViewWidget) &&
+            !(this.component instanceof CallActionActionComponent)
+        ) {
             this.runningFlow.flow.connectionLines
                 .filter(
                     connectionLine =>
