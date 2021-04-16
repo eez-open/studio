@@ -66,6 +66,9 @@ export class Draggable {
             return;
         }
 
+        e.preventDefault();
+        e.stopPropagation();
+
         this.element.addEventListener("pointerup", this.onPointerUp);
         this.element.addEventListener("pointercancel", this.onPointerCancel);
 

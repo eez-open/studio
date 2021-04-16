@@ -166,6 +166,14 @@ ipcMain.on("readyToClose", (event: any) => {
     }
 });
 
+ipcMain.on("reload", (event: any) => {
+    const window = findWindowByWebContents(event.sender);
+    if (window) {
+        window.browserWindow.webContents.reload();
+        window.browserWindow.webContents.clearHistory();
+    }
+});
+
 app.on(
     "browser-window-focus",
     function (event: Electron.Event, browserWindow: Electron.BrowserWindow) {

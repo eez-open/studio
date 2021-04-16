@@ -50,7 +50,7 @@ EEZStudio.electron.ipcRenderer.on("beforeClose", async () => {
 
 EEZStudio.electron.ipcRenderer.on("reload", async () => {
     if (await beforeAppClose()) {
-        window.location.reload();
+        EEZStudio.electron.ipcRenderer.send("reload");
     }
 });
 

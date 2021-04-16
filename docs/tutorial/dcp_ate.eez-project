@@ -4,7 +4,7 @@
       "projectVersion": "v2",
       "projectType": "dashboard",
       "imports": [],
-      "css": ".page {\n    background-color: #fafafa;\n}\n\n.main_page {\n    border: 1px solid #eee;\n}\n\n.pane {\n    box-shadow: rgba(132, 132, 132, 0.2) 0px 0px 10px 4px;\n    background-color: white;\n}\n\n.instrument_title {\n    font-weight: 600;\n    font-size: 120%;\n    color: #007bff;\n}\n\n.slot_title_wrapper {\n    border-bottom: 1px solid #ddd;\n}\n\n.slot_title, .slot_title_number {\n    font-weight: 600;\n    font-size: 110%;\n    color: #17a2b8;\n}\n\n.text-error {\n    font-weight: 600;\n    color: rgb(127, 0, 0);\n}\n\n.text-success {\n    font-weight: 600;\n    color: rgb(0, 127, 0);\n}\n"
+      "css": ".page {\n    background-color: #fafafa;\n}\n\n.main_page {\n    border: 1px solid #eee;\n}\n\n.pane {\n    box-shadow: rgba(132, 132, 132, 0.2) 0px 0px 10px 4px;\n    background-color: white;\n}\n\n.instrument_title {\n    font-weight: 600;\n    font-size: 120%;\n    color: #007bff;\n}\n\n.slot_title_wrapper {\n    border-bottom: 1px solid #ddd;\n}\n\n.slot_title, .slot_title_number, .section-title {\n    font-weight: 600;\n    font-size: 110%;\n    color: #17a2b8;\n}\n\n.text-error {\n    font-weight: 600;\n    color: rgb(127, 0, 0);\n}\n\n.text-success {\n    font-weight: 600;\n    color: rgb(0, 127, 0);\n}\n"
     },
     "build": {
       "configurations": [
@@ -23,6 +23,22 @@
     {
       "name": "bb3_2",
       "type": "struct"
+    },
+    {
+      "name": "test_name",
+      "type": "string"
+    },
+    {
+      "name": "run_all_tests",
+      "type": "boolean"
+    },
+    {
+      "name": "test_start_time",
+      "type": "date"
+    },
+    {
+      "name": "test_module_id",
+      "type": "string"
     }
   ],
   "actions": [
@@ -30,11 +46,12 @@
       "components": [
         {
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
-          "left": -210,
-          "top": 72,
+          "left": 16,
+          "top": 123,
           "width": 0,
           "height": 0,
           "wireID": "e63ab18d-c017-483e-827d-b4582c088cab",
+          "catchError": true,
           "connection": "envox.hr",
           "sql": "INSERT INTO modules(serial, model, version, added_by, created_at) \nVALUES('{serial}', '{model}', '{version}', current_user, NOW())\nRETURNING *"
         },
@@ -72,8 +89,8 @@
         },
         {
           "type": "OutputActionComponent",
-          "left": 725,
-          "top": 20,
+          "left": 844,
+          "top": 236,
           "width": 0,
           "height": 0,
           "wireID": "1cfed536-419f-45b1-ebea-d97722e826cc",
@@ -99,7 +116,7 @@
         },
         {
           "type": "InputActionComponent",
-          "left": -750,
+          "left": -670,
           "top": -133,
           "width": 0,
           "height": 0,
@@ -108,8 +125,8 @@
         },
         {
           "type": "EvalActionComponent",
-          "left": 462,
-          "top": 7,
+          "left": 608,
+          "top": -3,
           "width": 0,
           "height": 0,
           "wireID": "9552acf4-8e37-41c7-cbee-78f18e567113",
@@ -117,6 +134,26 @@
             "value"
           ],
           "expression": "{value}.rows[0].id"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -425,
+          "top": 267,
+          "width": 0,
+          "height": 0,
+          "wireID": "e75f5310-da54-4818-8ade-3b41285673c4",
+          "action": "is_module_registered"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": -118,
+          "top": 234,
+          "width": 0,
+          "height": 0,
+          "wireID": "6d1986b0-5002-46b8-c49c-78136e21f19f",
+          "asInputProperties": [
+            "value"
+          ]
         }
       ],
       "connectionLines": [
@@ -130,12 +167,6 @@
           "source": "85054d0b-75bb-410d-ff67-9957c5b5dd9b",
           "output": "True",
           "target": "9295cb6f-5f50-487a-cc46-4ae3c5000f69",
-          "input": "@seqin"
-        },
-        {
-          "source": "85054d0b-75bb-410d-ff67-9957c5b5dd9b",
-          "output": "False",
-          "target": "e63ab18d-c017-483e-827d-b4582c088cab",
           "input": "@seqin"
         },
         {
@@ -191,6 +222,48 @@
           "output": "result",
           "target": "9552acf4-8e37-41c7-cbee-78f18e567113",
           "input": "value"
+        },
+        {
+          "source": "85054d0b-75bb-410d-ff67-9957c5b5dd9b",
+          "output": "False",
+          "target": "e75f5310-da54-4818-8ade-3b41285673c4",
+          "input": "@seqin"
+        },
+        {
+          "source": "93c12e8c-f701-4171-fb62-5c4075f1e043",
+          "output": "@seqout",
+          "target": "e75f5310-da54-4818-8ade-3b41285673c4",
+          "input": "80ca4312-fd33-4582-f204-a400afefef10"
+        },
+        {
+          "source": "acfa6054-32bf-495f-8182-6445dacafdb6",
+          "output": "@seqout",
+          "target": "e75f5310-da54-4818-8ade-3b41285673c4",
+          "input": "efdae745-ec6e-4eb6-c3fe-4ff4b985cc1f"
+        },
+        {
+          "source": "027b1223-1be0-454f-e54b-ee482db04174",
+          "output": "@seqout",
+          "target": "e75f5310-da54-4818-8ade-3b41285673c4",
+          "input": "1e6eb2cc-2875-48a4-9dd0-6c04e9a13131"
+        },
+        {
+          "source": "e75f5310-da54-4818-8ade-3b41285673c4",
+          "output": "8e8388cd-2b7c-41c3-fa5d-b5195623d925",
+          "target": "1cfed536-419f-45b1-ebea-d97722e826cc",
+          "input": "@seqin"
+        },
+        {
+          "source": "e75f5310-da54-4818-8ade-3b41285673c4",
+          "output": "cc2fff72-4e7b-49b1-94e9-b5b3b747db52",
+          "target": "6d1986b0-5002-46b8-c49c-78136e21f19f",
+          "input": "value"
+        },
+        {
+          "source": "6d1986b0-5002-46b8-c49c-78136e21f19f",
+          "output": "True",
+          "target": "e63ab18d-c017-483e-827d-b4582c088cab",
+          "input": "@seqin"
         }
       ],
       "name": "register_module",
@@ -692,6 +765,3515 @@
       ],
       "name": "save_calibration",
       "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "InputActionComponent",
+          "left": -433,
+          "top": -347,
+          "width": 0,
+          "height": 0,
+          "wireID": "e1838038-0328-40f7-b37f-467f45fdc01f",
+          "name": "Test name"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 340,
+          "top": -350,
+          "width": 0,
+          "height": 0,
+          "wireID": "7dfff2fe-f8a9-46ae-c292-5947fb588f53"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": -25,
+          "top": -350,
+          "width": 0,
+          "height": 0,
+          "wireID": "0d11d20b-f22d-459a-9521-4164398775a1",
+          "asInputProperties": [],
+          "variable": "run_all_tests",
+          "value": "true"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -217,
+          "top": -347,
+          "width": 0,
+          "height": 0,
+          "wireID": "3a1c1ac8-f2c0-4830-bac3-43febf4d2bea",
+          "action": "start_test"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "0d11d20b-f22d-459a-9521-4164398775a1",
+          "output": "@seqout",
+          "target": "7dfff2fe-f8a9-46ae-c292-5947fb588f53",
+          "input": "@seqin"
+        },
+        {
+          "source": "e1838038-0328-40f7-b37f-467f45fdc01f",
+          "output": "@seqout",
+          "target": "3a1c1ac8-f2c0-4830-bac3-43febf4d2bea",
+          "input": "e1838038-0328-40f7-b37f-467f45fdc01f"
+        },
+        {
+          "source": "3a1c1ac8-f2c0-4830-bac3-43febf4d2bea",
+          "output": "@seqout",
+          "target": "0d11d20b-f22d-459a-9521-4164398775a1",
+          "input": "@seqin"
+        }
+      ],
+      "name": "start_all_tests",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "InputActionComponent",
+          "left": -435,
+          "top": -361,
+          "width": 0,
+          "height": 0,
+          "wireID": "e1838038-0328-40f7-b37f-467f45fdc01f",
+          "name": "Test name"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 349,
+          "top": -364,
+          "width": 0,
+          "height": 0,
+          "wireID": "e93823c8-042d-4955-fd91-d83c6fb1e81c"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": -276,
+          "top": -361,
+          "width": 0,
+          "height": 0,
+          "wireID": "c656babf-ecd1-46d6-f989-927e0685ebce",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "test_name"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": 104,
+          "top": -364,
+          "width": 0,
+          "height": 0,
+          "wireID": "201188e8-5afb-4067-e18a-798e63d45798",
+          "variable": "run_all_tests",
+          "value": "false"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": -108,
+          "top": -364,
+          "width": 0,
+          "height": 0,
+          "wireID": "b820190a-e695-4f05-87f8-2d44085ed3fd",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "test_start_time",
+          "value": ""
+        },
+        {
+          "type": "DateNowActionComponent",
+          "left": -255,
+          "top": -276,
+          "width": 0,
+          "height": 0,
+          "wireID": "47e7aa74-10a8-4fc8-eb3a-6981377c2169"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "e1838038-0328-40f7-b37f-467f45fdc01f",
+          "output": "@seqout",
+          "target": "c656babf-ecd1-46d6-f989-927e0685ebce",
+          "input": "value"
+        },
+        {
+          "source": "201188e8-5afb-4067-e18a-798e63d45798",
+          "output": "@seqout",
+          "target": "e93823c8-042d-4955-fd91-d83c6fb1e81c",
+          "input": "@seqin"
+        },
+        {
+          "source": "47e7aa74-10a8-4fc8-eb3a-6981377c2169",
+          "output": "value",
+          "target": "b820190a-e695-4f05-87f8-2d44085ed3fd",
+          "input": "value"
+        },
+        {
+          "source": "c656babf-ecd1-46d6-f989-927e0685ebce",
+          "output": "@seqout",
+          "target": "b820190a-e695-4f05-87f8-2d44085ed3fd",
+          "input": "@seqin"
+        },
+        {
+          "source": "b820190a-e695-4f05-87f8-2d44085ed3fd",
+          "output": "@seqout",
+          "target": "201188e8-5afb-4067-e18a-798e63d45798",
+          "input": "@seqin"
+        }
+      ],
+      "name": "start_test",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -436,
+          "top": -407,
+          "width": 0,
+          "height": 0,
+          "wireID": "1c549988-cb84-419c-c29f-d4425d2ccd46"
+        }
+      ],
+      "connectionLines": [],
+      "name": "end_test",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "OutputActionComponent",
+          "left": 13,
+          "top": -393,
+          "width": 0,
+          "height": 0,
+          "wireID": "4459249b-d362-4f4e-f111-85e739c0f2b0",
+          "name": "Initialization"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 13,
+          "top": -274,
+          "width": 0,
+          "height": 0,
+          "wireID": "5c2ed9a6-b1b4-4ac7-a3b0-d23d446cfa75",
+          "name": "Setup power channel"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 13,
+          "top": -156,
+          "width": 0,
+          "height": 0,
+          "wireID": "acafdbe3-6ba8-44c7-9106-fa741ca02599",
+          "name": "Check OCP trip"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 13,
+          "top": -41,
+          "width": 0,
+          "height": 0,
+          "wireID": "18c0aa56-d8cc-4708-dea5-b786a1b313fa",
+          "name": "Check Idle Power"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 13,
+          "top": 72,
+          "width": 0,
+          "height": 0,
+          "wireID": "6fce9787-f9a5-499d-8526-d2006b803163",
+          "name": "Module initialization"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 14,
+          "top": 180,
+          "width": 0,
+          "height": 0,
+          "wireID": "f67de019-336e-4a17-fc3f-a5c9cb7b05e0",
+          "name": "SPI device initialization"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 13,
+          "top": 290,
+          "width": 0,
+          "height": 0,
+          "wireID": "eb3b585c-1611-4689-e335-9536e845e8f9",
+          "name": "Check Output Voltage"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 15,
+          "top": 407,
+          "width": 0,
+          "height": 0,
+          "wireID": "7b196395-33e2-4d35-9c45-34a6c175be7a",
+          "name": "Check Output Current 60 mA"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 15,
+          "top": 528,
+          "width": 0,
+          "height": 0,
+          "wireID": "c2969165-c3ba-4e15-af56-65321e85afe9",
+          "name": "Check Output Current 25 mA"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 15,
+          "top": 645,
+          "width": 0,
+          "height": 0,
+          "wireID": "136fe2f9-b5e4-44e3-ac4f-ea67050c47d9",
+          "name": "Read temperature"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 15,
+          "top": 767,
+          "width": 0,
+          "height": 0,
+          "wireID": "75f199a8-eace-4451-b577-d851e8558978",
+          "name": "Check Output Current 2.5 A"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 12,
+          "top": 886,
+          "width": 0,
+          "height": 0,
+          "wireID": "9981219f-e78f-46d3-d223-d8e436031757",
+          "name": "Check Output Current 4.6 A"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 12,
+          "top": 1006,
+          "width": 0,
+          "height": 0,
+          "wireID": "0369ad37-3e65-4481-c554-f91c6cd286e2",
+          "name": "Check Temperature"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 12,
+          "top": 1110,
+          "width": 0,
+          "height": 0,
+          "wireID": "31be4a3b-b823-4ba1-e415-1bf865f3e1cb",
+          "name": "Cleanup"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 181,
+          "top": 1254,
+          "width": 0,
+          "height": 0,
+          "wireID": "da8644e9-d1dd-4379-9d3d-53ec4d6391a1",
+          "name": "Do next test"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": -64,
+          "top": 1241,
+          "width": 0,
+          "height": 0,
+          "wireID": "51e62018-a0f5-4877-b1a0-9e0aedc9958b",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -237,
+          "top": 1241,
+          "width": 0,
+          "height": 0,
+          "wireID": "150bf65e-420b-4523-bc4a-d6767710bd9d",
+          "variable": "run_all_tests"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 181,
+          "top": 1342,
+          "width": 0,
+          "height": 0,
+          "wireID": "cfac404e-a225-4c45-f16a-15f229959551",
+          "action": "end_test"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -542,
+          "top": -513,
+          "width": 0,
+          "height": 0,
+          "wireID": "b58e53b9-557f-4b5e-92ee-739816a1ee99"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -421,
+          "top": -393,
+          "width": 0,
+          "height": 0,
+          "wireID": "b42efca9-6a40-480e-cc2b-f83522b8c516",
+          "action": "basic_test_init"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -420,
+          "top": -274,
+          "width": 0,
+          "height": 0,
+          "wireID": "ad5ced5e-1a54-41be-a4b3-4e5a59e3da1b",
+          "action": "basic_test_setup"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -420,
+          "top": -156,
+          "width": 0,
+          "height": 0,
+          "wireID": "7b5ecf8c-794a-402a-c6a3-b81cacfc009e",
+          "action": "basic_test_check_ocp"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -420,
+          "top": -41,
+          "width": 0,
+          "height": 0,
+          "wireID": "3fa5d3af-3f36-443c-e90a-958d4a21d48c",
+          "action": "basic_test_idle_power"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -420,
+          "top": 72,
+          "width": 0,
+          "height": 0,
+          "wireID": "36eff7cd-50ea-4a24-ce8c-08608a743489",
+          "action": "basic_test_module_init"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -419,
+          "top": 180,
+          "width": 0,
+          "height": 0,
+          "wireID": "f35232bf-5097-48b1-c1f6-64e7087024aa",
+          "action": "basic_test_spi_dev_init"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -420,
+          "top": 290,
+          "width": 0,
+          "height": 0,
+          "wireID": "25cd69e3-c3a1-4c39-9ad7-1b44811039ac",
+          "action": "basic_test_outp_volt"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -418,
+          "top": 407,
+          "width": 0,
+          "height": 0,
+          "wireID": "0136e189-bff0-46f3-cf75-8660a8841757",
+          "action": "basic_test_outp_curr_60mA"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -419,
+          "top": 528,
+          "width": 0,
+          "height": 0,
+          "wireID": "a7634080-ce25-40ed-90ec-8283bbddb47d",
+          "action": "basic_test_outp_curr_25mA"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -418,
+          "top": 645,
+          "width": 0,
+          "height": 0,
+          "wireID": "bbad7562-70de-4ac6-81b8-96baa34fd755",
+          "action": "basic_test_read_temp"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -418,
+          "top": 767,
+          "width": 0,
+          "height": 0,
+          "wireID": "787681a5-1cd1-42f9-ae94-8d30cb8d1806",
+          "action": "basic_test_outp_curr_2_5A"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -421,
+          "top": 886,
+          "width": 0,
+          "height": 0,
+          "wireID": "4ee8412b-3ab9-4b22-b87b-da02c5759225",
+          "action": "basic_test_outp_curr_4_6A"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -421,
+          "top": 1006,
+          "width": 0,
+          "height": 0,
+          "wireID": "6c101c07-99f2-43ae-958a-9b2f3655577d",
+          "action": "basic_test_temp"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -421,
+          "top": 1110,
+          "width": 0,
+          "height": 0,
+          "wireID": "f8ff7ca5-ce45-4213-b9aa-e9eba51a2c62",
+          "action": "basic_test_cleanup"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -186,
+          "top": -513,
+          "width": 0,
+          "height": 0,
+          "wireID": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "value": "\"-\""
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "150bf65e-420b-4523-bc4a-d6767710bd9d",
+          "output": "variable",
+          "target": "51e62018-a0f5-4877-b1a0-9e0aedc9958b",
+          "input": "value"
+        },
+        {
+          "source": "51e62018-a0f5-4877-b1a0-9e0aedc9958b",
+          "output": "True",
+          "target": "da8644e9-d1dd-4379-9d3d-53ec4d6391a1",
+          "input": "@seqin"
+        },
+        {
+          "source": "51e62018-a0f5-4877-b1a0-9e0aedc9958b",
+          "output": "False",
+          "target": "cfac404e-a225-4c45-f16a-15f229959551",
+          "input": "@seqin"
+        },
+        {
+          "source": "b42efca9-6a40-480e-cc2b-f83522b8c516",
+          "output": "130c803a-3803-48ca-e40c-4f12400d9cc2",
+          "target": "4459249b-d362-4f4e-f111-85e739c0f2b0",
+          "input": "@seqin"
+        },
+        {
+          "source": "ad5ced5e-1a54-41be-a4b3-4e5a59e3da1b",
+          "output": "f098c305-78f4-4cda-8b52-00ebe4fb109c",
+          "target": "5c2ed9a6-b1b4-4ac7-a3b0-d23d446cfa75",
+          "input": "@seqin"
+        },
+        {
+          "source": "7b5ecf8c-794a-402a-c6a3-b81cacfc009e",
+          "output": "0a603da5-6d6b-42b5-fea4-05973265383c",
+          "target": "acafdbe3-6ba8-44c7-9106-fa741ca02599",
+          "input": "@seqin"
+        },
+        {
+          "source": "3fa5d3af-3f36-443c-e90a-958d4a21d48c",
+          "output": "b37c02c2-b1d6-4965-e5d8-081474ed3bbc",
+          "target": "18c0aa56-d8cc-4708-dea5-b786a1b313fa",
+          "input": "@seqin"
+        },
+        {
+          "source": "f35232bf-5097-48b1-c1f6-64e7087024aa",
+          "output": "b844a37e-9083-4e24-ad8f-5c7e5a092a6d",
+          "target": "f67de019-336e-4a17-fc3f-a5c9cb7b05e0",
+          "input": "@seqin"
+        },
+        {
+          "source": "25cd69e3-c3a1-4c39-9ad7-1b44811039ac",
+          "output": "49a34be5-f4ff-4e63-deed-3657b9cf945d",
+          "target": "eb3b585c-1611-4689-e335-9536e845e8f9",
+          "input": "@seqin"
+        },
+        {
+          "source": "0136e189-bff0-46f3-cf75-8660a8841757",
+          "output": "3c33302c-c14f-4a32-d1fa-4745e59732e1",
+          "target": "7b196395-33e2-4d35-9c45-34a6c175be7a",
+          "input": "@seqin"
+        },
+        {
+          "source": "a7634080-ce25-40ed-90ec-8283bbddb47d",
+          "output": "c15d626f-a9a0-4aa6-dc06-eb6ad9d493af",
+          "target": "c2969165-c3ba-4e15-af56-65321e85afe9",
+          "input": "@seqin"
+        },
+        {
+          "source": "bbad7562-70de-4ac6-81b8-96baa34fd755",
+          "output": "ed630d2a-ba2c-4d5a-b686-fd4e7ed24f63",
+          "target": "136fe2f9-b5e4-44e3-ac4f-ea67050c47d9",
+          "input": "@seqin"
+        },
+        {
+          "source": "787681a5-1cd1-42f9-ae94-8d30cb8d1806",
+          "output": "5fe014bc-6cc9-4105-dc62-1a6eabc24318",
+          "target": "75f199a8-eace-4451-b577-d851e8558978",
+          "input": "@seqin"
+        },
+        {
+          "source": "4ee8412b-3ab9-4b22-b87b-da02c5759225",
+          "output": "7020f278-7adf-4536-b703-138bd61b24b6",
+          "target": "9981219f-e78f-46d3-d223-d8e436031757",
+          "input": "@seqin"
+        },
+        {
+          "source": "6c101c07-99f2-43ae-958a-9b2f3655577d",
+          "output": "96a402e8-13d5-4e58-fe2c-b514c4eda7e0",
+          "target": "0369ad37-3e65-4481-c554-f91c6cd286e2",
+          "input": "@seqin"
+        },
+        {
+          "source": "f8ff7ca5-ce45-4213-b9aa-e9eba51a2c62",
+          "output": "e740603e-1dfc-4b0e-d0aa-790ae1df7370",
+          "target": "31be4a3b-b823-4ba1-e415-1bf865f3e1cb",
+          "input": "@seqin"
+        },
+        {
+          "source": "b42efca9-6a40-480e-cc2b-f83522b8c516",
+          "output": "@seqout",
+          "target": "ad5ced5e-1a54-41be-a4b3-4e5a59e3da1b",
+          "input": "@seqin"
+        },
+        {
+          "source": "ad5ced5e-1a54-41be-a4b3-4e5a59e3da1b",
+          "output": "@seqout",
+          "target": "7b5ecf8c-794a-402a-c6a3-b81cacfc009e",
+          "input": "@seqin"
+        },
+        {
+          "source": "7b5ecf8c-794a-402a-c6a3-b81cacfc009e",
+          "output": "@seqout",
+          "target": "3fa5d3af-3f36-443c-e90a-958d4a21d48c",
+          "input": "@seqin"
+        },
+        {
+          "source": "3fa5d3af-3f36-443c-e90a-958d4a21d48c",
+          "output": "@seqout",
+          "target": "36eff7cd-50ea-4a24-ce8c-08608a743489",
+          "input": "@seqin"
+        },
+        {
+          "source": "36eff7cd-50ea-4a24-ce8c-08608a743489",
+          "output": "@seqout",
+          "target": "f35232bf-5097-48b1-c1f6-64e7087024aa",
+          "input": "@seqin"
+        },
+        {
+          "source": "f35232bf-5097-48b1-c1f6-64e7087024aa",
+          "output": "@seqout",
+          "target": "25cd69e3-c3a1-4c39-9ad7-1b44811039ac",
+          "input": "@seqin"
+        },
+        {
+          "source": "25cd69e3-c3a1-4c39-9ad7-1b44811039ac",
+          "output": "@seqout",
+          "target": "0136e189-bff0-46f3-cf75-8660a8841757",
+          "input": "@seqin"
+        },
+        {
+          "source": "0136e189-bff0-46f3-cf75-8660a8841757",
+          "output": "@seqout",
+          "target": "a7634080-ce25-40ed-90ec-8283bbddb47d",
+          "input": "@seqin"
+        },
+        {
+          "source": "a7634080-ce25-40ed-90ec-8283bbddb47d",
+          "output": "@seqout",
+          "target": "bbad7562-70de-4ac6-81b8-96baa34fd755",
+          "input": "@seqin"
+        },
+        {
+          "source": "bbad7562-70de-4ac6-81b8-96baa34fd755",
+          "output": "@seqout",
+          "target": "787681a5-1cd1-42f9-ae94-8d30cb8d1806",
+          "input": "@seqin"
+        },
+        {
+          "source": "787681a5-1cd1-42f9-ae94-8d30cb8d1806",
+          "output": "@seqout",
+          "target": "4ee8412b-3ab9-4b22-b87b-da02c5759225",
+          "input": "@seqin"
+        },
+        {
+          "source": "4ee8412b-3ab9-4b22-b87b-da02c5759225",
+          "output": "@seqout",
+          "target": "6c101c07-99f2-43ae-958a-9b2f3655577d",
+          "input": "@seqin"
+        },
+        {
+          "source": "6c101c07-99f2-43ae-958a-9b2f3655577d",
+          "output": "@seqout",
+          "target": "f8ff7ca5-ce45-4213-b9aa-e9eba51a2c62",
+          "input": "@seqin"
+        },
+        {
+          "source": "f8ff7ca5-ce45-4213-b9aa-e9eba51a2c62",
+          "output": "@seqout",
+          "target": "150bf65e-420b-4523-bc4a-d6767710bd9d",
+          "input": "@seqin"
+        },
+        {
+          "source": "36eff7cd-50ea-4a24-ce8c-08608a743489",
+          "output": "9e6b58bb-ae51-46d8-b3f1-5da5481ddb57",
+          "target": "6fce9787-f9a5-499d-8526-d2006b803163",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "4459249b-d362-4f4e-f111-85e739c0f2b0",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "5c2ed9a6-b1b4-4ac7-a3b0-d23d446cfa75",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "acafdbe3-6ba8-44c7-9106-fa741ca02599",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "18c0aa56-d8cc-4708-dea5-b786a1b313fa",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "6fce9787-f9a5-499d-8526-d2006b803163",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "f67de019-336e-4a17-fc3f-a5c9cb7b05e0",
+          "input": "@seqin"
+        },
+        {
+          "source": "b58e53b9-557f-4b5e-92ee-739816a1ee99",
+          "output": "@seqout",
+          "target": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "eb3b585c-1611-4689-e335-9536e845e8f9",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "7b196395-33e2-4d35-9c45-34a6c175be7a",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "c2969165-c3ba-4e15-af56-65321e85afe9",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "136fe2f9-b5e4-44e3-ac4f-ea67050c47d9",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "75f199a8-eace-4451-b577-d851e8558978",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "9981219f-e78f-46d3-d223-d8e436031757",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "0369ad37-3e65-4481-c554-f91c6cd286e2",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "value",
+          "target": "31be4a3b-b823-4ba1-e415-1bf865f3e1cb",
+          "input": "@seqin"
+        },
+        {
+          "source": "8b900115-669b-4050-a1ee-db268bff6c9a",
+          "output": "@seqout",
+          "target": "b42efca9-6a40-480e-cc2b-f83522b8c516",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -511,
+          "top": -444,
+          "width": 0,
+          "height": 0,
+          "wireID": "2370f102-7126-4d19-ba9b-534d8ae50140"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 268,
+          "top": -176,
+          "width": 0,
+          "height": 0,
+          "wireID": "6c6e1263-32e0-4791-a770-f1ea3bb1fed6"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -393,
+          "top": -368,
+          "width": 0,
+          "height": 0,
+          "wireID": "ad9819db-4d50-473d-b7b9-c487a2f4148e",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -75,
+          "top": -221,
+          "width": 0,
+          "height": 0,
+          "wireID": "7e16c03a-ea64-42e2-a321-12463d4d80fe",
+          "value": "\"Done\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -315,
+          "top": -207,
+          "width": 0,
+          "height": 0,
+          "wireID": "07a50cb8-bc1f-426d-e561-58f27c5d6ad5",
+          "action": "init_check"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 268,
+          "top": -338,
+          "width": 0,
+          "height": 0,
+          "wireID": "130c803a-3803-48ca-e40c-4f12400d9cc2",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "ad9819db-4d50-473d-b7b9-c487a2f4148e",
+          "output": "@seqout",
+          "target": "07a50cb8-bc1f-426d-e561-58f27c5d6ad5",
+          "input": "@seqin"
+        },
+        {
+          "source": "07a50cb8-bc1f-426d-e561-58f27c5d6ad5",
+          "output": "@seqout",
+          "target": "7e16c03a-ea64-42e2-a321-12463d4d80fe",
+          "input": "@seqin"
+        },
+        {
+          "source": "ad9819db-4d50-473d-b7b9-c487a2f4148e",
+          "output": "value",
+          "target": "130c803a-3803-48ca-e40c-4f12400d9cc2",
+          "input": "@seqin"
+        },
+        {
+          "source": "7e16c03a-ea64-42e2-a321-12463d4d80fe",
+          "output": "value",
+          "target": "130c803a-3803-48ca-e40c-4f12400d9cc2",
+          "input": "@seqin"
+        },
+        {
+          "source": "2370f102-7126-4d19-ba9b-534d8ae50140",
+          "output": "@seqout",
+          "target": "ad9819db-4d50-473d-b7b9-c487a2f4148e",
+          "input": "@seqin"
+        },
+        {
+          "source": "7e16c03a-ea64-42e2-a321-12463d4d80fe",
+          "output": "@seqout",
+          "target": "6c6e1263-32e0-4791-a770-f1ea3bb1fed6",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_init",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "f872edd3-2ecf-472e-cdda-20e6d5ecbc37"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 264,
+          "top": -136,
+          "width": 0,
+          "height": 0,
+          "wireID": "d2c6ea2d-d0ed-404a-fb91-42f0685653f3"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -337,
+          "top": -311,
+          "width": 0,
+          "height": 0,
+          "wireID": "39b671ac-1444-4b75-c4c5-8368adb4bec5",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 21,
+          "top": -212,
+          "width": 0,
+          "height": 0,
+          "wireID": "fd832d06-50e6-444b-b522-fd8cb7e2b813",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -154,
+          "top": -218,
+          "width": 0,
+          "height": 0,
+          "wireID": "9c78e243-ebb7-43c5-e454-3582516f4f21",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 215,
+          "top": -293,
+          "width": 0,
+          "height": 0,
+          "wireID": "f098c305-78f4-4cda-8b52-00ebe4fb109c",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "39b671ac-1444-4b75-c4c5-8368adb4bec5",
+          "output": "@seqout",
+          "target": "9c78e243-ebb7-43c5-e454-3582516f4f21",
+          "input": "@seqin"
+        },
+        {
+          "source": "9c78e243-ebb7-43c5-e454-3582516f4f21",
+          "output": "@seqout",
+          "target": "fd832d06-50e6-444b-b522-fd8cb7e2b813",
+          "input": "@seqin"
+        },
+        {
+          "source": "fd832d06-50e6-444b-b522-fd8cb7e2b813",
+          "output": "value",
+          "target": "f098c305-78f4-4cda-8b52-00ebe4fb109c",
+          "input": "@seqin"
+        },
+        {
+          "source": "39b671ac-1444-4b75-c4c5-8368adb4bec5",
+          "output": "value",
+          "target": "f098c305-78f4-4cda-8b52-00ebe4fb109c",
+          "input": "@seqin"
+        },
+        {
+          "source": "f872edd3-2ecf-472e-cdda-20e6d5ecbc37",
+          "output": "@seqout",
+          "target": "39b671ac-1444-4b75-c4c5-8368adb4bec5",
+          "input": "@seqin"
+        },
+        {
+          "source": "fd832d06-50e6-444b-b522-fd8cb7e2b813",
+          "output": "value",
+          "target": "d2c6ea2d-d0ed-404a-fb91-42f0685653f3",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_setup",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "21281022-45d1-4d9c-baaa-69e45d1a811e"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 264,
+          "top": -107,
+          "width": 0,
+          "height": 0,
+          "wireID": "934675f6-0356-4f7e-963d-53e64f5e6c31"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "d0acc24c-d747-4247-8118-c507b6d68d5e",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 24,
+          "top": -192,
+          "width": 0,
+          "height": 0,
+          "wireID": "98bbe911-0c47-4355-dd7c-140cbf194f4f",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "4af8a983-d1be-4d9a-dc99-3bf04777e6e6",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "0a603da5-6d6b-42b5-fea4-05973265383c",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "d0acc24c-d747-4247-8118-c507b6d68d5e",
+          "output": "@seqout",
+          "target": "4af8a983-d1be-4d9a-dc99-3bf04777e6e6",
+          "input": "@seqin"
+        },
+        {
+          "source": "4af8a983-d1be-4d9a-dc99-3bf04777e6e6",
+          "output": "@seqout",
+          "target": "98bbe911-0c47-4355-dd7c-140cbf194f4f",
+          "input": "@seqin"
+        },
+        {
+          "source": "98bbe911-0c47-4355-dd7c-140cbf194f4f",
+          "output": "value",
+          "target": "0a603da5-6d6b-42b5-fea4-05973265383c",
+          "input": "@seqin"
+        },
+        {
+          "source": "d0acc24c-d747-4247-8118-c507b6d68d5e",
+          "output": "value",
+          "target": "0a603da5-6d6b-42b5-fea4-05973265383c",
+          "input": "@seqin"
+        },
+        {
+          "source": "21281022-45d1-4d9c-baaa-69e45d1a811e",
+          "output": "@seqout",
+          "target": "d0acc24c-d747-4247-8118-c507b6d68d5e",
+          "input": "@seqin"
+        },
+        {
+          "source": "98bbe911-0c47-4355-dd7c-140cbf194f4f",
+          "output": "value",
+          "target": "934675f6-0356-4f7e-963d-53e64f5e6c31",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_check_ocp",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "7a15570e-142c-4feb-b3c9-6ef6f32bae92"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 244,
+          "top": -98,
+          "width": 0,
+          "height": 0,
+          "wireID": "2d6d10dd-7e6e-4857-97dd-f845660ac4d2"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "1b9759c0-f747-436c-d3a0-c4370a5832f3",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 18,
+          "top": -176,
+          "width": 0,
+          "height": 0,
+          "wireID": "6daeae4d-b9d4-4878-c08a-628ec47eb6f5",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "aa0d3865-7dc0-48dd-b451-b69607c29c8d",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "b37c02c2-b1d6-4965-e5d8-081474ed3bbc",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "1b9759c0-f747-436c-d3a0-c4370a5832f3",
+          "output": "@seqout",
+          "target": "aa0d3865-7dc0-48dd-b451-b69607c29c8d",
+          "input": "@seqin"
+        },
+        {
+          "source": "aa0d3865-7dc0-48dd-b451-b69607c29c8d",
+          "output": "@seqout",
+          "target": "6daeae4d-b9d4-4878-c08a-628ec47eb6f5",
+          "input": "@seqin"
+        },
+        {
+          "source": "6daeae4d-b9d4-4878-c08a-628ec47eb6f5",
+          "output": "value",
+          "target": "b37c02c2-b1d6-4965-e5d8-081474ed3bbc",
+          "input": "@seqin"
+        },
+        {
+          "source": "1b9759c0-f747-436c-d3a0-c4370a5832f3",
+          "output": "value",
+          "target": "b37c02c2-b1d6-4965-e5d8-081474ed3bbc",
+          "input": "@seqin"
+        },
+        {
+          "source": "7a15570e-142c-4feb-b3c9-6ef6f32bae92",
+          "output": "@seqout",
+          "target": "1b9759c0-f747-436c-d3a0-c4370a5832f3",
+          "input": "@seqin"
+        },
+        {
+          "source": "6daeae4d-b9d4-4878-c08a-628ec47eb6f5",
+          "output": "value",
+          "target": "2d6d10dd-7e6e-4857-97dd-f845660ac4d2",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_idle_power",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "587405c2-fdfe-4e4a-eb2b-cec4c36a399b"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 213,
+          "top": -115,
+          "width": 0,
+          "height": 0,
+          "wireID": "98d12cea-4aaf-4fba-9879-1b9bea84eb14"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "a6f03f35-9714-46b0-8a2a-25cd37d05135",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 31,
+          "top": -176,
+          "width": 0,
+          "height": 0,
+          "wireID": "3dd314a5-7e41-4d1e-8e49-b57f2c6d7ec1",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "9dba0989-641d-4e8c-c4ee-4c85d0504a05",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "9e6b58bb-ae51-46d8-b3f1-5da5481ddb57",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "a6f03f35-9714-46b0-8a2a-25cd37d05135",
+          "output": "@seqout",
+          "target": "9dba0989-641d-4e8c-c4ee-4c85d0504a05",
+          "input": "@seqin"
+        },
+        {
+          "source": "9dba0989-641d-4e8c-c4ee-4c85d0504a05",
+          "output": "@seqout",
+          "target": "3dd314a5-7e41-4d1e-8e49-b57f2c6d7ec1",
+          "input": "@seqin"
+        },
+        {
+          "source": "3dd314a5-7e41-4d1e-8e49-b57f2c6d7ec1",
+          "output": "value",
+          "target": "9e6b58bb-ae51-46d8-b3f1-5da5481ddb57",
+          "input": "@seqin"
+        },
+        {
+          "source": "a6f03f35-9714-46b0-8a2a-25cd37d05135",
+          "output": "value",
+          "target": "9e6b58bb-ae51-46d8-b3f1-5da5481ddb57",
+          "input": "@seqin"
+        },
+        {
+          "source": "587405c2-fdfe-4e4a-eb2b-cec4c36a399b",
+          "output": "@seqout",
+          "target": "a6f03f35-9714-46b0-8a2a-25cd37d05135",
+          "input": "@seqin"
+        },
+        {
+          "source": "3dd314a5-7e41-4d1e-8e49-b57f2c6d7ec1",
+          "output": "value",
+          "target": "98d12cea-4aaf-4fba-9879-1b9bea84eb14",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_module_init",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "6fe88340-d65c-4bd6-d55c-d7e3648c5ffd"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 289,
+          "top": -122,
+          "width": 0,
+          "height": 0,
+          "wireID": "517671e9-6dbc-4672-e40b-fb1d8055e2d2"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "bc53ff77-a870-48c5-c62c-b77b6e7def39",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 31,
+          "top": -192,
+          "width": 0,
+          "height": 0,
+          "wireID": "bf53a4fe-3224-4ff7-cf85-20c2cf43d004",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "02ce894a-1b66-4f3a-edde-081fcfabeec6",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "b844a37e-9083-4e24-ad8f-5c7e5a092a6d",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "bc53ff77-a870-48c5-c62c-b77b6e7def39",
+          "output": "@seqout",
+          "target": "02ce894a-1b66-4f3a-edde-081fcfabeec6",
+          "input": "@seqin"
+        },
+        {
+          "source": "02ce894a-1b66-4f3a-edde-081fcfabeec6",
+          "output": "@seqout",
+          "target": "bf53a4fe-3224-4ff7-cf85-20c2cf43d004",
+          "input": "@seqin"
+        },
+        {
+          "source": "bf53a4fe-3224-4ff7-cf85-20c2cf43d004",
+          "output": "value",
+          "target": "b844a37e-9083-4e24-ad8f-5c7e5a092a6d",
+          "input": "@seqin"
+        },
+        {
+          "source": "bc53ff77-a870-48c5-c62c-b77b6e7def39",
+          "output": "value",
+          "target": "b844a37e-9083-4e24-ad8f-5c7e5a092a6d",
+          "input": "@seqin"
+        },
+        {
+          "source": "6fe88340-d65c-4bd6-d55c-d7e3648c5ffd",
+          "output": "@seqout",
+          "target": "bc53ff77-a870-48c5-c62c-b77b6e7def39",
+          "input": "@seqin"
+        },
+        {
+          "source": "bf53a4fe-3224-4ff7-cf85-20c2cf43d004",
+          "output": "value",
+          "target": "517671e9-6dbc-4672-e40b-fb1d8055e2d2",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_spi_dev_init",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "998b41d3-c152-4877-ddc2-d6480b7ad79f"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 265,
+          "top": -101,
+          "width": 0,
+          "height": 0,
+          "wireID": "a9ab8df3-5589-403a-a823-c04b758413da"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "cab54b7e-3210-4207-d472-2d2a5b11fc36",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 11,
+          "top": -162,
+          "width": 0,
+          "height": 0,
+          "wireID": "0a10d7ae-2a89-46a4-a86b-f1952fd6154c",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "056afe32-547d-4207-cafb-99d411bab7e6",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "49a34be5-f4ff-4e63-deed-3657b9cf945d",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "cab54b7e-3210-4207-d472-2d2a5b11fc36",
+          "output": "@seqout",
+          "target": "056afe32-547d-4207-cafb-99d411bab7e6",
+          "input": "@seqin"
+        },
+        {
+          "source": "056afe32-547d-4207-cafb-99d411bab7e6",
+          "output": "@seqout",
+          "target": "0a10d7ae-2a89-46a4-a86b-f1952fd6154c",
+          "input": "@seqin"
+        },
+        {
+          "source": "0a10d7ae-2a89-46a4-a86b-f1952fd6154c",
+          "output": "value",
+          "target": "49a34be5-f4ff-4e63-deed-3657b9cf945d",
+          "input": "@seqin"
+        },
+        {
+          "source": "cab54b7e-3210-4207-d472-2d2a5b11fc36",
+          "output": "value",
+          "target": "49a34be5-f4ff-4e63-deed-3657b9cf945d",
+          "input": "@seqin"
+        },
+        {
+          "source": "998b41d3-c152-4877-ddc2-d6480b7ad79f",
+          "output": "@seqout",
+          "target": "cab54b7e-3210-4207-d472-2d2a5b11fc36",
+          "input": "@seqin"
+        },
+        {
+          "source": "0a10d7ae-2a89-46a4-a86b-f1952fd6154c",
+          "output": "value",
+          "target": "a9ab8df3-5589-403a-a823-c04b758413da",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_outp_volt",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "dd88d562-6c3a-4bfe-c3bc-db614ce2a14e"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 276,
+          "top": -106,
+          "width": 0,
+          "height": 0,
+          "wireID": "cf5af154-f0c0-4864-d83e-a8c664f0672e"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "2773e918-7e52-4a37-b872-ebd2c7e58b4a",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 65,
+          "top": -167,
+          "width": 0,
+          "height": 0,
+          "wireID": "4d2d772f-ae74-4af4-dcea-5ea45771511b",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "f8f390ca-0535-4dc4-999c-15f5063ac84c",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "3c33302c-c14f-4a32-d1fa-4745e59732e1",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "2773e918-7e52-4a37-b872-ebd2c7e58b4a",
+          "output": "@seqout",
+          "target": "f8f390ca-0535-4dc4-999c-15f5063ac84c",
+          "input": "@seqin"
+        },
+        {
+          "source": "f8f390ca-0535-4dc4-999c-15f5063ac84c",
+          "output": "@seqout",
+          "target": "4d2d772f-ae74-4af4-dcea-5ea45771511b",
+          "input": "@seqin"
+        },
+        {
+          "source": "4d2d772f-ae74-4af4-dcea-5ea45771511b",
+          "output": "value",
+          "target": "3c33302c-c14f-4a32-d1fa-4745e59732e1",
+          "input": "@seqin"
+        },
+        {
+          "source": "2773e918-7e52-4a37-b872-ebd2c7e58b4a",
+          "output": "value",
+          "target": "3c33302c-c14f-4a32-d1fa-4745e59732e1",
+          "input": "@seqin"
+        },
+        {
+          "source": "dd88d562-6c3a-4bfe-c3bc-db614ce2a14e",
+          "output": "@seqout",
+          "target": "2773e918-7e52-4a37-b872-ebd2c7e58b4a",
+          "input": "@seqin"
+        },
+        {
+          "source": "4d2d772f-ae74-4af4-dcea-5ea45771511b",
+          "output": "value",
+          "target": "cf5af154-f0c0-4864-d83e-a8c664f0672e",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_outp_curr_60mA",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "0c428fca-1e71-438c-df11-7d3253fd7382"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 244,
+          "top": -98,
+          "width": 0,
+          "height": 0,
+          "wireID": "54ccefd4-5329-4381-8ae2-d3b8289ac7c0"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "ab63e314-870b-4a96-a3bd-87c6a241adbc",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 31,
+          "top": -181,
+          "width": 0,
+          "height": 0,
+          "wireID": "94a5c951-2a2f-4215-f5ed-01a51bb25929",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "566479a0-4751-4954-eb0d-96acef7996ad",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "c15d626f-a9a0-4aa6-dc06-eb6ad9d493af",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "ab63e314-870b-4a96-a3bd-87c6a241adbc",
+          "output": "@seqout",
+          "target": "566479a0-4751-4954-eb0d-96acef7996ad",
+          "input": "@seqin"
+        },
+        {
+          "source": "566479a0-4751-4954-eb0d-96acef7996ad",
+          "output": "@seqout",
+          "target": "94a5c951-2a2f-4215-f5ed-01a51bb25929",
+          "input": "@seqin"
+        },
+        {
+          "source": "94a5c951-2a2f-4215-f5ed-01a51bb25929",
+          "output": "value",
+          "target": "c15d626f-a9a0-4aa6-dc06-eb6ad9d493af",
+          "input": "@seqin"
+        },
+        {
+          "source": "ab63e314-870b-4a96-a3bd-87c6a241adbc",
+          "output": "value",
+          "target": "c15d626f-a9a0-4aa6-dc06-eb6ad9d493af",
+          "input": "@seqin"
+        },
+        {
+          "source": "0c428fca-1e71-438c-df11-7d3253fd7382",
+          "output": "@seqout",
+          "target": "ab63e314-870b-4a96-a3bd-87c6a241adbc",
+          "input": "@seqin"
+        },
+        {
+          "source": "94a5c951-2a2f-4215-f5ed-01a51bb25929",
+          "output": "value",
+          "target": "54ccefd4-5329-4381-8ae2-d3b8289ac7c0",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_outp_curr_25mA",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "a72bf8b7-f560-42ea-d109-69c76efa68c5"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 220,
+          "top": -131,
+          "width": 0,
+          "height": 0,
+          "wireID": "d2deb869-0644-410b-b2f3-8c80e1abeed3"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "e84e9c06-f462-4879-f7da-99b3172b4ec9",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 23,
+          "top": -170,
+          "width": 0,
+          "height": 0,
+          "wireID": "659fade9-f957-4c87-f72f-1d906931d8b5",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "ee06b0dd-605e-40dd-947b-7e3089aa6417",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "ed630d2a-ba2c-4d5a-b686-fd4e7ed24f63",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "e84e9c06-f462-4879-f7da-99b3172b4ec9",
+          "output": "@seqout",
+          "target": "ee06b0dd-605e-40dd-947b-7e3089aa6417",
+          "input": "@seqin"
+        },
+        {
+          "source": "ee06b0dd-605e-40dd-947b-7e3089aa6417",
+          "output": "@seqout",
+          "target": "659fade9-f957-4c87-f72f-1d906931d8b5",
+          "input": "@seqin"
+        },
+        {
+          "source": "659fade9-f957-4c87-f72f-1d906931d8b5",
+          "output": "value",
+          "target": "ed630d2a-ba2c-4d5a-b686-fd4e7ed24f63",
+          "input": "@seqin"
+        },
+        {
+          "source": "e84e9c06-f462-4879-f7da-99b3172b4ec9",
+          "output": "value",
+          "target": "ed630d2a-ba2c-4d5a-b686-fd4e7ed24f63",
+          "input": "@seqin"
+        },
+        {
+          "source": "a72bf8b7-f560-42ea-d109-69c76efa68c5",
+          "output": "@seqout",
+          "target": "e84e9c06-f462-4879-f7da-99b3172b4ec9",
+          "input": "@seqin"
+        },
+        {
+          "source": "659fade9-f957-4c87-f72f-1d906931d8b5",
+          "output": "value",
+          "target": "d2deb869-0644-410b-b2f3-8c80e1abeed3",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_read_temp",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "6921c5c5-3da6-42b3-fcbc-f4df62d6762f"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 244,
+          "top": -113,
+          "width": 0,
+          "height": 0,
+          "wireID": "d2c62118-20ff-40af-86f8-1e7c1a3005af"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "d967e8cd-d400-4830-c755-5e78b18cde9f",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 15,
+          "top": -174,
+          "width": 0,
+          "height": 0,
+          "wireID": "c1bbf267-96ae-40af-a445-72c7f58fc1ce",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "88b43143-d535-42d8-f733-1bfcb56685aa",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "5fe014bc-6cc9-4105-dc62-1a6eabc24318",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "d967e8cd-d400-4830-c755-5e78b18cde9f",
+          "output": "@seqout",
+          "target": "88b43143-d535-42d8-f733-1bfcb56685aa",
+          "input": "@seqin"
+        },
+        {
+          "source": "88b43143-d535-42d8-f733-1bfcb56685aa",
+          "output": "@seqout",
+          "target": "c1bbf267-96ae-40af-a445-72c7f58fc1ce",
+          "input": "@seqin"
+        },
+        {
+          "source": "c1bbf267-96ae-40af-a445-72c7f58fc1ce",
+          "output": "value",
+          "target": "5fe014bc-6cc9-4105-dc62-1a6eabc24318",
+          "input": "@seqin"
+        },
+        {
+          "source": "d967e8cd-d400-4830-c755-5e78b18cde9f",
+          "output": "value",
+          "target": "5fe014bc-6cc9-4105-dc62-1a6eabc24318",
+          "input": "@seqin"
+        },
+        {
+          "source": "6921c5c5-3da6-42b3-fcbc-f4df62d6762f",
+          "output": "@seqout",
+          "target": "d967e8cd-d400-4830-c755-5e78b18cde9f",
+          "input": "@seqin"
+        },
+        {
+          "source": "c1bbf267-96ae-40af-a445-72c7f58fc1ce",
+          "output": "value",
+          "target": "d2c62118-20ff-40af-86f8-1e7c1a3005af",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_outp_curr_2_5A",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "89135c7d-ed7e-4bf6-dbfa-46a975906991"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 265,
+          "top": -112,
+          "width": 0,
+          "height": 0,
+          "wireID": "3ccd1f13-c74e-452d-d908-01115631559b"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "ea09874b-e844-4235-e4dd-22069d304422",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 68,
+          "top": -162,
+          "width": 0,
+          "height": 0,
+          "wireID": "b6359304-3515-4c5e-c673-8c5abafcbe25",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "1b5a9b73-353c-421b-a387-a2600936cd37",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "7020f278-7adf-4536-b703-138bd61b24b6",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "ea09874b-e844-4235-e4dd-22069d304422",
+          "output": "@seqout",
+          "target": "1b5a9b73-353c-421b-a387-a2600936cd37",
+          "input": "@seqin"
+        },
+        {
+          "source": "1b5a9b73-353c-421b-a387-a2600936cd37",
+          "output": "@seqout",
+          "target": "b6359304-3515-4c5e-c673-8c5abafcbe25",
+          "input": "@seqin"
+        },
+        {
+          "source": "b6359304-3515-4c5e-c673-8c5abafcbe25",
+          "output": "value",
+          "target": "7020f278-7adf-4536-b703-138bd61b24b6",
+          "input": "@seqin"
+        },
+        {
+          "source": "ea09874b-e844-4235-e4dd-22069d304422",
+          "output": "value",
+          "target": "7020f278-7adf-4536-b703-138bd61b24b6",
+          "input": "@seqin"
+        },
+        {
+          "source": "89135c7d-ed7e-4bf6-dbfa-46a975906991",
+          "output": "@seqout",
+          "target": "ea09874b-e844-4235-e4dd-22069d304422",
+          "input": "@seqin"
+        },
+        {
+          "source": "b6359304-3515-4c5e-c673-8c5abafcbe25",
+          "output": "value",
+          "target": "3ccd1f13-c74e-452d-d908-01115631559b",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_outp_curr_4_6A",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "4a83498c-ce18-4ba9-d2aa-417599ce89ac"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 259,
+          "top": -131,
+          "width": 0,
+          "height": 0,
+          "wireID": "34f72dc7-5aa1-4e3c-a048-cb1ea1ab0df6"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "56c48e60-4cb9-45c3-b6ba-5357cbee2e49",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 20,
+          "top": -192,
+          "width": 0,
+          "height": 0,
+          "wireID": "acd68107-7fb4-40d2-f79f-40c1b8d86263",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "f3884a43-3e8b-4f9a-ccf5-8731dadbcdef",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "96a402e8-13d5-4e58-fe2c-b514c4eda7e0",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "56c48e60-4cb9-45c3-b6ba-5357cbee2e49",
+          "output": "@seqout",
+          "target": "f3884a43-3e8b-4f9a-ccf5-8731dadbcdef",
+          "input": "@seqin"
+        },
+        {
+          "source": "f3884a43-3e8b-4f9a-ccf5-8731dadbcdef",
+          "output": "@seqout",
+          "target": "acd68107-7fb4-40d2-f79f-40c1b8d86263",
+          "input": "@seqin"
+        },
+        {
+          "source": "acd68107-7fb4-40d2-f79f-40c1b8d86263",
+          "output": "value",
+          "target": "96a402e8-13d5-4e58-fe2c-b514c4eda7e0",
+          "input": "@seqin"
+        },
+        {
+          "source": "56c48e60-4cb9-45c3-b6ba-5357cbee2e49",
+          "output": "value",
+          "target": "96a402e8-13d5-4e58-fe2c-b514c4eda7e0",
+          "input": "@seqin"
+        },
+        {
+          "source": "4a83498c-ce18-4ba9-d2aa-417599ce89ac",
+          "output": "@seqout",
+          "target": "56c48e60-4cb9-45c3-b6ba-5357cbee2e49",
+          "input": "@seqin"
+        },
+        {
+          "source": "acd68107-7fb4-40d2-f79f-40c1b8d86263",
+          "output": "value",
+          "target": "34f72dc7-5aa1-4e3c-a048-cb1ea1ab0df6",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_temp",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -491,
+          "top": -424,
+          "width": 0,
+          "height": 0,
+          "wireID": "c5ed3baa-e805-405e-8f8c-9a15b2c90db8"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 220,
+          "top": -94,
+          "width": 0,
+          "height": 0,
+          "wireID": "9cacb2a3-6039-477b-92f8-e410a5b8e9c8"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -317,
+          "top": -291,
+          "width": 0,
+          "height": 0,
+          "wireID": "5ed2b552-f6cd-4d6a-b1ce-e21340e16f85",
+          "value": "\"Running...\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 22,
+          "top": -169,
+          "width": 0,
+          "height": 0,
+          "wireID": "b58b4d4f-2d0a-48fc-b6d3-af55a2158b18",
+          "value": "\"Done\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -134,
+          "top": -198,
+          "width": 0,
+          "height": 0,
+          "wireID": "1e8bad3a-d5e8-470a-8c56-b614c92e1683",
+          "milliseconds": 100
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 235,
+          "top": -273,
+          "width": 0,
+          "height": 0,
+          "wireID": "e740603e-1dfc-4b0e-d0aa-790ae1df7370",
+          "name": "Label"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "5ed2b552-f6cd-4d6a-b1ce-e21340e16f85",
+          "output": "@seqout",
+          "target": "1e8bad3a-d5e8-470a-8c56-b614c92e1683",
+          "input": "@seqin"
+        },
+        {
+          "source": "1e8bad3a-d5e8-470a-8c56-b614c92e1683",
+          "output": "@seqout",
+          "target": "b58b4d4f-2d0a-48fc-b6d3-af55a2158b18",
+          "input": "@seqin"
+        },
+        {
+          "source": "b58b4d4f-2d0a-48fc-b6d3-af55a2158b18",
+          "output": "value",
+          "target": "e740603e-1dfc-4b0e-d0aa-790ae1df7370",
+          "input": "@seqin"
+        },
+        {
+          "source": "5ed2b552-f6cd-4d6a-b1ce-e21340e16f85",
+          "output": "value",
+          "target": "e740603e-1dfc-4b0e-d0aa-790ae1df7370",
+          "input": "@seqin"
+        },
+        {
+          "source": "c5ed3baa-e805-405e-8f8c-9a15b2c90db8",
+          "output": "@seqout",
+          "target": "5ed2b552-f6cd-4d6a-b1ce-e21340e16f85",
+          "input": "@seqin"
+        },
+        {
+          "source": "b58b4d4f-2d0a-48fc-b6d3-af55a2158b18",
+          "output": "value",
+          "target": "9cacb2a3-6039-477b-92f8-e410a5b8e9c8",
+          "input": "@seqin"
+        }
+      ],
+      "name": "basic_test_cleanup",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "OutputActionComponent",
+          "left": 353,
+          "top": -341,
+          "width": 0,
+          "height": 0,
+          "wireID": "b514ece0-7c78-4848-b881-0996e28f955e",
+          "name": "Check OVP trip"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 353,
+          "top": -260,
+          "width": 0,
+          "height": 0,
+          "wireID": "e42c9481-b094-46a9-9167-f01e90c757c3",
+          "name": "Cleanup"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 175,
+          "top": -425,
+          "width": 0,
+          "height": 0,
+          "wireID": "e4a15d1e-29ca-4252-ea74-4d3e83ba1ff9",
+          "value": "\"-\""
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 353,
+          "top": -129,
+          "width": 0,
+          "height": 0,
+          "wireID": "e9ec8756-5662-49da-9510-93316beea929",
+          "name": "Do next test"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "e4a15d1e-29ca-4252-ea74-4d3e83ba1ff9",
+          "output": "value",
+          "target": "b514ece0-7c78-4848-b881-0996e28f955e",
+          "input": "@seqin"
+        },
+        {
+          "source": "e4a15d1e-29ca-4252-ea74-4d3e83ba1ff9",
+          "output": "value",
+          "target": "e42c9481-b094-46a9-9167-f01e90c757c3",
+          "input": "@seqin"
+        }
+      ],
+      "name": "hw_ovp_test",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "OutputActionComponent",
+          "left": 298,
+          "top": -358,
+          "width": 0,
+          "height": 0,
+          "wireID": "ce0d3d7a-a101-4c6a-fdc2-546ee258ee22",
+          "name": "Initialization"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 297,
+          "top": -302,
+          "width": 0,
+          "height": 0,
+          "wireID": "08ce78c5-1f28-4ac2-f768-6fb548077457",
+          "name": "Rsense connection test"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 297,
+          "top": -247,
+          "width": 0,
+          "height": 0,
+          "wireID": "550737fb-78a3-4fc7-b20e-f9521882d1cb",
+          "name": "Polarity error test"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 152,
+          "top": -438,
+          "width": 0,
+          "height": 0,
+          "wireID": "2e6b2fcf-ce1f-4e55-aefe-a052f93baaaf",
+          "value": "\"-\""
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 298,
+          "top": -109,
+          "width": 0,
+          "height": 0,
+          "wireID": "49c10d42-df4c-4920-da06-262f95b02e20",
+          "name": "Do next test"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "2e6b2fcf-ce1f-4e55-aefe-a052f93baaaf",
+          "output": "value",
+          "target": "ce0d3d7a-a101-4c6a-fdc2-546ee258ee22",
+          "input": "@seqin"
+        },
+        {
+          "source": "2e6b2fcf-ce1f-4e55-aefe-a052f93baaaf",
+          "output": "value",
+          "target": "08ce78c5-1f28-4ac2-f768-6fb548077457",
+          "input": "@seqin"
+        },
+        {
+          "source": "2e6b2fcf-ce1f-4e55-aefe-a052f93baaaf",
+          "output": "value",
+          "target": "550737fb-78a3-4fc7-b20e-f9521882d1cb",
+          "input": "@seqin"
+        }
+      ],
+      "name": "rsense_test",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "OutputActionComponent",
+          "left": 321,
+          "top": -357,
+          "width": 0,
+          "height": 0,
+          "wireID": "7f5a429a-bbea-4274-e194-d58baddc0e38",
+          "name": "Initialization"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 321,
+          "top": -290,
+          "width": 0,
+          "height": 0,
+          "wireID": "224dae29-2680-4774-d587-bc88c1cc31e8",
+          "name": "Check 0.5 V"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 321,
+          "top": -219,
+          "width": 0,
+          "height": 0,
+          "wireID": "5dfb80b7-5394-45b9-ef90-a172dee7690b",
+          "name": "Check 1.25 V"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 321,
+          "top": -157,
+          "width": 0,
+          "height": 0,
+          "wireID": "7c728a88-ef41-4827-e065-01ba39b3afd5",
+          "name": "Check 1.8 V"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 321,
+          "top": -93,
+          "width": 0,
+          "height": 0,
+          "wireID": "a92cf3fc-7723-401e-f5b8-e3f11032a079",
+          "name": "Cleanup"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 152,
+          "top": -449,
+          "width": 0,
+          "height": 0,
+          "wireID": "421f929f-76f9-4878-cf71-27e84c4d33bc",
+          "value": "\"-\""
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 321,
+          "top": 22,
+          "width": 0,
+          "height": 0,
+          "wireID": "19f29a2e-70a6-4e01-958b-c52d670dc322",
+          "name": "Do next test"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "421f929f-76f9-4878-cf71-27e84c4d33bc",
+          "output": "value",
+          "target": "7f5a429a-bbea-4274-e194-d58baddc0e38",
+          "input": "@seqin"
+        },
+        {
+          "source": "421f929f-76f9-4878-cf71-27e84c4d33bc",
+          "output": "value",
+          "target": "224dae29-2680-4774-d587-bc88c1cc31e8",
+          "input": "@seqin"
+        },
+        {
+          "source": "421f929f-76f9-4878-cf71-27e84c4d33bc",
+          "output": "value",
+          "target": "5dfb80b7-5394-45b9-ef90-a172dee7690b",
+          "input": "@seqin"
+        },
+        {
+          "source": "421f929f-76f9-4878-cf71-27e84c4d33bc",
+          "output": "value",
+          "target": "7c728a88-ef41-4827-e065-01ba39b3afd5",
+          "input": "@seqin"
+        },
+        {
+          "source": "421f929f-76f9-4878-cf71-27e84c4d33bc",
+          "output": "value",
+          "target": "a92cf3fc-7723-401e-f5b8-e3f11032a079",
+          "input": "@seqin"
+        }
+      ],
+      "name": "rprog_test",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "OutputActionComponent",
+          "left": 319,
+          "top": -312,
+          "width": 0,
+          "height": 0,
+          "wireID": "fa04d29e-3df0-44c2-d8b3-ead1c14b0d08",
+          "name": "Initialization"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 319,
+          "top": -222,
+          "width": 0,
+          "height": 0,
+          "wireID": "1d6a39a9-cd37-4afd-ea49-821f8e324ba8",
+          "name": "DP on"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 319,
+          "top": -143,
+          "width": 0,
+          "height": 0,
+          "wireID": "133b0d97-7fbc-4317-bc95-0549ad85028b",
+          "name": "DP off"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 319,
+          "top": -76,
+          "width": 0,
+          "height": 0,
+          "wireID": "b572114b-4334-4bf5-d4a3-2a9203ad2a2f",
+          "name": "Cleanup"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 159,
+          "top": -411,
+          "width": 0,
+          "height": 0,
+          "wireID": "c8583259-9027-40a9-9eef-c296435cfb38",
+          "value": "\"-\""
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 319,
+          "top": 62,
+          "width": 0,
+          "height": 0,
+          "wireID": "ee1e7f97-017e-4d83-adea-5d901a656f3a",
+          "name": "Do next test"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "c8583259-9027-40a9-9eef-c296435cfb38",
+          "output": "value",
+          "target": "fa04d29e-3df0-44c2-d8b3-ead1c14b0d08",
+          "input": "@seqin"
+        },
+        {
+          "source": "c8583259-9027-40a9-9eef-c296435cfb38",
+          "output": "value",
+          "target": "1d6a39a9-cd37-4afd-ea49-821f8e324ba8",
+          "input": "@seqin"
+        },
+        {
+          "source": "c8583259-9027-40a9-9eef-c296435cfb38",
+          "output": "value",
+          "target": "133b0d97-7fbc-4317-bc95-0549ad85028b",
+          "input": "@seqin"
+        },
+        {
+          "source": "c8583259-9027-40a9-9eef-c296435cfb38",
+          "output": "value",
+          "target": "b572114b-4334-4bf5-d4a3-2a9203ad2a2f",
+          "input": "@seqin"
+        }
+      ],
+      "name": "dp_test",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "ScpiActionComponent",
+          "left": -461,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "b0a2c090-1f28-47f0-f717-d85c46c66b07",
+          "instrument": "bb3_1",
+          "scpi": "pow = syst:pow?"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -557,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "d0459860-a422-4357-84b7-096d1f4678f4"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -151,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "37b988e5-ea4c-48ca-864f-222a117eb879",
+          "milliseconds": 6000
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": -268,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "6a19b036-77a3-4668-f7b4-d1100db894c9",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -374,
+          "top": -328,
+          "width": 0,
+          "height": 0,
+          "wireID": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "action": "consume_errors"
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -547,
+          "top": -328,
+          "width": 0,
+          "height": 0,
+          "wireID": "abb9459a-eb82-4ee8-8a57-e390b471e7ff",
+          "variable": "bb3_1"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -547,
+          "top": -213,
+          "width": 0,
+          "height": 0,
+          "wireID": "e7b11ad7-050c-4323-84c6-21fa477c2403",
+          "instrument": "bb3_1",
+          "scpi": "model = SYST:SLOT:MOD? 2"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -48,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "674c7b77-ed3a-4a20-f205-e59aabac261f",
+          "instrument": "bb3_1",
+          "scpi": "syst:pow 1"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 108,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "42490167-533c-4b4e-9089-5fe243052507",
+          "milliseconds": 4000
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 211,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "c047658b-6eff-4b28-c0d1-d18569157093",
+          "instrument": "bb3_1",
+          "scpi": "pow = syst:pow?"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 410,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "46efbf41-5222-482b-8be0-16a893df926b",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 540,
+          "top": -478,
+          "width": 0,
+          "height": 0,
+          "wireID": "20252490-0e51-46aa-cff1-01c62a4d3a3a",
+          "message": "Can not power up device"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -282,
+          "top": -213,
+          "width": 0,
+          "height": 0,
+          "wireID": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "\"SMX46\"",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": -79,
+          "top": -112,
+          "width": 0,
+          "height": 0,
+          "wireID": "3ccd9cab-e4b2-4170-a533-b0a9a3628085",
+          "message": "SMX46 is not in Slot 2 on BB3_1"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -79,
+          "top": -211,
+          "width": 0,
+          "height": 0,
+          "wireID": "0efd7939-cfaa-4a23-e4d8-4b70a4e9d751",
+          "instrument": "bb3_1",
+          "scpi": "status = SYST:SLOT:STAT? 2"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 192,
+          "top": -211,
+          "width": 0,
+          "height": 0,
+          "wireID": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 311,
+          "top": -112,
+          "width": 0,
+          "height": 0,
+          "wireID": "b348ebaa-735e-4065-aa1a-8fa54064b225",
+          "message": "Module in Slot 2 on BB3_1 is not enabled"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 311,
+          "top": -209,
+          "width": 0,
+          "height": 0,
+          "wireID": "46b957fc-94bb-4536-ddde-9da7dd4a9fd8",
+          "instrument": "bb3_1",
+          "scpi": "test = DIAG:TEST? SLOT2"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 540,
+          "top": -209,
+          "width": 0,
+          "height": 0,
+          "wireID": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 696,
+          "top": -112,
+          "width": 0,
+          "height": 0,
+          "wireID": "89e45b3e-b93d-4296-e802-e53be98fd28d",
+          "message": "Error on module in Slot 2 on BB3_1"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -547,
+          "top": -13,
+          "width": 0,
+          "height": 0,
+          "wireID": "7f6f2f89-49a7-4d21-dcc6-06f320669e97",
+          "instrument": "bb3_1",
+          "scpi": "model = SYST:SLOT:MOD? 3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -282,
+          "top": -13,
+          "width": 0,
+          "height": 0,
+          "wireID": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "\"MIO168\"",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": -79,
+          "top": 88,
+          "width": 0,
+          "height": 0,
+          "wireID": "a4958e9f-e089-446e-d5a6-4d3a63f1de39",
+          "message": "MIO168 is not in Slot 3 on BB3_1"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -79,
+          "top": -11,
+          "width": 0,
+          "height": 0,
+          "wireID": "de947dc7-6d33-42e3-82c4-49587097b411",
+          "instrument": "bb3_1",
+          "scpi": "status = SYST:SLOT:STAT? 3"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 192,
+          "top": -11,
+          "width": 0,
+          "height": 0,
+          "wireID": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 311,
+          "top": 88,
+          "width": 0,
+          "height": 0,
+          "wireID": "3223da3e-b652-412b-a71b-b9722c746e3b",
+          "message": "Module in Slot 3 on BB3_1 is not enabled"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 311,
+          "top": -9,
+          "width": 0,
+          "height": 0,
+          "wireID": "56ae7c2b-d8cb-4d45-ae9f-a12ef9cfe9d5",
+          "instrument": "bb3_1",
+          "scpi": "test = DIAG:TEST? SLOT3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 526,
+          "top": -9,
+          "width": 0,
+          "height": 0,
+          "wireID": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 696,
+          "top": 88,
+          "width": 0,
+          "height": 0,
+          "wireID": "24ed0828-1611-41d2-973f-56e279218eb0",
+          "message": "Error on module in Slot 3 on BB3_1"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -547,
+          "top": 182,
+          "width": 0,
+          "height": 0,
+          "wireID": "8ed4f0bb-ba12-46a4-e644-eaf2007346c1",
+          "instrument": "bb3_2",
+          "scpi": "model = SYST:SLOT:MOD? 1"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -282,
+          "top": 182,
+          "width": 0,
+          "height": 0,
+          "wireID": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "\"DCP405\"",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": -79,
+          "top": 283,
+          "width": 0,
+          "height": 0,
+          "wireID": "86fbda21-6a89-4917-8794-746d3b0b284c",
+          "message": "SMX46 is not in Slot 1 on BB3_2"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -79,
+          "top": 184,
+          "width": 0,
+          "height": 0,
+          "wireID": "e6463c34-1304-4bb2-9405-1fb4d669824c",
+          "instrument": "bb3_2",
+          "scpi": "status = SYST:SLOT:STAT? 1"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 192,
+          "top": 184,
+          "width": 0,
+          "height": 0,
+          "wireID": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 311,
+          "top": 283,
+          "width": 0,
+          "height": 0,
+          "wireID": "2c37b5be-6116-4cbe-d6bd-8e0ba5591185",
+          "message": "Module in Slot 1 on BB3_2 is not enabled"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 311,
+          "top": 186,
+          "width": 0,
+          "height": 0,
+          "wireID": "4a37dffe-7fed-420d-8cee-493f232e6b09",
+          "instrument": "bb3_2",
+          "scpi": "test = DIAG:TEST? SLOT1"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 526,
+          "top": 186,
+          "width": 0,
+          "height": 0,
+          "wireID": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 696,
+          "top": 283,
+          "width": 0,
+          "height": 0,
+          "wireID": "068a2e30-f988-44c7-af63-3bceda87cbdf",
+          "message": "Error on module in Slot 1 on BB3_2"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -547,
+          "top": 391,
+          "width": 0,
+          "height": 0,
+          "wireID": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "instrument": "bb3_2",
+          "scpi": "model = SYST:SLOT:MOD? 3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -281,
+          "top": 391,
+          "width": 0,
+          "height": 0,
+          "wireID": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "\"DCP405\"",
+          "operator": "="
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -83,
+          "top": 393,
+          "width": 0,
+          "height": 0,
+          "wireID": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "instrument": "bb3_2",
+          "scpi": "version = SYST:SLOT:VERS? 3"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 198,
+          "top": 393,
+          "width": 0,
+          "height": 0,
+          "wireID": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "instrument": "bb3_2",
+          "scpi": "serial = SYST:SLOT:SNO? 3"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 462,
+          "top": 391,
+          "width": 0,
+          "height": 0,
+          "wireID": "1d775480-09d3-452d-922b-8c051e450c66",
+          "catchError": true,
+          "action": "register_module"
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 687,
+          "top": 445,
+          "width": 0,
+          "height": 0,
+          "wireID": "2d9ed860-e4af-4d3b-e923-05aa101610bd",
+          "message": "Failed to register Module in Slot 3 on BB3_2"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": -250,
+          "top": 536,
+          "width": 0,
+          "height": 0,
+          "wireID": "45386773-777f-4691-9c41-84e20f3e2aaa",
+          "asInputProperties": [
+            "value"
+          ],
+          "variable": "test_module_id"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -74,
+          "top": 536,
+          "width": 0,
+          "height": 0,
+          "wireID": "6c44d32f-f0db-425d-d000-3221d2a230c4",
+          "instrument": "bb3_2",
+          "scpi": "status = SYST:SLOT:STAT? 3"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 192,
+          "top": 536,
+          "width": 0,
+          "height": 0,
+          "wireID": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 311,
+          "top": 642,
+          "width": 0,
+          "height": 0,
+          "wireID": "5acb876e-e482-4da1-d245-6e9e81d63778",
+          "message": "Module in Slot 3 on BB3_2 is not enabled"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 311,
+          "top": 536,
+          "width": 0,
+          "height": 0,
+          "wireID": "9aa1854f-33f8-41a4-d183-4b615db41ac7",
+          "instrument": "bb3_2",
+          "scpi": "test = DIAG:TEST? SLOT3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 526,
+          "top": 536,
+          "width": 0,
+          "height": 0,
+          "wireID": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -547,
+          "top": 739,
+          "width": 0,
+          "height": 0,
+          "wireID": "dbe748f6-af3f-41bb-ec02-768035586352",
+          "instrument": "bb3_1",
+          "scpi": "route:open (@211:246)"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -360,
+          "top": 739,
+          "width": 0,
+          "height": 0,
+          "wireID": "0c4aed59-86c8-41dc-d972-55c7eab221d1",
+          "instrument": "bb3_2",
+          "scpi": "inst (@301)"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -171,
+          "top": 739,
+          "width": 0,
+          "height": 0,
+          "wireID": "3e3badd1-3a95-4e67-db34-1c4676530440",
+          "instrument": "bb3_2",
+          "scpi": "OUTP:PROT:CLE"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 13,
+          "top": 739,
+          "width": 0,
+          "height": 0,
+          "wireID": "5b5d746a-987d-4b7f-fb3d-0d309b7af384",
+          "instrument": "bb3_2",
+          "scpi": "outp 0"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -547,
+          "top": 866,
+          "width": 0,
+          "height": 0,
+          "wireID": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "instrument": "bb3_2",
+          "scpi": "inst (@101)"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -360,
+          "top": 866,
+          "width": 0,
+          "height": 0,
+          "wireID": "6d1a91fd-f4f6-4289-cb42-10b2e9af99c3",
+          "instrument": "bb3_2",
+          "scpi": "OUTP:PROT:CLE"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": -163,
+          "top": 866,
+          "width": 0,
+          "height": 0,
+          "wireID": "c60b18f4-e97b-4b03-d7ac-b1ea6e0e4318"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "d0459860-a422-4357-84b7-096d1f4678f4",
+          "output": "@seqout",
+          "target": "b0a2c090-1f28-47f0-f717-d85c46c66b07",
+          "input": "@seqin"
+        },
+        {
+          "source": "b0a2c090-1f28-47f0-f717-d85c46c66b07",
+          "output": "pow",
+          "target": "6a19b036-77a3-4668-f7b4-d1100db894c9",
+          "input": "value"
+        },
+        {
+          "source": "6a19b036-77a3-4668-f7b4-d1100db894c9",
+          "output": "False",
+          "target": "37b988e5-ea4c-48ca-864f-222a117eb879",
+          "input": "@seqin"
+        },
+        {
+          "source": "6a19b036-77a3-4668-f7b4-d1100db894c9",
+          "output": "True",
+          "target": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "input": "@seqin"
+        },
+        {
+          "source": "abb9459a-eb82-4ee8-8a57-e390b471e7ff",
+          "output": "variable",
+          "target": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "input": "9334994c-29b7-434a-a399-4fcdf3325913"
+        },
+        {
+          "source": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "output": "@seqout",
+          "target": "e7b11ad7-050c-4323-84c6-21fa477c2403",
+          "input": "@seqin"
+        },
+        {
+          "source": "37b988e5-ea4c-48ca-864f-222a117eb879",
+          "output": "@seqout",
+          "target": "674c7b77-ed3a-4a20-f205-e59aabac261f",
+          "input": "@seqin"
+        },
+        {
+          "source": "674c7b77-ed3a-4a20-f205-e59aabac261f",
+          "output": "@seqout",
+          "target": "42490167-533c-4b4e-9089-5fe243052507",
+          "input": "@seqin"
+        },
+        {
+          "source": "42490167-533c-4b4e-9089-5fe243052507",
+          "output": "@seqout",
+          "target": "c047658b-6eff-4b28-c0d1-d18569157093",
+          "input": "@seqin"
+        },
+        {
+          "source": "c047658b-6eff-4b28-c0d1-d18569157093",
+          "output": "pow",
+          "target": "46efbf41-5222-482b-8be0-16a893df926b",
+          "input": "value"
+        },
+        {
+          "source": "46efbf41-5222-482b-8be0-16a893df926b",
+          "output": "True",
+          "target": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "input": "@seqin"
+        },
+        {
+          "source": "46efbf41-5222-482b-8be0-16a893df926b",
+          "output": "False",
+          "target": "20252490-0e51-46aa-cff1-01c62a4d3a3a",
+          "input": "@seqin"
+        },
+        {
+          "source": "e7b11ad7-050c-4323-84c6-21fa477c2403",
+          "output": "model",
+          "target": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "input": "A"
+        },
+        {
+          "source": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "output": "False",
+          "target": "3ccd9cab-e4b2-4170-a533-b0a9a3628085",
+          "input": "@seqin"
+        },
+        {
+          "source": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "output": "True",
+          "target": "0efd7939-cfaa-4a23-e4d8-4b70a4e9d751",
+          "input": "@seqin"
+        },
+        {
+          "source": "0efd7939-cfaa-4a23-e4d8-4b70a4e9d751",
+          "output": "status",
+          "target": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "input": "value"
+        },
+        {
+          "source": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "output": "False",
+          "target": "b348ebaa-735e-4065-aa1a-8fa54064b225",
+          "input": "@seqin"
+        },
+        {
+          "source": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "output": "True",
+          "target": "46b957fc-94bb-4536-ddde-9da7dd4a9fd8",
+          "input": "@seqin"
+        },
+        {
+          "source": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "output": "False",
+          "target": "89e45b3e-b93d-4296-e802-e53be98fd28d",
+          "input": "@seqin"
+        },
+        {
+          "source": "7f6f2f89-49a7-4d21-dcc6-06f320669e97",
+          "output": "model",
+          "target": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "input": "A"
+        },
+        {
+          "source": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "output": "False",
+          "target": "a4958e9f-e089-446e-d5a6-4d3a63f1de39",
+          "input": "@seqin"
+        },
+        {
+          "source": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "output": "True",
+          "target": "de947dc7-6d33-42e3-82c4-49587097b411",
+          "input": "@seqin"
+        },
+        {
+          "source": "de947dc7-6d33-42e3-82c4-49587097b411",
+          "output": "status",
+          "target": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "input": "value"
+        },
+        {
+          "source": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "output": "False",
+          "target": "3223da3e-b652-412b-a71b-b9722c746e3b",
+          "input": "@seqin"
+        },
+        {
+          "source": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "output": "True",
+          "target": "56ae7c2b-d8cb-4d45-ae9f-a12ef9cfe9d5",
+          "input": "@seqin"
+        },
+        {
+          "source": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "output": "False",
+          "target": "24ed0828-1611-41d2-973f-56e279218eb0",
+          "input": "@seqin"
+        },
+        {
+          "source": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "output": "True",
+          "target": "7f6f2f89-49a7-4d21-dcc6-06f320669e97",
+          "input": "@seqin"
+        },
+        {
+          "source": "8ed4f0bb-ba12-46a4-e644-eaf2007346c1",
+          "output": "model",
+          "target": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "input": "A"
+        },
+        {
+          "source": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "output": "False",
+          "target": "86fbda21-6a89-4917-8794-746d3b0b284c",
+          "input": "@seqin"
+        },
+        {
+          "source": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "output": "True",
+          "target": "e6463c34-1304-4bb2-9405-1fb4d669824c",
+          "input": "@seqin"
+        },
+        {
+          "source": "e6463c34-1304-4bb2-9405-1fb4d669824c",
+          "output": "status",
+          "target": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "input": "value"
+        },
+        {
+          "source": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "output": "False",
+          "target": "2c37b5be-6116-4cbe-d6bd-8e0ba5591185",
+          "input": "@seqin"
+        },
+        {
+          "source": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "output": "True",
+          "target": "4a37dffe-7fed-420d-8cee-493f232e6b09",
+          "input": "@seqin"
+        },
+        {
+          "source": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "output": "False",
+          "target": "068a2e30-f988-44c7-af63-3bceda87cbdf",
+          "input": "@seqin"
+        },
+        {
+          "source": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "output": "True",
+          "target": "8ed4f0bb-ba12-46a4-e644-eaf2007346c1",
+          "input": "@seqin"
+        },
+        {
+          "source": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "output": "True",
+          "target": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "input": "@seqin"
+        },
+        {
+          "source": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "output": "model",
+          "target": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "input": "A"
+        },
+        {
+          "source": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "output": "True",
+          "target": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "input": "@seqin"
+        },
+        {
+          "source": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "output": "@seqout",
+          "target": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "input": "@seqin"
+        },
+        {
+          "source": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "output": "model",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "acfa6054-32bf-495f-8182-6445dacafdb6"
+        },
+        {
+          "source": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "output": "version",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "027b1223-1be0-454f-e54b-ee482db04174"
+        },
+        {
+          "source": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "output": "serial",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "93c12e8c-f701-4171-fb62-5c4075f1e043"
+        },
+        {
+          "source": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "output": "@seqout",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "@seqin"
+        },
+        {
+          "source": "1d775480-09d3-452d-922b-8c051e450c66",
+          "output": "1cfed536-419f-45b1-ebea-d97722e826cc",
+          "target": "45386773-777f-4691-9c41-84e20f3e2aaa",
+          "input": "value"
+        },
+        {
+          "source": "45386773-777f-4691-9c41-84e20f3e2aaa",
+          "output": "@seqout",
+          "target": "6c44d32f-f0db-425d-d000-3221d2a230c4",
+          "input": "@seqin"
+        },
+        {
+          "source": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "output": "False",
+          "target": "5acb876e-e482-4da1-d245-6e9e81d63778",
+          "input": "@seqin"
+        },
+        {
+          "source": "6c44d32f-f0db-425d-d000-3221d2a230c4",
+          "output": "status",
+          "target": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "input": "value"
+        },
+        {
+          "source": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "output": "True",
+          "target": "9aa1854f-33f8-41a4-d183-4b615db41ac7",
+          "input": "@seqin"
+        },
+        {
+          "source": "9aa1854f-33f8-41a4-d183-4b615db41ac7",
+          "output": "test",
+          "target": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "input": "A"
+        },
+        {
+          "source": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "output": "True",
+          "target": "dbe748f6-af3f-41bb-ec02-768035586352",
+          "input": "@seqin"
+        },
+        {
+          "source": "dbe748f6-af3f-41bb-ec02-768035586352",
+          "output": "@seqout",
+          "target": "0c4aed59-86c8-41dc-d972-55c7eab221d1",
+          "input": "@seqin"
+        },
+        {
+          "source": "0c4aed59-86c8-41dc-d972-55c7eab221d1",
+          "output": "@seqout",
+          "target": "3e3badd1-3a95-4e67-db34-1c4676530440",
+          "input": "@seqin"
+        },
+        {
+          "source": "3e3badd1-3a95-4e67-db34-1c4676530440",
+          "output": "@seqout",
+          "target": "5b5d746a-987d-4b7f-fb3d-0d309b7af384",
+          "input": "@seqin"
+        },
+        {
+          "source": "5b5d746a-987d-4b7f-fb3d-0d309b7af384",
+          "output": "@seqout",
+          "target": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "input": "@seqin"
+        },
+        {
+          "source": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "output": "@seqout",
+          "target": "6d1a91fd-f4f6-4289-cb42-10b2e9af99c3",
+          "input": "@seqin"
+        },
+        {
+          "source": "6d1a91fd-f4f6-4289-cb42-10b2e9af99c3",
+          "output": "@seqout",
+          "target": "c60b18f4-e97b-4b03-d7ac-b1ea6e0e4318",
+          "input": "@seqin"
+        },
+        {
+          "source": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "output": "False",
+          "target": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "input": "@seqin"
+        },
+        {
+          "source": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "output": "False",
+          "target": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "input": "@seqin"
+        },
+        {
+          "source": "1d775480-09d3-452d-922b-8c051e450c66",
+          "output": "@Error",
+          "target": "2d9ed860-e4af-4d3b-e923-05aa101610bd",
+          "input": "@seqin"
+        },
+        {
+          "source": "1d775480-09d3-452d-922b-8c051e450c66",
+          "output": "@error",
+          "target": "2d9ed860-e4af-4d3b-e923-05aa101610bd",
+          "input": "@seqin"
+        },
+        {
+          "source": "46b957fc-94bb-4536-ddde-9da7dd4a9fd8",
+          "output": "test",
+          "target": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "input": "A"
+        },
+        {
+          "source": "56ae7c2b-d8cb-4d45-ae9f-a12ef9cfe9d5",
+          "output": "test",
+          "target": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "input": "A"
+        },
+        {
+          "source": "4a37dffe-7fed-420d-8cee-493f232e6b09",
+          "output": "test",
+          "target": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "input": "A"
+        }
+      ],
+      "name": "init_check",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -462,
+          "top": -417,
+          "width": 0,
+          "height": 0,
+          "wireID": "2849cc3a-81a6-49f8-846c-6c3fa184edb7"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 273,
+          "top": -363,
+          "width": 0,
+          "height": 0,
+          "wireID": "62533bec-f758-4dd0-9521-4be49322bcf3"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -274,
+          "top": -417,
+          "width": 0,
+          "height": 0,
+          "wireID": "e60bca06-8326-444f-938a-8f6c889656ba",
+          "asInputProperties": [
+            "instrument"
+          ],
+          "scpi": "count = SYST:ERR:COUN?"
+        },
+        {
+          "type": "InputActionComponent",
+          "left": -497,
+          "top": -361,
+          "width": 0,
+          "height": 0,
+          "wireID": "9334994c-29b7-434a-a399-4fcdf3325913",
+          "name": "instrument"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 74,
+          "top": -417,
+          "width": 0,
+          "height": 0,
+          "wireID": "9ce495f3-c29c-4125-cbfe-a3b3da03dcb1",
+          "asInputProperties": [
+            "value"
+          ]
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -274,
+          "top": -303,
+          "width": 0,
+          "height": 0,
+          "wireID": "60a4089c-73f4-44b1-b7f4-3a41174638d8",
+          "asInputProperties": [
+            "instrument"
+          ],
+          "scpi": "SYST:ERR?"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "9334994c-29b7-434a-a399-4fcdf3325913",
+          "output": "@seqout",
+          "target": "e60bca06-8326-444f-938a-8f6c889656ba",
+          "input": "instrument"
+        },
+        {
+          "source": "2849cc3a-81a6-49f8-846c-6c3fa184edb7",
+          "output": "@seqout",
+          "target": "e60bca06-8326-444f-938a-8f6c889656ba",
+          "input": "@seqin"
+        },
+        {
+          "source": "9ce495f3-c29c-4125-cbfe-a3b3da03dcb1",
+          "output": "False",
+          "target": "62533bec-f758-4dd0-9521-4be49322bcf3",
+          "input": "@seqin"
+        },
+        {
+          "source": "e60bca06-8326-444f-938a-8f6c889656ba",
+          "output": "count",
+          "target": "9ce495f3-c29c-4125-cbfe-a3b3da03dcb1",
+          "input": "value"
+        },
+        {
+          "source": "9ce495f3-c29c-4125-cbfe-a3b3da03dcb1",
+          "output": "True",
+          "target": "60a4089c-73f4-44b1-b7f4-3a41174638d8",
+          "input": "@seqin"
+        },
+        {
+          "source": "60a4089c-73f4-44b1-b7f4-3a41174638d8",
+          "output": "@seqout",
+          "target": "e60bca06-8326-444f-938a-8f6c889656ba",
+          "input": "@seqin"
+        },
+        {
+          "source": "9334994c-29b7-434a-a399-4fcdf3325913",
+          "output": "@seqout",
+          "target": "60a4089c-73f4-44b1-b7f4-3a41174638d8",
+          "input": "instrument"
+        }
+      ],
+      "name": "consume_errors",
+      "implementationType": "flow"
     }
   ],
   "pages": [
@@ -810,6 +4392,1513 @@
       "top": 0,
       "width": 1194,
       "height": 788,
+      "css": "page main_page"
+    },
+    {
+      "components": [
+        {
+          "type": "ButtonWidget",
+          "left": 10,
+          "top": 10,
+          "width": 150,
+          "height": 40,
+          "wireID": "d1a577f9-53d1-46e8-b6b3-e71bc345a244",
+          "asOutputProperties": [
+            "action"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "Start All Tests",
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "Container",
+          "left": 10,
+          "top": 50,
+          "width": 400,
+          "height": 520,
+          "wireID": "471cc51f-7312-40d8-d8f6-688c37016acf",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "name": "1. Basic test (without calibation)",
+          "widgets": [
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 0,
+              "width": 400,
+              "height": 40,
+              "wireID": "d0a45525-e299-4a1f-add4-4c3b2dec382b",
+              "className": "section-title",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "1. Basic test (without calibation)"
+            },
+            {
+              "type": "ButtonWidget",
+              "left": 0,
+              "top": 40,
+              "width": 110,
+              "height": 32,
+              "wireID": "89b9b12d-ef82-4f2b-812b-56efea7b3e82",
+              "asOutputProperties": [
+                "action"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Start This Test",
+              "disabledStyle": {
+                "inheritFrom": "default"
+              }
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "4d1d7d77-c2ef-4bdf-e1df-35bc6412f9b5",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Initialization"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "cd71edb9-bcb9-4ca1-99aa-b4b72a000740",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "13a964c0-6075-4b13-d1e6-0a82a579beb4",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Setup power channel"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "1aef7d16-f884-4803-cc64-c72aaf3b7042",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "69a37d3b-e0c0-432b-e0e9-76c3332e521b",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check OCP trip"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "4998ebbb-d25d-43a1-9b72-3d75e9399d8e",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 168,
+              "width": 190,
+              "height": 32,
+              "wireID": "a58d1136-898b-449a-eab3-1fbd38dcf2b3",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check Idle Power"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 168,
+              "width": 190,
+              "height": 32,
+              "wireID": "0ee73517-650a-45fa-ef32-b5ebd29de4cd",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 200,
+              "width": 190,
+              "height": 32,
+              "wireID": "aa342449-e4c7-4f23-8fad-a69496dbc634",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Module initialization"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 200,
+              "width": 190,
+              "height": 32,
+              "wireID": "47a49327-1db7-46bf-b560-efc90c8c6928",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 232,
+              "width": 190,
+              "height": 32,
+              "wireID": "5ba66503-6ce0-4438-d318-b2cdb30f2bb0",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "SPI device initialization"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 232,
+              "width": 190,
+              "height": 32,
+              "wireID": "99299cb5-7465-4305-ef68-363ffd6ecee6",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 264,
+              "width": 190,
+              "height": 32,
+              "wireID": "e4c24681-2f82-43ca-fa71-5dc911e0a2e6",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check Output Voltage"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 264,
+              "width": 190,
+              "height": 32,
+              "wireID": "3fae1fd3-7e2b-44ad-db5f-4df48819d6ee",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 296,
+              "width": 190,
+              "height": 32,
+              "wireID": "54aad887-73b4-44fd-d562-8ff013f4a83e",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check Output Current 60 mA"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 296,
+              "width": 190,
+              "height": 32,
+              "wireID": "d21747c0-f903-4acc-c0d7-93096923c896",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 328,
+              "width": 190,
+              "height": 32,
+              "wireID": "5063a69b-be1b-49f4-8b92-aab3a5d5c684",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check Output Current 25 mA"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 328,
+              "width": 190,
+              "height": 32,
+              "wireID": "fcaba0c9-ae66-4e04-e27b-6f00bc18a2e3",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 360,
+              "width": 190,
+              "height": 32,
+              "wireID": "add3e75c-216f-4b9a-8e9b-2ad25283f827",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Read temperature"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 360,
+              "width": 190,
+              "height": 32,
+              "wireID": "00d54b8a-9de9-416f-d9e1-78f76875a7e1",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 392,
+              "width": 190,
+              "height": 32,
+              "wireID": "105d16fa-12d6-4541-c11b-05e6c96fb8f5",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check Output Current 2.5 A"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 392,
+              "width": 190,
+              "height": 32,
+              "wireID": "e9490c46-f5bf-49ef-e3ad-883b3ae78ebc",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 424,
+              "width": 190,
+              "height": 32,
+              "wireID": "09dd6f27-8ddd-4161-a7cf-e509357f480a",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check Output Current 4.6 A"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 424,
+              "width": 190,
+              "height": 32,
+              "wireID": "a7c89331-fa29-4f37-d188-a1cb90fa05bf",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 456,
+              "width": 190,
+              "height": 32,
+              "wireID": "1ccd52e0-a579-46a6-c48a-d196ea155856",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check Temperature"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 456,
+              "width": 190,
+              "height": 32,
+              "wireID": "bf34a18b-9dce-4b39-c8b6-8f47be8b2fb9",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 488,
+              "width": 190,
+              "height": 32,
+              "wireID": "4c309bdc-1844-481a-e22d-d0c68e090268",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Cleanup"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 488,
+              "width": 190,
+              "height": 32,
+              "wireID": "9eed2b82-8c15-402e-db94-6aa5534b6b28",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "left": 10,
+          "top": 570,
+          "width": 400,
+          "height": 136,
+          "wireID": "0a767887-43ed-453c-f355-c4b28181fd72",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "name": "2. HW OVP",
+          "widgets": [
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 0,
+              "width": 400,
+              "height": 40,
+              "wireID": "bf1e3578-958d-42a6-861d-0a450d3fa117",
+              "className": "section-title",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "2. HW OVP"
+            },
+            {
+              "type": "ButtonWidget",
+              "left": 0,
+              "top": 40,
+              "width": 110,
+              "height": 32,
+              "wireID": "f479ea8b-cb88-4762-b647-243db1171335",
+              "asOutputProperties": [
+                "action"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Start This Test",
+              "disabledStyle": {
+                "inheritFrom": "default"
+              }
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "98797948-4c8a-4f52-8c5a-18c3bf9638fd",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check OVP trip"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "9bd00501-f528-40fb-efbc-6c0d571d1a5d",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "6ebb3368-19d1-4c29-800a-0cc52c9fab6f",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Cleanup"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "c485dedc-7cae-4174-b67e-6b86d47071e5",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "left": 410,
+          "top": 50,
+          "width": 400,
+          "height": 168,
+          "wireID": "754d2e78-41dc-4803-c1fa-09acb4fa3fca",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "name": "3. Rsense",
+          "widgets": [
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 0,
+              "width": 400,
+              "height": 40,
+              "wireID": "f40a3da0-6a0d-4988-ec48-e5b1ade0a7b6",
+              "className": "section-title",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "3. Rsense"
+            },
+            {
+              "type": "ButtonWidget",
+              "left": 0,
+              "top": 40,
+              "width": 110,
+              "height": 32,
+              "wireID": "c012a30c-17d8-4c96-b5a3-010c883d8388",
+              "asOutputProperties": [
+                "action"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Start This Test",
+              "disabledStyle": {
+                "inheritFrom": "default"
+              }
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "c6fa9110-2795-4f1f-ac00-095cd22b7f79",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Initialization"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "3a70edee-fa75-46d0-df9b-45f1f2af30e2",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "32de1763-2001-4a35-ac61-7c7e46fa4d79",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Rsense connection test"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "a3bf411f-60fc-4901-fe04-9b8a05d8bb82",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "c4b23d60-8476-43d8-c89d-709f9adbd4d2",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Polarity error test"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "20cbaa09-e9b8-473a-9eb7-212584e092b7",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "left": 410,
+          "top": 218,
+          "width": 400,
+          "height": 232,
+          "wireID": "ad6647e2-bbde-4d5c-ac46-d2ff02038eeb",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "name": "4. Rprog",
+          "widgets": [
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 0,
+              "width": 400,
+              "height": 40,
+              "wireID": "65af084d-343a-4461-8db1-3e9d45d8317c",
+              "className": "section-title",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "4. Rprog"
+            },
+            {
+              "type": "ButtonWidget",
+              "left": 7,
+              "top": 40,
+              "width": 110,
+              "height": 32,
+              "wireID": "0381b81d-ec88-4d2f-a314-13a540f821d4",
+              "asOutputProperties": [
+                "action"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Start This Test",
+              "disabledStyle": {
+                "inheritFrom": "default"
+              }
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "d97fccbf-ee19-4309-9345-ab09ea5c86d3",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Initialization"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "ef143c74-6046-4002-81fb-989a63a3ad50",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "b8d0757b-8b93-4fe6-c45a-3e261bdfdc1f",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check 0.5 V"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "d223baa3-1d0a-41f4-f6f3-429e61f9ef4c",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "5b77390d-0a1b-4664-d2cd-dcc82c9eb556",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check 1.25 V"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "b48eb744-1f7c-45c1-b0c5-90a731eb3023",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 168,
+              "width": 190,
+              "height": 32,
+              "wireID": "590c756e-e41c-4a78-b396-ebc39a1983e5",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Check 1.8 V"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 168,
+              "width": 190,
+              "height": 32,
+              "wireID": "ce7cf1d7-5ffc-48b0-e6e1-edf2b53c4e67",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 200,
+              "width": 190,
+              "height": 32,
+              "wireID": "46557e89-7bb0-4505-d41c-5b59206c6b2e",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Cleanup"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 200,
+              "width": 190,
+              "height": 32,
+              "wireID": "8576ce46-bd68-4eab-b9c3-1cebeec51d67",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "left": 410,
+          "top": 450,
+          "width": 400,
+          "height": 200,
+          "wireID": "025ad736-3aca-4de6-b49b-8b2766d35534",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "name": "5. DP",
+          "widgets": [
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 0,
+              "width": 400,
+              "height": 40,
+              "wireID": "95d9138a-f291-43ac-e9ba-954a41f9c092",
+              "className": "section-title",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "5. DP"
+            },
+            {
+              "type": "ButtonWidget",
+              "left": 0,
+              "top": 40,
+              "width": 110,
+              "height": 32,
+              "wireID": "ca17add6-3614-4c13-81c2-e4930c9c39c3",
+              "asOutputProperties": [
+                "action"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Start This Test",
+              "disabledStyle": {
+                "inheritFrom": "default"
+              }
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "c404dbaa-7080-4dee-d59e-bd0e357f3782",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Initialization"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 72,
+              "width": 190,
+              "height": 32,
+              "wireID": "937fefa9-26fd-4978-ced2-9f67de2b2fc5",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "2cf5de35-f956-4960-c023-97cbe4a91417",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "DP on"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 104,
+              "width": 190,
+              "height": 32,
+              "wireID": "8363b1d2-0027-4887-c154-9aa435394ddb",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "beb484c8-fb0e-4946-a08c-b0dde828879a",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "DP off"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 136,
+              "width": 190,
+              "height": 32,
+              "wireID": "81722a2a-ef11-432a-d4e7-0ecf5dfdbaa5",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            },
+            {
+              "type": "TextWidget",
+              "left": 0,
+              "top": 168,
+              "width": 190,
+              "height": 32,
+              "wireID": "0a1a1b39-930b-4dc7-ab4d-34aa28d95ef4",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "text": "Cleanup"
+            },
+            {
+              "type": "TextWidget",
+              "left": 190,
+              "top": 168,
+              "width": 190,
+              "height": 32,
+              "wireID": "f939a431-f1cd-4f99-8fc2-397497bbae35",
+              "asInputProperties": [
+                "data"
+              ],
+              "style": {
+                "inheritFrom": "default"
+              },
+              "name": "result",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -267,
+          "top": 143,
+          "width": 0,
+          "height": 0,
+          "wireID": "1757b106-617e-4391-b961-ead9120db5b2",
+          "action": "basic_test"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -159,
+          "top": 664,
+          "width": 0,
+          "height": 0,
+          "wireID": "2007dd3e-6552-42a6-9970-6bd1b1980d69",
+          "action": "hw_ovp_test"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 1128,
+          "top": 79,
+          "width": 0,
+          "height": 0,
+          "wireID": "0c9d8d39-1625-4457-f2dc-0a767d8167c0",
+          "action": "rsense_test"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 1128,
+          "top": 259,
+          "width": 0,
+          "height": 0,
+          "wireID": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "action": "rprog_test"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 1128,
+          "top": 485,
+          "width": 0,
+          "height": 0,
+          "wireID": "3729651f-875f-40ea-9321-de3180601138",
+          "action": "dp_test"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -461,
+          "top": 58,
+          "width": 0,
+          "height": 0,
+          "wireID": "5d865535-8db0-4823-af17-0719a87b6149",
+          "action": "start_all_tests"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -589,
+          "top": 58,
+          "width": 0,
+          "height": 0,
+          "wireID": "c8de4a35-878d-44db-c740-c252c1884737",
+          "value": "\"All tests\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -435,
+          "top": 143,
+          "width": 0,
+          "height": 0,
+          "wireID": "0681deeb-88bd-4234-ce63-48463ac8824f",
+          "action": "start_test"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -656,
+          "top": 143,
+          "width": 0,
+          "height": 0,
+          "wireID": "b3ea23da-111d-4fe1-9cbe-88fc615f2a19",
+          "value": "\"Basic test (without calibration)\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -313,
+          "top": 664,
+          "width": 0,
+          "height": 0,
+          "wireID": "bfa48c1a-6955-4305-ef8b-64e808e9420e",
+          "action": "start_test"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -435,
+          "top": 664,
+          "width": 0,
+          "height": 0,
+          "wireID": "a261da65-8278-4f0a-9e71-750b23fa34ff",
+          "value": "\"HW OVP\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 975,
+          "top": 79,
+          "width": 0,
+          "height": 0,
+          "wireID": "5483a1b8-509d-4ed4-9ed6-7152c260f07b",
+          "action": "start_test"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 853,
+          "top": 79,
+          "width": 0,
+          "height": 0,
+          "wireID": "17f41d7c-4403-4d29-a601-f74dcc072c25",
+          "value": "\"Rsense\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 975,
+          "top": 259,
+          "width": 0,
+          "height": 0,
+          "wireID": "06107a44-583a-4250-c01d-fbcf0e248516",
+          "action": "start_test"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 853,
+          "top": 259,
+          "width": 0,
+          "height": 0,
+          "wireID": "0ddd9a1e-0ae1-424a-a3de-0a5d8e603546",
+          "value": "\"Rprog\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 975,
+          "top": 485,
+          "width": 0,
+          "height": 0,
+          "wireID": "d673cce6-c14b-4de1-a2b7-d7300a45028b",
+          "action": "start_test"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 853,
+          "top": 485,
+          "width": 0,
+          "height": 0,
+          "wireID": "955cc667-00fd-4e3f-a01a-6795cb32b2cc",
+          "value": "\"DP\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 1329,
+          "top": 706,
+          "width": 0,
+          "height": 0,
+          "wireID": "6da410a4-4ad4-438b-bae8-a96ff51e8033",
+          "action": "end_test"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "4459249b-d362-4f4e-f111-85e739c0f2b0",
+          "target": "cd71edb9-bcb9-4ca1-99aa-b4b72a000740",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "5c2ed9a6-b1b4-4ac7-a3b0-d23d446cfa75",
+          "target": "1aef7d16-f884-4803-cc64-c72aaf3b7042",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "acafdbe3-6ba8-44c7-9106-fa741ca02599",
+          "target": "4998ebbb-d25d-43a1-9b72-3d75e9399d8e",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "18c0aa56-d8cc-4708-dea5-b786a1b313fa",
+          "target": "0ee73517-650a-45fa-ef32-b5ebd29de4cd",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "6fce9787-f9a5-499d-8526-d2006b803163",
+          "target": "47a49327-1db7-46bf-b560-efc90c8c6928",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "f67de019-336e-4a17-fc3f-a5c9cb7b05e0",
+          "target": "99299cb5-7465-4305-ef68-363ffd6ecee6",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "eb3b585c-1611-4689-e335-9536e845e8f9",
+          "target": "3fae1fd3-7e2b-44ad-db5f-4df48819d6ee",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "7b196395-33e2-4d35-9c45-34a6c175be7a",
+          "target": "d21747c0-f903-4acc-c0d7-93096923c896",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "c2969165-c3ba-4e15-af56-65321e85afe9",
+          "target": "fcaba0c9-ae66-4e04-e27b-6f00bc18a2e3",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "136fe2f9-b5e4-44e3-ac4f-ea67050c47d9",
+          "target": "00d54b8a-9de9-416f-d9e1-78f76875a7e1",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "75f199a8-eace-4451-b577-d851e8558978",
+          "target": "e9490c46-f5bf-49ef-e3ad-883b3ae78ebc",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "9981219f-e78f-46d3-d223-d8e436031757",
+          "target": "a7c89331-fa29-4f37-d188-a1cb90fa05bf",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "0369ad37-3e65-4481-c554-f91c6cd286e2",
+          "target": "bf34a18b-9dce-4b39-c8b6-8f47be8b2fb9",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "31be4a3b-b823-4ba1-e415-1bf865f3e1cb",
+          "target": "9eed2b82-8c15-402e-db94-6aa5534b6b28",
+          "input": "data"
+        },
+        {
+          "source": "0c9d8d39-1625-4457-f2dc-0a767d8167c0",
+          "output": "ce0d3d7a-a101-4c6a-fdc2-546ee258ee22",
+          "target": "3a70edee-fa75-46d0-df9b-45f1f2af30e2",
+          "input": "data"
+        },
+        {
+          "source": "0c9d8d39-1625-4457-f2dc-0a767d8167c0",
+          "output": "08ce78c5-1f28-4ac2-f768-6fb548077457",
+          "target": "a3bf411f-60fc-4901-fe04-9b8a05d8bb82",
+          "input": "data"
+        },
+        {
+          "source": "0c9d8d39-1625-4457-f2dc-0a767d8167c0",
+          "output": "550737fb-78a3-4fc7-b20e-f9521882d1cb",
+          "target": "20cbaa09-e9b8-473a-9eb7-212584e092b7",
+          "input": "data"
+        },
+        {
+          "source": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "output": "7f5a429a-bbea-4274-e194-d58baddc0e38",
+          "target": "ef143c74-6046-4002-81fb-989a63a3ad50",
+          "input": "data"
+        },
+        {
+          "source": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "output": "224dae29-2680-4774-d587-bc88c1cc31e8",
+          "target": "d223baa3-1d0a-41f4-f6f3-429e61f9ef4c",
+          "input": "data"
+        },
+        {
+          "source": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "output": "5dfb80b7-5394-45b9-ef90-a172dee7690b",
+          "target": "b48eb744-1f7c-45c1-b0c5-90a731eb3023",
+          "input": "data"
+        },
+        {
+          "source": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "output": "7c728a88-ef41-4827-e065-01ba39b3afd5",
+          "target": "ce7cf1d7-5ffc-48b0-e6e1-edf2b53c4e67",
+          "input": "data"
+        },
+        {
+          "source": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "output": "a92cf3fc-7723-401e-f5b8-e3f11032a079",
+          "target": "8576ce46-bd68-4eab-b9c3-1cebeec51d67",
+          "input": "data"
+        },
+        {
+          "source": "3729651f-875f-40ea-9321-de3180601138",
+          "output": "fa04d29e-3df0-44c2-d8b3-ead1c14b0d08",
+          "target": "937fefa9-26fd-4978-ced2-9f67de2b2fc5",
+          "input": "data"
+        },
+        {
+          "source": "3729651f-875f-40ea-9321-de3180601138",
+          "output": "1d6a39a9-cd37-4afd-ea49-821f8e324ba8",
+          "target": "8363b1d2-0027-4887-c154-9aa435394ddb",
+          "input": "data"
+        },
+        {
+          "source": "3729651f-875f-40ea-9321-de3180601138",
+          "output": "133b0d97-7fbc-4317-bc95-0549ad85028b",
+          "target": "81722a2a-ef11-432a-d4e7-0ecf5dfdbaa5",
+          "input": "data"
+        },
+        {
+          "source": "3729651f-875f-40ea-9321-de3180601138",
+          "output": "b572114b-4334-4bf5-d4a3-2a9203ad2a2f",
+          "target": "f939a431-f1cd-4f99-8fc2-397497bbae35",
+          "input": "data"
+        },
+        {
+          "source": "2007dd3e-6552-42a6-9970-6bd1b1980d69",
+          "output": "b514ece0-7c78-4848-b881-0996e28f955e",
+          "target": "9bd00501-f528-40fb-efbc-6c0d571d1a5d",
+          "input": "data"
+        },
+        {
+          "source": "2007dd3e-6552-42a6-9970-6bd1b1980d69",
+          "output": "e42c9481-b094-46a9-9167-f01e90c757c3",
+          "target": "c485dedc-7cae-4174-b67e-6b86d47071e5",
+          "input": "data"
+        },
+        {
+          "source": "1757b106-617e-4391-b961-ead9120db5b2",
+          "output": "da8644e9-d1dd-4379-9d3d-53ec4d6391a1",
+          "target": "2007dd3e-6552-42a6-9970-6bd1b1980d69",
+          "input": "@seqin"
+        },
+        {
+          "source": "2007dd3e-6552-42a6-9970-6bd1b1980d69",
+          "output": "e9ec8756-5662-49da-9510-93316beea929",
+          "target": "0c9d8d39-1625-4457-f2dc-0a767d8167c0",
+          "input": "@seqin"
+        },
+        {
+          "source": "0c9d8d39-1625-4457-f2dc-0a767d8167c0",
+          "output": "49c10d42-df4c-4920-da06-262f95b02e20",
+          "target": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "input": "@seqin"
+        },
+        {
+          "source": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "output": "19f29a2e-70a6-4e01-958b-c52d670dc322",
+          "target": "3729651f-875f-40ea-9321-de3180601138",
+          "input": "@seqin"
+        },
+        {
+          "source": "c8de4a35-878d-44db-c740-c252c1884737",
+          "output": "value",
+          "target": "5d865535-8db0-4823-af17-0719a87b6149",
+          "input": "e1838038-0328-40f7-b37f-467f45fdc01f"
+        },
+        {
+          "source": "5d865535-8db0-4823-af17-0719a87b6149",
+          "output": "@seqout",
+          "target": "1757b106-617e-4391-b961-ead9120db5b2",
+          "input": "@seqin"
+        },
+        {
+          "source": "d1a577f9-53d1-46e8-b6b3-e71bc345a244",
+          "output": "action",
+          "target": "c8de4a35-878d-44db-c740-c252c1884737",
+          "input": "@seqin"
+        },
+        {
+          "source": "89b9b12d-ef82-4f2b-812b-56efea7b3e82",
+          "output": "action",
+          "target": "b3ea23da-111d-4fe1-9cbe-88fc615f2a19",
+          "input": "@seqin"
+        },
+        {
+          "source": "b3ea23da-111d-4fe1-9cbe-88fc615f2a19",
+          "output": "value",
+          "target": "0681deeb-88bd-4234-ce63-48463ac8824f",
+          "input": "e1838038-0328-40f7-b37f-467f45fdc01f"
+        },
+        {
+          "source": "0681deeb-88bd-4234-ce63-48463ac8824f",
+          "output": "@seqout",
+          "target": "1757b106-617e-4391-b961-ead9120db5b2",
+          "input": "@seqin"
+        },
+        {
+          "source": "a261da65-8278-4f0a-9e71-750b23fa34ff",
+          "output": "value",
+          "target": "bfa48c1a-6955-4305-ef8b-64e808e9420e",
+          "input": "e1838038-0328-40f7-b37f-467f45fdc01f"
+        },
+        {
+          "source": "f479ea8b-cb88-4762-b647-243db1171335",
+          "output": "action",
+          "target": "a261da65-8278-4f0a-9e71-750b23fa34ff",
+          "input": "@seqin"
+        },
+        {
+          "source": "bfa48c1a-6955-4305-ef8b-64e808e9420e",
+          "output": "@seqout",
+          "target": "2007dd3e-6552-42a6-9970-6bd1b1980d69",
+          "input": "@seqin"
+        },
+        {
+          "source": "17f41d7c-4403-4d29-a601-f74dcc072c25",
+          "output": "value",
+          "target": "5483a1b8-509d-4ed4-9ed6-7152c260f07b",
+          "input": "e1838038-0328-40f7-b37f-467f45fdc01f"
+        },
+        {
+          "source": "c012a30c-17d8-4c96-b5a3-010c883d8388",
+          "output": "action",
+          "target": "17f41d7c-4403-4d29-a601-f74dcc072c25",
+          "input": "@seqin"
+        },
+        {
+          "source": "5483a1b8-509d-4ed4-9ed6-7152c260f07b",
+          "output": "@seqout",
+          "target": "0c9d8d39-1625-4457-f2dc-0a767d8167c0",
+          "input": "@seqin"
+        },
+        {
+          "source": "0ddd9a1e-0ae1-424a-a3de-0a5d8e603546",
+          "output": "value",
+          "target": "06107a44-583a-4250-c01d-fbcf0e248516",
+          "input": "e1838038-0328-40f7-b37f-467f45fdc01f"
+        },
+        {
+          "source": "955cc667-00fd-4e3f-a01a-6795cb32b2cc",
+          "output": "value",
+          "target": "d673cce6-c14b-4de1-a2b7-d7300a45028b",
+          "input": "e1838038-0328-40f7-b37f-467f45fdc01f"
+        },
+        {
+          "source": "0381b81d-ec88-4d2f-a314-13a540f821d4",
+          "output": "action",
+          "target": "0ddd9a1e-0ae1-424a-a3de-0a5d8e603546",
+          "input": "@seqin"
+        },
+        {
+          "source": "06107a44-583a-4250-c01d-fbcf0e248516",
+          "output": "@seqout",
+          "target": "80f69916-45b2-4539-96ce-76c9dd387901",
+          "input": "@seqin"
+        },
+        {
+          "source": "ca17add6-3614-4c13-81c2-e4930c9c39c3",
+          "output": "action",
+          "target": "955cc667-00fd-4e3f-a01a-6795cb32b2cc",
+          "input": "@seqin"
+        },
+        {
+          "source": "d673cce6-c14b-4de1-a2b7-d7300a45028b",
+          "output": "@seqout",
+          "target": "3729651f-875f-40ea-9321-de3180601138",
+          "input": "@seqin"
+        },
+        {
+          "source": "3729651f-875f-40ea-9321-de3180601138",
+          "output": "ee1e7f97-017e-4d83-adea-5d901a656f3a",
+          "target": "6da410a4-4ad4-438b-bae8-a96ff51e8033",
+          "input": "@seqin"
+        }
+      ],
+      "name": "DCP405",
+      "left": 0,
+      "top": 0,
+      "width": 820,
+      "height": 716,
       "css": "page main_page"
     },
     {
@@ -1002,8 +6091,8 @@
         },
         {
           "type": "OutputActionComponent",
-          "left": 779,
-          "top": -365,
+          "left": 817,
+          "top": -397,
           "width": 0,
           "height": 0,
           "wireID": "bada8498-bd54-4227-f3a2-5aa5ef0bc68a",
@@ -1065,8 +6154,8 @@
         },
         {
           "type": "WriteSettingsActionComponent",
-          "left": 779,
-          "top": -276,
+          "left": 968,
+          "top": -272,
           "width": 0,
           "height": 0,
           "wireID": "d3d2590f-86d6-4ba1-d5e0-f08afe8ba3a5",
@@ -1110,6 +6199,17 @@
           "height": 0,
           "wireID": "fb092ad6-72b0-443e-b2b6-f70f940fe4cb",
           "variable": "instrument.isConnected"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 832,
+          "top": -335,
+          "width": 0,
+          "height": 0,
+          "wireID": "5b434a13-1bc9-4485-aca1-8a6510cd545c",
+          "asInputProperties": [
+            "value"
+          ]
         }
       ],
       "connectionLines": [
@@ -1198,18 +6298,6 @@
           "input": "value"
         },
         {
-          "source": "acae171d-93cf-4db2-82fa-969c4e99bcff",
-          "output": "@seqout",
-          "target": "4a132abc-0cd3-4a43-b361-1a85b4d757ae",
-          "input": "@seqin"
-        },
-        {
-          "source": "fb873f95-16de-4689-c090-36136038b744",
-          "output": "@seqout",
-          "target": "4a132abc-0cd3-4a43-b361-1a85b4d757ae",
-          "input": "@seqin"
-        },
-        {
           "source": "4953b9cc-3702-49d7-a51c-856b64516a91",
           "output": "variable",
           "target": "ad1f6bcf-5a2b-4578-82cd-f7ef112e9058",
@@ -1232,6 +6320,18 @@
           "output": "variable",
           "target": "ce4017ad-3710-4224-d611-f629b2e58d70",
           "input": "visible"
+        },
+        {
+          "source": "5b434a13-1bc9-4485-aca1-8a6510cd545c",
+          "output": "True",
+          "target": "d3d2590f-86d6-4ba1-d5e0-f08afe8ba3a5",
+          "input": "@seqin"
+        },
+        {
+          "source": "4a132abc-0cd3-4a43-b361-1a85b4d757ae",
+          "output": "result",
+          "target": "5b434a13-1bc9-4485-aca1-8a6510cd545c",
+          "input": "value"
         }
       ],
       "name": "bb3",
@@ -1629,8 +6729,8 @@
         },
         {
           "type": "CallActionActionComponent",
-          "left": -389,
-          "top": 289,
+          "left": -392,
+          "top": 337,
           "width": 0,
           "height": 0,
           "wireID": "e9420d2d-9d63-44b4-a4fc-1bdf761074e6",

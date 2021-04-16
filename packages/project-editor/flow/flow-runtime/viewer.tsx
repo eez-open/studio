@@ -330,19 +330,6 @@ const FlowViewerCanvasContainer = styled.div<FlowViewerCanvasContainerParams>`
         }
     }
 
-    .EezStudio_FlowRuntimeSelection_SelectedObject {
-        border: 1px solid #333;
-    }
-
-    .EezStudio_FlowRuntimeSelection_BoundingRect {
-        border: 2px solid black;
-        background-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .EezStudio_FlowRuntimeSelection_ResizeHandle {
-        background-color: rgba(0, 0, 0, 0.6);
-    }
-
     .connection-line-path {
         marker-start: url(#lineStart);
         marker-end: url(#lineEnd);
@@ -388,7 +375,7 @@ export class FlowViewer
     declare context: React.ContextType<typeof ProjectContext>;
 
     @observable flowContext: RuntimeFlowContext = new RuntimeFlowContext(
-        "eez-flow-editor-" + guid()
+        "eez-flow-viewer-" + guid()
     );
 
     get runningFlow() {

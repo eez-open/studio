@@ -62,10 +62,13 @@ export class DragAndDropManagerClass {
         event.dataTransfer.dropEffect = this.dropEffect;
     }
 
-    deleteDragItem() {
+    deleteDragItem(options?: { dropPlace?: IEezObject }) {
         if (this.dropObject && this.dropEffect == "move") {
             if (this.dragObject) {
-                this.UndoManager?.DocumentStore.deleteObject(this.dragObject);
+                this.UndoManager?.DocumentStore.deleteObject(
+                    this.dragObject,
+                    options
+                );
             }
             this.dropEffect = undefined;
             this.dragItemDeleted = true;

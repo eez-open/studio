@@ -94,7 +94,7 @@ import { getProjectFeatures } from "project-editor/core/extensions";
 import * as SearchModule from "project-editor/core/search";
 import { DataContext } from "project-editor/features/data/data";
 import { CurrentSearch } from "project-editor/core/search";
-import { Project, getFlow } from "project-editor/project/project";
+import { Project, getFlow, ProjectType } from "project-editor/project/project";
 
 import {
     build as buildProject,
@@ -474,6 +474,7 @@ class NavigationStoreClass implements INavigationStore {
 
     showObject(objectToShow: IEezObject) {
         this.setSelection([objectToShow]);
+
         for (
             let object: IEezObject | undefined = objectToShow;
             object;
@@ -1654,6 +1655,12 @@ export class DocumentStoreClass {
         return this._project!;
     }
 
+    get isDashboardProject() {
+        return (
+            this.project.settings.general.projectType === ProjectType.DASHBOARD
+        );
+    }
+
     getObjectFromPath(path: string[]) {
         return getObjectFromPath(this.project, path);
     }
@@ -1790,17 +1797,25 @@ export class DocumentStoreClass {
         }
     }
 
-    deleteObject(object: IEezObject) {
+    deleteObject(object: IEezObject, options?: { dropPlace?: IEezObject }) {
         let closeCombineCommands = false;
 
         if (object instanceof Component) {
-            if (!this.UndoManager.combineCommands) {
-                this.UndoManager.setCombineCommands(true);
-                closeCombineCommands = true;
-            }
-
             const flow = getAncestorOfType(object, Flow.classInfo) as Flow;
-            flow.deleteConnectionLines(object);
+
+            let keepConnectionLines =
+                options &&
+                options.dropPlace &&
+                flow == getAncestorOfType(options.dropPlace, Flow.classInfo);
+
+            if (!keepConnectionLines) {
+                if (!this.UndoManager.combineCommands) {
+                    this.UndoManager.setCombineCommands(true);
+                    closeCombineCommands = true;
+                }
+
+                flow.deleteConnectionLines(object);
+            }
         }
 
         deleteObject(object);
@@ -2298,7 +2313,6 @@ async function initExtensions() {
                                 aClass
                             );
                         },
-                        PropertyType,
                         makeDerivedClassInfo,
                         ActionComponent,
                         getFlow

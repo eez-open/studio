@@ -75,6 +75,8 @@ import {
     OutputActionComponent
 } from "project-editor/flow/action-components";
 
+import { RunningFlow } from "project-editor/flow/runtime";
+
 const { MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,8 +161,8 @@ export class ContainerWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -320,7 +322,10 @@ export class ListWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
@@ -430,7 +435,10 @@ export class GridWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
@@ -914,11 +922,11 @@ export class LayoutViewWidget extends EmbeddedWidget {
     @computed get inputs() {
         const page = findPage(getProject(this), this.layout);
         if (!page) {
-            return super.inputProperties;
+            return super.inputs;
         }
 
         return [
-            ...super.inputProperties,
+            ...super.inputs,
             ...page.components
                 .filter(component => component instanceof InputActionComponent)
                 .map((inputActionComponent: InputActionComponent) => ({
@@ -932,11 +940,11 @@ export class LayoutViewWidget extends EmbeddedWidget {
     @computed get outputs() {
         const page = findPage(getProject(this), this.layout);
         if (!page) {
-            return super.outputProperties;
+            return super.outputs;
         }
 
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             ...page.components
                 .filter(component => component instanceof OutputActionComponent)
                 .map((outputActionComponent: OutputActionComponent) => ({
@@ -1011,6 +1019,36 @@ export class LayoutViewWidget extends EmbeddedWidget {
                 {super.render(flowContext)}
             </>
         );
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        const page = this.getLayoutPage(
+            runningFlow.RuntimeStore.DocumentStore.dataContext
+        );
+
+        if (page) {
+            const layoutRunningFlow = runningFlow.getRunningFlowByComponent(
+                this
+            );
+            if (layoutRunningFlow) {
+                const componentState = runningFlow.getComponentState(this);
+                for (let [input, inputData] of componentState.inputsData) {
+                    for (let component of page.components) {
+                        if (component instanceof InputActionComponent) {
+                            if (component.wireID === input) {
+                                layoutRunningFlow?.propagateValue(
+                                    component,
+                                    "@seqout",
+                                    inputData.value
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return undefined;
     }
 
     open() {
@@ -1144,14 +1182,17 @@ export class DisplayDataWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -1347,8 +1388,7 @@ export class TextWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? (
+                {flowContext.document.DocumentStore.isDashboardProject ? (
                     <span>{text}</span>
                 ) : (
                     <ComponentCanvas
@@ -1682,14 +1722,17 @@ export class MultilineTextWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -1777,14 +1820,17 @@ export class RectangleWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -1974,7 +2020,10 @@ export class BitmapWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     @computed
@@ -1993,8 +2042,8 @@ export class BitmapWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2121,10 +2170,7 @@ export class ButtonWidget extends EmbeddedWidget {
                 messages.push(output.propertyNotSetMessage(object, "text"));
             }
 
-            if (
-                getProject(object).settings.general.projectType !==
-                ProjectType.DASHBOARD
-            ) {
+            if (!getDocumentStore(object).isDashboardProject) {
                 checkObjectReference(object, "enabled", messages, true);
             }
 
@@ -2155,8 +2201,7 @@ export class ButtonWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? (
+                {flowContext.document.DocumentStore.isDashboardProject ? (
                     <button
                         className="btn btn-secondary"
                         disabled={!buttonEnabled}
@@ -2245,14 +2290,17 @@ export class ToggleButtonWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2303,14 +2351,17 @@ export class ButtonGroupWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2513,14 +2564,17 @@ export class BarGraphWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2825,14 +2879,17 @@ export class YTGraphWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2940,14 +2997,17 @@ export class UpDownWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3100,14 +3160,17 @@ export class ListGraphWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3189,7 +3252,10 @@ export class AppViewWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
@@ -3260,14 +3326,17 @@ export class ScrollBarWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3401,14 +3470,17 @@ export class ProgressWidget extends EmbeddedWidget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Progress.png"
+        icon: "../home/_images/widgets/Progress.png",
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3484,14 +3556,17 @@ export class CanvasWidget extends EmbeddedWidget {
             }
 
             return messages;
-        }
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
     });
 
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore.project.settings.general
-                    .projectType === ProjectType.DASHBOARD ? null : (
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}

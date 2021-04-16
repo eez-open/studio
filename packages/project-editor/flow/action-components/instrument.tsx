@@ -55,6 +55,12 @@ export class ScpiActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
+        label: (component: ScpiActionComponent) => {
+            if (!component.isInputProperty("instrument")) {
+                return `SCPI ${component.instrument}`;
+            }
+            return ActionComponent.classInfo.label!(component);
+        },
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7">
                 <path d="M1.5 0C.67 0 0 .67 0 1.5S.67 3 1.5 3H2v1h-.5C.67 4 0 4.67 0 5.5S.67 7 1.5 7 3 6.33 3 5.5V5h1v.5C4 6.33 4.67 7 5.5 7S7 6.33 7 5.5 6.33 4 5.5 4H5V3h.5C6.33 3 7 2.33 7 1.5S6.33 0 5.5 0 4 .67 4 1.5V2H3v-.5C3 .67 2.33 0 1.5 0zm0 1c.28 0 .5.22.5.5V2h-.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5zm4 0c.28 0 .5.22.5.5s-.22.5-.5.5H5v-.5c0-.28.22-.5.5-.5zM3 3h1v1H3V3zM1.5 5H2v.5c0 .28-.22.5-.5.5S1 5.78 1 5.5s.22-.5.5-.5zM5 5h.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5V5z" />
@@ -109,7 +115,7 @@ export class ScpiActionComponent extends ActionComponent {
                 });
             }
         },
-        paletteGroupName: "Instrument"
+        componentPaletteGroupName: "Instrument"
     });
 
     @observable instrument: string;
@@ -158,7 +164,7 @@ export class ScpiActionComponent extends ActionComponent {
 
     @computed get inputs() {
         return [
-            ...super.inputProperties,
+            ...super.inputs,
             ...ScpiActionComponent.parse(this.scpi).inputs.map(input => ({
                 name: input,
                 displayName: input,
@@ -169,7 +175,7 @@ export class ScpiActionComponent extends ActionComponent {
 
     @computed get outputs() {
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             ...ScpiActionComponent.parse(this.scpi).outputs.map(output => ({
                 name: output,
                 displayName: output,
@@ -294,14 +300,12 @@ export class ScpiActionComponent extends ActionComponent {
         } finally {
             connection.release();
         }
+        return undefined;
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
-        const instrument = this.getInstrumentObject(flowContext);
-
         return (
             <ScpiDiv className="body">
-                <div>Instrument: [{instrument?.id ?? ""}]</div>
                 <pre>{this.scpi}</pre>
             </ScpiDiv>
         );
@@ -412,12 +416,12 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                 <path d="M4.916 37.202a2.724 2.724 0 1 1-3.852-3.853l7.874-7.874A11.446 11.446 0 0 1 7.266 19.5c0-6.351 5.15-11.5 11.5-11.5s11.5 5.149 11.5 11.5S25.117 31 18.766 31c-2.188 0-4.234-.611-5.975-1.672l-7.874 7.874zM18.766 12a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15z" />
             </svg>
         ),
-        paletteGroupName: "Instrument"
+        componentPaletteGroupName: "Instrument"
     });
 
     @computed get outputs() {
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             {
                 name: "instrument",
                 type: PropertyType.Any
@@ -442,6 +446,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                 />
             );
         });
+        return undefined;
     }
 }
 
@@ -457,12 +462,12 @@ export class GetInstrumentActionComponent extends ActionComponent {
                 <path d="M224 144c-44.004 0-80.001 36-80.001 80 0 44.004 35.997 80 80.001 80 44.005 0 79.999-35.996 79.999-80 0-44-35.994-80-79.999-80zm190.938 58.667c-9.605-88.531-81.074-160-169.605-169.599V0h-42.666v33.067c-88.531 9.599-160 81.068-169.604 169.599H0v42.667h33.062c9.604 88.531 81.072 160 169.604 169.604V448h42.666v-33.062c88.531-9.604 160-81.073 169.605-169.604H448v-42.667h-33.062zM224 373.333c-82.137 0-149.334-67.198-149.334-149.333 0-82.136 67.197-149.333 149.334-149.333 82.135 0 149.332 67.198 149.332 149.333S306.135 373.333 224 373.333z" />
             </svg>
         ),
-        paletteGroupName: "Instrument"
+        componentPaletteGroupName: "Instrument"
     });
 
     @computed get inputs() {
         return [
-            ...super.inputProperties,
+            ...super.inputs,
             {
                 name: "id",
                 type: PropertyType.String
@@ -472,7 +477,7 @@ export class GetInstrumentActionComponent extends ActionComponent {
 
     @computed get outputs() {
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             {
                 name: "instrument",
                 type: PropertyType.Any
@@ -494,6 +499,8 @@ export class GetInstrumentActionComponent extends ActionComponent {
         }
 
         runningFlow.propagateValue(this, "instrument", instrument);
+
+        return undefined;
     }
 }
 

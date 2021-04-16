@@ -28,6 +28,7 @@ export interface IDataContext {
 
     get(dataItemId: string): any;
     set(dataItemId: string, value: any): void;
+    isVariableDeclared(dataItemId: string): boolean;
     declare(dataItemId: string, value: any): void;
 
     getEnumValue(dataItemId: string): number;

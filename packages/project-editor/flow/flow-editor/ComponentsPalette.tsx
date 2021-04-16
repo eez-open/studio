@@ -277,6 +277,9 @@ const ComponentsPaletteDiv = styled.div`
 export class ComponentsPalette extends React.Component<{
     showOnlyActions?: boolean;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     @observable selectedComponentClass: IObjectClassInfo | undefined;
 
     @action.bound
@@ -300,11 +303,25 @@ export class ComponentsPalette extends React.Component<{
             ) {
                 return;
             }
+
+            if (
+                componentClass.objectClass.classInfo.enabledInComponentPalette
+            ) {
+                if (
+                    !componentClass.objectClass.classInfo.enabledInComponentPalette(
+                        this.context.project.settings.general.projectType
+                    )
+                ) {
+                    return;
+                }
+            }
+
             const parts = componentClass.name.split("/");
             let groupName;
             if (parts.length == 1) {
                 groupName =
-                    componentClass.objectClass.classInfo.paletteGroupName;
+                    componentClass.objectClass.classInfo
+                        .componentPaletteGroupName;
                 if (!groupName) {
                     if (componentClass.name.endsWith("Widget")) {
                         groupName = "!1Common Widgets";
@@ -319,6 +336,7 @@ export class ComponentsPalette extends React.Component<{
             } else if (parts.length == 2) {
                 groupName = parts[0];
             }
+
             if (groupName) {
                 let componentClasses = groups.get(groupName);
                 if (!componentClasses) {

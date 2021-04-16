@@ -184,6 +184,10 @@ export class InstrumentObject {
 
     _creationDate: Date | null | undefined;
 
+    toString() {
+        return `Instrument: ${this.name} [${this.id}]`;
+    }
+
     get isUnknownExtension() {
         return (
             this.extension &&

@@ -1113,8 +1113,6 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     onDrop(dropPosition: DropPosition, event: any) {
-        DragAndDropManager.deleteDragItem();
-
         if (DragAndDropManager.dragObject) {
             let object = JSON.parse(
                 objectToJson(DragAndDropManager.dragObject)
@@ -1127,11 +1125,17 @@ export class TreeAdapter implements ITreeAdapter {
             const DocumentStore = getDocumentStore(this.rootItem.object);
 
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
+                DragAndDropManager.deleteDragItem({
+                    dropPlace: getParent(dropItem.object)
+                });
                 aNewObject = DocumentStore.insertObjectBefore(
                     dropItem.object,
                     object
                 );
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
+                DragAndDropManager.deleteDragItem({
+                    dropPlace: getParent(dropItem.object)
+                });
                 aNewObject = DocumentStore.insertObjectAfter(
                     dropItem.object,
                     object
@@ -1143,11 +1147,12 @@ export class TreeAdapter implements ITreeAdapter {
                     true
                 );
                 if (dropPlace) {
-                    if (isArray(dropPlace as IEezObject)) {
-                        aNewObject = DocumentStore.addObject(
-                            dropPlace as IEezObject,
-                            object
-                        );
+                    DragAndDropManager.deleteDragItem({
+                        dropPlace
+                    });
+
+                    if (isArray(dropPlace)) {
+                        aNewObject = DocumentStore.addObject(dropPlace, object);
                     } else {
                         DocumentStore.updateObject(dropItem.object, {
                             [(dropPlace as PropertyInfo).name]: object

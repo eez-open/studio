@@ -32,7 +32,8 @@ import {
     getLabel,
     findPropertyByNameInObject,
     findPropertyByNameInClassInfo,
-    PropertyProps
+    PropertyProps,
+    generalGroup
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
@@ -41,12 +42,7 @@ import {
 } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
-import {
-    checkObjectReference,
-    getFlow,
-    getProject,
-    ProjectType
-} from "project-editor/project/project";
+import { checkObjectReference, getFlow } from "project-editor/project/project";
 
 import type {
     IResizeHandler,
@@ -127,8 +123,7 @@ export function makeStylePropertyInfo(
             !getDocumentStore(object).masterProjectEnabled,
         enumerable: false,
         hideInPropertyGrid: (object: IEezObject) =>
-            getProject(object).settings.general.projectType ===
-            ProjectType.DASHBOARD
+            getDocumentStore(object).isDashboardProject
     };
 }
 
@@ -571,7 +566,7 @@ export class Component extends EezObject {
         );
     }
 
-    get inputProperties() {
+    get inputs() {
         return [
             ...((this.asInputProperties ?? [])
                 .map(inputPropertyName =>
@@ -584,7 +579,7 @@ export class Component extends EezObject {
         ];
     }
 
-    get outputProperties() {
+    get outputs() {
         return [
             ...((this.asOutputProperties ?? [])
                 .map(outputPropertyName =>
@@ -595,14 +590,6 @@ export class Component extends EezObject {
                 )
                 .filter(propertyInfo => !!propertyInfo) as PropertyInfo[])
         ];
-    }
-
-    get inputs() {
-        return this.inputProperties;
-    }
-
-    get outputs() {
-        return this.outputProperties;
     }
 
     @computed
@@ -622,8 +609,12 @@ export class Component extends EezObject {
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
 
-    onStart(runningFlow: IRunningFlow) {}
-    onFinish(runningFlow: IRunningFlow) {}
+    async execute(
+        runningFlow: IRunningFlow,
+        dispose: (() => void) | undefined
+    ): Promise<(() => void) | undefined> {
+        return undefined;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -644,8 +635,7 @@ export class Widget extends Component {
                 type: PropertyType.String,
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType !==
-                    ProjectType.DASHBOARD
+                    !getDocumentStore(object).isDashboardProject
             }
         ],
 
@@ -1123,10 +1113,7 @@ export class EmbeddedWidget extends Widget {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        if (
-            flowContext.document.DocumentStore.project.settings.general
-                .projectType !== ProjectType.DASHBOARD
-        ) {
+        if (!flowContext.document.DocumentStore.isDashboardProject) {
             const backgroundColor = this.style.backgroundColorProperty;
             style.backgroundColor = to16bitsColor(backgroundColor);
         }
@@ -1143,7 +1130,14 @@ function renderActionComponent(
     const classInfo = getClassInfo(actionNode);
 
     const inputs = actionNode.inputs;
-    const outputs = actionNode.outputs;
+
+    let outputs = actionNode.outputs;
+
+    // move @error output to end
+    let i = outputs.findIndex(output => output.name === "@error");
+    if (i !== -1) {
+        outputs = [...outputs.slice(0, i), ...outputs.slice(i + 1), outputs[i]];
+    }
 
     return (
         <>
@@ -1184,6 +1178,9 @@ function renderActionComponent(
                             <div
                                 key={property.name}
                                 data-connection-output-id={property.name}
+                                className={classNames({
+                                    error: property.name === "@error"
+                                })}
                             >
                                 {property.displayName ??
                                     humanize(property.name)}
@@ -1199,7 +1196,32 @@ function renderActionComponent(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ActionComponent extends Component {
-    static classInfo = makeDerivedClassInfo(Component.classInfo, {});
+    static classInfo = makeDerivedClassInfo(Component.classInfo, {
+        properties: [
+            {
+                name: "catchError",
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup
+            }
+        ]
+    });
+
+    @observable catchError: boolean;
+
+    get outputs() {
+        if (!this.catchError) {
+            return super.outputs;
+        }
+
+        return [
+            ...super.outputs,
+            {
+                name: "@error",
+                displayName: "@Error",
+                type: PropertyType.String
+            }
+        ];
+    }
 
     get autoSize() {
         return true;
@@ -1225,8 +1247,6 @@ export class ActionComponent extends Component {
     render(flowContext: IFlowContext) {
         return renderActionComponent(this, flowContext);
     }
-
-    async execute(runningFlow: IRunningFlow): Promise<void> {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

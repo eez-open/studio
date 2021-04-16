@@ -45,7 +45,6 @@ import {
 import { styled } from "eez-studio-ui/styled-components";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
-import { ProjectType } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -423,6 +422,28 @@ export class PageTabState implements IEditorState {
             }
         }
     }
+
+    @action
+    selectObjects(objects: IEezObject[]) {
+        const items: ITreeObjectAdapter[] = [];
+
+        for (let i = 0; i < objects.length; i++) {
+            const object = objects[i];
+
+            let ancestor: IEezObject | undefined;
+            for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
+                let item = this.componentContainerDisplayItem.getObjectAdapter(
+                    ancestor
+                );
+                if (item) {
+                    items.push(item);
+                    break;
+                }
+            }
+        }
+
+        this.componentContainerDisplayItem.selectItems(items);
+    }
 }
 
 @observer
@@ -564,9 +585,7 @@ export class PagesNavigation extends NavigationComponent {
         } else {
             const buttons: JSX.Element[] = [];
 
-            const hasThemes =
-                this.context.project.settings.general.projectType !==
-                ProjectType.DASHBOARD;
+            const hasThemes = !this.context.isDashboardProject;
 
             if (
                 hasThemes &&

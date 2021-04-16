@@ -203,6 +203,25 @@ export abstract class Flow extends EezObject {
                 }
             }
             return undefined;
+        },
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (jsObject.connectionLines) {
+                for (let i = 1; i < jsObject.connectionLines.length; i++) {
+                    for (let j = 0; j < i; j++) {
+                        const a = jsObject.connectionLines[i];
+                        const b = jsObject.connectionLines[j];
+                        if (
+                            a.source == b.source &&
+                            a.output == b.output &&
+                            a.target == b.target &&
+                            a.input == b.input
+                        ) {
+                            console.log("duplicate", a);
+                        }
+                    }
+                }
+            }
         }
     };
 
@@ -447,5 +466,27 @@ export class FlowTabState implements IEditorState {
                 return;
             }
         }
+    }
+
+    @action
+    selectObjects(objects: IEezObject[]) {
+        const items: ITreeObjectAdapter[] = [];
+
+        for (let i = 0; i < objects.length; i++) {
+            const object = objects[i];
+
+            let ancestor: IEezObject | undefined;
+            for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
+                let item = this.componentContainerDisplayItem.getObjectAdapter(
+                    ancestor
+                );
+                if (item) {
+                    items.push(item);
+                    break;
+                }
+            }
+        }
+
+        this.componentContainerDisplayItem.selectItems(items);
     }
 }

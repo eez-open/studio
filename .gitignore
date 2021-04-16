@@ -27,3 +27,4 @@ TODO.txt
 builder-output
 
 **/*.eez-project-ui-state
+**/*.eez-project-runtime-settings

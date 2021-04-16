@@ -240,6 +240,10 @@ const ComponentEnclosureDiv = styled.div`
                 margin-bottom: 0;
             }
         }
+
+        [data-connection-output-id].error {
+            color: red;
+        }
     }
 
     &.eez-widget-component {
@@ -295,11 +299,13 @@ const ComponentEnclosureDiv = styled.div`
         }
     }
 
+    &.Button button,
     &.ButtonWidget button {
         width: 100%;
         height: 100%;
     }
 
+    &.Text button,
     &.TextWidget {
         display: flex;
         align-items: center;

@@ -32,7 +32,8 @@ import {
     findPropertyByNameInObject,
     getRootObject,
     getAncestorOfType,
-    getParent
+    getParent,
+    ProjectType
 } from "project-editor/core/object";
 import {
     Message,
@@ -74,6 +75,8 @@ import { FlowEditor } from "project-editor/flow/flow-editor/editor";
 import { ContainerWidget, LayoutViewWidget } from "project-editor/flow/widgets";
 import { Widget } from "project-editor/flow/component";
 import { PagesNavigation } from "project-editor/features/page/PagesNavigation";
+
+export { ProjectType } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -527,17 +530,9 @@ registerClass(ImportDirective);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export enum ProjectType {
-    MASTER_FIRMWARE = "master",
-    FIRMWARE_MODULE = "firmware-module",
-    RESOURCE = "resource",
-    APPLET = "applet",
-    DASHBOARD = "dashboard"
-}
-
 export class General extends EezObject {
     @observable projectVersion: "v1" | "v2";
-    @observable projectType: string;
+    @observable projectType: ProjectType;
     @observable scpiDocFolder?: string;
     @observable namespace: string;
     @observable masterProject: string;
@@ -597,8 +592,7 @@ export class General extends EezObject {
                 name: "css",
                 type: PropertyType.CSS,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType !==
-                    ProjectType.DASHBOARD
+                    !getDocumentStore(object).isDashboardProject
             }
         ],
         showInNavigation: true,
@@ -675,8 +669,7 @@ export class Settings extends EezObject {
                 ) => {
                     const DocumentStore = getDocumentStore(object);
                     return (
-                        DocumentStore.project.settings.general.projectType !==
-                            ProjectType.DASHBOARD &&
+                        !DocumentStore.isDashboardProject &&
                         !DocumentStore.masterProjectEnabled
                     );
                 }

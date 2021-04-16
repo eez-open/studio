@@ -30,10 +30,7 @@ import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Output } from "project-editor/components/Output";
 
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
-import {
-    BuildConfiguration,
-    ProjectType
-} from "project-editor/project/project";
+import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { CommandPalette } from "project-editor/project/command-palette";
 
@@ -108,9 +105,10 @@ class Toolbar extends React.Component {
 
     get isBuildConfigurationSelectorVisible() {
         return (
-            this.context.project.pages ||
-            this.context.project.actions ||
-            this.context.project.data
+            !this.context.isDashboardProject &&
+            (this.context.project.pages ||
+                this.context.project.actions ||
+                this.context.project.data)
         );
     }
 
@@ -179,8 +177,7 @@ class Toolbar extends React.Component {
                         </div>
                     )}
 
-                    {this.context.project.settings.general.projectType !=
-                        ProjectType.DASHBOARD && (
+                    {!this.context.isDashboardProject && (
                         <div className="btn-group" role="group">
                             <IconAction
                                 title="Check"
@@ -194,9 +191,10 @@ class Toolbar extends React.Component {
                             />
                         </div>
                     )}
+                </div>
 
-                    {this.context.project.settings.general.projectType ==
-                        ProjectType.DASHBOARD && (
+                <div>
+                    {this.context.isDashboardProject && (
                         <div className="btn-group" role="group">
                             <ButtonAction
                                 text="Run"

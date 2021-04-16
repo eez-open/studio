@@ -36,8 +36,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     Project,
     findReferencedObject,
-    getProject,
-    ProjectType
+    getProject
 } from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/ProjectEditor";
 
@@ -749,10 +748,7 @@ export class Style extends EezObject {
 
             const Projectstore = getDocumentStore(object);
 
-            if (
-                Projectstore.project.settings.general.projectType ===
-                ProjectType.DASHBOARD
-            ) {
+            if (Projectstore.isDashboardProject) {
                 return messages;
             }
 

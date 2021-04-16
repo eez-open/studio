@@ -7,7 +7,7 @@ import { Icon } from "eez-studio-ui/icon";
 
 export interface ITreeNode<T = any> {
     id: string;
-    label: string;
+    label: React.ReactNode;
     children: ITreeNode[];
     selected: boolean;
     expanded: boolean;

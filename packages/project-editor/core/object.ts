@@ -15,32 +15,10 @@ import { Rect } from "eez-studio-shared/geometry";
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import { observable } from "mobx";
 
-////////////////////////////////////////////////////////////////////////////////
+import { ProjectType, PropertyType } from "eez-studio-types";
+export { ProjectType, PropertyType } from "eez-studio-types";
 
-export enum PropertyType {
-    String,
-    StringArray,
-    MultilineText,
-    JSON,
-    CSS,
-    CPP,
-    Number,
-    NumberArray,
-    Array,
-    Object,
-    Enum,
-    Image,
-    Color,
-    ThemedColor,
-    RelativeFolder,
-    RelativeFile,
-    ObjectReference,
-    ConfigurationReference,
-    Boolean,
-    GUID,
-    Any,
-    Null
-}
+////////////////////////////////////////////////////////////////////////////////
 
 export interface EnumItem {
     id: string | number;
@@ -192,6 +170,7 @@ export interface IEditorState {
     loadState(state: any): void;
     saveState(): any;
     selectObject(object: IEezObject): void;
+    selectObjects(objects: IEezObject[]): void;
 }
 
 export interface IEditor {
@@ -227,7 +206,9 @@ export interface ClassInfo {
 
     parentClassInfo?: ClassInfo;
 
-    paletteGroupName?: string;
+    componentPaletteGroupName?: string;
+    enabledInComponentPalette?: (projectType: ProjectType) => boolean;
+
     showInNavigation?: boolean;
     hideInProperties?: boolean;
     isPropertyMenuSupported?: boolean;

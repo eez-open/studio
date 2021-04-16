@@ -15,8 +15,7 @@ import { Message, Type } from "project-editor/core/output";
 import {
     findReferencedObject,
     Project,
-    getProject,
-    ProjectType
+    getProject
 } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { build } from "project-editor/features/action/build";
@@ -30,7 +29,7 @@ import {
 import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
 import { FlowEditor } from "project-editor/flow/flow-editor/editor";
 import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
-import { IPanel } from "project-editor/core/store";
+import { getDocumentStore, IPanel } from "project-editor/core/store";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
 import { ThemesSideView } from "project-editor/features/style/theme";
 import { bind } from "bind-decorator";
@@ -212,8 +211,10 @@ export class ActionsNavigation extends NavigationComponent {
             <ListNavigation
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
+                editable={!this.context.RuntimeStore.isRuntimeMode}
             />
         );
+
         const navigation = this.context.RuntimeStore.isRuntimeMode ? (
             listNavigation
         ) : (
@@ -361,8 +362,7 @@ export class Action extends Flow {
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType ===
-                    ProjectType.DASHBOARD
+                    getDocumentStore(object).isDashboardProject
             }
         ],
         beforeLoadHook: (action: Action, jsObject: any) => {
@@ -395,8 +395,7 @@ export class Action extends Flow {
                         {
                             name: result.values.name
                         },
-                        getProject(parent).settings.general.projectType ===
-                            ProjectType.DASHBOARD
+                        getDocumentStore(parent).isDashboardProject
                             ? ({
                                   implementationType: "flow",
                                   components: [],

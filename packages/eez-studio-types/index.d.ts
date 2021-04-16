@@ -4,10 +4,43 @@ import { ThemedStyledInterface } from "styled-components";
 
 interface IEezObject {}
 
+export const enum PropertyType {
+    String,
+    StringArray,
+    MultilineText,
+    JSON,
+    CSS,
+    CPP,
+    Number,
+    NumberArray,
+    Array,
+    Object,
+    Enum,
+    Image,
+    Color,
+    ThemedColor,
+    RelativeFolder,
+    RelativeFile,
+    ObjectReference,
+    ConfigurationReference,
+    Boolean,
+    GUID,
+    Any,
+    Null
+}
+
+export const enum ProjectType {
+    MASTER_FIRMWARE = "master",
+    FIRMWARE_MODULE = "firmware-module",
+    RESOURCE = "resource",
+    APPLET = "applet",
+    DASHBOARD = "dashboard"
+}
+
 interface PropertyInfo {
     name: string;
     displayName?: string;
-    type: any;
+    type: PropertyType;
     hideInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
@@ -17,24 +50,23 @@ interface ClassInfo {
     properties: PropertyInfo[];
     icon?: React.ReactNode;
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
+    enabledInComponentPalette?: (projectType: ProjectType) => boolean;
 }
 
 declare class Component {
     static classInfo: ClassInfo;
 
-    get inputProperties(): PropertyInfo[];
     get inputs(): PropertyInfo[];
-
-    get outputProperties(): PropertyInfo[];
     get outputs(): PropertyInfo[];
 
-    onStart(runningFlow: IRunningFlow): void;
-    onFinish(runningFlow: IRunningFlow): void;
+    execute(
+        runningFlow: IRunningFlow,
+        dispose: (() => void) | undefined
+    ): Promise<(() => void) | undefined>;
 }
 
 declare class ActionComponent extends Component {
     getBody(flowContext: IFlowContext): React.ReactNode;
-    execute(runningFlow: IRunningFlow): Promise<void>;
 }
 
 interface IFlowContext {
@@ -82,7 +114,8 @@ interface IRunningFlow {
     propagateValue(
         sourceComponent: Component,
         output: string,
-        value: any
+        value: any,
+        outputName?: string
     ): void;
 }
 
@@ -92,6 +125,7 @@ interface IDataContext {
 
     get(dataItemId: string): any;
     set(dataItemId: string, value: any): void;
+    isVariableDeclared(dataItemId: string): boolean;
     declare(dataItemId: string, value: any): void;
 
     getEnumValue(dataItemId: string): number;
@@ -153,7 +187,6 @@ interface IEezStudio {
     mobx: typeof mobx;
     styled: ThemedStyledInterface<ThemeInterface>;
     registerClass: (classToRegister: any) => void;
-    PropertyType: any;
     makeDerivedClassInfo: (
         baseClassInfo: ClassInfo,
         derivedClassInfoProperties: Partial<ClassInfo>

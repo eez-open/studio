@@ -12,16 +12,12 @@ import {
     PropertyType
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
-import {
-    findReferencedObject,
-    getProject,
-    Project,
-    ProjectType
-} from "project-editor/project/project";
+import { findReferencedObject, Project } from "project-editor/project/project";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/data/build";
 import { metrics } from "project-editor/features/data/metrics";
 import type { IDataContext } from "project-editor/flow/flow-interfaces";
+import { getDocumentStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +31,8 @@ export class DataItem extends EezObject {
         | "string"
         | "enum"
         | "list"
-        | "struct";
+        | "struct"
+        | "date";
     @observable enumItems: string;
     @observable defaultValue: string;
     @observable defaultValueList: string;
@@ -79,6 +76,9 @@ export class DataItem extends EezObject {
                     },
                     {
                         id: "struct"
+                    },
+                    {
+                        id: "date"
                     }
                 ]
             },
@@ -110,8 +110,7 @@ export class DataItem extends EezObject {
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType ===
-                    ProjectType.DASHBOARD
+                    getDocumentStore(object).isDashboardProject
             }
         ],
         newItem: (parent: IEezObject) => {
@@ -227,6 +226,21 @@ export class DataContext implements IDataContext {
         } else {
             this.setDataItemValue(dataItemId, value);
         }
+    }
+
+    isVariableDeclared(dataItemId: string) {
+        const parts = dataItemId.split(".");
+        dataItemId = parts[0];
+
+        if (this.localVariables && this.localVariables.has(dataItemId)) {
+            return true;
+        }
+
+        if (findDataItem(this.project, dataItemId)) {
+            return true;
+        }
+
+        return false;
     }
 
     @action

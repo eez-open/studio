@@ -34,8 +34,7 @@ import {
 import {
     Project,
     findReferencedObject,
-    getProject,
-    ProjectType
+    getProject
 } from "project-editor/project/project";
 
 import { Component, Widget } from "project-editor/flow/component";
@@ -203,8 +202,7 @@ export class Page extends Flow {
                 referencedObjectCollectionPath: "styles",
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType ===
-                    ProjectType.DASHBOARD
+                    getDocumentStore(object).isDashboardProject
             },
             {
                 name: "usedIn",
@@ -212,16 +210,14 @@ export class Page extends Flow {
                 referencedObjectCollectionPath: "settings/build/configurations",
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType ===
-                    ProjectType.DASHBOARD
+                    getDocumentStore(object).isDashboardProject
             },
             {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType ===
-                    ProjectType.DASHBOARD
+                    getDocumentStore(object).isDashboardProject
             },
             {
                 name: "portrait",
@@ -241,8 +237,7 @@ export class Page extends Flow {
                 type: PropertyType.String,
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectType !==
-                    ProjectType.DASHBOARD
+                    !getDocumentStore(object).isDashboardProject
             }
         ],
         beforeLoadHook: (page: Page, jsObject: any) => {
@@ -426,10 +421,7 @@ export class Page extends Flow {
     }
 
     getClassName() {
-        return getProject(this).settings.general.projectType ===
-            ProjectType.DASHBOARD
-            ? this.css
-            : "";
+        return getDocumentStore(this).isDashboardProject ? this.css : "";
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {

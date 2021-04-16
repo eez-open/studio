@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, computed, IReactionDisposer, autorun } from "mobx";
+import { observable, action, computed, autorun } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -29,6 +29,45 @@ import { RunningFlow } from "../runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class StartActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 582">
+                <path d="M174 292c0-9.333 4.667-17.333 14-24L552 40c13.333-9.333 24.667-11 34-5 9.333 6 14 17.667 14 35v442c0 17.333-4.667 29-14 35s-20.667 4.333-34-5L188 314c-9.333-6.667-14-14-14-22M0 58C0 19.333 25.333 0 76 0c49.333 0 74 19.333 74 58v466c0 38.667-24.667 58-74 58-50.667 0-76-19.333-76-58V58" />
+            </svg>
+        )
+    });
+}
+
+registerClass(StartActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class EndActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 582">
+                <path d="M412 268c9.333 6.667 14 14.667 14 24 0 8-4.667 15.333-14 22L50 542c-14.667 9.333-26.667 11-36 5-9.333-6-14-17.667-14-35V70c0-17.333 4.667-29 14-35s21.333-4.333 36 5l362 228M526 0c49.333 0 74 19.333 74 58v466c0 38.667-24.667 58-74 58-50.667 0-76-19.333-76-58V58c0-38.667 25.333-58 76-58" />
+            </svg>
+        )
+    });
+
+    async execute(runningFlow: RunningFlow) {
+        if (runningFlow.parentRunningFlow && runningFlow.component) {
+            runningFlow.parentRunningFlow.propagateValue(
+                runningFlow.component,
+                "@seqout",
+                null
+            );
+        }
+        return undefined;
+    }
+}
+
+registerClass(EndActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class InputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
@@ -55,8 +94,6 @@ export class InputActionComponent extends ActionComponent {
     });
 
     @observable name: string;
-
-    async execute(runningFlow: RunningFlow) {}
 }
 
 registerClass(InputActionComponent);
@@ -99,19 +136,17 @@ export class OutputActionComponent extends ActionComponent {
             runningFlow.parentRunningFlow.propagateValue(
                 runningFlow.component,
                 this.wireID,
-                value.value
+                value.value,
+                this.name
             );
         }
+        return undefined;
     }
 }
 
 registerClass(OutputActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class GetVariableActionComponentRunningState {
-    disposeReaction: IReactionDisposer;
-}
 
 export class GetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -142,26 +177,20 @@ export class GetVariableActionComponent extends ActionComponent {
         );
     }
 
-    onStart(runningFlow: RunningFlow) {
-        const runningState = new GetVariableActionComponentRunningState();
+    async execute(runningFlow: RunningFlow, dispose: (() => void) | undefined) {
+        if (dispose) {
+            return dispose;
+        }
 
-        runningFlow.setComponentRunningState(this, runningState);
-
-        runningState.disposeReaction = autorun(() =>
-            runningFlow.propagateValue(
-                this,
-                "variable",
-                runningFlow.getVariable(this, this.variable)
-            )
-        );
-    }
-
-    onFinish(runningFlow: RunningFlow) {
-        runningFlow
-            .getComponentRunningState<GetVariableActionComponentRunningState>(
-                this
-            )
-            .disposeReaction();
+        return autorun(() => {
+            if (runningFlow.isVariableDeclared(this, this.variable)) {
+                runningFlow.propagateValue(
+                    this,
+                    "variable",
+                    runningFlow.getVariable(this, this.variable)
+                );
+            }
+        });
     }
 }
 
@@ -264,7 +293,7 @@ export class EvalActionComponent extends ActionComponent {
 
     @computed get inputs() {
         return [
-            ...super.inputProperties,
+            ...super.inputs,
             ...EvalActionComponent.parse(this.expression).inputs.map(input => ({
                 name: input,
                 displayName: input,
@@ -275,7 +304,7 @@ export class EvalActionComponent extends ActionComponent {
 
     @computed get outputs() {
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             {
                 name: "result",
                 type: PropertyType.Any
@@ -320,6 +349,7 @@ export class EvalActionComponent extends ActionComponent {
             console.error(err);
             runningFlow.propagateValue(this, "result", undefined);
         }
+        return undefined;
     }
 }
 
@@ -388,6 +418,7 @@ export class SetVariableActionComponent extends ActionComponent {
     async execute(runningFlow: RunningFlow) {
         let value = runningFlow.getPropertyValue(this, "value");
         runningFlow.setVariable(this, this.variable, value);
+        return undefined;
     }
 }
 
@@ -456,6 +487,7 @@ export class DeclareVariableActionComponent extends ActionComponent {
     async execute(runningFlow: RunningFlow) {
         let value = runningFlow.getPropertyValue(this, "value");
         runningFlow.declareVariable(this, this.variable, value);
+        return undefined;
     }
 }
 
@@ -516,7 +548,7 @@ export class CompareActionComponent extends ActionComponent {
 
     @computed get outputs() {
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             {
                 name: "True",
                 type: PropertyType.Null
@@ -531,7 +563,8 @@ export class CompareActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <CompareActionComponentDiv className="body">
-                A {this.operator} B
+                {this.isInputProperty("A") ? "A" : this.A} {this.operator}{" "}
+                {this.isInputProperty("B") ? "B" : this.B}
             </CompareActionComponentDiv>
         );
     }
@@ -560,6 +593,7 @@ export class CompareActionComponent extends ActionComponent {
         } else {
             runningFlow.propagateValue(this, "False", false);
         }
+        return undefined;
     }
 }
 
@@ -593,7 +627,7 @@ export class IsTrueActionComponent extends ActionComponent {
 
     @computed get outputs() {
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             {
                 name: "True",
                 type: PropertyType.Null
@@ -613,6 +647,7 @@ export class IsTrueActionComponent extends ActionComponent {
         } else {
             runningFlow.propagateValue(this, "False", false);
         }
+        return undefined;
     }
 }
 
@@ -650,6 +685,7 @@ export class ConstantActionComponent extends ActionComponent {
 
     async execute(runningFlow: RunningFlow) {
         runningFlow.propagateValue(this, "value", JSON.parse(this.value));
+        return undefined;
     }
 }
 
@@ -676,7 +712,7 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     @computed get outputs() {
         return [
-            ...super.outputProperties,
+            ...super.outputs,
             {
                 name: "value",
                 type: PropertyType.Any
@@ -706,6 +742,7 @@ export class ReadSettingActionComponent extends ActionComponent {
             "value",
             runningFlow.RuntimeStore.readSettings(key)
         );
+        return undefined;
     }
 }
 
@@ -732,7 +769,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
 
     @computed get inputs() {
         return [
-            ...super.inputProperties,
+            ...super.inputs,
             {
                 name: "value",
                 type: PropertyType.Any
@@ -762,6 +799,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
             "value"
         );
         runningFlow.RuntimeStore.writeSettings(key, inputPropertyValue?.value);
+        return undefined;
     }
 }
 
@@ -790,7 +828,7 @@ export class CallActionActionComponent extends ActionComponent {
     @computed get inputs() {
         const action = findAction(getProject(this), this.action);
         if (!action) {
-            return super.inputProperties;
+            return super.inputs;
         }
 
         const inputs = action.components
@@ -802,13 +840,13 @@ export class CallActionActionComponent extends ActionComponent {
                 type: PropertyType.Any
             }));
 
-        return [...super.inputProperties, ...inputs];
+        return [...super.inputs, ...inputs];
     }
 
     @computed get outputs() {
         const action = findAction(getProject(this), this.action);
         if (!action) {
-            return super.outputProperties;
+            return super.outputs;
         }
 
         const outputs = action.components
@@ -820,7 +858,7 @@ export class CallActionActionComponent extends ActionComponent {
                 type: PropertyType.Any
             }));
 
-        return [...super.outputProperties, ...outputs];
+        return [...super.outputs, ...outputs];
     }
 
     async execute(runningFlow: RunningFlow) {
@@ -845,6 +883,7 @@ export class CallActionActionComponent extends ActionComponent {
                 }
             }
         }
+        return undefined;
     }
 }
 
@@ -980,6 +1019,107 @@ export class CommentActionComponent extends ActionComponent {
 }
 
 registerClass(CommentActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class DateNowActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 40">
+                <path d="M12 18H8v4h4v-4zm8 0h-4v4h4v-4zm8 0h-4v4h4v-4zm4-14h-2V0h-4v4H10V0H6v4H4C1.78 4 .02 5.8.02 8L0 36c0 2.2 1.78 4 4 4h28c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4zm0 32H4V14h28v22z" />
+            </svg>
+        )
+    });
+
+    @computed get outputs() {
+        return [
+            ...super.outputs,
+            {
+                name: "value",
+                type: PropertyType.Any
+            }
+        ];
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        runningFlow.propagateValue(this, "value", Date.now());
+        return undefined;
+    }
+}
+
+registerClass(DateNowActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class DelayActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            {
+                name: "milliseconds",
+                type: PropertyType.Number
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+                <path d="M7.5 5.1c0 .3-.2.5-.5.5H5c-.3 0-.5-.2-.5-.5v-2c0-.3.2-.5.5-.5s.5.2.5.5v1.5H7c.2 0 .5.3.5.5zM10 5c0-2.8-2.2-5-5-5S0 2.2 0 5s2.2 5 5 5 5-2.2 5-5zM9 5c0 2.2-1.8 4-4 4S1 7.2 1 5s1.8-4 4-4 4 1.8 4 4z" />
+            </svg>
+        )
+    });
+
+    @observable milliseconds: number;
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.milliseconds} ms</pre>
+            </div>
+        );
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        await new Promise<void>(resolve =>
+            setTimeout(resolve, this.milliseconds ?? 0)
+        );
+        return undefined;
+    }
+}
+
+registerClass(DelayActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ErrorActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            {
+                name: "message",
+                type: PropertyType.String
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+                <path d="M18 26h4v4h-4zm0-16h4v12h-4zm1.99-10C8.94 0 0 8.95 0 20s8.94 20 19.99 20S40 31.05 40 20 31.04 0 19.99 0zM20 36c-8.84 0-16-7.16-16-16S11.16 4 20 4s16 7.16 16 16-7.16 16-16 16z" />
+            </svg>
+        )
+    });
+
+    @observable message: number;
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.message}</pre>
+            </div>
+        );
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        // runningFlow.throwError(this.message);
+        return undefined;
+    }
+}
+
+registerClass(ErrorActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
