@@ -29,7 +29,6 @@ import {
     IEezObject,
     PropertyType
 } from "project-editor/core/object";
-import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import type {
     IDataContext,
@@ -38,7 +37,7 @@ import type {
 import { LayoutViewWidget } from "./widgets";
 import { visitObjects } from "project-editor/core/search";
 import { isWebStudio } from "eez-studio-shared/util-electron";
-import { values } from "lodash";
+import { Splitter } from "eez-studio-ui/splitter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +47,7 @@ const MAX_HISTORY_ITEMS = 1000;
 
 /*
 
-system inputs: @start, @seqin
+system inputs: @seqin
 system outputs: @seqout
 
 */
@@ -68,6 +67,11 @@ interface QueueTask {
     connectionLine?: ConnectionLine;
 }
 
+interface StartQueueTask {
+    runningFlow: RunningFlow;
+    component: Component;
+}
+
 export class RuntimeStoreClass {
     constructor(public DocumentStore: DocumentStoreClass) {}
 
@@ -80,6 +84,8 @@ export class RuntimeStoreClass {
     @action.bound
     setRuntimeMode() {
         if (!this.isRuntimeMode) {
+            this.selectedRunningFlow = undefined;
+            this.selectedHistoryItem = undefined;
             this.isRuntimeMode = true;
             this.isStopped = false;
             this.start();
@@ -91,6 +97,7 @@ export class RuntimeStoreClass {
             this.stop();
 
             this.queue = [];
+
             runInAction(() => {
                 this.runningFlows = [];
                 this.history = [];
@@ -103,10 +110,8 @@ export class RuntimeStoreClass {
     async start() {
         await this.loadSettings();
 
-        this.startSpeedCalculation();
-
         runInAction(() => {
-            this.queue = [];
+            this.queueIsEmpty = true;
 
             this.runningFlows = this.DocumentStore.project.pages
                 .filter(page => !page.isUsedAsCustomWidget)
@@ -132,14 +137,12 @@ export class RuntimeStoreClass {
         this.runningFlows.forEach(runningFlow => runningFlow.finish());
         EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
 
-        this.stopSpeedCalculation();
-
         this.isStopped = true;
 
         await this.saveSettings();
     }
 
-    get isRunning() {
+    @computed get isRunning() {
         return (
             this.runningFlows.find(runningFlow => runningFlow.isRunning) !=
             undefined
@@ -149,9 +152,17 @@ export class RuntimeStoreClass {
     ////////////////////////////////////////
 
     queue: QueueTask[] = [];
+    startQueue: StartQueueTask[] = [];
     pumpTimeoutId: any;
+    @observable queueIsEmpty: boolean;
 
     @observable runningFlows: RunningFlow[] = [];
+
+    @observable runningComponents: number;
+
+    @computed get isIdle() {
+        return this.queueIsEmpty && !this.isRunning;
+    }
 
     getRunningFlow(flow: Flow) {
         for (let runningFlow of this.runningFlows) {
@@ -173,50 +184,66 @@ export class RuntimeStoreClass {
     pumpQueue = async () => {
         this.pumpTimeoutId = undefined;
 
-        this.calculateSpeed();
-
-        const runningComponents = [];
-
-        const time = Date.now();
-
-        while (Date.now() - time < 100) {
-            const task = this.queue.shift();
-            if (!task) {
-                break;
-            }
-
-            const {
-                runningFlow,
-                component,
-                input,
-                inputData,
-                connectionLine
-            } = task;
-
-            const componentState = runningFlow.getComponentState(component);
-
-            if (componentState.isRunning) {
-                runningComponents.push(task);
-            } else {
-                componentState.setInputData(input, inputData);
-
-                if (componentState.isReadyToRun()) {
-                    componentState.run();
+        if (this.startQueue.length > 0) {
+            while (true) {
+                const startTask = this.startQueue.shift();
+                if (!startTask) {
+                    break;
                 }
 
-                if (connectionLine) {
-                    connectionLine.setActive();
-                }
+                const { runningFlow, component } = startTask;
+
+                const componentState = runningFlow.getComponentState(component);
+                componentState.run();
             }
         }
 
-        this.queue.unshift(...runningComponents);
+        if (this.queue.length > 0) {
+            const runningComponents = [];
+
+            while (true) {
+                const task = this.queue.shift();
+                if (!task) {
+                    break;
+                }
+
+                const {
+                    runningFlow,
+                    component,
+                    input,
+                    inputData,
+                    connectionLine
+                } = task;
+
+                const componentState = runningFlow.getComponentState(component);
+
+                if (componentState.isRunning) {
+                    runningComponents.push(task);
+                } else {
+                    componentState.setInputData(input, inputData);
+
+                    if (componentState.isReadyToRun()) {
+                        componentState.run();
+                    }
+
+                    if (connectionLine) {
+                        connectionLine.setActive();
+                    }
+                }
+            }
+
+            this.queue.unshift(...runningComponents);
+        }
 
         this.pumpTimeoutId = setTimeout(this.pumpQueue);
+
+        runInAction(() => (this.queueIsEmpty = this.queue.length === 0));
     };
 
     @action
     executeWidgetAction(flowContext: IFlowContext, widget: Widget) {
+        this.queueIsEmpty = false;
+
         if (this.isStopped) {
             this.start();
         }
@@ -263,45 +290,12 @@ export class RuntimeStoreClass {
     }
 
     ////////////////////////////////////////
-    // SPEED CALCULATION
-
-    numExecutedTasks: number = 0;
-    measureSpeedTime: number;
-    @observable speed: number;
-
-    startSpeedCalculation() {
-        this.measureSpeedTime = new Date().getTime();
-        this.numExecutedTasks = 0;
-    }
-
-    onTaskExecuted() {
-        this.numExecutedTasks++;
-    }
-
-    calculateSpeed() {
-        const time = new Date().getTime();
-        if (time - this.measureSpeedTime >= 1000) {
-            runInAction(() => {
-                this.speed = this.numExecutedTasks;
-            });
-            this.numExecutedTasks = 0;
-            this.measureSpeedTime = time;
-        }
-    }
-
-    stopSpeedCalculation() {
-        runInAction(() => {
-            this.speed = 0;
-        });
-    }
-
-    ////////////////////////////////////////
-    // RUNNING FLOWS PANE
+    // RUNNING FLOWS PANEL
 
     @observable selectedRunningFlow: RunningFlow | undefined;
 
     ////////////////////////////////////////
-    // HISTORY PANE
+    // HISTORY PANEL
 
     @observable history: HistoryItem[] = [];
     @observable selectedHistoryItem: HistoryItem | undefined;
@@ -430,7 +424,7 @@ export type InputPropertyValue = InputData;
 class ComponentState {
     inputsData = new Map<string, InputData>();
     @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
-    isRunning: boolean = false;
+    @observable isRunning: boolean = false;
     @observable runningState: any;
     dispose: (() => void) | undefined = undefined;
 
@@ -448,20 +442,12 @@ class ComponentState {
         this.inputsData.set(input, inputData);
     }
 
-    start() {
-        this.runningFlow.RuntimeStore.queue.push({
-            runningFlow: this.runningFlow,
-            component: this.component,
-            input: "@start",
-            inputData: {
-                time: Date.now(),
-                value: null
-            }
-        });
-    }
-
     isReadyToRun() {
         if (this.component instanceof LayoutViewWidget) {
+            return true;
+        }
+
+        if (this.component instanceof Widget) {
             return this.inputsData.size > 0;
         }
 
@@ -551,10 +537,11 @@ class ComponentState {
 
             this.runningFlow.RuntimeStore.stop();
         } finally {
-            this.isRunning = false;
+            runInAction(() => {
+                this.runningFlow.RuntimeStore.queueIsEmpty = false;
+                this.isRunning = false;
+            });
         }
-
-        this.runningFlow.RuntimeStore.onTaskExecuted();
 
         if (
             !(this.component instanceof LayoutViewWidget) &&
@@ -672,7 +659,7 @@ export class RunningFlow {
             if (propertyInfo && propertyInfo.type === PropertyType.JSON) {
                 return JSON.parse(value);
             } else {
-                return values;
+                return value;
             }
         }
     }
@@ -709,7 +696,7 @@ export class RunningFlow {
         return this.dataContext.declare(variableName, value);
     }
 
-    get isRunning(): boolean {
+    @computed get isRunning(): boolean {
         for (let [_, componentState] of this.componentStates) {
             if (componentState.isRunning) {
                 return true;
@@ -723,7 +710,7 @@ export class RunningFlow {
     }
 
     start() {
-        const components = [];
+        let componentState: ComponentState | undefined = undefined;
 
         const v = visitObjects(this.flow);
         while (true) {
@@ -732,13 +719,23 @@ export class RunningFlow {
                 break;
             }
             if (visitResult.value instanceof Component) {
-                components.push(visitResult.value);
+                if (!componentState) {
+                    componentState = new ComponentState(
+                        this,
+                        visitResult.value
+                    );
+                } else {
+                    componentState.component = visitResult.value;
+                }
+
+                if (componentState.isReadyToRun()) {
+                    this.RuntimeStore.startQueue.push({
+                        runningFlow: this,
+                        component: visitResult.value
+                    });
+                }
             }
         }
-
-        components.forEach(component =>
-            this.getComponentState(component).start()
-        );
     }
 
     finish() {
@@ -752,6 +749,7 @@ export class RunningFlow {
     }
 
     startFromWidgetAction(widget: Component) {
+        this.RuntimeStore.queueIsEmpty = false;
         this.executeWire(widget, "action");
     }
 
@@ -781,6 +779,7 @@ export class RunningFlow {
 
     @action
     executeAction(component: Component, action: Action) {
+        this.RuntimeStore.queueIsEmpty = false;
         const runningFlow = new RunningFlow(
             this.RuntimeStore,
             action,
@@ -1059,18 +1058,12 @@ class ExecutionErrorHistoryItem extends HistoryItem {
 
 const RuntimePanelDiv = styled.div`
     flex-grow: 1;
-    background-color: ${props => props.theme.panelHeaderColor};
-    overflow: auto;
-    padding: 10px;
 
-    .running-flows,
-    .history {
-        border: 1px solid ${props => props.theme.borderColor};
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Tree {
         overflow: auto;
-        background-color: white;
-    }
-
-    .running-flows {
     }
 
     .running-flow {
@@ -1085,10 +1078,6 @@ const RuntimePanelDiv = styled.div`
     .history-label {
         display: flex;
         justify-content: space-between;
-    }
-
-    .history {
-        height: 300px;
     }
 
     .history-item {
@@ -1111,18 +1100,25 @@ class RuntimePanel extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
+        if (!this.context.RuntimeStore.isIdle) {
+            return null;
+        }
+
         return (
             <Panel
                 id="runtime"
                 title={"Runtime Info"}
                 body={
                     <RuntimePanelDiv>
-                        <SpeedPane />
-                        <RunningFlowsPane />
-
-                        {this.context.RuntimeStore.speed === 0 && (
-                            <HistoryPane />
-                        )}
+                        <Splitter
+                            type="vertical"
+                            persistId={`project-editor/runtime-info`}
+                            sizes={`50%|50%`}
+                            childrenOverflow="hidden"
+                        >
+                            <RunningFlowsPanel />
+                            <HistoryPanel />
+                        </Splitter>
                     </RuntimePanelDiv>
                 }
             />
@@ -1133,70 +1129,23 @@ class RuntimePanel extends React.Component {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class SpeedPane extends React.Component {
+class RunningFlowsPanel extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
         return (
-            <div>
-                Speed: {this.context.RuntimeStore.speed} actions per second
-            </div>
+            <Panel
+                id="project-editor/runtime-info/flows"
+                title="History"
+                body={<FlowsTree />}
+            />
         );
     }
 }
 
 @observer
-class RunningFlowsPane extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    render() {
-        return (
-            <>
-                <div>
-                    <label>Running flows:</label>
-                </div>
-                <div className="running-flows">
-                    <RunningFlows />
-                </div>
-            </>
-        );
-    }
-}
-
-@observer
-class HistoryPane extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    render() {
-        return (
-            <>
-                <div className="history-label">
-                    <label>History:</label>
-                    <Toolbar>
-                        {this.context.RuntimeStore.history.length > 0 && (
-                            <IconAction
-                                icon="material:clear"
-                                title="Clear history"
-                                onClick={this.context.RuntimeStore.clearHistory}
-                            ></IconAction>
-                        )}
-                    </Toolbar>
-                </div>
-                <div className="history">
-                    <History />
-                </div>
-            </>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class RunningFlows extends React.Component {
+class FlowsTree extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -1229,13 +1178,14 @@ class RunningFlows extends React.Component {
             id: "all",
             label: "All",
             children: getChildren(this.context.RuntimeStore.runningFlows),
-            selected: false,
+            selected: !selectedRunningFlow,
             expanded: true
         };
     }
 
     @action.bound
     selectNode(node?: ITreeNode<RunningFlow>) {
+        this.context.RuntimeStore.selectedHistoryItem = undefined;
         this.context.RuntimeStore.selectedRunningFlow = node?.data;
 
         if (this.context.RuntimeStore.selectedRunningFlow) {
@@ -1259,7 +1209,31 @@ class RunningFlows extends React.Component {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class History extends React.Component {
+class HistoryPanel extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        return (
+            <Panel
+                id="project-editor/runtime-info/history"
+                title="History"
+                buttons={[
+                    <IconAction
+                        key="clear"
+                        icon="material:clear"
+                        title="Clear history"
+                        onClick={this.context.RuntimeStore.clearHistory}
+                    ></IconAction>
+                ]}
+                body={<HistoryTree />}
+            />
+        );
+    }
+}
+
+@observer
+class HistoryTree extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
