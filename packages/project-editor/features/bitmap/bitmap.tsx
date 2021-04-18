@@ -25,7 +25,7 @@ import { showGenericDialog } from "project-editor/core/util";
 
 import { ProjectContext } from "project-editor/project/context";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
-import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import {
     Project,
     findReferencedObject,

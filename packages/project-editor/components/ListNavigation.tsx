@@ -38,7 +38,7 @@ import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { List } from "project-editor/components/List";
 import { Panel } from "project-editor/components/Panel";
 
-import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////

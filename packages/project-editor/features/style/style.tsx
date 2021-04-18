@@ -38,7 +38,7 @@ import {
     findReferencedObject,
     getProject
 } from "project-editor/project/project";
-import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 
 import { findFont } from "project-editor/features/font/font";
 import { drawText } from "project-editor/flow/draw";

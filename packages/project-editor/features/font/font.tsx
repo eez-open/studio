@@ -41,7 +41,7 @@ import {
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import { ListNavigation } from "project-editor/components/ListNavigation";
-import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { Project, findReferencedObject } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 

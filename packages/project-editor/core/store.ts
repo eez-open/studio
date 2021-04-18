@@ -2303,20 +2303,24 @@ async function initExtensions() {
 
             extensions.forEach(extension => {
                 if (extension.eezFlowExtensionInit) {
-                    extension.eezFlowExtensionInit({
-                        React,
-                        mobx,
-                        styled,
-                        registerClass(aClass: EezClass) {
-                            registerClassByName(
-                                `${extension.name}/${aClass.name}`,
-                                aClass
-                            );
-                        },
-                        makeDerivedClassInfo,
-                        ActionComponent,
-                        getFlow
-                    });
+                    try {
+                        extension.eezFlowExtensionInit({
+                            React,
+                            mobx,
+                            styled,
+                            registerClass(aClass: EezClass) {
+                                registerClassByName(
+                                    `${extension.name}/${aClass.name}`,
+                                    aClass
+                                );
+                            },
+                            makeDerivedClassInfo,
+                            ActionComponent,
+                            getFlow
+                        });
+                    } catch (err) {
+                        console.error(err);
+                    }
                 }
             });
         }

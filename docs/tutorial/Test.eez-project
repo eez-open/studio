@@ -44,7 +44,7 @@
         },
         {
           "type": "OutputActionComponent",
-          "left": 165,
+          "left": 250,
           "top": 1,
           "width": 0,
           "height": 0,
@@ -52,7 +52,7 @@
         },
         {
           "type": "SetVariableActionComponent",
-          "left": 0,
+          "left": 85,
           "top": 1,
           "width": 0,
           "height": 0,
@@ -75,8 +75,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": -306,
-          "top": 131,
+          "left": -348,
+          "top": 100,
           "width": 0,
           "height": 0,
           "wireID": "9a69f7a0-f325-4a0b-f910-6c8df84fee05",
@@ -3196,7 +3196,7 @@
         },
         {
           "type": "ScpiActionComponent",
-          "left": 84,
+          "left": -55,
           "top": 340,
           "width": 0,
           "height": 0,
@@ -3266,8 +3266,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": -74,
-          "top": 396,
+          "left": -208,
+          "top": 346,
           "width": 0,
           "height": 0,
           "wireID": "c8cb649a-0fb5-4823-dc6b-57fc61333987",
@@ -3451,23 +3451,6 @@
           }
         },
         {
-          "type": "GetInstrumentActionComponent",
-          "left": -309,
-          "top": 693,
-          "width": 0,
-          "height": 0,
-          "wireID": "d6c27539-52c8-4044-e3f8-d64c3f42c34c"
-        },
-        {
-          "type": "ConstantActionComponent",
-          "left": -459,
-          "top": 693,
-          "width": 0,
-          "height": 0,
-          "wireID": "205ff6cf-b81f-4121-df6d-59a55e0085bb",
-          "value": "\"65\""
-        },
-        {
           "type": "Button",
           "left": 23,
           "top": 254,
@@ -3536,6 +3519,32 @@
           "wireID": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
           "variable": "continue",
           "value": "true"
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 23,
+          "top": 38,
+          "width": 136,
+          "height": 32,
+          "wireID": "e1bd0765-fac0-4947-9919-ce447cf7043d",
+          "asOutputProperties": [
+            "action"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": "Select Instrument",
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "SelectInstrumentActionComponent",
+          "left": -250,
+          "top": 163,
+          "width": 0,
+          "height": 0,
+          "wireID": "07cf82ca-3509-4834-98ef-b230d492f285"
         }
       ],
       "connectionLines": [
@@ -3568,18 +3577,6 @@
           "output": "value",
           "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "input": "delay"
-        },
-        {
-          "source": "d6c27539-52c8-4044-e3f8-d64c3f42c34c",
-          "output": "instrument",
-          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
-          "input": "instrument"
-        },
-        {
-          "source": "205ff6cf-b81f-4121-df6d-59a55e0085bb",
-          "output": "value",
-          "target": "d6c27539-52c8-4044-e3f8-d64c3f42c34c",
-          "input": "id"
         },
         {
           "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
@@ -3616,6 +3613,18 @@
           "output": "@seqout",
           "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "input": "@seqin"
+        },
+        {
+          "source": "e1bd0765-fac0-4947-9919-ce447cf7043d",
+          "output": "action",
+          "target": "07cf82ca-3509-4834-98ef-b230d492f285",
+          "input": "@seqin"
+        },
+        {
+          "source": "07cf82ca-3509-4834-98ef-b230d492f285",
+          "output": "instrument",
+          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "input": "instrument"
         }
       ],
       "name": "plotly",
@@ -3684,8 +3693,8 @@
         },
         {
           "type": "ScpiActionComponent",
-          "left": 162,
-          "top": 315,
+          "left": 59,
+          "top": 310,
           "width": 0,
           "height": 0,
           "wireID": "f4043449-0ea8-4cc3-abad-de5209273d2c",

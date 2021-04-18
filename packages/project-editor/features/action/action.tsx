@@ -1,5 +1,5 @@
 import React from "react";
-import { action, computed, observable } from "mobx";
+import { computed, observable } from "mobx";
 import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
@@ -9,7 +9,8 @@ import {
     IEezObject,
     PropertyType,
     NavigationComponent,
-    EditorComponent
+    EditorComponent,
+    IEditorState
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
 import {
@@ -22,24 +23,20 @@ import { build } from "project-editor/features/action/build";
 import { metrics } from "project-editor/features/action/metrics";
 import { ProjectContext } from "project-editor/project/context";
 import { Splitter } from "eez-studio-ui/splitter";
-import {
-    ListNavigation,
-    ListNavigationWithProperties
-} from "project-editor/components/ListNavigation";
-import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { ListNavigation } from "project-editor/components/ListNavigation";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { FlowEditor } from "project-editor/flow/flow-editor/editor";
 import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
 import { getDocumentStore, IPanel } from "project-editor/core/store";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
-import { ThemesSideView } from "project-editor/features/style/theme";
 import { bind } from "bind-decorator";
 import { TreeAdapter } from "project-editor/core/objectAdapter";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
-import { IconAction } from "eez-studio-ui/action";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/render";
+import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,20 +90,43 @@ export class ActionEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        let flowTabState = this.props.editor.state as FlowTabState;
-        if (this.context.RuntimeStore.isRuntimeMode) {
-            return (
-                <FlowViewer
-                    widgetContainer={flowTabState.componentContainerDisplayItem}
-                    frontFace={false}
-                />
-            );
+        let tabState = this.props.editor.state as ActionTabState | FlowTabState;
+
+        if (tabState instanceof ActionTabState) {
+            return <PropertyGrid objects={[tabState.selectedObject!]} />;
         } else {
             return (
-                <FlowEditor
-                    widgetContainer={flowTabState.componentContainerDisplayItem}
-                    frontFace={false}
-                />
+                <Splitter
+                    type="horizontal"
+                    persistId="project-editor/action-editor"
+                    sizes="100%|400px"
+                    childrenOverflow="hidden|hidden"
+                >
+                    {this.context.RuntimeStore.isRuntimeMode ? (
+                        <FlowViewer
+                            widgetContainer={
+                                tabState.componentContainerDisplayItem
+                            }
+                            frontFace={false}
+                        />
+                    ) : (
+                        <FlowEditor
+                            widgetContainer={
+                                tabState.componentContainerDisplayItem
+                            }
+                            frontFace={false}
+                        />
+                    )}
+                    <Splitter
+                        type="vertical"
+                        persistId="page-editor/properties-widgets-palette"
+                        sizes={`100%|200px`}
+                        childrenOverflow="hidden|hidden"
+                    >
+                        <PropertiesPanel object={this.selectedObject} />
+                        <ComponentsPalette showOnlyActions={true} />
+                    </Splitter>
+                </Splitter>
             );
         }
     }
@@ -203,10 +223,6 @@ export class ActionsNavigation extends NavigationComponent {
     }
 
     render() {
-        if (!this.flowContainerDisplayItem) {
-            return <ListNavigationWithProperties {...this.props} />;
-        }
-
         const listNavigation = (
             <ListNavigation
                 id={this.props.id}
@@ -243,80 +259,38 @@ export class ActionsNavigation extends NavigationComponent {
             </Splitter>
         );
 
-        if (this.context.RuntimeStore.isRuntimeMode) {
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/actions-runtime"`}
-                    sizes={`240px|100%`}
-                    childrenOverflow={`hidden|hidden`}
-                >
-                    {navigation}
-                    <Editors />
-                </Splitter>
-            );
-        } else {
-            const buttons: JSX.Element[] = [];
-
-            if (!this.context.UIStateStore.viewOptions.themesVisible) {
-                buttons.push(
-                    <IconAction
-                        key="show-themes"
-                        icon="material:palette"
-                        iconSize={16}
-                        onClick={action(
-                            () =>
-                                (this.context.UIStateStore.viewOptions.themesVisible = true)
-                        )}
-                        title="Show themes panel"
-                    ></IconAction>
-                );
-            }
-
-            const properties = (
-                <Splitter
-                    type="vertical"
-                    persistId="page-editor/properties-widgets-palette"
-                    sizes={`100%|200px`}
-                    childrenOverflow="hidden|hidden"
-                >
-                    <PropertiesPanel
-                        object={this.selectedObject}
-                        buttons={buttons}
-                    />
-                    <ComponentsPalette showOnlyActions={true} />
-                </Splitter>
-            );
-
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/actions${
-                        this.context.UIStateStore.viewOptions.themesVisible
-                            ? ""
-                            : "-without-themes"
-                    }`}
-                    sizes={`240px|100%|400px${
-                        this.context.UIStateStore.viewOptions.themesVisible
-                            ? "|240px"
-                            : ""
-                    }`}
-                    childrenOverflow={`hidden|hidden|hidden${
-                        this.context.UIStateStore.viewOptions.themesVisible
-                            ? "|hidden"
-                            : ""
-                    }`}
-                >
-                    {navigation}
-                    <Editors />
-                    {properties}
-                    {this.context.UIStateStore.viewOptions.themesVisible && (
-                        <ThemesSideView hasCloseButton={true} />
-                    )}
-                </Splitter>
-            );
-        }
+        return navigation;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ActionTabState implements IEditorState {
+    action: Action;
+
+    constructor(object: IEezObject) {
+        this.action = object as Action;
+    }
+
+    @computed
+    get selectedObject(): IEezObject | undefined {
+        return this.action;
+    }
+
+    @computed
+    get selectedObjects() {
+        return [];
+    }
+
+    loadState() {}
+
+    saveState() {
+        return null;
+    }
+
+    selectObject(object: IEezObject) {}
+
+    selectObjects(objects: IEezObject[]) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -409,7 +383,7 @@ export class Action extends Flow {
         createEditorState: (action: Action) => {
             return action.implementationType === "flow"
                 ? new FlowTabState(action)
-                : undefined;
+                : new ActionTabState(action);
         },
         editorComponent: ActionEditor,
         navigationComponent: ActionsNavigation,

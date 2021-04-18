@@ -3,7 +3,7 @@ import React from "react";
 
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 import { ProjectContext } from "project-editor/project/context";
 
@@ -13,7 +13,7 @@ export class ScpiSubsystemOrCommandEditor extends React.Component<
     {}
 > {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
         const properties = <PropertiesPanel object={this.props.object} />;

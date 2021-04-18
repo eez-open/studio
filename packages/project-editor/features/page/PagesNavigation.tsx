@@ -32,7 +32,7 @@ import { FlowEditor } from "project-editor/flow/flow-editor/editor";
 import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
 
-import { Editors, PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 
 import { ThemesSideView } from "project-editor/features/style/theme";
 import { ProjectContext } from "project-editor/project/context";
@@ -177,7 +177,7 @@ export class PageEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        return (
+        const editor = (
             <VerticalHeaderWithBody>
                 <ToolbarHeader>
                     <IconAction
@@ -280,6 +280,73 @@ export class PageEditor extends EditorComponent implements IPanel {
                     </FlipCardDiv>
                 </Body>
             </VerticalHeaderWithBody>
+        );
+
+        const buttons: JSX.Element[] = [];
+
+        const hasThemes = !this.context.isDashboardProject;
+
+        if (hasThemes && !this.context.UIStateStore.viewOptions.themesVisible) {
+            buttons.push(
+                <IconAction
+                    key="show-themes"
+                    icon="material:palette"
+                    iconSize={16}
+                    onClick={action(
+                        () =>
+                            (this.context.UIStateStore.viewOptions.themesVisible = true)
+                    )}
+                    title="Show themes panel"
+                ></IconAction>
+            );
+        }
+
+        let properties;
+
+        properties = (
+            <Splitter
+                type="vertical"
+                persistId="page-editor/properties-widgets-palette"
+                sizes={`100%|200px`}
+                childrenOverflow="hidden|hidden"
+            >
+                <PropertiesPanel
+                    object={this.selectedObject}
+                    buttons={buttons}
+                />
+                <ComponentsPalette />
+            </Splitter>
+        );
+
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/page-editor${
+                    hasThemes &&
+                    this.context.UIStateStore.viewOptions.themesVisible
+                        ? ""
+                        : "-without-themes"
+                }`}
+                sizes={`100%|400px${
+                    hasThemes &&
+                    this.context.UIStateStore.viewOptions.themesVisible
+                        ? "|240px"
+                        : ""
+                }`}
+                childrenOverflow={`hidden|hidden${
+                    hasThemes &&
+                    this.context.UIStateStore.viewOptions.themesVisible
+                        ? "|hidden"
+                        : ""
+                }`}
+            >
+                {editor}
+                {properties}
+                {hasThemes &&
+                    this.context.UIStateStore.viewOptions.themesVisible && (
+                        <ThemesSideView hasCloseButton={true} />
+                    )}
+            </Splitter>
         );
     }
 }
@@ -568,91 +635,6 @@ export class PagesNavigation extends NavigationComponent {
             </Splitter>
         );
 
-        const editors = <Editors />;
-
-        if (this.context.RuntimeStore.isRuntimeMode) {
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/pages-runtime"`}
-                    sizes={"240px|100%"}
-                    childrenOverflow={`hidden|hidden`}
-                >
-                    {navigation}
-                    {editors}
-                </Splitter>
-            );
-        } else {
-            const buttons: JSX.Element[] = [];
-
-            const hasThemes = !this.context.isDashboardProject;
-
-            if (
-                hasThemes &&
-                !this.context.UIStateStore.viewOptions.themesVisible
-            ) {
-                buttons.push(
-                    <IconAction
-                        key="show-themes"
-                        icon="material:palette"
-                        iconSize={16}
-                        onClick={action(
-                            () =>
-                                (this.context.UIStateStore.viewOptions.themesVisible = true)
-                        )}
-                        title="Show themes panel"
-                    ></IconAction>
-                );
-            }
-
-            let properties;
-
-            properties = (
-                <Splitter
-                    type="vertical"
-                    persistId="page-editor/properties-widgets-palette"
-                    sizes={`100%|200px`}
-                    childrenOverflow="hidden|hidden"
-                >
-                    <PropertiesPanel
-                        object={this.selectedObject}
-                        buttons={buttons}
-                    />
-                    <ComponentsPalette />
-                </Splitter>
-            );
-
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/pages${
-                        hasThemes &&
-                        this.context.UIStateStore.viewOptions.themesVisible
-                            ? ""
-                            : "-without-themes"
-                    }`}
-                    sizes={`240px|100%|400px${
-                        hasThemes &&
-                        this.context.UIStateStore.viewOptions.themesVisible
-                            ? "|240px"
-                            : ""
-                    }`}
-                    childrenOverflow={`hidden|hidden|hidden${
-                        hasThemes &&
-                        this.context.UIStateStore.viewOptions.themesVisible
-                            ? "|hidden"
-                            : ""
-                    }`}
-                >
-                    {navigation}
-                    {editors}
-                    {properties}
-                    {hasThemes &&
-                        this.context.UIStateStore.viewOptions.themesVisible && (
-                            <ThemesSideView hasCloseButton={true} />
-                        )}
-                </Splitter>
-            );
-        }
+        return navigation;
     }
 }

@@ -11,13 +11,13 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
-import { PropertiesPanel } from "project-editor/project/ProjectEditor";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ProjectContext } from "project-editor/project/context";
 
 @observer
 export class ScpiEnumsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     handleRefresh() {
         showImportScpiDocDialog(this.context);
