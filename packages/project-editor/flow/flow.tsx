@@ -437,16 +437,19 @@ export abstract class FlowTabState implements IEditorState {
 
     abstract get flow(): Flow;
     abstract get frontFace(): boolean;
+    abstract set frontFace(value: boolean);
 
     ensureSelectionVisible = () => {
-        const containerId = `eez-flow-viewer-${getId(this.flow)}-${
-            this.frontFace ? "front" : "back"
-        }`;
+        if (this.frontFace) {
+            this.frontFace = false;
+        }
 
-        const containerEl = document.getElementById(containerId);
-        if (containerEl) {
+        const el = document.getElementById(
+            `eez-flow-viewer-${getId(this.flow)}-back`
+        );
+        if (el) {
             const event = new Event("ensure-selection-visible");
-            containerEl.dispatchEvent(event);
+            el.dispatchEvent(event);
         }
     };
 }

@@ -3,12 +3,21 @@ import { computed, observable, action, runInAction } from "mobx";
 import { observer, inject } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { Point, pointDistance, Rect, BoundingRectBuilder } from "eez-studio-shared/geometry";
+import {
+    Point,
+    pointDistance,
+    Rect,
+    BoundingRectBuilder
+} from "eez-studio-shared/geometry";
 
 import { Draggable } from "eez-studio-ui/draggable";
 import styled from "eez-studio-ui/styled-components";
 
-import { IToolHandler, IMouseHandler, IDesignerContext } from "home/designer/designer-interfaces";
+import {
+    IToolHandler,
+    IMouseHandler,
+    IDesignerContext
+} from "home/designer/designer-interfaces";
 import { PanMouseHandler } from "home/designer/mouse-handler";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +126,10 @@ export class Canvas extends React.Component<{
             if (
                 clientRect.left !== transform.clientRect.left ||
                 clientRect.top !== transform.clientRect.top ||
-                (clientRect.width && clientRect.width !== transform.clientRect.width) ||
-                (clientRect.height && clientRect.height !== transform.clientRect.height)
+                (clientRect.width &&
+                    clientRect.width !== transform.clientRect.width) ||
+                (clientRect.height &&
+                    clientRect.height !== transform.clientRect.height)
             ) {
                 runInAction(() => {
                     transform.clientRect = clientRect;
@@ -149,7 +160,9 @@ export class Canvas extends React.Component<{
         this.draggable.attach(null);
 
         if (this.clientRectChangeDetectionAnimationFrameHandle) {
-            cancelAnimationFrame(this.clientRectChangeDetectionAnimationFrameHandle);
+            cancelAnimationFrame(
+                this.clientRectChangeDetectionAnimationFrameHandle
+            );
             this.clientRectChangeDetectionAnimationFrameHandle = undefined;
         }
 
@@ -183,8 +196,10 @@ export class Canvas extends React.Component<{
                 });
                 let x = point.x - transform.clientRect.width / 2;
                 let y = point.y - transform.clientRect.height / 2;
-                let tx = x - ((x - transform.translate.x) * scale) / transform.scale;
-                let ty = y - ((y - transform.translate.y) * scale) / transform.scale;
+                let tx =
+                    x - ((x - transform.translate.x) * scale) / transform.scale;
+                let ty =
+                    y - ((y - transform.translate.y) * scale) / transform.scale;
 
                 runInAction(() => {
                     transform.scale = scale;
@@ -194,8 +209,12 @@ export class Canvas extends React.Component<{
         } else {
             runInAction(() => {
                 transform.translate = {
-                    x: transform.translate.x - (event.shiftKey ? event.deltaY : event.deltaX),
-                    y: transform.translate.y - (event.shiftKey ? event.deltaX : event.deltaY)
+                    x:
+                        transform.translate.x -
+                        (event.shiftKey ? event.deltaY : event.deltaX),
+                    y:
+                        transform.translate.y -
+                        (event.shiftKey ? event.deltaX : event.deltaY)
                 };
             });
         }
@@ -279,10 +298,17 @@ export class Canvas extends React.Component<{
                         distance <= CONF_DOUBLE_CLICK_DISTANCE
                     ) {
                         // double click
-                        if (this.designerContext.viewState.selectedObjects.length === 1) {
-                            const object = this.designerContext.viewState.selectedObjects[0];
+                        if (
+                            this.designerContext.viewState.selectedObjects
+                                .length === 1
+                        ) {
+                            const object = this.designerContext.viewState
+                                .selectedObjects[0];
                             object.open();
-                        } else if (this.designerContext.viewState.selectedObjects.length === 0) {
+                        } else if (
+                            this.designerContext.viewState.selectedObjects
+                                .length === 0
+                        ) {
                             this.designerContext.viewState.resetTransform();
                         }
                     }
@@ -299,7 +325,11 @@ export class Canvas extends React.Component<{
         } else {
             this.lastMouseUpTime = undefined;
 
-            if (!preventContextMenu && this.props.toolHandler && this.buttonsAtDown === 2) {
+            if (
+                !preventContextMenu &&
+                this.props.toolHandler &&
+                this.buttonsAtDown === 2
+            ) {
                 this.props.toolHandler.onContextMenu(
                     this.designerContext,
                     transform.mouseEventToPagePoint(event),
@@ -324,7 +354,9 @@ export class Canvas extends React.Component<{
 
             this.props.toolHandler.onClick(
                 this.designerContext,
-                this.designerContext.viewState.transform.mouseEventToPagePoint(event.nativeEvent)
+                this.designerContext.viewState.transform.mouseEventToPagePoint(
+                    event.nativeEvent
+                )
             );
         }
     }
@@ -402,44 +434,60 @@ export class Canvas extends React.Component<{
                         }}
                     >
                         {this.props.children}
-                        {this.designerContext.options && this.designerContext.options.center && (
-                            <svg
-                                width={pageRect.width}
-                                height={pageRect.height}
-                                style={{
-                                    position: "absolute",
-                                    left: pageRect.left,
-                                    top: pageRect.top
-                                }}
-                                viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${pageRect.height}`}
-                            >
-                                <line
-                                    x1={pageRect.left}
-                                    y1={this.designerContext.options.center.y}
-                                    x2={pageRect.left + pageRect.width}
-                                    y2={this.designerContext.options.center.y}
-                                    style={centerLineStyle}
-                                />
-                                <line
-                                    x1={this.designerContext.options.center.x}
-                                    y1={pageRect.top}
-                                    x2={this.designerContext.options.center.x}
-                                    y2={pageRect.top + pageRect.height}
-                                    style={centerLineStyle}
-                                />
-                                {this.props.pageRect && (
-                                    <rect
-                                        x={this.props.pageRect.left}
-                                        y={this.props.pageRect.top}
-                                        width={this.props.pageRect.width}
-                                        height={this.props.pageRect.height}
-                                        style={pageRectLineStyle}
+                        {this.designerContext.options &&
+                            this.designerContext.options.center && (
+                                <svg
+                                    width={pageRect.width}
+                                    height={pageRect.height}
+                                    style={{
+                                        position: "absolute",
+                                        left: pageRect.left,
+                                        top: pageRect.top
+                                    }}
+                                    viewBox={`${pageRect.left}, ${pageRect.top}, ${pageRect.width}, ${pageRect.height}`}
+                                >
+                                    <line
+                                        x1={pageRect.left}
+                                        y1={
+                                            this.designerContext.options.center
+                                                .y
+                                        }
+                                        x2={pageRect.left + pageRect.width}
+                                        y2={
+                                            this.designerContext.options.center
+                                                .y
+                                        }
+                                        style={centerLineStyle}
                                     />
-                                )}
-                            </svg>
-                        )}
+                                    <line
+                                        x1={
+                                            this.designerContext.options.center
+                                                .x
+                                        }
+                                        y1={pageRect.top}
+                                        x2={
+                                            this.designerContext.options.center
+                                                .x
+                                        }
+                                        y2={pageRect.top + pageRect.height}
+                                        style={centerLineStyle}
+                                    />
+                                    {this.props.pageRect && (
+                                        <rect
+                                            x={this.props.pageRect.left}
+                                            y={this.props.pageRect.top}
+                                            width={this.props.pageRect.width}
+                                            height={this.props.pageRect.height}
+                                            style={pageRectLineStyle}
+                                        />
+                                    )}
+                                </svg>
+                            )}
                     </div>
-                    {this.props.toolHandler.render(this.designerContext, this.mouseHandler)}
+                    {this.props.toolHandler.render(
+                        this.designerContext,
+                        this.mouseHandler
+                    )}
                     {this.props.customOverlay}
                 </div>
             </CanvasDiv>

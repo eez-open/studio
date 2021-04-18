@@ -47,7 +47,7 @@ import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
 class ActionFlowTabState extends FlowTabState {
     flow: Flow;
-    frontFace = true;
+    frontFace = false;
 
     componentContainerDisplayItem: ITreeObjectAdapter;
 

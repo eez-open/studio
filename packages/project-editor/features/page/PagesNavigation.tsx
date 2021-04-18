@@ -288,6 +288,10 @@ export class PageEditor extends EditorComponent implements IPanel {
             </VerticalHeaderWithBody>
         );
 
+        if (this.pageTabState.isRuntime) {
+            return editor;
+        }
+
         const buttons: JSX.Element[] = [];
 
         const hasThemes = !this.context.isDashboardProject;

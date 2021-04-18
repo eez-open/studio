@@ -281,7 +281,8 @@ export class Canvas extends React.Component<{
                     className="eez-canvas"
                     style={{
                         position: "absolute",
-                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`
+                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
+                        transition: "transform 0.2s"
                     }}
                 >
                     {this.props.children}
@@ -449,18 +450,16 @@ export class FlowViewer
     }
 
     ensureSelectionVisible = () => {
-        const selectedObjectRects = this.flowContext.viewState.selectedObjects.map(
-            selectedObject => getObjectBoundingRect(selectedObject)
-        );
+        if (this.flowContext.viewState.selectedObjects.length > 0) {
+            const selectedObjectRects = this.flowContext.viewState.selectedObjects.map(
+                selectedObject => getObjectBoundingRect(selectedObject)
+            );
 
-        if (selectedObjectRects.length > 0) {
             let selectionBoundingRectBuilder = new BoundingRectBuilder();
             for (let i = 0; i < selectedObjectRects.length; i++) {
                 selectionBoundingRectBuilder.addRect(selectedObjectRects[i]);
             }
             const selectionBoundingRect = selectionBoundingRectBuilder.getRect();
-
-            const firstSelectedObjectRect = selectedObjectRects[0];
 
             let pageRect = this.flowContext.viewState.transform.clientToPageRect(
                 this.flowContext.viewState.transform.clientRect
@@ -477,48 +476,7 @@ export class FlowViewer
                         selectionBoundingRect.height / 2
                     )
                 };
-
-                pageRect = this.flowContext.viewState.transform.clientToPageRect(
-                    this.flowContext.viewState.transform.clientRect
-                );
-
-                let dx = 0;
-                let dy = 0;
-
-                if (!rectContains(pageRect, firstSelectedObjectRect)) {
-                    if (firstSelectedObjectRect.left < pageRect.left) {
-                        dx = -(pageRect.left - firstSelectedObjectRect.left);
-                    } else if (
-                        firstSelectedObjectRect.left +
-                            firstSelectedObjectRect.width >
-                        pageRect.left + pageRect.width
-                    ) {
-                        dx =
-                            firstSelectedObjectRect.left +
-                            firstSelectedObjectRect.width -
-                            (pageRect.left + pageRect.width);
-                    }
-
-                    if (firstSelectedObjectRect.top < pageRect.top) {
-                        dy = -(pageRect.top - firstSelectedObjectRect.top);
-                    } else if (
-                        firstSelectedObjectRect.top +
-                            firstSelectedObjectRect.height >
-                        pageRect.top + pageRect.height
-                    ) {
-                        dy =
-                            firstSelectedObjectRect.top +
-                            firstSelectedObjectRect.height -
-                            (pageRect.top + pageRect.height);
-                    }
-
-                    this.flowContext.viewState.transform.translate = {
-                        x:
-                            this.flowContext.viewState.transform.translate.x -
-                            dx,
-                        y: this.flowContext.viewState.transform.translate.y - dy
-                    };
-                }
+                //const firstSelectedObjectRect = selectedObjectRects[0];
             }
         }
     };
