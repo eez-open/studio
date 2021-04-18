@@ -1948,6 +1948,7 @@ const PropertyGridDiv = styled.div`
 interface PropertyGridProps {
     objects: IEezObject[];
     className?: string;
+    readOnly?: boolean;
 }
 
 @observer
@@ -2005,7 +2006,7 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             return null;
         }
 
-        const readOnly = isAnyObjectReadOnly(objects);
+        const readOnly = this.props.readOnly || isAnyObjectReadOnly(objects);
 
         let highlightedPropertyName: string | undefined;
         if (objects.length === 1) {

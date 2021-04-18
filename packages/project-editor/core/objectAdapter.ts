@@ -1273,13 +1273,13 @@ export class ListAdapter implements ITreeAdapter {
     dispose: IReactionDisposer;
 
     constructor(
-        private object: IEezObject,
+        protected object: IEezObject,
         public sortDirection?: SortDirectionType,
         onDoubleClick?: (object: IEezObject) => void,
         navigationStore?: INavigationStore,
         dragAndDropManager?: DragAndDropManagerClass,
-        private searchText?: string,
-        private filter?: (object: IEezObject) => boolean
+        protected searchText?: string,
+        protected filter?: (object: IEezObject) => boolean
     ) {
         this.onDoubleClickCallback = onDoubleClick;
 

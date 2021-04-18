@@ -325,52 +325,6 @@ class NavigationStoreClass implements INavigationStore {
         }
     }
 
-    getSelection(): IEezObject[] | undefined {
-        // TODO
-        return undefined;
-    }
-
-    @action
-    setSelection(selection: IEezObject[] | undefined) {
-        if (!selection || selection.length == 0) {
-            return;
-        }
-
-        let object = selection[0];
-
-        for (
-            let ancestor = getParent(object);
-            ancestor;
-            ancestor = getParent(ancestor)
-        ) {
-            let navigationItem = this.getNavigationSelectedItem(ancestor);
-            if (navigationItem && !isObjectNavigationItem(navigationItem)) {
-                navigationItem.objectAdapter.selectObjects(selection);
-                return;
-            }
-        }
-
-        let iterObject = object;
-        let parent = getParent(iterObject);
-        while (iterObject && parent) {
-            let grandparent = getParent(parent);
-            if (!isArray(grandparent)) {
-                let navigationItem = this.getNavigationSelectedItem(parent);
-                if (navigationItem && !isObjectNavigationItem(navigationItem)) {
-                    navigationItem.objectAdapter.selectObjects(selection);
-                } else {
-                    this.setNavigationSelectedItem(
-                        parent,
-                        createObjectNavigationItem(iterObject)!
-                    );
-                }
-            }
-
-            iterObject = parent;
-            parent = getParent(iterObject);
-        }
-    }
-
     isSelected(object: IEezObject) {
         let iterObject = object;
         let parent = getParent(iterObject);
@@ -469,6 +423,47 @@ class NavigationStoreClass implements INavigationStore {
                 parent,
                 createObjectNavigationItem(navigationObject)!
             );
+        }
+    }
+
+    @action
+    setSelection(selection: IEezObject[] | undefined) {
+        if (!selection || selection.length == 0) {
+            return;
+        }
+
+        let object = selection[0];
+
+        for (
+            let ancestor = getParent(object);
+            ancestor;
+            ancestor = getParent(ancestor)
+        ) {
+            let navigationItem = this.getNavigationSelectedItem(ancestor);
+            if (navigationItem && !isObjectNavigationItem(navigationItem)) {
+                navigationItem.objectAdapter.selectObjects(selection);
+                return;
+            }
+        }
+
+        let iterObject = object;
+        let parent = getParent(iterObject);
+        while (iterObject && parent) {
+            let grandparent = getParent(parent);
+            if (!isArray(grandparent)) {
+                let navigationItem = this.getNavigationSelectedItem(parent);
+                if (navigationItem && !isObjectNavigationItem(navigationItem)) {
+                    navigationItem.objectAdapter.selectObjects(selection);
+                } else {
+                    this.setNavigationSelectedItem(
+                        parent,
+                        createObjectNavigationItem(iterObject)!
+                    );
+                }
+            }
+
+            iterObject = parent;
+            parent = getParent(iterObject);
         }
     }
 
@@ -592,18 +587,6 @@ class EditorsStoreClass {
             }
         });
 
-        // close non-permanent editor if editor object is not selected
-        // autorun(() => {
-        //     for (let i = 0; i < this.editors.length; i++) {
-        //         if (!this.editors[i].permanent) {
-        //             if (!NavigationStore.isSelected(this.editors[i].object)) {
-        //                 this.closeEditor(this.editors[i]);
-        //             }
-        //             break;
-        //         }
-        //     }
-        // });
-
         // close editor if editor object doesn't exists anymore
         this.dispose2 = autorun(() => {
             this.editors.slice().forEach(editor => {
@@ -689,6 +672,8 @@ class EditorsStoreClass {
         }
 
         editor.active = true;
+
+        this.DocumentStore.NavigationStore.setSelection([editor.object]);
     }
 
     @action
@@ -959,8 +944,6 @@ class UIStateStoreClass {
 
 interface IUndoItem {
     commands: ICommand[];
-    selectionBefore: any;
-    selectionAfter: any;
 }
 
 export class UndoManagerClass {
@@ -968,7 +951,6 @@ export class UndoManagerClass {
     @observable redoStack: IUndoItem[] = [];
     @observable commands: ICommand[] = [];
 
-    private selectionBeforeFirstCommand: any;
     public combineCommands: boolean = false;
 
     constructor(public DocumentStore: DocumentStoreClass) {}
@@ -982,15 +964,11 @@ export class UndoManagerClass {
     @action
     pushToUndoStack() {
         if (this.commands.length > 0) {
-            let selectionAfter = this.DocumentStore.NavigationStore.getSelection();
             this.undoStack.push({
-                commands: this.commands,
-                selectionBefore: this.selectionBeforeFirstCommand,
-                selectionAfter: selectionAfter
+                commands: this.commands
             });
 
             this.commands = [];
-            this.selectionBeforeFirstCommand = this.DocumentStore.NavigationStore.getSelection();
         }
     }
 
@@ -1002,9 +980,7 @@ export class UndoManagerClass {
 
     @action
     executeCommand(command: ICommand) {
-        if (this.commands.length == 0) {
-            this.selectionBeforeFirstCommand = this.DocumentStore.NavigationStore.getSelection();
-        } else {
+        if (this.commands.length > 0) {
             if (!this.combineCommands) {
                 this.pushToUndoStack();
             }
@@ -1051,10 +1027,6 @@ export class UndoManagerClass {
                 undoItem.commands[i].undo();
             }
 
-            this.DocumentStore.NavigationStore.setSelection(
-                undoItem.selectionBefore
-            );
-
             this.redoStack.push(undoItem);
 
             this.DocumentStore.setModified(true);
@@ -1085,10 +1057,6 @@ export class UndoManagerClass {
             for (let i = 0; i < redoItem.commands.length; i++) {
                 redoItem.commands[i].execute();
             }
-
-            this.DocumentStore.NavigationStore.setSelection(
-                redoItem.selectionAfter
-            );
 
             this.undoStack.push(redoItem);
 

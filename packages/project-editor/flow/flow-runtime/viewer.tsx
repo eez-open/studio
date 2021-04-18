@@ -4,14 +4,20 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
-import { Point, Rect } from "eez-studio-shared/geometry";
+import {
+    BoundingRectBuilder,
+    Point,
+    Rect,
+    rectContains
+} from "eez-studio-shared/geometry";
 
 import styled from "eez-studio-ui/styled-components";
 
 import type {
     IDocument,
     IViewStatePersistantState,
-    IFlowContext
+    IFlowContext,
+    IRunningFlow
 } from "project-editor/flow/flow-interfaces";
 import { ITransform } from "project-editor/flow/flow-editor/transform";
 import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
@@ -22,9 +28,9 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Svg } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
-import { guid } from "eez-studio-shared/guid";
 import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 import { Selection } from "project-editor/flow/flow-runtime/selection";
+import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -369,18 +375,22 @@ export class FlowViewer
         widgetContainer: ITreeObjectAdapter;
         transitionIsActive?: boolean;
         frontFace: boolean;
+        runningFlow: IRunningFlow | undefined;
     }>
     implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @observable flowContext: RuntimeFlowContext = new RuntimeFlowContext(
-        "eez-flow-viewer-" + guid()
-    );
+    divRef = React.createRef<HTMLDivElement>();
+
+    @observable flowContext: RuntimeFlowContext = new RuntimeFlowContext();
 
     get runningFlow() {
-        return this.context.RuntimeStore.getRunningFlow(
-            this.props.widgetContainer.object as Flow
+        return (
+            this.props.runningFlow ||
+            this.context.RuntimeStore.getRunningFlow(
+                this.props.widgetContainer.object as Flow
+            )
         );
     }
 
@@ -414,11 +424,104 @@ export class FlowViewer
 
     componentDidMount() {
         this.updateFlowDocument();
+
+        this.divRef.current?.addEventListener(
+            "ensure-selection-visible",
+            this.ensureSelectionVisible
+        );
     }
 
     componentDidUpdate() {
         this.updateFlowDocument();
     }
+
+    componentDidCatch(error: any, info: any) {
+        console.error(error, info);
+    }
+
+    componentWillUnmount() {
+        this.flowContext.destroy();
+
+        this.divRef.current?.removeEventListener(
+            "ensure-selection-visible",
+            this.ensureSelectionVisible
+        );
+    }
+
+    ensureSelectionVisible = () => {
+        const selectedObjectRects = this.flowContext.viewState.selectedObjects.map(
+            selectedObject => getObjectBoundingRect(selectedObject)
+        );
+
+        if (selectedObjectRects.length > 0) {
+            let selectionBoundingRectBuilder = new BoundingRectBuilder();
+            for (let i = 0; i < selectedObjectRects.length; i++) {
+                selectionBoundingRectBuilder.addRect(selectedObjectRects[i]);
+            }
+            const selectionBoundingRect = selectionBoundingRectBuilder.getRect();
+
+            const firstSelectedObjectRect = selectedObjectRects[0];
+
+            let pageRect = this.flowContext.viewState.transform.clientToPageRect(
+                this.flowContext.viewState.transform.clientRect
+            );
+
+            if (!rectContains(pageRect, selectionBoundingRect)) {
+                this.flowContext.viewState.transform.translate = {
+                    x: -(
+                        selectionBoundingRect.left +
+                        selectionBoundingRect.width / 2
+                    ),
+                    y: -(
+                        selectionBoundingRect.top +
+                        selectionBoundingRect.height / 2
+                    )
+                };
+
+                pageRect = this.flowContext.viewState.transform.clientToPageRect(
+                    this.flowContext.viewState.transform.clientRect
+                );
+
+                let dx = 0;
+                let dy = 0;
+
+                if (!rectContains(pageRect, firstSelectedObjectRect)) {
+                    if (firstSelectedObjectRect.left < pageRect.left) {
+                        dx = -(pageRect.left - firstSelectedObjectRect.left);
+                    } else if (
+                        firstSelectedObjectRect.left +
+                            firstSelectedObjectRect.width >
+                        pageRect.left + pageRect.width
+                    ) {
+                        dx =
+                            firstSelectedObjectRect.left +
+                            firstSelectedObjectRect.width -
+                            (pageRect.left + pageRect.width);
+                    }
+
+                    if (firstSelectedObjectRect.top < pageRect.top) {
+                        dy = -(pageRect.top - firstSelectedObjectRect.top);
+                    } else if (
+                        firstSelectedObjectRect.top +
+                            firstSelectedObjectRect.height >
+                        pageRect.top + pageRect.height
+                    ) {
+                        dy =
+                            firstSelectedObjectRect.top +
+                            firstSelectedObjectRect.height -
+                            (pageRect.top + pageRect.height);
+                    }
+
+                    this.flowContext.viewState.transform.translate = {
+                        x:
+                            this.flowContext.viewState.transform.translate.x -
+                            dx,
+                        y: this.flowContext.viewState.transform.translate.y - dy
+                    };
+                }
+            }
+        }
+    };
 
     @computed
     get selectedObject() {
@@ -515,20 +618,13 @@ export class FlowViewer
         return { hasError: true };
     }
 
-    componentDidCatch(error: any, info: any) {
-        console.error(error, info);
-    }
-
-    componentWillUnmount() {
-        this.flowContext.destroy();
-    }
-
     render() {
         const flow = this.props.widgetContainer.object as Flow;
 
         return (
             <FlowViewerCanvasContainer
-                id={this.flowContext.containerId}
+                ref={this.divRef}
+                id={this.flowContext.viewState.containerId}
                 tabIndex={0}
                 onFocus={this.focusHander}
                 onDoubleClick={this.onDoubleClick}

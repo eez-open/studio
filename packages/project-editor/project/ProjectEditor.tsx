@@ -15,6 +15,7 @@ import { CommandPalette } from "project-editor/project/command-palette";
 import { Toolbar } from "project-editor/project/Toolbar";
 import { StatusBar } from "project-editor/project/StatusBar";
 import { Editors } from "./Editors";
+import { getClassInfo } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,31 +44,60 @@ class Content extends React.Component {
             />
         );
 
-        if (this.context.RuntimeStore.isRuntimeMode) {
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/content-runtime"`}
-                    sizes={"240px|100%|240px"}
-                    childrenOverflow={`hidden|hidden|hidden`}
-                >
-                    {menuNavigation}
-                    <Editors />
-                    {this.context.RuntimeStore.render()}
-                </Splitter>
-            );
+        let editors;
+
+        let selectedItem = this.context.NavigationStore.getNavigationSelectedItemAsObject(
+            this.context.project
+        );
+        if (selectedItem) {
+            if (getClassInfo(selectedItem).editorComponent) {
+                editors = <Editors />;
+            }
+        }
+
+        if (editors) {
+            if (this.context.RuntimeStore.isRuntimeMode) {
+                return (
+                    <Splitter
+                        type="horizontal"
+                        persistId={`project-editor/content-runtime"`}
+                        sizes={"240px|100%|240px"}
+                        childrenOverflow={`hidden|hidden|hidden`}
+                    >
+                        {menuNavigation}
+                        {editors}
+                        {this.context.RuntimeStore.render()}
+                    </Splitter>
+                );
+            } else {
+                return (
+                    <Splitter
+                        type="horizontal"
+                        persistId={`project-editor/content"`}
+                        sizes={"240px|100%"}
+                        childrenOverflow={`hidden|hidden`}
+                    >
+                        {menuNavigation}
+                        {editors}
+                    </Splitter>
+                );
+            }
         } else {
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId={`project-editor/content"`}
-                    sizes={"240px|100%"}
-                    childrenOverflow={`hidden|hidden`}
-                >
-                    {menuNavigation}
-                    <Editors />
-                </Splitter>
-            );
+            if (this.context.RuntimeStore.isRuntimeMode) {
+                return (
+                    <Splitter
+                        type="horizontal"
+                        persistId={`project-editor/content-runtime-without-editors"`}
+                        sizes={"100%|240px"}
+                        childrenOverflow={`hidden|hidden`}
+                    >
+                        {menuNavigation}
+                        {this.context.RuntimeStore.render()}
+                    </Splitter>
+                );
+            } else {
+                return menuNavigation;
+            }
         }
     }
 }

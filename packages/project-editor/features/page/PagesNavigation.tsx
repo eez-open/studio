@@ -12,7 +12,6 @@ import { IconAction } from "eez-studio-ui/action";
 import {
     EditorComponent,
     getParent,
-    IEditorState,
     IEezObject,
     NavigationComponent
 } from "project-editor/core/object";
@@ -45,6 +44,7 @@ import {
 import { styled } from "eez-studio-ui/styled-components";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
+import { FlowTabState } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -228,6 +228,9 @@ export class PageEditor extends EditorComponent implements IPanel {
                                             this.transitionIsActive
                                         }
                                         frontFace={true}
+                                        runningFlow={
+                                            this.pageTabState.runningFlow
+                                        }
                                     />
                                 ) : (
                                     <FlowEditor
@@ -262,6 +265,9 @@ export class PageEditor extends EditorComponent implements IPanel {
                                             this.transitionIsActive
                                         }
                                         frontFace={false}
+                                        runningFlow={
+                                            this.pageTabState.runningFlow
+                                        }
                                     />
                                 ) : (
                                     <FlowEditor
@@ -313,6 +319,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                 <PropertiesPanel
                     object={this.selectedObject}
                     buttons={buttons}
+                    readOnly={this.pageTabState.isRuntime}
                 />
                 <ComponentsPalette />
             </Splitter>
@@ -375,12 +382,43 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
     }
 }
 
-export class PageTabState implements IEditorState {
+export class PageTabState extends FlowTabState {
     page: Page;
+
     componentContainerDisplayItemEditorFrontFace: ITreeObjectAdapter;
     componentContainerDisplayItemEditorBackFace: ITreeObjectAdapter;
     componentContainerDisplayItemRuntimeFrontFace: ITreeObjectAdapter;
     componentContainerDisplayItemRuntimeBackFace: ITreeObjectAdapter;
+
+    constructor(object: IEezObject) {
+        super();
+
+        this.page = object as Page;
+
+        this.componentContainerDisplayItemEditorFrontFace = new PageTreeObjectAdapter(
+            this.page,
+            true
+        );
+
+        this.componentContainerDisplayItemEditorBackFace = new PageTreeObjectAdapter(
+            this.page,
+            false
+        );
+
+        this.componentContainerDisplayItemRuntimeFrontFace = new PageTreeObjectAdapter(
+            this.page,
+            true
+        );
+
+        this.componentContainerDisplayItemRuntimeBackFace = new PageTreeObjectAdapter(
+            this.page,
+            false
+        );
+    }
+
+    get flow() {
+        return this.page;
+    }
 
     @computed get DocumentStore() {
         return getDocumentStore(this.page);
@@ -404,30 +442,6 @@ export class PageTabState implements IEditorState {
                 this.DocumentStore.UIStateStore.pageEditorFrontFace = frontFace;
             }
         });
-    }
-
-    constructor(object: IEezObject) {
-        this.page = object as Page;
-
-        this.componentContainerDisplayItemEditorFrontFace = new PageTreeObjectAdapter(
-            this.page,
-            true
-        );
-
-        this.componentContainerDisplayItemEditorBackFace = new PageTreeObjectAdapter(
-            this.page,
-            false
-        );
-
-        this.componentContainerDisplayItemRuntimeFrontFace = new PageTreeObjectAdapter(
-            this.page,
-            true
-        );
-
-        this.componentContainerDisplayItemRuntimeBackFace = new PageTreeObjectAdapter(
-            this.page,
-            false
-        );
     }
 
     @computed get componentContainerDisplayItem() {

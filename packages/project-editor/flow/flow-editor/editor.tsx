@@ -47,7 +47,6 @@ import {
     ComponentEnclosure
 } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
-import { guid } from "eez-studio-shared/guid";
 import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 import { Draggable } from "eez-studio-ui/draggable";
 import {
@@ -921,9 +920,7 @@ export class FlowEditor
 
     div: HTMLDivElement;
 
-    flowContext: EditorFlowContext = new EditorFlowContext(
-        "eez-flow-editor-" + guid()
-    );
+    flowContext: EditorFlowContext = new EditorFlowContext();
     currentWidgetContainer?: ITreeObjectAdapter;
 
     @observable options: IEditorOptions;
@@ -1250,7 +1247,7 @@ export class FlowEditor
         return (
             <FlowEditorCanvasContainer
                 ref={(ref: any) => (this.div = ref!)}
-                id={this.flowContext.containerId}
+                id={this.flowContext.viewState.containerId}
                 tabIndex={0}
                 onFocus={this.focusHander}
                 onDragOver={this.onDragOver}

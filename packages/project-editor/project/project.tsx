@@ -57,8 +57,6 @@ import { Scpi } from "project-editor/features/scpi/scpi";
 import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
-import { MenuNavigation } from "project-editor/components/MenuNavigation";
-
 import {
     usage,
     startSearch,
@@ -742,8 +740,6 @@ function getProjectClassInfo() {
                     }
                 }
             },
-            navigationComponent: MenuNavigation,
-            navigationComponentId: "project",
             defaultNavigationKey: "settings"
         };
     }

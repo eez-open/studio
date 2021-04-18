@@ -12,7 +12,7 @@ import { Panel } from "project-editor/components/Panel";
 import { action, computed, observable, runInAction, toJS } from "mobx";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { Action, findAction } from "project-editor/features/action/action";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import {
     CallActionActionComponent,
     InputActionComponent,
@@ -1188,10 +1188,16 @@ class FlowsTree extends React.Component {
         this.context.RuntimeStore.selectedHistoryItem = undefined;
         this.context.RuntimeStore.selectedRunningFlow = node?.data;
 
-        if (this.context.RuntimeStore.selectedRunningFlow) {
-            this.context.NavigationStore.showObject(
-                this.context.RuntimeStore.selectedRunningFlow.flow
-            );
+        const runningFlow = this.context.RuntimeStore.selectedRunningFlow;
+        if (runningFlow) {
+            this.context.NavigationStore.showObject(runningFlow.flow);
+
+            const editorState = this.context.EditorsStore.activeEditor?.state;
+            if (editorState instanceof FlowTabState) {
+                setTimeout(() => {
+                    runInAction(() => (editorState.runningFlow = runningFlow));
+                }, 0);
+            }
         }
     }
 
@@ -1317,11 +1323,19 @@ class HistoryTree extends React.Component {
 
             if (objects.length > 0) {
                 this.context.NavigationStore.showObject(objects[0]);
+
                 setTimeout(() => {
-                    if (objects.length > 1) {
-                        this.context.EditorsStore.activeEditor?.state?.selectObjects(
-                            objects
-                        );
+                    const editorState = this.context.EditorsStore.activeEditor
+                        ?.state;
+                    if (editorState instanceof FlowTabState) {
+                        if (objects.length > 1) {
+                            this.context.EditorsStore.activeEditor?.state?.selectObjects(
+                                objects
+                            );
+                            setTimeout(editorState.ensureSelectionVisible, 0);
+                        } else {
+                            editorState.ensureSelectionVisible();
+                        }
                     }
                 }, 0);
             }

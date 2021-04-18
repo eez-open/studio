@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, observable } from "mobx";
+import { action, computed, observable } from "mobx";
 import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
@@ -10,7 +10,8 @@ import {
     PropertyType,
     NavigationComponent,
     EditorComponent,
-    IEditorState
+    IEditorState,
+    getParent
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
 import {
@@ -30,13 +31,87 @@ import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
 import { getDocumentStore, IPanel } from "project-editor/core/store";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
 import { bind } from "bind-decorator";
-import { TreeAdapter } from "project-editor/core/objectAdapter";
+import {
+    ITreeObjectAdapter,
+    TreeAdapter,
+    TreeObjectAdapter
+} from "project-editor/core/objectAdapter";
 import { Panel } from "project-editor/components/Panel";
 import { Tree } from "project-editor/components/Tree";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/render";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
+
+////////////////////////////////////////////////////////////////////////////////
+
+class ActionFlowTabState extends FlowTabState {
+    flow: Flow;
+    frontFace = true;
+
+    componentContainerDisplayItem: ITreeObjectAdapter;
+
+    constructor(object: IEezObject) {
+        super();
+
+        this.flow = object as Flow;
+        this.componentContainerDisplayItem = new TreeObjectAdapter(this.flow);
+    }
+
+    @computed
+    get selectedObject(): IEezObject | undefined {
+        return this.componentContainerDisplayItem.selectedObject || this.flow;
+    }
+
+    @computed
+    get selectedObjects() {
+        return this.componentContainerDisplayItem.selectedObjects;
+    }
+
+    loadState(state: any) {
+        this.componentContainerDisplayItem.loadState(state);
+    }
+
+    saveState() {
+        return this.componentContainerDisplayItem.saveState();
+    }
+
+    @action
+    selectObject(object: IEezObject) {
+        let ancestor: IEezObject | undefined;
+        for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
+            let item = this.componentContainerDisplayItem.getObjectAdapter(
+                ancestor
+            );
+            if (item) {
+                this.componentContainerDisplayItem.selectItems([item]);
+                return;
+            }
+        }
+    }
+
+    @action
+    selectObjects(objects: IEezObject[]) {
+        const items: ITreeObjectAdapter[] = [];
+
+        for (let i = 0; i < objects.length; i++) {
+            const object = objects[i];
+
+            let ancestor: IEezObject | undefined;
+            for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
+                let item = this.componentContainerDisplayItem.getObjectAdapter(
+                    ancestor
+                );
+                if (item) {
+                    items.push(item);
+                    break;
+                }
+            }
+        }
+
+        this.componentContainerDisplayItem.selectItems(items);
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +127,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
 
     @computed
     get treeAdapter() {
-        let flowTabState = this.props.editor.state as FlowTabState;
+        let flowTabState = this.props.editor.state as ActionFlowTabState;
         return new TreeAdapter(
             flowTabState.componentContainerDisplayItem,
             undefined,
@@ -63,13 +138,13 @@ export class ActionEditor extends EditorComponent implements IPanel {
 
     @computed
     get selectedObject() {
-        let flowTabState = this.props.editor.state as FlowTabState;
+        let flowTabState = this.props.editor.state as ActionFlowTabState;
         return flowTabState.selectedObject;
     }
 
     @computed
     get selectedObjects() {
-        let flowTabState = this.props.editor.state as FlowTabState;
+        let flowTabState = this.props.editor.state as ActionFlowTabState;
         return flowTabState.selectedObjects;
     }
 
@@ -90,7 +165,9 @@ export class ActionEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        let tabState = this.props.editor.state as ActionTabState | FlowTabState;
+        let tabState = this.props.editor.state as
+            | ActionTabState
+            | ActionFlowTabState;
 
         if (tabState instanceof ActionTabState) {
             return <PropertyGrid objects={[tabState.selectedObject!]} />;
@@ -108,6 +185,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
                                 tabState.componentContainerDisplayItem
                             }
                             frontFace={false}
+                            runningFlow={tabState.runningFlow}
                         />
                     ) : (
                         <FlowEditor
@@ -123,7 +201,10 @@ export class ActionEditor extends EditorComponent implements IPanel {
                         sizes={`100%|200px`}
                         childrenOverflow="hidden|hidden"
                     >
-                        <PropertiesPanel object={this.selectedObject} />
+                        <PropertiesPanel
+                            object={this.selectedObject}
+                            readOnly={this.context.RuntimeStore.isRuntimeMode}
+                        />
                         <ComponentsPalette showOnlyActions={true} />
                     </Splitter>
                 </Splitter>
@@ -160,7 +241,7 @@ export class ActionsNavigation extends NavigationComponent {
             return undefined;
         }
         let flowTabState = this.context.EditorsStore.activeEditor
-            .state as FlowTabState;
+            .state as ActionFlowTabState;
         if (!flowTabState) {
             return undefined;
         }
@@ -210,7 +291,7 @@ export class ActionsNavigation extends NavigationComponent {
 
         if (this.context.EditorsStore.activeEditor) {
             let flowTabState = this.context.EditorsStore.activeEditor
-                .state as FlowTabState;
+                .state as ActionFlowTabState;
             return [flowTabState.flow];
         }
 
@@ -382,7 +463,7 @@ export class Action extends Flow {
         },
         createEditorState: (action: Action) => {
             return action.implementationType === "flow"
-                ? new FlowTabState(action)
+                ? new ActionFlowTabState(action)
                 : new ActionTabState(action);
         },
         editorComponent: ActionEditor,

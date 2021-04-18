@@ -29,12 +29,11 @@ import type {
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
+import { getId } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class ViewState implements IViewState {
-    @observable document?: IDocument;
-
     @observable transform = new Transform({
         scale: 1,
         translate: { x: 0, y: 0 }
@@ -45,14 +44,18 @@ class ViewState implements IViewState {
 
     persistentStateReactionDisposer: IReactionDisposer;
 
-    constructor(
-        public flowContext: EditorFlowContext,
-        public containerId: string
-    ) {}
+    constructor(public flowContext: EditorFlowContext) {}
+
+    get document() {
+        return this.flowContext.document;
+    }
+
+    get containerId() {
+        return this.flowContext.containerId;
+    }
 
     @action
     set(
-        document: IDocument,
         viewStatePersistantState: IViewStatePersistantState,
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
@@ -62,8 +65,6 @@ class ViewState implements IViewState {
         if (this.persistentStateReactionDisposer) {
             this.persistentStateReactionDisposer();
         }
-
-        this.document = document;
 
         if (viewStatePersistantState) {
             if (viewStatePersistantState.transform) {
@@ -305,19 +306,23 @@ class ViewState implements IViewState {
 
 export class EditorFlowContext implements IFlowContext {
     @observable document: IDocument;
-    @observable viewState: ViewState;
+    @observable viewState: ViewState = new ViewState(this);
     @observable editorOptions: IEditorOptions = {};
     @observable dragComponent: Component | undefined;
     @observable frontFace: boolean;
     @observable dataContext: IDataContext;
     @observable runningFlow: IRunningFlow | undefined;
 
-    constructor(public containerId: string) {
-        this.viewState = new ViewState(this, this.containerId);
+    get containerId() {
+        return this.document?.flow
+            ? `eez-flow-editor-${getId(this.document?.flow.object)}-${
+                  this.frontFace ? "front" : "back"
+              }`
+            : "";
     }
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext {
-        return Object.assign(new EditorFlowContext(this.containerId), this, {
+        return Object.assign(new EditorFlowContext(), this, {
             dataContext: this.dataContext.createWithDefaultValueOverrides(
                 dataContextOverridesObject
             )
@@ -344,11 +349,7 @@ export class EditorFlowContext implements IFlowContext {
             this.document?.flow.object !== document?.flow.object;
         this.document = document;
 
-        this.viewState.set(
-            document,
-            viewStatePersistantState,
-            onSavePersistantState
-        );
+        this.viewState.set(viewStatePersistantState, onSavePersistantState);
 
         if (deselectAllObjects) {
             this.viewState.deselectAllObjects();

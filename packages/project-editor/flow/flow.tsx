@@ -7,6 +7,7 @@ import {
     ClassInfo,
     cloneObject,
     EezObject,
+    getId,
     getLabel,
     getParent,
     IEditorState,
@@ -16,14 +17,13 @@ import {
     PropertyType,
     registerClass
 } from "project-editor/core/object";
-import {
-    ITreeObjectAdapter,
-    TreeObjectAdapter
-} from "project-editor/core/objectAdapter";
 import { visitObjects } from "project-editor/core/search";
 import { getDocumentStore } from "project-editor/core/store";
 import { Component } from "project-editor/flow/component";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import {
+    IFlowContext,
+    IRunningFlow
+} from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/core/commands";
 
@@ -427,66 +427,26 @@ registerClass(FlowFragment);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class FlowTabState implements IEditorState {
-    flow: Flow;
-    componentContainerDisplayItem: ITreeObjectAdapter;
+export abstract class FlowTabState implements IEditorState {
+    @observable runningFlow: IRunningFlow | undefined;
 
-    constructor(object: IEezObject) {
-        this.flow = object as Flow;
-        this.componentContainerDisplayItem = new TreeObjectAdapter(this.flow);
-    }
+    abstract loadState(state: any): void;
+    abstract saveState(): any;
+    abstract selectObject(object: IEezObject): void;
+    abstract selectObjects(objects: IEezObject[]): void;
 
-    @computed
-    get selectedObject(): IEezObject | undefined {
-        return this.componentContainerDisplayItem.selectedObject || this.flow;
-    }
+    abstract get flow(): Flow;
+    abstract get frontFace(): boolean;
 
-    @computed
-    get selectedObjects() {
-        return this.componentContainerDisplayItem.selectedObjects;
-    }
+    ensureSelectionVisible = () => {
+        const containerId = `eez-flow-viewer-${getId(this.flow)}-${
+            this.frontFace ? "front" : "back"
+        }`;
 
-    loadState(state: any) {
-        this.componentContainerDisplayItem.loadState(state);
-    }
-
-    saveState() {
-        return this.componentContainerDisplayItem.saveState();
-    }
-
-    @action
-    selectObject(object: IEezObject) {
-        let ancestor: IEezObject | undefined;
-        for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-            let item = this.componentContainerDisplayItem.getObjectAdapter(
-                ancestor
-            );
-            if (item) {
-                this.componentContainerDisplayItem.selectItems([item]);
-                return;
-            }
+        const containerEl = document.getElementById(containerId);
+        if (containerEl) {
+            const event = new Event("ensure-selection-visible");
+            containerEl.dispatchEvent(event);
         }
-    }
-
-    @action
-    selectObjects(objects: IEezObject[]) {
-        const items: ITreeObjectAdapter[] = [];
-
-        for (let i = 0; i < objects.length; i++) {
-            const object = objects[i];
-
-            let ancestor: IEezObject | undefined;
-            for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-                let item = this.componentContainerDisplayItem.getObjectAdapter(
-                    ancestor
-                );
-                if (item) {
-                    items.push(item);
-                    break;
-                }
-            }
-        }
-
-        this.componentContainerDisplayItem.selectItems(items);
-    }
+    };
 }

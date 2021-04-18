@@ -700,6 +700,9 @@ export function getPropertyAsString(
     propertyInfo: PropertyInfo
 ) {
     let value = getProperty(object, propertyInfo.name);
+    if (typeof value === "boolean") {
+        return value.toString();
+    }
     if (typeof value === "number") {
         return value.toString();
     }

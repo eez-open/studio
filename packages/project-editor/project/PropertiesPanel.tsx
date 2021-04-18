@@ -5,7 +5,6 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import {
     findPropertyByChildObject,
-    getLabel,
     getParent,
     IEezObject,
     isValue
@@ -15,14 +14,12 @@ import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Panel } from "project-editor/components/Panel";
 
 @observer
-export class PropertiesPanel extends React.Component<
-    {
-        object: IEezObject | undefined;
-        navigationStore?: INavigationStore;
-        buttons?: JSX.Element[];
-    },
-    {}
-> {
+export class PropertiesPanel extends React.Component<{
+    object: IEezObject | undefined;
+    navigationStore?: INavigationStore;
+    buttons?: JSX.Element[];
+    readOnly?: boolean;
+}> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -68,23 +65,17 @@ export class PropertiesPanel extends React.Component<
         return objects;
     }
 
-    @computed get title() {
-        if (this.objects.length == 1) {
-            let object = this.objects[0];
-            if (isValue(object)) {
-                object = getParent(this.objects[0]);
-            }
-            return `${getLabel(object)} Properties`;
-        }
-        return "Properties";
-    }
-
     render() {
         return (
             <Panel
                 id="properties"
-                title={this.title}
-                body={<PropertyGrid objects={this.objects} />}
+                title="Properties"
+                body={
+                    <PropertyGrid
+                        objects={this.objects}
+                        readOnly={this.props.readOnly}
+                    />
+                }
                 buttons={this.props.buttons}
             />
         );
