@@ -386,6 +386,7 @@ export class RuntimeStoreClass {
     // RUNTIME SETTINGS
 
     @observable settings: any = {};
+    _settingsModified: boolean;
 
     readSettings(key: string) {
         return this.settings[key];
@@ -394,6 +395,7 @@ export class RuntimeStoreClass {
     @action
     writeSettings(key: string, value: any) {
         this.settings[key] = value;
+        this._settingsModified = true;
     }
 
     getSettingsFilePath() {
@@ -441,6 +443,10 @@ export class RuntimeStoreClass {
             return;
         }
 
+        if (!this._settingsModified) {
+            return;
+        }
+
         const fs = EEZStudio.remote.require("fs");
 
         return new Promise<void>(resolve => {
@@ -453,6 +459,7 @@ export class RuntimeStoreClass {
                         // TODO
                         console.error(err);
                     } else {
+                        this._settingsModified = false;
                         console.log("Runtime settings saved");
                     }
 

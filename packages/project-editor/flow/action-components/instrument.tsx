@@ -221,7 +221,15 @@ export class ScpiActionComponent extends ActionComponent {
         const editor = instrument.getEditor();
 
         if (!editor || !editor.instrument) {
-            throw "instrument not connected";
+            editor.onCreate();
+            await new Promise<void>(resolve => {
+                const intervalId = setInterval(() => {
+                    if (editor.instrument) {
+                        clearInterval(intervalId);
+                        resolve();
+                    }
+                }, 50);
+            });
         }
 
         const connection = getConnection(editor);
