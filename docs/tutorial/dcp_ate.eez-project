@@ -11554,7 +11554,7 @@
           "type": "GetVariableActionComponent",
           "left": 0,
           "top": -68,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "4953b9cc-3702-49d7-a51c-856b64516a91",
           "variable": "instrument.name"
@@ -11563,7 +11563,7 @@
           "type": "ConstantActionComponent",
           "left": -129,
           "top": 105,
-          "width": 122,
+          "width": 114,
           "height": 61,
           "wireID": "cd3cc276-6785-4b2a-fc1e-c237b6f73508",
           "value": "1"
@@ -11572,7 +11572,7 @@
           "type": "ConstantActionComponent",
           "left": 260,
           "top": 116,
-          "width": 122,
+          "width": 114,
           "height": 61,
           "wireID": "d8e04051-1f7b-4a69-cbc1-574f0f7cada6",
           "value": "2"
@@ -11581,7 +11581,7 @@
           "type": "ConstantActionComponent",
           "left": 649,
           "top": 116,
-          "width": 122,
+          "width": 114,
           "height": 61,
           "wireID": "963944a3-de42-4d68-fc56-3754545a52f6",
           "value": "3"
@@ -11590,7 +11590,7 @@
           "type": "GetVariableActionComponent",
           "left": -146,
           "top": 246,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "cbf9650c-e82b-4e16-b7c2-35827c0e9f8f",
           "variable": "instrument"
@@ -11599,7 +11599,7 @@
           "type": "SelectInstrumentActionComponent",
           "left": 143,
           "top": -155,
-          "width": 175,
+          "width": 158,
           "height": 61,
           "wireID": "02cebc66-80fe-4283-f896-a0407550c61b"
         },
@@ -11607,7 +11607,7 @@
           "type": "OutputActionComponent",
           "left": 1072,
           "top": -99,
-          "width": 136,
+          "width": 126,
           "height": 31,
           "wireID": "bada8498-bd54-4227-f3a2-5aa5ef0bc68a",
           "name": "instrument"
@@ -11616,7 +11616,7 @@
           "type": "DeclareVariableActionComponent",
           "left": 393,
           "top": -379,
-          "width": 161,
+          "width": 144,
           "height": 67,
           "wireID": "fb873f95-16de-4689-c090-36136038b744",
           "asInputProperties": [
@@ -11629,7 +11629,7 @@
           "type": "SetVariableActionComponent",
           "left": 316,
           "top": -155,
-          "width": 144,
+          "width": 133,
           "height": 67,
           "wireID": "acae171d-93cf-4db2-82fa-969c4e99bcff",
           "asInputProperties": [
@@ -11641,7 +11641,7 @@
           "type": "GetVariableActionComponent",
           "left": -170,
           "top": 177,
-          "width": 160,
+          "width": 147,
           "height": 55,
           "wireID": "d363844c-7850-4e61-93f0-fa678e7f0b9b",
           "variable": "instrument.isConnected"
@@ -11650,7 +11650,7 @@
           "type": "ReadSettingActionComponent",
           "left": 89,
           "top": -379,
-          "width": 138,
+          "width": 127,
           "height": 61,
           "wireID": "9e0030e0-0d83-408b-ebc5-be79c7f5c7c8",
           "asInputProperties": [
@@ -11662,7 +11662,7 @@
           "type": "GetInstrumentActionComponent",
           "left": 233,
           "top": -379,
-          "width": 157,
+          "width": 143,
           "height": 61,
           "wireID": "af5a7e6e-d827-439d-e531-62c42bb047cc"
         },
@@ -11670,7 +11670,7 @@
           "type": "WriteSettingsActionComponent",
           "left": 854,
           "top": -336,
-          "width": 147,
+          "width": 135,
           "height": 87,
           "wireID": "d3d2590f-86d6-4ba1-d5e0-f08afe8ba3a5",
           "asInputProperties": [
@@ -11682,7 +11682,7 @@
           "type": "InputActionComponent",
           "left": -75,
           "top": -312,
-          "width": 167,
+          "width": 153,
           "height": 31,
           "wireID": "f37a31c5-6b3c-4529-a6c1-05650031a072",
           "name": "instrument_key"
@@ -11691,7 +11691,7 @@
           "type": "GetVariableActionComponent",
           "left": 907,
           "top": -99,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "17d350ff-75c2-466a-80bf-fc29246d4e03",
           "variable": "instrument"
@@ -11700,7 +11700,7 @@
           "type": "GetVariableActionComponent",
           "left": 202,
           "top": -68,
-          "width": 160,
+          "width": 147,
           "height": 55,
           "wireID": "fb092ad6-72b0-443e-b2b6-f70f940fe4cb",
           "variable": "instrument.isConnected"
@@ -11709,7 +11709,7 @@
           "type": "GetVariableActionComponent",
           "left": 588,
           "top": -99,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "03d7ee2c-d9c7-409c-efc9-8e95901a14ea",
           "variable": "instrument"
@@ -11718,7 +11718,7 @@
           "type": "ConnectInstrumentActionComponent",
           "left": 751,
           "top": -196,
-          "width": 190,
+          "width": 173,
           "height": 61,
           "wireID": "6423318c-a718-41cb-e0db-fbabfbf7efa4",
           "asInputProperties": [
@@ -11729,7 +11729,7 @@
           "type": "GetVariableActionComponent",
           "left": 576,
           "top": -281,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "12663377-cecc-47ef-a963-0aed4e340069",
           "variable": "instrument.id"
@@ -11738,7 +11738,7 @@
           "type": "IsTrueActionComponent",
           "left": 621,
           "top": -196,
-          "width": 104,
+          "width": 97,
           "height": 87,
           "wireID": "a2942dc3-0f85-418a-f325-ce465e646d3c",
           "asInputProperties": [
@@ -11749,7 +11749,7 @@
           "type": "GetVariableActionComponent",
           "left": 477,
           "top": -197,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "f674c459-641f-4e0c-aef1-7dacd6784a4b",
           "variable": "instrument.id"
@@ -11758,7 +11758,7 @@
           "type": "IsTrueActionComponent",
           "left": 727,
           "top": -389,
-          "width": 104,
+          "width": 97,
           "height": 87,
           "wireID": "65017bc1-98b4-438c-cbdf-4475e80325df",
           "asInputProperties": [
@@ -12623,7 +12623,7 @@
           "type": "CallActionActionComponent",
           "left": -362,
           "top": 138,
-          "width": 156,
+          "width": 141,
           "height": 61,
           "wireID": "5d865535-8db0-4823-af17-0719a87b6149",
           "action": "start_all_tests"
@@ -12632,7 +12632,7 @@
           "type": "ConstantActionComponent",
           "left": -515,
           "top": 138,
-          "width": 122,
+          "width": 114,
           "height": 61,
           "wireID": "c8de4a35-878d-44db-c740-c252c1884737",
           "value": "\"All tests\""
@@ -12641,7 +12641,7 @@
           "type": "CallActionActionComponent",
           "left": 1473,
           "top": 228,
-          "width": 119,
+          "width": 111,
           "height": 61,
           "wireID": "6da410a4-4ad4-438b-bae8-a96ff51e8033",
           "action": "end_test"
@@ -12650,7 +12650,7 @@
           "type": "GetVariableActionComponent",
           "left": -578,
           "top": 353,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "ddf12a5a-b24d-4015-c4be-e1e24d86f868",
           "variable": "bb3_1.isConnected"
@@ -12659,7 +12659,7 @@
           "type": "GetVariableActionComponent",
           "left": -578,
           "top": 423,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "12d2ee96-bb36-44b2-9a8b-381e7c19bc98",
           "variable": "bb3_2.isConnected"
@@ -12668,7 +12668,7 @@
           "type": "EvalActionComponent",
           "left": -418,
           "top": 392,
-          "width": 356,
+          "width": 324,
           "height": 113,
           "wireID": "5b162a81-27ef-4b0b-ff4c-341c78b44511",
           "expression": "{bb3_1_connected} && \n{bb3_2_connected} && \n{test_status} != 2"
@@ -12677,7 +12677,7 @@
           "type": "CatchErrorActionComponent",
           "left": 1285,
           "top": 269,
-          "width": 130,
+          "width": 120,
           "height": 61,
           "wireID": "09e3bb41-bf50-4b55-ef4e-123265f11668"
         },
@@ -12685,7 +12685,7 @@
           "type": "ConstantActionComponent",
           "left": 1299,
           "top": 175,
-          "width": 122,
+          "width": 114,
           "height": 61,
           "wireID": "e93cc53d-c403-487f-a64e-c34c9d160d38",
           "value": "null"
@@ -12694,7 +12694,7 @@
           "type": "GetVariableActionComponent",
           "left": -578,
           "top": 492,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "f46e8f71-d75e-433d-c507-b93cf9f244b7",
           "variable": "test_status"
@@ -12703,7 +12703,7 @@
           "type": "GetVariableActionComponent",
           "left": 310,
           "top": -77,
-          "width": 145,
+          "width": 133,
           "height": 55,
           "wireID": "a98c2080-3293-435b-8194-6cf642386336",
           "variable": "test_status"
@@ -12712,7 +12712,7 @@
           "type": "ConstantActionComponent",
           "left": -185,
           "top": 281,
-          "width": 122,
+          "width": 114,
           "height": 61,
           "wireID": "23b7652c-feab-432d-924a-3dac73a21a24",
           "value": "\"-\""
@@ -12781,7 +12781,7 @@
           "type": "ShowPageActionComponent",
           "left": -64,
           "top": -172,
-          "width": 128,
+          "width": 119,
           "height": 67,
           "wireID": "63adeb37-dc35-4581-e91b-01e1177bfea6",
           "page": "main"
@@ -13205,7 +13205,7 @@
           "type": "ButtonWidget",
           "left": 0,
           "top": 40,
-          "width": 110,
+          "width": 130,
           "height": 32,
           "wireID": "89b9b12d-ef82-4f2b-812b-56efea7b3e82",
           "asInputProperties": [
@@ -13618,8 +13618,8 @@
           "type": "CallActionActionComponent",
           "left": -256,
           "top": 89,
-          "width": 0,
-          "height": 0,
+          "width": 179,
+          "height": 425,
           "wireID": "71ac2f78-1cc0-4426-c280-6992103aef5f",
           "action": "basic_test"
         },
@@ -13627,8 +13627,8 @@
           "type": "CallActionActionComponent",
           "left": -425,
           "top": 89,
-          "width": 0,
-          "height": 0,
+          "width": 115,
+          "height": 61,
           "wireID": "bdb09078-b235-4d98-abb8-d9fbf8746dc2",
           "action": "start_test"
         },
@@ -13636,8 +13636,8 @@
           "type": "ConstantActionComponent",
           "left": -642,
           "top": 140,
-          "width": 0,
-          "height": 0,
+          "width": 195,
+          "height": 61,
           "wireID": "22f7a5dd-dd9f-4fe3-f3a1-76b6f7c5ea6a",
           "value": "\"Basic test (without calibration)\""
         },
@@ -13645,24 +13645,24 @@
           "type": "StartActionComponent",
           "left": -409,
           "top": 17,
-          "width": 0,
-          "height": 0,
+          "width": 78,
+          "height": 31,
           "wireID": "cbf8ede1-6d99-4660-8635-acde18111b7e"
         },
         {
           "type": "EndActionComponent",
           "left": 0,
           "top": 543,
-          "width": 0,
-          "height": 0,
+          "width": 73,
+          "height": 31,
           "wireID": "27169b68-54ca-4a7c-a085-17a12e240e90"
         },
         {
           "type": "InputActionComponent",
           "left": 29,
           "top": -56,
-          "width": 0,
-          "height": 0,
+          "width": 92,
+          "height": 31,
           "wireID": "4a3d7a01-ca94-4887-82ab-c5ce7967917e",
           "name": "Label"
         },
@@ -13670,8 +13670,8 @@
           "type": "InputActionComponent",
           "left": -177,
           "top": 40,
-          "width": 0,
-          "height": 0,
+          "width": 141,
+          "height": 31,
           "wireID": "895c6db5-b542-41da-b169-8b50b82479e1",
           "name": "Start enabled"
         }
@@ -13908,7 +13908,7 @@
           "type": "ButtonWidget",
           "left": 0,
           "top": 40,
-          "width": 110,
+          "width": 130,
           "height": 32,
           "wireID": "f479ea8b-cb88-4762-b647-243db1171335",
           "asInputProperties": [
@@ -14131,7 +14131,7 @@
           "type": "ButtonWidget",
           "left": 0,
           "top": 40,
-          "width": 110,
+          "width": 130,
           "height": 32,
           "wireID": "c012a30c-17d8-4c96-b5a3-010c883d8388",
           "asInputProperties": [
@@ -14392,9 +14392,9 @@
         },
         {
           "type": "ButtonWidget",
-          "left": 7,
+          "left": 0,
           "top": 40,
-          "width": 110,
+          "width": 130,
           "height": 32,
           "wireID": "0381b81d-ec88-4d2f-a314-13a540f821d4",
           "asInputProperties": [
@@ -14737,7 +14737,7 @@
           "type": "ButtonWidget",
           "left": 0,
           "top": 40,
-          "width": 110,
+          "width": 130,
           "height": 32,
           "wireID": "ca17add6-3614-4c13-81c2-e4930c9c39c3",
           "asInputProperties": [
@@ -15040,7 +15040,7 @@
           "type": "ButtonWidget",
           "left": 0,
           "top": 40,
-          "width": 110,
+          "width": 130,
           "height": 32,
           "wireID": "ca17add6-3614-4c13-81c2-e4930c9c39c3",
           "asInputProperties": [
