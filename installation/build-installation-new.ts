@@ -32,11 +32,9 @@ async function getExtraResource() {
     let files = [
         "dist/**",
         "libs/**",
-
         "icon.icns",
         "icon.ico",
         "LICENSE.TXT",
-
         "node_modules/**",
         "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
         "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
@@ -48,7 +46,13 @@ async function getExtraResource() {
         "!**/*.ilk",
         "!**/*.lib",
         "!node_modules/better-sqlite3/build/Release/obj",
-        "!dist/eez-studio-ui/_images/background.png"
+        "!dist/eez-studio-ui/_images/background.png",
+        "!node_modules/plotly.js/dist/**",
+        "!node_modules/plotly.js/src/**",
+        "node_modules/plotly.js/dist/plotly.min.js",
+        "!node_modules/mapbox-gl/dist/**",
+        "!node_modules/mapbox-gl/src/**",
+        "node_modules/mapbox-gl/dist/mapbox-gl.js"
     ];
 
     // if (Platform.current() === Platform.WINDOWS) {
