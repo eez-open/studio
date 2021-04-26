@@ -666,6 +666,8 @@ export class Connection
             clearInterval(this.housekeepingIntervalId);
             this.housekeepingIntervalId = undefined;
         }
+
+        this.release();
     }
 
     acquireQueue: {

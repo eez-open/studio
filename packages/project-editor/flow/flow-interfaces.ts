@@ -152,6 +152,7 @@ export interface IEditorOptions {
 
 export interface IViewStatePersistantState {
     transform?: ITransform;
+    clientRect?: Rect;
 }
 
 export type HandleType =

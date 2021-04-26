@@ -33,7 +33,8 @@ import {
     findPropertyByNameInObject,
     findPropertyByNameInClassInfo,
     PropertyProps,
-    generalGroup
+    generalGroup,
+    isPropertyHidden
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
@@ -236,7 +237,8 @@ export function makeToggablePropertyToInput(
                             asInputProperties.sort();
 
                             DocumentStore.updateObject(component, {
-                                asInputProperties
+                                asInputProperties,
+                                [props.propertyInfo.name]: undefined
                             });
 
                             DocumentStore.UndoManager.setCombineCommands(false);
@@ -306,7 +308,8 @@ export function makeToggablePropertyToOutput(
                             asOutputProperties.sort();
 
                             DocumentStore.updateObject(component, {
-                                asOutputProperties
+                                asOutputProperties,
+                                [props.propertyInfo.name]: undefined
                             });
 
                             DocumentStore.UndoManager.setCombineCommands(false);
@@ -359,6 +362,8 @@ export class Component extends EezObject {
     @observable asOutputProperties: string[];
 
     @observable _geometry: ComponentGeometry;
+
+    @observable catchError: boolean;
 
     get autoSize() {
         return false;
@@ -443,6 +448,11 @@ export class Component extends EezObject {
                 type: PropertyType.StringArray,
                 hideInPropertyGrid: true,
                 defaultValue: []
+            },
+            {
+                name: "catchError",
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup
             }
         ],
 
@@ -515,8 +525,116 @@ export class Component extends EezObject {
         },
         isSelectable: (object: Component) => {
             return true;
+        },
+
+        check: (object: Component) => {
+            let messages: output.Message[] = [];
+
+            object.inputs.forEach(input => {
+                if (
+                    !getFlow(object).connectionLines.find(
+                        connectionLine =>
+                            connectionLine.targetComponent === object &&
+                            connectionLine.input === input.name
+                    )
+                ) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            `No connection to input "${input.name}"`,
+                            object
+                        )
+                    );
+                }
+            });
+
+            object.outputs.forEach(componentOutput => {
+                if (
+                    !getFlow(object).connectionLines.find(
+                        connectionLine =>
+                            connectionLine.sourceComponent === object &&
+                            connectionLine.output === componentOutput.name
+                    )
+                ) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            `Output "${componentOutput.name}" is not connected`,
+                            object
+                        )
+                    );
+                }
+            });
+
+            if (!(object instanceof ActionComponent)) {
+                if (object.left < 0) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "left")
+                        )
+                    );
+                }
+
+                if (object.top < 0) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "top")
+                        )
+                    );
+                }
+
+                if (
+                    object.left + object.width >
+                    getWidgetParent(object).width
+                ) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "width")
+                        )
+                    );
+                }
+
+                if (
+                    object.top + object.height >
+                    getWidgetParent(object).height
+                ) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            "Widget is outside of its parent",
+                            getChildOfObject(object, "height")
+                        )
+                    );
+                }
+            }
+
+            checkObjectReference(object, "data", messages);
+            checkObjectReference(object, "action", messages);
+
+            return messages;
+        },
+
+        updateObjectValueHook: (object: Component, values: any) => {
+            if (values.catchError !== undefined) {
+                if (!values.catchError && object.catchError) {
+                    const flow = getFlow(object);
+                    flow.deleteConnectionLinesFromOutput(object, "@error");
+                }
+            }
         }
     };
+
+    set geometry(value: ComponentGeometry) {
+        this._geometry = value;
+        this.width = this._geometry.width;
+        this.height = this._geometry.height;
+    }
 
     @computed
     get absolutePositionPoint() {
@@ -575,12 +693,15 @@ export class Component extends EezObject {
                         inputPropertyName
                     )
                 )
-                .filter(propertyInfo => !!propertyInfo) as PropertyInfo[])
+                .filter(
+                    propertyInfo =>
+                        propertyInfo && !isPropertyHidden(this, propertyInfo)
+                ) as PropertyInfo[])
         ];
     }
 
     get outputs() {
-        return [
+        const outputs = [
             ...((this.asOutputProperties ?? [])
                 .map(outputPropertyName =>
                     findPropertyByNameInClassInfo(
@@ -588,8 +709,21 @@ export class Component extends EezObject {
                         outputPropertyName
                     )
                 )
-                .filter(propertyInfo => !!propertyInfo) as PropertyInfo[])
+                .filter(
+                    propertyInfo =>
+                        propertyInfo && !isPropertyHidden(this, propertyInfo)
+                ) as PropertyInfo[])
         ];
+
+        if (this.catchError) {
+            outputs.push({
+                name: "@error",
+                displayName: "@Error",
+                type: PropertyType.String
+            });
+        }
+
+        return outputs;
     }
 
     @computed
@@ -780,7 +914,8 @@ export class Widget extends Component {
         },
         getResizeHandlers(object: Widget) {
             return object.getResizeHandlers();
-        }
+        },
+        componentHeaderColor: "#FFFFFF"
     });
 
     putInSelect() {
@@ -1066,6 +1201,9 @@ export class Widget extends Component {
                         <div
                             key={property.name}
                             data-connection-input-id={property.name}
+                            className={classNames({
+                                seq: property.name === "@seqin"
+                            })}
                             title={
                                 property.displayName ?? humanize(property.name)
                             }
@@ -1077,6 +1215,9 @@ export class Widget extends Component {
                         <div
                             key={property.name}
                             data-connection-output-id={property.name}
+                            className={classNames({
+                                seq: property.name === "@seqout"
+                            })}
                             title={
                                 property.displayName ?? humanize(property.name)
                             }
@@ -1124,8 +1265,7 @@ export class EmbeddedWidget extends Widget {
 
 function renderActionComponent(
     actionNode: ActionComponent,
-    flowContext: IFlowContext,
-    titleStyle?: React.CSSProperties
+    flowContext: IFlowContext
 ) {
     const classInfo = getClassInfo(actionNode);
 
@@ -1139,6 +1279,13 @@ function renderActionComponent(
         outputs = [...outputs.slice(0, i), ...outputs.slice(i + 1), outputs[i]];
     }
 
+    let titleStyle: React.CSSProperties | undefined;
+    if (classInfo.componentHeaderColor) {
+        titleStyle = {
+            backgroundColor: classInfo.componentHeaderColor
+        };
+    }
+
     return (
         <>
             <div className="title-enclosure">
@@ -1147,11 +1294,7 @@ function renderActionComponent(
                         className="title-image"
                         data-connection-input-id="@seqin"
                     >
-                        {typeof classInfo.icon == "string" ? (
-                            <img src={classInfo.icon} />
-                        ) : (
-                            classInfo.icon
-                        )}
+                        {classInfo.icon}
                     </span>
                     <span className="title-text">{getLabel(actionNode)}</span>
                     <span data-connection-output-id="@seqout"></span>
@@ -1197,31 +1340,8 @@ function renderActionComponent(
 
 export class ActionComponent extends Component {
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
-        properties: [
-            {
-                name: "catchError",
-                type: PropertyType.Boolean,
-                propertyGridGroup: generalGroup
-            }
-        ]
+        properties: []
     });
-
-    @observable catchError: boolean;
-
-    get outputs() {
-        if (!this.catchError) {
-            return super.outputs;
-        }
-
-        return [
-            ...super.outputs,
-            {
-                name: "@error",
-                displayName: "@Error",
-                type: PropertyType.String
-            }
-        ];
-    }
 
     get autoSize() {
         return true;
@@ -1271,7 +1391,8 @@ export class NotFoundComponent extends ActionComponent {
                     (object as any)[key] = value;
                 }
             });
-        }
+        },
+        componentHeaderColor: "#fc9b9b"
     });
 
     @computed get inputs() {
@@ -1306,8 +1427,6 @@ export class NotFoundComponent extends ActionComponent {
     }
 
     render(flowContext: IFlowContext): JSX.Element {
-        return renderActionComponent(this, flowContext, {
-            backgroundColor: "red"
-        });
+        return renderActionComponent(this, flowContext);
     }
 }

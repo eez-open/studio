@@ -231,7 +231,9 @@ export interface ClassInfo {
         classInfo: ClassInfo,
         isSingleObject: boolean
     ) => IEezObject | PropertyInfo | undefined;
+
     icon?: string | React.ReactNode;
+    componentHeaderColor?: string;
 
     propertyGridTableComponent?: any;
 
@@ -318,6 +320,19 @@ export function makeDerivedClassInfo(
     if (baseCheck && derivedCheck) {
         derivedClassInfoProperties.check = (object: IEezObject) => {
             return baseCheck(object).concat(derivedCheck(object));
+        };
+    }
+
+    const baseUpdateObjectValueHook = baseClassInfo.updateObjectValueHook;
+    const derivedUpdateObjectValueHook =
+        derivedClassInfoProperties.updateObjectValueHook;
+    if (baseUpdateObjectValueHook && derivedUpdateObjectValueHook) {
+        derivedClassInfoProperties.updateObjectValueHook = (
+            object: IEezObject,
+            values: any
+        ) => {
+            baseUpdateObjectValueHook(object, values);
+            derivedUpdateObjectValueHook(object, values);
         };
     }
 

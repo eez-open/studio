@@ -5,7 +5,6 @@ import {
     reaction,
     IReactionDisposer
 } from "mobx";
-import stringify from "json-stable-stringify";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
@@ -56,28 +55,25 @@ class ViewState implements IViewState {
 
     @action
     set(
-        viewStatePersistantState: IViewStatePersistantState,
+        viewStatePersistantState: IViewStatePersistantState | undefined,
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
-        ) => void,
-        lastViewState?: ViewState
+        ) => void
     ) {
         if (this.persistentStateReactionDisposer) {
             this.persistentStateReactionDisposer();
         }
 
-        if (viewStatePersistantState) {
-            if (viewStatePersistantState.transform) {
-                this.transform.scale = viewStatePersistantState.transform.scale;
-                this.transform.translate =
-                    viewStatePersistantState.transform.translate;
-            } else {
-                this.resetTransform();
-            }
+        if (viewStatePersistantState?.transform) {
+            this.transform.scale = viewStatePersistantState.transform.scale;
+            this.transform.translate =
+                viewStatePersistantState.transform.translate;
+        } else {
+            this.resetTransform();
         }
 
-        if (lastViewState) {
-            this.transform.clientRect = lastViewState.transform.clientRect;
+        if (viewStatePersistantState?.clientRect) {
+            this.transform.clientRect = viewStatePersistantState.clientRect;
         }
 
         this.persistentStateReactionDisposer = reaction(
@@ -92,7 +88,8 @@ class ViewState implements IViewState {
             transform: {
                 translate: this.transform.translate,
                 scale: this.transform.scale
-            }
+            },
+            clientRect: this.transform.clientRect
         };
     }
 
@@ -305,13 +302,13 @@ class ViewState implements IViewState {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EditorFlowContext implements IFlowContext {
-    @observable document: IDocument;
-    @observable viewState: ViewState = new ViewState(this);
-    @observable editorOptions: IEditorOptions = {};
+    document: IDocument;
+    viewState: ViewState = new ViewState(this);
+    editorOptions: IEditorOptions = {};
     @observable dragComponent: Component | undefined;
-    @observable frontFace: boolean;
-    @observable dataContext: IDataContext;
-    @observable runningFlow: IRunningFlow | undefined;
+    frontFace: boolean;
+    dataContext: IDataContext;
+    runningFlow: IRunningFlow | undefined;
 
     get containerId() {
         return this.document?.flow
@@ -333,10 +330,9 @@ export class EditorFlowContext implements IFlowContext {
         return this;
     }
 
-    @action
     set(
         document: IDocument,
-        viewStatePersistantState: IViewStatePersistantState,
+        viewStatePersistantState: IViewStatePersistantState | undefined,
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
@@ -345,23 +341,19 @@ export class EditorFlowContext implements IFlowContext {
         options?: IEditorOptions,
         filterSnapLines?: (node: ITreeObjectAdapter) => boolean
     ) {
-        const deselectAllObjects =
-            this.document?.flow.object !== document?.flow.object;
         this.document = document;
 
         this.viewState.set(viewStatePersistantState, onSavePersistantState);
 
-        if (deselectAllObjects) {
-            this.viewState.deselectAllObjects();
-        }
-
         this.frontFace = frontFace;
         this.runningFlow = runningFlow;
 
-        const newOptions = options || {};
-        if (stringify(newOptions) !== stringify(this.editorOptions)) {
-            this.editorOptions = newOptions;
-        }
+        this.editorOptions = options || {
+            center: {
+                x: 0,
+                y: 0
+            }
+        };
 
         this.editorOptions.filterSnapLines = filterSnapLines;
 

@@ -15,6 +15,8 @@ import { Action, findAction } from "project-editor/features/action/action";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import {
     CallActionActionComponent,
+    CatchErrorActionComponent,
+    ErrorActionComponent,
     InputActionComponent,
     StartActionComponent
 } from "project-editor/flow/action-components";
@@ -38,10 +40,15 @@ import { LayoutViewWidget } from "./widgets";
 import { visitObjects } from "project-editor/core/search";
 import { isWebStudio } from "eez-studio-shared/util-electron";
 import { Splitter } from "eez-studio-ui/splitter";
+import { Page } from "project-editor/features/page/page";
+import {
+    PageEditor,
+    PageTabState
+} from "project-editor/features/page/PagesNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const MAX_HISTORY_ITEMS = 1000;
+const MAX_HISTORY_ITEMS = 10000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,25 +79,61 @@ interface StartQueueTask {
     component: Component;
 }
 
-export class RuntimeStoreClass {
-    constructor(public DocumentStore: DocumentStoreClass) {}
+abstract class HistoryItem {
+    date: Date = new Date();
+    id = guid();
+    @observable history: HistoryItem[] = [];
 
-    ////////////////////////////////////////
+    constructor(
+        public runningFlow: RunningFlow | undefined,
+        public flow?: Flow,
+        public sourceComponent?: Component,
+        public targetComponent?: Component,
+        public connectionLine?: ConnectionLine
+    ) {}
+
+    abstract get label(): string;
+
+    get isError() {
+        return false;
+    }
+}
+
+export class RuntimeStoreClass {
+    constructor(public DocumentStore: DocumentStoreClass) {
+        (window as any).runtime = this;
+    }
 
     @observable isRuntimeMode = false;
+    @observable isStopped = false;
+    @observable selectedPage: Page;
 
-    isStopped = false;
-
-    @action.bound
-    setRuntimeMode() {
+    setRuntimeMode = async () => {
         if (!this.isRuntimeMode) {
-            this.selectedRunningFlow = undefined;
-            this.selectedHistoryItem = undefined;
-            this.isRuntimeMode = true;
-            this.isStopped = false;
-            this.start();
+            runInAction(() => {
+                this.isRuntimeMode = true;
+                this.selectedRunningFlow = undefined;
+                this.selectedHistoryItem = undefined;
+                this.isStopped = false;
+                this.DocumentStore.UIStateStore.showDebugInfo = false;
+                this.selectedPage = this.DocumentStore.project.pages[0];
+
+                this.DocumentStore.UIStateStore.pageRuntimeFrontFace = true;
+                this.DocumentStore.dataContext.clearDataItemValues();
+
+                this.queueIsEmpty = true;
+                this.runningFlows = this.DocumentStore.project.pages
+                    .filter(page => !page.isUsedAsCustomWidget)
+                    .map(page => new RunningFlow(this, page));
+            });
+
+            await this.loadSettings();
+
+            this.runningFlows.forEach(runningFlow => runningFlow.start());
+            this.pumpQueue();
+            EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
         }
-    }
+    };
 
     setEditorMode = async () => {
         if (this.isRuntimeMode) {
@@ -103,31 +146,23 @@ export class RuntimeStoreClass {
                 this.history = [];
             });
 
+            this.DocumentStore.EditorsStore.editors.forEach(editor => {
+                if (editor.state instanceof FlowTabState) {
+                    const flowTabState = editor.state;
+                    runInAction(() => {
+                        flowTabState.runningFlow = undefined;
+                    });
+                }
+            });
+
             runInAction(() => (this.isRuntimeMode = false));
         }
     };
 
-    async start() {
-        await this.loadSettings();
-
-        runInAction(() => {
-            this.queueIsEmpty = true;
-
-            this.runningFlows = this.DocumentStore.project.pages
-                .filter(page => !page.isUsedAsCustomWidget)
-                .map(page => new RunningFlow(this, page));
-        });
-
-        this.runningFlows.forEach(runningFlow => runningFlow.start());
-
-        this.pumpQueue();
-
-        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
-    }
-
     async stop() {
         if (this.pumpTimeoutId) {
             clearTimeout(this.pumpTimeoutId);
+            this.pumpTimeoutId = undefined;
         }
 
         while (this.isRunning) {
@@ -137,7 +172,9 @@ export class RuntimeStoreClass {
         this.runningFlows.forEach(runningFlow => runningFlow.finish());
         EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
 
-        this.isStopped = true;
+        runInAction(() => {
+            this.isStopped = true;
+        });
 
         await this.saveSettings();
     }
@@ -161,7 +198,7 @@ export class RuntimeStoreClass {
     @observable runningComponents: number;
 
     @computed get isIdle() {
-        return this.queueIsEmpty && !this.isRunning;
+        return this.isStopped || (this.queueIsEmpty && !this.isRunning);
     }
 
     getRunningFlow(flow: Flow) {
@@ -245,7 +282,7 @@ export class RuntimeStoreClass {
         this.queueIsEmpty = false;
 
         if (this.isStopped) {
-            this.start();
+            return;
         }
 
         if (widget.isOutputProperty("action")) {
@@ -259,11 +296,16 @@ export class RuntimeStoreClass {
             );
 
             if (action) {
-                const runningFlow = new RunningFlow(this, action);
+                const parentRunningFlow = flowContext.runningFlow! as RunningFlow;
+                const runningFlow = new RunningFlow(
+                    this,
+                    action,
+                    parentRunningFlow
+                );
                 this.addHistoryItem(
                     new ExecuteWidgetActionHistoryItem(runningFlow, widget)
                 );
-                this.addRunningFlow(runningFlow);
+                parentRunningFlow.runningFlows.push(runningFlow);
                 runningFlow.startAction();
             } else {
                 this.addHistoryItem(
@@ -275,12 +317,6 @@ export class RuntimeStoreClass {
                 new WidgetActionNotDefinedHistoryItem(undefined, widget)
             );
         }
-    }
-
-    addRunningFlow(runningFlow: RunningFlow) {
-        runInAction(() => {
-            this.runningFlows.push(runningFlow);
-        });
     }
 
     removeRunningFlow(runningFlow: RunningFlow) {
@@ -300,29 +336,28 @@ export class RuntimeStoreClass {
     @observable history: HistoryItem[] = [];
     @observable selectedHistoryItem: HistoryItem | undefined;
 
+    @action
     addHistoryItem(historyItem: HistoryItem) {
-        runInAction(() => {
-            if (historyItem instanceof OutputValueHistoryItem) {
-                for (let i = this.history.length - 1; i >= 0; i--) {
-                    const parentHistoryItem = this.history[i];
-                    if (
-                        parentHistoryItem instanceof
-                            ExecuteComponentHistoryItem &&
-                        parentHistoryItem.componentState ==
-                            historyItem.componentState
-                    ) {
-                        parentHistoryItem.history.push(historyItem);
-                        return;
-                    }
-                }
-            }
+        // if (historyItem instanceof OutputValueHistoryItem) {
+        //     for (let i = this.history.length - 1; i >= 0; i--) {
+        //         const parentHistoryItem = this.history[i];
+        //         if (
+        //             parentHistoryItem instanceof
+        //                 ExecuteComponentHistoryItem &&
+        //             parentHistoryItem.componentState ==
+        //                 historyItem.componentState
+        //         ) {
+        //             parentHistoryItem.history.push(historyItem);
+        //             return;
+        //         }
+        //     }
+        // }
 
-            this.history.push(historyItem);
+        this.history.push(historyItem);
 
-            if (this.history.length > MAX_HISTORY_ITEMS) {
-                this.history.shift();
-            }
-        });
+        if (this.history.length > MAX_HISTORY_ITEMS) {
+            this.history.shift();
+        }
     }
 
     @action.bound
@@ -332,7 +367,18 @@ export class RuntimeStoreClass {
 
     ////////////////////////////////////////
 
-    render() {
+    @computed get selectedPageElement() {
+        return (
+            <PageEditor
+                editor={{
+                    object: this.selectedPage,
+                    state: new PageTabState(this.selectedPage)
+                }}
+            ></PageEditor>
+        );
+    }
+
+    renderRuntimePanel() {
         return <RuntimePanel />;
     }
 
@@ -421,12 +467,14 @@ export class RuntimeStoreClass {
 
 export type InputPropertyValue = InputData;
 
-class ComponentState {
+export class ComponentState {
     inputsData = new Map<string, InputData>();
     @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
     @observable isRunning: boolean = false;
     @observable runningState: any;
     dispose: (() => void) | undefined = undefined;
+
+    constructor(public runningFlow: RunningFlow, public component: Component) {}
 
     getInputValue(input: string) {
         return this.inputsData.get(input);
@@ -435,8 +483,6 @@ class ComponentState {
     getInputPropertyValue(input: string) {
         return this._inputPropertyValues.get(input);
     }
-
-    constructor(public runningFlow: RunningFlow, public component: Component) {}
 
     setInputData(input: string, inputData: InputData) {
         this.inputsData.set(input, inputData);
@@ -449,6 +495,10 @@ class ComponentState {
 
         if (this.component instanceof Widget) {
             return this.inputsData.size > 0;
+        }
+
+        if (this.component instanceof CatchErrorActionComponent) {
+            return !!this.inputsData.get("message");
         }
 
         if (
@@ -526,7 +576,6 @@ class ComponentState {
             runInAction(() => {
                 this.runningFlow.hasError = true;
             });
-
             this.runningFlow.RuntimeStore.addHistoryItem(
                 new ExecutionErrorHistoryItem(
                     this.runningFlow,
@@ -535,7 +584,45 @@ class ComponentState {
                 )
             );
 
-            this.runningFlow.RuntimeStore.stop();
+            const catchErrorOutput = this.findCatchErrorOutput();
+            if (catchErrorOutput) {
+                catchErrorOutput.connectionLines.forEach(connectionLine => {
+                    this.runningFlow.RuntimeStore.queue.push({
+                        runningFlow:
+                            catchErrorOutput.componentState.runningFlow,
+                        component: connectionLine.targetComponent!,
+                        input: connectionLine.input,
+                        inputData: {
+                            time: Date.now(),
+                            value: err
+                        },
+                        connectionLine
+                    });
+                });
+            } else {
+                let runningFlow: RunningFlow | undefined;
+                if (this.component instanceof ErrorActionComponent) {
+                    runningFlow = this.runningFlow.parentRunningFlow;
+                } else {
+                    runningFlow = this.runningFlow;
+                }
+
+                const catchErrorActionComponentState =
+                    runningFlow && runningFlow.findCatchErrorActionComponent();
+                if (catchErrorActionComponentState) {
+                    this.runningFlow.RuntimeStore.queue.push({
+                        runningFlow: catchErrorActionComponentState.runningFlow,
+                        component: catchErrorActionComponentState.component,
+                        input: "message",
+                        inputData: {
+                            time: Date.now(),
+                            value: err
+                        }
+                    });
+                } else {
+                    this.runningFlow.RuntimeStore.stop();
+                }
+            }
         } finally {
             runInAction(() => {
                 this.runningFlow.RuntimeStore.queueIsEmpty = false;
@@ -574,6 +661,31 @@ class ComponentState {
         if (this.dispose) {
             this.dispose();
         }
+    }
+
+    findCatchErrorOutput():
+        | {
+              componentState: ComponentState;
+              connectionLines: ConnectionLine[];
+          }
+        | undefined {
+        const connectionLines = this.runningFlow.flow.connectionLines.filter(
+            connectionLine =>
+                connectionLine.sourceComponent == this.component &&
+                connectionLine.output === "@error" &&
+                connectionLine.targetComponent
+        );
+        if (connectionLines.length > 0) {
+            return { componentState: this, connectionLines };
+        }
+
+        if (this.runningFlow.parentRunningFlow && this.runningFlow.component) {
+            return this.runningFlow.parentRunningFlow
+                .getComponentState(this.runningFlow.component)
+                .findCatchErrorOutput();
+        }
+
+        return undefined;
     }
 }
 
@@ -786,7 +898,7 @@ export class RunningFlow {
             this,
             component
         );
-        this.RuntimeStore.addRunningFlow(runningFlow);
+        this.runningFlows.push(runningFlow);
         runningFlow.start();
         return runningFlow;
     }
@@ -870,29 +982,24 @@ export class RunningFlow {
             }
         });
     }
+
+    findCatchErrorActionComponent(): ComponentState | undefined {
+        const catchErrorActionComponent = this.flow.components.find(
+            component => component instanceof CatchErrorActionComponent
+        );
+        if (catchErrorActionComponent) {
+            return this.getComponentState(catchErrorActionComponent);
+        }
+
+        if (this.parentRunningFlow) {
+            return this.parentRunningFlow.findCatchErrorActionComponent();
+        }
+
+        return undefined;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-abstract class HistoryItem {
-    date: Date = new Date();
-    id = guid();
-    @observable history: HistoryItem[] = [];
-
-    constructor(
-        public runningFlow: RunningFlow | undefined,
-        public flow?: Flow,
-        public sourceComponent?: Component,
-        public targetComponent?: Component,
-        public connectionLine?: ConnectionLine
-    ) {}
-
-    abstract get label(): string;
-
-    get isError() {
-        return false;
-    }
-}
 
 class ActionStartHistoryItem extends HistoryItem {
     constructor(public runningFlow: RunningFlow | undefined, flow: Flow) {
@@ -1328,14 +1435,9 @@ class HistoryTree extends React.Component {
                     const editorState = this.context.EditorsStore.activeEditor
                         ?.state;
                     if (editorState instanceof FlowTabState) {
-                        if (objects.length > 1) {
-                            this.context.EditorsStore.activeEditor?.state?.selectObjects(
-                                objects
-                            );
-                            setTimeout(editorState.ensureSelectionVisible, 0);
-                        } else {
-                            editorState.ensureSelectionVisible();
-                        }
+                        this.context.EditorsStore.activeEditor?.state?.selectObjects(
+                            objects
+                        );
                     }
                 }, 0);
             }

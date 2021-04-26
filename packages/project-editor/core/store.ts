@@ -104,7 +104,12 @@ import {
 import { getAllMetrics } from "project-editor/project/metrics";
 import { ActionComponent, Component } from "project-editor/flow/component";
 import { Page } from "project-editor/features/page/page";
-import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
+import {
+    ConnectionLine,
+    Flow,
+    FlowFragment,
+    FlowTabState
+} from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
@@ -426,6 +431,11 @@ class NavigationStoreClass implements INavigationStore {
         }
     }
 
+    getSelection(): IEezObject[] | undefined {
+        // TODO
+        return undefined;
+    }
+
     @action
     setSelection(selection: IEezObject[] | undefined) {
         if (!selection || selection.length == 0) {
@@ -486,6 +496,10 @@ class NavigationStoreClass implements INavigationStore {
                                 ? getParent(objectToShow)
                                 : objectToShow
                         );
+
+                        if (editor.state instanceof FlowTabState) {
+                            editor.state.ensureSelectionVisible();
+                        }
                     }
                 }, 0);
                 break;
@@ -674,6 +688,15 @@ class EditorsStoreClass {
         editor.active = true;
 
         this.DocumentStore.NavigationStore.setSelection([editor.object]);
+
+        setTimeout(() => {
+            const el = document.querySelector(
+                "#eez-project-active-editor [tabindex]"
+            );
+            if (el && el instanceof HTMLElement) {
+                el.focus();
+            }
+        }, 0);
     }
 
     @action
@@ -786,6 +809,7 @@ class UIStateStoreClass {
     @observable pageEditorFrontFace: boolean = false;
     @observable pageRuntimeFrontFace: boolean = true;
     @observable showCommandPalette: boolean = false;
+    @observable showDebugInfo = false;
 
     dispose1: mobx.IReactionDisposer;
     dispose2: mobx.IReactionDisposer;
@@ -844,6 +868,7 @@ class UIStateStoreClass {
         this.loadObjects(uiState.objects);
         this.pageEditorFrontFace = uiState.pageEditorFrontFace;
         this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
+        this.showDebugInfo = uiState.showDebugInfo;
     }
 
     @computed
@@ -880,7 +905,8 @@ class UIStateStoreClass {
             objects: this.objectsJS,
             activeOutputSection: this.activeOutputSection,
             pageEditorFrontFace: this.pageEditorFrontFace,
-            pageRuntimeFrontFace: this.pageRuntimeFrontFace
+            pageRuntimeFrontFace: this.pageRuntimeFrontFace,
+            showDebugInfo: this.showDebugInfo
         };
     }
 
@@ -944,6 +970,8 @@ class UIStateStoreClass {
 
 interface IUndoItem {
     commands: ICommand[];
+    selectionBefore: any;
+    selectionAfter: any;
 }
 
 export class UndoManagerClass {
@@ -951,6 +979,7 @@ export class UndoManagerClass {
     @observable redoStack: IUndoItem[] = [];
     @observable commands: ICommand[] = [];
 
+    private selectionBeforeFirstCommand: any;
     public combineCommands: boolean = false;
 
     constructor(public DocumentStore: DocumentStoreClass) {}
@@ -964,11 +993,15 @@ export class UndoManagerClass {
     @action
     pushToUndoStack() {
         if (this.commands.length > 0) {
+            let selectionAfter = this.DocumentStore.NavigationStore.getSelection();
             this.undoStack.push({
-                commands: this.commands
+                commands: this.commands,
+                selectionBefore: this.selectionBeforeFirstCommand,
+                selectionAfter: selectionAfter
             });
 
             this.commands = [];
+            this.selectionBeforeFirstCommand = this.DocumentStore.NavigationStore.getSelection();
         }
     }
 
@@ -980,7 +1013,9 @@ export class UndoManagerClass {
 
     @action
     executeCommand(command: ICommand) {
-        if (this.commands.length > 0) {
+        if (this.commands.length == 0) {
+            this.selectionBeforeFirstCommand = this.DocumentStore.NavigationStore.getSelection();
+        } else {
             if (!this.combineCommands) {
                 this.pushToUndoStack();
             }
@@ -1027,6 +1062,10 @@ export class UndoManagerClass {
                 undoItem.commands[i].undo();
             }
 
+            this.DocumentStore.NavigationStore.setSelection(
+                undoItem.selectionBefore
+            );
+
             this.redoStack.push(undoItem);
 
             this.DocumentStore.setModified(true);
@@ -1057,6 +1096,10 @@ export class UndoManagerClass {
             for (let i = 0; i < redoItem.commands.length; i++) {
                 redoItem.commands[i].execute();
             }
+
+            this.DocumentStore.NavigationStore.setSelection(
+                redoItem.selectionAfter
+            );
 
             this.undoStack.push(redoItem);
 

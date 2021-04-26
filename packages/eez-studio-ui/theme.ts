@@ -25,6 +25,7 @@ export interface ThemeInterface {
     actionTextColor: string;
     actionHoverColor: string;
     connectionLineColor: string;
+    seqConnectionLineColor: string;
     selectedConnectionLineColor: string;
     activeConnectionLineColor: string;
     connectionLineInTheMakingColor: string;
@@ -58,6 +59,7 @@ export const theme: ThemeInterface = {
     actionHoverColor: "#0056b3",
     connectionLineColor: "#999",
     selectedConnectionLineColor: "red",
+    seqConnectionLineColor: "#3FADB5",
     activeConnectionLineColor: "blue",
     connectionLineInTheMakingColor: "#337bb7"
 };

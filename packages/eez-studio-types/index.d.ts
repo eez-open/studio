@@ -49,6 +49,7 @@ interface PropertyInfo {
 interface ClassInfo {
     properties: PropertyInfo[];
     icon?: React.ReactNode;
+    componentHeaderColor?: string;
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
     enabledInComponentPalette?: (projectType: ProjectType) => boolean;
 }
@@ -162,6 +163,7 @@ interface ThemeInterface {
     actionTextColor: string;
     actionHoverColor: string;
     connectionLineColor: string;
+    seqConnectionLineColor: string;
     selectedConnectionLineColor: string;
     activeConnectionLineColor: string;
     connectionLineInTheMakingColor: string;

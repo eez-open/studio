@@ -172,7 +172,29 @@ export class Toolbar extends React.Component {
                             <ButtonAction
                                 text="Run"
                                 title="Enter run mode"
-                                icon="material:play_arrow"
+                                icon={
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="2"
+                                        stroke="currentColor"
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        ></path>
+                                        <circle cx="13" cy="4" r="1"></circle>
+                                        <path d="M4 17l5 1l.75 -1.5"></path>
+                                        <path d="M15 21l0 -4l-4 -3l1 -6"></path>
+                                        <path d="M7 12l0 -3l5 -1l3 3l3 1"></path>
+                                    </svg>
+                                }
                                 onClick={
                                     this.context.RuntimeStore.setRuntimeMode
                                 }
@@ -196,48 +218,77 @@ export class Toolbar extends React.Component {
                 </div>
 
                 <div>
-                    <div className="btn-group">
-                        <SearchInput
-                            className={classNames("form-control", {
-                                empty: !this.context.UIStateStore.searchPattern
-                            })}
-                            type="text"
-                            placeholder="&#xe8b6;"
-                            value={
-                                this.context.UIStateStore.searchPattern ?? ""
-                            }
-                            onChange={this.onSearchPatternChange}
-                        />
-                        <div className="btn-group" role="group">
-                            <IconAction
-                                icon={MATCH_CASE_ICON}
-                                title="Match case"
-                                iconSize={20}
-                                enabled={true}
-                                selected={
-                                    this.context.UIStateStore.searchMatchCase
-                                }
-                                onClick={this.toggleMatchCase}
+                    {this.context.RuntimeStore.isRuntimeMode && (
+                        <div className="btn-group">
+                            <ButtonAction
+                                text="Stop"
+                                title="Stop execution"
+                                icon="material:stop"
+                                enabled={!this.context.RuntimeStore.isStopped}
+                                onClick={() => this.context.RuntimeStore.stop()}
                             />
+
                             <IconAction
-                                icon={MATCH_WHOLE_WORD_ICON}
-                                title="Match whole word"
-                                iconSize={20}
-                                enabled={true}
+                                title="Debug"
+                                icon="material:adb"
+                                onClick={action(
+                                    () =>
+                                        (this.context.UIStateStore.showDebugInfo = !this
+                                            .context.UIStateStore.showDebugInfo)
+                                )}
                                 selected={
-                                    this.context.UIStateStore
-                                        .searchMatchWholeWord
+                                    this.context.UIStateStore.showDebugInfo
                                 }
-                                onClick={this.toggleMatchWholeWord}
-                            />
-                            <IconAction
-                                title="Refresh search results"
-                                icon="material:refresh"
-                                enabled={true}
-                                onClick={() => this.startSearch()}
                             />
                         </div>
-                    </div>
+                    )}
+                    {!this.context.RuntimeStore.isRuntimeMode && (
+                        <div className="btn-group">
+                            <SearchInput
+                                className={classNames("form-control", {
+                                    empty: !this.context.UIStateStore
+                                        .searchPattern
+                                })}
+                                type="text"
+                                placeholder="&#xe8b6;"
+                                value={
+                                    this.context.UIStateStore.searchPattern ??
+                                    ""
+                                }
+                                onChange={this.onSearchPatternChange}
+                            />
+                            <div className="btn-group" role="group">
+                                <IconAction
+                                    icon={MATCH_CASE_ICON}
+                                    title="Match case"
+                                    iconSize={20}
+                                    enabled={true}
+                                    selected={
+                                        this.context.UIStateStore
+                                            .searchMatchCase
+                                    }
+                                    onClick={this.toggleMatchCase}
+                                />
+                                <IconAction
+                                    icon={MATCH_WHOLE_WORD_ICON}
+                                    title="Match whole word"
+                                    iconSize={20}
+                                    enabled={true}
+                                    selected={
+                                        this.context.UIStateStore
+                                            .searchMatchWholeWord
+                                    }
+                                    onClick={this.toggleMatchWholeWord}
+                                />
+                                <IconAction
+                                    title="Refresh search results"
+                                    icon="material:refresh"
+                                    enabled={true}
+                                    onClick={() => this.startSearch()}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </ToolbarNav>
         );

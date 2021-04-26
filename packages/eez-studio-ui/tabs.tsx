@@ -1,13 +1,15 @@
 import React from "react";
 import { observer } from "mobx-react";
+import { observable, action } from "mobx";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
+import { DndProvider, useDrag, useDrop, DropTargetMonitor } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { XYCoord } from "dnd-core";
 
 import styled from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
 import { IconAction } from "eez-studio-ui/action";
-import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -29,99 +31,171 @@ export interface ITab {
 
 /////////////////////////////// ///////////////////////////////////////////////
 
-@observer
-class TabView extends React.Component<
-    {
-        tab: ITab;
-    },
-    {}
-> {
-    div: HTMLElement;
+export const ItemTypes = {
+    TAB: "tab"
+};
 
-    ensureVisible() {
-        if (this.props.tab.active) {
-            scrollIntoViewIfNeeded($(this.div)[0]);
-        }
-    }
+interface TabViewProps {
+    tab: ITab;
+    index: number;
+    moveTab?: (dragIndex: number, hoverIndex: number) => void;
+}
 
-    componentDidMount() {
-        this.ensureVisible();
-    }
+interface DragItem {
+    tab: ITab;
+    index: number;
+}
 
-    componentDidUpdate() {
-        this.ensureVisible();
-    }
+export const TabView: React.FC<TabViewProps> = observer(
+    ({ tab, index, moveTab }) => {
+        const onMouseUp = React.useCallback(
+            (e: React.MouseEvent<HTMLElement>) => {
+                if (e.button === 1) {
+                    if (tab.close) {
+                        tab.close();
+                    }
+                }
+            },
+            [tab]
+        );
 
-    @bind
-    onMouseUp(e: React.MouseEvent<HTMLElement>) {
-        if (e.button === 1) {
-            if (this.props.tab.close) {
-                this.props.tab.close();
+        const onMouseDown = React.useCallback(() => {
+            tab.makeActive();
+        }, [tab]);
+
+        const onContextMenu = React.useCallback(
+            (event: React.MouseEvent) => {
+                event.preventDefault();
+
+                const menu = new Menu();
+
+                if (tab.openInWindow) {
+                    menu.append(
+                        new MenuItem({
+                            label: "Open in Window",
+                            click: () => tab.openInWindow!()
+                        })
+                    );
+                }
+
+                if (tab.close) {
+                    menu.append(
+                        new MenuItem({
+                            label: "Close",
+                            click: () => tab.close!()
+                        })
+                    );
+                }
+
+                if (menu.items.length > 0) {
+                    menu.popup({});
+                }
+            },
+            [tab]
+        );
+
+        const onDoubleClick = React.useCallback(() => {
+            if (tab.makePermanent) {
+                tab.makePermanent();
             }
+        }, [tab]);
+
+        const onClose = React.useCallback(
+            (e: any) => {
+                e.stopPropagation();
+                if (tab.close) {
+                    tab.close();
+                }
+            },
+            [tab]
+        );
+
+        const ref = React.useRef<HTMLDivElement>(null);
+
+        const [{ handlerId }, drop] = useDrop({
+            accept: ItemTypes.TAB,
+            collect(monitor) {
+                return {
+                    handlerId: monitor.getHandlerId()
+                };
+            },
+            hover(item: DragItem, monitor: DropTargetMonitor) {
+                if (!ref.current) {
+                    return;
+                }
+
+                const dragIndex = item.index;
+                const hoverIndex = index;
+
+                // Don't replace items with themselves
+                if (dragIndex === hoverIndex) {
+                    return;
+                }
+
+                // Determine rectangle on screen
+                const hoverBoundingRect = ref.current?.getBoundingClientRect();
+
+                // Get vertical middle
+                const hoverMiddleX =
+                    (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
+
+                // Determine mouse position
+                const clientOffset = monitor.getClientOffset();
+
+                // Get pixels to the left
+                const hoverClientX =
+                    (clientOffset as XYCoord).x - hoverBoundingRect.left;
+
+                // Only perform the move when the mouse has crossed half of the items height
+                // When dragging downwards, only move when the cursor is below 50%
+                // When dragging upwards, only move when the cursor is above 50%
+
+                // Dragging downwards
+                if (dragIndex < hoverIndex && hoverClientX < hoverMiddleX) {
+                    return;
+                }
+
+                // Dragging upwards
+                if (dragIndex > hoverIndex && hoverClientX > hoverMiddleX) {
+                    return;
+                }
+
+                // Time to actually perform the action
+                moveTab!(dragIndex, hoverIndex);
+
+                // Note: we're mutating the monitor item here!
+                // Generally it's better to avoid mutations,
+                // but it's good here for the sake of performance
+                // to avoid expensive index searches.
+                item.index = hoverIndex;
+            }
+        });
+
+        const [{ isDragging }, drag] = useDrag({
+            type: ItemTypes.TAB,
+            item: () => {
+                return { tab, index };
+            },
+            collect: (monitor: any) => ({
+                isDragging: monitor.isDragging()
+            })
+        });
+
+        if (moveTab) {
+            drag(drop(ref));
         }
-    }
 
-    @bind
-    onClick() {
-        this.props.tab.makeActive();
-    }
-
-    @bind
-    onContextMenu(event: React.MouseEvent) {
-        event.preventDefault();
-
-        const menu = new Menu();
-
-        if (this.props.tab.openInWindow) {
-            menu.append(
-                new MenuItem({
-                    label: "Open in Window",
-                    click: () => this.props.tab.openInWindow!()
-                })
-            );
-        }
-
-        if (this.props.tab.close) {
-            menu.append(
-                new MenuItem({
-                    label: "Close",
-                    click: () => this.props.tab.close!()
-                })
-            );
-        }
-
-        if (menu.items.length > 0) {
-            menu.popup({});
-        }
-    }
-
-    @bind
-    onDoubleClick() {
-        if (this.props.tab.makePermanent) {
-            this.props.tab.makePermanent();
-        }
-    }
-
-    @bind
-    onClose(e: any) {
-        e.stopPropagation();
-        if (this.props.tab.close) {
-            this.props.tab.close();
-        }
-    }
-
-    render() {
         let className = classNames("EezStudio_Tab", {
-            active: this.props.tab.active,
-            permanent: this.props.tab.permanent
+            active: tab.active,
+            permanent: tab.permanent
         });
 
         let closeIcon: JSX.Element | undefined;
-        if (this.props.tab.close) {
+        if (tab.close) {
             closeIcon = (
                 <i
                     className="close material-icons"
-                    onClick={this.onClose}
+                    onClick={onClose}
                     title="Close tab"
                 >
                     close
@@ -130,39 +204,43 @@ class TabView extends React.Component<
         }
 
         let icon;
-        if (typeof this.props.tab.icon == "string") {
-            icon = <Icon icon={this.props.tab.icon} />;
+        if (typeof tab.icon == "string") {
+            icon = <Icon icon={tab.icon} />;
         } else {
-            icon = this.props.tab.icon;
+            icon = tab.icon;
         }
 
         let title;
-        if (typeof this.props.tab.title === "string") {
+        if (typeof tab.title === "string") {
             title = (
                 <>
                     {icon}
-                    <span className="title" title={this.props.tab.title}>
-                        {this.props.tab.title}
+                    <span className="title" title={tab.title}>
+                        {tab.title}
                     </span>
                 </>
             );
         } else {
-            title = this.props.tab.title;
+            title = tab.title;
         }
+
+        const opacity = isDragging ? 0 : 1;
 
         return (
             <div
-                ref={ref => (this.div = ref!)}
+                ref={ref}
                 className={className}
-                onMouseUp={this.onMouseUp}
-                onClick={this.onClick}
-                onContextMenu={this.onContextMenu}
-                onDoubleClick={this.onDoubleClick}
-                title={this.props.tab.tooltipTitle}
+                onMouseDown={onMouseDown}
+                onMouseUp={onMouseUp}
+                onContextMenu={onContextMenu}
+                onDoubleClick={onDoubleClick}
+                title={tab.tooltipTitle}
+                style={{ opacity }}
+                data-handler-id={handlerId}
             >
                 <div>
                     {title}
-                    {this.props.tab.loading && (
+                    {tab.loading && (
                         <Loader size={24} style={{ marginLeft: 10 }} />
                     )}
                     {closeIcon}
@@ -170,7 +248,7 @@ class TabView extends React.Component<
             </div>
         );
     }
-}
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -376,13 +454,32 @@ export class TabsView extends React.Component<{
     tabs: ITab[];
     addTabPopup?: React.ReactNode;
     addTabAttention?: boolean;
+    moveTab?: (dragIndex: number, hoverIndex: number) => void;
 }> {
+    ref = React.createRef<HTMLDivElement>();
+
+    @observable el: HTMLDivElement | null = null;
+
+    @action
+    componentDidMount() {
+        this.el = this.ref.current;
+    }
+
     render() {
         return (
-            <TabsViewContainer>
-                {this.props.tabs.map(tab => (
-                    <TabView key={tab.id} tab={tab} />
-                ))}
+            <TabsViewContainer ref={this.ref}>
+                {this.el && (
+                    <DndProvider backend={HTML5Backend}>
+                        {this.props.tabs.map((tab, index) => (
+                            <TabView
+                                key={tab.id}
+                                tab={tab}
+                                index={index}
+                                moveTab={this.props.moveTab}
+                            />
+                        ))}
+                    </DndProvider>
+                )}
                 {this.props.addTabPopup && (
                     <AddTabButton
                         popup={this.props.addTabPopup}

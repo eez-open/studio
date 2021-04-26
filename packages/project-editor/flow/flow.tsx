@@ -249,6 +249,9 @@ export abstract class Flow extends EezObject {
     objectsToClipboardData(objects: IEezObject[]) {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
+        // if (flowFragment.connectionLines.length === 0) {
+        //     return objectsToClipboardData(objects);
+        // }
         return objectToClipboardData(flowFragment);
     }
 
@@ -258,11 +261,6 @@ export abstract class Flow extends EezObject {
         DocumentStore.UndoManager.setCombineCommands(true);
 
         flowFragment.rewire();
-
-        flowFragment.components.forEach(widget => {
-            widget.left += 20;
-            widget.top += 20;
-        });
 
         DocumentStore.addObjects(
             this.connectionLines,
@@ -444,9 +442,13 @@ export abstract class FlowTabState implements IEditorState {
             this.frontFace = false;
         }
 
-        const el = document.getElementById(
-            `eez-flow-viewer-${getId(this.flow)}-back`
-        );
+        const id = getId(this.flow);
+
+        let el = document.getElementById(`eez-flow-viewer-${id}-back`);
+        if (!el) {
+            el = document.getElementById(`eez-flow-editor-${id}-back`);
+        }
+
         if (el) {
             const event = new Event("ensure-selection-visible");
             el.dispatchEvent(event);

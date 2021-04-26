@@ -36,10 +36,11 @@ import {
     TreeAdapter,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
-import { Panel } from "project-editor/components/Panel";
-import { Tree } from "project-editor/components/Tree";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import {
+    IFlowContext,
+    IViewStatePersistantState
+} from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/render";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 
@@ -50,6 +51,8 @@ class ActionFlowTabState extends FlowTabState {
     frontFace = false;
 
     componentContainerDisplayItem: ITreeObjectAdapter;
+
+    viewState: IViewStatePersistantState | undefined;
 
     constructor(object: IEezObject) {
         super();
@@ -69,11 +72,17 @@ class ActionFlowTabState extends FlowTabState {
     }
 
     loadState(state: any) {
-        this.componentContainerDisplayItem.loadState(state);
+        this.componentContainerDisplayItem.loadState(state.selection);
+        if (state.transform) {
+            this.viewState = { transform: state.transform };
+        }
     }
 
     saveState() {
-        return this.componentContainerDisplayItem.saveState();
+        return {
+            selection: this.componentContainerDisplayItem.saveState(),
+            transform: this.viewState?.transform
+        };
     }
 
     @action
@@ -165,13 +174,36 @@ export class ActionEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        let tabState = this.props.editor.state as
+        const tabState = this.props.editor.state as
             | ActionTabState
             | ActionFlowTabState;
 
         if (tabState instanceof ActionTabState) {
             return <PropertyGrid objects={[tabState.selectedObject!]} />;
         } else {
+            if (this.context.RuntimeStore.isRuntimeMode) {
+                return (
+                    <div
+                        style={{
+                            flexGrow: 1,
+                            position: "relative"
+                        }}
+                    >
+                        <FlowViewer
+                            widgetContainer={
+                                tabState.componentContainerDisplayItem
+                            }
+                            viewStatePersistantState={tabState.viewState}
+                            onSavePersistantState={viewState =>
+                                (tabState.viewState = viewState)
+                            }
+                            frontFace={false}
+                            runningFlow={tabState.runningFlow}
+                        />
+                    </div>
+                );
+            }
+
             return (
                 <Splitter
                     type="horizontal"
@@ -179,22 +211,14 @@ export class ActionEditor extends EditorComponent implements IPanel {
                     sizes="100%|400px"
                     childrenOverflow="hidden|hidden"
                 >
-                    {this.context.RuntimeStore.isRuntimeMode ? (
-                        <FlowViewer
-                            widgetContainer={
-                                tabState.componentContainerDisplayItem
-                            }
-                            frontFace={false}
-                            runningFlow={tabState.runningFlow}
-                        />
-                    ) : (
-                        <FlowEditor
-                            widgetContainer={
-                                tabState.componentContainerDisplayItem
-                            }
-                            frontFace={false}
-                        />
-                    )}
+                    <FlowEditor
+                        widgetContainer={tabState.componentContainerDisplayItem}
+                        viewStatePersistantState={tabState.viewState}
+                        onSavePersistantState={viewState =>
+                            (tabState.viewState = viewState)
+                        }
+                        frontFace={false}
+                    />
                     <Splitter
                         type="vertical"
                         persistId="page-editor/properties-widgets-palette"
@@ -309,38 +333,47 @@ export class ActionsNavigation extends NavigationComponent {
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
                 editable={!this.context.RuntimeStore.isRuntimeMode}
+                navigationStore={this.props.navigationStore}
+                dragAndDropManager={this.props.dragAndDropManager}
+                onDoubleClickItem={this.props.onDoubleClickItem}
             />
         );
 
-        const navigation = this.context.RuntimeStore.isRuntimeMode ? (
-            listNavigation
-        ) : (
-            <Splitter
-                type="vertical"
-                persistId="page-editor/navigation-structure"
-                sizes={`50%|50%`}
-                childrenOverflow="hidden|hidden"
-            >
-                {listNavigation}
-                <Panel
-                    id="page-structure"
-                    title="Action Structure"
-                    body={
-                        this.treeAdapter ? (
-                            <Tree
-                                treeAdapter={this.treeAdapter}
-                                tabIndex={0}
-                                onFocus={this.onFocus}
-                            />
-                        ) : (
-                            <div />
-                        )
-                    }
-                />
-            </Splitter>
-        );
+        return listNavigation;
 
-        return navigation;
+        // if (this.props.navigationStore) {
+        //     return listNavigation;
+        // }
+
+        // const navigation = this.context.RuntimeStore.isRuntimeMode ? (
+        //     listNavigation
+        // ) : (
+        //     <Splitter
+        //         type="vertical"
+        //         persistId="page-editor/navigation-structure"
+        //         sizes={`50%|50%`}
+        //         childrenOverflow="hidden|hidden"
+        //     >
+        //         {listNavigation}
+        //         <Panel
+        //             id="page-structure"
+        //             title="Action Structure"
+        //             body={
+        //                 this.treeAdapter ? (
+        //                     <Tree
+        //                         treeAdapter={this.treeAdapter}
+        //                         tabIndex={0}
+        //                         onFocus={this.onFocus}
+        //                     />
+        //                 ) : (
+        //                     <div />
+        //                 )
+        //             }
+        //         />
+        //     </Splitter>
+        // );
+
+        // return navigation;
     }
 }
 
@@ -363,11 +396,9 @@ export class ActionTabState implements IEditorState {
         return [];
     }
 
-    loadState() {}
+    loadState(state: any) {}
 
-    saveState() {
-        return null;
-    }
+    saveState() {}
 
     selectObject(object: IEezObject) {}
 

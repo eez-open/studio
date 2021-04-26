@@ -190,8 +190,6 @@ export class PanMouseHandler extends MouseHandler {
         y: 0
     };
 
-    cursor = "default";
-
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
     }
@@ -812,6 +810,8 @@ export class ConnectionLineMouseHandler extends MouseHandler {
               connectionInput: string;
           }
         | undefined;
+
+    cursor: string = "crosshair";
 
     constructor(
         private sourceObject: ITreeObjectAdapter,

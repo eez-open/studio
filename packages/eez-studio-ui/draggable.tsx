@@ -82,6 +82,8 @@ export class Draggable {
         this.overlayElement.style.width = "100%";
         this.overlayElement.style.height = "100%";
         this.overlayElement.style.backgroundColor = "transparent";
+        this.overlayElement.style.zIndex = "1000";
+        this.overlayElement.style.backgroundColor = "transparent";
         this.overlayElement.style.cursor = this.cursor || "default";
         this.overlayElement.addEventListener("pointermove", e => {
             this.finishDragging(e, true);

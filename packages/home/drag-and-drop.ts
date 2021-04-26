@@ -16,24 +16,29 @@ export function handleDragAndDrop() {
     }
 
     $(document).on("dragover", $ev => {
-        $ev.preventDefault();
         const ev = $ev.originalEvent as DragEvent;
         if (ev.dataTransfer) {
-            ev.dataTransfer.dropEffect = "copy";
+            if (ev.dataTransfer.files.length > 0) {
+                $ev.preventDefault();
+                ev.dataTransfer.dropEffect = "copy";
+            } else {
+                ev.dataTransfer.dropEffect = "none";
+            }
         }
     });
 
     $(document).on("drop", async $ev => {
-        $ev.preventDefault();
         const ev = $ev.originalEvent as DragEvent;
-
         const dt = ev.dataTransfer;
-        if (dt) {
+        if (dt && dt.files.length > 0) {
+            $ev.preventDefault();
+
             const files = dt.files;
 
             for (const file of files) {
                 for (const extension of extensions) {
-                    const handleDragAndDropFile = extension[1].handleDragAndDropFile;
+                    const handleDragAndDropFile =
+                        extension[1].handleDragAndDropFile;
                     if (
                         handleDragAndDropFile &&
                         (await handleDragAndDropFile(file.path, {

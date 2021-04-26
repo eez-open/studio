@@ -48,28 +48,25 @@ class ViewState implements IViewState {
 
     @action
     set(
-        viewStatePersistantState: IViewStatePersistantState,
+        viewStatePersistantState: IViewStatePersistantState | undefined,
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
-        ) => void,
-        lastViewState?: ViewState
+        ) => void
     ) {
         if (this.persistentStateReactionDisposer) {
             this.persistentStateReactionDisposer();
         }
 
-        if (viewStatePersistantState) {
-            if (viewStatePersistantState.transform) {
-                this.transform.scale = viewStatePersistantState.transform.scale;
-                this.transform.translate =
-                    viewStatePersistantState.transform.translate;
-            } else {
-                this.resetTransform();
-            }
+        if (viewStatePersistantState?.transform) {
+            this.transform.scale = viewStatePersistantState.transform.scale;
+            this.transform.translate =
+                viewStatePersistantState.transform.translate;
+        } else {
+            this.resetTransform();
         }
 
-        if (lastViewState) {
-            this.transform.clientRect = lastViewState.transform.clientRect;
+        if (viewStatePersistantState?.clientRect) {
+            this.transform.clientRect = viewStatePersistantState.clientRect;
         }
 
         this.persistentStateReactionDisposer = reaction(
@@ -84,7 +81,8 @@ class ViewState implements IViewState {
             transform: {
                 translate: this.transform.translate,
                 scale: this.transform.scale
-            }
+            },
+            clientRect: this.transform.clientRect
         };
     }
 
@@ -149,13 +147,12 @@ class ViewState implements IViewState {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RuntimeFlowContext implements IFlowContext {
-    @observable document: IDocument;
-    @observable viewState: ViewState = new ViewState(this);
-    @observable editorOptions: IEditorOptions = {};
-    @observable dragComponent: Component | undefined;
-    @observable frontFace: boolean;
-    @observable dataContext: IDataContext;
-    @observable runningFlow: IRunningFlow | undefined;
+    document: IDocument;
+    viewState: ViewState = new ViewState(this);
+    editorOptions: IEditorOptions = {};
+    frontFace: boolean;
+    dataContext: IDataContext;
+    runningFlow: IRunningFlow | undefined;
 
     get containerId() {
         return this.document?.flow
@@ -179,33 +176,20 @@ export class RuntimeFlowContext implements IFlowContext {
         });
     }
 
-    @action
     set(
         document: IDocument,
-        viewStatePersistantState: IViewStatePersistantState,
+        viewStatePersistantState: IViewStatePersistantState | undefined,
         onSavePersistantState: (
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
         frontFace: boolean,
         runningFlow: IRunningFlow | undefined
     ) {
-        const deselectAllObjects =
-            this.document?.flow.object !== document?.flow.object;
-
         this.document = document;
-
         this.viewState.set(viewStatePersistantState, onSavePersistantState);
-
-        if (deselectAllObjects) {
-            this.viewState.deselectAllObjects();
-        }
-
         this.editorOptions = {};
-
         this.frontFace = frontFace ?? false;
-
         this.runningFlow = runningFlow;
-
         this.dataContext = this.document.DocumentStore.dataContext;
     }
 

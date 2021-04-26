@@ -45,8 +45,11 @@ import { styled } from "eez-studio-ui/styled-components";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { FlowTabState } from "project-editor/flow/flow";
+import { IViewStatePersistantState } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+const FLIP_CARD_ANIMATION_DURATION = 400;
 
 const FlipCardDiv = styled.div`
     perspective: 1000px;
@@ -58,7 +61,7 @@ const FlipCardDiv = styled.div`
         position: relative;
         width: 100%;
         height: 100%;
-        transition: transform 0.6s;
+        transition: transform ${FLIP_CARD_ANIMATION_DURATION}ms;
         transform-style: preserve-3d;
     }
 
@@ -73,6 +76,7 @@ const FlipCardDiv = styled.div`
         height: 100%;
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
+        display: flex;
     }
 
     .flip-card-back {
@@ -87,44 +91,24 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     @observable transitionIsActive = false;
 
-    flipCardInnerRef = React.createRef<HTMLDivElement>();
+    @action.bound switchFaces() {
+        // this.transitionIsActive = true;
+
+        // setTimeout(() => {
+        //     this.pageTabState.frontFace = !this.pageTabState.frontFace;
+        //     setTimeout(
+        //         action(() => {
+        //             this.transitionIsActive = false;
+        //         }),
+        //         FLIP_CARD_ANIMATION_DURATION
+        //     );
+        // });
+
+        this.pageTabState.frontFace = !this.pageTabState.frontFace;
+    }
 
     get pageTabState() {
         return this.props.editor.state as PageTabState;
-    }
-
-    @action.bound
-    onTransitionStart(event: TransitionEvent) {
-        if (event.target === this.flipCardInnerRef.current) {
-            this.transitionIsActive = true;
-        }
-    }
-
-    @action.bound
-    onTransitionEnd(event: TransitionEvent) {
-        if (event.target === this.flipCardInnerRef.current) {
-            this.transitionIsActive = false;
-        }
-    }
-
-    componentDidMount() {
-        const el = this.flipCardInnerRef.current!;
-
-        el.addEventListener("transitionstart", this.onTransitionStart, false);
-
-        el.addEventListener("transitionend", this.onTransitionEnd, false);
-    }
-
-    componentWillUnmount() {
-        const el = this.flipCardInnerRef.current!;
-
-        el.removeEventListener(
-            "transitionstart",
-            this.onTransitionStart,
-            false
-        );
-
-        el.removeEventListener("transitionend", this.onTransitionEnd, false);
     }
 
     @bind
@@ -184,106 +168,137 @@ export class PageEditor extends EditorComponent implements IPanel {
                         title="Show front face"
                         icon="material:flip_to_front"
                         iconSize={16}
-                        onClick={action(
-                            () => (this.pageTabState.frontFace = true)
-                        )}
+                        onClick={this.switchFaces}
                         selected={this.pageTabState.frontFace}
                     />
                     <IconAction
                         title="Show back face"
                         icon="material:flip_to_back"
                         iconSize={16}
-                        onClick={action(
-                            () => (this.pageTabState.frontFace = false)
-                        )}
+                        onClick={this.switchFaces}
                         selected={!this.pageTabState.frontFace}
                     />
                     <div style={{ flexGrow: 1 }}></div>
                 </ToolbarHeader>
                 <Body>
-                    <FlipCardDiv>
-                        <div
-                            ref={this.flipCardInnerRef}
-                            className={classNames("flip-card-inner", {
-                                "show-back-face": !this.pageTabState.frontFace
-                            })}
-                        >
+                    {!this.transitionIsActive &&
+                        (this.pageTabState.isRuntime ? (
+                            <FlowViewer
+                                widgetContainer={
+                                    this.pageTabState
+                                        .componentContainerDisplayItemRuntime
+                                }
+                                viewStatePersistantState={
+                                    this.pageTabState.runtimeViewState
+                                }
+                                onSavePersistantState={viewState =>
+                                    (this.pageTabState.runtimeViewState = viewState)
+                                }
+                                frontFace={this.pageTabState.frontFace}
+                                runningFlow={this.pageTabState.runningFlow}
+                            />
+                        ) : (
+                            <FlowEditor
+                                widgetContainer={
+                                    this.pageTabState
+                                        .componentContainerDisplayItemEditor
+                                }
+                                viewStatePersistantState={
+                                    this.pageTabState.editorViewState
+                                }
+                                onSavePersistantState={viewState =>
+                                    (this.pageTabState.editorViewState = viewState)
+                                }
+                                frontFace={this.pageTabState.frontFace}
+                            />
+                        ))}
+                    {this.transitionIsActive && (
+                        <FlipCardDiv>
                             <div
-                                className="flip-card-front"
-                                style={{
-                                    display:
-                                        this.pageTabState.frontFace ||
-                                        this.transitionIsActive
-                                            ? "flex"
-                                            : "none"
-                                }}
+                                className={classNames("flip-card-inner", {
+                                    "show-back-face": !this.pageTabState
+                                        .frontFace
+                                })}
                             >
-                                {this.pageTabState.isRuntime ? (
-                                    <FlowViewer
-                                        widgetContainer={
-                                            this.pageTabState
-                                                .componentContainerDisplayItemRuntimeFrontFace
-                                        }
-                                        transitionIsActive={
-                                            this.transitionIsActive
-                                        }
-                                        frontFace={true}
-                                        runningFlow={
-                                            this.pageTabState.runningFlow
-                                        }
-                                    />
-                                ) : (
-                                    <FlowEditor
-                                        widgetContainer={
-                                            this.pageTabState
-                                                .componentContainerDisplayItemEditorFrontFace
-                                        }
-                                        transitionIsActive={
-                                            this.transitionIsActive
-                                        }
-                                        frontFace={true}
-                                    />
-                                )}
+                                <div className="flip-card-front">
+                                    {this.pageTabState.isRuntime ? (
+                                        <FlowViewer
+                                            widgetContainer={
+                                                this.pageTabState
+                                                    .componentContainerDisplayItemRuntimeFrontFace
+                                            }
+                                            viewStatePersistantState={
+                                                this.pageTabState
+                                                    .runtimeFrontViewState
+                                            }
+                                            onSavePersistantState={viewState =>
+                                                (this.pageTabState.runtimeFrontViewState = viewState)
+                                            }
+                                            transitionIsActive={true}
+                                            frontFace={true}
+                                            runningFlow={
+                                                this.pageTabState.runningFlow
+                                            }
+                                        />
+                                    ) : (
+                                        <FlowEditor
+                                            widgetContainer={
+                                                this.pageTabState
+                                                    .componentContainerDisplayItemEditorFrontFace
+                                            }
+                                            viewStatePersistantState={
+                                                this.pageTabState
+                                                    .editorFrontViewState
+                                            }
+                                            onSavePersistantState={viewState =>
+                                                (this.pageTabState.editorFrontViewState = viewState)
+                                            }
+                                            transitionIsActive={true}
+                                            frontFace={true}
+                                        />
+                                    )}
+                                </div>
+                                <div className="flip-card-back">
+                                    {this.pageTabState.isRuntime ? (
+                                        <FlowViewer
+                                            widgetContainer={
+                                                this.pageTabState
+                                                    .componentContainerDisplayItemRuntimeBackFace
+                                            }
+                                            viewStatePersistantState={
+                                                this.pageTabState
+                                                    .runtimeBackViewState
+                                            }
+                                            onSavePersistantState={viewState =>
+                                                (this.pageTabState.runtimeBackViewState = viewState)
+                                            }
+                                            transitionIsActive={true}
+                                            frontFace={false}
+                                            runningFlow={
+                                                this.pageTabState.runningFlow
+                                            }
+                                        />
+                                    ) : (
+                                        <FlowEditor
+                                            widgetContainer={
+                                                this.pageTabState
+                                                    .componentContainerDisplayItemEditorBackFace
+                                            }
+                                            viewStatePersistantState={
+                                                this.pageTabState
+                                                    .editorBackViewState
+                                            }
+                                            onSavePersistantState={viewState =>
+                                                (this.pageTabState.editorBackViewState = viewState)
+                                            }
+                                            transitionIsActive={true}
+                                            frontFace={false}
+                                        />
+                                    )}
+                                </div>
                             </div>
-                            <div
-                                className="flip-card-back"
-                                style={{
-                                    display:
-                                        !this.pageTabState.frontFace ||
-                                        this.transitionIsActive
-                                            ? "flex"
-                                            : "none"
-                                }}
-                            >
-                                {this.pageTabState.isRuntime ? (
-                                    <FlowViewer
-                                        widgetContainer={
-                                            this.pageTabState
-                                                .componentContainerDisplayItemRuntimeBackFace
-                                        }
-                                        transitionIsActive={
-                                            this.transitionIsActive
-                                        }
-                                        frontFace={false}
-                                        runningFlow={
-                                            this.pageTabState.runningFlow
-                                        }
-                                    />
-                                ) : (
-                                    <FlowEditor
-                                        widgetContainer={
-                                            this.pageTabState
-                                                .componentContainerDisplayItemEditorBackFace
-                                        }
-                                        transitionIsActive={
-                                            this.transitionIsActive
-                                        }
-                                        frontFace={false}
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    </FlipCardDiv>
+                        </FlipCardDiv>
+                    )}
                 </Body>
             </VerticalHeaderWithBody>
         );
@@ -394,6 +409,11 @@ export class PageTabState extends FlowTabState {
     componentContainerDisplayItemRuntimeFrontFace: ITreeObjectAdapter;
     componentContainerDisplayItemRuntimeBackFace: ITreeObjectAdapter;
 
+    editorFrontViewState: IViewStatePersistantState | undefined;
+    editorBackViewState: IViewStatePersistantState | undefined;
+    runtimeFrontViewState: IViewStatePersistantState | undefined;
+    runtimeBackViewState: IViewStatePersistantState | undefined;
+
     constructor(object: IEezObject) {
         super();
 
@@ -448,16 +468,52 @@ export class PageTabState extends FlowTabState {
         });
     }
 
-    @computed get componentContainerDisplayItem() {
-        if (this.isRuntime) {
-            return this.frontFace
-                ? this.componentContainerDisplayItemRuntimeFrontFace
-                : this.componentContainerDisplayItemRuntimeBackFace;
-        }
+    @computed get componentContainerDisplayItemRuntime() {
+        return this.frontFace
+            ? this.componentContainerDisplayItemRuntimeFrontFace
+            : this.componentContainerDisplayItemRuntimeBackFace;
+    }
 
+    @computed get componentContainerDisplayItemEditor() {
         return this.frontFace
             ? this.componentContainerDisplayItemEditorFrontFace
             : this.componentContainerDisplayItemEditorBackFace;
+    }
+
+    @computed get componentContainerDisplayItem() {
+        if (this.isRuntime) {
+            return this.componentContainerDisplayItemRuntime;
+        }
+
+        return this.componentContainerDisplayItemEditor;
+    }
+
+    get editorViewState() {
+        return this.frontFace
+            ? this.editorFrontViewState
+            : this.editorBackViewState;
+    }
+
+    set editorViewState(viewState: IViewStatePersistantState | undefined) {
+        if (this.frontFace) {
+            this.editorFrontViewState = viewState;
+        } else {
+            this.editorBackViewState = viewState;
+        }
+    }
+
+    get runtimeViewState() {
+        return this.frontFace
+            ? this.runtimeFrontViewState
+            : this.runtimeBackViewState;
+    }
+
+    set runtimeViewState(viewState: IViewStatePersistantState | undefined) {
+        if (this.frontFace) {
+            this.runtimeFrontViewState = viewState;
+        } else {
+            this.runtimeBackViewState = viewState;
+        }
     }
 
     @computed
@@ -471,26 +527,69 @@ export class PageTabState extends FlowTabState {
     }
 
     loadState(state: any) {
-        this.componentContainerDisplayItemEditorFrontFace.loadState(
-            state.editorFront
-        );
-        this.componentContainerDisplayItemEditorBackFace.loadState(
-            state.editorBack
-        );
-        this.componentContainerDisplayItemRuntimeFrontFace.loadState(
-            state.runtimeFront
-        );
-        this.componentContainerDisplayItemRuntimeBackFace.loadState(
-            state.runtimeBack
-        );
+        if (state.editorFront) {
+            this.componentContainerDisplayItemEditorFrontFace.loadState(
+                state.editorFront.selection
+            );
+            if (state.editorFront.transform) {
+                this.editorFrontViewState = {
+                    transform: state.editorFront.transform
+                };
+            }
+        }
+
+        if (state.editorBack) {
+            this.componentContainerDisplayItemEditorBackFace.loadState(
+                state.editorBack.selection
+            );
+            if (state.editorBack.transform) {
+                this.editorBackViewState = {
+                    transform: state.editorBack.transform
+                };
+            }
+        }
+
+        if (state.runtimeFront) {
+            this.componentContainerDisplayItemRuntimeFrontFace.loadState(
+                state.runtimeFront.selection
+            );
+            if (state.runtimeFront.transform) {
+                this.runtimeFrontViewState = {
+                    transform: state.runtimeFront.transform
+                };
+            }
+        }
+
+        if (state.runtimeBack) {
+            this.componentContainerDisplayItemRuntimeBackFace.loadState(
+                state.runtimeBack.selection
+            );
+            if (state.runtimeBack.transform) {
+                this.runtimeBackViewState = {
+                    transform: state.runtimeBack.transform
+                };
+            }
+        }
     }
 
     saveState() {
         return {
-            editorFront: this.componentContainerDisplayItemEditorFrontFace.saveState(),
-            editorBack: this.componentContainerDisplayItemEditorBackFace.saveState(),
-            runtimeFront: this.componentContainerDisplayItemRuntimeFrontFace.saveState(),
-            runtimeBack: this.componentContainerDisplayItemRuntimeBackFace.saveState()
+            editorFront: {
+                selection: this.componentContainerDisplayItemEditorFrontFace.saveState(),
+                transform: this.editorFrontViewState?.transform
+            },
+            editorBack: {
+                selection: this.componentContainerDisplayItemEditorBackFace.saveState(),
+                transform: this.editorBackViewState?.transform
+            },
+            runtimeFront: {
+                selection: this.componentContainerDisplayItemRuntimeFrontFace.saveState(),
+                transform: this.runtimeFrontViewState?.transform
+            },
+            runtimeBack: {
+                selection: this.componentContainerDisplayItemRuntimeBackFace.saveState(),
+                transform: this.runtimeBackViewState?.transform
+            }
         };
     }
 
@@ -565,7 +664,9 @@ export class PagesNavigation extends NavigationComponent {
         return new TreeAdapter(
             this.componentContainerDisplayItem,
             undefined,
-            undefined,
+            (object: IEezObject) => {
+                return object instanceof Widget;
+            },
             true
         );
     }

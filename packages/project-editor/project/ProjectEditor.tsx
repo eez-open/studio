@@ -37,6 +37,13 @@ class Content extends React.Component {
             return <div />;
         }
 
+        if (
+            this.context.RuntimeStore.isRuntimeMode &&
+            !this.context.UIStateStore.showDebugInfo
+        ) {
+            return this.context.RuntimeStore.selectedPageElement;
+        }
+
         const menuNavigation = (
             <MenuNavigation
                 id="project"
@@ -60,13 +67,13 @@ class Content extends React.Component {
                 return (
                     <Splitter
                         type="horizontal"
-                        persistId={`project-editor/content-runtime"`}
-                        sizes={"240px|100%|240px"}
+                        persistId={`project-editor/content-runtime-with-debug"`}
+                        sizes={"240px|100%|400px"}
                         childrenOverflow={`hidden|hidden|hidden`}
                     >
                         {menuNavigation}
                         {editors}
-                        {this.context.RuntimeStore.render()}
+                        {this.context.RuntimeStore.renderRuntimePanel()}
                     </Splitter>
                 );
             } else {
@@ -83,21 +90,7 @@ class Content extends React.Component {
                 );
             }
         } else {
-            if (this.context.RuntimeStore.isRuntimeMode) {
-                return (
-                    <Splitter
-                        type="horizontal"
-                        persistId={`project-editor/content-runtime-without-editors"`}
-                        sizes={"100%|240px"}
-                        childrenOverflow={`hidden|hidden`}
-                    >
-                        {menuNavigation}
-                        {this.context.RuntimeStore.render()}
-                    </Splitter>
-                );
-            } else {
-                return menuNavigation;
-            }
+            return menuNavigation;
         }
     }
 }
@@ -160,14 +153,21 @@ export class ProjectEditor extends React.Component<{}, {}> {
 
         if (isWebStudio()) {
             mainContent = (
-                <MainContentWrapper>
+                <>
                     <Toolbar />
                     <Content />
-                </MainContentWrapper>
+                </>
+            );
+        } else if (this.context.RuntimeStore.isRuntimeMode) {
+            mainContent = (
+                <>
+                    <Toolbar />
+                    <Content />
+                </>
             );
         } else {
             mainContent = (
-                <MainContentWrapper>
+                <>
                     <Toolbar />
                     <Splitter
                         type="vertical"
@@ -183,16 +183,17 @@ export class ProjectEditor extends React.Component<{}, {}> {
                         {outputPanel}
                     </Splitter>
                     {statusBar}
-                </MainContentWrapper>
+                </>
             );
         }
 
         return (
             <ProjectEditorWrapper>
-                {mainContent}
-                {this.context.UIStateStore.showCommandPalette && (
-                    <CommandPalette />
-                )}
+                <MainContentWrapper>{mainContent}</MainContentWrapper>
+                {this.context.UIStateStore.showCommandPalette &&
+                    !this.context.RuntimeStore.isRuntimeMode && (
+                        <CommandPalette />
+                    )}
             </ProjectEditorWrapper>
         );
     }

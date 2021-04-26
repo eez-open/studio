@@ -114,7 +114,7 @@ export class IconAction extends React.Component<
 @observer
 export class ButtonAction extends React.Component<{
     text: string;
-    icon?: string;
+    icon?: string | JSX.Element;
     iconSize?: number;
     title: string;
     onClick?: (event: any) => void;
@@ -136,7 +136,7 @@ export class ButtonAction extends React.Component<{
                     <Icon
                         icon={icon}
                         size={iconSize}
-                        style={{ marginRight: 10 }}
+                        style={{ marginRight: 5 }}
                     />
                 )}
                 {text}

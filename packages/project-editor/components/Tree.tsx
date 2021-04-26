@@ -10,7 +10,11 @@ import { hasClass } from "eez-studio-shared/dom";
 import { Icon } from "eez-studio-ui/icon";
 import styled from "eez-studio-ui/styled-components";
 
-import { ITreeAdapter, ITreeItem, DropPosition } from "project-editor/core/objectAdapter";
+import {
+    ITreeAdapter,
+    ITreeItem,
+    DropPosition
+} from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +93,12 @@ const TreeRow = observer(
             ensureVisibleTimeout = setTimeout(() => {
                 ensureVisibleTimeout = undefined;
 
-                if (!(treeAdapter.draggableAdapter && treeAdapter.draggableAdapter.isDragging)) {
+                if (
+                    !(
+                        treeAdapter.draggableAdapter &&
+                        treeAdapter.draggableAdapter.isDragging
+                    )
+                ) {
                     if (hasClass(ref.current, "selected")) {
                         ref.current!.scrollIntoView({ block: "center" });
                     }
@@ -100,7 +109,8 @@ const TreeRow = observer(
         let className = classNames("tree-row", {
             selected: treeAdapter.isSelected(item),
             "drag-source":
-                treeAdapter.draggableAdapter && treeAdapter.draggableAdapter.isDragSource(item)
+                treeAdapter.draggableAdapter &&
+                treeAdapter.draggableAdapter.isDragSource(item)
         });
 
         let triangle: JSX.Element | undefined;
@@ -150,7 +160,9 @@ const TreeRow = observer(
                 {renderItem ? (
                     renderItem(treeAdapter.getItemId(item))
                 ) : (
-                    <span className={labelClassName}>{treeAdapter.itemToString(item)}</span>
+                    <span className={labelClassName}>
+                        {treeAdapter.itemToString(item)}
+                    </span>
                 )}
             </div>
         );
@@ -180,7 +192,8 @@ const TreeDiv = styled.div`
     &:not(.drag-source) {
         .tree-row:not(.drag-source) {
             &.selected {
-                background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
+                background-color: ${props =>
+                    props.theme.nonFocusedSelectionBackgroundColor};
                 color: ${props => props.theme.nonFocusedSelectionColor};
             }
         }
@@ -188,17 +201,20 @@ const TreeDiv = styled.div`
         &:focus {
             .tree-row:not(.drag-source) {
                 &:hover {
-                    background-color: ${props => props.theme.hoverBackgroundColor};
+                    background-color: ${props =>
+                        props.theme.hoverBackgroundColor};
                     color: ${props => props.theme.hoverColor};
                 }
 
                 &.focused {
-                    background-color: ${props => props.theme.focusBackgroundColor};
+                    background-color: ${props =>
+                        props.theme.focusBackgroundColor};
                     color: ${props => props.theme.focusColor};
                 }
 
                 &.selected {
-                    background-color: ${props => props.theme.selectionBackgroundColor};
+                    background-color: ${props =>
+                        props.theme.selectionBackgroundColor};
                     color: ${props => props.theme.selectionColor};
                 }
             }
@@ -354,13 +370,17 @@ export class Tree extends React.Component<TreeProps, {}> {
                 this.props.treeAdapter.pasteSelection();
             }
         } else {
-            let focusedItemId = $(this.treeDiv).find(".tree-row.selected").attr("data-object-id");
+            let focusedItemId = $(this.treeDiv)
+                .find(".tree-row.selected")
+                .attr("data-object-id");
 
             if (!focusedItemId) {
                 return;
             }
 
-            let $focusedItem = $(this.treeDiv).find(`.tree-row[data-object-id="${focusedItemId}"]`);
+            let $focusedItem = $(this.treeDiv).find(
+                `.tree-row[data-object-id="${focusedItemId}"]`
+            );
 
             if (
                 event.keyCode == 38 ||
@@ -373,7 +393,9 @@ export class Tree extends React.Component<TreeProps, {}> {
                 let $rows = $(this.treeDiv).find(".tree-row");
                 let index = $rows.index($focusedItem);
 
-                let pageSize = Math.floor($(this.treeDiv).height()! / $rows.height()!);
+                let pageSize = Math.floor(
+                    $(this.treeDiv).height()! / $rows.height()!
+                );
 
                 if (event.keyCode == 38) {
                     // up
@@ -446,10 +468,14 @@ export class Tree extends React.Component<TreeProps, {}> {
                 const firstRowRect = $allRows.get(0).getBoundingClientRect();
                 const treeDivRect = this.treeDiv.getBoundingClientRect();
                 let rowIndexAtCursor = Math.floor(
-                    (event.nativeEvent.clientY - treeDivRect.top) / firstRowRect.height
+                    (event.nativeEvent.clientY - treeDivRect.top) /
+                        firstRowRect.height
                 );
 
-                if (rowIndexAtCursor >= 0 && rowIndexAtCursor < $allRows.length) {
+                if (
+                    rowIndexAtCursor >= 0 &&
+                    rowIndexAtCursor < $allRows.length
+                ) {
                     const $row = $allRows.eq(rowIndexAtCursor);
                     const rowRect = $row.get(0).getBoundingClientRect();
 
@@ -466,7 +492,9 @@ export class Tree extends React.Component<TreeProps, {}> {
 
                     function checks() {
                         const $row = $treeDiv.find(
-                            `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
+                            `[data-object-id="${treeAdapter.getItemId(
+                                dropItem
+                            )}"]`
                         );
                         const rowIndexAtCursor = $allRows.index($row);
 
@@ -495,9 +523,13 @@ export class Tree extends React.Component<TreeProps, {}> {
                     let nextItem = nextObjectId
                         ? treeAdapter.getItemFromId(nextObjectId!)
                         : undefined;
-                    let nextItemParent = nextItem && treeAdapter.getItemParent(nextItem);
+                    let nextItemParent =
+                        nextItem && treeAdapter.getItemParent(nextItem);
 
-                    if (event.nativeEvent.clientY < rowRect.top + rowRect.height / 2) {
+                    if (
+                        event.nativeEvent.clientY <
+                        rowRect.top + rowRect.height / 2
+                    ) {
                         dropPosition = DropPosition.DROP_POSITION_BEFORE;
 
                         checks();
@@ -505,9 +537,12 @@ export class Tree extends React.Component<TreeProps, {}> {
                         dropPosition = DropPosition.DROP_POSITION_AFTER;
 
                         if (
-                            event.nativeEvent.clientX > labelRect.left + CHILD_OFFSET &&
+                            event.nativeEvent.clientX >
+                                labelRect.left + CHILD_OFFSET &&
                             draggableAdapter.canDropInside(dropItem) &&
-                            !draggableAdapter.isAncestorOfDragObject(dropItem) &&
+                            !draggableAdapter.isAncestorOfDragObject(
+                                dropItem
+                            ) &&
                             !(
                                 rowIndexAtCursor + 1 < $allRows.length &&
                                 treeAdapter.isAncestor(nextItem!, dropItem)
@@ -524,7 +559,9 @@ export class Tree extends React.Component<TreeProps, {}> {
 
                             while (true) {
                                 const $row = $treeDiv.find(
-                                    `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
+                                    `[data-object-id="${treeAdapter.getItemId(
+                                        dropItem
+                                    )}"]`
                                 );
 
                                 if ($row.length > 0) {
@@ -536,17 +573,27 @@ export class Tree extends React.Component<TreeProps, {}> {
                                         canDropToItem = dropItem;
 
                                         const $label = $row.find("span");
-                                        const labelRect = $label.get(0).getBoundingClientRect();
+                                        const labelRect = $label
+                                            .get(0)
+                                            .getBoundingClientRect();
 
-                                        if (event.nativeEvent.clientX > labelRect.left) {
+                                        if (
+                                            event.nativeEvent.clientX >
+                                            labelRect.left
+                                        ) {
                                             break;
                                         }
                                     }
                                 }
 
-                                const parentItem = treeAdapter.getItemParent(dropItem);
+                                const parentItem = treeAdapter.getItemParent(
+                                    dropItem
+                                );
 
-                                if (!parentItem || parentItem === nextItemParent) {
+                                if (
+                                    !parentItem ||
+                                    parentItem === nextItemParent
+                                ) {
                                     break;
                                 }
 
@@ -554,9 +601,13 @@ export class Tree extends React.Component<TreeProps, {}> {
                             }
 
                             if (canDropToItem) {
-                                if (treeAdapter.getItemParent(canDropToItem) === nextItemParent) {
+                                if (
+                                    treeAdapter.getItemParent(canDropToItem) ===
+                                    nextItemParent
+                                ) {
                                     dropItem = nextItem!;
-                                    dropPosition = DropPosition.DROP_POSITION_BEFORE;
+                                    dropPosition =
+                                        DropPosition.DROP_POSITION_BEFORE;
                                     checks();
                                 } else {
                                     dropItem = canDropToItem;
@@ -578,29 +629,52 @@ export class Tree extends React.Component<TreeProps, {}> {
                             }
 
                             const $row = $treeDiv.find(
-                                `[data-object-id="${treeAdapter.getItemId(dropItem)}"]`
+                                `[data-object-id="${treeAdapter.getItemId(
+                                    dropItem
+                                )}"]`
                             );
                             const rowRect = $row[0].getBoundingClientRect();
 
                             const $label = $row.find("span");
-                            const labelRect = $label.get(0).getBoundingClientRect();
+                            const labelRect = $label
+                                .get(0)
+                                .getBoundingClientRect();
 
                             this.dropMarkVerticalConnectionLineHeight = undefined;
 
-                            if (dropPosition === DropPosition.DROP_POSITION_INSIDE) {
+                            if (
+                                dropPosition ===
+                                DropPosition.DROP_POSITION_INSIDE
+                            ) {
                                 this.dropMarkLeft =
-                                    labelRect.left - treeDivRect.left + CHILD_OFFSET;
+                                    labelRect.left -
+                                    treeDivRect.left +
+                                    CHILD_OFFSET;
                                 this.dropMarkTop = rowRect.bottom;
                                 this.dropMarkTop -= treeDivRect.top;
-                                this.dropMarkWidth = rowRect.right - labelRect.left - CHILD_OFFSET;
+                                this.dropMarkWidth =
+                                    rowRect.right -
+                                    labelRect.left -
+                                    CHILD_OFFSET;
                             } else {
-                                this.dropMarkLeft = labelRect.left - treeDivRect.left;
-                                if (this.dropPosition === DropPosition.DROP_POSITION_BEFORE) {
+                                this.dropMarkLeft =
+                                    labelRect.left - treeDivRect.left;
+                                if (
+                                    this.dropPosition ===
+                                    DropPosition.DROP_POSITION_BEFORE
+                                ) {
                                     this.dropMarkTop = rowRect.top;
                                 } else {
-                                    if (rowIndexAtCursor !== $allRows.index($row)) {
-                                        const $row2 = $allRows.eq(rowIndexAtCursor);
-                                        const rowRect2 = $row2.get(0).getBoundingClientRect();
+                                    if (
+                                        rowIndexAtCursor !==
+                                        $allRows.index($row)
+                                    ) {
+                                        const $row2 = $allRows.eq(
+                                            rowIndexAtCursor
+                                        );
+                                        const rowRect2 = $row2
+                                            .get(0)
+                                            .getBoundingClientRect();
 
                                         this.dropMarkTop = rowRect2.bottom;
                                         this.dropMarkVerticalConnectionLineHeight =
@@ -610,7 +684,8 @@ export class Tree extends React.Component<TreeProps, {}> {
                                     }
                                 }
                                 this.dropMarkTop -= treeDivRect.top;
-                                this.dropMarkWidth = rowRect.right - labelRect.left;
+                                this.dropMarkWidth =
+                                    rowRect.right - labelRect.left;
                             }
                         }
 
@@ -645,14 +720,19 @@ export class Tree extends React.Component<TreeProps, {}> {
     }
 
     @bind
-    onRowDragStart(event: any) {
-        let item = this.props.treeAdapter.getItemFromId($(event.target).attr("data-object-id")!);
+    onRowDragStart(event: React.DragEvent<HTMLDivElement>) {
+        event.stopPropagation();
+        let item = this.props.treeAdapter.getItemFromId(
+            $(event.target).attr("data-object-id")!
+        );
         this.props.treeAdapter.draggableAdapter!.onDragStart(item!, event);
     }
 
     @bind
     onRowDrag(event: any) {
-        let item = this.props.treeAdapter.getItemFromId($(event.target).attr("data-object-id")!);
+        let item = this.props.treeAdapter.getItemFromId(
+            $(event.target).attr("data-object-id")!
+        );
         this.props.treeAdapter.draggableAdapter!.onDrag(item!, event);
     }
 
@@ -664,18 +744,26 @@ export class Tree extends React.Component<TreeProps, {}> {
     @bind
     onRowClick(event: React.MouseEvent<HTMLDivElement>) {
         const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
-        let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+        let item = this.props.treeAdapter.getItemFromId(
+            $rowDiv.attr("data-object-id")!
+        )!;
         if (event.shiftKey) {
             const $treeDiv = $rowDiv.parent();
             const $selectedItems = $treeDiv.find(".tree-row.selected");
             if ($selectedItems.length > 0) {
                 let $rows = $treeDiv.find(".tree-row");
 
-                let iFirst = $rows.index($selectedItems.first() as JQuery<HTMLElement>);
-                let iLast = $rows.index($selectedItems.last() as JQuery<HTMLElement>);
+                let iFirst = $rows.index(
+                    $selectedItems.first() as JQuery<HTMLElement>
+                );
+                let iLast = $rows.index(
+                    $selectedItems.last() as JQuery<HTMLElement>
+                );
                 let iThisItem = $rows.index(
                     $treeDiv.find(
-                        `.tree-row[data-object-id="${this.props.treeAdapter.getItemId(item)}"]`
+                        `.tree-row[data-object-id="${this.props.treeAdapter.getItemId(
+                            item
+                        )}"]`
                     ) as JQuery<HTMLElement>
                 );
 
@@ -724,8 +812,12 @@ export class Tree extends React.Component<TreeProps, {}> {
             event.preventDefault();
             event.stopPropagation();
 
-            const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
-            let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+            const $rowDiv = $(event.target).closest(
+                ".tree-row[data-object-id]"
+            );
+            let item = this.props.treeAdapter.getItemFromId(
+                $rowDiv.attr("data-object-id")!
+            )!;
 
             if (!this.props.treeAdapter.isSelected(item)) {
                 this.props.treeAdapter.selectItem(item);
@@ -743,7 +835,9 @@ export class Tree extends React.Component<TreeProps, {}> {
         event.stopPropagation();
 
         const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
-        let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+        let item = this.props.treeAdapter.getItemFromId(
+            $rowDiv.attr("data-object-id")!
+        )!;
         let row = this.props.treeAdapter.allRows.find(row => row.item == item)!;
         if (row.collapsable) {
             this.props.treeAdapter.selectItem(item);
@@ -759,7 +853,9 @@ export class Tree extends React.Component<TreeProps, {}> {
         event.stopPropagation();
 
         const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
-        let item = this.props.treeAdapter.getItemFromId($rowDiv.attr("data-object-id")!)!;
+        let item = this.props.treeAdapter.getItemFromId(
+            $rowDiv.attr("data-object-id")!
+        )!;
         this.props.treeAdapter.selectItem(item);
         this.props.treeAdapter.collapsableAdapter!.toggleExpanded(item);
     }
@@ -770,10 +866,18 @@ export class Tree extends React.Component<TreeProps, {}> {
     }
 
     render() {
-        const { treeAdapter, tabIndex, onFocus, onEditItem, renderItem } = this.props;
+        const {
+            treeAdapter,
+            tabIndex,
+            onFocus,
+            onEditItem,
+            renderItem
+        } = this.props;
 
         const className = classNames({
-            "drag-source": treeAdapter.draggableAdapter && treeAdapter.draggableAdapter.isDragging,
+            "drag-source":
+                treeAdapter.draggableAdapter &&
+                treeAdapter.draggableAdapter.isDragging,
             "zero-level": treeAdapter.maxLevel === 0
         });
 
@@ -792,7 +896,8 @@ export class Tree extends React.Component<TreeProps, {}> {
                     ref={ref => (this.treeDiv = ref!)}
                     style={{
                         pointerEvents:
-                            treeAdapter.draggableAdapter && treeAdapter.draggableAdapter.isDragging
+                            treeAdapter.draggableAdapter &&
+                            treeAdapter.draggableAdapter.isDragging
                                 ? "none"
                                 : "auto"
                     }}
@@ -822,7 +927,9 @@ export class Tree extends React.Component<TreeProps, {}> {
                             left={this.dropMarkLeft}
                             top={this.dropMarkTop}
                             width={this.dropMarkWidth}
-                            verticalConnectionLineHeight={this.dropMarkVerticalConnectionLineHeight}
+                            verticalConnectionLineHeight={
+                                this.dropMarkVerticalConnectionLineHeight
+                            }
                         />
                     )}
                 </div>

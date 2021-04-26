@@ -7,14 +7,17 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ConnectionLine } from "project-editor/flow/flow";
 import { getConnectionLineShape } from "project-editor/flow/flow-editor/connection-line-shape";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { OutputActionComponent } from "../action-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const lineColor = theme.connectionLineColor;
+const seqLineColor = theme.seqConnectionLineColor;
 const selectedLineColor = theme.selectedConnectionLineColor;
 const activeLineColor = theme.activeConnectionLineColor;
 
 const strokeWidth = 1.2;
+const seqStrokeWidth = 1.2;
 const strokeOutlineWidth = 1.5;
 const strokeBackgroundWidth = 8;
 
@@ -57,16 +60,21 @@ const VisiblePath = observer(
         connectionLine: ConnectionLine;
         context: IFlowContext;
     }) => {
+        const seq =
+            connectionLine.input === "@seqin" &&
+            !(connectionLine.targetComponent instanceof OutputActionComponent);
+
         return (
             <path
                 d={lineShape}
                 style={{
                     fill: "none",
-                    strokeWidth,
+                    strokeWidth: seq ? seqStrokeWidth : strokeWidth,
                     strokeLinecap: "round"
                 }}
                 className={classNames("connection-line-path", {
                     selected,
+                    seq,
                     active:
                         connectionLine.active &&
                         context.document.DocumentStore.RuntimeStore
@@ -137,6 +145,8 @@ export const LineMarkers = () => (
         <defs>
             <LineStartMarker id="lineStart" color={lineColor} />
             <LineEndMarker id="lineEnd" color={lineColor} />
+            <LineStartMarker id="seqLineStart" color={seqLineColor} />
+            <LineEndMarker id="seqLineEnd" color={seqLineColor} />
             <LineStartMarker id="selectedLineStart" color={selectedLineColor} />
             <LineEndMarker id="selectedLineEnd" color={selectedLineColor} />
             <LineStartMarker id="activeLineStart" color={activeLineColor} />

@@ -1,6 +1,7 @@
 import React from "react";
-import { computed } from "mobx";
+import { action, computed } from "mobx";
 import { observer } from "mobx-react";
+import update from "immutability-helper";
 
 import { stringCompare } from "eez-studio-shared/string";
 
@@ -232,6 +233,18 @@ class AppComponent extends React.Component {
                         tabs={tabs.tabs}
                         addTabPopup={this.addTabPopup}
                         addTabAttention={this.addTabAttention}
+                        moveTab={action(
+                            (dragIndex: number, hoverIndex: number) => {
+                                const tab = tabs.tabs[dragIndex];
+
+                                tabs.tabs = update(tabs.tabs, {
+                                    $splice: [
+                                        [dragIndex, 1],
+                                        [hoverIndex, 0, tab]
+                                    ]
+                                });
+                            }
+                        )}
                     />
                     {appStore.history.sessions.activeSession && (
                         <SessionInfoContainer>

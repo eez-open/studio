@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, action, runInAction, observable } from "mobx";
+import { computed, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -190,6 +190,10 @@ export class Canvas extends React.Component<{
         }
     }
 
+    componentDidUpdate() {
+        this.resizeObserverCallback();
+    }
+
     componentWillUnmount() {
         this.div.removeEventListener("wheel", this.onWheel);
 
@@ -281,8 +285,7 @@ export class Canvas extends React.Component<{
                     className="eez-canvas"
                     style={{
                         position: "absolute",
-                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
-                        transition: "transform 0.2s"
+                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`
                     }}
                 >
                     {this.props.children}
@@ -323,25 +326,29 @@ const FlowViewerCanvasContainer = styled.div<FlowViewerCanvasContainerParams>`
         overflow: hidden;
     }
 
-    &:focus {
-        left: 2px;
-        top: 2px;
-        width: calc(100% - 4px);
-        height: calc(100% - 4px);
+    /* make sure focus outline is fully visible */
+    left: 2px;
+    top: 2px;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
 
-        & > div {
-            left: 1px;
-            top: 1px;
-            width: calc(100% - 2px);
-            height: calc(100% - 2px);
-        }
+    & > div {
+        left: 1px;
+        top: 1px;
+        width: calc(100% - 2px);
+        height: calc(100% - 2px);
     }
 
     .connection-line-path {
+        stroke: ${props => props.theme.connectionLineColor};
         marker-start: url(#lineStart);
         marker-end: url(#lineEnd);
 
-        stroke: ${props => props.theme.connectionLineColor};
+        &.seq {
+            stroke: ${props => props.theme.seqConnectionLineColor};
+            marker-start: url(#seqLineStart);
+            marker-end: url(#seqLineEnd);
+        }
 
         &.selected {
             stroke: ${props => props.theme.selectedConnectionLineColor};
@@ -374,6 +381,8 @@ const FlowViewerCanvasContainer = styled.div<FlowViewerCanvasContainerParams>`
 export class FlowViewer
     extends React.Component<{
         widgetContainer: ITreeObjectAdapter;
+        viewStatePersistantState: IViewStatePersistantState | undefined;
+        onSavePersistantState: (viewState: IViewStatePersistantState) => void;
         transitionIsActive?: boolean;
         frontFace: boolean;
         runningFlow: IRunningFlow | undefined;
@@ -384,7 +393,7 @@ export class FlowViewer
 
     divRef = React.createRef<HTMLDivElement>();
 
-    @observable flowContext: RuntimeFlowContext = new RuntimeFlowContext();
+    _flowContext: RuntimeFlowContext | undefined = undefined;
 
     get runningFlow() {
         return (
@@ -395,45 +404,44 @@ export class FlowViewer
         );
     }
 
-    @action
-    updateFlowDocument() {
-        let document = this.flowContext.document;
+    @computed
+    get flowContext() {
+        let clientRect: Rect | undefined = undefined;
 
-        const documentChanged =
-            !document || document.flow != this.props.widgetContainer;
-
-        if (documentChanged) {
-            document = new FlowDocument(
-                this.props.widgetContainer,
-                this.flowContext
-            );
+        if (this._flowContext) {
+            clientRect = this._flowContext.viewState.transform.clientRect;
+            this._flowContext.destroy();
         }
 
-        if (
-            documentChanged ||
-            this.flowContext.runningFlow != this.runningFlow
-        ) {
-            this.flowContext.set(
-                document,
-                this.viewStatePersistantState,
-                this.onSavePersistantState,
-                this.props.frontFace,
-                this.runningFlow
-            );
+        let viewStatePersistantState = this.props.viewStatePersistantState;
+        if (clientRect) {
+            if (!viewStatePersistantState) {
+                viewStatePersistantState = { clientRect };
+            } else if (!viewStatePersistantState.clientRect) {
+                viewStatePersistantState.clientRect = clientRect;
+            }
         }
+
+        const flowContext = new RuntimeFlowContext();
+
+        flowContext.set(
+            new FlowDocument(this.props.widgetContainer, flowContext),
+            this.props.viewStatePersistantState,
+            this.props.onSavePersistantState,
+            this.props.frontFace,
+            this.runningFlow
+        );
+
+        this._flowContext = flowContext;
+
+        return flowContext;
     }
 
     componentDidMount() {
-        this.updateFlowDocument();
-
         this.divRef.current?.addEventListener(
             "ensure-selection-visible",
             this.ensureSelectionVisible
         );
-    }
-
-    componentDidUpdate() {
-        this.updateFlowDocument();
     }
 
     componentDidCatch(error: any, info: any) {
@@ -441,7 +449,9 @@ export class FlowViewer
     }
 
     componentWillUnmount() {
-        this.flowContext.destroy();
+        if (this._flowContext) {
+            this._flowContext.destroy();
+        }
 
         this.divRef.current?.removeEventListener(
             "ensure-selection-visible",
@@ -466,6 +476,16 @@ export class FlowViewer
             );
 
             if (!rectContains(pageRect, selectionBoundingRect)) {
+                const selectionEl = this.divRef.current?.querySelector(
+                    ".EezStudio_FlowRuntimeSelection"
+                ) as HTMLDivElement;
+                const canvasEl = this.divRef.current?.querySelector(
+                    ".eez-canvas"
+                ) as HTMLCanvasElement;
+
+                canvasEl.style.transition = "transform 0.2s";
+                selectionEl.style.display = "none";
+
                 this.flowContext.viewState.transform.translate = {
                     x: -(
                         selectionBoundingRect.left +
@@ -476,7 +496,11 @@ export class FlowViewer
                         selectionBoundingRect.height / 2
                     )
                 };
-                //const firstSelectedObjectRect = selectedObjectRects[0];
+
+                setTimeout(() => {
+                    canvasEl.style.transition = "";
+                    selectionEl.style.display = "block";
+                }, 200);
             }
         }
     };
@@ -504,65 +528,6 @@ export class FlowViewer
         this.context.NavigationStore.setSelectedPanel(this);
     }
 
-    savedViewState: IViewStatePersistantState | undefined;
-
-    @computed
-    get viewStatePersistantState(): IViewStatePersistantState {
-        const uiState = this.context.UIStateStore.getObjectUIState(
-            this.props.widgetContainer.object,
-            this.props.frontFace ? "front" : "back"
-        );
-
-        let transform: ITransform | undefined;
-        if (uiState && uiState.flowEditorCanvasViewState) {
-            transform = uiState.flowEditorCanvasViewState.transform;
-        }
-
-        let viewState: IViewStatePersistantState = {
-            transform
-        };
-
-        if (!this.savedViewState) {
-            // selection changed in Tree => change selection in Editor
-            return viewState;
-        }
-
-        // return existing viewState from editor
-        viewState = this.savedViewState;
-        this.savedViewState = undefined;
-        return viewState;
-    }
-
-    @bind
-    onSavePersistantState(viewState: IViewStatePersistantState) {
-        if (!this.flowContext.dragComponent) {
-            this.savedViewState = viewState;
-
-            const uiState = this.context.UIStateStore.getObjectUIState(
-                this.props.widgetContainer.object,
-                this.props.frontFace ? "front" : "back"
-            );
-            if (
-                !uiState ||
-                !uiState.flowEditorCanvasViewState ||
-                !_isEqual(
-                    uiState.flowEditorCanvasViewState.transform,
-                    viewState.transform
-                )
-            ) {
-                this.context.UIStateStore.updateObjectUIState(
-                    this.props.widgetContainer.object,
-                    this.props.frontFace ? "front" : "back",
-                    {
-                        flowEditorCanvasViewState: {
-                            transform: viewState.transform
-                        }
-                    }
-                );
-            }
-        }
-    }
-
     getDragComponent(event: React.DragEvent) {
         return undefined;
     }
@@ -579,6 +544,8 @@ export class FlowViewer
     render() {
         const flow = this.props.widgetContainer.object as Flow;
 
+        this.runningFlow;
+
         return (
             <FlowViewerCanvasContainer
                 ref={this.divRef}
@@ -592,23 +559,22 @@ export class FlowViewer
                     flowContext={this.flowContext}
                     transitionIsActive={this.props.transitionIsActive}
                 >
-                    {this.flowContext.document?.flow.object === flow &&
-                        this.runningFlow && (
-                            <>
-                                <div
-                                    style={{
-                                        position: "absolute"
-                                    }}
-                                >
-                                    {flow.renderComponents(this.flowContext)}
-                                </div>
-                                {!this.props.frontFace && (
-                                    <AllConnectionLines
-                                        flowContext={this.flowContext}
-                                    />
-                                )}
-                            </>
-                        )}
+                    {this.flowContext.document?.flow.object === flow && (
+                        <>
+                            <div
+                                style={{
+                                    position: "absolute"
+                                }}
+                            >
+                                {flow.renderComponents(this.flowContext)}
+                            </div>
+                            {!this.props.frontFace && (
+                                <AllConnectionLines
+                                    flowContext={this.flowContext}
+                                />
+                            )}
+                        </>
+                    )}
                 </Canvas>
             </FlowViewerCanvasContainer>
         );

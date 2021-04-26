@@ -71,8 +71,10 @@ import {
 } from "project-editor/flow/component";
 
 import {
+    EndActionComponent,
     InputActionComponent,
-    OutputActionComponent
+    OutputActionComponent,
+    StartActionComponent
 } from "project-editor/flow/action-components";
 
 import { RunningFlow } from "project-editor/flow/runtime";
@@ -526,7 +528,13 @@ export class SelectWidget extends EmbeddedWidget {
                         );
                     }
 
-                    return `${label || "???"} ➔ ${childLabel}`;
+                    if (!label) {
+                        label = (getParent(childObject) as IEezObject[])
+                            .indexOf(childObject)
+                            .toString();
+                    }
+
+                    return `${label} ➔ ${childLabel}`;
                 },
 
                 interceptAddObject: (widgets: Widget[], object: Widget) => {
@@ -553,7 +561,9 @@ export class SelectWidget extends EmbeddedWidget {
             let messages: output.Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                if (!object.isInputProperty("data")) {
+                    messages.push(output.propertyNotSetMessage(object, "data"));
+                }
             } else {
                 let dataItem = findDataItem(getProject(object), object.data);
                 if (dataItem) {
@@ -656,56 +666,58 @@ export class SelectWidget extends EmbeddedWidget {
         return undefined;
     }
 
-    getSelectedWidget(dataContext: IDataContext) {
-        if (this.data) {
-            let index: number = dataContext.getEnumValue(this.data);
-            if (index >= 0 && index < this.widgets.length) {
-                return this.widgets[index];
-            }
-        }
-        return undefined;
-    }
-
     getSelectedIndex(flowContext: IFlowContext) {
-        if (flowContext.runningFlow) {
-            let value = flowContext.runningFlow.getPropertyValue(this, "data");
-            if (typeof value === "boolean") {
-                return value ? 1 : 0;
+        if (this.isInputProperty("data")) {
+            if (flowContext.runningFlow) {
+                let value = flowContext.runningFlow.getPropertyValue(
+                    this,
+                    "data"
+                );
+
+                if (typeof value === "boolean") {
+                    return value ? 1 : 0;
+                }
+
+                if (typeof value === "number") {
+                    return value;
+                }
             }
-            if (typeof value === "number") {
-                return value;
-            }
-            return -1;
         }
 
-        const selectedObjects = flowContext.viewState.selectedObjects;
+        if (!flowContext.runningFlow) {
+            const selectedObjects = flowContext.viewState.selectedObjects;
 
-        for (let i = 0; i < this.widgets.length; ++i) {
+            for (let i = 0; i < this.widgets.length; ++i) {
+                if (
+                    selectedObjects.find(selectedObject =>
+                        isAncestor(selectedObject.object, this.widgets[i])
+                    )
+                ) {
+                    this._lastSelectedIndexInSelectWidget = i;
+                    return i;
+                }
+            }
+
             if (
-                selectedObjects.find(selectedObject =>
-                    isAncestor(selectedObject.object, this.widgets[i])
-                )
+                this._lastSelectedIndexInSelectWidget !== undefined &&
+                this._lastSelectedIndexInSelectWidget < this.widgets.length
             ) {
-                this._lastSelectedIndexInSelectWidget = i;
-                return i;
+                return this._lastSelectedIndexInSelectWidget;
             }
         }
 
-        if (
-            this._lastSelectedIndexInSelectWidget !== undefined &&
-            this._lastSelectedIndexInSelectWidget < this.widgets.length
-        ) {
-            return this._lastSelectedIndexInSelectWidget;
+        if (this.data) {
+            let index: number = flowContext.dataContext.getEnumValue(this.data);
+            if (index >= 0 && index < this.widgets.length) {
+                return index;
+            }
         }
 
-        const selectedWidget = this.getSelectedWidget(flowContext.dataContext);
-        if (selectedWidget) {
-            return this.widgets.indexOf(selectedWidget);
-        }
-
-        if (this.widgets.length > 0) {
-            this._lastSelectedIndexInSelectWidget = 0;
-            return this._lastSelectedIndexInSelectWidget;
+        if (!flowContext.runningFlow) {
+            if (this.widgets.length > 0) {
+                this._lastSelectedIndexInSelectWidget = 0;
+                return 0;
+            }
         }
 
         return -1;
@@ -713,18 +725,20 @@ export class SelectWidget extends EmbeddedWidget {
 
     render(flowContext: IFlowContext) {
         const index = this.getSelectedIndex(flowContext);
-        if (index === -1) {
-            return null;
-        }
 
-        const selectedWidget = this.widgets[index];
+        let selectedWidget =
+            index >= 0 && index < this.widgets.length
+                ? this.widgets[index]
+                : undefined;
 
         return (
             <>
-                <ComponentsContainerEnclosure
-                    components={[selectedWidget]}
-                    flowContext={flowContext}
-                />
+                {selectedWidget && (
+                    <ComponentsContainerEnclosure
+                        components={[selectedWidget]}
+                        flowContext={flowContext}
+                    />
+                )}
                 {super.render(flowContext)}
             </>
         );
@@ -928,7 +942,14 @@ export class LayoutViewWidget extends EmbeddedWidget {
         return [
             ...super.inputs,
             ...page.components
+                .filter(component => component instanceof StartActionComponent)
+                .map(() => ({
+                    name: "@seqin",
+                    type: PropertyType.Null
+                })),
+            ...page.components
                 .filter(component => component instanceof InputActionComponent)
+                .sort((a, b) => a.top - b.top)
                 .map((inputActionComponent: InputActionComponent) => ({
                     name: inputActionComponent.wireID,
                     displayName: inputActionComponent.name,
@@ -946,7 +967,14 @@ export class LayoutViewWidget extends EmbeddedWidget {
         return [
             ...super.outputs,
             ...page.components
+                .filter(component => component instanceof EndActionComponent)
+                .map(() => ({
+                    name: "@seqout",
+                    type: PropertyType.Any
+                })),
+            ...page.components
                 .filter(component => component instanceof OutputActionComponent)
+                .sort((a, b) => a.top - b.top)
                 .map((outputActionComponent: OutputActionComponent) => ({
                     name: outputActionComponent.wireID,
                     displayName: outputActionComponent.name,
@@ -1046,14 +1074,26 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
             const componentState = runningFlow.getComponentState(this);
             for (let [input, inputData] of componentState.inputsData) {
-                for (let component of page.components) {
-                    if (component instanceof InputActionComponent) {
-                        if (component.wireID === input) {
+                if (input === "@seqin") {
+                    for (let component of page.components) {
+                        if (component instanceof StartActionComponent) {
                             layoutRunningFlow?.propagateValue(
                                 component,
                                 "@seqout",
                                 inputData.value
                             );
+                        }
+                    }
+                } else {
+                    for (let component of page.components) {
+                        if (component instanceof InputActionComponent) {
+                            if (component.wireID === input) {
+                                layoutRunningFlow?.propagateValue(
+                                    component,
+                                    "@seqout",
+                                    inputData.value
+                                );
+                            }
                         }
                     }
                 }

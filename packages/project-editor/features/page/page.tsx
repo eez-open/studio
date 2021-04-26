@@ -345,6 +345,10 @@ export class Page extends Flow {
         }
     });
 
+    set geometry(value: ComponentGeometry) {
+        this._geometry = value;
+    }
+
     get autoSize() {
         return false;
     }

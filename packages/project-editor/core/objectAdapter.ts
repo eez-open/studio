@@ -1180,6 +1180,9 @@ export class TreeAdapter implements ITreeAdapter {
         nextObjectId: string | undefined
     ): boolean {
         const dragObject = DragAndDropManager.dragObject!;
+        if (!dragObject) {
+            return false;
+        }
 
         // check: can't drop object within itself
         if (this.isAncestorOfDragObject(dropItem)) {
@@ -1533,7 +1536,7 @@ export class ListAdapter implements ITreeAdapter {
         if (dropItem) {
             event.preventDefault();
             event.stopPropagation();
-            this.dragAndDropManager.setDropEffect(event);
+            this.dragAndDropManager.setDropEffect("copy");
         }
 
         if (this.dropItem !== dropItem) {
@@ -1582,6 +1585,9 @@ export class ListAdapter implements ITreeAdapter {
         }
 
         const dragObject = this.dragAndDropManager.dragObject!;
+        if (!dragObject) {
+            return false;
+        }
 
         // check: can't drop object if parent can't accept it
         if (!isObjectInstanceOf(dragObject, getClassInfo(this.object))) {

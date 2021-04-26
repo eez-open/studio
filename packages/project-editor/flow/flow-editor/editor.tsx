@@ -5,10 +5,12 @@ import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
+    BoundingRectBuilder,
     Point,
     pointDistance,
     pointInRect,
-    Rect
+    Rect,
+    rectContains
 } from "eez-studio-shared/geometry";
 import { closestByClass, closestBySelector } from "eez-studio-shared/dom";
 
@@ -22,6 +24,7 @@ import { ITransform } from "project-editor/flow/flow-editor/transform";
 import { EditorFlowContext } from "project-editor/flow/flow-editor/context";
 
 import {
+    getObjectBoundingRect,
     getObjectIdFromPoint,
     getObjectIdsInsideRect,
     getSelectedObjectsBoundingRect
@@ -314,7 +317,7 @@ const AllConnectionLines = observer(
 function CenterLines({ flowContext }: { flowContext: IFlowContext }) {
     const transform = flowContext.viewState.transform;
 
-    const CENTER_LINES_COLOR = "#ddd";
+    const CENTER_LINES_COLOR = "#eee";
     const CENTER_LINES_WIDTH = 1 / transform.scale;
     const centerLineStyle = {
         fill: "transparent",
@@ -412,12 +415,18 @@ export class Canvas extends React.Component<{
                 }
             );
         }
+
+        if (this.mouseHandler) {
+            this.div.style.cursor = this.mouseHandler.cursor;
+        } else {
+            this.div.style.cursor = "";
+        }
     }
 
     resizeObserverCallback = () => {
         this.clientRectChangeDetectionAnimationFrameHandle = undefined;
 
-        if ($(this.div).is(":visible") && !this.props.transitionIsActive) {
+        if ($(this.div).is(":visible")) {
             const transform = this.props.flowContext.viewState.transform;
 
             let clientRect = this.div.getBoundingClientRect();
@@ -446,6 +455,10 @@ export class Canvas extends React.Component<{
         if (this.div) {
             this.resizeObserver.observe(this.div);
         }
+    }
+
+    componentDidUpdate() {
+        this.resizeObserverCallback();
     }
 
     componentWillUnmount() {
@@ -761,12 +774,6 @@ export class Canvas extends React.Component<{
     render() {
         let style: React.CSSProperties = {};
 
-        if (this.mouseHandler) {
-            style.cursor = this.mouseHandler.cursor;
-        }
-
-        this.draggable.cursor = style.cursor;
-
         const transform = this.props.flowContext.viewState.transform;
 
         const xt = Math.round(
@@ -845,18 +852,16 @@ const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
         overflow: hidden;
     }
 
-    &:focus {
-        left: 2px;
-        top: 2px;
-        width: calc(100% - 4px);
-        height: calc(100% - 4px);
-
-        & > div {
-            left: 1px;
-            top: 1px;
-            width: calc(100% - 2px);
-            height: calc(100% - 2px);
-        }
+    /* make sure focus outline is fully visible */
+    left: 2px;
+    top: 2px;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+    & > div {
+        left: 1px;
+        top: 1px;
+        width: calc(100% - 2px);
+        height: calc(100% - 2px);
     }
 
     .EezStudio_FlowEditorSelection_SelectedObject {
@@ -876,6 +881,7 @@ const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
         color: ${props => props.theme.selectionColor}!important;
         background-color: ${props =>
             props.theme.selectionBackgroundColor}!important;
+        cursor: crosshair;
     }
 
     .title [data-connection-output-id]:hover {
@@ -889,6 +895,12 @@ const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
         marker-end: url(#lineEnd);
 
         stroke: ${props => props.theme.connectionLineColor};
+
+        &.seq {
+            stroke: ${props => props.theme.seqConnectionLineColor};
+            marker-start: url(#seqLineStart);
+            marker-end: url(#seqLineEnd);
+        }
 
         &.selected {
             stroke: ${props => props.theme.selectedConnectionLineColor};
@@ -911,6 +923,8 @@ const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
 export class FlowEditor
     extends React.Component<{
         widgetContainer: ITreeObjectAdapter;
+        viewStatePersistantState: IViewStatePersistantState | undefined;
+        onSavePersistantState: (viewState: IViewStatePersistantState) => void;
         transitionIsActive?: boolean;
         frontFace: boolean;
     }>
@@ -918,58 +932,49 @@ export class FlowEditor
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    div: HTMLDivElement;
+    divRef = React.createRef<HTMLDivElement>();
 
-    flowContext: EditorFlowContext = new EditorFlowContext();
     currentWidgetContainer?: ITreeObjectAdapter;
 
     @observable options: IEditorOptions;
 
-    @action
-    updateFlowDocument() {
-        let document = this.flowContext.document;
+    _flowContext: EditorFlowContext | undefined = undefined;
 
-        const runningFlow = document?.DocumentStore.RuntimeStore.getRunningFlow(
-            document.flow.object as Flow
+    @computed
+    get flowContext() {
+        let clientRect: Rect | undefined = undefined;
+
+        if (this._flowContext) {
+            clientRect = this._flowContext.viewState.transform.clientRect;
+            this._flowContext.destroy();
+        }
+
+        let viewStatePersistantState = this.props.viewStatePersistantState;
+        if (clientRect) {
+            if (!viewStatePersistantState) {
+                viewStatePersistantState = { clientRect };
+            } else if (!viewStatePersistantState.clientRect) {
+                viewStatePersistantState.clientRect = clientRect;
+            }
+        }
+
+        const flowContext = new EditorFlowContext();
+
+        flowContext.set(
+            new FlowDocument(this.props.widgetContainer, flowContext),
+            viewStatePersistantState,
+            this.props.onSavePersistantState,
+            this.props.frontFace,
+            this.context.RuntimeStore.getRunningFlow(
+                this.props.widgetContainer.object as Flow
+            ),
+            this.options,
+            this.filterSnapLines
         );
 
-        const documentChanged =
-            !document || document.flow != this.props.widgetContainer;
+        this._flowContext = flowContext;
 
-        if (documentChanged || this.flowContext.runningFlow != runningFlow) {
-            if (documentChanged) {
-                document = new FlowDocument(
-                    this.props.widgetContainer,
-                    this.flowContext
-                );
-            }
-
-            this.flowContext.set(
-                document,
-                this.viewStatePersistantState,
-                this.onSavePersistantState,
-                this.props.frontFace,
-                runningFlow,
-                this.options,
-                this.filterSnapLines
-            );
-        }
-    }
-
-    componentDidMount() {
-        this.updateFlowDocument();
-    }
-
-    componentDidUpdate() {
-        this.updateFlowDocument();
-    }
-
-    componentDidCatch(error: any, info: any) {
-        console.error(error, info);
-    }
-
-    componentWillUnmount() {
-        this.flowContext.destroy();
+        return flowContext;
     }
 
     @bind
@@ -996,6 +1001,74 @@ export class FlowEditor
         return false;
     }
 
+    componentDidMount() {
+        this.divRef.current?.addEventListener(
+            "ensure-selection-visible",
+            this.ensureSelectionVisible
+        );
+    }
+
+    componentDidCatch(error: any, info: any) {
+        console.error(error, info);
+    }
+
+    componentWillUnmount() {
+        if (this._flowContext) {
+            this._flowContext.destroy();
+        }
+
+        this.divRef.current?.removeEventListener(
+            "ensure-selection-visible",
+            this.ensureSelectionVisible
+        );
+    }
+
+    ensureSelectionVisible = () => {
+        if (this.flowContext.viewState.selectedObjects.length > 0) {
+            const selectedObjectRects = this.flowContext.viewState.selectedObjects.map(
+                selectedObject => getObjectBoundingRect(selectedObject)
+            );
+
+            let selectionBoundingRectBuilder = new BoundingRectBuilder();
+            for (let i = 0; i < selectedObjectRects.length; i++) {
+                selectionBoundingRectBuilder.addRect(selectedObjectRects[i]);
+            }
+            const selectionBoundingRect = selectionBoundingRectBuilder.getRect();
+
+            let pageRect = this.flowContext.viewState.transform.clientToPageRect(
+                this.flowContext.viewState.transform.clientRect
+            );
+
+            if (!rectContains(pageRect, selectionBoundingRect)) {
+                const selectionEl = this.divRef.current?.querySelector(
+                    ".EezStudio_FlowEditorSelection"
+                ) as HTMLDivElement;
+                const canvasEl = this.divRef.current?.querySelector(
+                    ".eez-canvas"
+                ) as HTMLCanvasElement;
+
+                canvasEl.style.transition = "transform 0.2s";
+                selectionEl.style.display = "none";
+
+                this.flowContext.viewState.transform.translate = {
+                    x: -(
+                        selectionBoundingRect.left +
+                        selectionBoundingRect.width / 2
+                    ),
+                    y: -(
+                        selectionBoundingRect.top +
+                        selectionBoundingRect.height / 2
+                    )
+                };
+
+                setTimeout(() => {
+                    canvasEl.style.transition = "";
+                    selectionEl.style.display = "block";
+                }, 200);
+            }
+        }
+    };
+
     @computed
     get selectedObject() {
         return this.props.widgetContainer.selectedObjects[0];
@@ -1015,7 +1088,39 @@ export class FlowEditor
     }
 
     pasteSelection() {
+        this.flowContext.document.DocumentStore.UndoManager.setCombineCommands(
+            true
+        );
+
         this.props.widgetContainer.pasteSelection();
+
+        const rectBounding = getSelectedObjectsBoundingRect(
+            this.flowContext.viewState
+        );
+        const rectPage = this.flowContext.viewState.transform.clientToPageRect(
+            this.flowContext.viewState.transform.clientRect
+        );
+
+        const left = rectPage.left + (rectPage.width - rectBounding.width) / 2;
+        const top = rectPage.top + (rectPage.height - rectBounding.height) / 2;
+
+        this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
+            if (objectAdapter.object instanceof Component) {
+                this.flowContext.document.DocumentStore.updateObject(
+                    objectAdapter.object,
+                    {
+                        left:
+                            left +
+                            (objectAdapter.object.left - rectBounding.left),
+                        top: top + (objectAdapter.object.top - rectBounding.top)
+                    }
+                );
+            }
+        });
+
+        this.flowContext.document.DocumentStore.UndoManager.setCombineCommands(
+            false
+        );
     }
 
     deleteSelection() {
@@ -1025,65 +1130,6 @@ export class FlowEditor
     @bind
     focusHander() {
         this.context.NavigationStore.setSelectedPanel(this);
-    }
-
-    savedViewState: IViewStatePersistantState | undefined;
-
-    @computed
-    get viewStatePersistantState(): IViewStatePersistantState {
-        const uiState = this.context.UIStateStore.getObjectUIState(
-            this.props.widgetContainer.object,
-            this.props.frontFace ? "front" : "back"
-        );
-
-        let transform: ITransform | undefined;
-        if (uiState && uiState.flowEditorCanvasViewState) {
-            transform = uiState.flowEditorCanvasViewState.transform;
-        }
-
-        let viewState: IViewStatePersistantState = {
-            transform
-        };
-
-        if (!this.savedViewState) {
-            // selection changed in Tree => change selection in Editor
-            return viewState;
-        }
-
-        // return existing viewState from editor
-        viewState = this.savedViewState;
-        this.savedViewState = undefined;
-        return viewState;
-    }
-
-    @bind
-    onSavePersistantState(viewState: IViewStatePersistantState) {
-        if (!this.flowContext.dragComponent) {
-            this.savedViewState = viewState;
-
-            const uiState = this.context.UIStateStore.getObjectUIState(
-                this.props.widgetContainer.object,
-                this.props.frontFace ? "front" : "back"
-            );
-            if (
-                !uiState ||
-                !uiState.flowEditorCanvasViewState ||
-                !_isEqual(
-                    uiState.flowEditorCanvasViewState.transform,
-                    viewState.transform
-                )
-            ) {
-                this.context.UIStateStore.updateObjectUIState(
-                    this.props.widgetContainer.object,
-                    this.props.frontFace ? "front" : "back",
-                    {
-                        flowEditorCanvasViewState: {
-                            transform: viewState.transform
-                        }
-                    }
-                );
-            }
-        }
     }
 
     getDragComponent(event: React.DragEvent) {
@@ -1106,6 +1152,7 @@ export class FlowEditor
         if (dragComponent) {
             event.preventDefault();
             event.stopPropagation();
+            event.dataTransfer.dropEffect = "copy";
 
             const flow = this.props.widgetContainer.object as Flow;
 
@@ -1165,7 +1212,7 @@ export class FlowEditor
                 if (objectAdapter) {
                     const viewState = this.flowContext.viewState;
                     viewState.selectObjects([objectAdapter]);
-                    this.div.focus();
+                    this.divRef.current!.focus();
                 }
             }, 0);
         }
@@ -1204,11 +1251,11 @@ export class FlowEditor
             }
         } else if (event.ctrlKey) {
             if (event.keyCode == "X".charCodeAt(0)) {
-                this.props.widgetContainer.cutSelection();
+                this.cutSelection();
             } else if (event.keyCode == "C".charCodeAt(0)) {
-                this.props.widgetContainer.copySelection();
+                this.copySelection();
             } else if (event.keyCode == "V".charCodeAt(0)) {
-                this.props.widgetContainer.pasteSelection();
+                this.pasteSelection();
             }
         } else if (event.keyCode == 46) {
             // delete
@@ -1246,7 +1293,7 @@ export class FlowEditor
 
         return (
             <FlowEditorCanvasContainer
-                ref={(ref: any) => (this.div = ref!)}
+                ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
                 tabIndex={0}
                 onFocus={this.focusHander}

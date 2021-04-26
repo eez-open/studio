@@ -60,7 +60,11 @@ export class Icon extends React.Component<
 
         if (typeof icon === "string") {
             if (icon.startsWith(MATERIAL_PREFIX)) {
-                let iconClassName = classnames("EezStudio_Icon", "material-icons", className);
+                let iconClassName = classnames(
+                    "EezStudio_Icon",
+                    "material-icons",
+                    className
+                );
 
                 let iconStyle = {
                     fontSize: iconSize + "px"
@@ -70,7 +74,11 @@ export class Icon extends React.Component<
                 }
 
                 const iconEl = (
-                    <i className={iconClassName} style={iconStyle} onClick={onClick}>
+                    <i
+                        className={iconClassName}
+                        style={iconStyle}
+                        onClick={onClick}
+                    >
                         {icon.slice(MATERIAL_PREFIX.length)}
                     </i>
                 );

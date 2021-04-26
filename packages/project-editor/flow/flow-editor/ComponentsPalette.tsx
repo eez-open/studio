@@ -60,7 +60,9 @@ class PaletteItem extends React.Component<{
     declare context: React.ContextType<typeof ProjectContext>;
 
     @action.bound
-    onDragStart(event: any) {
+    onDragStart(event: React.DragEvent<HTMLDivElement>) {
+        event.stopPropagation();
+
         let protoObject = new this.props.componentClass.objectClass();
 
         const componentClass = getClass(protoObject);
@@ -127,6 +129,16 @@ class PaletteItem extends React.Component<{
         let icon = this.props.componentClass.objectClass.classInfo.icon;
         let label = getLabel(this.props.componentClass);
 
+        let titleStyle: React.CSSProperties | undefined;
+        if (
+            this.props.componentClass.objectClass.classInfo.componentHeaderColor
+        ) {
+            titleStyle = {
+                backgroundColor: this.props.componentClass.objectClass.classInfo
+                    .componentHeaderColor
+            };
+        }
+
         return (
             <div
                 className={className}
@@ -134,6 +146,7 @@ class PaletteItem extends React.Component<{
                 draggable={true}
                 onDragStart={this.onDragStart}
                 onDragEnd={this.onDragEnd}
+                style={titleStyle}
             >
                 {typeof icon === "string" ? <img src={icon} /> : icon}
                 {label}
@@ -243,6 +256,9 @@ const ComponentsPaletteDiv = styled.div`
         }
         white-space: nowrap;
         min-width: 120px;
+        background-color: #3fadb5;
+        color: #333;
+        border-radius: 5px;
 
         &.selected {
             background-color: ${props =>

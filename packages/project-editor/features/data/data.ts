@@ -205,7 +205,6 @@ export class DataContext implements IDataContext {
         }
     }
 
-    @action
     setDataItemValue(dataItemId: string, value: any) {
         if (this.parentDataContext) {
             this.parentDataContext.setDataItemValue(dataItemId, value);
@@ -217,6 +216,11 @@ export class DataContext implements IDataContext {
                 throw `variable "${dataItemId}" not found`;
             }
         }
+    }
+
+    @action
+    clearDataItemValues() {
+        this.dataItemValues.clear();
     }
 
     @action
@@ -342,11 +346,7 @@ export class DataContext implements IDataContext {
                             ) {
                                 value = false;
                             } else {
-                                value = false;
-                                console.error(
-                                    "Invalid boolean default value",
-                                    dataItem
-                                );
+                                value = undefined;
                             }
                         } else if (dataItem.type == "list") {
                             try {

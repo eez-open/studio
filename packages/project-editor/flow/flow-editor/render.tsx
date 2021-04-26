@@ -155,8 +155,8 @@ const ComponentEnclosureDiv = styled.div`
             .title {
                 flex-grow: 1;
                 padding: 4px 0;
-                background-color: #43786d;
-                color: white;
+                background-color: #3fadb5;
+                color: #333;
                 display: flex;
                 flex-direction: row;
                 align-items: center;
@@ -175,7 +175,6 @@ const ComponentEnclosureDiv = styled.div`
 
                     svg {
                         vertical-align: baseline;
-                        fill: white;
                         height: 16px;
                     }
 
@@ -297,6 +296,11 @@ const ComponentEnclosureDiv = styled.div`
         [data-connection-output-id]:last-child {
             margin-bottom: 0;
         }
+
+        [data-connection-input-id].seq,
+        [data-connection-output-id].seq {
+            background-color: ${props => props.theme.seqConnectionLineColor};
+        }
     }
 
     &.Button button,
@@ -370,28 +374,19 @@ export const ComponentEnclosure = observer(
         const elRef = React.useRef<HTMLDivElement>(null);
 
         React.useEffect(() => {
-            if (!flowContext.frontFace) {
-                const el = elRef.current;
-                if (el) {
-                    const flipCardBack = el.closest(
-                        ".flip-card-inner:not(.show-back-face)>.flip-card-back"
-                    ) as HTMLElement;
-                    if (flipCardBack) {
-                        flipCardBack.style.transform = "rotateY(0)";
-                    }
-
+            const el = elRef.current;
+            if (el) {
+                const flipCard = el.closest(".flip-card-inner") as HTMLElement;
+                if (!flipCard) {
                     const geometry = calcComponentGeometry(
                         component,
                         el,
                         flowContext
                     );
-
-                    if (flipCardBack) {
-                        flipCardBack.style.transform = "rotateY(180deg)";
-                    }
-
+                    geometry.width = Math.round(geometry.width);
+                    geometry.height = Math.round(geometry.height);
                     runInAction(() => {
-                        component._geometry = geometry;
+                        component.geometry = geometry;
                     });
                 }
             }
