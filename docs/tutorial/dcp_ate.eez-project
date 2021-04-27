@@ -8369,7 +8369,7 @@
           "height": 189,
           "wireID": "ce089ef8-75ca-4428-9622-c90d060d4b5d",
           "instrument": "bb3_2",
-          "scpi": "INST (@101)\nCURR 2\nINST (@301)\nOUTP 0\nVOLT 0\nCURR 2\nvolt:prot:type SW\nvolt:prot:stat 1\n"
+          "scpi": "INST (@101)\nCURR 3.8\nINST (@301)\nOUTP 0\nVOLT 0\nCURR 2\nvolt:prot:type SW\nvolt:prot:stat 1\n"
         }
       ],
       "connectionLines": [
@@ -8407,7 +8407,7 @@
         },
         {
           "type": "EndActionComponent",
-          "left": 400,
+          "left": 452,
           "top": -66,
           "width": 73,
           "height": 31,
@@ -8425,7 +8425,7 @@
         },
         {
           "type": "CompareActionComponent",
-          "left": 242,
+          "left": 294,
           "top": -66,
           "width": 121,
           "height": 87,
@@ -8438,7 +8438,7 @@
         },
         {
           "type": "ErrorActionComponent",
-          "left": 342,
+          "left": 394,
           "top": 96,
           "width": 81,
           "height": 61,
@@ -8510,8 +8510,8 @@
         },
         {
           "type": "EndActionComponent",
-          "left": 426,
-          "top": -98,
+          "left": 484,
+          "top": -101,
           "width": 73,
           "height": 31,
           "wireID": "fba171ca-d168-45f9-ae58-6ec9e1687ede"
@@ -8528,8 +8528,8 @@
         },
         {
           "type": "CompareActionComponent",
-          "left": 279,
-          "top": -98,
+          "left": 337,
+          "top": -101,
           "width": 121,
           "height": 87,
           "wireID": "c70ceeb4-5cf4-4d60-8bd9-ca31e7237228",
@@ -8541,8 +8541,8 @@
         },
         {
           "type": "ErrorActionComponent",
-          "left": 380,
-          "top": 60,
+          "left": 438,
+          "top": 57,
           "width": 81,
           "height": 61,
           "wireID": "abd36073-efed-4816-f9a9-3330a45ad51e",
@@ -9397,10 +9397,10 @@
           "left": 156,
           "top": -254,
           "width": 138,
-          "height": 153,
+          "height": 171,
           "wireID": "a5afbedf-8a47-4348-b993-77ac836dfcdd",
           "instrument": "bb3_2",
-          "scpi": "inst (@301)\ncurr 0.1\nvolt 0\noutp 1\ncal:cle \"eezbb3\"\ncal 1, \"eezbb3\"\n"
+          "scpi": "*CLS\ninst (@301)\ncurr 0.1\nvolt 0\noutp 1\ncal:cle \"eezbb3\"\ncal 1, \"eezbb3\"\n"
         },
         {
           "type": "ScpiActionComponent",
