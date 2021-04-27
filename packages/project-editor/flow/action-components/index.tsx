@@ -31,6 +31,26 @@ import { getFlow, getProject } from "project-editor/project/project";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { findPage } from "project-editor/features/page/page";
 
+const LeftArrow = () => (
+    <div style={{ marginTop: -2, padding: "0 8px" }}>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <line x1="5" y1="12" x2="9" y2="16"></line>
+            <line x1="5" y1="12" x2="9" y2="8"></line>
+        </svg>
+    </div>
+);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StartActionComponent extends ActionComponent {
@@ -467,7 +487,7 @@ export class SetVariableActionComponent extends ActionComponent {
                 <div>
                     <pre>{this.variable}</pre>
                 </div>
-                <div style={{ padding: "0 10px" }}>🡨</div>
+                <LeftArrow />
                 <div style={{ textAlign: "left" }}>
                     <pre>{this.value}</pre>
                 </div>
@@ -537,7 +557,7 @@ export class DeclareVariableActionComponent extends ActionComponent {
                 <div>
                     <pre>{this.variable}</pre>
                 </div>
-                <div style={{ padding: "0 10px" }}>🡨</div>
+                <LeftArrow />
                 <div style={{ textAlign: "left" }}>
                     <pre>{this.value}</pre>
                 </div>
