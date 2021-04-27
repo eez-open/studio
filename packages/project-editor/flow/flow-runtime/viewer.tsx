@@ -31,6 +31,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 import { Selection } from "project-editor/flow/flow-runtime/selection";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
+import { Component } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -461,9 +462,11 @@ export class FlowViewer
 
     ensureSelectionVisible = () => {
         if (this.flowContext.viewState.selectedObjects.length > 0) {
-            const selectedObjectRects = this.flowContext.viewState.selectedObjects.map(
-                selectedObject => getObjectBoundingRect(selectedObject)
-            );
+            const selectedObjectRects = this.flowContext.viewState.selectedObjects
+                .filter(
+                    selectedObject => selectedObject.object instanceof Component
+                )
+                .map(selectedObject => getObjectBoundingRect(selectedObject));
 
             let selectionBoundingRectBuilder = new BoundingRectBuilder();
             for (let i = 0; i < selectedObjectRects.length; i++) {

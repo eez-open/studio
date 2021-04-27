@@ -271,11 +271,18 @@ const ComponentEnclosureDiv = styled.div`
         [data-connection-output-id] {
             background-color: #999;
 
-            margin-left: calc(var(--size) / -1);
             margin-bottom: var(--size);
 
             width: var(--size);
             height: calc(var(--size) * 2);
+        }
+
+        [data-connection-input-id] {
+            margin-left: calc(var(--size) / -1);
+        }
+
+        [data-connection-output-id] {
+            margin-right: calc(var(--size) / -1);
         }
 
         [data-connection-input-id] {

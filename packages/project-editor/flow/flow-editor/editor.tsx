@@ -1025,9 +1025,11 @@ export class FlowEditor
 
     ensureSelectionVisible = () => {
         if (this.flowContext.viewState.selectedObjects.length > 0) {
-            const selectedObjectRects = this.flowContext.viewState.selectedObjects.map(
-                selectedObject => getObjectBoundingRect(selectedObject)
-            );
+            const selectedObjectRects = this.flowContext.viewState.selectedObjects
+                .filter(
+                    selectedObject => selectedObject.object instanceof Component
+                )
+                .map(selectedObject => getObjectBoundingRect(selectedObject));
 
             let selectionBoundingRectBuilder = new BoundingRectBuilder();
             for (let i = 0; i < selectedObjectRects.length; i++) {
