@@ -103,7 +103,7 @@ export interface PropertyInfo {
     type: PropertyType;
 
     // optional properties
-    displayName?: string;
+    displayName?: string | ((object: IEezObject) => string);
     enumItems?: EnumItem[];
     typeClass?: EezClass;
     referencedObjectCollectionPath?: string;
@@ -743,6 +743,19 @@ export function humanizePropertyName(object: IEezObject, propertyName: string) {
     return humanize(propertyName);
 }
 
+export function getObjectPropertyDisplayName(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    if (propertyInfo.displayName) {
+        if (typeof propertyInfo.displayName === "string") {
+            return propertyInfo.displayName;
+        }
+        return propertyInfo.displayName(object);
+    }
+    return humanize(propertyInfo.name);
+}
+
 export function objectToString(object: IEezObject) {
     let label: string;
 
@@ -754,7 +767,8 @@ export function objectToString(object: IEezObject) {
             getKey(object)
         );
         label =
-            (propertyInfo && propertyInfo.displayName) ||
+            (propertyInfo &&
+                getObjectPropertyDisplayName(object, propertyInfo)) ||
             humanize(getKey(object));
     } else {
         label = getLabel(object);

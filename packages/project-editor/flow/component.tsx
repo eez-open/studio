@@ -34,7 +34,8 @@ import {
     findPropertyByNameInClassInfo,
     PropertyProps,
     generalGroup,
-    isPropertyHidden
+    isPropertyHidden,
+    getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
@@ -1204,9 +1205,7 @@ export class Widget extends Component {
                             className={classNames({
                                 seq: property.name === "@seqin"
                             })}
-                            title={
-                                property.displayName ?? humanize(property.name)
-                            }
+                            title={getObjectPropertyDisplayName(this, property)}
                         ></div>
                     ))}
                 </div>
@@ -1218,9 +1217,7 @@ export class Widget extends Component {
                             className={classNames({
                                 seq: property.name === "@seqout"
                             })}
-                            title={
-                                property.displayName ?? humanize(property.name)
-                            }
+                            title={getObjectPropertyDisplayName(this, property)}
                         ></div>
                     ))}
                 </div>
@@ -1308,8 +1305,10 @@ function renderActionComponent(
                                 key={property.name}
                                 data-connection-input-id={property.name}
                             >
-                                {property.displayName ??
-                                    humanize(property.name)}
+                                {getObjectPropertyDisplayName(
+                                    actionNode,
+                                    property
+                                )}
                             </div>
                         ))}
                     </div>
@@ -1325,8 +1324,10 @@ function renderActionComponent(
                                     error: property.name === "@error"
                                 })}
                             >
-                                {property.displayName ??
-                                    humanize(property.name)}
+                                {getObjectPropertyDisplayName(
+                                    actionNode,
+                                    property
+                                )}
                             </div>
                         ))}
                     </div>

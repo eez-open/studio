@@ -212,12 +212,16 @@ export class GetVariableActionComponent extends ActionComponent {
 
     @observable variable: string;
 
-    getBody(flowContext: IFlowContext): React.ReactNode {
-        return (
-            <div className="outputs" data-connection-output-id="variable">
-                <pre>{this.variable}</pre>
-            </div>
-        );
+    @computed get outputs() {
+        return [
+            ...super.outputs,
+            {
+                name: "variable",
+                displayName: (component: GetVariableActionComponent) =>
+                    component.variable,
+                type: PropertyType.Any
+            }
+        ];
     }
 
     async execute(runningFlow: RunningFlow, dispose: (() => void) | undefined) {

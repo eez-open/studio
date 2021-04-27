@@ -40,7 +40,8 @@ import {
     getId,
     getClassInfo,
     isPropertyReadOnly,
-    isAnyPropertyReadOnly
+    isAnyPropertyReadOnly,
+    getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -61,10 +62,6 @@ import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
-
-function getPropertyName(propertyInfo: PropertyInfo) {
-    return propertyInfo.displayName ?? humanize(propertyInfo.name);
-}
 
 function getPropertyValue(objects: IEezObject[], propertyInfo: PropertyInfo) {
     if (objects.length === 0) {
@@ -270,7 +267,12 @@ class CodeEditorProperty extends React.Component<
         return (
             <React.Fragment>
                 {(showLabel == undefined || showLabel) && (
-                    <div>{getPropertyName(propertyInfo)}</div>
+                    <div>
+                        {getObjectPropertyDisplayName(
+                            this.props.objects[0],
+                            propertyInfo
+                        )}
+                    </div>
                 )}
                 <CodeEditor
                     ref={(ref: any) => (this.editor = ref)}
@@ -542,7 +544,7 @@ class ArrayProperty extends React.Component<PropertyProps> {
     }
 
     render() {
-        const { propertyInfo } = this.props;
+        const { objects, propertyInfo } = this.props;
 
         const addButton = (
             <button className="btn btn-primary" onClick={this.onAdd}>
@@ -569,7 +571,10 @@ class ArrayProperty extends React.Component<PropertyProps> {
                                     key={propertyInfo.name}
                                     className={propertyInfo.name}
                                 >
-                                    {getPropertyName(propertyInfo)}
+                                    {getObjectPropertyDisplayName(
+                                        objects[0],
+                                        propertyInfo
+                                    )}
                                 </th>
                             ))}
                     </tr>
@@ -677,7 +682,7 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
     }
 
     render() {
-        const { propertyInfo } = this.props;
+        const { objects, propertyInfo } = this.props;
 
         if (!propertyInfo.propertyGridCollapsable) {
             return (
@@ -724,7 +729,10 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
                                 size={18}
                                 className="triangle"
                             />
-                            {getPropertyName(propertyInfo)}
+                            {getObjectPropertyDisplayName(
+                                objects[0],
+                                propertyInfo
+                            )}
                         </div>
                     </div>
                 );
@@ -739,7 +747,7 @@ class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
                         size={18}
                         className="triangle"
                     />
-                    {getPropertyName(propertyInfo)}
+                    {getObjectPropertyDisplayName(objects[0], propertyInfo)}
                 </div>
                 <PropertyGrid
                     objects={this.props.objects.map(
@@ -766,17 +774,15 @@ class PropertyName extends React.Component<PropertyProps> {
     }
 
     render() {
-        const { propertyInfo } = this.props;
+        const { objects, propertyInfo } = this.props;
 
         if (propertyInfo.propertyGridCollapsable) {
             const enabled =
                 !propertyInfo.propertyGridCollapsableEnabled ||
-                propertyInfo.propertyGridCollapsableEnabled(
-                    this.props.objects[0]
-                );
+                propertyInfo.propertyGridCollapsableEnabled(objects[0]);
             const collapsed = propertyCollapsedStore.isCollapsed(
-                this.props.objects[0],
-                this.props.propertyInfo
+                objects[0],
+                propertyInfo
             );
 
             return (
@@ -792,17 +798,17 @@ class PropertyName extends React.Component<PropertyProps> {
                             className="triangle"
                         />
                     )}
-                    {getPropertyName(propertyInfo)}
+                    {getObjectPropertyDisplayName(objects[0], propertyInfo)}
                     {isAnyPropertyModified({
                         ...this.props,
-                        objects: this.props.objects.map(
+                        objects: objects.map(
                             object => (object as any)[propertyInfo.name]
                         )
                     }) && " ●"}
                 </div>
             );
         } else {
-            return getPropertyName(propertyInfo);
+            return getObjectPropertyDisplayName(objects[0], propertyInfo);
         }
     }
 }
@@ -1302,7 +1308,13 @@ class Property extends React.Component<PropertyProps> {
                         onChange={this.onChange}
                         readOnly={readOnly}
                     />
-                    <span>{" " + getPropertyName(propertyInfo)}</span>
+                    <span>
+                        {" " +
+                            getObjectPropertyDisplayName(
+                                this.props.objects[0],
+                                propertyInfo
+                            )}
+                    </span>
                 </label>
             );
         } else if (propertyInfo.type === PropertyType.GUID) {

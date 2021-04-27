@@ -21,7 +21,7 @@ import type {
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component } from "project-editor/flow/component";
-import { getId } from "project-editor/core/object";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -154,13 +154,7 @@ export class RuntimeFlowContext implements IFlowContext {
     dataContext: IDataContext;
     runningFlow: IRunningFlow | undefined;
 
-    get containerId() {
-        return this.document?.flow
-            ? `eez-flow-viewer-${getId(this.document?.flow.object)}-${
-                  this.frontFace ? "front" : "back"
-              }`
-            : "";
-    }
+    containerId = guid();
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext {
         return Object.assign(new RuntimeFlowContext(), this, {

@@ -39,7 +39,7 @@ export const enum ProjectType {
 
 interface PropertyInfo {
     name: string;
-    displayName?: string;
+    displayName?: string | ((object: IEezObject) => string);
     type: PropertyType;
     hideInPropertyGrid?:
         | boolean
