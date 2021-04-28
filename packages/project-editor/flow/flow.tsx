@@ -2,7 +2,10 @@ import React from "react";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import { action, computed, observable, runInAction } from "mobx";
-import { objectToClipboardData } from "project-editor/core/clipboard";
+import {
+    objectsToClipboardData,
+    objectToClipboardData
+} from "project-editor/core/clipboard";
 import {
     ClassInfo,
     cloneObject,
@@ -249,9 +252,10 @@ export abstract class Flow extends EezObject {
     objectsToClipboardData(objects: IEezObject[]) {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
-        // if (flowFragment.connectionLines.length === 0) {
-        //     return objectsToClipboardData(objects);
-        // }
+        if (flowFragment.connectionLines.length === 0) {
+            flowFragment.rewire();
+            return objectsToClipboardData(flowFragment.components);
+        }
         return objectToClipboardData(flowFragment);
     }
 

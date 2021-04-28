@@ -404,7 +404,9 @@ export class Page extends Flow {
                         components={this.components.filter(
                             component => !(component instanceof Widget)
                         )}
-                        flowContext={flowContext}
+                        flowContext={flowContext.overrideDataContext(
+                            this.dataContextOverridesObject
+                        )}
                     />
                 )}
             </>

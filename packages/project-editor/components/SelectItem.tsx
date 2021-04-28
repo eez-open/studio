@@ -78,7 +78,7 @@ class SelectItemDialog extends React.Component<{
     get collectionPath() {
         const { propertyInfo } = this.props;
         return propertyInfo.type === PropertyType.String
-            ? "gui/fonts"
+            ? "fonts"
             : propertyInfo.referencedObjectCollectionPath!;
     }
 

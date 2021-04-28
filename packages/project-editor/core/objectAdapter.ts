@@ -1536,7 +1536,7 @@ export class ListAdapter implements ITreeAdapter {
         if (dropItem) {
             event.preventDefault();
             event.stopPropagation();
-            this.dragAndDropManager.setDropEffect("copy");
+            this.dragAndDropManager.setDropEffect(event);
         }
 
         if (this.dropItem !== dropItem) {

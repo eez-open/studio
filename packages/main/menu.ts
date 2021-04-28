@@ -25,6 +25,10 @@ function showAboutBox(item: any, focusedWindow: any) {
     }
 }
 
+function isMacOs() {
+    return os.platform() === "darwin";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const darwinAppMenu: Electron.MenuItemConstructorOptions = {
@@ -203,7 +207,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
     }
 ];
 
-if (os.platform() != "darwin") {
+if (!isMacOs()) {
     fileMenuSubmenu.push(
         {
             type: "separator"
@@ -242,7 +246,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
             id: "undo",
             label: "Undo",
             accelerator: "CmdOrCtrl+Z",
-            role: "undo",
+            role: isMacOs() ? "undo" : undefined,
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     const win = findWindowByBrowserWindow(focusedWindow);
@@ -258,8 +262,8 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             id: "redo",
             label: "Redo",
-            accelerator: "Shift+CmdOrCtrl+Z",
-            role: "redo",
+            accelerator: "CmdOrCtrl+Y",
+            role: isMacOs() ? "redo" : undefined,
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     const win = findWindowByBrowserWindow(focusedWindow);
@@ -278,7 +282,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Cut",
             accelerator: "CmdOrCtrl+X",
-            role: "cut",
+            role: isMacOs() ? "cut" : undefined,
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("cut");
@@ -288,7 +292,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Copy",
             accelerator: "CmdOrCtrl+C",
-            role: "copy",
+            role: isMacOs() ? "copy" : undefined,
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("copy");
@@ -298,7 +302,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Paste",
             accelerator: "CmdOrCtrl+V",
-            role: "paste",
+            role: isMacOs() ? "paste" : undefined,
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("paste");
@@ -308,7 +312,7 @@ const editMenu: Electron.MenuItemConstructorOptions = {
         {
             label: "Delete",
             accelerator: "Delete",
-            role: "delete",
+            role: isMacOs() ? "delete" : undefined,
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("delete");
@@ -539,7 +543,7 @@ function buildViewMenu() {
         {
             label: "Toggle Full Screen",
             accelerator: (function () {
-                if (os.platform() == "darwin") {
+                if (isMacOs()) {
                     return "Ctrl+Command+F";
                 } else {
                     return "F11";
@@ -554,7 +558,7 @@ function buildViewMenu() {
         {
             label: "Toggle Developer Tools",
             accelerator: (function () {
-                if (os.platform() == "darwin") {
+                if (isMacOs()) {
                     return "Alt+Command+I";
                 } else {
                     return "Ctrl+Shift+I";
@@ -608,7 +612,7 @@ function buildViewMenu() {
 function buildMenuTemplate(win: IWindow | undefined) {
     var menuTemplate: Electron.MenuItemConstructorOptions[] = [];
 
-    if (os.platform() === "darwin") {
+    if (isMacOs()) {
         menuTemplate.push(darwinAppMenu);
     }
 
@@ -618,7 +622,7 @@ function buildMenuTemplate(win: IWindow | undefined) {
 
     menuTemplate.push(buildViewMenu());
 
-    if (os.platform() == "darwin") {
+    if (isMacOs()) {
         menuTemplate.push(darwinWindowMenu);
     } else {
         menuTemplate.push(helpMenu);
@@ -649,7 +653,7 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
         console.log(accelerator);
         let keybinding = accelerator.toString();
 
-        if (os.platform() === "darwin") {
+        if (isMacOs()) {
             keybinding = keybinding.replace("CmdOrCtrl", "Meta");
             keybinding = keybinding.replace("CommandOrControl", "Meta");
         } else {

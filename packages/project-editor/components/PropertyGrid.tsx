@@ -305,6 +305,12 @@ class ThemedColorInput extends React.Component<{
     @bind
     onDragOver(event: React.DragEvent) {
         event.preventDefault();
+        event.stopPropagation();
+
+        var data = getEezStudioDataFromDragEvent(this.context, event);
+        if (data && data.objectClassName === "Color" && data.object) {
+            event.dataTransfer.dropEffect = "copy";
+        }
     }
 
     @bind
