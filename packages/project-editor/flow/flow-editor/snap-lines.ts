@@ -3,6 +3,7 @@ import { Rect } from "eez-studio-shared/geometry";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { _each } from "eez-studio-shared/algorithm";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,9 +58,7 @@ export function findSnapLines(
                 }
             }
 
-            for (let i = 0; i < node.children.length; i++) {
-                findSnapLinesInNode((node.children as ITreeObjectAdapter[])[i]);
-            }
+            _each(node.children, (item: any) => findSnapLinesInNode(item));
         }
 
         findSnapLinesInNode(tree);

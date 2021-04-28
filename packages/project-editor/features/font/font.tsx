@@ -1001,9 +1001,9 @@ export class Glyph extends EezObject {
             for (let x = 0; x < this.glyphBitmap.width; x++) {
                 for (let y = 0; y < this.glyphBitmap.height; y++) {
                     const i = (y * this.glyphBitmap.width + x) * 4;
-                    buffer[i + 0] = this.getPixel(x, y);
-                    buffer[i + 1] = this.getPixel(x, y);
-                    buffer[i + 2] = this.getPixel(x, y);
+                    buffer[i + 0] = 255 - this.getPixel(x, y);
+                    buffer[i + 1] = 255 - this.getPixel(x, y);
+                    buffer[i + 2] = 255 - this.getPixel(x, y);
                     buffer[i + 3] = 255;
                 }
             }

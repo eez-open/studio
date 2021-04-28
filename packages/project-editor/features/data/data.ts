@@ -183,25 +183,22 @@ export class DataContext implements IDataContext {
     }
 
     getDataItemValue(
-        dataItemId: string
+        dataItem: DataItem | undefined
     ): {
-        dataItem: DataItem | undefined;
         hasValue: boolean;
         value: any;
     } {
         if (this.parentDataContext) {
-            return this.parentDataContext.getDataItemValue(dataItemId);
+            return this.parentDataContext.getDataItemValue(dataItem);
         }
 
-        const dataItem = findDataItem(this.project, dataItemId);
         if (dataItem) {
             return {
-                dataItem,
-                hasValue: this.dataItemValues.has(dataItemId),
-                value: this.dataItemValues.get(dataItemId)
+                hasValue: this.dataItemValues.has(dataItem.name),
+                value: this.dataItemValues.get(dataItem.name)
             };
         } else {
-            return { dataItem: undefined, hasValue: false, value: undefined };
+            return { hasValue: false, value: undefined };
         }
     }
 
@@ -299,9 +296,8 @@ export class DataContext implements IDataContext {
         if (this.localVariables && this.localVariables.has(dataItemId)) {
             value = this.localVariables.get(dataItemId);
         } else {
-            const { dataItem, hasValue, value: value_ } = this.getDataItemValue(
-                dataItemId
-            );
+            const dataItem = this.findDataItem(dataItemId);
+            const { hasValue, value: value_ } = this.getDataItemValue(dataItem);
 
             if (dataItem) {
                 if (hasValue) {

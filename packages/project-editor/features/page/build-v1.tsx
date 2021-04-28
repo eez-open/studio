@@ -1142,37 +1142,46 @@ function buildWidget(object: Widget | Page) {
     let type: number;
     if (object instanceof Widget) {
         let widget = object;
-        if (widget.type == "Container") {
+
+        let widgetType = widget.type;
+        if (widgetType.endsWith("Widget")) {
+            widgetType = widgetType.substring(
+                0,
+                widgetType.length - "Widget".length
+            );
+        }
+
+        if (widgetType == "Container") {
             type = WIDGET_TYPE_CONTAINER;
-        } else if (widget.type == "List") {
+        } else if (widgetType == "List") {
             type = WIDGET_TYPE_LIST;
-        } else if (widget.type == "Select") {
+        } else if (widgetType == "Select") {
             type = WIDGET_TYPE_SELECT;
-        } else if (widget.type == "DisplayData") {
+        } else if (widgetType == "DisplayData") {
             type = WIDGET_TYPE_DISPLAY_DATA;
-        } else if (widget.type == "Text") {
+        } else if (widgetType == "Text") {
             type = WIDGET_TYPE_TEXT;
-        } else if (widget.type == "MultilineText") {
+        } else if (widgetType == "MultilineText") {
             type = WIDGET_TYPE_MULTILINE_TEXT;
-        } else if (widget.type == "Rectangle") {
+        } else if (widgetType == "Rectangle") {
             type = WIDGET_TYPE_RECTANGLE;
-        } else if (widget.type == "Bitmap") {
+        } else if (widgetType == "Bitmap") {
             type = WIDGET_TYPE_BITMAP;
-        } else if (widget.type == "Button") {
+        } else if (widgetType == "Button") {
             type = WIDGET_TYPE_BUTTON;
-        } else if (widget.type == "ToggleButton") {
+        } else if (widgetType == "ToggleButton") {
             type = WIDGET_TYPE_TOGGLE_BUTTON;
-        } else if (widget.type == "ButtonGroup") {
+        } else if (widgetType == "ButtonGroup") {
             type = WIDGET_TYPE_BUTTON_GROUP;
-        } else if (widget.type == "BarGraph") {
+        } else if (widgetType == "BarGraph") {
             type = WIDGET_TYPE_BAR_GRAPH;
-        } else if (widget.type == "YTGraph") {
+        } else if (widgetType == "YTGraph") {
             type = WIDGET_TYPE_YT_GRAPH;
-        } else if (widget.type == "UpDown") {
+        } else if (widgetType == "UpDown") {
             type = WIDGET_TYPE_UP_DOWN;
-        } else if (widget.type == "ListGraph") {
+        } else if (widgetType == "ListGraph") {
             type = WIDGET_TYPE_LIST_GRAPH;
-        } else if (widget.type == "LayoutView") {
+        } else if (widgetType == "LayoutView") {
             type = WIDGET_TYPE_CUSTOM;
         } else {
             type = WIDGET_TYPE_NONE;
