@@ -67,7 +67,8 @@ import {
     makeStylePropertyInfo,
     makeTextPropertyInfo,
     migrateStyleProperty,
-    EmbeddedWidget
+    EmbeddedWidget,
+    makeToggablePropertyToInput
 } from "project-editor/flow/component";
 
 import {
@@ -3645,5 +3646,135 @@ export class CanvasWidget extends EmbeddedWidget {
 }
 
 registerClass(CanvasWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+class TextInputRunningState {
+    constructor(value: string) {
+        this.value = value;
+    }
+
+    @observable value: string;
+}
+
+export class TextInputWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        properties: [
+            {
+                name: "password",
+                type: PropertyType.Boolean
+            },
+            makeToggablePropertyToInput({
+                name: "value",
+                type: PropertyType.String
+            })
+        ],
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 160,
+            height: 32,
+            title: ""
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M12 3a3 3 0 0 0 -3 3v12a3 3 0 0 0 3 3"></path>
+                <path d="M6 3a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3"></path>
+                <path d="M13 7h7a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-7"></path>
+                <path d="M5 7h-1a1 1 0 0 0 -1 1v8a1 1 0 0 0 1 1h1"></path>
+                <path d="M17 12h.01"></path>
+                <path d="M13 12h.01"></path>
+            </svg>
+        ),
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD
+    });
+
+    @observable password: boolean;
+
+    @computed get outputs() {
+        return [
+            ...super.outputs,
+            {
+                name: "value",
+                type: PropertyType.String
+            }
+        ];
+    }
+
+    render(flowContext: IFlowContext): React.ReactNode {
+        const runningState = flowContext.runningFlow?.getComponentRunningState<TextInputRunningState>(
+            this
+        );
+
+        let value = runningState?.value ?? "";
+
+        return (
+            <>
+                <input
+                    type="text"
+                    value={value}
+                    onChange={event => {
+                        const value = event.target.value;
+                        if (runningState && runningState.value != value) {
+                            runInAction(() => (runningState.value = value));
+
+                            (flowContext.runningFlow as
+                                | RunningFlow
+                                | undefined)?.propagateValue(
+                                this,
+                                "value",
+                                value
+                            );
+                        }
+                    }}
+                ></input>
+                {super.render(flowContext)}
+            </>
+        );
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        let runningState = runningFlow.getComponentRunningState<TextInputRunningState>(
+            this
+        );
+
+        let value: string;
+        const inputValue = runningFlow.getInputValue(this, "value");
+        if (inputValue) {
+            value = inputValue.value ?? "";
+        } else {
+            value = "";
+        }
+
+        if (!runningState) {
+            runningState = new TextInputRunningState(value);
+            runningFlow.setComponentRunningState(this, runningState);
+        } else {
+            if (value != runningState.value) {
+                runInAction(() => (runningState.value = value));
+            }
+        }
+
+        return undefined;
+    }
+}
+
+registerClass(TextInputWidget);
+
+////////////////////////////////////////////////////////////////////////////////
 
 import "project-editor/flow/widgets/plotly";
