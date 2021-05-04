@@ -1,4 +1,12 @@
-import { observable, computed, reaction, runInAction, action, autorun, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    reaction,
+    runInAction,
+    action,
+    autorun,
+    toJS
+} from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";
 
@@ -7,7 +15,11 @@ import { getConnection, Connection } from "instrument/window/connection";
 import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { compareVersions } from "eez-studio-shared/util";
-import { FIRMWARE_RELEASES_URL, MODULE_FIRMWARE_RELEASES_URL } from "instrument/bb3/conf";
+import {
+    FIRMWARE_RELEASES_URL,
+    MODULE_FIRMWARE_RELEASES_URL,
+    PINOUT_PAGES
+} from "instrument/bb3/conf";
 import { removeQuotes, useConnection } from "instrument/bb3/helpers";
 import { Module, ModuleFirmwareRelease } from "instrument/bb3/objects/Module";
 import {
@@ -16,9 +28,15 @@ import {
     getScriptsOnTheInstrument
 } from "instrument/bb3/objects/Script";
 import { ScriptsCatalog } from "instrument/bb3/objects/ScriptsCatalog";
-import { List, IListOnInstrument, getListsOnTheInstrument } from "instrument/bb3/objects/List";
+import {
+    List,
+    IListOnInstrument,
+    getListsOnTheInstrument
+} from "instrument/bb3/objects/List";
 
 import { IHistoryItem } from "instrument/window/history/item";
+
+import * as notification from "eez-studio-ui/notification";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +59,10 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
                 if (typeof release.tag_name == "string") {
                     if (
                         !latestReleaseVersion ||
-                        compareVersions(release.tag_name, latestReleaseVersion) > 1
+                        compareVersions(
+                            release.tag_name,
+                            latestReleaseVersion
+                        ) > 1
                     ) {
                         latestReleaseVersion = release.tag_name;
                     }
@@ -108,7 +129,9 @@ async function getModulesInfoFromInstrument(
     if (compareVersions(firmwareVersion, "1.0") > 0) {
         const numSlots = await connection.query("SYST:SLOT?");
         for (let i = 0; i < numSlots; i++) {
-            const moduleType = removeQuotes(await connection.query(`SYST:SLOT:MOD? ${i + 1}`));
+            const moduleType = removeQuotes(
+                await connection.query(`SYST:SLOT:MOD? ${i + 1}`)
+            );
             if (moduleType) {
                 const moduleRevision = removeQuotes(
                     await connection.query(`SYST:SLOT:VERS? ${i + 1}`)
@@ -180,6 +203,8 @@ export class BB3Instrument {
     @observable scriptsOnInstrumentFetchError: boolean = false;
     @observable listsOnInstrumentFetchError: boolean = false;
 
+    @observable uploadPinoutPagesButtonEnabled: boolean = true;
+
     terminate: () => void;
 
     constructor(
@@ -187,7 +212,8 @@ export class BB3Instrument {
         public appStore: InstrumentAppStore,
         instrument: InstrumentObject
     ) {
-        const bb3Properties = instrument.custom[BB3Instrument.CUSTOM_PROPERTY_NAME];
+        const bb3Properties =
+            instrument.custom[BB3Instrument.CUSTOM_PROPERTY_NAME];
 
         if (bb3Properties?.timeOfLastRefresh) {
             this.timeOfLastRefresh = new Date(bb3Properties.timeOfLastRefresh);
@@ -248,14 +274,19 @@ export class BB3Instrument {
                           moduleType: module.moduleType,
                           moduleRevision: module.moduleRevision,
                           firmwareVersion: module.firmwareVersion,
-                          allReleases: module.allReleases.map(release => toJS(release))
+                          allReleases: module.allReleases.map(release =>
+                              toJS(release)
+                          )
                       }))
                     : [],
                 scriptsOnInstrument: toJS(this.scriptsOnInstrument),
                 listsOnInstrument: toJS(this.listsOnInstrument)
             }),
             state => {
-                instrument.setCustomProperty(BB3Instrument.CUSTOM_PROPERTY_NAME, state);
+                instrument.setCustomProperty(
+                    BB3Instrument.CUSTOM_PROPERTY_NAME,
+                    state
+                );
             }
         );
 
@@ -267,7 +298,8 @@ export class BB3Instrument {
 
         const dispose5 = autorun(() => {
             if (appStore.history.items.length > 0) {
-                const historyItem = appStore.history.items[appStore.history.items.length - 1];
+                const historyItem =
+                    appStore.history.items[appStore.history.items.length - 1];
                 const latestHistoryItem = this.latestHistoryItem;
                 if (
                     !latestHistoryItem ||
@@ -302,7 +334,8 @@ export class BB3Instrument {
         const CONF_REFRESH_EVERY_MS = 24 * 60 * 60 * 1000;
         return (
             !this.timeOfLastRefresh ||
-            new Date().getTime() - this.timeOfLastRefresh.getTime() > CONF_REFRESH_EVERY_MS
+            new Date().getTime() - this.timeOfLastRefresh.getTime() >
+                CONF_REFRESH_EVERY_MS
         );
     }
 
@@ -331,7 +364,9 @@ export class BB3Instrument {
                 let listsOnInstrument: IListOnInstrument[] | undefined;
 
                 try {
-                    firmwareVersion = removeQuotes(await connection.query("SYST:CPU:FIRM?"));
+                    firmwareVersion = removeQuotes(
+                        await connection.query("SYST:CPU:FIRM?")
+                    );
                 } catch (err) {
                     console.error("failed to get firmware version", err);
                 }
@@ -354,13 +389,21 @@ export class BB3Instrument {
                             this.scriptsOnInstrument
                         );
                     } catch (err) {
-                        console.error("failed to get scripts on the instrument info", err);
+                        console.error(
+                            "failed to get scripts on the instrument info",
+                            err
+                        );
                     }
 
                     try {
-                        listsOnInstrument = await getListsOnTheInstrument(connection);
+                        listsOnInstrument = await getListsOnTheInstrument(
+                            connection
+                        );
                     } catch (err) {
-                        console.error("failed to get lists on the instrument info", err);
+                        console.error(
+                            "failed to get lists on the instrument info",
+                            err
+                        );
                     }
                 }
                 runInAction(() => {
@@ -396,14 +439,17 @@ export class BB3Instrument {
                     scripts.push(script);
                     script.scriptOnInstrument = undefined;
                 } else {
-                    scripts.push(new Script(this, undefined, catalogScriptItem));
+                    scripts.push(
+                        new Script(this, undefined, catalogScriptItem)
+                    );
                 }
             }
         }
 
         for (let scriptOnInstrument of scriptsOnInstrument) {
             const script = scripts.find(
-                script => script.catalogScriptItem?.name == scriptOnInstrument.name
+                script =>
+                    script.catalogScriptItem?.name == scriptOnInstrument.name
             );
 
             if (script) {
@@ -425,17 +471,23 @@ export class BB3Instrument {
 
     @computed
     get allScriptsCollection() {
-        return this.scripts.slice().sort((a, b) => stringCompare(a.name, b.name));
+        return this.scripts
+            .slice()
+            .sort((a, b) => stringCompare(a.name, b.name));
     }
 
     @computed
     get catalogScriptsCollection() {
-        return this.allScriptsCollection.filter(script => script.catalogScriptItem);
+        return this.allScriptsCollection.filter(
+            script => script.catalogScriptItem
+        );
     }
 
     @computed
     get instrumentScriptsCollection() {
-        return this.allScriptsCollection.filter(script => script.scriptOnInstrument);
+        return this.allScriptsCollection.filter(
+            script => script.scriptOnInstrument
+        );
     }
 
     @computed
@@ -465,7 +517,9 @@ export class BB3Instrument {
     }
 
     @computed get canInstallAllScripts() {
-        return this.notInstalledCatalogScriptsCollection.length > 0 && !this.busy;
+        return (
+            this.notInstalledCatalogScriptsCollection.length > 0 && !this.busy
+        );
     }
 
     @action setBusy(value: boolean) {
@@ -476,7 +530,8 @@ export class BB3Instrument {
         if (this.canInstallAllScripts) {
             this.setBusy(true);
             try {
-                for (const script of this.notInstalledCatalogScriptsCollection) {
+                for (const script of this
+                    .notInstalledCatalogScriptsCollection) {
                     await script.install();
                 }
             } finally {
@@ -500,7 +555,9 @@ export class BB3Instrument {
         }
 
         for (let listOnInstrument of listsOnInstrument) {
-            const list = lists.find(list => list.studioList?.name == listOnInstrument.name);
+            const list = lists.find(
+                list => list.studioList?.name == listOnInstrument.name
+            );
             if (list) {
                 list.listOnInstrument = listOnInstrument;
             } else {
@@ -513,7 +570,9 @@ export class BB3Instrument {
 
     @computed
     get sortedLists() {
-        return this.lists.slice().sort((a, b) => stringCompare(a.baseName, b.baseName));
+        return this.lists
+            .slice()
+            .sort((a, b) => stringCompare(a.baseName, b.baseName));
     }
 
     @computed
@@ -527,7 +586,9 @@ export class BB3Instrument {
     get canDownloadAllLists() {
         return (
             !this.busy &&
-            this.lists.filter(list => list.instrumentVersionNewer || !list.studioList).length > 0
+            this.lists.filter(
+                list => list.instrumentVersionNewer || !list.studioList
+            ).length > 0
         );
     }
 
@@ -550,7 +611,9 @@ export class BB3Instrument {
     get canUploadAllLists() {
         return (
             !this.busy &&
-            this.lists.filter(list => list.studioVersionNewer || !list.listOnInstrument).length > 0
+            this.lists.filter(
+                list => list.studioVersionNewer || !list.listOnInstrument
+            ).length > 0
         );
     }
 
@@ -569,5 +632,94 @@ export class BB3Instrument {
                 this.setBusy(false);
             }
         }
+    };
+
+    async pngToJpg(url: string) {
+        return new Promise<ArrayBuffer>((resolve, reject) => {
+            const img = new Image();
+
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d")!;
+                canvas.height = img.naturalHeight;
+                canvas.width = img.naturalWidth;
+                ctx.drawImage(img, 0, 0);
+                canvas.toBlob(
+                    blob => {
+                        resolve(blob!.arrayBuffer());
+                    },
+                    "image/jpeg",
+                    1.0
+                );
+            };
+
+            img.onerror = err => {
+                console.error(err);
+                reject(`Failed to load pinout image from "${url}"!`);
+            };
+
+            img.src = url;
+        });
+    }
+
+    uploadPinoutPages = async () => {
+        await useConnection(
+            {
+                bb3Instrument: this,
+                setBusy: action((value: boolean) => {
+                    runInAction(() => {
+                        this.uploadPinoutPagesButtonEnabled = !value;
+                    });
+                })
+            },
+            async connection => {
+                const rootFolders = await connection.query("MMEM:CAT?");
+                if (rootFolders.indexOf(`"Docs,FOLD,0"`) === -1) {
+                    await connection.command(`MMEM:MDIR "/Docs"`);
+                }
+
+                const progressToastId = notification.info(
+                    "Uploading pinput pages ...",
+                    {
+                        autoClose: false,
+                        hideProgressBar: false
+                    }
+                );
+
+                for (let i = 0; i < PINOUT_PAGES.length; i++) {
+                    notification.update(progressToastId, {
+                        render: `Downloading ${PINOUT_PAGES[i].fileName}...`
+                    });
+
+                    const image = await this.pngToJpg(PINOUT_PAGES[i].url);
+
+                    const uploadInstructions = Object.assign(
+                        {},
+                        connection.instrument.defaultFileUploadInstructions,
+                        {
+                            sourceData: image,
+                            sourceFileType: "application/octet-stream",
+                            destinationFileName: PINOUT_PAGES[i].fileName,
+                            destinationFolderPath: "/Docs"
+                        }
+                    );
+
+                    notification.update(progressToastId, {
+                        render: `Uploading ${PINOUT_PAGES[i].fileName} ...`
+                    });
+
+                    await new Promise<void>((resolve, reject) =>
+                        connection.upload(uploadInstructions, resolve, reject)
+                    );
+                }
+
+                notification.update(progressToastId, {
+                    type: notification.SUCCESS,
+                    render: `Done.`,
+                    autoClose: 1000
+                });
+            },
+            false
+        );
     };
 }

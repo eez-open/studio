@@ -1861,12 +1861,40 @@ export class FontEditor
     @action.bound
     onAddGlyph() {
         const font = this.props.font;
-        let newGlyph = cloneObject(
-            this.context,
-            font.glyphs[font.glyphs.length - 1]
-        ) as Glyph;
-        newGlyph.encoding = newGlyph.encoding + 1;
+
+        let newGlyph: Glyph;
+
+        if (font.glyphs.length > 0) {
+            newGlyph = cloneObject(
+                this.context,
+                font.glyphs[font.glyphs.length - 1]
+            ) as Glyph;
+
+            newGlyph.encoding = newGlyph.encoding + 1;
+        } else {
+            newGlyph = loadObject(
+                this.context,
+                undefined,
+                {
+                    encoding: 128,
+                    x: 0,
+                    y: 0,
+                    width: 1,
+                    height: 1,
+                    dx: 1,
+                    glyphBitmap: {
+                        width: 1,
+                        height: 1,
+                        pixelArray: [0]
+                    },
+                    source: font.source
+                },
+                Glyph
+            ) as Glyph;
+        }
+
         newGlyph = this.context.addObject(font.glyphs, newGlyph) as Glyph;
+
         this._selectedGlyph = newGlyph;
     }
 

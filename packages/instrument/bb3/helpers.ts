@@ -52,6 +52,38 @@ export function fetchFileUrl(fileUrl: string) {
     });
 }
 
+export function fetchFileAsDataUrl(fileUrl: string) {
+    return new Promise<IFetchedFile>((resolve, reject) => {
+        let req = new XMLHttpRequest();
+        req.responseType = "blob";
+        req.open("GET", fileUrl);
+
+        req.addEventListener("load", () => {
+            const decodedFileUri = decodeURIComponent(fileUrl);
+            const lastPathSeparatorIndex = decodedFileUri.lastIndexOf("/");
+            const fileName = decodedFileUri.substr(lastPathSeparatorIndex + 1);
+
+            const reader = new FileReader();
+
+            reader.addEventListener("loadend", function () {
+                if (!reader.result) {
+                    reject("no file data");
+                } else {
+                    resolve({ fileName, fileData: reader.result });
+                }
+            });
+
+            reader.readAsDataURL(req.response);
+        });
+
+        req.addEventListener("error", error => {
+            reject(error);
+        });
+
+        req.send();
+    });
+}
+
 export async function useConnection(
     obj: {
         bb3Instrument: BB3Instrument;

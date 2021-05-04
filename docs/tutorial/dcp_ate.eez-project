@@ -9633,6 +9633,15 @@
           "wireID": "def875f1-ed3f-43c9-9091-8a6c9a8f2025",
           "instrument": "bb3_1",
           "scpi": ":SENSE:VOLT:RANG 2, (@304)\n*OPC?"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -130,
+          "top": -123,
+          "width": 114,
+          "height": 61,
+          "wireID": "25dfb44f-ca12-4298-b09b-dd8cad0fc955",
+          "value": "0.1606"
         }
       ],
       "connectionLines": [
@@ -9641,12 +9650,6 @@
           "output": "@seqout",
           "target": "f15899e7-1c9d-4f30-bc14-588c6d80584d",
           "input": "@seqin"
-        },
-        {
-          "source": "fe409e6d-d10f-4ea0-8392-d7ce2995b54b",
-          "output": "volt",
-          "target": "bc529e44-3462-4706-db52-b19ce207370d",
-          "input": "A"
         },
         {
           "source": "bc529e44-3462-4706-db52-b19ce207370d",
@@ -9779,6 +9782,18 @@
           "output": "@seqout",
           "target": "117994fc-790b-4c28-e33f-fd82c8b76a94",
           "input": "@seqin"
+        },
+        {
+          "source": "fe409e6d-d10f-4ea0-8392-d7ce2995b54b",
+          "output": "volt",
+          "target": "25dfb44f-ca12-4298-b09b-dd8cad0fc955",
+          "input": "@seqin"
+        },
+        {
+          "source": "25dfb44f-ca12-4298-b09b-dd8cad0fc955",
+          "output": "value",
+          "target": "bc529e44-3462-4706-db52-b19ce207370d",
+          "input": "A"
         }
       ],
       "name": "calibration_voltage",
@@ -10644,7 +10659,7 @@
           "asInputProperties": [
             "A"
           ],
-          "B": "0.043",
+          "B": "0.023",
           "C": "0.047",
           "operator": "BETWEEN"
         },
@@ -11751,8 +11766,8 @@
           "height": 31,
           "wireID": "6f2c97c8-73cc-4b75-b253-b9fb97a01bbd",
           "connection": "envox.hr",
-          "user": "ADD_USER_NAME",
-          "password": "ADD_USER_PASSWORD",
+          "user": "martin",
+          "password": "V5gHg3FX",
           "host": "envox.hr",
           "port": 5432,
           "database": "bb3_ate",
