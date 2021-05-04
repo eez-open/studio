@@ -47,7 +47,7 @@ export const ModulesSection = observer(
                     </table>
                     {isConnected && (
                         <button
-                            className="btn btn-sm btn-primary"
+                            className="btn btn-primary"
                             onClick={bb3Instrument.uploadPinoutPages}
                             style={{ marginTop: 10 }}
                             disabled={
