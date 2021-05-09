@@ -1246,8 +1246,8 @@ export class CommentActionComponent extends ActionComponent {
                         {typeof classInfo.icon == "string" ? (
                             <img src={classInfo.icon} />
                         ) : (
-                            classInfo.icon
-                        )}
+                                classInfo.icon
+                            )}
                     </div>
                 </div>
                 <div className="body">
@@ -1273,10 +1273,10 @@ registerClass(CommentActionComponent);
 export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            {
+            makeToggablePropertyToInput({
                 name: "milliseconds",
                 type: PropertyType.Number
-            }
+            })
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
@@ -1297,8 +1297,9 @@ export class DelayActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
+        let milliseconds = runningFlow.getPropertyValue(this, "milliseconds");
         await new Promise<void>(resolve =>
-            setTimeout(resolve, this.milliseconds ?? 0)
+            setTimeout(resolve, milliseconds ?? 0)
         );
         return undefined;
     }
@@ -1387,7 +1388,7 @@ registerClass(CatchErrorActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 class CounterRunningState {
-    constructor(public value: number) {}
+    constructor(public value: number) { }
 }
 
 export class CounterActionComponent extends ActionComponent {
