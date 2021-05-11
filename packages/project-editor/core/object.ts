@@ -580,6 +580,10 @@ export function getEditorComponent(
 }
 
 export function getLabel(object: IEezObject): string {
+    if (typeof object === "string") {
+        return object;
+    }
+
     const label = getClassInfo(object).label;
     if (label) {
         return label(object);
