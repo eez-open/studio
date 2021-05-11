@@ -244,14 +244,14 @@ export class ScpiActionComponent extends ActionComponent {
             for (let i = 0; i < lines.length; i++) {
                 const commandOrQueriesLine = lines[i];
                 const commandOrQueries = commandOrQueriesLine.split(";");
+                let offset = 0;
                 for (let j = 0; j < commandOrQueries.length; j++) {
                     const commandOrQuery = commandOrQueries[j].trim();
 
                     let command = commandOrQuery;
-                    let str = command;
                     ScpiActionComponent.PARAMS_REGEXP.lastIndex = 0;
                     while (true) {
-                        let matches = str.match(
+                        let matches = command.substring(offset).match(
                             ScpiActionComponent.PARAMS_REGEXP
                         );
                         if (!matches) {
@@ -269,13 +269,14 @@ export class ScpiActionComponent extends ActionComponent {
                         ) {
                             const value = inputPropertyValue.value;
 
-                            const i = matches.index!;
+                            const i = offset + matches.index!;
 
                             command =
                                 command.substring(0, i) +
                                 value +
                                 command.substring(i + matches[1].length + 2);
-                            str = command.substring(i + value.length);
+
+                            offset = i + value.length;
                         } else {
                             throw `missing scpi parameter ${input}`;
                         }

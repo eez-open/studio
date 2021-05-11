@@ -874,7 +874,8 @@ export class ReadSettingActionComponent extends ActionComponent {
         properties: [
             makeToggablePropertyToInput({
                 name: "key",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             })
         ],
         icon: (
@@ -932,7 +933,8 @@ export class WriteSettingsActionComponent extends ActionComponent {
         properties: [
             makeToggablePropertyToInput({
                 name: "key",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             })
         ],
         icon: (

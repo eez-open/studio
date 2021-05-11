@@ -349,6 +349,9 @@ export class BB3Instrument {
                 bb3Instrument: this,
                 setBusy: (value: boolean) => {
                     this.setRefreshInProgress(value);
+                    runInAction(() => {
+                        this.uploadPinoutPagesButtonEnabled = !value;
+                    });
                 }
             },
             async connection => {

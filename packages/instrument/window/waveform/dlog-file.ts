@@ -26,7 +26,9 @@ export enum Unit {
     UNIT_MICRO_FARAD,
     UNIT_NANO_FARAD,
     UNIT_PICO_FARAD,
-    UNIT_MINUTE
+    UNIT_MINUTE,
+    UNIT_VOLT_AMPERE,
+    UNIT_VOLT_AMPERE_REACTIVE
 }
 
 enum Fields {
@@ -89,8 +91,8 @@ export enum DataType {
     DATA_TYPE_FLOAT, // supported
     DATA_TYPE_FLOAT_BE,
     DATA_TYPE_DOUBLE,
-    DATA_TYPE_DOUBLE_BE,
-};
+    DATA_TYPE_DOUBLE_BE
+}
 
 export enum ScaleType {
     LINEAR,
@@ -285,7 +287,9 @@ export function decodeDlog<UnitType>(
             } else if (fieldId === Fields.FIELD_ID_DURATION) {
                 duration = readDouble(offset);
                 offset += 8;
-            } else if (fieldId === Fields.FIELD_ID_DATA_CONTAINS_SAMPLE_VALIDITY_BIT) {
+            } else if (
+                fieldId === Fields.FIELD_ID_DATA_CONTAINS_SAMPLE_VALIDITY_BIT
+            ) {
                 dataContainsSampleValidityBit = !!readUInt8(offset);
                 offset++;
             } else if (fieldId === Fields.FIELD_ID_DATA_SIZE) {
@@ -537,7 +541,8 @@ export function decodeDlog<UnitType>(
     const bookmarks: DlogBookmark[] = [];
     if (dataSize != 0) {
         let offset = dataOffset + dataSize * numBytesPerRow;
-        let textOffset = offset + (bookmarksSize + 1) * NUM_BYTES_PER_BOOKMARK_IN_INDEX;
+        let textOffset =
+            offset + (bookmarksSize + 1) * NUM_BYTES_PER_BOOKMARK_IN_INDEX;
         for (let i = 0; i < bookmarksSize; i++) {
             let sampleIndex = readUInt32(offset);
             offset += 4;
@@ -547,7 +552,10 @@ export function decodeDlog<UnitType>(
 
             let textIndexEnd = readUInt32(offset + 4);
 
-            let text = readString(textOffset + textIndexStart, textOffset + textIndexEnd);
+            let text = readString(
+                textOffset + textIndexStart,
+                textOffset + textIndexEnd
+            );
             bookmarks.push({
                 value: sampleIndex * xAxis.step,
                 text
@@ -556,7 +564,8 @@ export function decodeDlog<UnitType>(
     }
 
     //
-    let length = dataSize != 0 ? dataSize : (data.length - dataOffset) / numBytesPerRow;
+    let length =
+        dataSize != 0 ? dataSize : (data.length - dataOffset) / numBytesPerRow;
 
     if (!yAxisDefined) {
         yAxis = yAxes[0];
@@ -565,19 +574,27 @@ export function decodeDlog<UnitType>(
     const getValue = (rowIndex: number, columnIndex: number) => {
         let offset = dataOffset + rowIndex * numBytesPerRow;
 
-        if (!hasIsValidBit || (readUInt8(offset) & 0x80)) {
+        if (!hasIsValidBit || readUInt8(offset) & 0x80) {
             offset += columnDataIndexes[columnIndex];
 
             const dataType = yAxes[columnIndex].dataType;
 
             if (dataType == DataType.DATA_TYPE_BIT) {
-                return readUInt8(offset) & columnBitMask[columnIndex] ? 1.0 : 0.0;
+                return readUInt8(offset) & columnBitMask[columnIndex]
+                    ? 1.0
+                    : 0.0;
             }
             if (dataType == DataType.DATA_TYPE_INT16_BE) {
-                return yAxis.transformOffset + yAxis.transformScale * readInt16BE(offset);
+                return (
+                    yAxis.transformOffset +
+                    yAxis.transformScale * readInt16BE(offset)
+                );
             }
             if (dataType == DataType.DATA_TYPE_INT24_BE) {
-                return yAxis.transformOffset + yAxis.transformScale * readInt24BE(offset);
+                return (
+                    yAxis.transformOffset +
+                    yAxis.transformScale * readInt24BE(offset)
+                );
             }
 
             if (yAxis.dataType == DataType.DATA_TYPE_FLOAT) {
