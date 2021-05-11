@@ -1,0 +1,79 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v2",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "data": [],
+  "actions": [],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "TextInputWidget",
+          "left": 73,
+          "top": 36,
+          "width": 160,
+          "height": 32,
+          "wireID": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
+          "asInputProperties": []
+        },
+        {
+          "type": "TextWidget",
+          "left": 319,
+          "top": 36,
+          "width": 146,
+          "height": 32,
+          "wireID": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
+          "asInputProperties": [
+            "data"
+          ],
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": ""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 58,
+          "top": -74,
+          "width": 114,
+          "height": 61,
+          "wireID": "fad891f0-6fcd-4f3b-d412-f39d4a282728",
+          "value": "\"Hello, world!\""
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
+          "output": "value",
+          "target": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
+          "input": "data"
+        },
+        {
+          "source": "fad891f0-6fcd-4f3b-d412-f39d4a282728",
+          "output": "value",
+          "target": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
+          "input": "data"
+        }
+      ],
+      "name": "Page",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272
+    }
+  ],
+  "colors": [],
+  "themes": []
+}
