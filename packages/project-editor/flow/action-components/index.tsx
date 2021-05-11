@@ -595,7 +595,10 @@ export class CompareActionComponent extends ActionComponent {
                 name: "B",
                 displayName: "B",
                 type: PropertyType.JSON,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (object: CompareActionComponent) => {
+                    return object.operator == "NOT";
+                }
             }),
             makeToggablePropertyToInput({
                 name: "C",
@@ -616,8 +619,10 @@ export class CompareActionComponent extends ActionComponent {
                     { id: "<=", label: "<=" },
                     { id: ">=", label: ">=" },
                     { id: "<>", label: "<>" },
+                    { id: "NOT", label: "NOT" },
                     { id: "AND", label: "AND" },
                     { id: "OR", label: "OR" },
+                    { id: "XOR", label: "XOR" },
                     { id: "BETWEEN", label: "BETWEEN" }
                 ]
             }
@@ -665,6 +670,15 @@ export class CompareActionComponent extends ActionComponent {
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
+        if (this.operator == "NOT") {
+            return (
+                <CompareActionComponentDiv className="body">
+                    {" NOT "}
+                    {this.isInputProperty("A") ? "A" : this.A}
+                </CompareActionComponentDiv>
+            );
+        }
+
         if (this.operator == "BETWEEN") {
             return (
                 <CompareActionComponentDiv className="body">
@@ -684,29 +698,35 @@ export class CompareActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
-        let A = runningFlow.getPropertyValue(this, "A");
-        let B = runningFlow.getPropertyValue(this, "B");
-
         let result;
-        if (this.operator === "=") {
-            result = A === B;
-        } else if (this.operator === "<") {
-            result = A < B;
-        } else if (this.operator === ">") {
-            result = A > B;
-        } else if (this.operator === "<=") {
-            result = A <= B;
-        } else if (this.operator === ">=") {
-            result = A >= B;
-        } else if (this.operator === "<>") {
-            result = A !== B;
-        } else if (this.operator === "AND") {
-            result = A && B;
-        } else if (this.operator === "OR") {
-            result = A || B;
-        } else if (this.operator === "BETWEEN") {
-            let C = runningFlow.getPropertyValue(this, "C");
-            result = A >= B && A <= C;
+        let A = runningFlow.getPropertyValue(this, "A");
+
+        if (this.operator == "NOT") {
+            result = !A;
+        } else {
+            let B = runningFlow.getPropertyValue(this, "B");
+            if (this.operator === "=") {
+                result = A === B;
+            } else if (this.operator === "<") {
+                result = A < B;
+            } else if (this.operator === ">") {
+                result = A > B;
+            } else if (this.operator === "<=") {
+                result = A <= B;
+            } else if (this.operator === ">=") {
+                result = A >= B;
+            } else if (this.operator === "<>") {
+                result = A !== B;
+            } else if (this.operator === "AND") {
+                result = A && B;
+            } else if (this.operator === "OR") {
+                result = A || B;
+            } else if (this.operator === "XOR") {
+                result = A ? !B : B;
+            } else if (this.operator === "BETWEEN") {
+                let C = runningFlow.getPropertyValue(this, "C");
+                result = A >= B && A <= C;
+            }
         }
 
         if (result) {
@@ -1248,8 +1268,8 @@ export class CommentActionComponent extends ActionComponent {
                         {typeof classInfo.icon == "string" ? (
                             <img src={classInfo.icon} />
                         ) : (
-                            classInfo.icon
-                        )}
+                                classInfo.icon
+                            )}
                     </div>
                 </div>
                 <div className="body">
@@ -1275,10 +1295,10 @@ registerClass(CommentActionComponent);
 export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            {
+            makeToggablePropertyToInput({
                 name: "milliseconds",
                 type: PropertyType.Number
-            }
+            })
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
@@ -1299,8 +1319,9 @@ export class DelayActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
+        let milliseconds = runningFlow.getPropertyValue(this, "milliseconds");
         await new Promise<void>(resolve =>
-            setTimeout(resolve, this.milliseconds ?? 0)
+            setTimeout(resolve, milliseconds ?? 0)
         );
         return undefined;
     }
@@ -1389,7 +1410,7 @@ registerClass(CatchErrorActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 class CounterRunningState {
-    constructor(public value: number) {}
+    constructor(public value: number) { }
 }
 
 export class CounterActionComponent extends ActionComponent {
