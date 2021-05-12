@@ -2728,10 +2728,10 @@
           "left": -360,
           "top": 739,
           "width": 138,
-          "height": 135,
+          "height": 153,
           "wireID": "0c4aed59-86c8-41dc-d972-55c7eab221d1",
           "instrument": "bb3_2",
-          "scpi": "inst (@301)\nOUTP:PROT:CLE\noutp 0\nvolt:prot:stat 0\nCURR:LIM MAX"
+          "scpi": "OUTP:PROT:COUP 0\ninst (@301)\nOUTP:PROT:CLE\noutp 0\nvolt:prot:stat 0\nCURR:LIM MAX"
         },
         {
           "type": "ScpiActionComponent",
