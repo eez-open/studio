@@ -302,7 +302,7 @@
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": -600,
           "top": -398,
-          "width": 283,
+          "width": 301,
           "height": 81,
           "wireID": "d4a736ad-f8bb-447c-b06f-1a1248b9ca2c",
           "connection": "envox.hr",
@@ -312,7 +312,7 @@
           "type": "EvalActionComponent",
           "left": -266,
           "top": -398,
-          "width": 317,
+          "width": 337,
           "height": 103,
           "wireID": "be02409d-2a17-4464-9920-f7a1f828d593",
           "asInputProperties": [
@@ -324,7 +324,7 @@
           "type": "EvalActionComponent",
           "left": 197,
           "top": -295,
-          "width": 169,
+          "width": 175,
           "height": 67,
           "wireID": "cb21d7bb-9a7b-4d51-ec37-177735772713",
           "asInputProperties": [
@@ -336,7 +336,7 @@
           "type": "InputActionComponent",
           "left": -776,
           "top": -398,
-          "width": 91,
+          "width": 93,
           "height": 31,
           "wireID": "80ca4312-fd33-4582-f204-a400afefef10",
           "name": "serial"
@@ -345,7 +345,7 @@
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": 152,
           "top": -160,
-          "width": 346,
+          "width": 365,
           "height": 117,
           "wireID": "da681ea1-ea85-47bc-b86e-7ac728f6b29d",
           "connection": "envox.hr",
@@ -355,7 +355,7 @@
           "type": "EvalActionComponent",
           "left": -592,
           "top": 92,
-          "width": 290,
+          "width": 308,
           "height": 67,
           "wireID": "ce127ac3-8f5f-4629-c588-7c5cb0161638",
           "asInputProperties": [
@@ -367,7 +367,7 @@
           "type": "IsTrueActionComponent",
           "left": -226,
           "top": 81,
-          "width": 97,
+          "width": 98,
           "height": 87,
           "wireID": "c58fa280-e2f4-4710-a65a-2359ecbd61c2",
           "asInputProperties": [
@@ -378,7 +378,7 @@
           "type": "ConstantActionComponent",
           "left": 366,
           "top": 3,
-          "width": 114,
+          "width": 116,
           "height": 61,
           "wireID": "4d1eb70f-bc2d-47e1-c59a-559ff0f043b0",
           "value": "\"Yes\""
@@ -387,7 +387,7 @@
           "type": "ConstantActionComponent",
           "left": 366,
           "top": 78,
-          "width": 114,
+          "width": 116,
           "height": 61,
           "wireID": "465817f2-f267-4ee0-f605-722a8c98bd0c",
           "value": "\"No\""
@@ -396,7 +396,7 @@
           "type": "EvalActionComponent",
           "left": -156,
           "top": -160,
-          "width": 236,
+          "width": 249,
           "height": 67,
           "wireID": "35dd8e03-9dd6-49be-b987-7194d05bfebc",
           "asInputProperties": [
@@ -408,7 +408,7 @@
           "type": "ScpiActionComponent",
           "left": -568,
           "top": 270,
-          "width": 403,
+          "width": 427,
           "height": 87,
           "wireID": "c6e86db4-be7c-4737-b5de-254759ef3a44",
           "asInputProperties": [
@@ -421,7 +421,7 @@
           "type": "EvalActionComponent",
           "left": -592,
           "top": -160,
-          "width": 256,
+          "width": 271,
           "height": 67,
           "wireID": "a3f80526-a07d-4890-df18-a788917120bd",
           "asInputProperties": [
@@ -433,7 +433,7 @@
           "type": "CompareActionComponent",
           "left": -322,
           "top": -160,
-          "width": 122,
+          "width": 123,
           "height": 87,
           "wireID": "0aacff3b-c42c-4bd4-e923-e8baf86a4486",
           "asInputProperties": [
@@ -446,7 +446,7 @@
           "type": "ConstantActionComponent",
           "left": -455,
           "top": -83,
-          "width": 114,
+          "width": 116,
           "height": 61,
           "wireID": "ea543aa8-f196-440d-af13-7a95bb9f987a",
           "value": "\"DCP405\""
@@ -455,7 +455,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": -255,
-          "width": 214,
+          "width": 213,
           "height": 31,
           "wireID": "cc2fff72-4e7b-49b1-94e9-b5b3b747db52",
           "name": "Register button enabled?"
@@ -464,7 +464,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": -43,
-          "width": 199,
+          "width": 200,
           "height": 31,
           "wireID": "20d81fb6-269e-4d40-e267-679768f786b1",
           "name": "Calibration saved label"
@@ -473,7 +473,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": 301,
-          "width": 125,
+          "width": 128,
           "height": 31,
           "wireID": "a02fceb2-c2a6-4685-9178-a6ef99549b1d",
           "name": "cal params"
@@ -482,7 +482,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": -367,
-          "width": 158,
+          "width": 159,
           "height": 31,
           "wireID": "cf49549d-2106-47ee-bdf4-ed52b06a11f6",
           "name": "Registered label"
@@ -491,7 +491,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": 81,
-          "width": 262,
+          "width": 261,
           "height": 31,
           "wireID": "2cb0acc9-e9f2-42a2-92bb-f42d585e81aa",
           "name": "Save calibration button enabled?"
@@ -500,7 +500,7 @@
           "type": "EvalActionComponent",
           "left": 110,
           "top": 159,
-          "width": 457,
+          "width": 487,
           "height": 87,
           "wireID": "609d045d-859b-422d-b2ce-7e1a782bf1db",
           "asInputProperties": [
@@ -522,7 +522,7 @@
           "type": "InputActionComponent",
           "left": -766,
           "top": 326,
-          "width": 81,
+          "width": 82,
           "height": 31,
           "wireID": "1e6eb2cc-2875-48a4-9dd0-6c04e9a13131",
           "name": "slot"
@@ -531,7 +531,7 @@
           "type": "EvalActionComponent",
           "left": -97,
           "top": 341,
-          "width": 544,
+          "width": 585,
           "height": 103,
           "wireID": "fc404e60-93c8-4d13-bb6b-8a95e95cc717",
           "expression": "{cal_params}?.indexOf(\"u_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_5A_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_50mA_cal_params_exists=1\") !== -1\n"
@@ -540,7 +540,7 @@
           "type": "OutputActionComponent",
           "left": 635,
           "top": 215,
-          "width": 124,
+          "width": 123,
           "height": 31,
           "wireID": "8e8388cd-2b7c-41c3-fa5d-b5195623d925",
           "name": "module_id"
@@ -11877,8 +11877,8 @@
           "height": 31,
           "wireID": "6f2c97c8-73cc-4b75-b253-b9fb97a01bbd",
           "connection": "envox.hr",
-          "user": "denis",
-          "password": "20diadora21",
+          "user": "USERNAME",
+          "password": "USERPWD",
           "host": "envox.hr",
           "port": 5432,
           "database": "bb3_ate",
