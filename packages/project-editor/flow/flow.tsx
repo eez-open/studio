@@ -2,10 +2,7 @@ import React from "react";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import { action, computed, observable, runInAction } from "mobx";
-import {
-    objectsToClipboardData,
-    objectToClipboardData
-} from "project-editor/core/clipboard";
+import { objectToClipboardData } from "project-editor/core/clipboard";
 import {
     ClassInfo,
     cloneObject,

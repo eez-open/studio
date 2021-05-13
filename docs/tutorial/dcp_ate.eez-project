@@ -1037,8 +1037,8 @@
         },
         {
           "type": "EndActionComponent",
-          "left": 893,
-          "top": -96,
+          "left": 896,
+          "top": -56,
           "width": 73,
           "height": 31,
           "wireID": "d413e999-338a-46c4-cde4-6fe9a3d23433"
@@ -1628,15 +1628,15 @@
           "input": "value"
         },
         {
-          "source": "15f5e3ee-b341-41dd-982d-72601e5c66d8",
-          "output": "@seqout",
-          "target": "5a304829-952c-49e9-9902-a167ea9a8fd8",
+          "source": "e7b734f5-e1aa-4a3a-9ba9-466eed4f673f",
+          "output": "result",
+          "target": "d413e999-338a-46c4-cde4-6fe9a3d23433",
           "input": "@seqin"
         },
         {
-          "source": "e7b734f5-e1aa-4a3a-9ba9-466eed4f673f",
-          "output": "result",
-          "target": "5a304829-952c-49e9-9902-a167ea9a8fd8",
+          "source": "15f5e3ee-b341-41dd-982d-72601e5c66d8",
+          "output": "@seqout",
+          "target": "d413e999-338a-46c4-cde4-6fe9a3d23433",
           "input": "@seqin"
         }
       ],
