@@ -1297,7 +1297,7 @@ export class DelayActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
-        let milliseconds = runningFlow.getPropertyValue(this, "milliseconds");
+        const milliseconds = runningFlow.getPropertyValue(this, "milliseconds");
         await new Promise<void>(resolve =>
             setTimeout(resolve, milliseconds ?? 0)
         );
@@ -1388,7 +1388,7 @@ registerClass(CatchErrorActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 class CounterRunningState {
-    constructor(public value: number) {}
+    constructor(public value: number) { }
 }
 
 export class CounterActionComponent extends ActionComponent {
