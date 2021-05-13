@@ -90,9 +90,8 @@ export class ConnectionLine extends EezObject {
             return undefined;
         }
 
-        const outputGeometry = this.sourceComponent._geometry.outputs[
-            this.output
-        ];
+        const outputGeometry =
+            this.sourceComponent._geometry.outputs[this.output];
         if (!outputGeometry) {
             return undefined;
         }
@@ -252,10 +251,6 @@ export abstract class Flow extends EezObject {
     objectsToClipboardData(objects: IEezObject[]) {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
-        if (flowFragment.connectionLines.length === 0) {
-            flowFragment.rewire();
-            return objectsToClipboardData(flowFragment.components);
-        }
         return objectToClipboardData(flowFragment);
     }
 

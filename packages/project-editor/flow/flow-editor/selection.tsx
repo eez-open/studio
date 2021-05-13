@@ -26,25 +26,6 @@ import { Action } from "project-editor/features/action/action";
 const SelectionDiv = styled.div`
     position: absolute;
     cursor: move;
-
-    .EezStudio_FlowEditorSelection_BoundingRect {
-        border: 2px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    .EezStudio_FlowEditorSelection_SelectedObject {
-        pointer-events: none;
-        border: 2px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    .EezStudio_FlowEditorSelection_SelectedObjectsParent {
-        pointer-events: none;
-        border: 2px dotted magenta;
-    }
-
-    .EezStudio_FlowEditorSelection_ResizeHandle {
-        position: absolute;
-        background-color: rgba(0, 0, 255, 0.8);
-    }
 `;
 
 ////////////////////////////////////////////////////////////////////////////////

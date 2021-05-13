@@ -38,7 +38,9 @@ import {
     getLabel
 } from "project-editor/core/object";
 import {
+    canDuplicate,
     canCut,
+    canCopy,
     canPaste,
     canDelete,
     extendContextMenu,
@@ -184,6 +186,9 @@ export interface ITreeObjectAdapter
         object: IEezObject
     ): ITreeObjectAdapter | undefined;
     getParent(item: ITreeObjectAdapter): ITreeObjectAdapter | undefined;
+    canDuplicate(): boolean;
+    duplicateSelection(): void;
+    cutSelection(): void;
     canCut(): boolean;
     cutSelection(): void;
     canCopy(): boolean;
@@ -192,7 +197,10 @@ export interface ITreeObjectAdapter
     pasteSelection(): void;
     canDelete(): boolean;
     deleteSelection(): void;
-    createSelectionContextMenu(): Electron.Menu | undefined;
+    createSelectionContextMenu(actions?: {
+        pasteSelection: () => void;
+        duplicateSelection: () => void;
+    }): Electron.Menu | undefined;
     showSelectionContextMenu(): void;
 }
 
@@ -562,6 +570,20 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return undefined;
     }
 
+    canDuplicate() {
+        if (this.selectedItems.length == 0) {
+            return false;
+        }
+
+        for (let i = 0; i < this.selectedItems.length; i++) {
+            if (!canDuplicate(this.selectedItems[i].object)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     canCut() {
         if (this.selectedItems.length == 0) {
             return false;
@@ -574,6 +596,13 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
 
         return true;
+    }
+
+    duplicateSelection() {
+        if (this.canDuplicate()) {
+            this.copySelection();
+            this.pasteSelection();
+        }
     }
 
     cutSelection() {
@@ -599,7 +628,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
 
         for (let i = 0; i < this.selectedItems.length; i++) {
-            if (!canCut(this.selectedItems[i].object)) {
+            if (!canCopy(this.selectedItems[i].object)) {
                 return false;
             }
         }
@@ -693,12 +722,26 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
     }
 
-    createSelectionContextMenu() {
-        if (this.selectedItems.length == 1) {
-            return createContextMenu(this, this.selectedItems[0].object);
-        }
-
+    createSelectionContextMenu(actions?: {
+        pasteSelection: () => void;
+        duplicateSelection: () => void;
+    }) {
         let menuItems: Electron.MenuItem[] = [];
+
+        if (this.canDuplicate()) {
+            menuItems.push(
+                new MenuItem({
+                    label: "Duplicate",
+                    click: () => {
+                        if (actions?.duplicateSelection) {
+                            actions.duplicateSelection();
+                        } else {
+                            this.duplicateSelection();
+                        }
+                    }
+                })
+            );
+        }
 
         let clipboardMenuItems: Electron.MenuItem[] = [];
 
@@ -729,7 +772,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
                 new MenuItem({
                     label: "Paste",
                     click: () => {
-                        this.pasteSelection();
+                        if (actions?.pasteSelection) {
+                            actions.pasteSelection();
+                        } else {
+                            this.pasteSelection();
+                        }
                     }
                 })
             );

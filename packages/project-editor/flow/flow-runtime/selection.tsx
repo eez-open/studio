@@ -15,11 +15,6 @@ import { ConnectionLine, Flow } from "project-editor/flow/flow";
 
 const SelectionDiv = styled.div`
     position: absolute;
-
-    .EezStudio_FlowRuntimeSelection_SelectedObject {
-        border: 3px dashed ${props => props.theme.selectionBackgroundColor};
-        border-radius: 6px;
-    }
 `;
 
 ////////////////////////////////////////////////////////////////////////////////

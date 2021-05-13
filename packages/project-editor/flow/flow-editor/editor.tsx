@@ -169,9 +169,7 @@ class FlowDocument implements IDocument {
         return this.flow.getParent(object);
     }
 
-    objectFromPoint(
-        point: Point
-    ):
+    objectFromPoint(point: Point):
         | {
               id: string;
               connectionInput?: string;
@@ -226,8 +224,63 @@ class FlowDocument implements IDocument {
     }
 
     createContextMenu(objects: ITreeObjectAdapter[]) {
-        return this.flow.createSelectionContextMenu();
+        return this.flow.createSelectionContextMenu({
+            duplicateSelection: this.duplicateSelection,
+            pasteSelection: this.pasteSelection
+        });
     }
+
+    duplicateSelection = () => {
+        this.DocumentStore.UndoManager.setCombineCommands(true);
+
+        this.flow.duplicateSelection();
+
+        this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
+            if (objectAdapter.object instanceof Component) {
+                this.flowContext.document.DocumentStore.updateObject(
+                    objectAdapter.object,
+                    {
+                        left: objectAdapter.object.left + 20,
+                        top: objectAdapter.object.top + 20
+                    }
+                );
+            }
+        });
+
+        this.DocumentStore.UndoManager.setCombineCommands(false);
+    };
+
+    pasteSelection = () => {
+        this.DocumentStore.UndoManager.setCombineCommands(true);
+
+        this.flow.pasteSelection();
+
+        const rectBounding = getSelectedObjectsBoundingRect(
+            this.flowContext.viewState
+        );
+        const rectPage = this.flowContext.viewState.transform.clientToPageRect(
+            this.flowContext.viewState.transform.clientRect
+        );
+
+        const left = rectPage.left + (rectPage.width - rectBounding.width) / 2;
+        const top = rectPage.top + (rectPage.height - rectBounding.height) / 2;
+
+        this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
+            if (objectAdapter.object instanceof Component) {
+                this.flowContext.document.DocumentStore.updateObject(
+                    objectAdapter.object,
+                    {
+                        left:
+                            left +
+                            (objectAdapter.object.left - rectBounding.left),
+                        top: top + (objectAdapter.object.top - rectBounding.top)
+                    }
+                );
+            }
+        });
+
+        this.DocumentStore.UndoManager.setCombineCommands(false);
+    };
 
     @computed get DocumentStore() {
         return getDocumentStore(this.flow.object);
@@ -402,11 +455,13 @@ export class Canvas extends React.Component<{
                 this.div,
                 this.mouseHandler,
                 (point: Point) => {
-                    const newTransform = this.props.flowContext.viewState.transform.clone();
+                    const newTransform =
+                        this.props.flowContext.viewState.transform.clone();
                     newTransform.translateBy(point);
 
                     runInAction(() => {
-                        this.props.flowContext.viewState.transform = newTransform;
+                        this.props.flowContext.viewState.transform =
+                            newTransform;
                     });
 
                     this.mouseHandler?.onTransformChanged(
@@ -573,9 +628,10 @@ export class Canvas extends React.Component<{
             if (closestByClass(event.target, "EezStudio_FlowEditorSelection")) {
                 return isMoveable ? new DragMouseHandler() : undefined;
             } else {
-                let point = flowContext.viewState.transform.pointerEventToPagePoint(
-                    event
-                );
+                let point =
+                    flowContext.viewState.transform.pointerEventToPagePoint(
+                        event
+                    );
                 const result = flowContext.document.objectFromPoint(point);
                 if (result) {
                     const object = flowContext.document.findObjectById(
@@ -703,8 +759,9 @@ export class Canvas extends React.Component<{
                             this.props.flowContext.viewState.selectedObjects
                                 .length === 1
                         ) {
-                            const object = this.props.flowContext.viewState
-                                .selectedObjects[0];
+                            const object =
+                                this.props.flowContext.viewState
+                                    .selectedObjects[0];
                             object.open();
                         } else if (
                             this.props.flowContext.viewState.selectedObjects
@@ -729,9 +786,8 @@ export class Canvas extends React.Component<{
             if (!preventContextMenu && this.buttonsAtDown === 2) {
                 // show context menu
                 const context = this.props.flowContext;
-                const point = context.viewState.transform.pointerEventToPagePoint(
-                    event
-                );
+                const point =
+                    context.viewState.transform.pointerEventToPagePoint(event);
                 if (
                     context.viewState.selectedObjects.length === 0 ||
                     !pointInRect(
@@ -742,16 +798,14 @@ export class Canvas extends React.Component<{
                     context.viewState.deselectAllObjects();
 
                     let result = context.document.objectFromPoint(point);
-                    if (!result) {
-                        return;
+                    if (result) {
+                        const object = context.document.findObjectById(
+                            result.id
+                        );
+                        if (object) {
+                            context.viewState.selectObject(object);
+                        }
                     }
-
-                    const object = context.document.findObjectById(result.id);
-                    if (!object) {
-                        return;
-                    }
-
-                    context.viewState.selectObject(object);
                 }
 
                 setTimeout(() => {
@@ -865,16 +919,23 @@ const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
     }
 
     .EezStudio_FlowEditorSelection_SelectedObject {
+        pointer-events: none;
         border: 1px solid #333;
     }
 
     .EezStudio_FlowEditorSelection_BoundingRect {
         border: 2px solid black;
-        background-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
     }
 
     .EezStudio_FlowEditorSelection_ResizeHandle {
+        position: absolute;
         background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .EezStudio_FlowEditorSelection_SelectedObjectsParent {
+        pointer-events: none;
+        border: 2px dotted magenta;
     }
 
     [data-connection-output-id]:hover {
@@ -928,7 +989,8 @@ export class FlowEditor
         transitionIsActive?: boolean;
         frontFace: boolean;
     }>
-    implements IPanel {
+    implements IPanel
+{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -1025,21 +1087,27 @@ export class FlowEditor
 
     ensureSelectionVisible = () => {
         if (this.flowContext.viewState.selectedObjects.length > 0) {
-            const selectedObjectRects = this.flowContext.viewState.selectedObjects
-                .filter(
-                    selectedObject => selectedObject.object instanceof Component
-                )
-                .map(selectedObject => getObjectBoundingRect(selectedObject));
+            const selectedObjectRects =
+                this.flowContext.viewState.selectedObjects
+                    .filter(
+                        selectedObject =>
+                            selectedObject.object instanceof Component
+                    )
+                    .map(selectedObject =>
+                        getObjectBoundingRect(selectedObject)
+                    );
 
             let selectionBoundingRectBuilder = new BoundingRectBuilder();
             for (let i = 0; i < selectedObjectRects.length; i++) {
                 selectionBoundingRectBuilder.addRect(selectedObjectRects[i]);
             }
-            const selectionBoundingRect = selectionBoundingRectBuilder.getRect();
+            const selectionBoundingRect =
+                selectionBoundingRectBuilder.getRect();
 
-            let pageRect = this.flowContext.viewState.transform.clientToPageRect(
-                this.flowContext.viewState.transform.clientRect
-            );
+            let pageRect =
+                this.flowContext.viewState.transform.clientToPageRect(
+                    this.flowContext.viewState.transform.clientRect
+                );
 
             if (!rectContains(pageRect, selectionBoundingRect)) {
                 const selectionEl = this.divRef.current?.querySelector(
@@ -1090,39 +1158,7 @@ export class FlowEditor
     }
 
     pasteSelection() {
-        this.flowContext.document.DocumentStore.UndoManager.setCombineCommands(
-            true
-        );
-
-        this.props.widgetContainer.pasteSelection();
-
-        const rectBounding = getSelectedObjectsBoundingRect(
-            this.flowContext.viewState
-        );
-        const rectPage = this.flowContext.viewState.transform.clientToPageRect(
-            this.flowContext.viewState.transform.clientRect
-        );
-
-        const left = rectPage.left + (rectPage.width - rectBounding.width) / 2;
-        const top = rectPage.top + (rectPage.height - rectBounding.height) / 2;
-
-        this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
-            if (objectAdapter.object instanceof Component) {
-                this.flowContext.document.DocumentStore.updateObject(
-                    objectAdapter.object,
-                    {
-                        left:
-                            left +
-                            (objectAdapter.object.left - rectBounding.left),
-                        top: top + (objectAdapter.object.top - rectBounding.top)
-                    }
-                );
-            }
-        });
-
-        this.flowContext.document.DocumentStore.UndoManager.setCombineCommands(
-            false
-        );
+        this.flowContext.document.pasteSelection();
     }
 
     deleteSelection() {
