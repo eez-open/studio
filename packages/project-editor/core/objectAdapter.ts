@@ -49,7 +49,6 @@ import {
     pasteItem,
     deleteItem,
     deleteItems,
-    createContextMenu,
     showContextMenu,
     canContainChildren,
     INavigationStore,
