@@ -296,7 +296,8 @@ export class RuntimeStoreClass {
             );
 
             if (action) {
-                const parentRunningFlow = flowContext.runningFlow! as RunningFlow;
+                const parentRunningFlow =
+                    flowContext.runningFlow! as RunningFlow;
                 const runningFlow = new RunningFlow(
                     this,
                     action,
@@ -536,9 +537,8 @@ export class ComponentState {
             if (parentRunningFlow) {
                 const parentComponent = this.runningFlow.component;
                 if (parentComponent) {
-                    const parentComponentState = parentRunningFlow.getComponentState(
-                        parentComponent
-                    );
+                    const parentComponentState =
+                        parentRunningFlow.getComponentState(parentComponent);
                     if (
                         parentRunningFlow.flow.connectionLines.find(
                             connectionLine =>
@@ -594,6 +594,16 @@ export class ComponentState {
             const catchErrorOutput = this.findCatchErrorOutput();
             if (catchErrorOutput) {
                 catchErrorOutput.connectionLines.forEach(connectionLine => {
+                    this.runningFlow.RuntimeStore.addHistoryItem(
+                        new OutputValueHistoryItem(
+                            catchErrorOutput.componentState.runningFlow,
+                            catchErrorOutput.componentState,
+                            connectionLine,
+                            "@error",
+                            err
+                        )
+                    );
+
                     this.runningFlow.RuntimeStore.queue.push({
                         runningFlow:
                             catchErrorOutput.componentState.runningFlow,
@@ -713,7 +723,8 @@ export class RunningFlow {
         public parentRunningFlow?: RunningFlow,
         public component?: Component
     ) {
-        this.dataContext = this.RuntimeStore.DocumentStore.dataContext.createWithLocalVariables();
+        this.dataContext =
+            this.RuntimeStore.DocumentStore.dataContext.createWithLocalVariables();
     }
 
     get label() {
@@ -1264,8 +1275,8 @@ class FlowsTree extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     @computed get rootNode(): ITreeNode<RunningFlow> {
-        const selectedRunningFlow = this.context.RuntimeStore
-            .selectedRunningFlow;
+        const selectedRunningFlow =
+            this.context.RuntimeStore.selectedRunningFlow;
 
         function getChildren(
             runningFlows: RunningFlow[]
@@ -1358,8 +1369,8 @@ class HistoryTree extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     @computed get rootNode(): ITreeNode<HistoryItem> {
-        const selectedHistoryItem = this.context.RuntimeStore
-            .selectedHistoryItem;
+        const selectedHistoryItem =
+            this.context.RuntimeStore.selectedHistoryItem;
 
         function getChildren(
             historyItems: HistoryItem[]
@@ -1439,8 +1450,8 @@ class HistoryTree extends React.Component {
                 this.context.NavigationStore.showObject(objects[0]);
 
                 setTimeout(() => {
-                    const editorState = this.context.EditorsStore.activeEditor
-                        ?.state;
+                    const editorState =
+                        this.context.EditorsStore.activeEditor?.state;
                     if (editorState instanceof FlowTabState) {
                         this.context.EditorsStore.activeEditor?.state?.selectObjects(
                             objects

@@ -8,7 +8,6 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    getClassInfo,
     PropertyInfo,
     specificGroup,
     IEezObject
@@ -286,15 +285,11 @@ export class EvalActionComponent extends ActionComponent {
         componentHeaderColor: "#A6BBCF",
         updateObjectValueHook: (object: EvalActionComponent, values: any) => {
             if (values.expression) {
-                const {
-                    inputs: inputsBefore,
-                    outputs: outputsBefore
-                } = EvalActionComponent.parse(object.expression);
+                const { inputs: inputsBefore, outputs: outputsBefore } =
+                    EvalActionComponent.parse(object.expression);
 
-                const {
-                    inputs: inputsAfter,
-                    outputs: outputsAfter
-                } = EvalActionComponent.parse(values.expression);
+                const { inputs: inputsAfter, outputs: outputsAfter } =
+                    EvalActionComponent.parse(values.expression);
 
                 const flow = getFlow(object);
 
@@ -1161,10 +1156,8 @@ registerClass(CallActionActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 const TrixEditorDiv = styled.div`
-    position: absolute;
+    position: relative;
     background-color: #ffff88;
-    border: 1px solid ${props => props.theme.borderColor};
-    box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
     padding: 5px;
     .trix-button-group {
         border: none !important;
@@ -1253,37 +1246,22 @@ export class CommentActionComponent extends ActionComponent {
                 <path d="M13 0H1C.45 0 0 .45 0 1v8c0 .55.45 1 1 1h2v3.5L6.5 10H13c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm0 9H6l-2 2V9H1V1h12v8z" />
             </svg>
         ),
-        componentHeaderColor: "#FDF0C2"
+        componentHeaderColor: "#ffff88"
     });
 
     @observable text: string;
 
-    render(flowContext: IFlowContext) {
-        const classInfo = getClassInfo(this);
-
+    getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <>
-                <div className="title-enclosure">
-                    <div className="title">
-                        {typeof classInfo.icon == "string" ? (
-                            <img src={classInfo.icon} />
-                        ) : (
-                                classInfo.icon
-                            )}
-                    </div>
-                </div>
-                <div className="body">
-                    <TrixEditor
-                        value={this.text}
-                        setValue={action((value: string) => {
-                            const DocumentStore = getDocumentStore(this);
-                            DocumentStore.updateObject(this, {
-                                text: value
-                            });
-                        })}
-                    ></TrixEditor>
-                </div>
-            </>
+            <TrixEditor
+                value={this.text}
+                setValue={action((value: string) => {
+                    const DocumentStore = getDocumentStore(this);
+                    DocumentStore.updateObject(this, {
+                        text: value
+                    });
+                })}
+            ></TrixEditor>
         );
     }
 }
@@ -1410,7 +1388,7 @@ registerClass(CatchErrorActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 class CounterRunningState {
-    constructor(public value: number) { }
+    constructor(public value: number) {}
 }
 
 export class CounterActionComponent extends ActionComponent {
@@ -1466,9 +1444,8 @@ export class CounterActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
-        let counterRunningState = runningFlow.getComponentRunningState<CounterRunningState>(
-            this
-        );
+        let counterRunningState =
+            runningFlow.getComponentRunningState<CounterRunningState>(this);
 
         if (!counterRunningState) {
             counterRunningState = new CounterRunningState(this.countValue);

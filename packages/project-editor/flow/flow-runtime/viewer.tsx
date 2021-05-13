@@ -91,6 +91,10 @@ class FlowDocument implements IDocument {
         return undefined;
     }
 
+    duplicateSelection() {}
+
+    pasteSelection() {}
+
     @computed get DocumentStore() {
         return getDocumentStore(this.flow.object);
     }
@@ -340,6 +344,11 @@ const FlowViewerCanvasContainer = styled.div<FlowViewerCanvasContainerParams>`
         height: calc(100% - 2px);
     }
 
+    .EezStudio_FlowRuntimeSelection_SelectedObject {
+        border: 3px dashed ${props => props.theme.selectionBackgroundColor};
+        border-radius: 6px;
+    }
+
     .connection-line-path {
         stroke: ${props => props.theme.connectionLineColor};
         marker-start: url(#lineStart);
@@ -388,7 +397,8 @@ export class FlowViewer
         frontFace: boolean;
         runningFlow: IRunningFlow | undefined;
     }>
-    implements IPanel {
+    implements IPanel
+{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -462,21 +472,27 @@ export class FlowViewer
 
     ensureSelectionVisible = () => {
         if (this.flowContext.viewState.selectedObjects.length > 0) {
-            const selectedObjectRects = this.flowContext.viewState.selectedObjects
-                .filter(
-                    selectedObject => selectedObject.object instanceof Component
-                )
-                .map(selectedObject => getObjectBoundingRect(selectedObject));
+            const selectedObjectRects =
+                this.flowContext.viewState.selectedObjects
+                    .filter(
+                        selectedObject =>
+                            selectedObject.object instanceof Component
+                    )
+                    .map(selectedObject =>
+                        getObjectBoundingRect(selectedObject)
+                    );
 
             let selectionBoundingRectBuilder = new BoundingRectBuilder();
             for (let i = 0; i < selectedObjectRects.length; i++) {
                 selectionBoundingRectBuilder.addRect(selectedObjectRects[i]);
             }
-            const selectionBoundingRect = selectionBoundingRectBuilder.getRect();
+            const selectionBoundingRect =
+                selectionBoundingRectBuilder.getRect();
 
-            let pageRect = this.flowContext.viewState.transform.clientToPageRect(
-                this.flowContext.viewState.transform.clientRect
-            );
+            let pageRect =
+                this.flowContext.viewState.transform.clientToPageRect(
+                    this.flowContext.viewState.transform.clientRect
+                );
 
             if (!rectContains(pageRect, selectionBoundingRect)) {
                 const selectionEl = this.divRef.current?.querySelector(

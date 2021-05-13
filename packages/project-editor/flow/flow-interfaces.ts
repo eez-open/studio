@@ -76,9 +76,7 @@ export interface IDocument {
     ): ITreeObjectAdapter | undefined;
 
     // view
-    objectFromPoint(
-        point: Point
-    ):
+    objectFromPoint(point: Point):
         | {
               id: string;
               connectionInput?: string;
@@ -90,6 +88,8 @@ export interface IDocument {
 
     // misc.
     createContextMenu(objects: ITreeObjectAdapter[]): Electron.Menu | undefined;
+    duplicateSelection(): void;
+    pasteSelection(): void;
 
     // events
     onDragStart(): void;
