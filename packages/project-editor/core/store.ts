@@ -1513,7 +1513,12 @@ export class DocumentStoreClass {
                     if (err) {
                         resolve({});
                     } else {
-                        resolve(JSON.parse(data));
+                        try {
+                            resolve(JSON.parse(data));
+                        } catch (err) {
+                            console.error("Invalid UI state file", err);
+                            resolve({});
+                        }
                     }
                 }
             );
