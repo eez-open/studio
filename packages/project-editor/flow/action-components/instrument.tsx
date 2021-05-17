@@ -70,15 +70,11 @@ export class ScpiActionComponent extends ActionComponent {
         componentHeaderColor: "#FDD0A2",
         updateObjectValueHook: (object: ScpiActionComponent, values: any) => {
             if (values.scpi) {
-                const {
-                    inputs: inputsBefore,
-                    outputs: outputsBefore
-                } = ScpiActionComponent.parse(object.scpi);
+                const { inputs: inputsBefore, outputs: outputsBefore } =
+                    ScpiActionComponent.parse(object.scpi);
 
-                const {
-                    inputs: inputsAfter,
-                    outputs: outputsAfter
-                } = ScpiActionComponent.parse(values.scpi);
+                const { inputs: inputsAfter, outputs: outputsAfter } =
+                    ScpiActionComponent.parse(values.scpi);
 
                 const flow = getFlow(object);
 
@@ -124,7 +120,8 @@ export class ScpiActionComponent extends ActionComponent {
     @observable scpi: string;
 
     static readonly PARAMS_REGEXP = /\{([^\}]+)\}/;
-    static readonly QUERY_WITH_ASSIGNMENT_REGEXP = /(?<outputName>[^\s]+)\s*=\s*(?<query>.+\?)(?<params>.*)/;
+    static readonly QUERY_WITH_ASSIGNMENT_REGEXP =
+        /(?<outputName>[^\s]+)\s*=\s*(?<query>.+\?)(?<params>.*)/;
     static readonly QUERY_REGEXP = /(?<query>.+\?)(?<params>.*)/;
 
     static parse(scpi: string) {
@@ -149,9 +146,10 @@ export class ScpiActionComponent extends ActionComponent {
                     str = str.substring(matches.index! + matches[1].length);
                 }
 
-                const matches = ScpiActionComponent.QUERY_WITH_ASSIGNMENT_REGEXP.exec(
-                    commandOrQuery
-                );
+                const matches =
+                    ScpiActionComponent.QUERY_WITH_ASSIGNMENT_REGEXP.exec(
+                        commandOrQuery
+                    );
                 if (matches) {
                     const output = matches.groups!.outputName.trim();
                     outputs.add(output);
@@ -251,23 +249,21 @@ export class ScpiActionComponent extends ActionComponent {
                     let command = commandOrQuery;
                     ScpiActionComponent.PARAMS_REGEXP.lastIndex = 0;
                     while (true) {
-                        let matches = command.substring(offset).match(
-                            ScpiActionComponent.PARAMS_REGEXP
-                        );
+                        let matches = command
+                            .substring(offset)
+                            .match(ScpiActionComponent.PARAMS_REGEXP);
                         if (!matches) {
                             break;
                         }
 
                         const input = matches[1].trim();
-                        const inputPropertyValue = runningFlow.getInputPropertyValue(
-                            this,
-                            input
-                        );
+                        const inputPropertyValue =
+                            runningFlow.getInputPropertyValue(this, input);
                         if (
                             inputPropertyValue &&
                             inputPropertyValue.value != undefined
                         ) {
-                            const value = inputPropertyValue.value;
+                            const value = inputPropertyValue.value.toString();
 
                             const i = offset + matches.index!;
 
@@ -282,9 +278,10 @@ export class ScpiActionComponent extends ActionComponent {
                         }
                     }
 
-                    const matches = ScpiActionComponent.QUERY_WITH_ASSIGNMENT_REGEXP.exec(
-                        command
-                    );
+                    const matches =
+                        ScpiActionComponent.QUERY_WITH_ASSIGNMENT_REGEXP.exec(
+                            command
+                        );
 
                     if (matches) {
                         const output = matches.groups!.outputName.trim();
@@ -317,9 +314,8 @@ export class ScpiActionComponent extends ActionComponent {
                         runningFlow.propagateValue(this, output, result);
                     } else {
                         if (command.length > 0) {
-                            const matches = ScpiActionComponent.QUERY_REGEXP.exec(
-                                command
-                            );
+                            const matches =
+                                ScpiActionComponent.QUERY_REGEXP.exec(command);
                             if (matches) {
                                 console.log(
                                     `SCPI QUERY [${instrument.name}]:`,
