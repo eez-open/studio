@@ -2064,7 +2064,8 @@ export function pasteItem(object: IEezObject) {
                             ) as Flow;
                             if (flow) {
                                 return flow.pasteFlowFragment(
-                                    c.serializedData.object as FlowFragment
+                                    c.serializedData.object as FlowFragment,
+                                    object
                                 );
                             }
                         }

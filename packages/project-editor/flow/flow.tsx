@@ -19,13 +19,14 @@ import {
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
 import { getDocumentStore } from "project-editor/core/store";
-import { Component } from "project-editor/flow/component";
+import { Component, Widget } from "project-editor/flow/component";
 import {
     IFlowContext,
     IRunningFlow
 } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/core/commands";
+import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -251,26 +252,48 @@ export abstract class Flow extends EezObject {
         return objectToClipboardData(flowFragment);
     }
 
-    pasteFlowFragment(flowFragment: FlowFragment) {
+    pasteFlowFragment(flowFragment: FlowFragment, object: IEezObject) {
         const DocumentStore = getDocumentStore(this);
 
         DocumentStore.UndoManager.setCombineCommands(true);
 
         flowFragment.rewire();
 
-        DocumentStore.addObjects(
-            this.connectionLines,
-            flowFragment.connectionLines
-        );
+        let components: IEezObject[];
 
-        const widgets = DocumentStore.addObjects(
-            this.components,
-            flowFragment.components
-        );
+        if (flowFragment.connectionLines.length > 0) {
+            DocumentStore.addObjects(
+                this.connectionLines,
+                flowFragment.connectionLines
+            );
+
+            components = DocumentStore.addObjects(
+                this.components,
+                flowFragment.components
+            );
+        } else {
+            if (
+                (object instanceof ContainerWidget ||
+                    object instanceof SelectWidget) &&
+                flowFragment.components.every(
+                    component => component instanceof Widget
+                )
+            ) {
+                components = DocumentStore.addObjects(
+                    object.widgets,
+                    flowFragment.components
+                );
+            } else {
+                components = DocumentStore.addObjects(
+                    this.components,
+                    flowFragment.components
+                );
+            }
+        }
 
         DocumentStore.UndoManager.setCombineCommands(false);
 
-        return widgets;
+        return components;
     }
 
     deleteConnectionLines(component: Component) {
