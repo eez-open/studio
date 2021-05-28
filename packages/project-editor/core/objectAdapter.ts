@@ -1159,6 +1159,9 @@ export class TreeAdapter implements ITreeAdapter {
     }
 
     onDrop(dropPosition: DropPosition, event: any) {
+        event.stopPropagation();
+        event.preventDefault();
+
         if (DragAndDropManager.dragObject) {
             let object = JSON.parse(
                 objectToJson(DragAndDropManager.dragObject)
@@ -1597,6 +1600,9 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     onDrop(dropPosition: DropPosition, event: any) {
+        event.stopPropagation();
+        event.preventDefault();
+
         this.dragAndDropManager.deleteDragItem();
 
         if (this.dragAndDropManager.dragObject) {

@@ -315,6 +315,7 @@ class ThemedColorInput extends React.Component<{
 
     @bind
     onDrop(event: React.DragEvent) {
+        event.stopPropagation();
         event.preventDefault();
         var data = getEezStudioDataFromDragEvent(this.context, event);
         if (data && data.objectClassName === "Color" && data.object) {
@@ -994,9 +995,8 @@ class Property extends React.Component<PropertyProps> {
         })
             .then(result => {
                 let oldValue = this._value;
-                let newValue = result.values[
-                    this.props.propertyInfo.name
-                ].trim();
+                let newValue =
+                    result.values[this.props.propertyInfo.name].trim();
                 if (newValue.length === 0) {
                     newValue = undefined;
                 }
@@ -1245,9 +1245,10 @@ class Property extends React.Component<PropertyProps> {
                         </div>
                     );
                 } else {
-                    let objects: IEezObject[] = this.context.project.getAllObjectsOfType(
-                        propertyInfo.referencedObjectCollectionPath!
-                    );
+                    let objects: IEezObject[] =
+                        this.context.project.getAllObjectsOfType(
+                            propertyInfo.referencedObjectCollectionPath!
+                        );
 
                     let options = objects
                         .slice()
@@ -1458,11 +1459,14 @@ class Property extends React.Component<PropertyProps> {
                                 type="button"
                                 onClick={async () => {
                                     if (this.context.filePath) {
-                                        const result = await EEZStudio.remote.dialog.showOpenDialog(
-                                            {
-                                                properties: ["openDirectory"]
-                                            }
-                                        );
+                                        const result =
+                                            await EEZStudio.remote.dialog.showOpenDialog(
+                                                {
+                                                    properties: [
+                                                        "openDirectory"
+                                                    ]
+                                                }
+                                            );
 
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
@@ -1517,13 +1521,14 @@ class Property extends React.Component<PropertyProps> {
                                 type="button"
                                 onClick={async () => {
                                     if (this.context.filePath) {
-                                        const result = await EEZStudio.remote.dialog.showOpenDialog(
-                                            {
-                                                properties: ["openFile"],
-                                                filters:
-                                                    propertyInfo.fileFilters
-                                            }
-                                        );
+                                        const result =
+                                            await EEZStudio.remote.dialog.showOpenDialog(
+                                                {
+                                                    properties: ["openFile"],
+                                                    filters:
+                                                        propertyInfo.fileFilters
+                                                }
+                                            );
 
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
@@ -1567,31 +1572,33 @@ class Property extends React.Component<PropertyProps> {
                                     className="btn btn-secondary"
                                     type="button"
                                     onClick={async () => {
-                                        const result = await EEZStudio.remote.dialog.showOpenDialog(
-                                            {
-                                                properties: ["openFile"],
-                                                filters: [
-                                                    {
-                                                        name: "Image files",
-                                                        extensions: [
-                                                            "png",
-                                                            "jpg",
-                                                            "jpeg"
-                                                        ]
-                                                    },
-                                                    {
-                                                        name: "All Files",
-                                                        extensions: ["*"]
-                                                    }
-                                                ]
-                                            }
-                                        );
+                                        const result =
+                                            await EEZStudio.remote.dialog.showOpenDialog(
+                                                {
+                                                    properties: ["openFile"],
+                                                    filters: [
+                                                        {
+                                                            name: "Image files",
+                                                            extensions: [
+                                                                "png",
+                                                                "jpg",
+                                                                "jpeg"
+                                                            ]
+                                                        },
+                                                        {
+                                                            name: "All Files",
+                                                            extensions: ["*"]
+                                                        }
+                                                    ]
+                                                }
+                                            );
                                         const filePaths = result.filePaths;
                                         if (filePaths && filePaths[0]) {
                                             if (propertyInfo.embeddedImage) {
-                                                const fs = EEZStudio.remote.require(
-                                                    "fs"
-                                                );
+                                                const fs =
+                                                    EEZStudio.remote.require(
+                                                        "fs"
+                                                    );
                                                 fs.readFile(
                                                     this.context.getAbsoluteFilePath(
                                                         filePaths[0]

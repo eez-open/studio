@@ -3,10 +3,20 @@ import { observable, action, reaction } from "mobx";
 import { observer } from "mobx-react";
 
 import { styled } from "eez-studio-ui/styled-components";
-import { activityLogStore, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
+import {
+    activityLogStore,
+    IActivityLogEntry
+} from "eez-studio-shared/activity-log";
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
 import { IHistoryItem } from "instrument/window/history/item";
-import { HistoryItems, CLIPBOARD_DATA_TYPE } from "instrument/window/history/list-component";
+import {
+    HistoryItems,
+    CLIPBOARD_DATA_TYPE
+} from "instrument/window/history/list-component";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IAppStore, History } from "instrument/window/history/history";
 import { instruments } from "instrument/instrument-object";
@@ -42,7 +52,8 @@ class ScrapbookStore {
             if (itemIds) {
                 this._items = itemIds
                     .map(itemId => {
-                        const activityLogEntry = activityLogStore.findById(itemId);
+                        const activityLogEntry =
+                            activityLogStore.findById(itemId);
                         if (activityLogEntry) {
                             return createHistoryItem(
                                 activityLogEntry,
@@ -57,12 +68,18 @@ class ScrapbookStore {
 
         reaction(
             () => this._items.map(item => item.id),
-            items => localStorage.setItem(`instrument/scrapbook/items`, JSON.stringify(items))
+            items =>
+                localStorage.setItem(
+                    `instrument/scrapbook/items`,
+                    JSON.stringify(items)
+                )
         );
 
         //
 
-        const thumbnailSizeStr = localStorage.getItem(`instrument/scrapbook/thumbnail-size`);
+        const thumbnailSizeStr = localStorage.getItem(
+            `instrument/scrapbook/thumbnail-size`
+        );
         if (thumbnailSizeStr) {
             this.thumbnailSize = JSON.parse(thumbnailSizeStr);
         }
@@ -78,7 +95,9 @@ class ScrapbookStore {
 
         //
 
-        const showAllStr = localStorage.getItem(`instrument/scrapbook/show-all`);
+        const showAllStr = localStorage.getItem(
+            `instrument/scrapbook/show-all`
+        );
         if (showAllStr) {
             this.showAll = JSON.parse(showAllStr);
         }
@@ -86,7 +105,10 @@ class ScrapbookStore {
         reaction(
             () => this.showAll,
             showAll =>
-                localStorage.setItem(`instrument/scrapbook/show-all`, JSON.stringify(showAll))
+                localStorage.setItem(
+                    `instrument/scrapbook/show-all`,
+                    JSON.stringify(showAll)
+                )
         );
     }
 
@@ -112,7 +134,10 @@ class ScrapbookStore {
         }
     }
 
-    insertBeforeItem(item: IHistoryItem | undefined, activityLogEntry: IActivityLogEntry): void {
+    insertBeforeItem(
+        item: IHistoryItem | undefined,
+        activityLogEntry: IActivityLogEntry
+    ): void {
         let insertAt = item ? this._items.indexOf(item) : this._items.length;
 
         item = this._items.find(item => item.id == activityLogEntry.id);
@@ -127,7 +152,10 @@ class ScrapbookStore {
             this._items.splice(
                 insertAt,
                 0,
-                createHistoryItem(activityLogEntry, getAppStore(activityLogEntry.oid))
+                createHistoryItem(
+                    activityLogEntry,
+                    getAppStore(activityLogEntry.oid)
+                )
             );
         }
     }
@@ -148,7 +176,9 @@ class ScrapbookStore {
     }
 
     deleteSelectedHistoryItems = action(() => {
-        this._items = this._items.filter(item => this.selection.items.indexOf(item) == -1);
+        this._items = this._items.filter(
+            item => this.selection.items.indexOf(item) == -1
+        );
     });
 
     selectAllItems = action((appStore: IAppStore) => {
@@ -234,7 +264,10 @@ const HeaderContainer = styled.div`
 `;
 
 @observer
-export class Scrapbook extends React.Component<{ appStore: IAppStore; history: History }> {
+export class Scrapbook extends React.Component<{
+    appStore: IAppStore;
+    history: History;
+}> {
     div: HTMLDivElement;
     insertAt: number | undefined;
     @observable dropMarkLeft: number | undefined;
@@ -243,11 +276,15 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
 
     onDragOver = action((event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
+        event.stopPropagation();
+
+        event.dataTransfer.dropEffect = "copy";
 
         const rectContainer = this.div.getBoundingClientRect();
 
-        const itemElements = $(this.div).find(">div.EezStudio_HistoryItemEnclosure");
+        const itemElements = $(this.div).find(
+            ">div.EezStudio_HistoryItemEnclosure"
+        );
         let i = 0;
         let x = rectContainer.left + 10;
         let y = rectContainer.top + 10;
@@ -286,14 +323,18 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
     });
 
     onDrop = action((event: React.DragEvent<HTMLDivElement>) => {
+        event.stopPropagation();
         event.preventDefault();
+
         if (this.insertAt != undefined) {
             const itemId = event.dataTransfer.getData(CLIPBOARD_DATA_TYPE);
             const activityLogEntry = activityLogStore.findById(itemId);
             if (activityLogEntry) {
                 const items = getScrapbookStore().items(this.props.appStore);
                 getScrapbookStore().insertBeforeItem(
-                    this.insertAt < items.length ? items[this.insertAt] : undefined,
+                    this.insertAt < items.length
+                        ? items[this.insertAt]
+                        : undefined,
                     activityLogEntry
                 );
             }
@@ -311,7 +352,9 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
     };
 
     showInHistory = () => {
-        this.props.appStore.history.showItem(getScrapbookStore().selection.items[0]);
+        this.props.appStore.history.showItem(
+            getScrapbookStore().selection.items[0]
+        );
     };
 
     setDiv = (ref: any) => {
@@ -342,7 +385,9 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
                                     className="form-check-input"
                                     checked={theScrapbook.showAll}
                                     onChange={action(
-                                        event => (theScrapbook.showAll = event.target.checked)
+                                        event =>
+                                            (theScrapbook.showAll =
+                                                event.target.checked)
                                     )}
                                 />
                                 Show all
@@ -381,8 +426,9 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
                         }}
                         onClick={event => {
                             if (
-                                $(event.target).closest(".EezStudio_HistoryItemEnclosure")
-                                    .length === 0
+                                $(event.target).closest(
+                                    ".EezStudio_HistoryItemEnclosure"
+                                ).length === 0
                             ) {
                                 theScrapbook.selection.selectItems([]);
                             }
@@ -390,12 +436,16 @@ export class Scrapbook extends React.Component<{ appStore: IAppStore; history: H
                     >
                         <HistoryItems
                             appStore={this.props.appStore}
-                            historyItems={theScrapbook.items(this.props.appStore)}
+                            historyItems={theScrapbook.items(
+                                this.props.appStore
+                            )}
                             selection={theScrapbook.selection}
                             selectHistoryItemsSpecification={undefined}
                             getAllItemsBetween={this.getAllItemsBetween}
                             isDeletedItemsHistory={false}
-                            deleteSelectedHistoryItems={theScrapbook.deleteSelectedHistoryItems}
+                            deleteSelectedHistoryItems={
+                                theScrapbook.deleteSelectedHistoryItems
+                            }
                             viewType="thumbs"
                             thumbnailSize={theScrapbook.thumbnailSize}
                             showInHistory={this.showInHistory}

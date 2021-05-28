@@ -1232,6 +1232,9 @@ export class FlowEditor
 
     @action.bound
     onDrop(event: React.DragEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+
         if (this.flowContext.dragComponent) {
             const flow = this.props.widgetContainer.object as Flow;
 
