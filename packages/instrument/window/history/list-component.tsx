@@ -130,7 +130,10 @@ function getThumbnailEnclosure(thumbnailSize: number) {
     return CachedHistoryItemThumbnailEnclosure;
 }
 
-class ErrorBoundary extends React.Component<{ id: string }, { hasError: boolean }> {
+class ErrorBoundary extends React.Component<
+    { id: string },
+    { hasError: boolean }
+> {
     constructor(props: any) {
         super(props);
         this.state = { hasError: false };
@@ -169,8 +172,13 @@ export class HistoryItems extends React.Component<{
     appStore: IAppStore;
     historyItems: IHistoryItem[];
     selection: ISelection;
-    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
-    getAllItemsBetween: (fromItem: IHistoryItem, toItem: IHistoryItem) => IHistoryItem[];
+    selectHistoryItemsSpecification:
+        | SelectHistoryItemsSpecification
+        | undefined;
+    getAllItemsBetween: (
+        fromItem: IHistoryItem,
+        toItem: IHistoryItem
+    ) => IHistoryItem[];
     isDeletedItemsHistory: boolean;
     deleteSelectedHistoryItems: () => void;
     viewType: "chat" | "thumbs";
@@ -184,7 +192,10 @@ export class HistoryItems extends React.Component<{
             let showCheckbox = false;
 
             if (this.props.selectHistoryItemsSpecification) {
-                if (this.props.selectHistoryItemsSpecification.historyItemType === "chart") {
+                if (
+                    this.props.selectHistoryItemsSpecification
+                        .historyItemType === "chart"
+                ) {
                     if (historyItem instanceof Waveform) {
                         showCheckbox = true;
                     } else {
@@ -198,10 +209,11 @@ export class HistoryItems extends React.Component<{
             let className = classNames(
                 `EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`,
                 {
-                    EezStudio_HistoryItemEnclosure_Session: historyItem.type.startsWith(
-                        "activity-log/session"
-                    ),
-                    selected: !this.props.selectHistoryItemsSpecification && historyItem.selected,
+                    EezStudio_HistoryItemEnclosure_Session:
+                        historyItem.type.startsWith("activity-log/session"),
+                    selected:
+                        !this.props.selectHistoryItemsSpecification &&
+                        historyItem.selected,
                     disablePreview: showCheckbox
                 },
                 this.props.viewType
@@ -242,7 +254,10 @@ export class HistoryItems extends React.Component<{
                             return;
                         }
 
-                        if ($(event.target).parents("#EezStudio_ModalContent").length) {
+                        if (
+                            $(event.target).parents("#EezStudio_ModalContent")
+                                .length
+                        ) {
                             // ignore clicks on history items with preview in zoom mode
                             return;
                         }
@@ -250,10 +265,17 @@ export class HistoryItems extends React.Component<{
                         let historyItems;
                         if (event.ctrlKey) {
                             if (historyItem.selected) {
-                                historyItems = this.props.selection.items.slice();
-                                historyItems.splice(historyItems.indexOf(historyItem), 1);
+                                historyItems =
+                                    this.props.selection.items.slice();
+                                historyItems.splice(
+                                    historyItems.indexOf(historyItem),
+                                    1
+                                );
                             } else {
-                                historyItems = this.props.selection.items.concat([historyItem]);
+                                historyItems =
+                                    this.props.selection.items.concat([
+                                        historyItem
+                                    ]);
                             }
                         } else if (event.shiftKey) {
                             if (this.props.selection.items.length > 0) {
@@ -325,15 +347,21 @@ export class HistoryItems extends React.Component<{
                     }}
                     draggable={true}
                     onDragStart={event => {
-                        event.dataTransfer.effectAllowed = "move";
-                        event.dataTransfer.setData(CLIPBOARD_DATA_TYPE, historyItem.id);
+                        event.stopPropagation();
+                        event.dataTransfer.effectAllowed = "copy";
+                        event.dataTransfer.setData(
+                            CLIPBOARD_DATA_TYPE,
+                            historyItem.id
+                        );
                     }}
                     onDrag={() => false}
                 >
                     {showCheckbox && (
                         <input
                             type="checkbox"
-                            checked={this.props.appStore.isHistoryItemSelected(historyItem.id)}
+                            checked={this.props.appStore.isHistoryItemSelected(
+                                historyItem.id
+                            )}
                             onChange={event => {
                                 this.props.appStore.selectHistoryItem(
                                     historyItem.id,
@@ -445,7 +473,9 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         let c = 0;
 
         const scrollIntoView = (() => {
-            const element = $(this.div).find(`.EezStudio_HistoryItem_${historyItem.id}`)[0];
+            const element = $(this.div).find(
+                `.EezStudio_HistoryItem_${historyItem.id}`
+            )[0];
             if (element) {
                 element.scrollIntoView({ block: "center" });
             }
@@ -467,7 +497,10 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                     this.div.scrollTop = this.fromBottom;
                 }
             } else if (this.fromTop !== undefined) {
-                let scrollTop = this.div.scrollHeight - this.div.clientHeight - this.fromTop;
+                let scrollTop =
+                    this.div.scrollHeight -
+                    this.div.clientHeight -
+                    this.fromTop;
                 if (scrollTop != this.div.scrollTop) {
                     this.div.scrollTop = scrollTop;
                 }
@@ -493,14 +526,17 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
             }
             if (
                 this.props.history.navigator.hasNewer &&
-                this.div.scrollHeight - (this.div.scrollTop + this.div.clientHeight) <
+                this.div.scrollHeight -
+                    (this.div.scrollTop + this.div.clientHeight) <
                     CONF_AUTO_RELOAD_Y_THRESHOLD
             ) {
                 this.loadNewer();
             }
         }
 
-        this.animationFrameRequestId = window.requestAnimationFrame(this.autoScroll);
+        this.animationFrameRequestId = window.requestAnimationFrame(
+            this.autoScroll
+        );
     }
 
     @bind
@@ -512,7 +548,10 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
             if (this.fromBottom !== undefined) {
                 this.fromBottom = this.div.scrollTop;
             } else if (this.fromTop !== undefined) {
-                this.fromTop = this.div.scrollHeight - this.div.clientHeight - this.div.scrollTop;
+                this.fromTop =
+                    this.div.scrollHeight -
+                    this.div.clientHeight -
+                    this.div.scrollTop;
             }
         }
 
@@ -525,11 +564,15 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         }
         this.findCenterItemTimeut = setTimeout(() => {
             this.findCenterItemTimeut = undefined;
-            const itemElements = $(this.div).find(".EezStudio_HistoryItemEnclosure");
+            const itemElements = $(this.div).find(
+                ".EezStudio_HistoryItemEnclosure"
+            );
             if (itemElements.length > 0) {
                 let foundItemElement = itemElements[0];
                 const rect = foundItemElement.getBoundingClientRect();
-                let minDistance = Math.abs(this.div.clientHeight - (rect.top + rect.height / 2));
+                let minDistance = Math.abs(
+                    this.div.clientHeight - (rect.top + rect.height / 2)
+                );
 
                 for (let i = 1; i < itemElements.length; ++i) {
                     const rect = itemElements[i].getBoundingClientRect();
@@ -542,7 +585,9 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                     }
                 }
 
-                const matches = foundItemElement.className.match(/EezStudio_HistoryItem_(\d*)/);
+                const matches = foundItemElement.className.match(
+                    /EezStudio_HistoryItem_(\d*)/
+                );
                 if (matches && matches.length >= 1) {
                     const itemId = matches[1];
                     if (itemId !== this.lastItemInTheCenterId) {
@@ -570,7 +615,8 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         for (let i = 0; i < items.length; ++i) {
             const item = items[i] as HTMLDivElement;
             if (
-                item.className.indexOf("EezStudio_HistoryItemEnclosure") !== -1 &&
+                item.className.indexOf("EezStudio_HistoryItemEnclosure") !==
+                    -1 &&
                 item.offsetTop > this.div.scrollTop
             ) {
                 firstItem = item;
@@ -613,13 +659,20 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                     }
                 }}
                 onClick={event => {
-                    if ($(event.target).closest(".EezStudio_HistoryItemEnclosure").length === 0) {
+                    if (
+                        $(event.target).closest(
+                            ".EezStudio_HistoryItemEnclosure"
+                        ).length === 0
+                    ) {
                         this.props.history.selection.selectItems([]);
                     }
                 }}
             >
                 {this.props.history.navigator.hasOlder && (
-                    <LoadMoreButton icon="material:expand_less" loadMore={this.loadOlder} />
+                    <LoadMoreButton
+                        icon="material:expand_less"
+                        loadMore={this.loadOlder}
+                    />
                 )}
                 <HistoryItems
                     appStore={this.props.appStore}
@@ -628,11 +681,15 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                     selectHistoryItemsSpecification={
                         this.props.appStore.selectHistoryItemsSpecification
                     }
-                    getAllItemsBetween={(fromItem: IHistoryItem, toItem: IHistoryItem) =>
+                    getAllItemsBetween={(
+                        fromItem: IHistoryItem,
+                        toItem: IHistoryItem
+                    ) =>
                         this.props.history.getAllItemsBetween(fromItem, toItem)
                     }
                     isDeletedItemsHistory={
-                        this.props.history === this.props.appStore.deletedItemsHistory
+                        this.props.history ===
+                        this.props.appStore.deletedItemsHistory
                     }
                     deleteSelectedHistoryItems={() =>
                         this.props.history.deleteSelectedHistoryItems()
@@ -641,7 +698,10 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                     thumbnailSize={480}
                 />
                 {this.props.history.navigator.hasNewer && (
-                    <LoadMoreButton icon="material:expand_more" loadMore={this.loadNewer} />
+                    <LoadMoreButton
+                        icon="material:expand_more"
+                        loadMore={this.loadNewer}
+                    />
                 )}
             </HistoryListComponentContainer>
         );

@@ -115,7 +115,7 @@ const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
             });
             const filePaths = result.filePaths;
             if (filePaths && filePaths[0]) {
-                openProject(filePaths[0]);
+                openProject(filePaths[0], focusedWindow);
             }
         }
     },
@@ -371,8 +371,8 @@ const helpMenu: Electron.MenuItemConstructorOptions = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function openProject(projectFilePath: string) {
-    BrowserWindow.getFocusedWindow()!.webContents.send(
+export function openProject(projectFilePath: string, focusedWindow?: any) {
+    (focusedWindow || BrowserWindow.getFocusedWindow()!).webContents.send(
         "open-project",
         projectFilePath
     );

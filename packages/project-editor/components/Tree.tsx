@@ -586,9 +586,8 @@ export class Tree extends React.Component<TreeProps, {}> {
                                     }
                                 }
 
-                                const parentItem = treeAdapter.getItemParent(
-                                    dropItem
-                                );
+                                const parentItem =
+                                    treeAdapter.getItemParent(dropItem);
 
                                 if (
                                     !parentItem ||
@@ -640,7 +639,8 @@ export class Tree extends React.Component<TreeProps, {}> {
                                 .get(0)
                                 .getBoundingClientRect();
 
-                            this.dropMarkVerticalConnectionLineHeight = undefined;
+                            this.dropMarkVerticalConnectionLineHeight =
+                                undefined;
 
                             if (
                                 dropPosition ===
@@ -669,9 +669,8 @@ export class Tree extends React.Component<TreeProps, {}> {
                                         rowIndexAtCursor !==
                                         $allRows.index($row)
                                     ) {
-                                        const $row2 = $allRows.eq(
-                                            rowIndexAtCursor
-                                        );
+                                        const $row2 =
+                                            $allRows.eq(rowIndexAtCursor);
                                         const rowRect2 = $row2
                                             .get(0)
                                             .getBoundingClientRect();
@@ -708,6 +707,9 @@ export class Tree extends React.Component<TreeProps, {}> {
 
     @action.bound
     onDrop(event: any) {
+        event.stopPropagation();
+        event.preventDefault();
+
         if (this.props.treeAdapter.draggableAdapter!.dropItem) {
             let dropPosition = this.dropPosition;
             this.dropPosition = undefined;
@@ -866,13 +868,8 @@ export class Tree extends React.Component<TreeProps, {}> {
     }
 
     render() {
-        const {
-            treeAdapter,
-            tabIndex,
-            onFocus,
-            onEditItem,
-            renderItem
-        } = this.props;
+        const { treeAdapter, tabIndex, onFocus, onEditItem, renderItem } =
+            this.props;
 
         const className = classNames({
             "drag-source":

@@ -4,7 +4,13 @@ import { observable, computed, reaction, toJS, runInAction } from "mobx";
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { TIME_UNIT, UNKNOWN_UNIT, UNITS, IUnit } from "eez-studio-shared/units";
+import {
+    TIME_UNIT,
+    FREQUENCY_UNIT,
+    UNKNOWN_UNIT,
+    UNITS,
+    IUnit
+} from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
@@ -574,12 +580,15 @@ export class DlogWaveform extends FileHistoryItem {
         const step = this.dlog.xAxis.step;
         const stepStr = this.dlog.xAxis.unit.formatValue(step, 4);
 
-        const max = (this.length - 1) * this.dlog.xAxis.step;
+        const sampleRate = 1 / this.dlog.xAxis.step;
+        const sampleRateStr = FREQUENCY_UNIT.formatValue(sampleRate, 1);
+
+        const max = (this.length - 1) * step;
         const maxStr = this.dlog.xAxis.unit.formatValue(max, 4);
 
         let info;
-        if (this.dlog.xAxis.unit === TIME_UNIT) {
-            info = `Period: ${stepStr}, Duration: ${maxStr}`;
+        if (this.dlog.xAxis.unit.name === TIME_UNIT.name) {
+            info = `Period: ${stepStr}, Sample rate: ${sampleRateStr}, Duration: ${maxStr}`;
         } else {
             info = `Step: ${stepStr}, Max: ${maxStr}`;
         }

@@ -542,7 +542,9 @@ export class Component extends EezObject {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
-                            `No connection to input "${input.name}"`,
+                            `No connection to input "${
+                                input.displayName || input.name
+                            }"`,
                             object
                         )
                     );
@@ -560,7 +562,10 @@ export class Component extends EezObject {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
-                            `Output "${componentOutput.name}" is not connected`,
+                            `Output "${
+                                componentOutput.displayName ||
+                                componentOutput.name
+                            }" is not connected`,
                             object
                         )
                     );
@@ -794,7 +799,9 @@ export class Widget extends Component {
                     new MenuItem({
                         label: "Put in Select",
                         click: () => {
-                            const selectWidget = (objects[0] as Widget).putInSelect();
+                            const selectWidget = (
+                                objects[0] as Widget
+                            ).putInSelect();
                             context.selectObject(selectWidget);
                         }
                     })

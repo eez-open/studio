@@ -28,7 +28,8 @@ export enum Unit {
     UNIT_PICO_FARAD,
     UNIT_MINUTE,
     UNIT_VOLT_AMPERE,
-    UNIT_VOLT_AMPERE_REACTIVE
+    UNIT_VOLT_AMPERE_REACTIVE,
+    UNIT_DEGREE
 }
 
 enum Fields {

@@ -1019,6 +1019,30 @@ export class RunningFlow {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function getInputName(component: Component | undefined, inputName: string) {
+    if (component) {
+        const input = component.inputs.find(input => input.name == inputName);
+        if (input) {
+            return input.displayName || input.name;
+        }
+    }
+    return inputName;
+}
+
+function getOutputName(component: Component | undefined, outputName: string) {
+    if (component) {
+        const output = component.outputs.find(
+            output => output.name == outputName
+        );
+        if (output) {
+            return output.displayName || output.name;
+        }
+    }
+    return outputName;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class ActionStartHistoryItem extends HistoryItem {
     constructor(public runningFlow: RunningFlow | undefined, flow: Flow) {
         super(runningFlow, flow);
@@ -1153,9 +1177,16 @@ class OutputValueHistoryItem extends HistoryItem {
             }
         }
 
-        return `Output value from [${this.output}] to [${getLabel(
-            this.connectionLine.targetComponent!
-        )}/${this.connectionLine.input}]: ${value}`;
+        return `Output value from [${
+            this.output ||
+            getOutputName(
+                this.connectionLine.sourceComponent,
+                this.connectionLine.output
+            )
+        }] to [${getLabel(this.connectionLine.targetComponent!)}/${getInputName(
+            this.connectionLine.targetComponent,
+            this.connectionLine.input
+        )}]: ${value}`;
     }
 }
 

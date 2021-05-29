@@ -413,7 +413,8 @@ export class EvalActionComponent extends ActionComponent {
             let result = eval(expression);
             runningFlow.propagateValue(this, "result", result);
         } catch (err) {
-            console.error(err);
+            // console.error(err);
+            // TODO: report this to user
             runningFlow.propagateValue(this, "result", undefined);
         }
         return undefined;
