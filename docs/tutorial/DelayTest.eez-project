@@ -1,0 +1,202 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v2",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "DelayActionComponent",
+          "left": 77,
+          "top": 605,
+          "width": 131,
+          "height": 67,
+          "wireID": "1850d6c3-591c-4048-fa03-12860d1d8e9c",
+          "asInputProperties": [
+            "milliseconds"
+          ]
+        },
+        {
+          "type": "LineChartWidget",
+          "left": 0,
+          "top": 8,
+          "width": 1164,
+          "height": 523,
+          "wireID": "be7542f2-2f6c-4c3e-cb08-76f18323797e",
+          "asInputProperties": [
+            "data"
+          ],
+          "title": "Delay Action Test",
+          "maxPoints": 250,
+          "margin": {
+            "top": 50,
+            "right": 35,
+            "bottom": 40,
+            "left": 30
+          }
+        },
+        {
+          "type": "EvalActionComponent",
+          "left": -339,
+          "top": 656,
+          "width": 274,
+          "height": 87,
+          "wireID": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "expression": "{counter}*(1+{exp})"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -669,
+          "top": 656,
+          "width": 118,
+          "height": 61,
+          "wireID": "1d903b4b-c503-47df-b7fa-b5a9131cde5a",
+          "value": "1000"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -669,
+          "top": 743,
+          "width": 118,
+          "height": 61,
+          "wireID": "2b72111b-1290-4b47-eae8-6c586073c0af",
+          "value": "0.15"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 10,
+          "top": 851,
+          "width": 158,
+          "height": 87,
+          "wireID": "a2a4a0fb-a014-4e6e-d899-1f3aa5d3e86b",
+          "asInputProperties": [
+            "A"
+          ],
+          "B": "10000",
+          "operator": "<"
+        },
+        {
+          "type": "EvalActionComponent",
+          "left": 329,
+          "top": 656,
+          "width": 200,
+          "height": 67,
+          "wireID": "3556c3ee-4449-4e5d-c78d-142c3fa69ef6",
+          "expression": "{counter}"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 302,
+          "top": 907,
+          "width": 74,
+          "height": 31,
+          "wireID": "0478d27b-cc81-4dd5-9ace-30595ef54b1d"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -632,
+          "top": 597,
+          "width": 81,
+          "height": 31,
+          "wireID": "8c054702-d493-4ae0-d474-1c3960a989a8"
+        },
+        {
+          "type": "CommentActionComponent",
+          "left": 574,
+          "top": 411,
+          "width": 2,
+          "height": 10,
+          "wireID": "eaf1ca91-df42-4022-f97b-8e61b4181e4d",
+          "text": "<div><!--block-->This flow tests the delay action: It should produce a straight line. If the line is exponentially curved the delay is NOT working.</div>"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "1d903b4b-c503-47df-b7fa-b5a9131cde5a",
+          "output": "value",
+          "target": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "input": "counter"
+        },
+        {
+          "source": "2b72111b-1290-4b47-eae8-6c586073c0af",
+          "output": "value",
+          "target": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "input": "exp"
+        },
+        {
+          "source": "a2a4a0fb-a014-4e6e-d899-1f3aa5d3e86b",
+          "output": "True",
+          "target": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "input": "@seqin"
+        },
+        {
+          "source": "1850d6c3-591c-4048-fa03-12860d1d8e9c",
+          "output": "@seqout",
+          "target": "3556c3ee-4449-4e5d-c78d-142c3fa69ef6",
+          "input": "@seqin"
+        },
+        {
+          "source": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "output": "result",
+          "target": "3556c3ee-4449-4e5d-c78d-142c3fa69ef6",
+          "input": "counter"
+        },
+        {
+          "source": "3556c3ee-4449-4e5d-c78d-142c3fa69ef6",
+          "output": "result",
+          "target": "a2a4a0fb-a014-4e6e-d899-1f3aa5d3e86b",
+          "input": "A"
+        },
+        {
+          "source": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "output": "result",
+          "target": "be7542f2-2f6c-4c3e-cb08-76f18323797e",
+          "input": "data"
+        },
+        {
+          "source": "a2a4a0fb-a014-4e6e-d899-1f3aa5d3e86b",
+          "output": "False",
+          "target": "0478d27b-cc81-4dd5-9ace-30595ef54b1d",
+          "input": "@seqin"
+        },
+        {
+          "source": "8c054702-d493-4ae0-d474-1c3960a989a8",
+          "output": "@seqout",
+          "target": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "input": "@seqin"
+        },
+        {
+          "source": "3556c3ee-4449-4e5d-c78d-142c3fa69ef6",
+          "output": "result",
+          "target": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "input": "counter"
+        },
+        {
+          "source": "627f6fc7-02ff-44ba-fffb-447a54342671",
+          "output": "result",
+          "target": "1850d6c3-591c-4048-fa03-12860d1d8e9c",
+          "input": "milliseconds"
+        }
+      ],
+      "name": "main",
+      "left": 0,
+      "top": 0,
+      "width": 1164,
+      "height": 540
+    }
+  ],
+  "colors": [],
+  "themes": []
+}
