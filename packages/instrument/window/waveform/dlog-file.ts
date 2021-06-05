@@ -283,7 +283,8 @@ export function decodeDlog<UnitType>(
                 comment = readString(offset, offset + fieldDataLength);
                 offset += fieldDataLength;
             } else if (fieldId === Fields.FIELD_ID_START_TIME) {
-                startTime = new Date(readUInt32(offset) * 1000);
+                const startTimeMs = readUInt32(offset);
+                startTime = new Date(startTimeMs * 1000);
                 offset += 4;
             } else if (fieldId === Fields.FIELD_ID_DURATION) {
                 duration = readDouble(offset);
