@@ -1015,9 +1015,10 @@ export class LayoutViewWidget extends EmbeddedWidget {
             const layoutPage = this.getLayoutPage(flowContext.dataContext);
             if (layoutPage) {
                 if (!LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId) {
-                    LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId = window.requestAnimationFrame(
-                        LayoutViewWidget.clearRenderedLayoutPages
-                    );
+                    LayoutViewWidget.clearRenderedLayoutPagesFrameRequestId =
+                        window.requestAnimationFrame(
+                            LayoutViewWidget.clearRenderedLayoutPages
+                        );
                 }
 
                 if (
@@ -1259,6 +1260,8 @@ export class DisplayDataWidget extends EmbeddedWidget {
                                     ) as string)) ||
                                 "";
 
+                            text = text.toString();
+
                             function findStartOfFraction() {
                                 let i;
                                 for (
@@ -1422,10 +1425,8 @@ export class TextWidget extends EmbeddedWidget {
             text = this.text;
         } else {
             if (this.isInputProperty("data") && flowContext.runningFlow) {
-                const inputPropertyValue = flowContext.runningFlow.getInputPropertyValue(
-                    this,
-                    "data"
-                );
+                const inputPropertyValue =
+                    flowContext.runningFlow.getInputPropertyValue(this, "data");
                 if (
                     inputPropertyValue !== undefined &&
                     inputPropertyValue.value != undefined
@@ -2535,6 +2536,7 @@ registerClass(ButtonGroupWidget);
 
 export class BarGraphWidget extends EmbeddedWidget {
     @observable orientation?: string;
+    @observable displayValue: boolean;
     @observable textStyle: Style;
     @observable line1Data?: string;
     @observable line1Style: Style;
@@ -2561,6 +2563,11 @@ export class BarGraphWidget extends EmbeddedWidget {
                         id: "bottom-top"
                     }
                 ]
+            },
+            {
+                name: "displayValue",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
             },
             makeStylePropertyInfo("textStyle"),
             makeStylePropertyInfo("line1Style"),
@@ -2752,45 +2759,47 @@ export class BarGraphWidget extends EmbeddedWidget {
                                 );
                             }
 
-                            if (horizontal) {
-                                let textStyle = barGraphWidget.textStyle;
-                                const font = styleGetFont(textStyle);
-                                if (font) {
-                                    let w = draw.measureStr(
-                                        valueText,
-                                        font,
-                                        this.width
-                                    );
-                                    w += style.paddingRect.left;
-
-                                    if (w > 0 && this.height > 0) {
-                                        let backgroundColor: string;
-                                        let x: number;
-
-                                        if (pos + w <= this.width) {
-                                            backgroundColor =
-                                                style.backgroundColorProperty;
-                                            x = pos;
-                                        } else {
-                                            backgroundColor =
-                                                style.colorProperty;
-                                            x =
-                                                pos -
-                                                w -
-                                                style.paddingRect.right;
-                                        }
-
-                                        drawText(
-                                            ctx,
+                            if (this.displayValue) {
+                                if (horizontal) {
+                                    let textStyle = barGraphWidget.textStyle;
+                                    const font = styleGetFont(textStyle);
+                                    if (font) {
+                                        let w = draw.measureStr(
                                             valueText,
-                                            x,
-                                            0,
-                                            w,
-                                            this.height,
-                                            textStyle,
-                                            false,
-                                            backgroundColor
+                                            font,
+                                            this.width
                                         );
+                                        w += style.paddingRect.left;
+
+                                        if (w > 0 && this.height > 0) {
+                                            let backgroundColor: string;
+                                            let x: number;
+
+                                            if (pos + w <= this.width) {
+                                                backgroundColor =
+                                                    style.backgroundColorProperty;
+                                                x = pos;
+                                            } else {
+                                                backgroundColor =
+                                                    style.colorProperty;
+                                                x =
+                                                    pos -
+                                                    w -
+                                                    style.paddingRect.right;
+                                            }
+
+                                            drawText(
+                                                ctx,
+                                                valueText,
+                                                x,
+                                                0,
+                                                w,
+                                                this.height,
+                                                textStyle,
+                                                false,
+                                                backgroundColor
+                                            );
+                                        }
                                     }
                                 }
                             }
@@ -3454,9 +3463,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
                             // draw thumb
                             const [size, position, pageSize] = (widget.data &&
                                 flowContext.dataContext.get(widget.data)) || [
-                                100,
-                                25,
-                                20
+                                100, 25, 20
                             ];
 
                             let xThumb;
@@ -3716,9 +3723,10 @@ export class TextInputWidget extends Widget {
     }
 
     render(flowContext: IFlowContext): React.ReactNode {
-        const runningState = flowContext.runningFlow?.getComponentRunningState<TextInputRunningState>(
-            this
-        );
+        const runningState =
+            flowContext.runningFlow?.getComponentRunningState<TextInputRunningState>(
+                this
+            );
 
         let value = runningState?.value ?? "";
 
@@ -3732,13 +3740,11 @@ export class TextInputWidget extends Widget {
                         if (runningState && runningState.value != value) {
                             runInAction(() => (runningState.value = value));
 
-                            (flowContext.runningFlow as
-                                | RunningFlow
-                                | undefined)?.propagateValue(
-                                this,
-                                "value",
-                                value
-                            );
+                            (
+                                flowContext.runningFlow as
+                                    | RunningFlow
+                                    | undefined
+                            )?.propagateValue(this, "value", value);
                         }
                     }}
                 ></input>
@@ -3748,9 +3754,8 @@ export class TextInputWidget extends Widget {
     }
 
     async execute(runningFlow: RunningFlow) {
-        let runningState = runningFlow.getComponentRunningState<TextInputRunningState>(
-            this
-        );
+        let runningState =
+            runningFlow.getComponentRunningState<TextInputRunningState>(this);
 
         let value: string;
         const inputValue = runningFlow.getInputValue(this, "value");

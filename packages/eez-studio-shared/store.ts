@@ -3,16 +3,39 @@ import { observable, computed, action, toJS } from "mobx";
 import { db } from "eez-studio-shared/db";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
 import { isRenderer } from "eez-studio-shared/util-electron";
-import { _each, _extend, _keys, _map, _pickBy } from "eez-studio-shared/algorithm";
+import {
+    _each,
+    _extend,
+    _keys,
+    _map,
+    _pickBy
+} from "eez-studio-shared/algorithm";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type StoreOperation = "create" | "restore" | "read" | "update" | "delete";
+export type StoreOperation =
+    | "create"
+    | "restore"
+    | "read"
+    | "update"
+    | "delete";
 
 interface IStoreObjectsCollection<T> {
-    createObject(object: T, op: StoreOperation, options?: IStoreOperationOptions): void;
-    updateObject(changes: Partial<T>, op: StoreOperation, options?: IStoreOperationOptions): void;
-    deleteObject(object: T, op: StoreOperation, options?: IStoreOperationOptions): void;
+    createObject(
+        object: T,
+        op: StoreOperation,
+        options?: IStoreOperationOptions
+    ): void;
+    updateObject(
+        changes: Partial<T>,
+        op: StoreOperation,
+        options?: IStoreOperationOptions
+    ): void;
+    deleteObject(
+        object: T,
+        op: StoreOperation,
+        options?: IStoreOperationOptions
+    ): void;
 }
 
 export function createStoreObjectsCollection<
@@ -29,7 +52,11 @@ export function createStoreObjectsCollection<
     return {
         objects: objects,
 
-        createObject(object: T, op: StoreOperation, options?: IStoreOperationOptions) {
+        createObject(
+            object: T,
+            op: StoreOperation,
+            options?: IStoreOperationOptions
+        ) {
             objects.set(object.id, object);
 
             if (!isDeletedCollection) {
@@ -45,7 +72,11 @@ export function createStoreObjectsCollection<
             }
         },
 
-        updateObject(changes: Partial<T>, op: StoreOperation, options?: IStoreOperationOptions) {
+        updateObject(
+            changes: Partial<T>,
+            op: StoreOperation,
+            options?: IStoreOperationOptions
+        ) {
             const object = objects.get(changes.id!);
             if (object) {
                 _each(changes, function (value: any, key: string) {
@@ -54,7 +85,11 @@ export function createStoreObjectsCollection<
             }
         },
 
-        deleteObject(object: T, op: StoreOperation, options?: IStoreOperationOptions) {
+        deleteObject(
+            object: T,
+            op: StoreOperation,
+            options?: IStoreOperationOptions
+        ) {
             let collectionObject = objects.get(object.id);
             if (collectionObject) {
                 if (
@@ -137,7 +172,10 @@ export interface IStore {
     storeVersion: any;
     notifySource: {
         id: string;
-        filterMessage(message: any, filterSpecification: IFilterSpecification): boolean;
+        filterMessage(
+            message: any,
+            filterSpecification: IFilterSpecification
+        ): boolean;
         onNewTarget(
             targetId: string,
             filterSpecification: IFilterSpecification,
@@ -178,16 +216,20 @@ export function createStore({
     versions: string[];
     properties: { [propertyName: string]: IType };
     create?: (props: any) => any;
-    filterMessage?: (message: any, filterSpecification: IFilterSpecification) => boolean;
+    filterMessage?: (
+        message: any,
+        filterSpecification: IFilterSpecification
+    ) => boolean;
     prepareWhereClause?: (
         filterSpecification: IFilterSpecification
     ) => { whereClause: string; params: any[] } | undefined;
     orderBy?: string;
 }) {
     function execCreateObject(object: any, options?: IStoreOperationOptions) {
-        let questionMarks = _map(nonTransientProperties, (value: IType, key: string) => "?").join(
-            ","
-        );
+        let questionMarks = _map(
+            nonTransientProperties,
+            (value: IType, key: string) => "?"
+        ).join(",");
 
         let values = _map(nonTransientProperties, (value: IType, key: string) =>
             value.toDB ? value.toDB(object[key]) : object[key]
@@ -195,9 +237,9 @@ export function createStore({
 
         let info = db
             .prepare(
-                `INSERT INTO "${storeName}"(${_keys(nonTransientProperties).join(
-                    ","
-                )}) VALUES(${questionMarks})`
+                `INSERT INTO "${storeName}"(${_keys(
+                    nonTransientProperties
+                ).join(",")}) VALUES(${questionMarks})`
             )
             .run(values);
 
@@ -209,7 +251,9 @@ export function createStore({
             options
         };
 
-        const undoable = !(options && options.undoable === false) && undoManager.currentTransaction;
+        const undoable =
+            !(options && options.undoable === false) &&
+            undoManager.currentTransaction;
         if (undoable) {
             undoManager.execCommand({
                 store,
@@ -217,7 +261,9 @@ export function createStore({
                 undo: {
                     exec: () =>
                         db
-                            .prepare(`UPDATE "${storeName}" SET deleted=1 WHERE id = ?`)
+                            .prepare(
+                                `UPDATE "${storeName}" SET deleted=1 WHERE id = ?`
+                            )
                             .run(object.id),
                     notifyArg: {
                         op: "delete",
@@ -228,7 +274,9 @@ export function createStore({
                 redo: {
                     exec: () =>
                         db
-                            .prepare(`UPDATE "${storeName}" SET deleted=0 WHERE id = ?`)
+                            .prepare(
+                                `UPDATE "${storeName}" SET deleted=0 WHERE id = ?`
+                            )
                             .run(object.id),
                     notifyArg: {
                         op: "restore",
@@ -247,10 +295,13 @@ export function createStore({
     function execUpdateObject(object: any, options?: IStoreOperationOptions) {
         const changedProperties = _pickBy(
             object,
-            (value: any, key: string) => properties[key] && !properties[key].transient
+            (value: any, key: string) =>
+                properties[key] && !properties[key].transient
         );
 
-        const undoable = !(options && options.undoable === false) && undoManager.currentTransaction;
+        const undoable =
+            !(options && options.undoable === false) &&
+            undoManager.currentTransaction;
 
         // select old values
         const undoValues: any = [];
@@ -259,7 +310,9 @@ export function createStore({
         };
         if (undoable) {
             let propertyNames = Object.keys(changedProperties);
-            const query = `SELECT ${propertyNames.join(",")} FROM "${storeName}" WHERE id = ?`;
+            const query = `SELECT ${propertyNames.join(
+                ","
+            )} FROM "${storeName}" WHERE id = ?`;
 
             const row = db.prepare(query).get(object.id);
 
@@ -274,7 +327,10 @@ export function createStore({
         }
 
         // update
-        const columns = _map(changedProperties, (value, key) => key + "=?").join(",");
+        const columns = _map(
+            changedProperties,
+            (value, key) => key + "=?"
+        ).join(",");
 
         let values = _map(changedProperties, (value, key) => {
             let toDB = properties[key].toDB;
@@ -283,7 +339,9 @@ export function createStore({
 
         values.push(object.id);
 
-        db.prepare(`UPDATE "${storeName}" SET ${columns} WHERE id = ?`).run(values);
+        db.prepare(`UPDATE "${storeName}" SET ${columns} WHERE id = ?`).run(
+            values
+        );
 
         const notifyArg = {
             op: "update",
@@ -298,7 +356,9 @@ export function createStore({
                 undo: {
                     exec: () =>
                         db
-                            .prepare(`UPDATE "${storeName}" SET ${columns} WHERE id = ?`)
+                            .prepare(
+                                `UPDATE "${storeName}" SET ${columns} WHERE id = ?`
+                            )
                             .run(undoValues),
                     notifyArg: {
                         op: "update",
@@ -308,7 +368,11 @@ export function createStore({
                 },
                 redo: {
                     exec: () =>
-                        db.prepare(`UPDATE "${storeName}" SET ${columns} WHERE id = ?`).run(values),
+                        db
+                            .prepare(
+                                `UPDATE "${storeName}" SET ${columns} WHERE id = ?`
+                            )
+                            .run(values),
                     notifyArg
                 }
             });
@@ -325,10 +389,15 @@ export function createStore({
         };
 
         const undoable =
-            !(options && (options.undoable === false || options.deletePermanently === true)) &&
-            undoManager.currentTransaction;
+            !(
+                options &&
+                (options.undoable === false ||
+                    options.deletePermanently === true)
+            ) && undoManager.currentTransaction;
         if (undoable) {
-            db.prepare(`UPDATE "${storeName}" SET deleted=1 WHERE id = ?`).run(object.id);
+            db.prepare(`UPDATE "${storeName}" SET deleted=1 WHERE id = ?`).run(
+                object.id
+            );
 
             undoManager.execCommand({
                 store,
@@ -336,7 +405,9 @@ export function createStore({
                 undo: {
                     exec: () =>
                         db
-                            .prepare(`UPDATE "${storeName}" SET deleted=0 WHERE id = ?`)
+                            .prepare(
+                                `UPDATE "${storeName}" SET deleted=0 WHERE id = ?`
+                            )
                             .run(object.id),
                     notifyArg: {
                         op: "restore",
@@ -347,7 +418,9 @@ export function createStore({
                 redo: {
                     exec: () =>
                         db
-                            .prepare(`UPDATE "${storeName}" SET deleted=1 WHERE id = ?`)
+                            .prepare(
+                                `UPDATE "${storeName}" SET deleted=1 WHERE id = ?`
+                            )
                             .run(object.id),
                     notifyArg: {
                         op: "delete",
@@ -358,13 +431,20 @@ export function createStore({
             });
         } else {
             if (object.id) {
-                db.prepare(`DELETE FROM "${storeName}" WHERE id = ?`).run(object.id);
+                db.prepare(`DELETE FROM "${storeName}" WHERE id = ?`).run(
+                    object.id
+                );
             } else {
-                db.prepare(`DELETE FROM "${storeName}" WHERE oid = ?`).run(object.oid);
+                db.prepare(`DELETE FROM "${storeName}" WHERE oid = ?`).run(
+                    object.oid
+                );
             }
 
             if (options && options.deletePermanently) {
-                undoManager.removeAllTransactionsReferencingObject(store, object);
+                undoManager.removeAllTransactionsReferencingObject(
+                    store,
+                    object
+                );
             }
 
             sendMessage(store.notifySource, notifyArg);
@@ -378,11 +458,16 @@ export function createStore({
             options
         };
 
-        db.prepare(`UPDATE "${storeName}" SET deleted=0 WHERE id = ?`).run(object.id);
+        db.prepare(`UPDATE "${storeName}" SET deleted=0 WHERE id = ?`).run(
+            object.id
+        );
 
         const undoable =
-            !(options && (options.undoable === false || options.deletePermanently === true)) &&
-            undoManager.currentTransaction;
+            !(
+                options &&
+                (options.undoable === false ||
+                    options.deletePermanently === true)
+            ) && undoManager.currentTransaction;
         if (undoable) {
             undoManager.execCommand({
                 store,
@@ -390,7 +475,9 @@ export function createStore({
                 undo: {
                     exec: () =>
                         db
-                            .prepare(`UPDATE "${storeName}" SET deleted=1 WHERE id = ?`)
+                            .prepare(
+                                `UPDATE "${storeName}" SET deleted=1 WHERE id = ?`
+                            )
                             .run(object.id),
                     notifyArg: {
                         op: "delete",
@@ -401,7 +488,9 @@ export function createStore({
                 redo: {
                     exec: () =>
                         db
-                            .prepare(`UPDATE "${storeName}" SET deleted=0 WHERE id = ?`)
+                            .prepare(
+                                `UPDATE "${storeName}" SET deleted=0 WHERE id = ?`
+                            )
                             .run(object.id),
                     notifyArg: {
                         op: "restore",
@@ -420,24 +509,36 @@ export function createStore({
     if (!isRenderer()) {
         const { ipcMain } = require("electron");
 
-        ipcMain.on("shared/store/create-object/" + storeName, (event: any, arg: any) => {
-            event.returnValue = execCreateObject(arg.object, arg.options);
-        });
+        ipcMain.on(
+            "shared/store/create-object/" + storeName,
+            (event: any, arg: any) => {
+                event.returnValue = execCreateObject(arg.object, arg.options);
+            }
+        );
 
-        ipcMain.on("shared/store/update-object/" + storeName, (event: any, arg: any) => {
-            execUpdateObject(arg.object, arg.options);
-            event.returnValue = true;
-        });
+        ipcMain.on(
+            "shared/store/update-object/" + storeName,
+            (event: any, arg: any) => {
+                execUpdateObject(arg.object, arg.options);
+                event.returnValue = true;
+            }
+        );
 
-        ipcMain.on("shared/store/delete-object/" + storeName, (event: any, arg: any) => {
-            execDeleteObject(arg.object, arg.options);
-            event.returnValue = true;
-        });
+        ipcMain.on(
+            "shared/store/delete-object/" + storeName,
+            (event: any, arg: any) => {
+                execDeleteObject(arg.object, arg.options);
+                event.returnValue = true;
+            }
+        );
 
-        ipcMain.on("shared/store/undelete-object/" + storeName, (event: any, arg: any) => {
-            execUndeleteObject(arg.object, arg.options);
-            event.returnValue = true;
-        });
+        ipcMain.on(
+            "shared/store/undelete-object/" + storeName,
+            (event: any, arg: any) => {
+                execUndeleteObject(arg.object, arg.options);
+                event.returnValue = true;
+            }
+        );
     }
 
     function createObject(object: any, options?: IStoreOperationOptions) {
@@ -445,7 +546,7 @@ export function createStore({
             return EEZStudio.electron.ipcRenderer.sendSync(
                 "shared/store/create-object/" + storeName,
                 {
-                    object: toJS(object),
+                    object: toJS(observable(object)),
                     options
                 }
             );
@@ -646,7 +747,9 @@ export function createStore({
 
             if (properties.deleted) {
                 let deletedOption =
-                    (filterSpecification && filterSpecification.deletedOption) || "exclude";
+                    (filterSpecification &&
+                        filterSpecification.deletedOption) ||
+                    "exclude";
                 if (deletedOption === "exclude") {
                     if (whereClause) {
                         whereClause = `(${whereClause}) AND `;
@@ -686,7 +789,9 @@ export function createStore({
     ////////////////////////////////////////////////////////////////////////////////
 
     store.watch = (objectsCollection, filterSpecification) => {
-        let deletedOption = (filterSpecification && filterSpecification.deletedOption) || "exclude";
+        let deletedOption =
+            (filterSpecification && filterSpecification.deletedOption) ||
+            "exclude";
 
         return watch(
             store.notifySource.id,
@@ -694,21 +799,37 @@ export function createStore({
             filterSpecification,
 
             action(
-                (params: { op: StoreOperation; object: any; options?: IStoreOperationOptions }) => {
+                (params: {
+                    op: StoreOperation;
+                    object: any;
+                    options?: IStoreOperationOptions;
+                }) => {
                     function createObject(object: any) {
                         if (create) {
                             object = create(object);
                         }
-                        objectsCollection.createObject(object, params.op, params.options);
+                        objectsCollection.createObject(
+                            object,
+                            params.op,
+                            params.options
+                        );
                         return object;
                     }
 
                     function updateObject(changes: any) {
-                        objectsCollection.updateObject(changes, params.op, params.options);
+                        objectsCollection.updateObject(
+                            changes,
+                            params.op,
+                            params.options
+                        );
                     }
 
                     function deleteObject(object: any) {
-                        objectsCollection.deleteObject(object, params.op, params.options);
+                        objectsCollection.deleteObject(
+                            object,
+                            params.op,
+                            params.options
+                        );
                     }
 
                     if (params.op === "create") {
@@ -735,7 +856,8 @@ export function createStore({
                         } else {
                             if (
                                 deletedOption !== "only" ||
-                                (params.options && params.options.deletePermanently)
+                                (params.options &&
+                                    params.options.deletePermanently)
                             ) {
                                 deleteObject(params.object);
                             } else {
@@ -901,10 +1023,16 @@ class UndoManager {
             for (let i = 0; i < transaction.commands.length; i++) {
                 let command = transaction.commands[i];
                 if (command.store === store) {
-                    if (object.id && command.notifyArg.object.id === object.id) {
+                    if (
+                        object.id &&
+                        command.notifyArg.object.id === object.id
+                    ) {
                         return false;
                     }
-                    if (object.oid && command.notifyArg.object.oid === object.oid) {
+                    if (
+                        object.oid &&
+                        command.notifyArg.object.oid === object.oid
+                    ) {
                         return false;
                     }
                 }
@@ -925,10 +1053,13 @@ if (!isRenderer()) {
 
     const { ipcMain } = require("electron");
 
-    ipcMain.on("shared/store/begin-transaction", async (event: any, arg: any) => {
-        await undoManager.execBeginTransaction(arg);
-        event.returnValue = true;
-    });
+    ipcMain.on(
+        "shared/store/begin-transaction",
+        async (event: any, arg: any) => {
+            await undoManager.execBeginTransaction(arg);
+            event.returnValue = true;
+        }
+    );
 
     ipcMain.on("shared/store/commit-transaction", (event: any) => {
         undoManager.execCommitTransaction();
@@ -946,7 +1077,10 @@ if (!isRenderer()) {
 
 export function beginTransaction(label: string) {
     if (isRenderer()) {
-        return EEZStudio.electron.ipcRenderer.sendSync("shared/store/begin-transaction", label);
+        return EEZStudio.electron.ipcRenderer.sendSync(
+            "shared/store/begin-transaction",
+            label
+        );
     } else {
         return undoManager.execBeginTransaction(label);
     }
@@ -954,7 +1088,9 @@ export function beginTransaction(label: string) {
 
 export function commitTransaction() {
     if (isRenderer()) {
-        return EEZStudio.electron.ipcRenderer.sendSync("shared/store/commit-transaction");
+        return EEZStudio.electron.ipcRenderer.sendSync(
+            "shared/store/commit-transaction"
+        );
     } else {
         return undoManager.execCommitTransaction();
     }

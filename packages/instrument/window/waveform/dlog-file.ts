@@ -609,6 +609,8 @@ export function decodeDlog<UnitType>(
         return NaN;
     };
 
+    console.log(1 / xAxis.step);
+
     return {
         version,
         comment,

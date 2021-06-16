@@ -68,7 +68,10 @@ export interface IFieldComponentProps {
     onOk: () => void;
 }
 
-export class FieldComponent extends React.Component<IFieldComponentProps, any> {}
+export class FieldComponent extends React.Component<
+    IFieldComponentProps,
+    any
+> {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -166,7 +169,10 @@ interface GenericDialogState {
 }
 
 @observer
-export class GenericDialog extends React.Component<GenericDialogProps, GenericDialogState> {
+export class GenericDialog extends React.Component<
+    GenericDialogProps,
+    GenericDialogState
+> {
     fieldContext: any = {};
 
     constructor(props: GenericDialogProps) {
@@ -176,11 +182,12 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
 
         this.props.dialogDefinition.fields.forEach(fieldProperties => {
             if (fieldProperties.unit !== undefined) {
-                values[fieldProperties.name] = UNITS[fieldProperties.unit].formatValue(
-                    this.props.values[fieldProperties.name]
-                );
+                values[fieldProperties.name] = UNITS[
+                    fieldProperties.unit
+                ].formatValue(this.props.values[fieldProperties.name]);
             } else {
-                values[fieldProperties.name] = this.props.values[fieldProperties.name];
+                values[fieldProperties.name] =
+                    this.props.values[fieldProperties.name];
             }
         });
 
@@ -195,9 +202,13 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
         var values: any = {};
         this.props.dialogDefinition.fields.forEach(fieldProperties => {
             if (fieldProperties.type === "integer") {
-                values[fieldProperties.name] = parseInt(this.state.values[fieldProperties.name]);
+                values[fieldProperties.name] = parseInt(
+                    this.state.values[fieldProperties.name]
+                );
             } else if (fieldProperties.type === "number") {
-                values[fieldProperties.name] = parseFloat(this.state.values[fieldProperties.name]);
+                values[fieldProperties.name] = parseFloat(
+                    this.state.values[fieldProperties.name]
+                );
             } else if (fieldProperties.type === "enum") {
                 let enumItems;
                 if (typeof fieldProperties.enumItems === "function") {
@@ -212,7 +223,8 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                     const id = value.toString();
                     enumItem = enumItems.find(enumItem => {
                         const enumItemId =
-                            typeof enumItem === "string" || typeof enumItem === "number"
+                            typeof enumItem === "string" ||
+                            typeof enumItem === "number"
                                 ? enumItem
                                 : enumItem.id;
                         return enumItemId.toString() === id;
@@ -222,7 +234,10 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                 }
 
                 if (enumItem !== undefined) {
-                    if (typeof enumItem === "string" || typeof enumItem === "number") {
+                    if (
+                        typeof enumItem === "string" ||
+                        typeof enumItem === "number"
+                    ) {
                         values[fieldProperties.name] = enumItem;
                     } else {
                         values[fieldProperties.name] = enumItem.id;
@@ -231,11 +246,12 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                     values[fieldProperties.name] = undefined;
                 }
             } else if (fieldProperties.unit !== undefined) {
-                values[fieldProperties.name] = UNITS[fieldProperties.unit].parseValue(
-                    this.state.values[fieldProperties.name]
-                );
+                values[fieldProperties.name] = UNITS[
+                    fieldProperties.unit
+                ].parseValue(this.state.values[fieldProperties.name]);
             } else {
-                values[fieldProperties.name] = this.state.values[fieldProperties.name];
+                values[fieldProperties.name] =
+                    this.state.values[fieldProperties.name];
             }
         });
         return values;
@@ -278,13 +294,18 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
 
         this.props.dialogDefinition.fields
             .filter(fieldProperties => {
-                return !fieldProperties.visible || fieldProperties.visible(this.values);
+                return (
+                    !fieldProperties.visible ||
+                    fieldProperties.visible(this.values)
+                );
             })
             .forEach(fieldProperties => {
                 let fieldValidators: Rule[] = [];
 
                 if (fieldProperties.type === "integer") {
-                    fieldValidators = fieldValidators.concat([validators.integer]);
+                    fieldValidators = fieldValidators.concat([
+                        validators.integer
+                    ]);
                 }
 
                 if (fieldProperties.unit) {
@@ -294,11 +315,16 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                 }
 
                 if (fieldProperties.validators) {
-                    fieldValidators = fieldValidators.concat(fieldProperties.validators);
+                    fieldValidators = fieldValidators.concat(
+                        fieldProperties.validators
+                    );
                 }
 
                 fieldValidators.forEach(validator => {
-                    let message = validator(this.state.values, fieldProperties.name);
+                    let message = validator(
+                        this.state.values,
+                        fieldProperties.name
+                    );
                     if (message) {
                         if (!errorMessages) {
                             errorMessages = {};
@@ -341,7 +367,8 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                 {this.props.dialogDefinition.fields
                     .filter(fieldProperties => {
                         return (
-                            !fieldProperties.visible || fieldProperties.visible(this.state.values)
+                            !fieldProperties.visible ||
+                            fieldProperties.visible(this.state.values)
                         );
                     })
                     .map(fieldProperties => {
@@ -349,8 +376,12 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             fieldProperties.displayName != undefined
                                 ? fieldProperties.displayName
                                 : humanize(fieldProperties.name);
-                        const value = this.state.values[fieldProperties.name] || "";
-                        const onChange = this.onChange.bind(this, fieldProperties);
+                        const value =
+                            this.state.values[fieldProperties.name] || "";
+                        const onChange = this.onChange.bind(
+                            this,
+                            fieldProperties
+                        );
                         const errors =
                             this.state.errorMessages &&
                             this.state.errorMessages[fieldProperties.name];
@@ -373,7 +404,9 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             Field = RadioGroupProperty;
 
                             let enumItems;
-                            if (typeof fieldProperties.enumItems === "function") {
+                            if (
+                                typeof fieldProperties.enumItems === "function"
+                            ) {
                                 enumItems = fieldProperties.enumItems();
                             } else {
                                 enumItems = fieldProperties.enumItems!;
@@ -381,7 +414,8 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
 
                             children = enumItems.map(enumItem => {
                                 const id =
-                                    typeof enumItem === "string" || typeof enumItem === "number"
+                                    typeof enumItem === "string" ||
+                                    typeof enumItem === "number"
                                         ? enumItem.toString()
                                         : enumItem.id;
                                 return (
@@ -398,17 +432,30 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                                 );
                             });
 
-                            const selectedEnumItem = enumItems.find(enumItem => {
-                                if (typeof enumItem === "string" || typeof enumItem === "number") {
-                                    return false;
+                            const selectedEnumItem = enumItems.find(
+                                enumItem => {
+                                    if (
+                                        typeof enumItem === "string" ||
+                                        typeof enumItem === "number"
+                                    ) {
+                                        return false;
+                                    }
+                                    return (
+                                        enumItem.image && enumItem.id === value
+                                    );
                                 }
-                                return enumItem.image && enumItem.id === value;
-                            });
+                            );
 
                             if (selectedEnumItem) {
-                                const image = (selectedEnumItem as IEnumItem).image;
+                                const image = (selectedEnumItem as IEnumItem)
+                                    .image;
                                 children = (
-                                    <div style={{ display: "flex", flexDirection: "row" }}>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "row"
+                                        }}
+                                    >
                                         <div>{children}</div>
                                         <Card>
                                             <img src={image} />
@@ -420,7 +467,9 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                             Field = SelectProperty;
 
                             let enumItems;
-                            if (typeof fieldProperties.enumItems === "function") {
+                            if (
+                                typeof fieldProperties.enumItems === "function"
+                            ) {
                                 enumItems = fieldProperties.enumItems();
                             } else {
                                 enumItems = fieldProperties.enumItems!;
@@ -428,7 +477,8 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
 
                             children = enumItems.map(enumItem => {
                                 const id =
-                                    typeof enumItem === "string" || typeof enumItem === "number"
+                                    typeof enumItem === "string" ||
+                                    typeof enumItem === "number"
                                         ? enumItem.toString()
                                         : enumItem.id;
                                 return (
@@ -453,18 +503,29 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
                                 <PropertyEnclosure
                                     key={fieldProperties.name}
                                     errors={errors}
-                                    className={fieldProperties.enclosureClassName}
+                                    className={
+                                        fieldProperties.enclosureClassName
+                                    }
                                 >
-                                    {!fieldProperties.fullLine && <td>{name}</td>}
+                                    {!fieldProperties.fullLine && (
+                                        <td>{name}</td>
+                                    )}
                                     <td>
                                         {
                                             <fieldProperties.type
                                                 key={fieldProperties.name}
-                                                dialogContext={this.props.dialogContext}
-                                                fieldProperties={fieldProperties}
+                                                dialogContext={
+                                                    this.props.dialogContext
+                                                }
+                                                fieldProperties={
+                                                    fieldProperties
+                                                }
                                                 values={this.state.values}
                                                 fieldContext={this.fieldContext}
-                                                onChange={this.onChange.bind(this, fieldProperties)}
+                                                onChange={this.onChange.bind(
+                                                    this,
+                                                    fieldProperties
+                                                )}
                                                 onOk={this.onOk}
                                             />
                                         }
@@ -500,7 +561,9 @@ export class GenericDialog extends React.Component<GenericDialogProps, GenericDi
             }
 
             if (this.props.opts.jsPanel) {
-                fields = <div style={{ padding: 10, width: "100%" }}>{fields}</div>;
+                fields = (
+                    <div style={{ padding: 10, width: "100%" }}>{fields}</div>
+                );
             }
         }
 

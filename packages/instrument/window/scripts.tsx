@@ -32,7 +32,11 @@ import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 import { showShortcutDialog } from "shortcuts/shortcut-dialog";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
-import { executeShortcut, isShorcutRunning, stopActiveShortcut } from "instrument/window/script";
+import {
+    executeShortcut,
+    isShorcutRunning,
+    stopActiveShortcut
+} from "instrument/window/script";
 import { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
@@ -65,7 +69,8 @@ export class ScriptsModel implements IModel {
     @computed
     get selectedScript() {
         return values(this.appStore.shortcutsStore.shortcuts).find(
-            script => script.id === this.appStore.navigationStore.selectedScriptId
+            script =>
+                script.id === this.appStore.navigationStore.selectedScriptId
         );
     }
 
@@ -142,7 +147,10 @@ export class ScriptsModel implements IModel {
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique({}, values(this.appStore.shortcutsStore.shortcuts))
+                            validators.unique(
+                                {},
+                                values(this.appStore.shortcutsStore.shortcuts)
+                            )
                         ]
                     },
                     {
@@ -169,7 +177,7 @@ export class ScriptsModel implements IModel {
 
             values: {
                 name: "",
-                type: ""
+                type: "scpi-commands"
             }
         })
             .then(result => {
@@ -188,7 +196,9 @@ export class ScriptsModel implements IModel {
                     selected: false
                 });
                 if (scriptId) {
-                    this.appStore.navigationStore.changeSelectedScriptId(scriptId);
+                    this.appStore.navigationStore.changeSelectedScriptId(
+                        scriptId
+                    );
                 }
             })
             .catch(() => {});
@@ -200,7 +210,9 @@ export class ScriptsModel implements IModel {
         if (selectedScript) {
             const isExtensionShortcut =
                 selectedScript.groupName &&
-                selectedScript.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX);
+                selectedScript.groupName.startsWith(
+                    SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
+                );
 
             confirm(
                 "Are you sure?",
@@ -241,13 +253,17 @@ export class ScriptsModel implements IModel {
 
             connection.upload(
                 Object.assign({}, instrument.defaultFileUploadInstructions, {
-                    sourceData: this.newActionCode || this.selectedScript!.action.data,
+                    sourceData:
+                        this.newActionCode || this.selectedScript!.action.data,
                     sourceFileType: "text/x-python",
                     destinationFileName: this.selectedScript!.name + ".py",
                     destinationFolderPath: "/Scripts"
                 }),
                 () => notification.success(`Script uploaded.`),
-                err => notification.error(`Failed to upload script: ${err.toString()}`)
+                err =>
+                    notification.error(
+                        `Failed to upload script: ${err.toString()}`
+                    )
             );
         }
     }
@@ -268,7 +284,10 @@ const ScriptsContainer = styled.div`
 `;
 
 @observer
-export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }, {}> {
+export class ScriptView extends React.Component<
+    { appStore: InstrumentAppStore },
+    {}
+> {
     codeEditor: CodeEditor | null;
 
     componentDidMount() {
@@ -293,9 +312,11 @@ export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }
                         scriptsModel.newActionCode = value;
                     }}
                     mode={
-                        scriptsModel.selectedScript.action.type === "scpi-commands"
+                        scriptsModel.selectedScript.action.type ===
+                        "scpi-commands"
                             ? "scpi"
-                            : scriptsModel.selectedScript.action.type === "javascript"
+                            : scriptsModel.selectedScript.action.type ===
+                              "javascript"
                             ? "javascript"
                             : "python"
                     }
@@ -308,7 +329,10 @@ export class ScriptView extends React.Component<{ appStore: InstrumentAppStore }
         return (
             <ScriptsContainer>
                 {scriptsModel.errorMessage && (
-                    <AlertDanger className="mb-0" onDismiss={scriptsModel.dismissError}>
+                    <AlertDanger
+                        className="mb-0"
+                        onDismiss={scriptsModel.dismissError}
+                    >
                         {scriptsModel.errorMessage}
                     </AlertDanger>
                 )}
@@ -341,7 +365,8 @@ class MasterView extends React.Component<{
             .map(script => ({
                 id: script.id,
                 data: script,
-                selected: this.props.appStore.scriptsModel.selectedScript === script
+                selected:
+                    this.props.appStore.scriptsModel.selectedScript === script
             }));
     }
 
@@ -387,7 +412,9 @@ const HeaderContainer = styled(Header)`
 `;
 
 @observer
-export class ScriptHeader extends React.Component<{ appStore: InstrumentAppStore }> {
+export class ScriptHeader extends React.Component<{
+    appStore: InstrumentAppStore;
+}> {
     editShortcut = () => {
         const selectedScript = this.props.appStore.scriptsModel.selectedScript;
         if (!selectedScript) {
@@ -417,7 +444,9 @@ export class ScriptHeader extends React.Component<{ appStore: InstrumentAppStore
     render() {
         return (
             <HeaderContainer>
-                <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
+                <Toolbar
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                >
                     <ButtonAction
                         text="Edit Shortcut"
                         className="btn-secondary btn-sm"
@@ -439,7 +468,9 @@ export class ScriptHeader extends React.Component<{ appStore: InstrumentAppStore
 }
 
 @observer
-export class DetailsView extends React.Component<{ appStore: InstrumentAppStore }> {
+export class DetailsView extends React.Component<{
+    appStore: InstrumentAppStore;
+}> {
     render() {
         const { appStore } = this.props;
         return this.props.appStore.scriptsModel.selectedScript ? (
@@ -454,7 +485,9 @@ export class DetailsView extends React.Component<{ appStore: InstrumentAppStore 
 }
 
 @observer
-export class ScriptsEditor extends React.Component<{ appStore: InstrumentAppStore }> {
+export class ScriptsEditor extends React.Component<{
+    appStore: InstrumentAppStore;
+}> {
     render() {
         const appStore = this.props.appStore;
         const scriptsModel = this.props.appStore.scriptsModel;
@@ -474,8 +507,8 @@ export class ScriptsEditor extends React.Component<{ appStore: InstrumentAppStor
                     <MasterView
                         appStore={appStore}
                         selectedScript={scriptsModel.selectedScript}
-                        selectScript={
-                            (script: IShortcut) => navigationStore.changeSelectedScriptId(script.id)
+                        selectScript={(script: IShortcut) =>
+                            navigationStore.changeSelectedScriptId(script.id)
                         }
                     />
                     <DetailsView appStore={appStore} />
@@ -519,7 +552,8 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                 scriptsModel.selectedScript &&
                 appStore.instrument!.connection.isConnected &&
                 (scriptsModel.selectedScript.action.type === "scpi-commands" ||
-                    scriptsModel.selectedScript.action.type === "javascript") && (
+                    scriptsModel.selectedScript.action.type ===
+                        "javascript") && (
                     <ButtonAction
                         text="Run"
                         icon="material:play_arrow"
@@ -538,9 +572,17 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                 />
             )}
             <ButtonAction
-                text={scriptsModel.terminalVisible ? "Hide Terminal" : "Show Terminal"}
+                text={
+                    scriptsModel.terminalVisible
+                        ? "Hide Terminal"
+                        : "Show Terminal"
+                }
                 className="btn-secondary"
-                title={scriptsModel.terminalVisible ? "Hide terminal" : "Show terminal"}
+                title={
+                    scriptsModel.terminalVisible
+                        ? "Hide terminal"
+                        : "Show terminal"
+                }
                 onClick={scriptsModel.toggleTerminal}
             />
         </React.Fragment>
@@ -565,7 +607,10 @@ export const showScriptError = action(
     }
 );
 
-export function insertScpiCommandIntoCode(appStore: InstrumentAppStore, scpiCommand: string) {
+export function insertScpiCommandIntoCode(
+    appStore: InstrumentAppStore,
+    scpiCommand: string
+) {
     const scriptsModel = appStore.scriptsModel;
 
     const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;
@@ -587,7 +632,10 @@ export function insertScpiCommandIntoCode(appStore: InstrumentAppStore, scpiComm
     codeEditor.insertText(text);
 }
 
-export function insertScpiQueryIntoCode(appStore: InstrumentAppStore, scpiQuery: string) {
+export function insertScpiQueryIntoCode(
+    appStore: InstrumentAppStore,
+    scpiQuery: string
+) {
     const scriptsModel = appStore.scriptsModel;
 
     const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;
@@ -609,7 +657,10 @@ export function insertScpiQueryIntoCode(appStore: InstrumentAppStore, scpiQuery:
     codeEditor.insertText(text);
 }
 
-export async function importScript(appStore: InstrumentAppStore, filePath: string) {
+export async function importScript(
+    appStore: InstrumentAppStore,
+    filePath: string
+) {
     const isMicroPython = filePath.toLowerCase().endsWith(".py");
     const isJavaScript = filePath.toLowerCase().endsWith(".js");
     if (!isMicroPython && !isJavaScript) {
@@ -622,7 +673,9 @@ export async function importScript(appStore: InstrumentAppStore, filePath: strin
 
     const name = path.basename(filePath, filePath.slice(-3));
 
-    const script = values(appStore.shortcutsStore.shortcuts).find(script => script.name === name);
+    const script = values(appStore.shortcutsStore.shortcuts).find(
+        script => script.name === name
+    );
 
     let scriptId: string | undefined;
     if (script) {

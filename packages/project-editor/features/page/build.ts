@@ -185,6 +185,7 @@ const BAR_GRAPH_ORIENTATION_LEFT_RIGHT = 1;
 const BAR_GRAPH_ORIENTATION_RIGHT_LEFT = 2;
 const BAR_GRAPH_ORIENTATION_TOP_BOTTOM = 3;
 const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
+const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1134,6 +1135,10 @@ function buildWidget(object: Widget | Page, assets: Assets) {
                 orientation = BAR_GRAPH_ORIENTATION_BOTTOM_TOP;
         }
 
+        if (!widget.displayValue) {
+            orientation |= BAR_GRAPH_DO_NOT_DISPLAY_VALUE;
+        }
+
         specific.addField(new UInt8(orientation));
 
         // textStyle
@@ -1957,9 +1962,8 @@ export async function build(
         }
 
         if (buildAssetsDeclCompressed) {
-            result.GUI_ASSETS_DECL_COMPRESSED = buildGuiAssetsDecl(
-                compressedAssetsData
-            );
+            result.GUI_ASSETS_DECL_COMPRESSED =
+                buildGuiAssetsDecl(compressedAssetsData);
         }
 
         if (buildAssetsDef) {
