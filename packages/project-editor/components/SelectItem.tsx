@@ -144,8 +144,9 @@ class SelectItemDialog extends React.Component<{
         let value;
 
         if (propertyInfo.type === PropertyType.String) {
-            const glyphCode = `\\u${(this.navigationStore
-                .selectedObject as Glyph).encoding
+            const glyphCode = `\\u${(
+                this.navigationStore.selectedObject as Glyph
+            ).encoding
                 .toString(16)
                 .padStart(4, "0")}`;
 
@@ -155,10 +156,8 @@ class SelectItemDialog extends React.Component<{
                 params.textInputSelection.start != null &&
                 params.textInputSelection.end != null
             ) {
-                const existingValue: string = getProperty(
-                    object,
-                    propertyInfo.name
-                );
+                const existingValue: string =
+                    getProperty(object, propertyInfo.name) || "";
                 value =
                     existingValue.substring(
                         0,
