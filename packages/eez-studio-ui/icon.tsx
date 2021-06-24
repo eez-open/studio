@@ -14,6 +14,7 @@ const IconOverlay = styled.span`
     display: inline-block;
     position: absolute;
     font-size: 8px;
+    line-height: 12px;
     font-weight: bold;
     background-color: #eee;
     border: 1px solid #bbb;

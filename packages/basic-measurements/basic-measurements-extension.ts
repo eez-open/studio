@@ -1,4 +1,7 @@
-import { IExtensionDefinition, IFieldProperties } from "eez-studio-shared/extensions/extension";
+import {
+    IExtensionDefinition,
+    IFieldProperties
+} from "eez-studio-shared/extensions/extension";
 
 const fftParametersDescription: IFieldProperties[] = [
     // {
@@ -119,6 +122,24 @@ const basicMeasurementsExtension: IExtensionDefinition = {
             arity: 2,
             resultType: "chart"
         }
+        // {
+        //     id: "acActivePower",
+        //     name: "AC Active Power",
+        //     script: "ac_active.js",
+        //     arity: 2
+        // },
+        // {
+        //     id: "acReactivePower",
+        //     name: "AC Reactive Power",
+        //     script: "ac_reactive.js",
+        //     arity: 2
+        // },
+        // {
+        //     id: "acApparentPower",
+        //     name: "AC Apparent Power",
+        //     script: "ac_apparent.js",
+        //     arity: 2
+        // }
     ]
 };
 

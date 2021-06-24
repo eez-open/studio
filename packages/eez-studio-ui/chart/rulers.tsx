@@ -84,14 +84,20 @@ class DragXRulerMouseHandler implements MouseHandler {
         }
 
         this.x1 = this.rulersController.rulersModel.x1;
-        this.dx = this.rulersController.rulersModel.x2 - this.rulersController.rulersModel.x1;
+        this.dx =
+            this.rulersController.rulersModel.x2 -
+            this.rulersController.rulersModel.x1;
     }
 
     @action
     move(point: SVGPoint, event: PointerEvent) {
         let x = this.xAxisController.pxToValue(point.x);
         if (this.whichRuller === "both") {
-            x = getSnapToValue(event, this.x1 + x - this.xStart, this.xAxisController);
+            x = getSnapToValue(
+                event,
+                this.x1 + x - this.xStart,
+                this.xAxisController
+            );
             x = this.rulersController.snapToSample(x);
 
             if (x < this.xAxisController.minValue) {
@@ -131,7 +137,11 @@ class DragXRulerMouseHandler implements MouseHandler {
     }
 
     @action
-    up(point: SVGPoint | undefined, event: PointerEvent | undefined, cancel: boolean) {
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ) {
         this.rulersController.rulersModel.pauseDbUpdate = false;
     }
 
@@ -152,12 +162,16 @@ class DragYRulerMouseHandler implements MouseHandler {
     y1: number;
     dy: number;
 
-    constructor(private chartView: ChartView, private whichRuller: "y1" | "y2" | "both" | "none") {
+    constructor(
+        private chartView: ChartView,
+        private whichRuller: "y1" | "y2" | "both" | "none"
+    ) {
         this.chartIndex = chartView.props.chartController.chartIndex;
     }
 
     get rulersController() {
-        return this.chartView.props.chartController.chartsController.rulersController;
+        return this.chartView.props.chartController.chartsController
+            .rulersController;
     }
 
     get rulersModel() {
@@ -183,14 +197,20 @@ class DragYRulerMouseHandler implements MouseHandler {
         }
 
         this.y1 = this.rulersModel.y1[this.chartIndex];
-        this.dy = this.rulersModel.y2[this.chartIndex] - this.rulersModel.y1[this.chartIndex];
+        this.dy =
+            this.rulersModel.y2[this.chartIndex] -
+            this.rulersModel.y1[this.chartIndex];
     }
 
     @action
     move(point: SVGPoint, event: PointerEvent) {
         let y = this.yAxisController.pxToValue(point.y);
         if (this.whichRuller === "both") {
-            y = getSnapToValue(event, this.y1 + y - this.yStart, this.yAxisController);
+            y = getSnapToValue(
+                event,
+                this.y1 + y - this.yStart,
+                this.yAxisController
+            );
 
             if (y < this.yAxisController.minValue) {
                 y = this.yAxisController.minValue;
@@ -228,7 +248,11 @@ class DragYRulerMouseHandler implements MouseHandler {
     }
 
     @action
-    up(point: SVGPoint | undefined, event: PointerEvent | undefined, cancel: boolean) {
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ) {
         this.rulersModel.pauseDbUpdate = false;
     }
 
@@ -242,14 +266,19 @@ class DragYRulerMouseHandler implements MouseHandler {
 }
 
 export class RulersController {
-    constructor(public chartsController: ChartsController, public rulersModel: RulersModel) {}
+    constructor(
+        public chartsController: ChartsController,
+        public rulersModel: RulersModel
+    ) {}
 
     @computed
     get x1() {
         return (
             Math.round(
                 this.chartsController.chartLeft +
-                    this.chartsController.xAxisController.valueToPx(this.rulersModel.x1)
+                    this.chartsController.xAxisController.valueToPx(
+                        this.rulersModel.x1
+                    )
             ) + 0.5
         );
     }
@@ -259,7 +288,9 @@ export class RulersController {
         return (
             Math.round(
                 this.chartsController.chartLeft +
-                    this.chartsController.xAxisController.valueToPx(this.rulersModel.x2)
+                    this.chartsController.xAxisController.valueToPx(
+                        this.rulersModel.x2
+                    )
             ) + 0.5
         );
     }
@@ -268,9 +299,9 @@ export class RulersController {
         return (
             Math.round(
                 this.chartsController.chartBottom -
-                    this.chartsController.chartControllers[chartIndex].yAxisController.valueToPx(
-                        this.rulersModel.y1[chartIndex]
-                    )
+                    this.chartsController.chartControllers[
+                        chartIndex
+                    ].yAxisController.valueToPx(this.rulersModel.y1[chartIndex])
             ) + 0.5
         );
     }
@@ -279,14 +310,17 @@ export class RulersController {
         return (
             Math.round(
                 this.chartsController.chartBottom -
-                    this.chartsController.chartControllers[chartIndex].yAxisController.valueToPx(
-                        this.rulersModel.y2[chartIndex]
-                    )
+                    this.chartsController.chartControllers[
+                        chartIndex
+                    ].yAxisController.valueToPx(this.rulersModel.y2[chartIndex])
             ) + 0.5
         );
     }
 
-    onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
+    onDragStart(
+        chartView: ChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined {
         if (closestByClass(event.target, "EezStudio_ChartRuler_x1rect")) {
             return new DragXRulerMouseHandler(this, "x1");
         }
@@ -314,8 +348,11 @@ export class RulersController {
         if (this.rulersModel.xAxisRulersEnabled) {
             return new DragXRulerMouseHandler(this, "none");
         } else if (
-            chartView.props.chartController.chartIndex < this.rulersModel.yAxisRulersEnabled.length &&
-            this.rulersModel.yAxisRulersEnabled[chartView.props.chartController.chartIndex]
+            chartView.props.chartController.chartIndex <
+                this.rulersModel.yAxisRulersEnabled.length &&
+            this.rulersModel.yAxisRulersEnabled[
+                chartView.props.chartController.chartIndex
+            ]
         ) {
             return new DragYRulerMouseHandler(chartView, "none");
         }
@@ -573,14 +610,16 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
 
         this.outsideChangeInXRulersSubscriptionDisposer = autorun(() => {
-            const x1 = this.props.chartsController.xAxisController.unit.formatValue(
-                this.rulersModel.x1,
-                10
-            );
-            const x2 = this.props.chartsController.xAxisController.unit.formatValue(
-                this.rulersModel.x2,
-                10
-            );
+            const x1 =
+                this.props.chartsController.xAxisController.unit.formatValue(
+                    this.rulersModel.x1,
+                    10
+                );
+            const x2 =
+                this.props.chartsController.xAxisController.unit.formatValue(
+                    this.rulersModel.x2,
+                    10
+                );
             if (!this.isInsideChange) {
                 runInAction(() => {
                     this.x1 = x1;
@@ -596,8 +635,13 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
 
         this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
-            for (let i = 0; i < this.props.chartsController.chartControllers.length; ++i) {
-                const chartController = this.props.chartsController.chartControllers[i];
+            for (
+                let i = 0;
+                i < this.props.chartsController.chartControllers.length;
+                ++i
+            ) {
+                const chartController =
+                    this.props.chartsController.chartControllers[i];
                 if (
                     i < this.rulersModel.yAxisRulersEnabled.length &&
                     this.rulersModel.yAxisRulersEnabled[i] &&
@@ -635,10 +679,16 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         const xAxisController = this.props.chartsController.xAxisController;
 
         const x1 = xAxisController.unit.parseValue(this.x1);
-        this.x1Error = x1 == null || x1 < xAxisController.minValue || x1 > xAxisController.maxValue;
+        this.x1Error =
+            x1 == null ||
+            x1 < xAxisController.minValue ||
+            x1 > xAxisController.maxValue;
 
         const x2 = xAxisController.unit.parseValue(this.x2);
-        this.x2Error = x2 == null || x2 < xAxisController.minValue || x2 > xAxisController.maxValue;
+        this.x2Error =
+            x2 == null ||
+            x2 < xAxisController.minValue ||
+            x2 > xAxisController.maxValue;
 
         if (this.x1Error || this.x2Error) {
             return;
@@ -700,20 +750,28 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
 
         const dx = x2 - x1;
-        this.props.chartsController.xAxisController.zoom(x1 - 0.05 * dx, x2 + 0.05 * dx);
+        this.props.chartsController.xAxisController.zoom(
+            x1 - 0.05 * dx,
+            x2 + 0.05 * dx
+        );
     }
 
     validateYRange(chartIndex: number) {
-        const yAxisController = this.props.chartsController.chartControllers[chartIndex]
-            .yAxisController;
+        const yAxisController =
+            this.props.chartsController.chartControllers[chartIndex]
+                .yAxisController;
 
         const y1 = yAxisController.unit.parseValue(this.y1[chartIndex]);
         this.y1Error[chartIndex] =
-            y1 == null || y1 < yAxisController.minValue || y1 > yAxisController.maxValue;
+            y1 == null ||
+            y1 < yAxisController.minValue ||
+            y1 > yAxisController.maxValue;
 
         const y2 = yAxisController.unit.parseValue(this.y2[chartIndex]);
         this.y2Error[chartIndex] =
-            y2 == null || y2 < yAxisController.minValue || y2 > yAxisController.maxValue;
+            y2 == null ||
+            y2 < yAxisController.minValue ||
+            y2 > yAxisController.maxValue;
 
         if (this.y1Error[chartIndex] || this.y2Error[chartIndex]) {
             return;
@@ -728,11 +786,14 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         if (checked) {
             this.rulersModel.yAxisRulersEnabled[chartIndex] = true;
 
-            const yAxisController = this.props.chartsController.chartControllers[chartIndex]
-                .yAxisController;
+            const yAxisController =
+                this.props.chartsController.chartControllers[chartIndex]
+                    .yAxisController;
 
-            this.rulersModel.y1[chartIndex] = yAxisController.from + 0.1 * yAxisController.distance;
-            this.rulersModel.y2[chartIndex] = yAxisController.to - 0.1 * yAxisController.distance;
+            this.rulersModel.y1[chartIndex] =
+                yAxisController.from + 0.1 * yAxisController.distance;
+            this.rulersModel.y2[chartIndex] =
+                yAxisController.to - 0.1 * yAxisController.distance;
         } else {
             this.rulersModel.yAxisRulersEnabled[chartIndex] = false;
         }
@@ -771,10 +832,9 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
 
         const dy = y2 - y1;
-        this.props.chartsController.chartControllers[chartIndex].yAxisController.zoom(
-            y1 - 0.05 * dy,
-            y2 + 0.05 * dy
-        );
+        this.props.chartsController.chartControllers[
+            chartIndex
+        ].yAxisController.zoom(y1 - 0.05 * dy, y2 + 0.05 * dy);
     }
 
     render() {
@@ -798,9 +858,12 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                         <td>
                                             <input
                                                 type="text"
-                                                className={classNames("form-control", {
-                                                    error: this.x1Error
-                                                })}
+                                                className={classNames(
+                                                    "form-control",
+                                                    {
+                                                        error: this.x1Error
+                                                    }
+                                                )}
                                                 value={this.x1}
                                                 onChange={this.setX1}
                                             />
@@ -809,9 +872,12 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                         <td>
                                             <input
                                                 type="text"
-                                                className={classNames("form-control", {
-                                                    error: this.x2Error
-                                                })}
+                                                className={classNames(
+                                                    "form-control",
+                                                    {
+                                                        error: this.x2Error
+                                                    }
+                                                )}
                                                 value={this.x2}
                                                 onChange={this.setX2}
                                             />
@@ -822,7 +888,8 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                                 type="text"
                                                 className="form-control"
                                                 value={this.props.chartsController.xAxisController.unit.formatValue(
-                                                    this.rulersModel.x2 - this.rulersModel.x1,
+                                                    this.rulersModel.x2 -
+                                                        this.rulersModel.x1,
                                                     10
                                                 )}
                                                 readOnly={true}
@@ -842,26 +909,37 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                         </div>
                     )}
                 </div>
-                {_range(this.props.chartsController.chartControllers.length).map(chartIndex => (
-                    <div key={chartIndex} className="EezStudio_AxisRulersProperties">
+                {_range(
+                    this.props.chartsController.chartControllers.length
+                ).map(chartIndex => (
+                    <div
+                        key={chartIndex}
+                        className="EezStudio_AxisRulersProperties"
+                    >
                         <div className="EezStudio_SideDockView_PropertyLabel">
                             <Checkbox
                                 checked={
-                                    chartIndex < this.rulersModel.yAxisRulersEnabled.length &&
-                                    this.rulersModel.yAxisRulersEnabled[chartIndex]
+                                    chartIndex <
+                                        this.rulersModel.yAxisRulersEnabled
+                                            .length &&
+                                    this.rulersModel.yAxisRulersEnabled[
+                                        chartIndex
+                                    ]
                                 }
                                 onChange={(checked: boolean) =>
                                     this.enableYAxisRulers(chartIndex, checked)
                                 }
                             >
                                 Enable{" "}
-                                {this.props.chartsController.chartControllers.length > 1
+                                {this.props.chartsController.chartControllers
+                                    .length > 1
                                     ? `"${this.props.chartsController.chartControllers[chartIndex].yAxisController.axisModel.label}" `
                                     : ""}
                                 Y axis rulers
                             </Checkbox>
                         </div>
-                        {chartIndex < this.rulersModel.yAxisRulersEnabled.length &&
+                        {chartIndex <
+                            this.rulersModel.yAxisRulersEnabled.length &&
                             this.rulersModel.yAxisRulersEnabled[chartIndex] && (
                                 <div className="EezStudio_SideDockView_Property">
                                     <table>
@@ -871,12 +949,23 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                                 <td>
                                                     <input
                                                         type="text"
-                                                        className={classNames("form-control", {
-                                                            error: this.y1Error[chartIndex]
-                                                        })}
-                                                        value={this.y1[chartIndex]}
+                                                        className={classNames(
+                                                            "form-control",
+                                                            {
+                                                                error: this
+                                                                    .y1Error[
+                                                                    chartIndex
+                                                                ]
+                                                            }
+                                                        )}
+                                                        value={
+                                                            this.y1[chartIndex]
+                                                        }
                                                         onChange={event =>
-                                                            this.setY1(chartIndex, event)
+                                                            this.setY1(
+                                                                chartIndex,
+                                                                event
+                                                            )
                                                         }
                                                     />
                                                 </td>
@@ -884,12 +973,23 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                                 <td>
                                                     <input
                                                         type="text"
-                                                        className={classNames("form-control", {
-                                                            error: this.y2Error[chartIndex]
-                                                        })}
-                                                        value={this.y2[chartIndex]}
+                                                        className={classNames(
+                                                            "form-control",
+                                                            {
+                                                                error: this
+                                                                    .y2Error[
+                                                                    chartIndex
+                                                                ]
+                                                            }
+                                                        )}
+                                                        value={
+                                                            this.y2[chartIndex]
+                                                        }
                                                         onChange={event =>
-                                                            this.setY2(chartIndex, event)
+                                                            this.setY2(
+                                                                chartIndex,
+                                                                event
+                                                            )
                                                         }
                                                     />
                                                 </td>
@@ -901,19 +1001,30 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                                                         value={this.props.chartsController.chartControllers[
                                                             chartIndex
                                                         ].yAxisController.unit.formatValue(
-                                                            this.rulersModel.y2[chartIndex] -
-                                                                this.rulersModel.y1[chartIndex],
+                                                            this.rulersModel.y2[
+                                                                chartIndex
+                                                            ] -
+                                                                this.rulersModel
+                                                                    .y1[
+                                                                    chartIndex
+                                                                ],
                                                             4
                                                         )}
                                                         readOnly={true}
                                                     />
                                                 </td>
                                                 <td />
-                                                <td style={{ textAlign: "left" }}>
+                                                <td
+                                                    style={{
+                                                        textAlign: "left"
+                                                    }}
+                                                >
                                                     <IconAction
                                                         icon="material:search"
                                                         onClick={() =>
-                                                            this.zoomToFitYRulers(chartIndex)
+                                                            this.zoomToFitYRulers(
+                                                                chartIndex
+                                                            )
                                                         }
                                                         title="Zoom chart to fit both y1 and y2"
                                                     />

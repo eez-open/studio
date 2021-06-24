@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, trace } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -22,7 +22,12 @@ import { DlogWaveform } from "instrument/window/waveform/dlog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type ChartData = EnvelopeList | TableList | Waveform | MultiWaveform | DlogWaveform;
+export type ChartData =
+    | EnvelopeList
+    | TableList
+    | Waveform
+    | MultiWaveform
+    | DlogWaveform;
 
 export function createChartsController(
     chartData: ChartData,
@@ -48,7 +53,6 @@ interface ChartPreviewProps {
 
 @observer
 export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
-    @observable data: ChartData = this.props.data;
     @observable zoom: boolean = false;
 
     @action.bound
@@ -58,17 +62,18 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
 
     @computed
     get chartsController() {
-        return createChartsController(this.data, "split", this.zoom ? "interactive" : "preview");
-    }
-
-    @action
-    UNSAFE_componentWillReceiveProps(nextProps: ChartPreviewProps) {
-        this.data = nextProps.data;
+        trace();
+        return createChartsController(
+            this.props.data,
+            "split",
+            this.zoom ? "interactive" : "preview"
+        );
     }
 
     render() {
         const className = classNames("EezStudio_ChartPreview", {
-            EezStudio_ChartPreview_BlackBackground: globalViewOptions.blackBackground
+            EezStudio_ChartPreview_BlackBackground:
+                globalViewOptions.blackBackground
         });
 
         let toolbarWhenZoomed;
@@ -78,7 +83,9 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
                 this.props.data instanceof MultiWaveform ||
                 this.props.data instanceof DlogWaveform
             ) {
-                toolbarWhenZoomed = this.props.data.renderToolbar(this.chartsController);
+                toolbarWhenZoomed = this.props.data.renderToolbar(
+                    this.chartsController
+                );
             }
         }
 

@@ -273,8 +273,10 @@ class Measurement {
             return null;
         }
 
-        const lineController = this.measurementsController.chartsController
-            .lineControllers[chartIndex];
+        const lineController =
+            this.measurementsController.chartsController.lineControllers[
+                chartIndex
+            ];
         const waveformModel =
             lineController && lineController.getWaveformModel();
 
@@ -367,6 +369,7 @@ class Measurement {
                 values: input.values,
                 offset: input.offset,
                 scale: input.scale,
+                dlog: input.dlog,
                 length: 0,
                 value: (value: number) => 0,
                 waveformData: (value: number) => 0
@@ -451,6 +454,7 @@ class Measurement {
                 scale: task.scale,
                 samplingRate: task.samplingRate,
                 valueUnit: task.valueUnit,
+                dlog: task.dlog,
                 getSampleValueAtIndex: (index: number) => 0
             }))
         });
@@ -486,8 +490,8 @@ class Measurement {
     }
 
     get chartPanelTitle() {
-        const lineControllers = this.measurementsController.chartsController
-            .lineControllers;
+        const lineControllers =
+            this.measurementsController.chartsController.lineControllers;
         if (lineControllers.length > 1) {
             if (this.arity === 1) {
                 const lineController = lineControllers[this.chartIndex];
@@ -697,13 +701,15 @@ export class MeasurementsController {
             if (newChartPanelsViewState != this.chartPanelsViewState) {
                 runInAction(() => {
                     this.chartPanelsViewState = newChartPanelsViewState;
-                    this.measurementsModel.chartPanelsViewState = newChartPanelsViewState;
+                    this.measurementsModel.chartPanelsViewState =
+                        newChartPanelsViewState;
                 });
             }
         });
 
         if (this.measurementsModel.chartPanelsViewState) {
-            this.chartPanelsViewState = this.measurementsModel.chartPanelsViewState;
+            this.chartPanelsViewState =
+                this.measurementsModel.chartPanelsViewState;
         } else {
             this.chartPanelsViewState = JSON.stringify(
                 this.defaultChartPanelViewState
@@ -713,8 +719,8 @@ export class MeasurementsController {
         // mark dirty all chart measurements when measurement interval changes
         this.dispose3 = reaction(
             () => ({
-                isAnimationActive: this.chartsController.xAxisController
-                    .isAnimationActive,
+                isAnimationActive:
+                    this.chartsController.xAxisController.isAnimationActive,
                 measurementsInterval: this.calcMeasurementsInterval(),
                 measurements: this.measurementsModel.measurements
             }),
@@ -726,7 +732,7 @@ export class MeasurementsController {
                             this.measurementsInterval.x1 ||
                         measurementsInterval.x2 != this.measurementsInterval.x2
                     ) {
-                        this.chartMeasurements.forEach(
+                        this.measurements.forEach(
                             action(measurement => (measurement.dirty = true))
                         );
                     }
@@ -765,9 +771,8 @@ export class MeasurementsController {
         let numSamples = 0;
 
         for (let i = 0; i < this.chartsController.lineControllers.length; ++i) {
-            const waveformModel = this.chartsController.lineControllers[
-                i
-            ].getWaveformModel();
+            const waveformModel =
+                this.chartsController.lineControllers[i].getWaveformModel();
             if (waveformModel) {
                 numSamples = Math.max(
                     numSamples,
@@ -929,11 +934,14 @@ export class MeasurementValue extends React.Component<{
             }
 
             if (!unit) {
-                const lineController = this.props.measurement
-                    .measurementsController.chartsController.lineControllers[
-                    this.props.measurement.chartIndex
-                ];
-                unit = lineController ? lineController.yAxisController.unit : UNKNOWN_UNIT;
+                const lineController =
+                    this.props.measurement.measurementsController
+                        .chartsController.lineControllers[
+                        this.props.measurement.chartIndex
+                    ];
+                unit = lineController
+                    ? lineController.yAxisController.unit
+                    : UNKNOWN_UNIT;
             }
 
             const strValue = unit.formatValue(measurementResult.result, 4);
@@ -948,9 +956,8 @@ export class MeasurementValue extends React.Component<{
             );
         }
 
-        const {
-            GenericChart
-        } = require("eez-studio-ui/chart/generic-chart") as typeof GenericChartModule;
+        const { GenericChart } =
+            require("eez-studio-ui/chart/generic-chart") as typeof GenericChartModule;
 
         return (
             <ChartContainerDiv>
@@ -985,10 +992,12 @@ class MeasurementInputField extends FieldComponent {
                         if (measurement.arity === 1) {
                             measurement.chartIndex = newChartIndex;
                         } else {
-                            const newChartIndexes = measurement.chartIndexes.slice();
+                            const newChartIndexes =
+                                measurement.chartIndexes.slice();
                             newChartIndexes[inputIndex] = newChartIndex;
                             measurement.chartIndexes = newChartIndexes;
                         }
+                        measurement.dirty = true;
                     }
                 )}
             >
@@ -1055,6 +1064,7 @@ class MeasurementComponent extends React.Component<{
         return (
             <IconAction
                 icon="material:delete"
+                iconSize={16}
                 title="Remove measurement"
                 style={{ color: "#333" }}
                 onClick={() => {
@@ -1130,9 +1140,8 @@ class MeasurementComponent extends React.Component<{
         const xUnit = UNITS[result.xAxes.unit];
         const yUnit = UNITS[result.yAxes.unit];
 
-        const {
-            getLocale
-        } = require("eez-studio-shared/i10n") as typeof I10nModule;
+        const { getLocale } =
+            require("eez-studio-shared/i10n") as typeof I10nModule;
         const locale = getLocale();
 
         // determine CSV separator depending of locale usage of ","
@@ -1267,7 +1276,7 @@ class MeasurementComponent extends React.Component<{
             this.props.measurement.parametersDescription
         ) {
             content = (
-                <td>
+                <td width="100%">
                     <GenericDialog
                         dialogDefinition={this.dialogDefinition}
                         dialogContext={measurement}
@@ -1275,29 +1284,12 @@ class MeasurementComponent extends React.Component<{
                         embedded={true}
                         onValueChange={this.onValueChange}
                     />
-                    {measurement.result && !measurement.dirty && (
-                        <ActionsContainer>
-                            <IconAction
-                                icon="material:save"
-                                title="Save as CSV file"
-                                onClick={this.onSaveAsCsv}
-                                overlayText={"CSV"}
-                                enabled={!this.operationInProgress}
-                            />
-                            <IconAction
-                                icon="material:content_copy"
-                                title="Copy to clipboard"
-                                onClick={this.onCopy}
-                                enabled={!this.operationInProgress}
-                            />
-                        </ActionsContainer>
-                    )}
                 </td>
             );
         } else {
             // simplify in case of single chart and no measurement function parameters
             content = (
-                <td>
+                <td width="100%">
                     {this.isResultVisible && (
                         <MeasurementValue
                             measurement={this.props.measurement}
@@ -1312,7 +1304,35 @@ class MeasurementComponent extends React.Component<{
                 <tr key={measurement.measurementId}>
                     <td>{measurement.name}</td>
                     {content}
-                    <td>{this.deleteAction}</td>
+                    <td style={{ paddingRight: 20 }}>
+                        <ActionsContainer>
+                            <IconAction
+                                icon="material:content_copy"
+                                iconSize={16}
+                                title="Copy to clipboard"
+                                onClick={this.onCopy}
+                                enabled={
+                                    !this.operationInProgress &&
+                                    !!measurement.result
+                                }
+                            />
+                            <IconAction
+                                icon="material:save"
+                                iconSize={16}
+                                title="Save as CSV file"
+                                onClick={this.onSaveAsCsv}
+                                overlayText={"CSV"}
+                                enabled={
+                                    !this.operationInProgress &&
+                                    !!measurement.result
+                                }
+                                style={{
+                                    marginBottom: 10
+                                }}
+                            />
+                            {this.deleteAction}
+                        </ActionsContainer>
+                    </td>
                 </tr>
             </React.Fragment>
         );
@@ -1593,10 +1613,12 @@ export class ChartMeasurements extends React.Component<{
             goldenLayout.root
                 .getItemsByType("component")
                 .map((contentItem: any) => {
-                    const measurement = this.props.measurementsController.measurements.find(
-                        measurement =>
-                            measurement.measurementId === contentItem.config.id
-                    );
+                    const measurement =
+                        this.props.measurementsController.measurements.find(
+                            measurement =>
+                                measurement.measurementId ===
+                                contentItem.config.id
+                        );
 
                     contentItem.setTitle(measurement?.chartPanelTitle || "");
                 });
@@ -1617,7 +1639,8 @@ export class ChartMeasurements extends React.Component<{
 
             runInAction(
                 () =>
-                    (this.measurementsModel.chartPanelsViewState = chartPanelsViewState)
+                    (this.measurementsModel.chartPanelsViewState =
+                        chartPanelsViewState)
             );
         }, 1000);
     }

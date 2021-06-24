@@ -26,7 +26,10 @@ import { Filters, FilterStats } from "instrument/window/history/filters";
 import { HistorySessions } from "instrument/window/history/session/store";
 
 import { IHistoryItem } from "instrument/window/history/item";
-import { createHistoryItem, updateHistoryItemClass } from "instrument/window/history/item-factory";
+import {
+    createHistoryItem,
+    updateHistoryItemClass
+} from "instrument/window/history/item-factory";
 import {
     HistoryView,
     moveToTopOfHistory,
@@ -72,7 +75,10 @@ export interface IScrapbookStore {
     showAll: boolean;
     thumbnailSize: number;
     selection: ISelection;
-    insertBeforeItem(item: IHistoryItem | undefined, activityLogEntry: IActivityLogEntry): void;
+    insertBeforeItem(
+        item: IHistoryItem | undefined,
+        activityLogEntry: IActivityLogEntry
+    ): void;
     onUpdateActivityLogEntry(activityLogEntry: IActivityLogEntry): void;
     onActivityLogEntryRemoved(activityLogEntry: IActivityLogEntry): void;
     deleteSelectedHistoryItems(): void;
@@ -80,14 +86,18 @@ export interface IScrapbookStore {
 }
 
 export interface IAppStore {
-    selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
+    selectHistoryItemsSpecification:
+        | SelectHistoryItemsSpecification
+        | undefined;
     history: History;
     deletedItemsHistory: DeletedItemsHistory;
     isHistoryItemSelected(id: string): boolean;
     selectHistoryItem(id: string, selected: boolean): void;
 
     selectedHistoryItems: Map<string, boolean>;
-    selectHistoryItems(specification: SelectHistoryItemsSpecification | undefined): void;
+    selectHistoryItems(
+        specification: SelectHistoryItemsSpecification | undefined
+    ): void;
 
     oids?: string[];
 
@@ -139,7 +149,9 @@ class HistoryCalendar {
                         FROM
                             ${this.history.table} AS T1
                         WHERE
-                            ${this.history.oidWhereClause} ${this.history.getFilter()}
+                            ${
+                                this.history.oidWhereClause
+                            } ${this.history.getFilter()}
                     )
                     GROUP BY
                         date
@@ -149,7 +161,9 @@ class HistoryCalendar {
 
             runInAction(() => {
                 if (rows.length > 0) {
-                    rows.forEach(row => this.counters.set(row.date, Number(row.count)));
+                    rows.forEach(row =>
+                        this.counters.set(row.date, Number(row.count))
+                    );
                     this.minDate = new Date(rows[0].date + " 00:00:00");
                     this.maxDate = new Date();
                 } else {
@@ -174,7 +188,10 @@ class HistoryCalendar {
             const rows = await dbQuery(
                 `SELECT
                         id,
-                        ${this.history.options.store.nonTransientAndNonLazyProperties}
+                        ${
+                            this.history.options.store
+                                .nonTransientAndNonLazyProperties
+                        }
                     FROM
                         (
                             SELECT
@@ -193,7 +210,9 @@ class HistoryCalendar {
 
             this.history.displayRows(rows);
 
-            moveToTopOfHistory(this.history.appStore.navigationStore.mainHistoryView);
+            moveToTopOfHistory(
+                this.history.appStore.navigationStore.mainHistoryView
+            );
         } else {
             this.lastSelectedDay = new Date();
             this.showFirstHistoryItemAsSelectedDay = false;
@@ -202,11 +221,16 @@ class HistoryCalendar {
             const rows = await dbQuery(
                 `SELECT
                         id,
-                        ${this.history.options.store.nonTransientAndNonLazyProperties}
+                        ${
+                            this.history.options.store
+                                .nonTransientAndNonLazyProperties
+                        }
                     FROM
                         ${this.history.table} AS T1
                     WHERE
-                        ${this.history.oidWhereClause} ${this.history.getFilter()}
+                        ${
+                            this.history.oidWhereClause
+                        } ${this.history.getFilter()}
                     ORDER BY
                         date DESC
                     LIMIT ?`
@@ -216,7 +240,9 @@ class HistoryCalendar {
 
             this.history.displayRows(rows);
 
-            moveToBottomOfHistory(this.history.appStore.navigationStore.mainHistoryView);
+            moveToBottomOfHistory(
+                this.history.appStore.navigationStore.mainHistoryView
+            );
         }
     }
 
@@ -380,7 +406,10 @@ class HistorySearch {
         const rows = await dbQuery(
             `SELECT
                     id,
-                    ${this.history.options.store.nonTransientAndNonLazyProperties}
+                    ${
+                        this.history.options.store
+                            .nonTransientAndNonLazyProperties
+                    }
                 FROM
                     ${this.history.table} AS T1
                 WHERE
@@ -399,7 +428,8 @@ class HistorySearch {
 
         rows.forEach(
             action(row => {
-                const activityLogEntry = this.history.options.store.dbRowToObject(row);
+                const activityLogEntry =
+                    this.history.options.store.dbRowToObject(row);
                 this.searchResults.push(new SearchResult(activityLogEntry));
                 if (activityLogEntry.date > this.searchLastLogDate) {
                     this.searchLastLogDate = activityLogEntry.date;
@@ -462,10 +492,15 @@ class HistorySearch {
                         SELECT * FROM (
                             SELECT
                                 id,
-                                ${this.history.options.store.nonTransientAndNonLazyProperties}
+                                ${
+                                    this.history.options.store
+                                        .nonTransientAndNonLazyProperties
+                                }
                             FROM (
                                 SELECT * FROM ${this.history.table} AS T1
-                                WHERE ${this.history.oidWhereClause} ${this.history.getFilter()}
+                                WHERE ${
+                                    this.history.oidWhereClause
+                                } ${this.history.getFilter()}
                                 ORDER BY date
                             )
                             WHERE
@@ -478,10 +513,15 @@ class HistorySearch {
                         SELECT * FROM (
                             SELECT
                                 id,
-                                ${this.history.options.store.nonTransientAndNonLazyProperties}
+                                ${
+                                    this.history.options.store
+                                        .nonTransientAndNonLazyProperties
+                                }
                             FROM (
                                 SELECT * FROM ${this.history.table} AS T1
-                                WHERE ${this.history.oidWhereClause} ${this.history.getFilter()}
+                                WHERE ${
+                                    this.history.oidWhereClause
+                                } ${this.history.getFilter()}
                                 ORDER BY date DESC
                             )
                             WHERE
@@ -498,7 +538,9 @@ class HistorySearch {
 
             this.history.displayRows(rows);
 
-            const foundItem = this.history.findHistoryItemById(searchResult.logEntry.id);
+            const foundItem = this.history.findHistoryItemById(
+                searchResult.logEntry.id
+            );
             if (foundItem) {
                 runInAction(() => {
                     foundItem.historyItem.selected = true;
@@ -537,7 +579,9 @@ class HistoryNavigator {
                     FROM
                         ${this.history.table} AS T1
                     WHERE
-                        ${this.history.oidWhereClause} AND date < ? ${this.history.getFilter()}`
+                        ${
+                            this.history.oidWhereClause
+                        } AND date < ? ${this.history.getFilter()}`
                 )
                 .get(this.firstHistoryItemTime);
 
@@ -556,7 +600,9 @@ class HistoryNavigator {
                     FROM
                         ${this.history.table} AS T1
                     WHERE
-                        ${this.history.oidWhereClause} AND date > ? ${this.history.getFilter()}`
+                        ${
+                            this.history.oidWhereClause
+                        } AND date > ? ${this.history.getFilter()}`
                 )
                 .get(this.lastHistoryItemTime);
 
@@ -568,7 +614,9 @@ class HistoryNavigator {
 
     @computed
     get firstHistoryItem() {
-        return this.history.items.length > 0 ? this.history.items[0] : undefined;
+        return this.history.items.length > 0
+            ? this.history.items[0]
+            : undefined;
     }
 
     @computed
@@ -584,7 +632,10 @@ class HistoryNavigator {
             const rows = await dbQuery(
                 `SELECT
                         id,
-                        ${this.history.options.store.nonTransientAndNonLazyProperties}
+                        ${
+                            this.history.options.store
+                                .nonTransientAndNonLazyProperties
+                        }
                     FROM
                         (
                             SELECT
@@ -605,8 +656,13 @@ class HistoryNavigator {
 
             if (rows.length > 0) {
                 runInAction(() => {
-                    this.history.calendar.showFirstHistoryItemAsSelectedDay = true;
-                    this.history.items.splice(0, 0, ...this.history.rowsToHistoryItems(rows));
+                    this.history.calendar.showFirstHistoryItemAsSelectedDay =
+                        true;
+                    this.history.items.splice(
+                        0,
+                        0,
+                        ...this.history.rowsToHistoryItems(rows)
+                    );
                     this.history.freeSomeHistoryItemsFromBottomIfTooMany();
                 });
                 this.update();
@@ -620,7 +676,10 @@ class HistoryNavigator {
             const rows = await dbQuery(
                 `SELECT
                         id,
-                        ${this.history.options.store.nonTransientAndNonLazyProperties}
+                        ${
+                            this.history.options.store
+                                .nonTransientAndNonLazyProperties
+                        }
                     FROM
                         (
                             SELECT
@@ -639,8 +698,11 @@ class HistoryNavigator {
 
             if (rows.length > 0) {
                 runInAction(() => {
-                    this.history.calendar.showFirstHistoryItemAsSelectedDay = false;
-                    this.history.items.push(...this.history.rowsToHistoryItems(rows));
+                    this.history.calendar.showFirstHistoryItemAsSelectedDay =
+                        false;
+                    this.history.items.push(
+                        ...this.history.rowsToHistoryItems(rows)
+                    );
                     this.history.freeSomeHistoryItemsFromTopIfTooMany();
                 });
                 this.update();
@@ -673,7 +735,9 @@ class HistorySelection {
 
     @computed
     get items() {
-        return this.history.appStore.selectHistoryItemsSpecification ? [] : this._items;
+        return this.history.appStore.selectHistoryItemsSpecification
+            ? []
+            : this._items;
     }
 
     @action
@@ -720,7 +784,10 @@ export class History {
         return !this.isDeletedItemsHistory && this.options.isSessionsSupported;
     }
 
-    constructor(public appStore: IAppStore, private optionsArg?: Partial<IHistoryOptions>) {
+    constructor(
+        public appStore: IAppStore,
+        private optionsArg?: Partial<IHistoryOptions>
+    ) {
         if (this.isSessionsSupported) {
             this.sessions = new HistorySessions(this);
         }
@@ -778,7 +845,11 @@ export class History {
                             deleteTimeout = setTimeout(
                                 action(() => {
                                     deleteTimeout = undefined;
-                                    for (let i = 0; i < objectsToDelete.length; ++i) {
+                                    for (
+                                        let i = 0;
+                                        i < objectsToDelete.length;
+                                        ++i
+                                    ) {
                                         this.onDeleteActivityLogEntry(
                                             objectsToDelete[i],
                                             op,
@@ -851,7 +922,9 @@ export class History {
     get oidCond() {
         if (this.appStore.oids) {
             if (this.appStore.oids.length > 0) {
-                const oids = this.appStore.oids.map(oid => `'` + oid + `'`).join(",");
+                const oids = this.appStore.oids
+                    .map(oid => `'` + oid + `'`)
+                    .join(",");
                 return `oid IN(${oids})`;
             } else {
                 return "oid=oid";
@@ -972,7 +1045,8 @@ export class History {
             if (
                 this.items.length > 0 &&
                 (historyItem.date < this.items[j].date ||
-                    (historyItem.date === this.items[j].date && historyItem.id < this.items[j].id))
+                    (historyItem.date === this.items[j].date &&
+                        historyItem.id < this.items[j].id))
             ) {
                 break;
             }
@@ -1013,7 +1087,10 @@ export class History {
         const historyItems: IHistoryItem[] = [];
         rows.forEach(row => {
             const activityLogEntry = this.options.store.dbRowToObject(row);
-            const historyItem = createHistoryItem(activityLogEntry, this.appStore);
+            const historyItem = createHistoryItem(
+                activityLogEntry,
+                this.appStore
+            );
             historyItems.push(historyItem);
         });
         return historyItems;
@@ -1054,9 +1131,13 @@ export class History {
                         type: "activity-log/session-start"
                     };
                     if (this.sessions) {
-                        this.sessions.onActivityLogEntryRemoved(sessionStart as IActivityLogEntry);
+                        this.sessions.onActivityLogEntryRemoved(
+                            sessionStart as IActivityLogEntry
+                        );
                     }
-                    this.removeActivityLogEntry(sessionStart as IActivityLogEntry);
+                    this.removeActivityLogEntry(
+                        sessionStart as IActivityLogEntry
+                    );
                     return;
                 }
             }
@@ -1083,7 +1164,9 @@ export class History {
                 this.addActivityLogEntry(activityLogEntry);
             }
             // ... and scroll to the bottom of history list.
-            moveToBottomOfHistory(this.appStore.navigationStore.mainHistoryView);
+            moveToBottomOfHistory(
+                this.appStore.navigationStore.mainHistoryView
+            );
         }
     }
 
@@ -1109,7 +1192,10 @@ export class History {
             foundItem.historyItem.message !== activityLogEntry.message
         ) {
             foundItem.historyItem.message = activityLogEntry.message;
-            const updatedHistoryItem = updateHistoryItemClass(foundItem.historyItem, this.appStore);
+            const updatedHistoryItem = updateHistoryItemClass(
+                foundItem.historyItem,
+                this.appStore
+            );
             if (updatedHistoryItem !== foundItem.historyItem) {
                 this.items[foundItem.index] = updatedHistoryItem;
             }
@@ -1167,7 +1253,10 @@ export class History {
 
     /// Return all the history items between fromItem and toItem.
     /// This is used during mouse selection with SHIFT key.
-    getAllItemsBetween(fromItem: IHistoryItem, toItem: IHistoryItem): IHistoryItem[] {
+    getAllItemsBetween(
+        fromItem: IHistoryItem,
+        toItem: IHistoryItem
+    ): IHistoryItem[] {
         let direction: "normal" | "reversed" | undefined = undefined;
         let done = false;
 
@@ -1230,7 +1319,9 @@ export class History {
                         FROM
                             ${this.table} AS T1
                         WHERE
-                            ${this.oidWhereClause} AND id >= ? ${this.getFilter()}
+                            ${
+                                this.oidWhereClause
+                            } AND id >= ? ${this.getFilter()}
                         ORDER BY
                             id
                     )
@@ -1259,10 +1350,17 @@ export class History {
             if (lastItem instanceof FileHistoryItem) {
                 if (lastItem.expectedDataLength) {
                     let percent = lastItem.expectedDataLength
-                        ? Math.floor((100 * lastItem.dataLength) / lastItem.expectedDataLength)
+                        ? Math.floor(
+                              (100 * lastItem.dataLength) /
+                                  lastItem.expectedDataLength
+                          )
                         : 0;
-                    let transferSpeed = formatTransferSpeed(lastItem.transferSpeed);
-                    return `${this.getDirectionInfo(lastItem)} ${percent}% (${lastItem.dataLength} of ${lastItem.expectedDataLength}) ${transferSpeed}`;
+                    let transferSpeed = formatTransferSpeed(
+                        lastItem.transferSpeed
+                    );
+                    return `${this.getDirectionInfo(lastItem)} ${percent}% (${
+                        lastItem.dataLength
+                    } of ${lastItem.expectedDataLength}) ${transferSpeed}`;
                 }
             }
         }
@@ -1275,7 +1373,10 @@ export class History {
 export class DeletedItemsHistory extends History {
     @observable deletedCount: number = 0;
 
-    constructor(public appStore: IAppStore, options?: Partial<IHistoryOptions>) {
+    constructor(
+        public appStore: IAppStore,
+        options?: Partial<IHistoryOptions>
+    ) {
         super(
             appStore,
             Object.assign({}, options, {
@@ -1283,7 +1384,11 @@ export class DeletedItemsHistory extends History {
             })
         );
 
-        scheduleTask("Get deleted history items count", Priority.Lowest, this.refreshDeletedCount);
+        scheduleTask(
+            "Get deleted history items count",
+            Priority.Lowest,
+            this.refreshDeletedCount
+        );
     }
 
     @action.bound
@@ -1370,30 +1475,34 @@ export class DeletedItemsHistory extends History {
     @action.bound
     deleteSelectedHistoryItems() {
         if (this.selection.items.length > 0) {
-            confirm("Are you sure?", "This will permanently delete selected history items.", () => {
-                if (this.selection.items.length > 0) {
-                    console.log("deleteSelectedHistoryItems STARTED");
-                    beginTransaction("Purge history items");
+            confirm(
+                "Are you sure?",
+                "This will permanently delete selected history items.",
+                () => {
+                    if (this.selection.items.length > 0) {
+                        console.log("deleteSelectedHistoryItems STARTED");
+                        beginTransaction("Purge history items");
 
-                    this.selection.items.forEach(historyItem =>
-                        logDelete(
-                            this.options.store,
-                            {
-                                oid: historyItem.oid,
-                                id: historyItem.id
-                            },
-                            {
-                                deletePermanently: true
-                            }
-                        )
-                    );
+                        this.selection.items.forEach(historyItem =>
+                            logDelete(
+                                this.options.store,
+                                {
+                                    oid: historyItem.oid,
+                                    id: historyItem.id
+                                },
+                                {
+                                    deletePermanently: true
+                                }
+                            )
+                        );
 
-                    commitTransaction();
+                        commitTransaction();
 
-                    this.selection.selectItems([]);
-                    console.log("deleteSelectedHistoryItems FINISHED");
+                        this.selection.selectItems([]);
+                        console.log("deleteSelectedHistoryItems FINISHED");
+                    }
                 }
-            });
+            );
         }
     }
 
