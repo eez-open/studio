@@ -3406,6 +3406,10 @@ export class ChartView extends React.Component<
         }
     }
 
+    onWheelEnclosure = (event: WheelEvent) => {
+        event.preventDefault();
+    };
+
     @action.bound
     onWheel(event: React.WheelEvent<SVGSVGElement>) {
         if (this.props.mode === "preview") {
@@ -3531,11 +3535,24 @@ export class ChartView extends React.Component<
         this.cursor.onMouseEvent(event, this.mouseHandler);
     }
 
+    componentDidMount() {
+        this.draggable.element!.addEventListener(
+            "wheel",
+            this.onWheelEnclosure,
+            { passive: false }
+        );
+    }
+
     componentDidUpdate() {
         this.cursor.update();
     }
 
     componentWillUnmount() {
+        this.draggable.element!.removeEventListener(
+            "mousewheel",
+            this.onWheelEnclosure
+        );
+
         if (this.mouseHandler) {
             this.mouseHandler.up(undefined, undefined, true);
         }
@@ -3778,97 +3795,99 @@ function HelpView(props: any) {
     return (
         <HelpViewDiv>
             <table>
-                <tr>
-                    <td>
-                        <img
-                            width="46"
-                            height="64"
-                            src="../eez-studio-ui/_images/mouse_middle_button.png"
-                        ></img>
-                        <span className="text">or</span>
-                        <img
-                            width="46"
-                            height="64"
-                            src="../eez-studio-ui/_images/mouse_right_button.png"
-                        ></img>
-                    </td>
-                    <td>
-                        <Arrow />
-                    </td>
-                    <td>
-                        <span className="text">Drag chart</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <img
-                            width="46"
-                            height="64"
-                            src="../eez-studio-ui/_images/mouse_wheel.png"
-                        ></img>
-                    </td>
-                    <td>
-                        <Arrow />
-                    </td>
-                    <td>
-                        <span className="text">X-Axis Offset</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <span className="key">CTRL</span>
-                        <span className="text">+</span>
-                        <img
-                            width="46"
-                            height="64"
-                            src="../eez-studio-ui/_images/mouse_wheel.png"
-                        ></img>
-                    </td>
-                    <td>
-                        <Arrow />
-                    </td>
-                    <td>
-                        <span className="text">X-Axis Zoom</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <span className="key">SHIFT</span>
-                        <span className="text">+</span>
-                        <img
-                            width="46"
-                            height="64"
-                            src="../eez-studio-ui/_images/mouse_wheel.png"
-                        ></img>
-                    </td>
-                    <td>
-                        <Arrow />
-                    </td>
-                    <td>
-                        <span className="text">Y-Axis Offset</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <span className="key">SHIFT</span>
-                        <span className="text" style={{ marginRight: 12 }}>
-                            +
-                        </span>
-                        <span className="key">CTRL</span>
-                        <span className="text">+</span>
-                        <img
-                            width="46"
-                            height="64"
-                            src="../eez-studio-ui/_images/mouse_wheel.png"
-                        ></img>
-                    </td>
-                    <td>
-                        <Arrow />
-                    </td>
-                    <td>
-                        <span className="text">Y-Axis Zoom</span>
-                    </td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <td>
+                            <img
+                                width="46"
+                                height="64"
+                                src="../eez-studio-ui/_images/mouse_middle_button.png"
+                            ></img>
+                            <span className="text">or</span>
+                            <img
+                                width="46"
+                                height="64"
+                                src="../eez-studio-ui/_images/mouse_right_button.png"
+                            ></img>
+                        </td>
+                        <td>
+                            <Arrow />
+                        </td>
+                        <td>
+                            <span className="text">Drag chart</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img
+                                width="46"
+                                height="64"
+                                src="../eez-studio-ui/_images/mouse_wheel.png"
+                            ></img>
+                        </td>
+                        <td>
+                            <Arrow />
+                        </td>
+                        <td>
+                            <span className="text">X-Axis Offset</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span className="key">CTRL</span>
+                            <span className="text">+</span>
+                            <img
+                                width="46"
+                                height="64"
+                                src="../eez-studio-ui/_images/mouse_wheel.png"
+                            ></img>
+                        </td>
+                        <td>
+                            <Arrow />
+                        </td>
+                        <td>
+                            <span className="text">X-Axis Zoom</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span className="key">SHIFT</span>
+                            <span className="text">+</span>
+                            <img
+                                width="46"
+                                height="64"
+                                src="../eez-studio-ui/_images/mouse_wheel.png"
+                            ></img>
+                        </td>
+                        <td>
+                            <Arrow />
+                        </td>
+                        <td>
+                            <span className="text">Y-Axis Offset</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span className="key">SHIFT</span>
+                            <span className="text" style={{ marginRight: 12 }}>
+                                +
+                            </span>
+                            <span className="key">CTRL</span>
+                            <span className="text">+</span>
+                            <img
+                                width="46"
+                                height="64"
+                                src="../eez-studio-ui/_images/mouse_wheel.png"
+                            ></img>
+                        </td>
+                        <td>
+                            <Arrow />
+                        </td>
+                        <td>
+                            <span className="text">Y-Axis Zoom</span>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </HelpViewDiv>
     );
