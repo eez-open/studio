@@ -501,7 +501,7 @@ class Measurement {
             } else {
                 return `${this.name} (${this.chartIndexes
                     .map(chartIndex => {
-                        const lineController = lineControllers[this.chartIndex];
+                        const lineController = lineControllers[chartIndex];
                         return lineController ? lineController.label : "";
                     })
                     .join(", ")})`;
