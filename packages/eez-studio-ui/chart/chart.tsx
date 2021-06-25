@@ -392,9 +392,8 @@ export abstract class AxisController {
     get numSamples() {
         let numSamples = 0;
         for (let i = 0; i < this.chartsController.lineControllers.length; ++i) {
-            let waveformModel = this.chartsController.lineControllers[
-                i
-            ].getWaveformModel();
+            let waveformModel =
+                this.chartsController.lineControllers[i].getWaveformModel();
             if (waveformModel && waveformModel.length > numSamples) {
                 numSamples = waveformModel.length;
             }
@@ -490,11 +489,12 @@ class DynamicAxisController extends AxisController {
                     this.chartsController.viewOptions.axesLines.steps.y
                 )
             ) {
-                steps = this.chartsController.viewOptions.axesLines.steps.y.find(
-                    (vale: number[], i: number) =>
-                        this.chartsController.chartControllers[i] ===
-                        this.chartController
-                );
+                steps =
+                    this.chartsController.viewOptions.axesLines.steps.y.find(
+                        (vale: number[], i: number) =>
+                            this.chartsController.chartControllers[i] ===
+                            this.chartController
+                    );
             }
         }
 
@@ -513,8 +513,10 @@ class DynamicAxisController extends AxisController {
         const maxDistanceInPx = CONF_AXIS_MAX_TICK_DISTANCE;
         const minColorOpacity = CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY;
         const maxColorOpacity = CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY;
-        const minTextColorOpacity = CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY;
-        const maxTextColorOpacity = CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY;
+        const minTextColorOpacity =
+            CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY;
+        const maxTextColorOpacity =
+            CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY;
 
         const minLabelPx =
             this.position === "x"
@@ -1506,10 +1508,11 @@ export class ChartController {
         event: PointerEvent
     ): MouseHandler | undefined {
         if (this.chartsController.rulersController) {
-            const mouseHandler = this.chartsController.rulersController.onDragStart(
-                chartView,
-                event
-            );
+            const mouseHandler =
+                this.chartsController.rulersController.onDragStart(
+                    chartView,
+                    event
+                );
             if (mouseHandler) {
                 return mouseHandler;
             }
@@ -2300,6 +2303,19 @@ class AxisLabels extends React.Component<
     { axisController: AxisController },
     {}
 > {
+    ref = React.createRef<SVGGElement>();
+
+    componentDidMount() {
+        const g = this.ref.current;
+        if (g) {
+            runInAction(() => {
+                const rect = g.getBBox();
+                this.props.axisController.labelTextsWidth = rect.width;
+                this.props.axisController.labelTextsHeight = rect.height;
+            });
+        }
+    }
+
     render() {
         const { axisController } = this.props;
 
@@ -2347,18 +2363,7 @@ class AxisLabels extends React.Component<
             });
 
         return (
-            <g
-                ref={ref =>
-                    ref &&
-                    runInAction(() => {
-                        const rect = ref!.getBBox();
-                        this.props.axisController.labelTextsWidth = rect.width;
-                        this.props.axisController.labelTextsHeight =
-                            rect.height;
-                    })
-                }
-                className="EezStudio_ChartView_Labels"
-            >
+            <g ref={this.ref} className="EezStudio_ChartView_Labels">
                 {labels}
             </g>
         );
@@ -2927,8 +2932,8 @@ class ZoomToRectMouseHandler implements MouseHandler {
         let label;
 
         if (this.orientation === "x" || this.orientation === "both") {
-            const xAxisController = this.chartController.chartsController
-                .xAxisController;
+            const xAxisController =
+                this.chartController.chartsController.xAxisController;
             let fromPx = Math.min(this.startPoint.x, this.endPoint.x);
             let toPx = Math.max(this.startPoint.x, this.endPoint.x);
             let from = xAxisController.pxToLinearValue(fromPx);
@@ -2996,7 +3001,10 @@ class ZoomToRectMouseHandler implements MouseHandler {
                 return null;
             }
         } else {
-            if (width < ZoomToRectMouseHandler.MIN_SIZE || height < ZoomToRectMouseHandler.MIN_SIZE) {
+            if (
+                width < ZoomToRectMouseHandler.MIN_SIZE ||
+                height < ZoomToRectMouseHandler.MIN_SIZE
+            ) {
                 return null;
             }
         }
@@ -3139,10 +3147,8 @@ class Cursor implements ICursor {
     updateCursor(point: Point | undefined, event: PointerEvent | undefined) {
         this.visible = false;
 
-        const {
-            chartWidth,
-            chartHeight
-        } = this.chartView.props.chartController.chartsController;
+        const { chartWidth, chartHeight } =
+            this.chartView.props.chartController.chartsController;
         if (
             !point ||
             !event ||
@@ -3154,27 +3160,28 @@ class Cursor implements ICursor {
             return;
         }
 
-        const cursors = this.chartView.props.chartController.lineControllers.map(
-            lineController => {
-                const cursor: ICursor = {
-                    visible: false,
-                    lineController,
-                    time: 0,
-                    value: 0,
-                    valueIndex: -1,
-                    addPoint: false
-                };
-                lineController.updateCursor(cursor, point, event);
-                return cursor;
-            }
-        );
+        const cursors =
+            this.chartView.props.chartController.lineControllers.map(
+                lineController => {
+                    const cursor: ICursor = {
+                        visible: false,
+                        lineController,
+                        time: 0,
+                        value: 0,
+                        valueIndex: -1,
+                        addPoint: false
+                    };
+                    lineController.updateCursor(cursor, point, event);
+                    return cursor;
+                }
+            );
 
         let minDistance = Number.MAX_SAFE_INTEGER;
         let minDistanceIndex: number = -1;
         cursors.forEach((cursor, i) => {
             if (cursor.visible) {
-                const lineController = this.chartView.props.chartController
-                    .lineControllers[i];
+                const lineController =
+                    this.chartView.props.chartController.lineControllers[i];
                 const closestPoint = lineController.closestPoint(point);
                 if (closestPoint) {
                     let distance = pointDistance(closestPoint, point);
@@ -3468,9 +3475,7 @@ export class ChartView extends React.Component<
             this.mouseHandler = new PanMouseHandler([this.props.chartController.yAxisController]);
         } else if (point.y < 0) {
             this.mouseHandler = new PanMouseHandler([this.props.chartController.xAxisController]);
-        } else */ if (
-            event.buttons === 1
-        ) {
+        } else */ if (event.buttons === 1) {
             if (this.cursor && this.cursor.visible && this.cursor.addPoint) {
                 this.mouseHandler = this.cursor.lineController.addPoint(
                     this,

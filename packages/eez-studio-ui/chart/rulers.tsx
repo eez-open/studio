@@ -129,9 +129,13 @@ class DragXRulerMouseHandler implements MouseHandler {
             }
 
             if (this.whichRuller === "x1") {
-                this.rulersController.rulersModel.x1 = x;
+                if (x < this.rulersController.rulersModel.x2) {
+                    this.rulersController.rulersModel.x1 = x;
+                }
             } else {
-                this.rulersController.rulersModel.x2 = x;
+                if (x > this.rulersController.rulersModel.x1) {
+                    this.rulersController.rulersModel.x2 = x;
+                }
             }
         }
     }
