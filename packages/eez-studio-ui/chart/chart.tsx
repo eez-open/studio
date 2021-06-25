@@ -3712,6 +3712,152 @@ export class ChartView extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const HelpViewDiv = styled.div`
+    padding: 20px;
+    font-size: 18px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100%;
+
+    td {
+        height: 90px;
+        white-space: nowrap;
+    }
+
+    td:first-child {
+        display: flex;
+        vertical-align: center;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .key {
+        font-size: 16px;
+        color: #0094ff;
+        margin-top: 10px;
+        margin-right: 5px;
+        border: 1px solid #0094ff;
+        padding: 0 8px;
+        border-radius: 8px;
+    }
+
+    .text {
+        display: inline-block;
+        margin: 10px 10px 0 8px;
+    }
+
+    .arrow {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 28px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+`;
+
+function HelpView(props: any) {
+    return (
+        <HelpViewDiv>
+            <table>
+                <tr>
+                    <td>
+                        <img
+                            width="46"
+                            height="64"
+                            src="../eez-studio-ui/_images/mouse_middle_button.png"
+                        ></img>
+                        <span className="text">or</span>
+                        <img
+                            width="46"
+                            height="64"
+                            src="../eez-studio-ui/_images/mouse_right_button.png"
+                        ></img>
+                    </td>
+                    <td>
+                        <span className="arrow">🠖</span>
+                    </td>
+                    <td>
+                        <span className="text">Drag chart</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <img
+                            width="46"
+                            height="64"
+                            src="../eez-studio-ui/_images/mouse_wheel.png"
+                        ></img>
+                    </td>
+                    <td>
+                        <span className="arrow">🠖</span>
+                    </td>
+                    <td>
+                        <span className="text">X-Axis Offset</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span className="key">CTRL</span>
+                        <span className="text">+</span>
+                        <img
+                            width="46"
+                            height="64"
+                            src="../eez-studio-ui/_images/mouse_wheel.png"
+                        ></img>
+                    </td>
+                    <td>
+                        <span className="arrow">🠖</span>
+                    </td>
+                    <td>
+                        <span className="text">X-Axis Zoom</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span className="key">SHIFT</span>
+                        <span className="text">+</span>
+                        <img
+                            width="46"
+                            height="64"
+                            src="../eez-studio-ui/_images/mouse_wheel.png"
+                        ></img>
+                    </td>
+                    <td>
+                        <span className="arrow">🠖</span>
+                    </td>
+                    <td>
+                        <span className="text">Y-Axis Offset</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span className="key">SHIFT</span>
+                        <span className="text" style={{ marginRight: 12 }}>
+                            +
+                        </span>
+                        <span className="key">CTRL</span>
+                        <span className="text">+</span>
+                        <img
+                            width="46"
+                            height="64"
+                            src="../eez-studio-ui/_images/mouse_wheel.png"
+                        ></img>
+                    </td>
+                    <td>
+                        <span className="arrow">🠖</span>
+                    </td>
+                    <td>
+                        <span className="text">Y-Axis Zoom</span>
+                    </td>
+                </tr>
+            </table>
+        </HelpViewDiv>
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 interface ChartsViewInterface {
     chartsController: ChartsController;
     className?: string;
@@ -3880,6 +4026,18 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                 );
             }
         );
+
+        factory.registerComponent(
+            "HelpView",
+            function (container: any, props: ChartViewOptionsProps) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme}>
+                        <HelpView {...props} />
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
     }
 
     get chartViewOptionsItem() {
@@ -3922,6 +4080,16 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         };
     }
 
+    get helpItem() {
+        return {
+            type: "component",
+            componentName: "HelpView",
+            componentState: {},
+            title: "Help",
+            isClosable: false
+        };
+    }
+
     @computed
     get defaultLayoutConfig() {
         let content;
@@ -3937,9 +4105,14 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                                 ? [
                                       this.chartViewOptionsItem,
                                       this.rulersItem,
-                                      this.bookmarksItem
+                                      this.bookmarksItem,
+                                      this.helpItem
                                   ]
-                                : [this.chartViewOptionsItem, this.rulersItem]
+                                : [
+                                      this.chartViewOptionsItem,
+                                      this.rulersItem,
+                                      this.helpItem
+                                  ]
                         },
                         this.measurementsItem
                     ]
@@ -3950,8 +4123,12 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                 {
                     type: "column",
                     content: this.props.chartsController.bookmarks
-                        ? [this.chartViewOptionsItem, this.bookmarksItem]
-                        : [this.chartViewOptionsItem]
+                        ? [
+                              this.chartViewOptionsItem,
+                              this.bookmarksItem,
+                              this.helpItem
+                          ]
+                        : [this.chartViewOptionsItem, this.helpItem]
                 }
             ];
         }
@@ -4039,7 +4216,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
 
         if (this.sideDockAvailable) {
             const layoutId =
-                "layout/2" +
+                "layout/3" +
                 (this.props.chartsController.supportRulers
                     ? "/with-rulers"
                     : "") +

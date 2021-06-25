@@ -1255,12 +1255,46 @@ class MeasurementComponent extends React.Component<{
 
         runInAction(() => (this.operationInProgress = true));
 
-        const csv = await this.getCsv();
-        if (csv) {
-            clipboard.writeText(csv);
-            notification.success("CSV copied to the clipboard");
+        if (this.props.measurement.resultType === "chart") {
+            const csv = await this.getCsv();
+            if (csv) {
+                clipboard.writeText(csv);
+                notification.success("CSV copied to the clipboard");
+            } else {
+                notification.error(`Failed to export to CSV!`);
+            }
         } else {
-            notification.error(`Failed to export to CSV!`);
+            const measurementResult = this.props.measurement.result!;
+
+            let text;
+            if (typeof measurementResult.result === "string") {
+                text = measurementResult.result;
+            } else if (typeof measurementResult.result === "number") {
+                let unit;
+                if (measurementResult.resultUnit) {
+                    unit = UNITS[measurementResult.resultUnit];
+                }
+
+                if (!unit) {
+                    const lineController =
+                        this.props.measurement.measurementsController
+                            .chartsController.lineControllers[
+                            this.props.measurement.chartIndex
+                        ];
+                    unit = lineController
+                        ? lineController.yAxisController.unit
+                        : UNKNOWN_UNIT;
+                }
+
+                text = unit.formatValue(measurementResult.result, 4);
+            }
+
+            if (text) {
+                clipboard.writeText(text);
+                notification.success("Value copied to the clipboard");
+            } else {
+                notification.error(`Failed to copy value to clipboard!`);
+            }
         }
 
         runInAction(() => (this.operationInProgress = false));
@@ -1324,7 +1358,8 @@ class MeasurementComponent extends React.Component<{
                                 overlayText={"CSV"}
                                 enabled={
                                     !this.operationInProgress &&
-                                    !!measurement.result
+                                    !!measurement.result &&
+                                    measurement.resultType == "chart"
                                 }
                                 style={{
                                     marginBottom: 10
