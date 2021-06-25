@@ -3748,13 +3748,31 @@ const HelpViewDiv = styled.div`
     }
 
     .arrow {
-        display: inline-block;
         margin-top: 10px;
-        font-size: 28px;
-        padding-left: 10px;
-        padding-right: 10px;
     }
 `;
+
+function Arrow() {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="arrow"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            strokeWidth="1"
+            stroke="currentColor"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <line x1="15" y1="16" x2="19" y2="12" />
+            <line x1="15" y1="8" x2="19" y2="12" />
+        </svg>
+    );
+}
 
 function HelpView(props: any) {
     return (
@@ -3775,7 +3793,7 @@ function HelpView(props: any) {
                         ></img>
                     </td>
                     <td>
-                        <span className="arrow">🠖</span>
+                        <Arrow />
                     </td>
                     <td>
                         <span className="text">Drag chart</span>
@@ -3790,7 +3808,7 @@ function HelpView(props: any) {
                         ></img>
                     </td>
                     <td>
-                        <span className="arrow">🠖</span>
+                        <Arrow />
                     </td>
                     <td>
                         <span className="text">X-Axis Offset</span>
@@ -3807,7 +3825,7 @@ function HelpView(props: any) {
                         ></img>
                     </td>
                     <td>
-                        <span className="arrow">🠖</span>
+                        <Arrow />
                     </td>
                     <td>
                         <span className="text">X-Axis Zoom</span>
@@ -3824,7 +3842,7 @@ function HelpView(props: any) {
                         ></img>
                     </td>
                     <td>
-                        <span className="arrow">🠖</span>
+                        <Arrow />
                     </td>
                     <td>
                         <span className="text">Y-Axis Offset</span>
@@ -3845,7 +3863,7 @@ function HelpView(props: any) {
                         ></img>
                     </td>
                     <td>
-                        <span className="arrow">🠖</span>
+                        <Arrow />
                     </td>
                     <td>
                         <span className="text">Y-Axis Zoom</span>
@@ -4231,7 +4249,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
                     layoutId={layoutId}
                     defaultLayoutConfig={this.defaultLayoutConfig}
                     registerComponents={this.registerComponents}
-                    width={420}
+                    width={450}
                 >
                     {div}
                 </SideDock>
