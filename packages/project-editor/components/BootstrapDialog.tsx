@@ -1,3 +1,4 @@
+import bootstrap from "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
@@ -39,6 +40,7 @@ const NonModalDialogContainer = styled.div`
 export class BootstrapDialog extends React.Component<IDialogComponentProps> {
     div: HTMLDivElement;
     form: HTMLFormElement;
+    modal: bootstrap.Modal;
 
     componentDidMount() {
         $(this.div).on("shown.bs.modal", () => {
@@ -49,7 +51,9 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                 } else {
                     $(this.div)
                         .find(".modal-body")
-                        .find("input, textarea, select, .EezStudio_ListContainer, button")
+                        .find(
+                            "input, textarea, select, .EezStudio_ListContainer, button"
+                        )
                         .first()
                         .focus();
                 }
@@ -63,18 +67,22 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
             this.props.onCancel();
         });
 
-        $(this.div).modal();
+        this.modal = new bootstrap.Modal(this.div);
+        this.modal.show();
     }
 
     componentDidUpdate() {
         if (!this.props.open) {
-            $(this.div).modal("hide");
+            this.modal.hide();
         }
     }
 
     @bind
     onKeyPress(event: React.KeyboardEvent) {
-        if (event.which == 13 && !(event.target instanceof HTMLTextAreaElement)) {
+        if (
+            event.which == 13 &&
+            !(event.target instanceof HTMLTextAreaElement)
+        ) {
             event.preventDefault();
             this.props.onSubmit(event);
         }
@@ -103,7 +111,11 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                     disabled={button.disabled}
                     style={button.style}
                 >
-                    {button.text ? button.text : <Icon icon={button.icon!}></Icon>}
+                    {button.text ? (
+                        button.text
+                    ) : (
+                        <Icon icon={button.icon!}></Icon>
+                    )}
                 </button>
             ) : (
                 <IconAction
@@ -135,7 +147,12 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
         });
 
         return (
-            <div ref={ref => (this.div = ref!)} className="modal" tabIndex={-1} role="dialog">
+            <div
+                ref={ref => (this.div = ref!)}
+                className="modal"
+                tabIndex={-1}
+                role="dialog"
+            >
                 <form
                     ref={ref => (this.form = ref!)}
                     className={formClassName}
@@ -152,19 +169,20 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                                 {!this.props.cancelDisabled && (
                                     <button
                                         type="button"
-                                        className="close float-right"
+                                        className="btn-close float-right"
                                         disabled={props.disableButtons}
                                         aria-label="Close"
-                                    >
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
+                                    ></button>
                                 )}
                             </div>
                         )}
 
                         <div className="modal-body">{props.children}</div>
 
-                        <div className="modal-footer" style={{ justifyContent: "flex-start" }}>
+                        <div
+                            className="modal-footer"
+                            style={{ justifyContent: "flex-start" }}
+                        >
                             {this.props.additionalFooterControl}
                             {buttons}
                         </div>

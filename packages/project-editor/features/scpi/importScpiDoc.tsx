@@ -1,3 +1,4 @@
+import bootstrap from "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
 import { observable, computed, action, autorun, Lambda, toJS } from "mobx";
@@ -487,21 +488,22 @@ class FindChanges {
                         if (commandElement) {
                             let command = commandElement.textContent;
                             if (command) {
-                                let cleanedUpCommand = this.cleanUpScpiCommand(
-                                    command
-                                );
+                                let cleanedUpCommand =
+                                    this.cleanUpScpiCommand(command);
                                 if (cleanedUpCommand) {
                                     let table =
                                         commandElement.nextElementSibling;
                                     while (table) {
                                         if (table.tagName == "TABLE") {
-                                            let tr = table.querySelector(
-                                                "tr:first-child"
-                                            );
-                                            if (tr) {
-                                                let td = tr.querySelector(
-                                                    "td:first-child"
+                                            let tr =
+                                                table.querySelector(
+                                                    "tr:first-child"
                                                 );
+                                            if (tr) {
+                                                let td =
+                                                    tr.querySelector(
+                                                        "td:first-child"
+                                                    );
                                                 if (
                                                     td &&
                                                     td.textContent &&
@@ -509,9 +511,10 @@ class FindChanges {
                                                         "Syntax"
                                                     ) != -1
                                                 ) {
-                                                    let pList = tr.querySelectorAll(
-                                                        "td:nth-child(2)>p"
-                                                    );
+                                                    let pList =
+                                                        tr.querySelectorAll(
+                                                            "td:nth-child(2)>p"
+                                                        );
                                                     let p = pList[0];
                                                     if (p && p.textContent) {
                                                         this.addCommand(
@@ -667,17 +670,21 @@ class FindChanges {
                                                 "utf-8",
                                                 (err: any, data: string) => {
                                                     if (!err) {
-                                                        let element = document.createElement(
-                                                            "div"
-                                                        );
-                                                        element.innerHTML = data;
-                                                        let anchorElements = element.querySelectorAll(
-                                                            "A[name]"
-                                                        );
-                                                        let subsystems = this.getSubsystemFromScpiFileDoc(
-                                                            file,
-                                                            anchorElements
-                                                        );
+                                                        let element =
+                                                            document.createElement(
+                                                                "div"
+                                                            );
+                                                        element.innerHTML =
+                                                            data;
+                                                        let anchorElements =
+                                                            element.querySelectorAll(
+                                                                "A[name]"
+                                                            );
+                                                        let subsystems =
+                                                            this.getSubsystemFromScpiFileDoc(
+                                                                file,
+                                                                anchorElements
+                                                            );
                                                         resolve(subsystems);
                                                     } else {
                                                         resolve([]);
@@ -695,9 +702,10 @@ class FindChanges {
 
                                     results.forEach(subsystems => {
                                         if (subsystems) {
-                                            allSubsystems = allSubsystems.concat(
-                                                subsystems
-                                            );
+                                            allSubsystems =
+                                                allSubsystems.concat(
+                                                    subsystems
+                                                );
                                         }
                                     });
 
@@ -1027,6 +1035,7 @@ export class ImportScpiDocDialog extends React.Component<{
     }
 
     dialog: HTMLDivElement;
+    modal: bootstrap.Modal;
     addedSelectAllCheckbox: HTMLInputElement;
     deletedSelectAllCheckbox: HTMLInputElement;
     movedSelectAllCheckbox: HTMLInputElement;
@@ -1079,7 +1088,8 @@ export class ImportScpiDocDialog extends React.Component<{
             this.props.onHidden();
         });
 
-        $(this.dialog).modal();
+        this.modal = new bootstrap.Modal(this.dialog);
+        this.modal.show();
 
         const scpi = this.context.project.scpi;
 
@@ -1140,7 +1150,7 @@ export class ImportScpiDocDialog extends React.Component<{
 
         this.context.backgroundCheckEnabled = false;
 
-        $(this.dialog).modal("hide");
+        this.modal.hide();
 
         this.context.UndoManager.setCombineCommands(true);
 
@@ -1261,7 +1271,7 @@ export class ImportScpiDocDialog extends React.Component<{
     }
 
     onCancel() {
-        $(this.dialog).modal("hide");
+        this.modal.hide();
     }
 
     @action
@@ -1314,9 +1324,8 @@ export class ImportScpiDocDialog extends React.Component<{
                 "click",
                 action((event: any) => {
                     if (this.selectedChanges[section].length == 0) {
-                        (this.selectedChanges as any)[section] = this.changes[
-                            section
-                        ].slice();
+                        (this.selectedChanges as any)[section] =
+                            this.changes[section].slice();
                     } else {
                         this.selectedChanges[section] = [];
                     }
@@ -1422,7 +1431,8 @@ export class ImportScpiDocDialog extends React.Component<{
                                 <th className="col-8">
                                     <input
                                         ref={ref =>
-                                            (this.deletedSelectAllCheckbox = ref!)
+                                            (this.deletedSelectAllCheckbox =
+                                                ref!)
                                         }
                                         type="checkbox"
                                     />{" "}
@@ -1453,7 +1463,8 @@ export class ImportScpiDocDialog extends React.Component<{
                                 <th className="col-8">
                                     <input
                                         ref={ref =>
-                                            (this.updatedSelectAllCheckbox = ref!)
+                                            (this.updatedSelectAllCheckbox =
+                                                ref!)
                                         }
                                         type="checkbox"
                                     />{" "}
@@ -1468,7 +1479,8 @@ export class ImportScpiDocDialog extends React.Component<{
                                 <th className="col-4">
                                     <input
                                         ref={ref =>
-                                            (this.newEnumsSelectAllCheckbox = ref!)
+                                            (this.newEnumsSelectAllCheckbox =
+                                                ref!)
                                         }
                                         type="checkbox"
                                     />{" "}
@@ -1501,7 +1513,8 @@ export class ImportScpiDocDialog extends React.Component<{
                             );
 
                             if (section === "newEnums") {
-                                const newEnum = commandOrNewEnumDefinition as IEnum;
+                                const newEnum =
+                                    commandOrNewEnumDefinition as IEnum;
 
                                 return (
                                     <tr key={newEnum.name}>
@@ -1516,7 +1529,8 @@ export class ImportScpiDocDialog extends React.Component<{
                                     </tr>
                                 );
                             } else {
-                                const commandDefinition = commandOrNewEnumDefinition as CommandDefinition;
+                                const commandDefinition =
+                                    commandOrNewEnumDefinition as CommandDefinition;
 
                                 if (
                                     section === "added" ||
@@ -1557,8 +1571,9 @@ export class ImportScpiDocDialog extends React.Component<{
                                             </td>
                                             <td className="col-3">
                                                 {
-                                                    (commandDefinition as MovedCommandDefinition)
-                                                        .toSubsystem.name
+                                                    (
+                                                        commandDefinition as MovedCommandDefinition
+                                                    ).toSubsystem.name
                                                 }
                                             </td>
                                         </tr>
@@ -1651,12 +1666,10 @@ export class ImportScpiDocDialog extends React.Component<{
                             </h5>
                             <button
                                 type="button"
-                                className="close float-right"
+                                className="btn-close float-right"
                                 onClick={this.onCancel.bind(this)}
                                 aria-label="Close"
-                            >
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                            ></button>
                         </div>
                         <div className="modal-body">{content}</div>
                         {footer}

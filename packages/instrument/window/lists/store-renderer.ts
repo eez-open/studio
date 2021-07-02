@@ -1,7 +1,12 @@
 import { observable, action, toJS } from "mobx";
 
 import { capitalize } from "eez-studio-shared/string";
-import { IUnit, VOLTAGE_UNIT, CURRENT_UNIT, POWER_UNIT } from "eez-studio-shared/units";
+import {
+    IUnit,
+    VOLTAGE_UNIT,
+    CURRENT_UNIT,
+    POWER_UNIT
+} from "eez-studio-shared/units";
 
 import {
     ChartsController,
@@ -58,7 +63,10 @@ export function getMaxPower(instrument: InstrumentObject): number {
 export function getPowerLimitErrorMessage(instrument: InstrumentObject) {
     return `Power limit of ${POWER_UNIT.formatValue(
         getMaxPower(instrument),
-        Math.max(instrument.getDigits(VOLTAGE_UNIT), instrument.getDigits(CURRENT_UNIT))
+        Math.max(
+            instrument.getDigits(VOLTAGE_UNIT),
+            instrument.getDigits(CURRENT_UNIT)
+        )
     )} exceeded`;
 }
 
@@ -337,7 +345,8 @@ export class ListAxisModel implements IAxisModel {
 
     constructor(public $eez_noser_list: BaseList, unit: IUnit) {
         this.unit = unit.clone();
-        this.unit.precision = $eez_noser_list.$eez_noser_instrument.getDigits(unit);
+        this.unit.precision =
+            $eez_noser_list.$eez_noser_instrument.getDigits(unit);
 
         const props = $eez_noser_list.props.data[this.unit.name + "AxisModel"];
 

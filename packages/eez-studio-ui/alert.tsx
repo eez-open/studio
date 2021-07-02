@@ -18,12 +18,10 @@ export class Alert extends React.Component<
                 {this.props.onDismiss && (
                     <button
                         type="button"
-                        className="close"
+                        className="btn-close"
                         aria-label="Close"
                         onClick={this.props.onDismiss}
-                    >
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    ></button>
                 )}
                 {this.props.children}
             </div>

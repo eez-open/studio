@@ -160,15 +160,8 @@ export class DropdownButtonAction extends React.Component<
     {}
 > {
     render() {
-        const {
-            style,
-            icon,
-            iconSize,
-            text,
-            title,
-            onClick,
-            enabled
-        } = this.props;
+        const { style, icon, iconSize, text, title, onClick, enabled } =
+            this.props;
         let className = classNames(
             "EezStudio_ButtonAction btn dropdown-toggle",
             this.props.className
@@ -186,7 +179,7 @@ export class DropdownButtonAction extends React.Component<
             <div className="dropdown">
                 <button
                     {...buttonProps}
-                    data-toggle="dropdown"
+                    data-bs-toggle="dropdown"
                     aria-haspopup="true"
                     aria-expanded="false"
                 >
@@ -237,7 +230,7 @@ export class DropdownIconAction extends React.Component<
             <div className="dropdown">
                 <button
                     {...buttonProps}
-                    data-toggle="dropdown"
+                    data-bs-toggle="dropdown"
                     aria-haspopup="true"
                     aria-expanded="false"
                 >

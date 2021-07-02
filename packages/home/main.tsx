@@ -1,4 +1,5 @@
 /// <reference path="./globals.d.ts"/>
+import "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
 import { configure } from "mobx";
@@ -57,9 +58,8 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
 EEZStudio.electron.ipcRenderer.on(
     "importInstrumentDefinitionFile",
     (sender: any, filePath: string) => {
-        const {
-            importInstrumentDefinition
-        } = require("instrument/import-instrument-definition") as typeof ImportInstrumentDefinitionModule;
+        const { importInstrumentDefinition } =
+            require("instrument/import-instrument-definition") as typeof ImportInstrumentDefinitionModule;
         importInstrumentDefinition(filePath);
     }
 );

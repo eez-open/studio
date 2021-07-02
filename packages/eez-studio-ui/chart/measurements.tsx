@@ -58,8 +58,7 @@ let calculatingToastId: any;
 
 const Fade = cssTransition({
     enter: "fadeIn",
-    exit: "fadeOut",
-    duration: 0
+    exit: "fadeOut"
 });
 
 function showCalculating() {
@@ -1520,7 +1519,7 @@ export class MeasurementsDockView extends React.Component<{
                         <button
                             className="btn btn-sm btn-secondary dropdown-toggle"
                             type="button"
-                            data-toggle="dropdown"
+                            data-bs-toggle="dropdown"
                         >
                             Add Measurement
                         </button>

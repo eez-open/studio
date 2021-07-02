@@ -51,8 +51,6 @@ import * as UiPropertiesModule from "eez-studio-ui/properties";
 import * as AppStoreModule from "instrument/window/app-store";
 import * as Bb3Module from "instrument/bb3";
 
-import { showFileUploadDialog } from "instrument/window/terminal/file-upload-dialog";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_LISTS_MAX_POINTS = 256;
@@ -405,13 +403,15 @@ export class InstrumentObject {
         }
 
         if (ethernetPort === undefined) {
-            ethernetPort = DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!
-                .ethernet!.port;
+            ethernetPort =
+                DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.ethernet!
+                    .port;
         }
 
         if (baudRate === undefined) {
-            baudRate = DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!
-                .serial!.defaultBaudRate;
+            baudRate =
+                DEFAULT_INSTRUMENT_PROPERTIES.properties.connection!.serial!
+                    .defaultBaudRate;
         }
 
         if (idVendor === undefined) {
@@ -553,10 +553,8 @@ export class InstrumentObject {
     }
 
     get connectionParametersDetails() {
-        const {
-            PropertyList,
-            StaticProperty
-        } = require("eez-studio-ui/properties") as typeof UiPropertiesModule;
+        const { PropertyList, StaticProperty } =
+            require("eez-studio-ui/properties") as typeof UiPropertiesModule;
 
         if (this.lastConnection) {
             if (this.lastConnection.type === "ethernet") {
@@ -743,9 +741,8 @@ export class InstrumentObject {
                 }
             );
 
-            const {
-                closeWindow
-            } = require("main/window") as typeof MainWindowModule;
+            const { closeWindow } =
+                require("main/window") as typeof MainWindowModule;
             closeWindow(this.getEditorWindowArgs());
         }
     }
@@ -756,9 +753,8 @@ export class InstrumentObject {
 
     getEditor() {
         if (!this._instrumentAppStore) {
-            const {
-                InstrumentAppStore
-            } = require("instrument/window/app-store") as typeof AppStoreModule;
+            const { InstrumentAppStore } =
+                require("instrument/window/app-store") as typeof AppStoreModule;
             this._instrumentAppStore = new InstrumentAppStore(this.id);
         }
 
@@ -899,9 +895,8 @@ export class InstrumentObject {
     }
 
     async installExtension() {
-        const {
-            extensionsCatalog
-        } = require("home/extensions-manager/catalog") as typeof CatalogModule;
+        const { extensionsCatalog } =
+            require("home/extensions-manager/catalog") as typeof CatalogModule;
 
         const extension = extensionsCatalog.catalog.find(
             extension => extension.id === this.extension!.id
@@ -911,9 +906,8 @@ export class InstrumentObject {
                 autoClose: false
             });
 
-            const {
-                downloadAndInstallExtension
-            } = require("home/extensions-manager/extensions-manager") as typeof ExtensionMangerModule;
+            const { downloadAndInstallExtension } =
+                require("home/extensions-manager/extensions-manager") as typeof ExtensionMangerModule;
 
             await downloadAndInstallExtension(extension, progressToastId);
 
@@ -951,9 +945,8 @@ export class InstrumentObject {
     }
 
     getQueryResponseType(query: string) {
-        const command = this._instrumentAppStore.commandsTree.findCommand(
-            query
-        );
+        const command =
+            this._instrumentAppStore.commandsTree.findCommand(query);
         const response = command && (command as IQuerySyntax).response;
         if (response && response.type && response.type.length > 0) {
             return response.type[0].type;
@@ -962,9 +955,8 @@ export class InstrumentObject {
     }
 
     isCommandSendsBackDataBlock(commandName: string) {
-        const command = this._instrumentAppStore.commandsTree.findCommand(
-            commandName
-        );
+        const command =
+            this._instrumentAppStore.commandsTree.findCommand(commandName);
         return command && (command as ICommandSyntax).sendsBackDataBlock;
     }
 
@@ -977,12 +969,17 @@ export class InstrumentObject {
 
             if (fileUploadInstructions) {
                 if (this.defaultFileUploadInstructions) {
-                    fileUploadInstructions.favoriteDestinationPaths = this.defaultFileUploadInstructions.favoriteDestinationPaths;
+                    fileUploadInstructions.favoriteDestinationPaths =
+                        this.defaultFileUploadInstructions.favoriteDestinationPaths;
                 }
 
                 const instrument = this;
 
-                return () => {
+                return async () => {
+                    const { showFileUploadDialog } = await import(
+                        "instrument/window/terminal/file-upload-dialog"
+                    );
+
                     showFileUploadDialog(
                         fileUploadInstructions,
                         instructions => {
@@ -1027,9 +1024,8 @@ export class InstrumentObject {
 
     terminate() {
         if (this.isBB3) {
-            const {
-                getBB3Instrument
-            } = require("instrument/bb3") as typeof Bb3Module;
+            const { getBB3Instrument } =
+                require("instrument/bb3") as typeof Bb3Module;
             const bb3Instrument = getBB3Instrument(
                 this._instrumentAppStore,
                 false
@@ -1152,7 +1148,8 @@ export function changeGroupNameInInstruments(
     instruments.forEach((instrument: InstrumentObject) => {
         let i = instrument.selectedShortcutGroups.indexOf(oldName);
         if (i !== -1) {
-            let selectedShortcutGroups = instrument.selectedShortcutGroups.slice();
+            let selectedShortcutGroups =
+                instrument.selectedShortcutGroups.slice();
             selectedShortcutGroups.splice(i, 1);
             if (newName) {
                 selectedShortcutGroups.push(newName);

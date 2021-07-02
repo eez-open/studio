@@ -134,8 +134,9 @@ class PaletteItem extends React.Component<{
             this.props.componentClass.objectClass.classInfo.componentHeaderColor
         ) {
             titleStyle = {
-                backgroundColor: this.props.componentClass.objectClass.classInfo
-                    .componentHeaderColor
+                backgroundColor:
+                    this.props.componentClass.objectClass.classInfo
+                        .componentHeaderColor
             };
         }
 
@@ -177,7 +178,7 @@ class PaletteGroup extends React.Component<{
                     <h4 className="mb-0">
                         <button
                             className="btn btn-link"
-                            data-toggle="collapse"
+                            data-bs-toggle="collapse"
                             data-target={`#${target}`}
                         >
                             {name}

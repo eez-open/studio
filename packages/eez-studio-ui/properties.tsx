@@ -81,7 +81,9 @@ export class BytesProperty extends React.Component<
         return (
             <PropertyEnclosure>
                 <td className="PropertyName">{this.props.name}</td>
-                <td className="StaticPropertyValue">{formatBytes(this.props.value)}</td>
+                <td className="StaticPropertyValue">
+                    {formatBytes(this.props.value)}
+                </td>
             </PropertyEnclosure>
         );
     }
@@ -128,7 +130,7 @@ export class InputProperty extends React.Component<
                             <button
                                 className="btn btn-secondary dropdown-toggle"
                                 type="button"
-                                data-toggle="dropdown"
+                                data-bs-toggle="dropdown"
                             />
                             <div className="dropdown-menu">
                                 {this.props.suggestions.map(suggestion => (
@@ -136,7 +138,9 @@ export class InputProperty extends React.Component<
                                         key={suggestion}
                                         className="dropdown-item"
                                         type="button"
-                                        onClick={() => this.props.onChange(suggestion)}
+                                        onClick={() =>
+                                            this.props.onChange(suggestion)
+                                        }
                                     >
                                         {suggestion}
                                     </button>
@@ -168,7 +172,10 @@ export class InputProperty extends React.Component<
         }
 
         return (
-            <PropertyEnclosure errors={this.props.errors} title={this.props.title}>
+            <PropertyEnclosure
+                errors={this.props.errors}
+                title={this.props.title}
+            >
                 {content}
             </PropertyEnclosure>
         );
@@ -235,7 +242,11 @@ export class MultilineTextInputProperty extends React.Component<
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
+        return (
+            <PropertyEnclosure errors={this.props.errors}>
+                {content}
+            </PropertyEnclosure>
+        );
     }
 }
 
@@ -415,7 +426,9 @@ export class SelectProperty extends React.Component<
                             id={id}
                             className="form-control"
                             value={this.props.value}
-                            onChange={event => this.props.onChange(event.target.value)}
+                            onChange={event =>
+                                this.props.onChange(event.target.value)
+                            }
                             style={this.props.selectStyle}
                         >
                             {this.props.children}
@@ -447,7 +460,10 @@ export class SelectFromListProperty extends React.Component<
             <PropertyEnclosure errors={this.props.errors}>
                 <td colSpan={2}>
                     {this.props.name && (
-                        <label className="PropertyName col-form-label" htmlFor={id}>
+                        <label
+                            className="PropertyName col-form-label"
+                            htmlFor={id}
+                        >
                             {this.props.name}
                         </label>
                     )}
@@ -485,7 +501,9 @@ export class BooleanProperty extends React.Component<
                                 type="checkbox"
                                 className="form-check-input"
                                 checked={this.props.value}
-                                onChange={event => this.props.onChange(event.target.checked)}
+                                onChange={event =>
+                                    this.props.onChange(event.target.checked)
+                                }
                             />
                             {this.props.name}
                         </label>
@@ -543,7 +561,12 @@ export class KeybindingProperty extends React.Component<
         }
 
         let key = event.nativeEvent.key;
-        if (key !== "Control" && key !== "Shift" && key !== "Alt" && key !== "Meta") {
+        if (
+            key !== "Control" &&
+            key !== "Shift" &&
+            key !== "Alt" &&
+            key !== "Meta"
+        ) {
             if (key === " ") {
                 key = "space";
             }
@@ -620,7 +643,11 @@ export class KeybindingProperty extends React.Component<
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
+        return (
+            <PropertyEnclosure errors={this.props.errors}>
+                {content}
+            </PropertyEnclosure>
+        );
     }
 }
 
@@ -645,7 +672,10 @@ export class PropertyList extends React.Component<{
     className?: string;
 }> {
     render() {
-        let className = classNames("EezStudio_PropertyList", this.props.className);
+        let className = classNames(
+            "EezStudio_PropertyList",
+            this.props.className
+        );
 
         return (
             <table className={className}>
@@ -745,12 +775,12 @@ export class ButtonProperty extends React.Component<
 > {
     render() {
         return (
-            <tr >
+            <tr>
                 <td />
                 <td>
-                <button
-                onClick={value => this.props.onChange(1)}
-            >{this.props.name}</button>
+                    <button onClick={value => this.props.onChange(1)}>
+                        {this.props.name}
+                    </button>
                 </td>
             </tr>
         );

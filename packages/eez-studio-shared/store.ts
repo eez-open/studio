@@ -574,7 +574,9 @@ export function createStore({
             EEZStudio.electron.ipcRenderer.sendSync(
                 "shared/store/delete-object/" + storeName,
                 {
-                    object: toJS(object),
+                    object: {
+                        id: object.id
+                    },
                     options
                 }
             );

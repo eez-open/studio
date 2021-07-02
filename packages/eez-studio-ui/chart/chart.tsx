@@ -1,3 +1,4 @@
+import bootstrap from "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
 import { observable, computed, action, runInAction, autorun, toJS } from "mobx";
@@ -3128,7 +3129,7 @@ class Cursor implements ICursor {
     @observable valueIndex: number;
     @observable addPoint: boolean;
     @observable error: string | undefined;
-    cursorElement: EventTarget | null;
+    cursorElement: SVGElement | null;
     cursorPopover: any;
 
     @observable fillColor: string | undefined;
@@ -3232,7 +3233,7 @@ class Cursor implements ICursor {
             event.target instanceof Element &&
             !$.contains(this.chartView.svg, event.target) &&
             event.target != this.chartView.svg &&
-            !$(event.target).closest(".popover").length
+            this.cursorPopover
         ) {
             this.hidePopover();
         }
@@ -3247,19 +3248,18 @@ class Cursor implements ICursor {
                 </ThemeProvider>,
                 content
             );
-            this.cursorPopover = $(this.cursorElement)
-                .popover({
-                    content,
-                    html: true,
-                    placement: "top",
-                    delay: {
-                        show: 0,
-                        hide: 0
-                    },
-                    trigger: "manual"
-                })
-                .popover("show");
-            this.cursorPopover.css("pointer-events", "none");
+            this.cursorPopover = new bootstrap.Popover(this.cursorElement, {
+                content,
+                html: true,
+                placement: "top",
+                delay: {
+                    show: 0,
+                    hide: 0
+                },
+                trigger: "manual"
+            });
+            this.cursorPopover.show();
+            this.cursorElement.style.pointerEvents = "none";
             window.addEventListener("pointermove", this.onPointerMove, true);
         }
     }
@@ -3269,7 +3269,7 @@ class Cursor implements ICursor {
         this.visible = false;
         if (this.cursorPopover) {
             window.removeEventListener("pointermove", this.onPointerMove, true);
-            this.cursorPopover.popover("dispose");
+            this.cursorPopover.dispose();
             this.cursorPopover = undefined;
         }
     }
@@ -3277,7 +3277,7 @@ class Cursor implements ICursor {
     update() {
         if (this.cursorElement) {
             if (this.cursorPopover) {
-                this.cursorPopover.popover("update");
+                this.cursorPopover.update();
             } else {
                 this.showPopover();
             }

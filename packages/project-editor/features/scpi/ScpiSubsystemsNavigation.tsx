@@ -5,7 +5,10 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { NavigationComponent, getAncestorOfType } from "project-editor/core/object";
+import {
+    NavigationComponent,
+    getAncestorOfType
+} from "project-editor/core/object";
 import { getObjectFromNavigationItem } from "project-editor/core/store";
 
 import {
@@ -21,11 +24,11 @@ import { ProjectContext } from "project-editor/project/context";
 @observer
 export class ScpiSubsystemsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
-    handleRefresh() {
+    handleRefresh = () => {
         showImportScpiDocDialog(this.context);
-    }
+    };
 
     @computed
     get object(): ScpiSubsystem | ScpiCommand | undefined {
@@ -39,7 +42,10 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
                 return command as ScpiCommand;
             }
 
-            const subsystem = getAncestorOfType(object, ScpiSubsystem.classInfo);
+            const subsystem = getAncestorOfType(
+                object,
+                ScpiSubsystem.classInfo
+            );
             if (subsystem) {
                 return subsystem as ScpiSubsystem;
             }
@@ -55,7 +61,9 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         let commands =
             subsystem &&
             (getObjectFromNavigationItem(
-                this.context.NavigationStore.getNavigationSelectedItem(subsystem)
+                this.context.NavigationStore.getNavigationSelectedItem(
+                    subsystem
+                )
             ) as ScpiCommand[]);
 
         let command =
@@ -82,7 +90,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
                     title="Refresh with content from SCPI help folder"
                     icon="material:refresh"
                     iconSize={16}
-                    onClick={this.handleRefresh.bind(this)}
+                    onClick={this.handleRefresh}
                 />
             ];
         }
