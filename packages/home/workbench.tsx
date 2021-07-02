@@ -1,5 +1,5 @@
 import React from "react";
-import { action, observable } from "mobx";
+import { computed, action, observable, toJS } from "mobx";
 import { observer } from "mobx-react";
 
 import {
@@ -22,51 +22,116 @@ import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { createInstrument } from "instrument/instrument-extension";
 
-import { computed } from "mobx";
+import * as TabsStoreModule from "home/tabs-store";
 
 const { Menu, MenuItem } = EEZStudio.remote;
 
-import {
-    store,
-    workbenchObjects,
-    deleteWorkbenchObject,
-    WorkbenchObject
-} from "home/store";
+import { instruments, InstrumentObject } from "instrument/instrument-object";
+import { instrumentStore } from "instrument/instrument-object";
+
+////////////////////////////////////////////////////////////////////////////////
+
+function deleteInstrument(instrument: InstrumentObject) {
+    instrumentStore.deleteObject({
+        id: instrument.id
+    });
+}
+
+function openEditor(
+    instrument: InstrumentObject,
+    target: "tab" | "window" | "default"
+) {
+    if (target === "default") {
+        if (
+            EEZStudio.electron.ipcRenderer.sendSync(
+                "focusWindow",
+                instrument.getEditorWindowArgs()
+            )
+        ) {
+            return;
+        }
+        target = "tab";
+    }
+
+    const { tabs } = require("home/tabs-store") as typeof TabsStoreModule;
+
+    if (target === "tab") {
+        const tab = tabs.findTab(instrument.id);
+        if (tab) {
+            // tab already exists
+            tabs.makeActive(tab);
+        } else {
+            // close window if open
+            EEZStudio.electron.ipcRenderer.send(
+                "closeWindow",
+                toJS(instrument.getEditorWindowArgs())
+            );
+
+            // open tab
+            const tab = tabs.addInstrumentTab(instrument);
+            tab.makeActive();
+        }
+    } else {
+        // close tab if open
+        const tab = tabs.findTab(instrument.id);
+        if (tab) {
+            tabs.removeTab(tab);
+        }
+
+        // open window
+        EEZStudio.electron.ipcRenderer.send(
+            "openWindow",
+            toJS(instrument.getEditorWindowArgs())
+        );
+    }
+}
+
+window.onmessage = (message: any) => {
+    for (let key of instruments.keys()) {
+        const instrument = instruments.get(key);
+        if (instrument && instrument.id === message.data.instrumentId) {
+            if (message.data.type === "open-instrument-editor") {
+                openEditor(instrument, message.data.target);
+            } else if (message.data.type === "delete-instrument") {
+                beginTransaction("Delete instrument");
+                deleteInstrument(instrument);
+                commitTransaction();
+            }
+            return;
+        }
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class WorkbenchDocument {
     @computed
-    get objects() {
-        return Array.from(workbenchObjects.values());
+    get instruments() {
+        return Array.from(instruments.values());
     }
 
-    deleteObjects(objects: WorkbenchObject[]) {
-        if (objects.length > 0) {
+    deleteInstruments(instruments: InstrumentObject[]) {
+        if (instruments.length > 0) {
             beginTransaction("Delete workbench items");
         } else {
             beginTransaction("Delete workbench item");
         }
 
-        objects.forEach(object =>
-            deleteWorkbenchObject(object as WorkbenchObject)
+        instruments.forEach(instrument =>
+            deleteInstrument(instrument as InstrumentObject)
         );
 
         commitTransaction();
     }
 
-    createObject(params: any) {
-        return store.createObject(params);
-    }
-
-    createContextMenu(objects: WorkbenchObject[]): Electron.Menu {
+    createContextMenu(instruments: InstrumentObject[]): Electron.Menu {
         const menu = new Menu();
 
-        if (objects.length === 1) {
-            const object = objects[0];
+        if (instruments.length === 1) {
+            const instrument = instruments[0];
 
-            if (object.addToContextMenu) {
-                object.addToContextMenu(menu);
+            if (instrument.addToContextMenu) {
+                instrument.addToContextMenu(menu);
             }
 
             if (menu.items.length > 0) {
@@ -81,22 +146,22 @@ class WorkbenchDocument {
                 new MenuItem({
                     label: "Open in Tab",
                     click: () => {
-                        object.openEditor!("tab");
+                        instrument.openEditor("tab");
                     }
                 })
             );
 
             menu.append(
                 new MenuItem({
-                    label: "Open in Window",
+                    label: "Open in New Window",
                     click: () => {
-                        object.openEditor!("window");
+                        instrument.openEditor("window");
                     }
                 })
             );
         }
 
-        if (objects.length > 0) {
+        if (instruments.length > 0) {
             if (menu.items.length > 0) {
                 menu.append(
                     new MenuItem({
@@ -109,7 +174,7 @@ class WorkbenchDocument {
                 new MenuItem({
                     label: "Delete",
                     click: () => {
-                        this.deleteObjects(objects);
+                        this.deleteInstruments(instruments);
                     }
                 })
             );
@@ -138,8 +203,7 @@ export class WorkbenchToolbar extends React.Component {
 
                     showAddInstrumentDialog(extension => {
                         beginTransaction("Add instrument");
-                        let params = createInstrument(extension);
-                        workbenchDocument.createObject(params);
+                        createInstrument(extension);
                         commitTransaction();
                     });
                 }
@@ -206,7 +270,7 @@ const PanelTitleDiv = styled.div`
     font-weight: bold;
 `;
 
-const ObjectDetailsEnclosure = styled.div`
+const InstrumentDetailsEnclosure = styled.div`
     background-color: ${props => props.theme.panelHeaderColor};
     min-height: 100%;
 `;
@@ -219,10 +283,10 @@ export class PanelTitle extends React.Component<{ title?: string }, {}> {
 
 @observer
 export class Properties extends React.Component<{
-    selectedObject: WorkbenchObject | undefined;
+    selectedInstrument: InstrumentObject | undefined;
 }> {
     render() {
-        if (!this.props.selectedObject) {
+        if (!this.props.selectedInstrument) {
             return <div />;
         }
 
@@ -231,7 +295,7 @@ export class Properties extends React.Component<{
                 <PanelTitle title="History" />
                 <HistoryContentDiv>
                     <HistorySection
-                        oids={[this.props.selectedObject.oid]}
+                        oids={[this.props.selectedInstrument.id]}
                         simple={true}
                     />
                 </HistoryContentDiv>
@@ -244,9 +308,9 @@ export class Properties extends React.Component<{
                 sizes={"100%|240px"}
                 persistId={"home/designer/properties/splitter"}
             >
-                <ObjectDetailsEnclosure>
-                    {this.props.selectedObject.details}
-                </ObjectDetailsEnclosure>
+                <InstrumentDetailsEnclosure>
+                    {this.props.selectedInstrument.details}
+                </InstrumentDetailsEnclosure>
                 {history}
             </Splitter>
         );
@@ -255,7 +319,7 @@ export class Properties extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ObjectComponentDiv = styled.div`
+const InstrumentComponentEnclosure = styled.div`
     width: 240px;
 
     &.selected {
@@ -266,26 +330,37 @@ const ObjectComponentDiv = styled.div`
 `;
 
 @observer
-class ObjectComponent extends React.Component<
+class InstrumentComponent extends React.Component<
     {
-        object: WorkbenchObject;
+        instrument: InstrumentObject;
         isSelected: boolean;
-        selectObject: (object: WorkbenchObject) => void;
+        selectInstrument: (instrument: InstrumentObject) => void;
     },
     {}
 > {
+    open = () => {
+        openEditor(this.props.instrument, "default");
+    };
+
     render() {
-        const { object } = this.props;
+        const { instrument } = this.props;
+
         return (
-            <ObjectComponentDiv
+            <InstrumentComponentEnclosure
                 className={classNames("shadow p-3 m-3 bg-body rounded", {
                     selected: this.props.isSelected
                 })}
-                onClick={() => this.props.selectObject(object)}
-                onDoubleClick={() => this.props.object.open()}
+                onClick={() => this.props.selectInstrument(instrument)}
+                onDoubleClick={this.open}
+                onContextMenu={() => {
+                    const contextMenu = workbenchDocument.createContextMenu([
+                        instrument
+                    ]);
+                    contextMenu.popup({});
+                }}
             >
-                {object.content}
-            </ObjectComponentDiv>
+                {instrument.content}
+            </InstrumentComponentEnclosure>
         );
     }
 }
@@ -297,24 +372,20 @@ const WorkbenchDocumentDiv = styled.div`
 
 @observer
 export class WorkbenchDocumentComponent extends React.Component<{
-    selectedObject: WorkbenchObject | undefined;
-    selectObject: (object: WorkbenchObject) => void;
+    selectedInstrument: InstrumentObject | undefined;
+    selectInstrument: (instrument: InstrumentObject) => void;
 }> {
-    selectObject = (object: WorkbenchObject) => {
-        this.props.selectObject(object);
-    };
-
     render() {
         return (
             <WorkbenchDocumentDiv className="d-flex flex-wrap justify-content-center align-items-center">
-                {workbenchDocument.objects
+                {workbenchDocument.instruments
                     .sort((a, b) => stringCompare(a.name, b.name))
                     .map(obj => (
-                        <ObjectComponent
+                        <InstrumentComponent
                             key={obj.id}
-                            object={obj}
-                            isSelected={obj == this.props.selectedObject}
-                            selectObject={this.selectObject}
+                            instrument={obj}
+                            isSelected={obj == this.props.selectedInstrument}
+                            selectInstrument={this.props.selectInstrument}
                         />
                     ))}
             </WorkbenchDocumentDiv>
@@ -326,11 +397,11 @@ export class WorkbenchDocumentComponent extends React.Component<{
 
 @observer
 export class Workbench extends React.Component<{}, {}> {
-    @observable selectedObject: WorkbenchObject | undefined;
+    @observable selectedInstrument: InstrumentObject | undefined;
 
     @action.bound
-    selectObject(object: WorkbenchObject) {
-        this.selectedObject = object;
+    selectInstrument(instrument: InstrumentObject) {
+        this.selectedInstrument = instrument;
     }
 
     render() {
@@ -346,11 +417,13 @@ export class Workbench extends React.Component<{}, {}> {
                         persistId="home/designer/splitter"
                     >
                         <WorkbenchDocumentComponent
-                            selectedObject={this.selectedObject}
-                            selectObject={this.selectObject}
+                            selectedInstrument={this.selectedInstrument}
+                            selectInstrument={this.selectInstrument}
                         />
 
-                        <Properties selectedObject={this.selectedObject} />
+                        <Properties
+                            selectedInstrument={this.selectedInstrument}
+                        />
                     </Splitter>
                 </Body>
             </VerticalHeaderWithBody>

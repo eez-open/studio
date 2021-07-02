@@ -11,11 +11,6 @@ export { IFieldProperties } from "eez-studio-ui/generic-dialog";
 import type { IEezStudio } from "eez-studio-types";
 import { IHomeTab } from "home/tabs-store";
 
-export interface IActivityLogEntryInfo {
-    name: string;
-    content: JSX.Element | string;
-}
-
 export interface IEditor {
     onCreate(): void;
     onActivate(): void;
@@ -24,25 +19,6 @@ export interface IEditor {
     onBeforeAppClose(): Promise<boolean>;
 
     render(): JSX.Element;
-}
-
-export interface IObject {
-    id: string;
-    name: string;
-    content: JSX.Element | null;
-    activityLogEntryInfo(
-        logEntry: IActivityLogEntry
-    ): IActivityLogEntryInfo | null;
-    details: JSX.Element | null;
-    getEditor?(): IEditor;
-    getEditorWindowArgs?(): {
-        url: string;
-        args: any;
-    };
-    openEditor?(target: "tab" | "window" | "default"): void;
-    afterDelete?(): void;
-    addToContextMenu?(menu: Electron.Menu): void;
-    getIcon(): React.ReactNode;
 }
 
 export interface IExtensionProperties {
@@ -168,9 +144,6 @@ export interface IExtensionDefinition {
     init?: () => void;
     destroy?: () => void;
 
-    objectTypes?: {
-        [type: string]: (oid: string) => IObject | undefined;
-    };
     loadExtension?: (
         extensionFolderPath: string
     ) => Promise<IExtension | undefined>;

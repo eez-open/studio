@@ -25,7 +25,7 @@ import {
     showSessionsList
 } from "instrument/window/history/history-view";
 
-import { WorkbenchObject, workbenchObjects } from "home/store";
+import { instruments, InstrumentObject } from "instrument/instrument-object";
 import * as WorkbenchModule from "home/workbench";
 import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
@@ -277,8 +277,8 @@ class HomeSectionTab implements IHomeTab {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class ObjectEditorTab implements IHomeTab {
-    constructor(public tabs: Tabs, public object: WorkbenchObject) {
+class InstrumentTab implements IHomeTab {
+    constructor(public tabs: Tabs, public object: InstrumentObject) {
         this.editor = this.object.getEditor();
         this.editor.onCreate();
     }
@@ -547,6 +547,16 @@ class Tabs {
 
         loadPreinstalledExtension("instrument").then(async () => {
             if (!this.firstTime) {
+                console.log(location.search);
+                if (location.search) {
+                    debugger;
+                    const instrumentId = location.search.substring(1);
+                    if (instruments.get(instrumentId)) {
+                        this.openTabById(instrumentId, true);
+                        return;
+                    }
+                }
+
                 const tabsJSON = window.localStorage.getItem("home/tabs");
                 if (tabsJSON) {
                     const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
@@ -589,10 +599,8 @@ class Tabs {
 
         autorun(() => {
             const tabsToClose = this.tabs.filter(
-                tab =>
-                    tab instanceof ObjectEditorTab &&
-                    !workbenchObjects.get(tab.id)
-            ) as ObjectEditorTab[];
+                tab => tab instanceof InstrumentTab && !instruments.get(tab.id)
+            ) as InstrumentTab[];
 
             tabsToClose.forEach(tab => tab.close());
         });
@@ -662,9 +670,9 @@ class Tabs {
                     tabId.substr(ProjectEditorTab.ID_PREFIX.length)
                 );
             } else {
-                const object = workbenchObjects.get(tabId);
-                if (object) {
-                    tab = this.addObjectTab(object);
+                const instrument = instruments.get(tabId);
+                if (instrument) {
+                    tab = this.addInstrumentTab(instrument);
                 }
             }
         }
@@ -734,14 +742,14 @@ class Tabs {
     }
 
     @action
-    addObjectTab(object: WorkbenchObject) {
+    addInstrumentTab(instrument: InstrumentObject) {
         for (let tabIndex = 0; tabIndex < this.tabs.length; tabIndex++) {
-            if (this.tabs[tabIndex].id === object.id) {
+            if (this.tabs[tabIndex].id === instrument.id) {
                 return this.tabs[tabIndex];
             }
         }
 
-        const tab = new ObjectEditorTab(this, object);
+        const tab = new InstrumentTab(this, instrument);
         this.tabs.push(tab);
         return tab;
     }

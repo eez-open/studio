@@ -72,7 +72,7 @@ export const TabView: React.FC<TabViewProps> = observer(
                 if (tab.openInWindow) {
                     menu.append(
                         new MenuItem({
-                            label: "Open in Window",
+                            label: "Open in New Window",
                             click: () => tab.openInWindow!()
                         })
                     );
@@ -396,7 +396,8 @@ const AddTabButton = observer(
         React.useEffect(() => {
             setTimeout(() => {
                 if (open && popupContainerRef && popupContainerRef.current) {
-                    var bounding = popupContainerRef.current.getBoundingClientRect();
+                    var bounding =
+                        popupContainerRef.current.getBoundingClientRect();
                     setAlignRight(bounding.right > window.innerWidth);
                 } else {
                     setAlignRight(false);

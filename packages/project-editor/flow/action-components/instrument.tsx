@@ -29,7 +29,6 @@ import type {
     IFlowContext,
     IRunningFlow
 } from "project-editor/flow//flow-interfaces";
-import { workbenchObjects } from "home/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -386,11 +385,8 @@ class SelectInstrumentDialog extends React.Component<
     get instrumentNodes() {
         const instrumentObjects = [];
 
-        for (let [_, workbenchObject] of workbenchObjects) {
-            const instrument = instruments.get(workbenchObject.oid);
-            if (instrument) {
-                instrumentObjects.push(instrument);
-            }
+        for (let [_, instrument] of instruments) {
+            instrumentObjects.push(instrument);
         }
 
         instrumentObjects.sort((a, b) =>

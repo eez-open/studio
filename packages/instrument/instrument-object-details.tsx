@@ -268,11 +268,8 @@ export class InstrumentDetails extends React.Component<
     onDelete() {
         window.postMessage(
             {
-                type: "delete-object",
-                object: {
-                    id: this.props.instrument.id,
-                    type: "instrument"
-                }
+                type: "delete-instrument",
+                instrumentId: this.props.instrument.id
             },
             "*"
         );
@@ -306,7 +303,7 @@ export class InstrumentDetails extends React.Component<
                             onClick={this.onOpenInTab}
                         />
                         <ButtonAction
-                            text="Open in Window"
+                            text="Open in New Window"
                             title="Open instrument in new window"
                             className="btn btn-secondary"
                             onClick={this.onOpenInWindow}

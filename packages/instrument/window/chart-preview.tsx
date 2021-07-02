@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, trace } from "mobx";
+import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -62,7 +62,6 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
 
     @computed
     get chartsController() {
-        trace();
         return createChartsController(
             this.props.data,
             "split",

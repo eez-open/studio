@@ -406,7 +406,7 @@ export class Scrapbook extends React.Component<{
                                 )}
                                 min={48}
                                 max={480}
-                                className="form-control"
+                                className="form-range"
                             />
                         </div>
                     </HeaderContainer>

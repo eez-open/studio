@@ -111,7 +111,9 @@ export class InputProperty extends React.Component<
         let input = (
             <input
                 id={id}
-                className="form-control"
+                className={
+                    this.props.type == "range" ? "form-range" : "form-control"
+                }
                 type={this.props.type}
                 value={this.props.value}
                 title={this.props.title}

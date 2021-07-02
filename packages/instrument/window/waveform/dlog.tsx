@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, reaction, toJS, runInAction, trace } from "mobx";
+import { observable, computed, reaction, toJS, runInAction } from "mobx";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
@@ -469,8 +469,6 @@ export class DlogWaveform extends FileHistoryItem {
 
     @computed
     get values() {
-        trace();
-
         if (!this.transferSucceeded) {
             return undefined;
         }
@@ -484,7 +482,6 @@ export class DlogWaveform extends FileHistoryItem {
 
     @computed
     get dlog(): IDlog<IUnit> {
-        trace();
         return (
             (this.values && decodeDlog(this.values, dlogUnitToStudioUnit)) || {
                 version: 1,
@@ -555,7 +552,6 @@ export class DlogWaveform extends FileHistoryItem {
 
     @computed
     get channels() {
-        trace();
         return this.dlog.yAxes.map(yAxis => ({
             yAxis,
             axisModel: new DlogWaveformAxisModel(yAxis)
@@ -630,7 +626,6 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     @computed get channelsGroups(): IChannelsGroup[] {
-        trace();
         const channelsGroups: IChannelsGroup[] = [];
 
         function compareYAxis(

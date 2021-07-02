@@ -20,14 +20,14 @@ import { SessionInfo } from "instrument/window/history/session/info-view";
 import { tabs } from "home/tabs-store";
 import { getAppStore } from "home/history";
 
-import { workbenchObjects, WorkbenchObject } from "home/store";
+import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { Setup } from "home/setup";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class AddTabPopupStuff {
     @computed get instrumentObjects() {
-        return Array.from(workbenchObjects.values()).filter(
+        return Array.from(instruments.values()).filter(
             obj => !tabs.findTab(obj.id)
         );
     }
@@ -102,7 +102,7 @@ const AddTabPopup = observer(() => {
                             selected: false
                         }))}
                     renderNode={(node: IListNode) => {
-                        let object = node.data as WorkbenchObject;
+                        let object = node.data as InstrumentObject;
                         return (
                             <ListItem
                                 leftIcon={object.getIcon()}
@@ -112,7 +112,7 @@ const AddTabPopup = observer(() => {
                         );
                     }}
                     selectNode={(node: IListNode) => {
-                        let object = node.data as WorkbenchObject;
+                        let object = node.data as InstrumentObject;
                         object.openEditor("tab");
                     }}
                 ></List>

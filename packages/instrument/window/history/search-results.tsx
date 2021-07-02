@@ -3,37 +3,56 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    Header,
+    Body
+} from "eez-studio-ui/header-with-body";
 import { Loader } from "eez-studio-ui/loader";
 import { ButtonAction } from "eez-studio-ui/action";
 
-import { findObjectByActivityLogEntry } from "eez-studio-shared/extensions/extensions";
-
 import { History, SearchResult } from "instrument/window/history/history";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
+import { instruments } from "instrument/instrument-object";
+import { createHistoryItem } from "instrument/window/history/item-factory";
 
 @observer
 export class SearchResultComponent extends React.Component<{
     history: History;
     searchResult: SearchResult;
 }> {
+    getLogEntryInfo(logEntry: IActivityLogEntry) {
+        let type;
+        if (logEntry.type === "activity-log/note") {
+            type = "instrument";
+        } else {
+            let i = logEntry.type.indexOf("/");
+            if (i !== -1) {
+                type = logEntry.type.substring(0, i);
+            } else {
+                type = logEntry.type;
+            }
+        }
+
+        if (type == "instrument") {
+            const instrument = instruments.get(logEntry.oid);
+            if (instrument && instrument.extension) {
+                const historyItem = createHistoryItem(logEntry);
+                return historyItem.info;
+            }
+        }
+
+        return undefined;
+    }
+
     render() {
         const logEntry = this.props.searchResult.logEntry;
         const { date, type, message } = logEntry;
 
-        let name;
-        let content;
+        let content = this.getLogEntryInfo(logEntry);
 
-        const object = findObjectByActivityLogEntry(logEntry);
-        if (object) {
-            let info = object.activityLogEntryInfo(logEntry);
-            if (info) {
-                name = info.name;
-                content = info.content;
-            }
-        }
-
-        if (name === undefined) {
-            name = `${type}: ${message.slice(0, 100)}`;
+        if (content === undefined) {
+            content = `${type}: ${message.slice(0, 100)}`;
         }
 
         let className = classNames({
@@ -44,7 +63,9 @@ export class SearchResultComponent extends React.Component<{
             <tr
                 className={className}
                 onClick={() =>
-                    this.props.history.search.selectSearchResult(this.props.searchResult)
+                    this.props.history.search.selectSearchResult(
+                        this.props.searchResult
+                    )
                 }
             >
                 <td className="dateColumn">{formatDateTimeLong(date)}</td>
@@ -81,7 +102,9 @@ export class SearchResults extends React.Component<{ history: History }> {
                                     text="Stop"
                                     title="Stop search"
                                     className="btn-sm btn-secondary"
-                                    onClick={() => this.props.history.search.stopSearch()}
+                                    onClick={() =>
+                                        this.props.history.search.stopSearch()
+                                    }
                                 />
                             </div>
                         )}
@@ -90,13 +113,15 @@ export class SearchResults extends React.Component<{ history: History }> {
                 <Body className="EezStudio_HistoryTable selectable">
                     <table className="table">
                         <tbody>
-                            {this.props.history.search.searchResults.map(searchResult => (
-                                <SearchResultComponent
-                                    key={searchResult.logEntry.id}
-                                    history={this.props.history}
-                                    searchResult={searchResult}
-                                />
-                            ))}
+                            {this.props.history.search.searchResults.map(
+                                searchResult => (
+                                    <SearchResultComponent
+                                        key={searchResult.logEntry.id}
+                                        history={this.props.history}
+                                        searchResult={searchResult}
+                                    />
+                                )
+                            )}
                         </tbody>
                     </table>
                 </Body>

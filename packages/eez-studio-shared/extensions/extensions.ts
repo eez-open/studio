@@ -1,4 +1,4 @@
-import { observable, computed, action, runInAction, values } from "mobx";
+import { observable, computed, action, runInAction } from "mobx";
 const EventEmitter = require("events");
 const fs = require("fs");
 const path = require("path");
@@ -23,14 +23,11 @@ import { _difference } from "eez-studio-shared/algorithm";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 
-import { IActivityLogEntry } from "eez-studio-shared/activity-log";
-
 import * as notification from "eez-studio-ui/notification";
 import { confirm } from "eez-studio-ui/dialog-electron";
 
 import {
     IExtension,
-    IObject,
     IExtensionProperties
 } from "eez-studio-shared/extensions/extension";
 
@@ -599,49 +596,6 @@ export async function uninstallExtension(extensionId: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getObject(type: string, oid: string): IObject {
-    let object;
-
-    let getObject = objectTypes.get().get(type);
-    if (getObject) {
-        object = getObject(oid);
-    }
-
-    if (!object) {
-        object = {
-            id: oid,
-            name: "",
-            content: null,
-            activityLogEntryInfo(logEntry: IActivityLogEntry) {
-                return null;
-            },
-            details: null,
-            getIcon() {
-                return null;
-            }
-        };
-    }
-
-    return object;
-}
-
-export function getObjectTypeFromLogEntry(logEntry: IActivityLogEntry) {
-    if (logEntry.type === "activity-log/note") {
-        return "instrument";
-    }
-    let i = logEntry.type.indexOf("/");
-    if (i !== -1) {
-        return logEntry.type.substring(0, i);
-    }
-    return logEntry.type;
-}
-
-export function findObjectByActivityLogEntry(logEntry: IActivityLogEntry) {
-    return getObject(getObjectTypeFromLogEntry(logEntry), logEntry.oid);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 let notifySource = {
     id: "shared/extension"
 };
@@ -789,16 +743,4 @@ export const installedExtensions = computed(() => {
     return Array.from(extensions.values()).filter(
         extension => !extension.preInstalled
     );
-});
-
-export const objectTypes = computed(() => {
-    let objectTypes = new Map<string, (oid: string) => IObject | undefined>();
-    values(extensions).forEach(extension => {
-        if (extension.objectTypes) {
-            for (let key of Object.keys(extension.objectTypes)) {
-                objectTypes.set(key, extension.objectTypes![key]);
-            }
-        }
-    });
-    return objectTypes;
 });

@@ -22,7 +22,6 @@ import {
 import { tabs } from "./tabs-store";
 
 import { createInstrument } from "instrument/instrument-extension";
-import { workbenchDocument } from "home/workbench";
 
 const BB3_INSTRUMENT_EXTENSION_ID = "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
 const BB3_INSTRUMENT_MANUFACTURER = "EEZ";
@@ -184,14 +183,13 @@ async function onAdd() {
     }
 
     let params = createInstrument(installedVersion);
-    const objectId = workbenchDocument.createObject(params);
 
     runInAction(() => {
         tabs.firstTime = false;
     });
 
     setTimeout(() => {
-        tabs.openTabById(objectId, true);
+        tabs.openTabById(params.id, true);
     }, 50);
 }
 

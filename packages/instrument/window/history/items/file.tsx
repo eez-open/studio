@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction, trace } from "mobx";
+import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { clipboard, nativeImage, SaveDialogOptions } from "electron";
 import { bind } from "bind-decorator";
@@ -820,7 +820,6 @@ export class FileHistoryItem extends HistoryItem {
 
     @computed
     get transferSucceeded() {
-        trace();
         return this.state === "success" || this.state === "upload-finish";
     }
 

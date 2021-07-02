@@ -13,11 +13,7 @@ import {
     loadExtensionById,
     extensions
 } from "eez-studio-shared/extensions/extensions";
-import {
-    activityLogStore,
-    log,
-    IActivityLogEntry
-} from "eez-studio-shared/activity-log";
+import { activityLogStore, log } from "eez-studio-shared/activity-log";
 import { objectEqual } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { IUnit } from "eez-studio-shared/units";
@@ -29,7 +25,6 @@ import * as notification from "eez-studio-ui/notification";
 
 import * as MainWindowModule from "main/window";
 
-import { store as workbenchObjectsStore } from "home/store";
 import * as ExtensionMangerModule from "home/extensions-manager/extensions-manager";
 import * as CatalogModule from "home/extensions-manager/catalog";
 
@@ -38,7 +33,6 @@ import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
 import { IInstrumentProperties } from "instrument/export";
 import { ICommandSyntax, IQuerySyntax } from "instrument/commands-tree";
 
-import { createHistoryItem } from "instrument/window/history/item-factory";
 import { IConnection } from "instrument/connection/connection";
 import { createConnection } from "instrument/connection/connection";
 import {
@@ -676,18 +670,6 @@ export class InstrumentObject {
         return this._creationDate;
     }
 
-    activityLogEntryInfo(logEntry: IActivityLogEntry) {
-        if (this.extension) {
-            const historyItem = createHistoryItem(logEntry);
-            return {
-                name: this.name,
-                content: historyItem.info
-            };
-        } else {
-            return null;
-        }
-    }
-
     @computed
     get details() {
         const {
@@ -761,7 +743,7 @@ export class InstrumentObject {
 
     getEditorWindowArgs() {
         return {
-            url: "instrument/index.html?" + this.id,
+            url: "home/index.html?" + this.id,
             args: this.id
         };
     }
@@ -769,11 +751,8 @@ export class InstrumentObject {
     openEditor(target: "tab" | "window" | "default") {
         window.postMessage(
             {
-                type: "open-object-editor",
-                object: {
-                    id: this.id,
-                    type: "instrument"
-                },
+                type: "open-instrument-editor",
+                instrumentId: this.id,
                 target
             },
             "*"
@@ -872,19 +851,12 @@ export class InstrumentObject {
     }
 
     restore() {
-        let workbenchObject = workbenchObjectsStore.findByOid(this.id);
-
         beginTransaction("Restore instrument");
         store.undeleteObject(this);
-        workbenchObjectsStore.undeleteObject(workbenchObject);
         commitTransaction();
     }
 
     deletePermanently() {
-        workbenchObjectsStore.deleteObject(
-            { oid: this.id },
-            { deletePermanently: true }
-        );
         activityLogStore.deleteObject(
             { oid: this.id },
             { deletePermanently: true }
@@ -1034,6 +1006,13 @@ export class InstrumentObject {
         }
     }
 }
+
+// Legacy: we don't user 'workbench/objects' anymore, but if exists then remove all instruments not referenced by the 'workbench/objects'.
+try {
+    db.prepare(
+        `DELETE FROM instrument WHERE id NOT IN (SELECT oid FROM 'workbench/objects')`
+    ).run();
+} catch (err) {}
 
 export const store = createStore({
     storeName: "instrument",
