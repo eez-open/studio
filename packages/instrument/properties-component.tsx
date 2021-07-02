@@ -15,14 +15,18 @@ interface PropertiesComponentProps {
 }
 
 @observer
-export class PropertiesComponent extends React.Component<PropertiesComponentProps, {}> {
+export class PropertiesComponent extends React.Component<
+    PropertiesComponentProps,
+    {}
+> {
     @observable value: string = this.getValue();
     @observable errors: string[] | undefined;
 
     getValue(props?: PropertiesComponentProps) {
         props = props || this.props;
         return JSON.stringify(
-            (props.extension.properties as IInstrumentExtensionProperties).properties,
+            (props.extension.properties as IInstrumentExtensionProperties)
+                .properties,
             undefined,
             2
         );
@@ -49,12 +53,23 @@ export class PropertiesComponent extends React.Component<PropertiesComponentProp
 
     @bind
     onBlur() {
-        if (this.props.extension.isEditable && !this.errors && this.value !== this.getValue()) {
-            const properties = Object.assign({}, toJS(this.props.extension.properties));
+        if (
+            this.props.extension.isEditable &&
+            !this.errors &&
+            this.value !== this.getValue()
+        ) {
+            const properties = Object.assign(
+                {},
+                toJS(this.props.extension.properties)
+            );
             properties.properties = JSON.parse(this.value);
             changeExtensionProperties(
                 this.props.extension,
-                Object.assign({}, toJS(this.props.extension.properties), properties)
+                Object.assign(
+                    {},
+                    toJS(this.props.extension.properties),
+                    properties
+                )
             );
         }
     }

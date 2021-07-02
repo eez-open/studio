@@ -302,13 +302,13 @@ export class InstrumentDetails extends React.Component<
                         <ButtonAction
                             text="Open in Tab"
                             title="Open instrument in new tab"
-                            className="btn btn-default"
+                            className="btn btn-secondary"
                             onClick={this.onOpenInTab}
                         />
                         <ButtonAction
                             text="Open in Window"
                             title="Open instrument in new window"
-                            className="btn btn-default"
+                            className="btn btn-secondary"
                             onClick={this.onOpenInWindow}
                         />
                         <ButtonAction

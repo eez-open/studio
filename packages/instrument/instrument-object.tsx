@@ -747,8 +747,6 @@ export class InstrumentObject {
         }
     }
 
-    isEditable = true;
-
     _instrumentAppStore: AppStoreModule.InstrumentAppStore;
 
     getEditor() {

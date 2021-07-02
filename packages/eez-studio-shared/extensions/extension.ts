@@ -1,7 +1,6 @@
 import { UNITS } from "eez-studio-shared/units";
 import { IStore } from "eez-studio-shared/store";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
-import { IToolbarButton, IHomeTab } from "home/designer/designer-interfaces";
 
 import { IShortcut } from "shortcuts/interfaces";
 
@@ -10,6 +9,7 @@ import { IFieldProperties } from "eez-studio-ui/generic-dialog";
 export { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
 import type { IEezStudio } from "eez-studio-types";
+import { IHomeTab } from "home/tabs-store";
 
 export interface IActivityLogEntryInfo {
     name: string;
@@ -34,7 +34,6 @@ export interface IObject {
         logEntry: IActivityLogEntry
     ): IActivityLogEntryInfo | null;
     details: JSX.Element | null;
-    isEditable: boolean;
     getEditor?(): IEditor;
     getEditorWindowArgs?(): {
         url: string;
@@ -169,7 +168,6 @@ export interface IExtensionDefinition {
     init?: () => void;
     destroy?: () => void;
 
-    toolbarButtons?: IToolbarButton[];
     objectTypes?: {
         [type: string]: (oid: string) => IObject | undefined;
     };

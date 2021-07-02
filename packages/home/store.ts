@@ -1,4 +1,4 @@
-import { observable, computed, runInAction, toJS } from "mobx";
+import { computed, toJS } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
 import {
@@ -17,7 +17,6 @@ import { IActivityLogEntryInfo } from "eez-studio-shared/extensions/extension";
 import * as TabsStoreModule from "home/tabs-store";
 
 import { instrumentStore } from "instrument/instrument-object";
-import { IWorkbenchObject } from "home/designer/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -28,20 +27,16 @@ export interface IWorkbenchObjectProps {
     rect: Rect;
 }
 
-export class WorkbenchObject implements IWorkbenchObject {
+export class WorkbenchObject {
     constructor(props: IWorkbenchObjectProps) {
         this.id = props.id;
         this.type = props.type;
         this.oid = props.oid;
-        this.rect = props.rect;
     }
 
     id: string;
     type: string;
     oid: string;
-    @observable private _rect: Rect;
-
-    children: WorkbenchObject[] = [];
 
     @computed
     get implementation() {
@@ -50,24 +45,6 @@ export class WorkbenchObject implements IWorkbenchObject {
 
     get name() {
         return this.implementation.name;
-    }
-
-    get rect() {
-        return {
-            left: this._rect.left,
-            top: this._rect.top,
-            width: 128,
-            height: 164
-        };
-    }
-
-    set rect(rect: Rect) {
-        runInAction(() => (this._rect = rect));
-    }
-
-    @computed
-    get boundingRect() {
-        return this.rect;
     }
 
     get content(): JSX.Element | null {
@@ -85,17 +62,7 @@ export class WorkbenchObject implements IWorkbenchObject {
     }
 
     open() {
-        if (this.isEditable) {
-            this.openEditor("default");
-        }
-    }
-
-    get isMoveable() {
-        return true;
-    }
-
-    get isEditable() {
-        return this.implementation.isEditable;
+        this.openEditor("default");
     }
 
     getEditor() {
@@ -150,13 +117,6 @@ export class WorkbenchObject implements IWorkbenchObject {
                 toJS(this.getEditorWindowArgs())
             );
         }
-    }
-
-    saveRect() {
-        store.updateObject({
-            id: this.id,
-            rect: this.rect
-        });
     }
 
     afterDelete() {

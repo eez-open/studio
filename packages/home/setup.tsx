@@ -6,7 +6,10 @@ import classNames from "classnames";
 import { _uniqBy } from "eez-studio-shared/algorithm";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
-import { getManufacturer, isInstrumentExtension } from "eez-studio-shared/extensions/extensions";
+import {
+    getManufacturer,
+    isInstrumentExtension
+} from "eez-studio-shared/extensions/extensions";
 import { List, IListNode, ListItem } from "eez-studio-ui/list";
 import * as notification from "eez-studio-ui/notification";
 import { Loader } from "eez-studio-ui/loader";
@@ -19,14 +22,16 @@ import {
 import { tabs } from "./tabs-store";
 
 import { createInstrument } from "instrument/instrument-extension";
-import { workbenchDocument } from "home/designer/store";
+import { workbenchDocument } from "home/workbench";
 
 const BB3_INSTRUMENT_EXTENSION_ID = "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
 const BB3_INSTRUMENT_MANUFACTURER = "EEZ";
 
 class SetupState {
-    @observable selectedExtensionId: string | undefined = BB3_INSTRUMENT_EXTENSION_ID;
-    @observable selectedManufacturer: string | undefined = BB3_INSTRUMENT_MANUFACTURER;
+    @observable selectedExtensionId: string | undefined =
+        BB3_INSTRUMENT_EXTENSION_ID;
+    @observable selectedManufacturer: string | undefined =
+        BB3_INSTRUMENT_MANUFACTURER;
 
     extensionsManagerStore: ExtensionsManagerStore;
 
@@ -49,7 +54,9 @@ class SetupState {
         ).map(extension => ({
             id: extension.latestVersion.id,
             data: extension.latestVersion,
-            selected: getManufacturer(extension.latestVersion) == this.selectedManufacturer
+            selected:
+                getManufacturer(extension.latestVersion) ==
+                this.selectedManufacturer
         }));
     }
 
@@ -57,7 +64,9 @@ class SetupState {
     get extensionNodes() {
         return this.instrumentExtensionNodes
             .filter(
-                extension => getManufacturer(extension.latestVersion) == this.selectedManufacturer
+                extension =>
+                    getManufacturer(extension.latestVersion) ==
+                    this.selectedManufacturer
             )
             .map(extension => ({
                 id: extension.latestVersion.id,
@@ -117,7 +126,8 @@ function onSkip() {
 
 async function onAdd() {
     const extensionVersions = setupState.extensionsManagerStore.all.find(
-        extensionVersions => extensionVersions.latestVersion.id == setupState.selectedExtensionId
+        extensionVersions =>
+            extensionVersions.latestVersion.id == setupState.selectedExtensionId
     );
 
     if (!extensionVersions) {
@@ -149,8 +159,10 @@ async function onAdd() {
                     ) {
                         runInAction(() => {
                             if (setupState.extensionInstalling) {
-                                setupState.extensionInstalling.infoNode = options.render;
-                                setupState.extensionInstalling.infoType = options.type;
+                                setupState.extensionInstalling.infoNode =
+                                    options.render;
+                                setupState.extensionInstalling.infoType =
+                                    options.type;
                             }
                         });
                     }
@@ -172,8 +184,6 @@ async function onAdd() {
     }
 
     let params = createInstrument(installedVersion);
-    params.rect.left = 0 - params.rect.width / 2;
-    params.rect.top = 0 - params.rect.height / 2;
     const objectId = workbenchDocument.createObject(params);
 
     runInAction(() => {
@@ -194,9 +204,14 @@ function onTryAgain() {
 
 export const Setup = observer(() => {
     if (setupState.extensionInstalling) {
-        const buttonsContainerClassName = classNames("d-flex justify-content-between mt-3 mb-5", {
-            "invisible ": setupState.extensionInstalling.infoType !== notification.ERROR
-        });
+        const buttonsContainerClassName = classNames(
+            "d-flex justify-content-between mt-3 mb-5",
+            {
+                "invisible ":
+                    setupState.extensionInstalling.infoType !==
+                    notification.ERROR
+            }
+        );
 
         return (
             <div className="d-flex flex-column justify-content-center align-items-center h-100">
@@ -212,17 +227,23 @@ export const Setup = observer(() => {
                 >
                     {setupState.extensionInstalling.infoNode}
                 </h5>
-                <div className={buttonsContainerClassName} style={{ width: 400 }}>
+                <div
+                    className={buttonsContainerClassName}
+                    style={{ width: 400 }}
+                >
                     <button
                         className="btn btn-secondary"
-                        onClick={action(() => (setupState.extensionInstalling = undefined))}
+                        onClick={action(
+                            () => (setupState.extensionInstalling = undefined)
+                        )}
                     >
                         Back
                     </button>
                     <button
                         className="btn btn-primary"
                         disabled={
-                            !setupState.selectedManufacturer || !setupState.selectedExtensionId
+                            !setupState.selectedManufacturer ||
+                            !setupState.selectedExtensionId
                         }
                         onClick={onTryAgain}
                     >
@@ -253,14 +274,18 @@ export const Setup = observer(() => {
                         tabIndex={0}
                     />
                 </div>
-                <div className="d-flex justify-content-between mt-3 mb-5" style={{ width: 400 }}>
+                <div
+                    className="d-flex justify-content-between mt-3 mb-5"
+                    style={{ width: 400 }}
+                >
                     <button className="btn px-3" onClick={onSkip}>
                         Skip
                     </button>
                     <button
                         className="btn btn-lg btn-primary px-5"
                         disabled={
-                            !setupState.selectedManufacturer || !setupState.selectedExtensionId
+                            !setupState.selectedManufacturer ||
+                            !setupState.selectedExtensionId
                         }
                         onClick={onAdd}
                     >

@@ -26,7 +26,6 @@ import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import * as notification from "eez-studio-ui/notification";
-import { IToolbarButton } from "home/designer/designer-interfaces";
 import { confirm } from "eez-studio-ui/dialog-electron";
 
 import {
@@ -238,14 +237,13 @@ async function yarnInstall() {
         const packageJsonPath = `${extensionsFolderPath}/package.json`;
         const packageJson = require(packageJsonPath);
 
-        const folders = Object.keys(
-            packageJson.dependencies ?? []
-        ).map(plugin =>
-            path.resolve(
-                extensionsFolderPath,
-                "node_modules",
-                plugin.split("#")[0]
-            )
+        const folders = Object.keys(packageJson.dependencies ?? []).map(
+            plugin =>
+                path.resolve(
+                    extensionsFolderPath,
+                    "node_modules",
+                    plugin.split("#")[0]
+                )
         );
 
         const newExtensions = [];
@@ -554,12 +552,10 @@ export async function installExtension(
 
     if (result.extension.properties && result.extension.properties.shortcuts) {
         result.extension.properties.shortcuts.forEach(shortcut => {
-            const {
-                addShortcut
-            } = require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
-            const {
-                SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
-            } = require("shortcuts/shortcuts") as typeof ShortcutsModule;
+            const { addShortcut } =
+                require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
+            const { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } =
+                require("shortcuts/shortcuts") as typeof ShortcutsModule;
 
             addShortcut(
                 Object.assign({}, shortcut, {
@@ -591,12 +587,10 @@ export async function uninstallExtension(extensionId: string) {
         action(() => extensions.delete(extensionId))();
         loadExtensionTasks.delete(extensionFolderPath);
 
-        const {
-            deleteGroupInShortcuts
-        } = require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
-        const {
-            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
-        } = require("shortcuts/shortcuts") as typeof ShortcutsModule;
+        const { deleteGroupInShortcuts } =
+            require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
+        const { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } =
+            require("shortcuts/shortcuts") as typeof ShortcutsModule;
         deleteGroupInShortcuts(
             SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extensionId
         );
@@ -622,7 +616,6 @@ export function getObject(type: string, oid: string): IObject {
                 return null;
             },
             details: null,
-            isEditable: false,
             getIcon() {
                 return null;
             }
@@ -808,16 +801,4 @@ export const objectTypes = computed(() => {
         }
     });
     return objectTypes;
-});
-
-export const extensionsToolbarButtons = computed(() => {
-    let buttons: IToolbarButton[] = [];
-
-    values(extensions).forEach(extension => {
-        if (extension.toolbarButtons) {
-            buttons.push(...extension.toolbarButtons);
-        }
-    });
-
-    return buttons;
 });

@@ -26,7 +26,7 @@ import {
 } from "instrument/window/history/history-view";
 
 import { WorkbenchObject, workbenchObjects } from "home/store";
-import * as DesignerModule from "home/designer/designer";
+import * as WorkbenchModule from "home/workbench";
 import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
 import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
@@ -59,10 +59,9 @@ class WorkbenchTab implements IHomeTab {
     icon = "material:developer_board";
 
     render() {
-        const {
-            Designer
-        } = require("home/designer/designer") as typeof DesignerModule;
-        return <Designer />;
+        const { Workbench } =
+            require("home/workbench") as typeof WorkbenchModule;
+        return <Workbench />;
     }
 
     @action
@@ -88,14 +87,12 @@ class HistoryTab implements IHomeTab {
 
     render() {
         if (tabs.viewDeletedHistory) {
-            const {
-                DeletedHistoryItemsSection
-            } = require("home/history") as typeof HistoryModule;
+            const { DeletedHistoryItemsSection } =
+                require("home/history") as typeof HistoryModule;
             return <DeletedHistoryItemsSection />;
         } else {
-            const {
-                HistorySection
-            } = require("home/history") as typeof HistoryModule;
+            const { HistorySection } =
+                require("home/history") as typeof HistoryModule;
             return <HistorySection />;
         }
     }
@@ -122,9 +119,8 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     icon = "material:playlist_play";
 
     render() {
-        const {
-            ShortcutsAndGroups
-        } = require("home/shortcuts") as typeof ShortcutsModule;
+        const { ShortcutsAndGroups } =
+            require("home/shortcuts") as typeof ShortcutsModule;
         return <ShortcutsAndGroups />;
     }
 
@@ -150,9 +146,8 @@ class ExtensionManagerTab implements IHomeTab {
 
     @computed
     get numNewVersions() {
-        const {
-            extensionsManagerStore
-        } = require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
+        const { extensionsManagerStore } =
+            require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
         return extensionsManagerStore.newVersions.length;
     }
 
@@ -167,9 +162,8 @@ class ExtensionManagerTab implements IHomeTab {
 
     @computed
     get tooltipTitle() {
-        const {
-            extensionsManagerStore
-        } = require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
+        const { extensionsManagerStore } =
+            require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
 
         let title = this.title;
         if (this.numNewVersions > 1) {
@@ -187,9 +181,8 @@ class ExtensionManagerTab implements IHomeTab {
     }
 
     render() {
-        const {
-            ExtensionsManager
-        } = require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
+        const { ExtensionsManager } =
+            require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
         return <ExtensionsManager />;
     }
 
@@ -215,9 +208,8 @@ class SettingsTab implements IHomeTab {
 
     @computed
     get attention() {
-        const {
-            settingsController
-        } = require("home/settings") as typeof SettingsModule;
+        const { settingsController } =
+            require("home/settings") as typeof SettingsModule;
         return settingsController.isCompactDatabaseAdvisable;
     }
 
@@ -227,9 +219,8 @@ class SettingsTab implements IHomeTab {
 
     get tooltipTitle() {
         if (this.attention) {
-            const {
-                COMPACT_DATABASE_MESSAGE
-            } = require("home/settings") as typeof SettingsModule;
+            const { COMPACT_DATABASE_MESSAGE } =
+                require("home/settings") as typeof SettingsModule;
             return COMPACT_DATABASE_MESSAGE;
         } else {
             return this.title;
@@ -437,8 +428,8 @@ export class ProjectEditorTab implements IHomeTab {
                 this.DocumentStore.NavigationStore.selectedPanel.deleteSelection();
         };
         const toggleOutput = action(() => {
-            this.DocumentStore.UIStateStore.viewOptions.outputVisible = !this
-                .DocumentStore.UIStateStore.viewOptions.outputVisible;
+            this.DocumentStore.UIStateStore.viewOptions.outputVisible =
+                !this.DocumentStore.UIStateStore.viewOptions.outputVisible;
         });
         const showMetrics = () => this.DocumentStore.showMetrics();
 
@@ -551,9 +542,8 @@ class Tabs {
     @observable activeTab: IHomeTab;
 
     constructor() {
-        this._firstTime = EEZStudio.electron.ipcRenderer.sendSync(
-            "getFirstTime"
-        );
+        this._firstTime =
+            EEZStudio.electron.ipcRenderer.sendSync("getFirstTime");
 
         loadPreinstalledExtension("instrument").then(async () => {
             if (!this.firstTime) {
