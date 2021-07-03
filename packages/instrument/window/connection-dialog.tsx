@@ -21,7 +21,9 @@ import * as UsbTmcModule from "instrument/connection/interfaces/usbtmc";
 
 interface ConnectionPropertiesProps {
     connectionParameters: ConnectionParameters;
-    onConnectionParametersChanged: (connectionParameters: ConnectionParameters) => void;
+    onConnectionParametersChanged: (
+        connectionParameters: ConnectionParameters
+    ) => void;
     availableConnections: ("ethernet" | "serial" | "usbtmc")[];
     serialBaudRates: number[];
 }
@@ -45,7 +47,10 @@ class Devices {
 const devices = new Devices();
 
 @observer
-export class ConnectionProperties extends React.Component<ConnectionPropertiesProps, {}> {
+export class ConnectionProperties extends React.Component<
+    ConnectionPropertiesProps,
+    {}
+> {
     constructor(props: any) {
         super(props);
 
@@ -77,7 +82,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
         this.ethernetAddress = connectionParameters.ethernetParameters.address;
         this.ethernetPort = connectionParameters.ethernetParameters.port;
         this.serialPortPath = connectionParameters.serialParameters.port;
-        this.serialPortBaudRate = connectionParameters.serialParameters.baudRate;
+        this.serialPortBaudRate =
+            connectionParameters.serialParameters.baudRate;
         this.idVendor = connectionParameters.usbtmcParameters.idVendor;
         this.idProduct = connectionParameters.usbtmcParameters.idProduct;
     }
@@ -107,16 +113,22 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
 
                 if (this.iface === "ethernet") {
                     connectionParameters.type = "ethernet";
-                    connectionParameters.ethernetParameters.address = this.ethernetAddress;
-                    connectionParameters.ethernetParameters.port = this.ethernetPort;
+                    connectionParameters.ethernetParameters.address =
+                        this.ethernetAddress;
+                    connectionParameters.ethernetParameters.port =
+                        this.ethernetPort;
                 } else if (this.iface === "serial") {
                     connectionParameters.type = "serial";
-                    connectionParameters.serialParameters.port = this.serialPortPath;
-                    connectionParameters.serialParameters.baudRate = this.serialPortBaudRate;
+                    connectionParameters.serialParameters.port =
+                        this.serialPortPath;
+                    connectionParameters.serialParameters.baudRate =
+                        this.serialPortBaudRate;
                 } else {
                     connectionParameters.type = "usbtmc";
-                    connectionParameters.usbtmcParameters.idVendor = this.idVendor;
-                    connectionParameters.usbtmcParameters.idProduct = this.idProduct;
+                    connectionParameters.usbtmcParameters.idVendor =
+                        this.idVendor;
+                    connectionParameters.usbtmcParameters.idProduct =
+                        this.idProduct;
                 }
 
                 return connectionParameters;
@@ -179,7 +191,9 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                             path: port.path,
                             description:
                                 port.path +
-                                (port.manufacturer ? " - " + port.manufacturer : "") +
+                                (port.manufacturer
+                                    ? " - " + port.manufacturer
+                                    : "") +
                                 (port.productId ? " - " + port.productId : ""),
                             uniqueId: port.pnpId || port.path
                         };
@@ -213,9 +227,8 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
     }
 
     async refreshUsbDevices() {
-        const {
-            getUsbDevices
-        } = require("instrument/connection/interfaces/usbtmc") as typeof UsbTmcModule;
+        const { getUsbDevices } =
+            require("instrument/connection/interfaces/usbtmc") as typeof UsbTmcModule;
 
         const usbDevices = await getUsbDevices();
 
@@ -268,19 +281,20 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                     value={this.serialPortPath}
                     onChange={this.onSerialPortPathChange}
                     inputGroupButton={
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                title="Refresh list of available serial ports"
-                                onClick={this.onRefreshSerialPortPaths}
-                            >
-                                Refresh
-                            </button>
-                        </div>
+                        <button
+                            className="btn btn-secondary"
+                            title="Refresh list of available serial ports"
+                            onClick={this.onRefreshSerialPortPaths}
+                        >
+                            Refresh
+                        </button>
                     }
                 >
                     {devices.serialPortPaths.map(serialPortPath => (
-                        <option key={serialPortPath.uniqueId} value={serialPortPath.path}>
+                        <option
+                            key={serialPortPath.uniqueId}
+                            value={serialPortPath.path}
+                        >
                             {serialPortPath.description}
                         </option>
                     ))}
@@ -306,15 +320,13 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
                     value={this.selectedUsbDeviceIndex}
                     onChange={this.onUsbDeviceChange}
                     inputGroupButton={
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                title="Refresh list of available USB devices"
-                                onClick={this.onRefreshUsbDevices}
-                            >
-                                Refresh
-                            </button>
-                        </div>
+                        <button
+                            className="btn btn-secondary"
+                            title="Refresh list of available USB devices"
+                            onClick={this.onRefreshUsbDevices}
+                        >
+                            Refresh
+                        </button>
                     }
                 >
                     {devices.usbDevices.map((usbDevice, i) => (
@@ -331,16 +343,17 @@ export class ConnectionProperties extends React.Component<ConnectionPropertiesPr
 
         return (
             <PropertyList>
-                <SelectProperty name="Interface" value={this.iface} onChange={this.onIfaceChange}>
-                    {this.props.availableConnections.indexOf("ethernet") !== -1 && (
-                        <option value="ethernet">Ethernet</option>
-                    )}
-                    {this.props.availableConnections.indexOf("serial") !== -1 && (
-                        <option value="serial">Serial</option>
-                    )}
-                    {this.props.availableConnections.indexOf("usbtmc") !== -1 && (
-                        <option value="usbtmc">USBTMC</option>
-                    )}
+                <SelectProperty
+                    name="Interface"
+                    value={this.iface}
+                    onChange={this.onIfaceChange}
+                >
+                    {this.props.availableConnections.indexOf("ethernet") !==
+                        -1 && <option value="ethernet">Ethernet</option>}
+                    {this.props.availableConnections.indexOf("serial") !==
+                        -1 && <option value="serial">Serial</option>}
+                    {this.props.availableConnections.indexOf("usbtmc") !==
+                        -1 && <option value="usbtmc">USBTMC</option>}
                 </SelectProperty>
                 {options}
             </PropertyList>
@@ -376,7 +389,9 @@ class ConnectionDialog extends React.Component<
             <Dialog okButtonText="Connect" onOk={this.handleSumbit}>
                 <ConnectionProperties
                     connectionParameters={this.props.connectionParameters}
-                    onConnectionParametersChanged={this.onConnectionParametersChanged}
+                    onConnectionParametersChanged={
+                        this.onConnectionParametersChanged
+                    }
                     availableConnections={this.props.availableConnections}
                     serialBaudRates={this.props.serialBaudRates}
                 />

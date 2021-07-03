@@ -1079,15 +1079,13 @@ class Property extends React.Component<PropertyProps> {
                         value={this._value || ""}
                         readOnly
                     />
-                    <div className="input-group-append">
-                        <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={this.onEditUnique}
-                        >
-                            &hellip;
-                        </button>
-                    </div>
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={this.onEditUnique}
+                    >
+                        &hellip;
+                    </button>
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.MultilineText) {
@@ -1149,18 +1147,14 @@ class Property extends React.Component<PropertyProps> {
                             readOnly
                         />
                         {!readOnly && (
-                            <div className="input-group-append">
-                                <button
-                                    className="btn btn-secondary"
-                                    type="button"
-                                    title={
-                                        this.props.propertyInfo.onSelectTitle
-                                    }
-                                    onClick={this.onSelect}
-                                >
-                                    &hellip;
-                                </button>
-                            </div>
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                title={this.props.propertyInfo.onSelectTitle}
+                                onClick={this.onSelect}
+                            >
+                                &hellip;
+                            </button>
                         )}
                     </div>
                 );
@@ -1230,18 +1224,14 @@ class Property extends React.Component<PropertyProps> {
                                 onChange={this.onChange}
                                 readOnly={propertyInfo.computed}
                             />
-                            <div className="input-group-append">
-                                <button
-                                    className="btn btn-secondary"
-                                    type="button"
-                                    onClick={this.onSelect}
-                                    title={
-                                        this.props.propertyInfo.onSelectTitle
-                                    }
-                                >
-                                    &hellip;
-                                </button>
-                            </div>
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={this.onSelect}
+                                title={this.props.propertyInfo.onSelectTitle}
+                            >
+                                &hellip;
+                            </button>
                         </div>
                     );
                 } else {
@@ -1336,16 +1326,14 @@ class Property extends React.Component<PropertyProps> {
                         readOnly={readOnly}
                     />
                     {!readOnly && (
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                title="Generate GUID"
-                                onClick={this.onGenerateGuid}
-                            >
-                                +
-                            </button>
-                        </div>
+                        <button
+                            className="btn btn-secondary"
+                            type="button"
+                            title="Generate GUID"
+                            onClick={this.onGenerateGuid}
+                        >
+                            +
+                        </button>
                     )}
                 </div>
             );
@@ -1362,16 +1350,14 @@ class Property extends React.Component<PropertyProps> {
                             onKeyDown={this.onKeyDown}
                             readOnly={propertyInfo.computed}
                         />
-                        <div className="input-group-append">
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                onClick={this.onSelect}
-                                title={this.props.propertyInfo.onSelectTitle}
-                            >
-                                &hellip;
-                            </button>
-                        </div>
+                        <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={this.onSelect}
+                            title={this.props.propertyInfo.onSelectTitle}
+                        >
+                            &hellip;
+                        </button>
                     </div>
                 );
             } else {
@@ -1452,7 +1438,7 @@ class Property extends React.Component<PropertyProps> {
                         readOnly
                     />
                     {!readOnly && (
-                        <div className="input-group-append">
+                        <>
                             {clearButton}
                             <button
                                 className="btn btn-secondary"
@@ -1486,7 +1472,7 @@ class Property extends React.Component<PropertyProps> {
                             >
                                 &hellip;
                             </button>
-                        </div>
+                        </>
                     )}
                 </div>
             );
@@ -1514,7 +1500,7 @@ class Property extends React.Component<PropertyProps> {
                         readOnly
                     />
                     {!readOnly && (
-                        <div className="input-group-append">
+                        <>
                             {clearButton}
                             <button
                                 className="btn btn-secondary"
@@ -1548,7 +1534,7 @@ class Property extends React.Component<PropertyProps> {
                             >
                                 &hellip;
                             </button>
-                        </div>
+                        </>
                     )}
                 </div>
             );
@@ -1567,65 +1553,61 @@ class Property extends React.Component<PropertyProps> {
                             readOnly
                         />
                         {!readOnly && (
-                            <div className="input-group-append">
-                                <button
-                                    className="btn btn-secondary"
-                                    type="button"
-                                    onClick={async () => {
-                                        const result =
-                                            await EEZStudio.remote.dialog.showOpenDialog(
-                                                {
-                                                    properties: ["openFile"],
-                                                    filters: [
-                                                        {
-                                                            name: "Image files",
-                                                            extensions: [
-                                                                "png",
-                                                                "jpg",
-                                                                "jpeg"
-                                                            ]
-                                                        },
-                                                        {
-                                                            name: "All Files",
-                                                            extensions: ["*"]
-                                                        }
-                                                    ]
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={async () => {
+                                    const result =
+                                        await EEZStudio.remote.dialog.showOpenDialog(
+                                            {
+                                                properties: ["openFile"],
+                                                filters: [
+                                                    {
+                                                        name: "Image files",
+                                                        extensions: [
+                                                            "png",
+                                                            "jpg",
+                                                            "jpeg"
+                                                        ]
+                                                    },
+                                                    {
+                                                        name: "All Files",
+                                                        extensions: ["*"]
+                                                    }
+                                                ]
+                                            }
+                                        );
+                                    const filePaths = result.filePaths;
+                                    if (filePaths && filePaths[0]) {
+                                        if (propertyInfo.embeddedImage) {
+                                            const fs =
+                                                EEZStudio.remote.require("fs");
+                                            fs.readFile(
+                                                this.context.getAbsoluteFilePath(
+                                                    filePaths[0]
+                                                ),
+                                                "base64",
+                                                (err: any, data: any) => {
+                                                    if (!err) {
+                                                        this.changeValue(
+                                                            "data:image/png;base64," +
+                                                                data
+                                                        );
+                                                    }
                                                 }
                                             );
-                                        const filePaths = result.filePaths;
-                                        if (filePaths && filePaths[0]) {
-                                            if (propertyInfo.embeddedImage) {
-                                                const fs =
-                                                    EEZStudio.remote.require(
-                                                        "fs"
-                                                    );
-                                                fs.readFile(
-                                                    this.context.getAbsoluteFilePath(
-                                                        filePaths[0]
-                                                    ),
-                                                    "base64",
-                                                    (err: any, data: any) => {
-                                                        if (!err) {
-                                                            this.changeValue(
-                                                                "data:image/png;base64," +
-                                                                    data
-                                                            );
-                                                        }
-                                                    }
-                                                );
-                                            } else {
-                                                this.changeValue(
-                                                    this.context.getFilePathRelativeToProjectPath(
-                                                        filePaths[0]
-                                                    )
-                                                );
-                                            }
+                                        } else {
+                                            this.changeValue(
+                                                this.context.getFilePathRelativeToProjectPath(
+                                                    filePaths[0]
+                                                )
+                                            );
                                         }
-                                    }}
-                                >
-                                    &hellip;
-                                </button>
-                            </div>
+                                    }
+                                }}
+                            >
+                                &hellip;
+                            </button>
                         )}
                     </div>
                     {this._value && !propertyInfo.embeddedImage && (

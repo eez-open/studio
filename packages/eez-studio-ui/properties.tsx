@@ -127,29 +127,27 @@ export class InputProperty extends React.Component<
             input = (
                 <div className="input-group">
                     {input}
-                    <div className="input-group-append">
-                        <div className="dropdown">
-                            <button
-                                className="btn btn-secondary dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                            />
-                            <div className="dropdown-menu">
-                                {this.props.suggestions.map(suggestion => (
-                                    <button
-                                        key={suggestion}
-                                        className="dropdown-item"
-                                        type="button"
-                                        onClick={() =>
-                                            this.props.onChange(suggestion)
-                                        }
-                                    >
-                                        {suggestion}
-                                    </button>
-                                ))}
-                            </div>
+                    <>
+                        <button
+                            className="btn btn-secondary dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                        />
+                        <div className="dropdown-menu dropdown-menu-end">
+                            {this.props.suggestions.map(suggestion => (
+                                <button
+                                    key={suggestion}
+                                    className="dropdown-item"
+                                    type="button"
+                                    onClick={() =>
+                                        this.props.onChange(suggestion)
+                                    }
+                                >
+                                    {suggestion}
+                                </button>
+                            ))}
                         </div>
-                    </div>
+                    </>
                 </div>
             );
         }
@@ -618,15 +616,13 @@ export class KeybindingProperty extends React.Component<
             input = (
                 <div className="input-group">
                     {input}
-                    <div className="input-group-append">
-                        <button
-                            className="btn btn-secondary"
-                            title="Clear"
-                            onClick={this.onDeleteKeybinding}
-                        >
-                            &times;
-                        </button>
-                    </div>
+                    <button
+                        className="btn btn-secondary"
+                        title="Clear"
+                        onClick={this.onDeleteKeybinding}
+                    >
+                        &times;
+                    </button>
                 </div>
             );
         }

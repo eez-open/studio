@@ -8,7 +8,7 @@ import { ProjectContext } from "project-editor/project/context";
 
 export class RelativeFileInput extends FieldComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     onClear() {
         this.props.onChange(undefined);
@@ -21,7 +21,11 @@ export class RelativeFileInput extends FieldComponent {
         });
 
         if (result.filePaths && result.filePaths[0]) {
-            this.props.onChange(this.context.getFilePathRelativeToProjectPath(result.filePaths[0]));
+            this.props.onChange(
+                this.context.getFilePathRelativeToProjectPath(
+                    result.filePaths[0]
+                )
+            );
         }
     }
 
@@ -30,7 +34,11 @@ export class RelativeFileInput extends FieldComponent {
 
         if (this.props.values[this.props.fieldProperties.name]) {
             clearButton = (
-                <button className="btn btn-default" type="button" onClick={this.onClear.bind(this)}>
+                <button
+                    className="btn btn-default"
+                    type="button"
+                    onClick={this.onClear.bind(this)}
+                >
                     <Icon icon="material:close" size={17} />
                 </button>
             );
@@ -41,10 +49,12 @@ export class RelativeFileInput extends FieldComponent {
                 <input
                     type="text"
                     className="form-control"
-                    value={this.props.values[this.props.fieldProperties.name] || ""}
+                    value={
+                        this.props.values[this.props.fieldProperties.name] || ""
+                    }
                     readOnly
                 />
-                <div className="input-group-append">
+                <>
                     {clearButton}
                     <button
                         className="btn btn-secondary"
@@ -53,7 +63,7 @@ export class RelativeFileInput extends FieldComponent {
                     >
                         &hellip;
                     </button>
-                </div>
+                </>
             </div>
         );
     }

@@ -52,15 +52,13 @@ export class FileInputProperty extends React.Component<
                     value={this.props.value}
                     onChange={event => this.props.onChange(event.target.value)}
                 />
-                <div className="input-group-append">
-                    <button
-                        className="btn btn-secondary"
-                        title="Select file"
-                        onClick={this.onSelectFile}
-                    >
-                        &hellip;
-                    </button>
-                </div>
+                <button
+                    className="btn btn-secondary"
+                    title="Select file"
+                    onClick={this.onSelectFile}
+                >
+                    &hellip;
+                </button>
             </div>
         );
 
@@ -78,6 +76,10 @@ export class FileInputProperty extends React.Component<
             content = <td colSpan={2}>{input}</td>;
         }
 
-        return <PropertyEnclosure errors={this.props.errors}>{content}</PropertyEnclosure>;
+        return (
+            <PropertyEnclosure errors={this.props.errors}>
+                {content}
+            </PropertyEnclosure>
+        );
     }
 }

@@ -31,7 +31,7 @@ import {
     IEezObject,
     PropertyType
 } from "project-editor/core/object";
-import { IconAction } from "eez-studio-ui/action";
+import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import type {
     IDataContext,
     IFlowContext
@@ -108,6 +108,8 @@ export class RuntimeStoreClass {
     @observable isStopped = false;
     @observable selectedPage: Page;
 
+    @observable hasError = false;
+
     setRuntimeMode = async () => {
         if (!this.isRuntimeMode) {
             runInAction(() => {
@@ -115,6 +117,7 @@ export class RuntimeStoreClass {
                 this.selectedRunningFlow = undefined;
                 this.selectedHistoryItem = undefined;
                 this.isStopped = false;
+                this.hasError = false;
                 this.DocumentStore.UIStateStore.showDebugInfo = false;
                 this.selectedPage = this.DocumentStore.project.pages[0];
 
@@ -143,7 +146,7 @@ export class RuntimeStoreClass {
 
             runInAction(() => {
                 this.runningFlows = [];
-                this.history = [];
+                this.clearHistory();
             });
 
             this.DocumentStore.EditorsStore.editors.forEach(editor => {
@@ -364,6 +367,7 @@ export class RuntimeStoreClass {
     @action.bound
     clearHistory() {
         this.history = [];
+        this.hasError = false;
     }
 
     ////////////////////////////////////////
@@ -468,6 +472,10 @@ export class RuntimeStoreClass {
                 }
             );
         });
+    }
+
+    @computed get error() {
+        return "Unknown error";
     }
 }
 
@@ -581,6 +589,7 @@ export class ComponentState {
             );
         } catch (err) {
             runInAction(() => {
+                this.runningFlow.RuntimeStore.hasError = true;
                 this.runningFlow.hasError = true;
             });
             this.runningFlow.RuntimeStore.addHistoryItem(
@@ -1500,6 +1509,40 @@ class HistoryTree extends React.Component {
                 rootNode={this.rootNode}
                 selectNode={this.selectNode}
             />
+        );
+    }
+}
+
+@observer
+export class RuntimeToolbar extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        return (
+            <div className="btn-group">
+                {!this.context.RuntimeStore.isStopped && (
+                    <ButtonAction
+                        text="Stop"
+                        title="Stop execution"
+                        icon="material:stop"
+                        enabled={!this.context.RuntimeStore.isStopped}
+                        onClick={() => this.context.RuntimeStore.stop()}
+                    />
+                )}
+
+                <IconAction
+                    title="Debug"
+                    icon="material:adb"
+                    onClick={action(
+                        () =>
+                            (this.context.UIStateStore.showDebugInfo =
+                                !this.context.UIStateStore.showDebugInfo)
+                    )}
+                    selected={this.context.UIStateStore.showDebugInfo}
+                    attention={this.context.RuntimeStore.hasError}
+                />
+            </div>
         );
     }
 }
