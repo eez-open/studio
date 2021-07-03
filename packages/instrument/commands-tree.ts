@@ -95,7 +95,7 @@ export function addCommandToTree(command: ICommand, tree: ScpiCommandTreeNode) {
             numericSuffix = "none";
         }
 
-        //mnemonic = mnemonic.replace(/[\[\]\:]/g, "").replace(/\<n\>/g, "");
+        mnemonic = mnemonic.replace(/[\[\]\:]/g, "").replace(/\<n\>/g, "");
 
         let node;
 
