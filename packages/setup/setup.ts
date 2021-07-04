@@ -9,13 +9,9 @@ import { delay } from "eez-studio-shared/util";
 import {
     isDev,
     getUserDataPath,
-    makeFolder,
-    copyFile
+    makeFolder
 } from "eez-studio-shared/util-electron";
-import {
-    DEFAULT_DB_NAME,
-    EXTENSIONS_FOLDER_NAME
-} from "eez-studio-shared/conf";
+import { EXTENSIONS_FOLDER_NAME } from "eez-studio-shared/conf";
 
 async function setupExtensions(
     webContents: WebContents,
@@ -40,9 +36,8 @@ async function setupExtensions(
         `Installing ${fileList.length} extensions`
     );
 
-    const {
-        installExtension
-    } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
+    const { installExtension } =
+        require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
 
     for (let i = 0; i < fileList.length; i++) {
         const filePath = fileList[i];
@@ -88,24 +83,9 @@ async function setupExtensions(
     }
 }
 
-async function setupDatabase(
-    webContents: WebContents,
-    resourcesPath: string,
-    dbFilePath: string
-) {
-    webContents.send("setupMessage", "Installing database");
-    await copyFile(resourcesPath + "/init_storage.db", dbFilePath);
-    await delay(500);
-}
-
 function isAnySetupRequired() {
     const extensionsFolderPath = getUserDataPath(EXTENSIONS_FOLDER_NAME);
     if (!fs.existsSync(extensionsFolderPath)) {
-        return true;
-    }
-
-    const dbFilePath = getUserDataPath(DEFAULT_DB_NAME);
-    if (!fs.existsSync(dbFilePath)) {
         return true;
     }
 
@@ -115,15 +95,8 @@ function isAnySetupRequired() {
 async function doSetup(webContents: WebContents) {
     const resourcesPath = process.resourcesPath!;
 
-    const dbFilePath = getUserDataPath(DEFAULT_DB_NAME);
-    if (!fs.existsSync(dbFilePath)) {
-        await setupDatabase(webContents, resourcesPath, dbFilePath);
-    }
-
-    // database is ready, we can now load extensions
-    const {
-        loadExtensions
-    } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
+    const { loadExtensions } =
+        require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
     loadExtensions();
 
     const extensionsFolderPath = getUserDataPath(EXTENSIONS_FOLDER_NAME);
@@ -135,9 +108,8 @@ async function doSetup(webContents: WebContents) {
 export async function setup() {
     return new Promise<void>(resolve => {
         if (isDev || !isAnySetupRequired()) {
-            const {
-                loadExtensions
-            } = require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
+            const { loadExtensions } =
+                require("eez-studio-shared/extensions/extensions") as typeof ExtensionsModule;
             loadExtensions();
 
             resolve();

@@ -6,6 +6,7 @@
         "eezstudio-linux-x64": true,
         "node_modules": true,
         "libs": true,
+        "build": true,
         "dist": true
     },
     "typescript.reportStyleChecksAsWarnings": false,

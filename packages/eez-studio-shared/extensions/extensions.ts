@@ -38,7 +38,6 @@ import {
 } from "eez-studio-shared/extensions/extension-folder";
 
 import * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
-import * as ShortcutsModule from "shortcuts/shortcuts";
 
 const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
 const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
@@ -549,10 +548,8 @@ export async function installExtension(
 
     if (result.extension.properties && result.extension.properties.shortcuts) {
         result.extension.properties.shortcuts.forEach(shortcut => {
-            const { addShortcut } =
+            const { addShortcut, SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } =
                 require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
-            const { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } =
-                require("shortcuts/shortcuts") as typeof ShortcutsModule;
 
             addShortcut(
                 Object.assign({}, shortcut, {
@@ -584,10 +581,10 @@ export async function uninstallExtension(extensionId: string) {
         action(() => extensions.delete(extensionId))();
         loadExtensionTasks.delete(extensionFolderPath);
 
-        const { deleteGroupInShortcuts } =
-            require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
-        const { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } =
-            require("shortcuts/shortcuts") as typeof ShortcutsModule;
+        const {
+            deleteGroupInShortcuts,
+            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
+        } = require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
         deleteGroupInShortcuts(
             SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extensionId
         );

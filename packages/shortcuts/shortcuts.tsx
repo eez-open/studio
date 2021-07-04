@@ -18,18 +18,20 @@ import { extensions } from "eez-studio-shared/extensions/extensions";
 import { IShortcut, IShortcutsStore, IGroupsStore } from "shortcuts/interfaces";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 import { showShortcutDialog } from "shortcuts/shortcut-dialog";
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX = "__extension__";
-export const SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX = "__instrument__";
-export const FROM_EXTENSION_GROUP_NAME = "From instrument extension";
+import {
+    SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX,
+    FROM_EXTENSION_GROUP_NAME,
+    SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX
+} from "shortcuts/shortcuts-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const selectedShortcutId = observable.box<string>();
 
-export function selectShortcutById(shortcutsStore: IShortcutsStore, id: string) {
+export function selectShortcutById(
+    shortcutsStore: IShortcutsStore,
+    id: string
+) {
     if (selectedShortcutId) {
         const shortcut = shortcutsStore.shortcuts.get(selectedShortcutId.get());
         if (shortcut) {
@@ -195,7 +197,9 @@ class ShortcutRow implements IRow {
     }
 
     get color() {
-        return this.shortcut.showInToolbar ? this.shortcut.toolbarButtonColor : "transparent";
+        return this.shortcut.showInToolbar
+            ? this.shortcut.toolbarButtonColor
+            : "transparent";
     }
 
     @computed
@@ -217,7 +221,9 @@ class ShortcutRow implements IRow {
 
     getExtension(shortcut: IShortcut) {
         return extensions.get(
-            shortcut.groupName.substr(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX.length)
+            shortcut.groupName.substr(
+                SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX.length
+            )
         );
     }
 
@@ -228,7 +234,10 @@ class ShortcutRow implements IRow {
         }
 
         if (groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)) {
-            if (this.props.groupsStore && this.props.groupsStore.isGroupEnabled) {
+            if (
+                this.props.groupsStore &&
+                this.props.groupsStore.isGroupEnabled
+            ) {
                 return FROM_EXTENSION_GROUP_NAME;
             }
             const extension = this.getExtension(shortcut);
@@ -266,7 +275,9 @@ class ShortcutRow implements IRow {
                 .filter(extension => !!extension)
                 .filter((value, index, self) => self.indexOf(value) === index) // unique
                 .map(extension => (
-                    <div key={extension!.id}>{extension!.displayName || extension!.name}</div>
+                    <div key={extension!.id}>
+                        {extension!.displayName || extension!.name}
+                    </div>
                 ));
         } else {
             return this.getGroupName(this.props.shortcut);
@@ -297,7 +308,9 @@ class ShortcutRow implements IRow {
 
     @computed
     get confirmationComponent() {
-        return this.shortcut.requiresConfirmation && <Icon icon="material:check" />;
+        return (
+            this.shortcut.requiresConfirmation && <Icon icon="material:check" />
+        );
     }
 
     @computed
@@ -321,7 +334,9 @@ class ShortcutRow implements IRow {
         } else {
             return (
                 !!this.shortcut.groupName &&
-                this.shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)
+                this.shortcut.groupName.startsWith(
+                    SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
+                )
             );
         }
     }
@@ -340,7 +355,9 @@ class ShortcutRow implements IRow {
                                 this.props.groupsStore,
                                 this.shortcut,
                                 shortcut => {
-                                    this.props.shortcutsStore.updateShortcut!(shortcut);
+                                    this.props.shortcutsStore.updateShortcut!(
+                                        shortcut
+                                    );
                                 }
                             );
                         }}
@@ -355,7 +372,9 @@ class ShortcutRow implements IRow {
                                     ? "This type of shortcut once deleted cannot be restored without reinstalling instrument extension."
                                     : undefined,
                                 () => {
-                                    this.props.shortcutsStore.deleteShortcut!(this.shortcut);
+                                    this.props.shortcutsStore.deleteShortcut!(
+                                        this.shortcut
+                                    );
                                 }
                             );
                         }}
@@ -396,12 +415,21 @@ class ShortcutRow implements IRow {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function isSameShortcutFromDifferentExtension(s1: IShortcut, s2: IShortcut) {
-    if (!s1.groupName || !s1.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)) {
+export function isSameShortcutFromDifferentExtension(
+    s1: IShortcut,
+    s2: IShortcut
+) {
+    if (
+        !s1.groupName ||
+        !s1.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)
+    ) {
         return false;
     }
 
-    if (!s2.groupName || !s2.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)) {
+    if (
+        !s2.groupName ||
+        !s2.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)
+    ) {
         return false;
     }
 
@@ -519,7 +547,9 @@ export class Shortcuts extends React.Component<
     get rows() {
         let result: (IShortcut | IShortcut[])[] = [];
 
-        const sorted = Array.from(this.props.shortcutsStore.shortcuts.values()).sort((s1, s2) => {
+        const sorted = Array.from(
+            this.props.shortcutsStore.shortcuts.values()
+        ).sort((s1, s2) => {
             let name1 = s1.name.toLocaleLowerCase();
             let name2 = s2.name.toLocaleLowerCase();
             return name1 < name2 ? -1 : name1 > name2 ? 1 : 0;
@@ -530,7 +560,12 @@ export class Shortcuts extends React.Component<
             for (let i = 0; i < sorted.length; i++) {
                 let j;
                 for (j = i; j + 1 < sorted.length; j++) {
-                    if (!isSameShortcutFromDifferentExtension(sorted[i], sorted[j + 1])) {
+                    if (
+                        !isSameShortcutFromDifferentExtension(
+                            sorted[i],
+                            sorted[j + 1]
+                        )
+                    ) {
                         break;
                     }
                 }

@@ -182,14 +182,14 @@ async function onAdd() {
         }
     }
 
-    let params = createInstrument(installedVersion);
+    let instrumentId = createInstrument(installedVersion);
 
     runInAction(() => {
         tabs.firstTime = false;
     });
 
     setTimeout(() => {
-        tabs.openTabById(params.id, true);
+        tabs.openTabById(instrumentId, true);
     }, 50);
 }
 

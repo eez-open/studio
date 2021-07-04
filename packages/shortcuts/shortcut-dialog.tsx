@@ -23,14 +23,19 @@ import { CodeEditorProperty } from "eez-studio-ui/code-editor";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
-import { IActionType, IShortcut, IShortcutsStore, IGroupsStore } from "shortcuts/interfaces";
+import {
+    IActionType,
+    IShortcut,
+    IShortcutsStore,
+    IGroupsStore
+} from "shortcuts/interfaces";
 import { TOOLBAR_BUTTON_COLORS } from "shortcuts/toolbar-button-colors";
 
+import { isSameShortcutFromDifferentExtension } from "shortcuts/shortcuts";
 import {
-    isSameShortcutFromDifferentExtension,
     SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX,
     FROM_EXTENSION_GROUP_NAME
-} from "shortcuts/shortcuts";
+} from "shortcuts/shortcuts-store";
 
 interface ShortcutDialogProps {
     shortcutsStore: IShortcutsStore;
@@ -63,7 +68,9 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
             () => {
                 if (
                     this.shortcut.name !== this.props.shortcut.name &&
-                    Array.from(this.props.shortcutsStore.shortcuts.values()).find(
+                    Array.from(
+                        this.props.shortcutsStore.shortcuts.values()
+                    ).find(
                         shortcut =>
                             shortcut.name === this.shortcut.name &&
                             shortcut.id !== this.shortcut.id &&
@@ -139,7 +146,9 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
     get codeErrors() {
         if (this.validator.errors.actionCode) {
             if (this.codeError) {
-                return this.validator.errors.actionCode.concat([this.codeError]);
+                return this.validator.errors.actionCode.concat([
+                    this.codeError
+                ]);
             } else {
                 return this.validator.errors.actionCode;
             }
@@ -177,7 +186,9 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
     get isExtensionShortcut() {
         return (
             !!this.props.shortcut.groupName &&
-            this.props.shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)
+            this.props.shortcut.groupName.startsWith(
+                SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
+            )
         );
     }
 
@@ -201,11 +212,17 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         }
 
         if (groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)) {
-            if (this.props.groupsStore && this.props.groupsStore.isGroupEnabled) {
+            if (
+                this.props.groupsStore &&
+                this.props.groupsStore.isGroupEnabled
+            ) {
                 return FROM_EXTENSION_GROUP_NAME;
             }
             if (this.extension) {
-                return "Extension: " + (this.extension.displayName || this.extension.name);
+                return (
+                    "Extension: " +
+                    (this.extension.displayName || this.extension.name)
+                );
             }
         }
 
@@ -214,7 +231,11 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
 
     @computed
     get originalShortcut() {
-        if (this.extension && this.extension.properties && this.extension.properties.shortcuts) {
+        if (
+            this.extension &&
+            this.extension.properties &&
+            this.extension.properties.shortcuts
+        ) {
             return this.extension.properties.shortcuts!.find(
                 shortcut => shortcut.id === this.props.shortcut.originalId
             );
@@ -228,8 +249,10 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
             !!this.originalShortcut &&
             (this.shortcut.name !== this.originalShortcut.name ||
                 this.shortcut.keybinding !== this.originalShortcut.keybinding ||
-                this.shortcut.requiresConfirmation !== this.originalShortcut.requiresConfirmation ||
-                this.shortcut.showInToolbar !== this.originalShortcut.showInToolbar ||
+                this.shortcut.requiresConfirmation !==
+                    this.originalShortcut.requiresConfirmation ||
+                this.shortcut.showInToolbar !==
+                    this.originalShortcut.showInToolbar ||
                 (this.shortcut.showInToolbar &&
                     (this.shortcut.toolbarButtonPosition !==
                         this.originalShortcut.toolbarButtonPosition ||
@@ -245,10 +268,13 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         if (this.originalShortcut) {
             this.shortcut.name = this.originalShortcut.name;
             this.shortcut.keybinding = this.originalShortcut.keybinding;
-            this.shortcut.requiresConfirmation = this.originalShortcut.requiresConfirmation;
+            this.shortcut.requiresConfirmation =
+                this.originalShortcut.requiresConfirmation;
             this.shortcut.showInToolbar = this.originalShortcut.showInToolbar;
-            this.shortcut.toolbarButtonPosition = this.originalShortcut.toolbarButtonPosition;
-            this.shortcut.toolbarButtonColor = this.originalShortcut.toolbarButtonColor;
+            this.shortcut.toolbarButtonPosition =
+                this.originalShortcut.toolbarButtonPosition;
+            this.shortcut.toolbarButtonColor =
+                this.originalShortcut.toolbarButtonColor;
         }
     }
 
@@ -280,7 +306,11 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         }
 
         return (
-            <Dialog onOk={this.handleSubmit} size="large" additionalButton={resetToDefaultButton}>
+            <Dialog
+                onOk={this.handleSubmit}
+                size="large"
+                additionalButton={resetToDefaultButton}
+            >
                 <PropertyList>
                     <TextInputProperty
                         name="Name"
@@ -293,7 +323,9 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                     />
 
                     {this.props.shortcutsStore.renderUsedInProperty &&
-                        this.props.shortcutsStore.renderUsedInProperty(this.shortcut)}
+                        this.props.shortcutsStore.renderUsedInProperty(
+                            this.shortcut
+                        )}
 
                     {this.props.groupsStore && !this.isExtensionShortcut && (
                         <SelectProperty
@@ -306,7 +338,9 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                             errors={this.validator.errors.groupName}
                         >
                             <option key="" value="" />
-                            {Array.from(this.props.groupsStore.groups.values()).map(group => (
+                            {Array.from(
+                                this.props.groupsStore.groups.values()
+                            ).map(group => (
                                 <option key={group.id} value={group.name}>
                                     {group.name}
                                 </option>
@@ -335,7 +369,8 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                             name={"Action type"}
                             value={this.shortcut.action!.type}
                             onChange={action(
-                                (value: IActionType) => (this.shortcut.action!.type = value)
+                                (value: IActionType) =>
+                                    (this.shortcut.action!.type = value)
                             )}
                         >
                             <option value="scpi-commands">SCPI</option>
@@ -349,7 +384,8 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                             value={
                                 this.shortcut.action!.type === "scpi-commands"
                                     ? "SCPI"
-                                    : this.shortcut.action!.type === "javascript"
+                                    : this.shortcut.action!.type ===
+                                      "javascript"
                                     ? "JavaScript"
                                     : "MicroPython"
                             }
@@ -358,7 +394,10 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
 
                     {this.props.hideCodeEditor !== true && (
                         <CodeEditorProperty
-                            name={"Action code" + (this.isExtensionShortcut ? " (read only)" : "")}
+                            name={
+                                "Action code" +
+                                (this.isExtensionShortcut ? " (read only)" : "")
+                            }
                             value={this.shortcut.action!.data}
                             onChange={action((value: string) => {
                                 this.codeError = undefined;
@@ -377,7 +416,8 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                             name="Requires confirmation"
                             value={this.shortcut.requiresConfirmation!}
                             onChange={action(
-                                (value: boolean) => (this.shortcut.requiresConfirmation = value)
+                                (value: boolean) =>
+                                    (this.shortcut.requiresConfirmation = value)
                             )}
                         />
                     )}
@@ -387,44 +427,54 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
                             name="Show in toolbar"
                             value={this.shortcut.showInToolbar!}
                             onChange={action(
-                                (value: boolean) => (this.shortcut.showInToolbar = value)
+                                (value: boolean) =>
+                                    (this.shortcut.showInToolbar = value)
                             )}
                         />
                     )}
 
-                    {this.shortcut.action!.type !== "micropython" && this.shortcut.showInToolbar && (
-                        <NumberInputProperty
-                            name="Button position"
-                            value={this.shortcut.toolbarButtonPosition!}
-                            onChange={action((value: number) => {
-                                this.shortcut.toolbarButtonPosition = value;
-                                this.revalidate();
-                            })}
-                            min={1}
-                            errors={this.validator.errors.toolbarButtonPosition}
-                        />
-                    )}
+                    {this.shortcut.action!.type !== "micropython" &&
+                        this.shortcut.showInToolbar && (
+                            <NumberInputProperty
+                                name="Button position"
+                                value={this.shortcut.toolbarButtonPosition!}
+                                onChange={action((value: number) => {
+                                    this.shortcut.toolbarButtonPosition = value;
+                                    this.revalidate();
+                                })}
+                                min={1}
+                                errors={
+                                    this.validator.errors.toolbarButtonPosition
+                                }
+                            />
+                        )}
 
-                    {this.shortcut.action!.type !== "micropython" && this.shortcut.showInToolbar && (
-                        <SelectProperty
-                            name="Button color"
-                            value={this.shortcut.toolbarButtonColor!}
-                            onChange={action(
-                                (value: string) => (this.shortcut.toolbarButtonColor = value)
-                            )}
-                            selectStyle={{ backgroundColor: this.shortcut.toolbarButtonColor! }}
-                        >
-                            {TOOLBAR_BUTTON_COLORS.map(color => (
-                                <option
-                                    key={color}
-                                    value={color}
-                                    style={{ backgroundColor: color }}
-                                >
-                                    &nbsp;
-                                </option>
-                            ))}
-                        </SelectProperty>
-                    )}
+                    {this.shortcut.action!.type !== "micropython" &&
+                        this.shortcut.showInToolbar && (
+                            <SelectProperty
+                                name="Button color"
+                                value={this.shortcut.toolbarButtonColor!}
+                                onChange={action(
+                                    (value: string) =>
+                                        (this.shortcut.toolbarButtonColor =
+                                            value)
+                                )}
+                                selectStyle={{
+                                    backgroundColor:
+                                        this.shortcut.toolbarButtonColor!
+                                }}
+                            >
+                                {TOOLBAR_BUTTON_COLORS.map(color => (
+                                    <option
+                                        key={color}
+                                        value={color}
+                                        style={{ backgroundColor: color }}
+                                    >
+                                        &nbsp;
+                                    </option>
+                                ))}
+                            </SelectProperty>
+                        )}
                 </PropertyList>
             </Dialog>
         );

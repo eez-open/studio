@@ -5,17 +5,28 @@ import { observer } from "mobx-react";
 import { IShortcut, IGroup } from "shortcuts/interfaces";
 import { Shortcuts, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
 import { Groups, GroupsToolbarButtons } from "shortcuts/groups";
-import { shortcuts, addShortcut, updateShortcut, deleteShortcut } from "shortcuts/shortcuts-store";
-
 import {
-    SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX,
-    isSameShortcutFromDifferentExtension
-} from "shortcuts/shortcuts";
+    shortcuts,
+    addShortcut,
+    updateShortcut,
+    deleteShortcut
+} from "shortcuts/shortcuts-store";
 
-import { groups, addGroup, updateGroup, deleteGroup } from "shortcuts/groups-store";
+import { isSameShortcutFromDifferentExtension } from "shortcuts/shortcuts";
+import { SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX } from "shortcuts/shortcuts-store";
+import {
+    groups,
+    addGroup,
+    updateGroup,
+    deleteGroup
+} from "shortcuts/groups-store";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
 
 import * as InstrumentObjectModule from "instrument/instrument-object";
 
@@ -28,7 +39,9 @@ export const allShortcuts = computed(() => {
         .filter(
             shortcut =>
                 shortcut.groupName &&
-                !shortcut.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX)
+                !shortcut.groupName.startsWith(
+                    SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX
+                )
         )
         .forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
 
@@ -58,7 +71,9 @@ class ShortcutsStore {
     }
 
     updateShortcut(shortcut: Partial<IShortcut>) {
-        const sameShortcuts = this.getSameShortcutsFromDifferentExtensions(shortcut.id!);
+        const sameShortcuts = this.getSameShortcutsFromDifferentExtensions(
+            shortcut.id!
+        );
 
         beginTransaction("Edit shortcut");
 
@@ -78,7 +93,9 @@ class ShortcutsStore {
     }
 
     deleteShortcut(shortcut: Partial<IShortcut>) {
-        const sameShortcuts = this.getSameShortcutsFromDifferentExtensions(shortcut.id!);
+        const sameShortcuts = this.getSameShortcutsFromDifferentExtensions(
+            shortcut.id!
+        );
         beginTransaction("Delete shortcut");
         deleteShortcut(shortcut);
         sameShortcuts.forEach(sameShortcut => deleteShortcut(sameShortcut));
@@ -97,9 +114,8 @@ const groupsStore = {
         if (changes.name) {
             let group = groups.get(changes.id!);
             if (group && group.name != changes.name) {
-                const {
-                    changeGroupNameInInstruments
-                } = require("instrument/instrument-object") as typeof InstrumentObjectModule;
+                const { changeGroupNameInInstruments } =
+                    require("instrument/instrument-object") as typeof InstrumentObjectModule;
 
                 changeGroupNameInInstruments(group.name, changes.name);
             }
@@ -109,9 +125,8 @@ const groupsStore = {
     },
 
     deleteGroup(group: Partial<IGroup>) {
-        const {
-            deleteGroupInInstruments
-        } = require("instrument/instrument-object") as typeof InstrumentObjectModule;
+        const { deleteGroupInInstruments } =
+            require("instrument/instrument-object") as typeof InstrumentObjectModule;
 
         deleteGroupInInstruments(group.name!);
         deleteGroup(group);
@@ -139,9 +154,15 @@ export class ShortcutsAndGroups extends React.Component<{}, {}> {
                 </ToolbarHeader>
                 <Body tabIndex={0}>
                     {shortcutsOrGroups.get() ? (
-                        <Shortcuts shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
+                        <Shortcuts
+                            shortcutsStore={shortcutsStore}
+                            groupsStore={groupsStore}
+                        />
                     ) : (
-                        <Groups shortcutsStore={shortcutsStore} groupsStore={groupsStore} />
+                        <Groups
+                            shortcutsStore={shortcutsStore}
+                            groupsStore={groupsStore}
+                        />
                     )}
                 </Body>
             </VerticalHeaderWithBody>

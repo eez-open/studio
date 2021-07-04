@@ -3,7 +3,7 @@ const uglify = require("gulp-uglify-es").default;
 const pump = require("pump");
 
 const SRC = "packages";
-const DST = "dist";
+const DST = "build";
 
 // copy all from SRC to DST, excluding: *.ts, *.tsx, *.less, ...
 gulp.task("copy", function () {

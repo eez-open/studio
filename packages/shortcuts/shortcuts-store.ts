@@ -3,10 +3,18 @@ import { values } from "mobx";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { db } from "eez-studio-shared/db";
 import { sendMessage } from "eez-studio-shared/notify";
-import { createStore, types, createStoreObjectsCollection } from "eez-studio-shared/store";
+import {
+    createStore,
+    types,
+    createStoreObjectsCollection
+} from "eez-studio-shared/store";
 
 import { IShortcut } from "shortcuts/interfaces";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
+
+export const SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX = "__extension__";
+export const SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX = "__instrument__";
+export const FROM_EXTENSION_GROUP_NAME = "From instrument extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -171,7 +179,9 @@ export function deleteShortcut(shortcut: Partial<IShortcut>) {
 }
 
 export function deleteGroupInShortcuts(groupName: string) {
-    db.prepare(`DELETE FROM "${store.storeName}" WHERE groupName = ?`).run(groupName);
+    db.prepare(`DELETE FROM "${store.storeName}" WHERE groupName = ?`).run(
+        groupName
+    );
 
     let changedShortcuts = values(shortcuts)
         .filter(shortcut => shortcut.groupName === groupName)

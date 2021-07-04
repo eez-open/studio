@@ -27,7 +27,7 @@ import * as notification from "eez-studio-ui/notification";
 import { Toolbar } from "eez-studio-ui/toolbar";
 
 import { IShortcut } from "shortcuts/interfaces";
-import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts";
+import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts-store";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 import { showShortcutDialog } from "shortcuts/shortcut-dialog";
 

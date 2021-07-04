@@ -11,10 +11,7 @@ import { isRenderer } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 
 import { loadInstrumentExtension } from "instrument/import";
-import {
-    instrumentStore,
-    InstrumentObject
-} from "instrument/instrument-object";
+import { instrumentStore } from "instrument/instrument-object";
 import { IInstrumentProperties } from "instrument/export";
 
 import * as ConnectionModule from "instrument/connection/connection";
@@ -41,11 +38,11 @@ export const instrumentExtensions = computed(() => {
         );
 });
 
-export function createInstrument(extension: IExtension) {
+export function createInstrument(extension: IExtension): string {
     return instrumentStore.createObject({
         instrumentExtensionId: extension.id,
         autoConnect: false
-    }) as InstrumentObject;
+    });
 }
 
 const instrumentExtension: IExtensionDefinition = {
