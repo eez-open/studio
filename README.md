@@ -96,76 +96,10 @@ Download and start `EEZ_Studio_setup.exe`.
 sudo apt-get install build-essential libudev-dev
 git clone https://github.com/eez-open/studio
 cd studio
+npm install
 npm run build
 npm start
 ```
-
-### Build DEB package on Ubuntu
-
-First: install dependencies:
-
-```
-sudo npm install -g electron-installer-debian
-```
-
-Then build the package:
-
-```
-npm run build
-npm run build-installation
-npm run build-deb
-```
-
-Or in one step:
-
-```
-npm run build-deb-all
-```
-
-Built DEB package is located in `installation/linux`.
-
-### Build RPM package on Ubuntu
-
-First, install dependencies:
-
-```
-sudo npm install -g electron-installer-redhat
-sudo apt install rpm
-```
-
-Then build the package:
-
-```
-npm run build
-npm run build-installation
-npm run build-rpm
-```
-
-Or in one step:
-
-```
-npm run build-rpm-all
-```
-
-Built RPM package is located in `installation/linux`.
-
-### Build Snap package on Ubuntu
-
-```
-sudo npm install -g electron-installer-snap
-sudo apt install snapcraft
-npm run build
-npm run build-installation
-npm run build-snap
-```
-
-Built Snap package is located in `installation/linux`.
-
-### Build Linux installation using Docker
-
-Execute `./docker_start.sh` first, then execute `./docker-build.sh` inside docker container.
-
-Installation packages are located inside `builder-output` folder.
 
 ## USB TMC
 
