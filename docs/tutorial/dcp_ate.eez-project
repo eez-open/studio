@@ -302,7 +302,7 @@
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": -600,
           "top": -398,
-          "width": 301,
+          "width": 283,
           "height": 81,
           "wireID": "d4a736ad-f8bb-447c-b06f-1a1248b9ca2c",
           "connection": "envox.hr",
@@ -312,19 +312,20 @@
           "type": "EvalActionComponent",
           "left": -266,
           "top": -398,
-          "width": 337,
+          "width": 322,
           "height": 103,
           "wireID": "be02409d-2a17-4464-9920-f7a1f828d593",
           "asInputProperties": [
             "value"
           ],
+          "catchError": true,
           "expression": "new Date(\n    {value}.rows[0].created_at\n).toLocaleString()"
         },
         {
           "type": "EvalActionComponent",
           "left": 197,
           "top": -295,
-          "width": 175,
+          "width": 169,
           "height": 67,
           "wireID": "cb21d7bb-9a7b-4d51-ec37-177735772713",
           "asInputProperties": [
@@ -336,7 +337,7 @@
           "type": "InputActionComponent",
           "left": -776,
           "top": -398,
-          "width": 93,
+          "width": 91,
           "height": 31,
           "wireID": "80ca4312-fd33-4582-f204-a400afefef10",
           "name": "serial"
@@ -345,7 +346,7 @@
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": 152,
           "top": -160,
-          "width": 365,
+          "width": 346,
           "height": 117,
           "wireID": "da681ea1-ea85-47bc-b86e-7ac728f6b29d",
           "connection": "envox.hr",
@@ -355,7 +356,7 @@
           "type": "EvalActionComponent",
           "left": -592,
           "top": 92,
-          "width": 308,
+          "width": 290,
           "height": 67,
           "wireID": "ce127ac3-8f5f-4629-c588-7c5cb0161638",
           "asInputProperties": [
@@ -367,7 +368,7 @@
           "type": "IsTrueActionComponent",
           "left": -226,
           "top": 81,
-          "width": 98,
+          "width": 97,
           "height": 87,
           "wireID": "c58fa280-e2f4-4710-a65a-2359ecbd61c2",
           "asInputProperties": [
@@ -378,7 +379,7 @@
           "type": "ConstantActionComponent",
           "left": 366,
           "top": 3,
-          "width": 116,
+          "width": 114,
           "height": 61,
           "wireID": "4d1eb70f-bc2d-47e1-c59a-559ff0f043b0",
           "value": "\"Yes\""
@@ -387,7 +388,7 @@
           "type": "ConstantActionComponent",
           "left": 366,
           "top": 78,
-          "width": 116,
+          "width": 114,
           "height": 61,
           "wireID": "465817f2-f267-4ee0-f605-722a8c98bd0c",
           "value": "\"No\""
@@ -396,7 +397,7 @@
           "type": "EvalActionComponent",
           "left": -156,
           "top": -160,
-          "width": 249,
+          "width": 236,
           "height": 67,
           "wireID": "35dd8e03-9dd6-49be-b987-7194d05bfebc",
           "asInputProperties": [
@@ -408,7 +409,7 @@
           "type": "ScpiActionComponent",
           "left": -568,
           "top": 270,
-          "width": 427,
+          "width": 403,
           "height": 87,
           "wireID": "c6e86db4-be7c-4737-b5de-254759ef3a44",
           "asInputProperties": [
@@ -419,21 +420,22 @@
         },
         {
           "type": "EvalActionComponent",
-          "left": -592,
-          "top": -160,
-          "width": 271,
-          "height": 67,
+          "left": -752,
+          "top": -240,
+          "width": 262,
+          "height": 87,
           "wireID": "a3f80526-a07d-4890-df18-a788917120bd",
           "asInputProperties": [
             "value"
           ],
+          "catchError": true,
           "expression": "{value}.rows[0].model"
         },
         {
           "type": "CompareActionComponent",
           "left": -322,
           "top": -160,
-          "width": 123,
+          "width": 122,
           "height": 87,
           "wireID": "0aacff3b-c42c-4bd4-e923-e8baf86a4486",
           "asInputProperties": [
@@ -446,7 +448,7 @@
           "type": "ConstantActionComponent",
           "left": -455,
           "top": -83,
-          "width": 116,
+          "width": 114,
           "height": 61,
           "wireID": "ea543aa8-f196-440d-af13-7a95bb9f987a",
           "value": "\"DCP405\""
@@ -455,7 +457,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": -255,
-          "width": 213,
+          "width": 214,
           "height": 31,
           "wireID": "cc2fff72-4e7b-49b1-94e9-b5b3b747db52",
           "name": "Register button enabled?"
@@ -464,7 +466,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": -43,
-          "width": 200,
+          "width": 199,
           "height": 31,
           "wireID": "20d81fb6-269e-4d40-e267-679768f786b1",
           "name": "Calibration saved label"
@@ -473,7 +475,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": 301,
-          "width": 128,
+          "width": 125,
           "height": 31,
           "wireID": "a02fceb2-c2a6-4685-9178-a6ef99549b1d",
           "name": "cal params"
@@ -482,7 +484,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": -367,
-          "width": 159,
+          "width": 158,
           "height": 31,
           "wireID": "cf49549d-2106-47ee-bdf4-ed52b06a11f6",
           "name": "Registered label"
@@ -491,7 +493,7 @@
           "type": "OutputActionComponent",
           "left": 633,
           "top": 81,
-          "width": 261,
+          "width": 262,
           "height": 31,
           "wireID": "2cb0acc9-e9f2-42a2-92bb-f42d585e81aa",
           "name": "Save calibration button enabled?"
@@ -500,7 +502,7 @@
           "type": "EvalActionComponent",
           "left": 110,
           "top": 159,
-          "width": 487,
+          "width": 457,
           "height": 87,
           "wireID": "609d045d-859b-422d-b2ce-7e1a782bf1db",
           "asInputProperties": [
@@ -522,7 +524,7 @@
           "type": "InputActionComponent",
           "left": -766,
           "top": 326,
-          "width": 82,
+          "width": 81,
           "height": 31,
           "wireID": "1e6eb2cc-2875-48a4-9dd0-6c04e9a13131",
           "name": "slot"
@@ -531,7 +533,7 @@
           "type": "EvalActionComponent",
           "left": -97,
           "top": 341,
-          "width": 585,
+          "width": 544,
           "height": 103,
           "wireID": "fc404e60-93c8-4d13-bb6b-8a95e95cc717",
           "expression": "{cal_params}?.indexOf(\"u_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_5A_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_50mA_cal_params_exists=1\") !== -1\n"
@@ -540,10 +542,28 @@
           "type": "OutputActionComponent",
           "left": 635,
           "top": 215,
-          "width": 123,
+          "width": 124,
           "height": 31,
           "wireID": "8e8388cd-2b7c-41c3-fa5d-b5195623d925",
           "name": "module_id"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 131,
+          "top": -442,
+          "width": 114,
+          "height": 61,
+          "wireID": "db6085f0-dfa7-400e-85c3-90391e56b911",
+          "value": "\"\""
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -635,
+          "top": -134,
+          "width": 114,
+          "height": 61,
+          "wireID": "88b63e3b-c720-49f2-8d60-a43658d1b9a5",
+          "value": "\"\""
         }
       ],
       "connectionLines": [
@@ -732,6 +752,36 @@
           "output": "@error",
           "target": "fc404e60-93c8-4d13-bb6b-8a95e95cc717",
           "input": "cal_params"
+        },
+        {
+          "source": "be02409d-2a17-4464-9920-f7a1f828d593",
+          "output": "@error",
+          "target": "db6085f0-dfa7-400e-85c3-90391e56b911",
+          "input": "@seqin"
+        },
+        {
+          "source": "db6085f0-dfa7-400e-85c3-90391e56b911",
+          "output": "value",
+          "target": "cb21d7bb-9a7b-4d51-ec37-177735772713",
+          "input": "value"
+        },
+        {
+          "source": "db6085f0-dfa7-400e-85c3-90391e56b911",
+          "output": "value",
+          "target": "cf49549d-2106-47ee-bdf4-ed52b06a11f6",
+          "input": "@seqin"
+        },
+        {
+          "source": "a3f80526-a07d-4890-df18-a788917120bd",
+          "output": "@error",
+          "target": "88b63e3b-c720-49f2-8d60-a43658d1b9a5",
+          "input": "@seqin"
+        },
+        {
+          "source": "88b63e3b-c720-49f2-8d60-a43658d1b9a5",
+          "output": "value",
+          "target": "0aacff3b-c42c-4bd4-e923-e8baf86a4486",
+          "input": "A"
         }
       ],
       "name": "is_module_registered",
@@ -11920,7 +11970,7 @@
           "type": "eez-flow-ext-postgres/PostgresConnectionActionComponent",
           "left": 0,
           "top": -86,
-          "width": 178,
+          "width": 174,
           "height": 31,
           "wireID": "6f2c97c8-73cc-4b75-b253-b9fb97a01bbd",
           "connection": "envox.hr",
@@ -11959,7 +12009,7 @@
           "type": "ConstantActionComponent",
           "left": -144,
           "top": 151,
-          "width": 116,
+          "width": 114,
           "height": 61,
           "wireID": "cb28d72c-66ec-46e4-98e5-8139074a7d93",
           "value": "\"bb3_1_id\""
@@ -11968,7 +12018,7 @@
           "type": "ConstantActionComponent",
           "left": -144,
           "top": 533,
-          "width": 116,
+          "width": 114,
           "height": 61,
           "wireID": "fdcc6112-f9d4-4387-8ae4-c4a59a30abd0",
           "value": "\"bb3_2_id\""
@@ -11977,7 +12027,7 @@
           "type": "ShowPageActionComponent",
           "left": 289,
           "top": -86,
-          "width": 120,
+          "width": 119,
           "height": 67,
           "wireID": "22156ec9-593c-4a94-f65c-bee27bdacb93",
           "page": "DCP405"
@@ -12004,7 +12054,7 @@
           "type": "EvalActionComponent",
           "left": -362,
           "top": -4,
-          "width": 340,
+          "width": 324,
           "height": 87,
           "wireID": "45c7b03c-1cb2-4112-9363-45db7cf64e73",
           "expression": "{bb3_1_connected} && \n{bb3_2_connected}"
