@@ -241,7 +241,7 @@ async function generateFiles(
             destinationFolderPath +
                 "/" +
                 path.basename(DocumentStore.filePath, ".eez-project") +
-                ".res"
+                (DocumentStore.isAppletProject ? ".app" : ".res")
         );
     } else {
         const build = DocumentStore.project.settings.build;
@@ -353,13 +353,12 @@ export async function build(
                     Type.INFO,
                     `Building ${configuration.name} configuration`
                 );
-                configurationBuildResuts[
-                    configuration.name
-                ] = await getBuildResults(
-                    DocumentStore,
-                    sectionNames,
-                    configuration
-                );
+                configurationBuildResuts[configuration.name] =
+                    await getBuildResults(
+                        DocumentStore,
+                        sectionNames,
+                        configuration
+                    );
             }
         } else {
             const selectedBuildConfiguration =
@@ -371,13 +370,12 @@ export async function build(
                     Type.INFO,
                     `Building ${selectedBuildConfiguration.name} configuration`
                 );
-                configurationBuildResuts[
-                    selectedBuildConfiguration.name
-                ] = await getBuildResults(
-                    DocumentStore,
-                    sectionNames,
-                    selectedBuildConfiguration
-                );
+                configurationBuildResuts[selectedBuildConfiguration.name] =
+                    await getBuildResults(
+                        DocumentStore,
+                        sectionNames,
+                        selectedBuildConfiguration
+                    );
             } else {
                 configurationBuildResuts["default"] = await getBuildResults(
                     DocumentStore,

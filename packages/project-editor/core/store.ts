@@ -1680,6 +1680,10 @@ export class DocumentStoreClass {
         );
     }
 
+    get isAppletProject() {
+        return this.project.settings.general.projectType === ProjectType.APPLET;
+    }
+
     getObjectFromPath(path: string[]) {
         return getObjectFromPath(this.project, path);
     }

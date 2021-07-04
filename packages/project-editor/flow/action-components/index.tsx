@@ -407,16 +407,14 @@ export class EvalActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
-        try {
-            const { expression, values } = this.expandExpression(runningFlow);
-            values;
-            let result = eval(expression);
-            runningFlow.propagateValue(this, "result", result);
-        } catch (err) {
-            // console.error(err);
-            // TODO: report this to user
-            runningFlow.propagateValue(this, "result", undefined);
-        }
+        // try {
+        const { expression, values } = this.expandExpression(runningFlow);
+        values;
+        let result = eval(expression);
+        runningFlow.propagateValue(this, "result", result);
+        // } catch (err) {
+        //     runningFlow.propagateValue(this, "result", err);
+        // }
         return undefined;
     }
 }
@@ -1027,6 +1025,9 @@ export class LogActionComponent extends ActionComponent {
     }
 
     async execute(runningFlow: RunningFlow) {
+        const componentState = runningFlow.getComponentState(this);
+        const value = componentState.getInputValue("value");
+        console.log(value);
         return undefined;
     }
 }
@@ -1389,7 +1390,7 @@ registerClass(CatchErrorActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 class CounterRunningState {
-    constructor(public value: number) { }
+    constructor(public value: number) {}
 }
 
 export class CounterActionComponent extends ActionComponent {

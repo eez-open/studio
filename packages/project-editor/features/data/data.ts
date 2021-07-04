@@ -182,9 +182,7 @@ export class DataContext implements IDataContext {
         );
     }
 
-    getDataItemValue(
-        dataItem: DataItem | undefined
-    ): {
+    getDataItemValue(dataItem: DataItem | undefined): {
         hasValue: boolean;
         value: any;
     } {
@@ -326,8 +324,6 @@ export class DataContext implements IDataContext {
                                     "Invalid float default value",
                                     dataItem
                                 );
-                            } else {
-                                value = dataItem.defaultValue;
                             }
                         } else if (dataItem.type == "boolean") {
                             let defaultValue = dataItem.defaultValue

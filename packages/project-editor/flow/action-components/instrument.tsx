@@ -30,6 +30,31 @@ import type {
     IRunningFlow
 } from "project-editor/flow//flow-interfaces";
 
+// When passed quoted string as '"str"' it will return unquoted string as 'str'.
+// Returns undefined if passed value is not a valid string.
+function parseScpiString(value: string) {
+    if (
+        value &&
+        value.length >= 2 &&
+        value[0] === '"' &&
+        value.slice(-1) === '"'
+    ) {
+        let result = value.slice(1, -1);
+        // make sure there is no single quote (") inside
+        // scpi can return list of strings as "str1","str2","str3", we don't want to recognize this as string
+        for (let i = 0; i < result.length; i++) {
+            if (result[i] == '"') {
+                if (i == result.length - 1 || result[i + 1] != '"') {
+                    return undefined;
+                }
+                i++;
+            }
+        }
+        return result;
+    }
+    return undefined;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const ScpiDiv = styled.div`
@@ -301,13 +326,9 @@ export class ScpiActionComponent extends ActionComponent {
                             throw result.error;
                         }
 
-                        if (
-                            result &&
-                            result.length >= 2 &&
-                            result[0] === '"' &&
-                            result.slice(-1) === '"'
-                        ) {
-                            result = result.slice(1, -1);
+                        const resultStr = parseScpiString(result);
+                        if (resultStr) {
+                            result = resultStr;
                         }
 
                         runningFlow.propagateValue(this, output, result);
