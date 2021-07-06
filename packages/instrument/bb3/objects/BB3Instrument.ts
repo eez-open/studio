@@ -218,6 +218,8 @@ export class BB3Instrument {
     @observable scriptsOnInstrumentFetchError: boolean = false;
     @observable listsOnInstrumentFetchError: boolean = false;
 
+    @observable isUploadingMasterFirmware: boolean = false;
+
     terminate: () => void;
 
     constructor(
@@ -345,12 +347,13 @@ export class BB3Instrument {
     }
 
     get isTimeForRefresh() {
-        const CONF_REFRESH_EVERY_MS = 24 * 60 * 60 * 1000;
-        return (
-            !this.timeOfLastRefresh ||
-            new Date().getTime() - this.timeOfLastRefresh.getTime() >
-                CONF_REFRESH_EVERY_MS
-        );
+        // const CONF_REFRESH_EVERY_MS = 24 * 60 * 60 * 1000;
+        // return (
+        //     !this.timeOfLastRefresh ||
+        //     new Date().getTime() - this.timeOfLastRefresh.getTime() >
+        //         CONF_REFRESH_EVERY_MS
+        // );
+        return true;
     }
 
     async refresh(forceRefresh: boolean) {
@@ -757,6 +760,7 @@ export class BB3Instrument {
                 {
                     bb3Instrument: this,
                     setBusy: action((value: boolean) => {
+                        this.isUploadingMasterFirmware = value;
                         this.setBusy(value);
                     })
                 },
@@ -861,6 +865,7 @@ export class BB3Instrument {
                 {
                     bb3Instrument: this,
                     setBusy: action((value: boolean) => {
+                        this.isUploadingMasterFirmware = value;
                         this.setBusy(value);
                     })
                 },

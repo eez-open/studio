@@ -4,7 +4,12 @@ import {
     logUpdate,
     IActivityLogEntry
 } from "eez-studio-shared/activity-log";
-import { getFileSizeInBytes, openFile, readFile, closeFile } from "eez-studio-shared/util-electron";
+import {
+    getFileSizeInBytes,
+    openFile,
+    readFile,
+    closeFile
+} from "eez-studio-shared/util-electron";
 import { Buffer } from "buffer";
 
 import { FileState } from "instrument/connection/file-state";
@@ -34,7 +39,10 @@ export interface IFileUploadInstructions {
     }[];
 }
 
-export async function upload(oid: number, instructions: IFileUploadInstructions) {}
+export async function upload(
+    oid: number,
+    instructions: IFileUploadInstructions
+) {}
 
 function arrayBufferToBuffer(ab: ArrayBuffer): Buffer {
     var buffer = new Buffer(ab.byteLength);
@@ -92,17 +100,34 @@ export class FileUpload extends FileTransfer {
                 longOperation: true
             });
         }
+
+        if (this.onErrorCallback) {
+            this.onErrorCallback(
+                this.state == "abort" ? "Aborted" : this.error
+            );
+        }
     }
 
     async loadData() {
         try {
             if (this.instructions.sourceFilePath) {
-                this.fileDataLength = await getFileSizeInBytes(this.instructions.sourceFilePath);
+                this.fileDataLength = await getFileSizeInBytes(
+                    this.instructions.sourceFilePath
+                );
                 this.fileData = Buffer.allocUnsafe(this.fileDataLength);
                 this.fd = await openFile(this.instructions.sourceFilePath);
                 let inputBuffer = new Buffer(SAMPLE_LENGTH);
-                let { buffer } = await readFile(this.fd, inputBuffer, 0, SAMPLE_LENGTH, 0);
-                const fileType = detectFileType(buffer, this.instructions.sourceFilePath);
+                let { buffer } = await readFile(
+                    this.fd,
+                    inputBuffer,
+                    0,
+                    SAMPLE_LENGTH,
+                    0
+                );
+                const fileType = detectFileType(
+                    buffer,
+                    this.instructions.sourceFilePath
+                );
                 this.fileType = {
                     ext: fileType.ext,
                     mime: fileType.mime
@@ -184,10 +209,11 @@ export class FileUpload extends FileTransfer {
     }
 
     sendFileSize() {
-        let fileSizeConmmand = this.instructions.fileSizeCommandTemplate!.replace(
-            "<filesize>",
-            this.fileDataLength.toString()
-        );
+        let fileSizeConmmand =
+            this.instructions.fileSizeCommandTemplate!.replace(
+                "<filesize>",
+                this.fileDataLength.toString()
+            );
 
         fileSizeConmmand += ";*OPC?";
 
@@ -224,7 +250,13 @@ export class FileUpload extends FileTransfer {
         if (this.fd) {
             let inputBuffer = Buffer.allocUnsafe(length);
 
-            let { bytesRead, buffer } = await readFile(this.fd, inputBuffer, 0, length, position);
+            let { bytesRead, buffer } = await readFile(
+                this.fd,
+                inputBuffer,
+                0,
+                length,
+                position
+            );
 
             if (bytesRead !== length) {
                 return undefined;
@@ -234,12 +266,17 @@ export class FileUpload extends FileTransfer {
 
             return buffer.toString("binary");
         } else {
-            return this.fileData!.slice(position, position + length).toString("binary");
+            return this.fileData!.slice(position, position + length).toString(
+                "binary"
+            );
         }
     }
 
     async getNextChunkBlock() {
-        return this.getNextChunkBlockHeader() + (await this.getNextChunkBlockData());
+        return (
+            this.getNextChunkBlockHeader() +
+            (await this.getNextChunkBlockData())
+        );
     }
 
     async sendChunk() {
@@ -251,10 +288,11 @@ export class FileUpload extends FileTransfer {
         } else {
             let nextChunkBlock = await this.getNextChunkBlock();
             if (nextChunkBlock) {
-                let sendChunkCommand = this.instructions.sendChunkCommandTemplate.replace(
-                    "<chunk>",
-                    nextChunkBlock.replace(/\$/g, "$$$$")
-                );
+                let sendChunkCommand =
+                    this.instructions.sendChunkCommandTemplate.replace(
+                        "<chunk>",
+                        nextChunkBlock.replace(/\$/g, "$$$$")
+                    );
 
                 sendChunkCommand += ";*OPC?";
 
@@ -275,10 +313,13 @@ export class FileUpload extends FileTransfer {
 
     finish() {
         if (this.instructions.finishCommandTemplate) {
-            this.connection.send(this.instructions.finishCommandTemplate + ";" + "*OPC?", {
-                log: false,
-                longOperation: true
-            });
+            this.connection.send(
+                this.instructions.finishCommandTemplate + ";" + "*OPC?",
+                {
+                    log: false,
+                    longOperation: true
+                }
+            );
             this.state = "upload-finish";
         } else {
             this.state = "success";

@@ -33,7 +33,7 @@ export const ModulesSection = observer(
                                 <th>Model</th>
                                 <th>Revision</th>
                                 <th>Firmware</th>
-                                <th>All Firmware releases</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>

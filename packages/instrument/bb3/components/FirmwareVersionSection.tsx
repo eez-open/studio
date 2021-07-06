@@ -1,8 +1,10 @@
 import React from "react";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { compareVersions } from "eez-studio-shared/util";
 import { Loader } from "eez-studio-ui/loader";
+import styled from "eez-studio-ui/styled-components";
 
 import {
     FIRMWARE_RELEASES_PAGE,
@@ -12,9 +14,8 @@ import { openLink } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { Section } from "instrument/bb3/components/Section";
 import { DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
-import styled from "eez-studio-ui/styled-components";
 
-const AllReleasesDiv = styled.div`
+const OtherReleasesDiv = styled.div`
     margin-top: 10px;
 
     a[aria-expanded="true"] .chevron-right {
@@ -29,18 +30,21 @@ const OtherReleases = observer(
             return null;
         }
 
-        const otherReleases = bb3Instrument.mcu.allReleases.filter(
-            release =>
-                release.tag_name != bb3Instrument.mcu.latestFirmwareVersion &&
-                release.tag_name != bb3Instrument.mcu.firmwareVersion
-        );
+        const otherReleases = bb3Instrument.mcu.allReleases
+            .sort((a, b) => compareVersions(b.tag_name, a.tag_name))
+            .filter(
+                release =>
+                    release.tag_name !=
+                        bb3Instrument.mcu.latestFirmwareVersion &&
+                    release.tag_name != bb3Instrument.mcu.firmwareVersion
+            );
 
         if (otherReleases.length == 0) {
             return null;
         }
 
         return (
-            <AllReleasesDiv>
+            <OtherReleasesDiv>
                 <p>
                     <a
                         className="btn btn-light"
@@ -70,7 +74,16 @@ const OtherReleases = observer(
                                     <td>{release.tag_name}</td>
                                     <td>
                                         <button
-                                            className="btn btn-primary"
+                                            className={classNames(
+                                                "btn",
+                                                compareVersions(
+                                                    release.tag_name,
+                                                    bb3Instrument.mcu
+                                                        .firmwareVersion!
+                                                ) > 0
+                                                    ? "btn-primary"
+                                                    : "btn-danger"
+                                            )}
                                             style={{ marginLeft: 20 }}
                                             disabled={bb3Instrument.busy}
                                             onClick={() =>
@@ -79,7 +92,13 @@ const OtherReleases = observer(
                                                 )
                                             }
                                         >
-                                            Load
+                                            {compareVersions(
+                                                release.tag_name,
+                                                bb3Instrument.mcu
+                                                    .firmwareVersion!
+                                            ) > 0
+                                                ? "Upgrade"
+                                                : "Downgrade"}
                                         </button>
                                     </td>
                                 </tr>
@@ -87,7 +106,7 @@ const OtherReleases = observer(
                         </tbody>
                     </table>
                 </div>
-            </AllReleasesDiv>
+            </OtherReleasesDiv>
         );
     }
 );
@@ -203,7 +222,12 @@ export const FirmwareVersionSection = observer(
                     bb3Instrument.mcu.firmwareVersion || ""
                 }`}
                 body={
-                    isConnected && <ReleaseInfo bb3Instrument={bb3Instrument} />
+                    isConnected &&
+                    (bb3Instrument.isUploadingMasterFirmware ? (
+                        <Loader />
+                    ) : (
+                        <ReleaseInfo bb3Instrument={bb3Instrument} />
+                    ))
                 }
                 titleControls={
                     !bb3Instrument.busy &&

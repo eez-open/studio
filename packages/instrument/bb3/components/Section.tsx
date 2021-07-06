@@ -28,7 +28,7 @@ const HeaderContainer = styled.header`
 
 const Body = styled.div`
     & > *:first-child {
-        margin-top: 20px;
+        margin-top: 20px !important;
     }
 `;
 
