@@ -50,9 +50,7 @@ export const ModulesSection = observer(
                             className="btn btn-primary"
                             onClick={bb3Instrument.uploadPinoutPages}
                             style={{ marginTop: 10 }}
-                            disabled={
-                                !bb3Instrument.uploadPinoutPagesButtonEnabled
-                            }
+                            disabled={bb3Instrument.busy}
                         >
                             Upload Pinout Pages
                         </button>

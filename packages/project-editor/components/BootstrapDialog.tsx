@@ -43,36 +43,38 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
     modal: bootstrap.Modal;
 
     componentDidMount() {
-        $(this.div).on("shown.bs.modal", () => {
-            setTimeout(() => {
-                let element = $(this.div).find(".ql-editor")[0];
-                if (element) {
-                    element.focus();
-                } else {
-                    $(this.div)
-                        .find(".modal-body")
-                        .find(
-                            "input, textarea, select, .EezStudio_ListContainer, button"
-                        )
-                        .first()
-                        .focus();
-                }
+        if (this.div) {
+            $(this.div).on("shown.bs.modal", () => {
+                setTimeout(() => {
+                    let element = $(this.div).find(".ql-editor")[0];
+                    if (element) {
+                        element.focus();
+                    } else {
+                        $(this.div)
+                            .find(".modal-body")
+                            .find(
+                                "input, textarea, select, .EezStudio_ListContainer, button"
+                            )
+                            .first()
+                            .focus();
+                    }
+                });
             });
-        });
 
-        $(this.div).on("hidden.bs.modal", () => {
-            const parent = this.div.parentElement as HTMLElement;
-            ReactDOM.unmountComponentAtNode(parent);
-            parent.remove();
-            this.props.onCancel();
-        });
+            $(this.div).on("hidden.bs.modal", () => {
+                const parent = this.div.parentElement as HTMLElement;
+                ReactDOM.unmountComponentAtNode(parent);
+                parent.remove();
+                this.props.onCancel();
+            });
 
-        this.modal = new bootstrap.Modal(this.div);
-        this.modal.show();
+            this.modal = new bootstrap.Modal(this.div);
+            this.modal.show();
+        }
     }
 
     componentDidUpdate() {
-        if (!this.props.open) {
+        if (!this.props.open && this.modal) {
             this.modal.hide();
         }
     }

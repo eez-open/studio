@@ -71,7 +71,8 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 
             if (latestReleaseVersion) {
                 runInAction(() => {
-                    bb3Instrument.mcu.latestFirmwareVersion = latestReleaseVersion;
+                    bb3Instrument.mcu.latestFirmwareVersion =
+                        latestReleaseVersion;
                 });
             } else {
                 console.error("not found latest release version");
@@ -202,8 +203,6 @@ export class BB3Instrument {
 
     @observable scriptsOnInstrumentFetchError: boolean = false;
     @observable listsOnInstrumentFetchError: boolean = false;
-
-    @observable uploadPinoutPagesButtonEnabled: boolean = true;
 
     terminate: () => void;
 
@@ -350,7 +349,7 @@ export class BB3Instrument {
                 setBusy: (value: boolean) => {
                     this.setRefreshInProgress(value);
                     runInAction(() => {
-                        this.uploadPinoutPagesButtonEnabled = !value;
+                        this.setBusy(value);
                     });
                 }
             },
@@ -671,7 +670,7 @@ export class BB3Instrument {
                 bb3Instrument: this,
                 setBusy: action((value: boolean) => {
                     runInAction(() => {
-                        this.uploadPinoutPagesButtonEnabled = !value;
+                        this.setBusy(value);
                     });
                 })
             },
@@ -724,5 +723,79 @@ export class BB3Instrument {
             },
             false
         );
+    };
+
+    upgradeFirmwareWithLocalFile = async () => {
+        const result = await EEZStudio.remote.dialog.showOpenDialog(
+            EEZStudio.remote.getCurrentWindow(),
+            {
+                properties: ["openFile"],
+                filters: [
+                    { name: "SREC files", extensions: ["srec"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            }
+        );
+        const filePaths = result.filePaths;
+        if (filePaths && filePaths[0]) {
+            await useConnection(
+                {
+                    bb3Instrument: this,
+                    setBusy: action((value: boolean) => {
+                        this.setBusy(value);
+                    })
+                },
+                async connection => {
+                    const toastId = notification.info(
+                        "Sending firmware file to the BB3, please wait ...",
+                        {
+                            autoClose: false
+                        }
+                    );
+
+                    try {
+                        await new Promise<void>((resolve, reject) => {
+                            const uploadInstructions = Object.assign(
+                                {},
+                                connection.instrument
+                                    .defaultFileUploadInstructions,
+                                {
+                                    sourceFilePath: filePaths[0],
+                                    destinationFileName: "o.s",
+                                    destinationFolderPath: "/"
+                                }
+                            );
+
+                            connection.upload(
+                                uploadInstructions,
+                                resolve,
+                                reject
+                            );
+                        });
+
+                        notification.update(toastId, {
+                            type: notification.INFO,
+                            render: `Restarting BB3...`,
+                            autoClose: 1000
+                        });
+
+                        connection.command(":SYST:DEL 1000; :SYST:RES");
+
+                        notification.update(toastId, {
+                            type: notification.SUCCESS,
+                            render: `Loading continues on the BB3 ...`,
+                            autoClose: 1000
+                        });
+                    } catch (err) {
+                        notification.update(toastId, {
+                            type: notification.ERROR,
+                            render: err.toString(),
+                            autoClose: 1000
+                        });
+                    }
+                },
+                false
+            );
+        }
     };
 }
