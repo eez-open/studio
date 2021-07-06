@@ -92,13 +92,31 @@ Download and start `EEZ_Studio_setup.exe`.
 -   Install `Node.JS 8.9.x` or newer
 -   Install `node-gyp`, more information at https://github.com/nodejs/node-gyp#installation
 
+Only Linux:
+
 ```
 sudo apt-get install build-essential libudev-dev
+```
+
+All platforms:
+
+```
 git clone https://github.com/eez-open/studio
 cd studio
 npm install
 npm run build
+```
+
+Start with:
+
+```
 npm start
+```
+
+Create distribution packages:
+
+```
+npm run dist
 ```
 
 ## USB TMC
