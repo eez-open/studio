@@ -53,7 +53,7 @@ jobs:
               #API_KEY_ID: ${{ secrets.api_key_id }}
               #API_KEY_ISSUER_ID: ${{ secrets.api_key_issuer_id }}
             - name: Archive production artifacts
-                uses: actions/upload-artifact@v2
-                with:
-                name: dist
-                path: dist
+              uses: actions/upload-artifact@v2
+              with:
+                  name: dist
+                  path: dist
