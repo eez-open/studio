@@ -253,7 +253,7 @@ let files = [
         },
 
         linux: {
-            target: ["deb", "AppImage"],
+            target: ["deb", "AppImage", "rpm"],
             icon: "./icon.icns",
             category: "Utility",
             synopsis: packageJson.description,
