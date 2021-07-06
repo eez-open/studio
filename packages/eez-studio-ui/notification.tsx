@@ -1,6 +1,11 @@
 import React from "react";
 
-import { ToastContainer, toast, ToastOptions, UpdateOptions } from "react-toastify";
+import {
+    ToastContainer,
+    toast,
+    ToastOptions,
+    UpdateOptions
+} from "react-toastify";
 
 export type ToastId = React.ReactText;
 
@@ -30,7 +35,7 @@ export function dismiss(toastId: ToastId) {
 
 export const container = (
     <ToastContainer
-        position={"top-right"}
+        position={"top-center"}
         autoClose={5000}
         hideProgressBar={true}
         newestOnTop={false}

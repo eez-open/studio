@@ -60,7 +60,9 @@ export class Module {
                     connection.upload(uploadInstructions, resolve, reject)
                 );
 
-                connection.command(`DEBUG:DOWN:FIRM ${this.slotIndex},"/Updates/${file.fileName}"`);
+                connection.command(
+                    `DEBUG:DOWN:FIRM ${this.slotIndex},"/Updates/${file.fileName}"`
+                );
 
                 runInAction(() => {
                     this.firmwareVersion = selectedFirmwareVersion;

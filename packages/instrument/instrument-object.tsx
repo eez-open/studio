@@ -89,8 +89,7 @@ const InstrumentContent = styled.div`
     & > * {
         flex-grow: 0;
         flex-shrink: 0;
-
-        white-space: nowrap;
+        overflow-wrap: anywhere;
     }
 
     img {

@@ -24,7 +24,9 @@ const SelectModuleFirmwareVersion = observer(
                 }
             >
                 {versions.indexOf(selectedFirmwareVersion) == -1 && (
-                    <option value={selectedFirmwareVersion}>{selectedFirmwareVersion}</option>
+                    <option value={selectedFirmwareVersion}>
+                        {selectedFirmwareVersion}
+                    </option>
                 )}
                 {versions.map(version => (
                     <option key={version} value={version}>
@@ -39,15 +41,15 @@ const SelectModuleFirmwareVersion = observer(
 export const ModuleItem = observer(({ module }: { module: Module }) => {
     const newestVersion = module.allReleases.reduce<string | undefined>(
         (newestVersion, release) =>
-            !newestVersion || compareVersions(release.version, newestVersion) > 0
+            !newestVersion ||
+            compareVersions(release.version, newestVersion) > 0
                 ? release.version
                 : newestVersion,
         undefined
     );
 
-    const [selectedFirmwareVersion, setSelectedFirmwareVersion] = React.useState<
-        string | undefined
-    >(newestVersion);
+    const [selectedFirmwareVersion, setSelectedFirmwareVersion] =
+        React.useState<string | undefined>(newestVersion);
 
     const versions = module.allReleases.map(release => release.version);
 
@@ -60,24 +62,31 @@ export const ModuleItem = observer(({ module }: { module: Module }) => {
                 {versions.length > 0 && (
                     <div>
                         <SelectModuleFirmwareVersion
-                            selectedFirmwareVersion={selectedFirmwareVersion || ""}
-                            setSelectedFirmwareVersion={setSelectedFirmwareVersion}
+                            selectedFirmwareVersion={
+                                selectedFirmwareVersion || ""
+                            }
+                            setSelectedFirmwareVersion={
+                                setSelectedFirmwareVersion
+                            }
                             versions={versions}
                         />
                     </div>
                 )}
-                {selectedFirmwareVersion && selectedFirmwareVersion != module.firmwareVersion && (
-                    <div className="ml-2">
-                        <button
-                            className="btn btn-sm btn-primary"
-                            onClick={async () =>
-                                module.updateModuleFirmware(selectedFirmwareVersion)
-                            }
-                        >
-                            Update
-                        </button>
-                    </div>
-                )}
+                {selectedFirmwareVersion &&
+                    selectedFirmwareVersion != module.firmwareVersion && (
+                        <div className="ml-2">
+                            <button
+                                className="btn btn-sm btn-primary"
+                                onClick={() =>
+                                    module.updateModuleFirmware(
+                                        selectedFirmwareVersion
+                                    )
+                                }
+                            >
+                                Update
+                            </button>
+                        </div>
+                    )}
             </div>
         );
     }

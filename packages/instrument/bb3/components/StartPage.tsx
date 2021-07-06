@@ -16,10 +16,10 @@ import { ScriptsSection } from "instrument/bb3/components/scripts-section/Script
 import { ListsSection } from "instrument/bb3/components/lists-section/ListsSection";
 import { LatestHistoryItemSection } from "instrument/bb3/components/LatestHistoryItemSection";
 
-const GRID_GAP = 20;
+const GRID_GAP = 40;
 
 const StartPageContainer = styled.div`
-    padding: ${GRID_GAP}px;
+    padding: ${GRID_GAP / 2}px;
 
     display: grid;
     grid-gap: ${GRID_GAP}px;
@@ -35,19 +35,15 @@ const StartPageContainer = styled.div`
     section {
         margin-top: ${GRID_GAP}px;
 
-        /* box-shadow: 0 4px 6px hsla(0, 0%, 0%, 0.2); */
-        /* box-shadow: 0 3px 8px 0 hsla(0, 0%, 0%, 0.15); */
-        /* box-shadow: 0 3px 6px hsla(0, 0%, 0%, 0.15), 0 2px 4px hsla(0, 0%, 0%, 0.12); */
-        box-shadow: 0 1px 3px hsla(0, 0%, 0%, 0.12),
-            0 1px 2px hsla(0, 0%, 0%, 0.24);
-
-        background-color: ${props => props.theme.panelHeaderColor};
-        border-radius: ${GRID_GAP / 2}px;
-        padding: ${GRID_GAP}px;
+        padding: ${GRID_GAP / 2}px;
 
         &:first-child {
             margin-top: 0;
         }
+    }
+
+    .EezStudio_Toolbar {
+        background-color: transparent !important;
     }
 `;
 

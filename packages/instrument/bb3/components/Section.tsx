@@ -7,7 +7,6 @@ const HeaderContainer = styled.header`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
 
     & > div:first-child {
         display: flex;
@@ -27,6 +26,12 @@ const HeaderContainer = styled.header`
     }
 `;
 
+const Body = styled.div`
+    & > *:first-child {
+        margin-top: 20px;
+    }
+`;
+
 export const Section = observer(
     ({
         title,
@@ -38,14 +43,14 @@ export const Section = observer(
         body: React.ReactNode;
     }) => {
         return (
-            <section>
+            <section className="shadow rounded">
                 <HeaderContainer>
                     <div>
                         <h4 className="text-truncate">{title}</h4>
                     </div>
                     {titleControls}
                 </HeaderContainer>
-                <div>{body}</div>
+                <Body>{body}</Body>
             </section>
         );
     }

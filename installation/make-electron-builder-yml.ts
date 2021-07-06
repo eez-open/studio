@@ -253,17 +253,13 @@ let files = [
         },
 
         linux: {
-            target: ["deb", "rpm", "AppImage", "snap"],
+            target: ["deb", "AppImage"],
             icon: "./icon.icns",
             category: "Utility",
             synopsis: packageJson.description,
             description:
                 "The EEZ Studio is an open source cross-platform modular visual tool aimed to address various programming and management tasks for EEZ H24005 programmable power supply, EEZ Bench Box 3 and other test and measurement instruments that support SCPI.",
             mimeTypes: ["application/x-eez-project"]
-        },
-
-        snap: {
-            grade: "devel"
         }
     };
 

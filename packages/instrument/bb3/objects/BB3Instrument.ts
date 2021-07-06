@@ -20,7 +20,11 @@ import {
     MODULE_FIRMWARE_RELEASES_URL,
     PINOUT_PAGES
 } from "instrument/bb3/conf";
-import { removeQuotes, useConnection } from "instrument/bb3/helpers";
+import {
+    fetchFileUrl,
+    removeQuotes,
+    useConnection
+} from "instrument/bb3/helpers";
 import { Module, ModuleFirmwareRelease } from "instrument/bb3/objects/Module";
 import {
     Script,
@@ -42,6 +46,15 @@ import * as notification from "eez-studio-ui/notification";
 
 interface IMcu {
     firmwareVersion: string | undefined;
+    allReleases:
+        | {
+              assets: {
+                  browser_download_url: string;
+                  name: string;
+              }[];
+              tag_name: string;
+          }[]
+        | undefined;
     latestFirmwareVersion: string | undefined;
 }
 
@@ -71,6 +84,7 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 
             if (latestReleaseVersion) {
                 runInAction(() => {
+                    bb3Instrument.mcu.allReleases = req.response;
                     bb3Instrument.mcu.latestFirmwareVersion =
                         latestReleaseVersion;
                 });
@@ -225,6 +239,7 @@ export class BB3Instrument {
         } else {
             this.mcu = {
                 firmwareVersion: undefined,
+                allReleases: undefined,
                 latestFirmwareVersion: undefined
             };
         }
@@ -725,7 +740,7 @@ export class BB3Instrument {
         );
     };
 
-    upgradeFirmwareWithLocalFile = async () => {
+    upgradeMasterFirmwareWithLocalFile = async () => {
         const result = await EEZStudio.remote.dialog.showOpenDialog(
             EEZStudio.remote.getCurrentWindow(),
             {
@@ -798,4 +813,122 @@ export class BB3Instrument {
             );
         }
     };
+
+    async upgradeMasterFirmwareToVersion(selectedFirmwareVersion: string) {
+        const toastId = notification.info("Starting ...", {
+            autoClose: false
+        });
+
+        const allReleases = this.mcu.allReleases;
+        console.log(allReleases);
+        if (!allReleases) {
+            notification.update(toastId, {
+                type: notification.ERROR,
+                render: "Press Refresh button ...",
+                autoClose: 1000
+            });
+            return;
+        }
+
+        const release = allReleases.find(
+            release => release.tag_name == selectedFirmwareVersion
+        );
+
+        if (!release) {
+            notification.update(toastId, {
+                type: notification.ERROR,
+                render: "Failed to obtain release informations from github.com ...",
+                autoClose: 1000
+            });
+            return;
+        }
+
+        const asset = release.assets.find((asset: { name: string }) =>
+            asset.name.endsWith(".srec")
+        );
+
+        if (!asset) {
+            notification.update(toastId, {
+                type: notification.ERROR,
+                render: "Failed to obtain release asset informations from github.com ...",
+                autoClose: 1000
+            });
+            return;
+        }
+
+        try {
+            await useConnection(
+                {
+                    bb3Instrument: this,
+                    setBusy: action((value: boolean) => {
+                        this.setBusy(value);
+                    })
+                },
+                async connection => {
+                    try {
+                        notification.update(toastId, {
+                            type: notification.INFO,
+                            render: "Downloading firmware file from the github.com, please wait ..."
+                        });
+
+                        const file = await fetchFileUrl(
+                            asset.browser_download_url
+                        );
+
+                        notification.update(toastId, {
+                            type: notification.INFO,
+                            render: "Sending firmware file to the BB3, please wait ..."
+                        });
+
+                        await new Promise<void>((resolve, reject) => {
+                            const uploadInstructions = Object.assign(
+                                {},
+                                connection.instrument
+                                    .defaultFileUploadInstructions,
+                                {
+                                    sourceData: file.fileData,
+                                    sourceFileType: "application/octet-stream",
+                                    destinationFileName: "o.s",
+                                    destinationFolderPath: "/"
+                                }
+                            );
+
+                            connection.upload(
+                                uploadInstructions,
+                                resolve,
+                                reject
+                            );
+                        });
+
+                        notification.update(toastId, {
+                            type: notification.INFO,
+                            render: `Restarting BB3...`,
+                            autoClose: 1000
+                        });
+
+                        connection.command(":SYST:DEL 1000; :SYST:RES");
+
+                        notification.update(toastId, {
+                            type: notification.SUCCESS,
+                            render: `Loading continues on the BB3 ...`,
+                            autoClose: 1000
+                        });
+                    } catch (err) {
+                        notification.update(toastId, {
+                            type: notification.ERROR,
+                            render: err.toString(),
+                            autoClose: 1000
+                        });
+                    }
+                },
+                true
+            );
+        } catch (err) {
+            notification.update(toastId, {
+                type: notification.ERROR,
+                render: `Connection error: ${err.toString()}`,
+                autoClose: 1000
+            });
+        }
+    }
 }
