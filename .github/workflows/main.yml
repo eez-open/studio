@@ -55,5 +55,5 @@ jobs:
             - name: Archive production artifacts
               uses: actions/upload-artifact@v2
               with:
-                  name: dist_$RUNNER_OS
+                  name: "dist_$RUNNER_OS"
                   path: dist
