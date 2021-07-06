@@ -83,7 +83,8 @@ export const FirmwareVersionSection = observer(
                 }`}
                 body={<ReleaseInfo bb3Instrument={bb3Instrument} />}
                 titleControls={
-                    !bb3Instrument.busy && (
+                    !bb3Instrument.busy &&
+                    bb3Instrument.appStore.instrument?.isConnected && (
                         <DropdownIconAction
                             key="bb3-instrument/upgrade-firmware-with-local-file"
                             icon="material:more_vert"
