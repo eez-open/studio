@@ -75,7 +75,7 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
                         compareVersions(
                             release.tag_name,
                             latestReleaseVersion
-                        ) > 1
+                        ) > 0
                     ) {
                         latestReleaseVersion = release.tag_name;
                     }
