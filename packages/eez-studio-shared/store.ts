@@ -575,7 +575,8 @@ export function createStore({
                 "shared/store/delete-object/" + storeName,
                 {
                     object: {
-                        id: object.id
+                        id: object.id,
+                        oid: object.oid
                     },
                     options
                 }
