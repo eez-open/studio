@@ -30,6 +30,13 @@ const OtherReleases = observer(
             return null;
         }
 
+        if (
+            !bb3Instrument.mcu.firmwareVersion ||
+            compareVersions(bb3Instrument.mcu.firmwareVersion, "1.7.1") < 0
+        ) {
+            return null;
+        }
+
         const otherReleases = bb3Instrument.mcu.allReleases
             .sort((a, b) => compareVersions(b.tag_name, a.tag_name))
             .filter(
@@ -168,22 +175,23 @@ export const ReleaseInfo = observer(
                                 release notes
                             </a>
                             ).
+                            {compareVersions(firmwareVersion, "1.7.1") < 0 && (
+                                <span>
+                                    {" "}
+                                    Follow{" "}
+                                    <a
+                                        href="#"
+                                        onClick={() =>
+                                            openLink(FIRMWARE_UPGRADE_PAGE)
+                                        }
+                                    >
+                                        this instructions
+                                    </a>{" "}
+                                    how to install it.
+                                </span>
+                            )}
                         </span>
-                        {compareVersions(firmwareVersion, "1.7.1") < 0 ? (
-                            <>
-                                {" "}
-                                Follow{" "}
-                                <a
-                                    href="#"
-                                    onClick={() =>
-                                        openLink(FIRMWARE_UPGRADE_PAGE)
-                                    }
-                                >
-                                    this instructions
-                                </a>{" "}
-                                how to install it.
-                            </>
-                        ) : (
+                        {compareVersions(firmwareVersion, "1.7.1") >= 0 && (
                             <button
                                 className="btn btn-primary btn-lg"
                                 style={{ marginLeft: 20 }}
