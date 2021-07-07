@@ -34,6 +34,7 @@ const OtherReleases = observer(
             .sort((a, b) => compareVersions(b.tag_name, a.tag_name))
             .filter(
                 release =>
+                    compareVersions(release.tag_name, "1.7.1") >= 0 &&
                     release.tag_name !=
                         bb3Instrument.mcu.latestFirmwareVersion &&
                     release.tag_name != bb3Instrument.mcu.firmwareVersion
