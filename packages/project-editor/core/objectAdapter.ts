@@ -1087,7 +1087,7 @@ export class TreeAdapter implements ITreeAdapter {
         this.rootItem.deleteSelection();
     }
 
-    get collapsableAdapter() {
+    get collapsableAdapter(): TreeAdapter | undefined {
         return this.collapsable ? this : undefined;
     }
 

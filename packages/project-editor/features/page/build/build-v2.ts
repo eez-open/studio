@@ -44,7 +44,8 @@ import {
     ToggleButtonWidget,
     UpDownWidget,
     GridWidget,
-    ButtonGroupWidget
+    ButtonGroupWidget,
+    ScrollBarWidget
 } from "project-editor/flow/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1890,18 +1891,11 @@ class Assets {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-import { build as buildV1 } from "project-editor/features/page/build-v1";
-import { ScrollBarWidget } from "../../flow/widgets";
-
 export async function build(
     project: Project,
     sectionNames: string[] | undefined,
     buildConfiguration: BuildConfiguration | undefined
 ): Promise<BuildResult> {
-    if (project.settings.general.projectVersion === "v1") {
-        return buildV1(project, sectionNames, buildConfiguration);
-    }
-
     const result: any = {};
 
     const assets = new Assets(project, buildConfiguration);

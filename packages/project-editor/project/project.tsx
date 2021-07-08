@@ -258,9 +258,8 @@ class UsageTreeField extends FieldComponent {
 
     @computed
     get rootNode() {
-        let assetsUsage: IAssetsUsage = this.props.values[
-            this.props.fieldProperties.name
-        ];
+        let assetsUsage: IAssetsUsage =
+            this.props.values[this.props.fieldProperties.name];
         return new UsageTreeNode(
             "",
             _keys(assetsUsage.assets)
@@ -281,9 +280,8 @@ class UsageTreeField extends FieldComponent {
 
         this.selectedNode = node;
 
-        let assetsUsage: IAssetsUsage = this.props.values[
-            this.props.fieldProperties.name
-        ];
+        let assetsUsage: IAssetsUsage =
+            this.props.values[this.props.fieldProperties.name];
         if (this.selectedNode && this.selectedNode.children.length === 0) {
             assetsUsage.selectedAsset = this.selectedNode.id;
         } else {
@@ -321,8 +319,9 @@ class BuildAssetsUssage {
 
     onMessage(message: SearchCallbackMessage) {
         if (message.type == "value") {
-            const path = message.valueObject.propertyInfo
-                .referencedObjectCollectionPath!;
+            const path =
+                message.valueObject.propertyInfo
+                    .referencedObjectCollectionPath!;
 
             const importedProject = this.importDirective.project!;
 
@@ -349,9 +348,8 @@ class BuildAssetsUssage {
                 this.assets[path] = set;
                 runInAction(
                     () =>
-                        (this.assetsUsage.assets[path] = Array.from(set).join(
-                            ", "
-                        ))
+                        (this.assetsUsage.assets[path] =
+                            Array.from(set).join(", "))
                 );
             } else {
                 // console.log("NOT FOUND", path, assetName);
@@ -505,7 +503,7 @@ export class ImportDirective {
     };
 
     @computed({ keepAlive: true })
-    get project() {
+    get project(): Project | undefined {
         const DocumentStore = getDocumentStore(this);
 
         return this.projectFilePath
@@ -529,7 +527,7 @@ registerClass(ImportDirective);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class General extends EezObject {
-    @observable projectVersion: "v1" | "v2";
+    @observable projectVersion: "v1" | "v2" | "v3";
     @observable projectType: ProjectType;
     @observable scpiDocFolder?: string;
     @observable namespace: string;
@@ -543,7 +541,7 @@ export class General extends EezObject {
             {
                 name: "projectVersion",
                 type: PropertyType.Enum,
-                enumItems: [{ id: "v1" }, { id: "v2" }]
+                enumItems: [{ id: "v1" }, { id: "v2" }, { id: "v3" }]
             },
             {
                 name: "projectType",
@@ -751,24 +749,22 @@ function getProjectClassInfo() {
         let projectFeatureProperties: PropertyInfo[] = projectFeatures.map(
             projectFeature => {
                 return {
-                    name:
-                        projectFeature.eezStudioExtension.implementation
-                            .projectFeature.key,
+                    name: projectFeature.eezStudioExtension.implementation
+                        .projectFeature.key,
                     displayName:
                         projectFeature.eezStudioExtension.implementation
                             .projectFeature.displayName,
-                    type:
-                        projectFeature.eezStudioExtension.implementation
-                            .projectFeature.type,
+                    type: projectFeature.eezStudioExtension.implementation
+                        .projectFeature.type,
                     typeClass:
                         projectFeature.eezStudioExtension.implementation
                             .projectFeature.typeClass,
-                    isOptional: !projectFeature.eezStudioExtension
-                        .implementation.projectFeature.mandatory,
+                    isOptional:
+                        !projectFeature.eezStudioExtension.implementation
+                            .projectFeature.mandatory,
                     hideInPropertyGrid: true,
-                    check:
-                        projectFeature.eezStudioExtension.implementation
-                            .projectFeature.check,
+                    check: projectFeature.eezStudioExtension.implementation
+                        .projectFeature.check,
                     enumerable:
                         projectFeature.eezStudioExtension.implementation
                             .projectFeature.enumerable
@@ -865,15 +861,14 @@ export class Project extends EezObject {
     }
 
     @computed({ keepAlive: true })
-    get masterProject() {
-        return (
-            this.settings.general.masterProject &&
-            this._DocumentStore.loadExternalProject(
-                this._DocumentStore.getAbsoluteFilePath(
-                    this.settings.general.masterProject
-                )
-            )
-        );
+    get masterProject(): Project | undefined {
+        return this.settings.general.masterProject
+            ? this._DocumentStore.loadExternalProject(
+                  this._DocumentStore.getAbsoluteFilePath(
+                      this.settings.general.masterProject
+                  )
+              )
+            : undefined;
     }
 
     @computed({ keepAlive: true })

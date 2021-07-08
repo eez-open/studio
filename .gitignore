@@ -1,12 +1,9 @@
 .history
-eezstudio-linux-x64
-eezstudio-win32-x64
-eezstudio-darwin-x64
 node_modules
 npm-debug.log
 
-dist
-build
+/dist
+/build
 packages/**/*.js
 packages/**/*.js.map
 packages/eez-studio-ui/_stylesheets/main.css
@@ -19,7 +16,7 @@ installation/extra-resources
 tools/freetype-tools/agg-2.5
 tools/freetype-tools/FreeType-Emscripten
 
-TODO.txt
+/TODO.txt
 
 .DS_Store
 
