@@ -170,7 +170,7 @@ const sectionNamesRegexp = /\/\/\$\{eez-studio (.*)\}/g;
 
 function getSectionNames(DocumentStore: DocumentStoreClass): string[] {
     if (DocumentStore.masterProject) {
-        return ["GUI_ASSETS_DATA"];
+        return ["GUI_ASSETS_DATA", "GUI_ASSETS_DATA_MAP"];
     }
 
     const project = DocumentStore.project;
@@ -211,6 +211,18 @@ async function generateFile(
         await writeTextFile(filePath, buildFileContent);
     } else {
         await writeBinaryData(filePath, parts["GUI_ASSETS_DATA"]);
+        if (parts["GUI_ASSETS_DATA_MAP"]) {
+            await writeBinaryData(
+                filePath + ".map",
+                parts["GUI_ASSETS_DATA_MAP"]
+            );
+
+            DocumentStore.OutputSectionsStore.write(
+                Section.OUTPUT,
+                Type.INFO,
+                `File "${filePath}.map" builded`
+            );
+        }
     }
 
     DocumentStore.OutputSectionsStore.write(

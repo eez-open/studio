@@ -2222,11 +2222,18 @@ export class ButtonWidget extends EmbeddedWidget {
         check: (object: ButtonWidget) => {
             let messages: output.Message[] = [];
 
-            if (!object.text && !object.data) {
+            if (
+                !object.text &&
+                !object.data &&
+                !object.isInputProperty("data")
+            ) {
                 messages.push(output.propertyNotSetMessage(object, "text"));
             }
 
-            if (!getDocumentStore(object).isDashboardProject) {
+            if (
+                !getDocumentStore(object).isDashboardProject &&
+                !object.isInputProperty("enabled")
+            ) {
                 checkObjectReference(object, "enabled", messages, true);
             }
 

@@ -83,12 +83,16 @@ export async function build(
     const buildAssetsData =
         !sectionNames || sectionNames.indexOf("GUI_ASSETS_DATA") !== -1;
 
+    const buildAssetsDataMap =
+        !sectionNames || sectionNames.indexOf("GUI_ASSETS_DATA_MAP") !== -1;
+
     if (
         buildAssetsDecl ||
         buildAssetsDeclCompressed ||
         buildAssetsDef ||
         buildAssetsDefCompressed ||
-        buildAssetsData
+        buildAssetsData ||
+        buildAssetsDataMap
     ) {
         // build all assets as single data chunk
         const compressedAssetsData = await buildGuiAssetsData(assets);
@@ -116,6 +120,10 @@ export async function build(
 
         if (buildAssetsData) {
             result.GUI_ASSETS_DATA = compressedAssetsData;
+        }
+
+        if (buildAssetsDataMap) {
+            result.GUI_ASSETS_DATA_MAP = JSON.stringify(assets.map);
         }
     }
 

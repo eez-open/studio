@@ -39,6 +39,8 @@ export class Assets {
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
 
+    map: any = {};
+
     get DocumentStore() {
         return this.rootProject._DocumentStore;
     }
@@ -415,7 +417,27 @@ function buildDataItemNames(assets: Assets, dataBuffer: DataBuffer) {
     }, dataBuffer);
 }
 
-//function buildPrologData() {}
+function buildPrologData(assets: Assets, uncompressedSize: number) {
+    let prolog = new DataBuffer();
+
+    prolog.packArray(new TextEncoder().encode("~eez"));
+
+    prolog.packArray(
+        new TextEncoder().encode(
+            EEZStudio.remote.app.getVersion().padEnd(8, " ").substring(0, 8)
+        )
+    );
+
+    prolog.packUInt16(3); // PROJECT VERSION: 3
+
+    prolog.packUInt16(
+        assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
+    );
+
+    prolog.packUInt32(uncompressedSize);
+
+    return prolog;
+}
 
 export async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
@@ -441,27 +463,29 @@ export async function buildGuiAssetsData(assets: Assets) {
         }
     );
 
-    var inputBuffer = Buffer.from(
+    var uncompressedBuffer = Buffer.from(
         dataBuffer.buffer.slice(0, dataBuffer.offset)
     );
+    const uncompressedSize = uncompressedBuffer.length;
 
     const lz4ModuleName = "lz4";
     const LZ4 = require(lz4ModuleName);
-    var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
-    var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
+    var compressedBuffer = Buffer.alloc(
+        LZ4.encodeBound(uncompressedBuffer.length)
+    );
+    var compressedSize = LZ4.encodeBlock(uncompressedBuffer, compressedBuffer);
 
-    // console.log(assetRegions.map(x => x.length));
-    // outputBuffer = inputBuffer;
-    // compressedSize = outputBuffer.length;
+    const prolog = buildPrologData(assets, uncompressedSize);
+    var prologBuffer = Buffer.from(prolog.buffer.slice(0, prolog.offset));
 
-    const compressedData = Buffer.alloc(4 + compressedSize);
-    compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
-    outputBuffer.copy(compressedData, 4, 0, compressedSize);
+    const allData = Buffer.alloc(prologBuffer.length + compressedSize);
+    prologBuffer.copy(allData, 0, 0, prologBuffer.length);
+    compressedBuffer.copy(allData, prologBuffer.length, 0, compressedSize);
 
     assets.DocumentStore.OutputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
-        "Uncompressed size: " + inputBuffer.length
+        "Uncompressed size: " + uncompressedSize
     );
 
     assets.DocumentStore.OutputSectionsStore.write(
@@ -470,7 +494,7 @@ export async function buildGuiAssetsData(assets: Assets) {
         "Compressed size: " + compressedSize
     );
 
-    return compressedData;
+    return allData;
 }
 
 export function buildGuiAssetsDecl(data: Buffer) {

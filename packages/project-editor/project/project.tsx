@@ -634,6 +634,21 @@ export class General extends EezObject {
             }
         }
     };
+
+    getProjectTypeAsNumber() {
+        switch (this.projectType) {
+            case ProjectType.MASTER_FIRMWARE:
+                return 1;
+            case ProjectType.FIRMWARE_MODULE:
+                return 2;
+            case ProjectType.RESOURCE:
+                return 3;
+            case ProjectType.APPLET:
+                return 4;
+            case ProjectType.DASHBOARD:
+                return 5;
+        }
+    }
 }
 
 registerClass(General);
