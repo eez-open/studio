@@ -45,6 +45,11 @@ import {
     PageEditor,
     PageTabState
 } from "project-editor/features/page/PagesNavigation";
+import { showDialog } from "eez-studio-ui/dialog";
+import { SelectInstrumentDialog } from "./action-components/instrument";
+import { InstrumentObject } from "instrument/instrument-object";
+import * as notification from "eez-studio-ui/notification";
+import { Connection, getConnection } from "instrument/window/connection";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -112,6 +117,12 @@ export class RuntimeStoreClass {
 
     setRuntimeMode = async () => {
         if (!this.isRuntimeMode) {
+            if (this.DocumentStore.isAppletProject) {
+                if (!(await this.startApplet())) {
+                    return;
+                }
+            }
+
             runInAction(() => {
                 this.isRuntimeMode = true;
                 this.selectedRunningFlow = undefined;
@@ -121,65 +132,87 @@ export class RuntimeStoreClass {
                 this.DocumentStore.UIStateStore.showDebugInfo = false;
                 this.selectedPage = this.DocumentStore.project.pages[0];
 
-                this.DocumentStore.UIStateStore.pageRuntimeFrontFace = true;
-                this.DocumentStore.dataContext.clearDataItemValues();
+                this.DocumentStore.UIStateStore.pageRuntimeFrontFace =
+                    this.DocumentStore.isDashboardProject;
+
+                if (this.DocumentStore.isDashboardProject) {
+                    this.DocumentStore.dataContext.clearDataItemValues();
+                }
 
                 this.queueIsEmpty = true;
-                this.runningFlows = this.DocumentStore.project.pages
-                    .filter(page => !page.isUsedAsCustomWidget)
-                    .map(page => new RunningFlow(this, page));
+
+                if (this.DocumentStore.isDashboardProject) {
+                    this.runningFlows = this.DocumentStore.project.pages
+                        .filter(page => !page.isUsedAsCustomWidget)
+                        .map(page => new RunningFlow(this, page));
+                }
             });
 
-            await this.loadSettings();
+            if (this.DocumentStore.isDashboardProject) {
+                await this.loadSettings();
 
-            this.runningFlows.forEach(runningFlow => runningFlow.start());
-            this.pumpQueue();
-            EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
+                this.runningFlows.forEach(runningFlow => runningFlow.start());
+                this.pumpQueue();
+                EEZStudio.electron.ipcRenderer.send(
+                    "preventAppSuspension",
+                    true
+                );
+            }
         }
     };
 
     setEditorMode = async () => {
         if (this.isRuntimeMode) {
-            this.stop();
+            await this.stop();
 
             this.queue = [];
 
-            runInAction(() => {
-                this.runningFlows = [];
-                this.clearHistory();
-            });
+            if (this.DocumentStore.isDashboardProject) {
+                runInAction(() => {
+                    this.runningFlows = [];
+                    this.clearHistory();
+                });
 
-            this.DocumentStore.EditorsStore.editors.forEach(editor => {
-                if (editor.state instanceof FlowTabState) {
-                    const flowTabState = editor.state;
-                    runInAction(() => {
-                        flowTabState.runningFlow = undefined;
-                    });
-                }
-            });
+                this.DocumentStore.EditorsStore.editors.forEach(editor => {
+                    if (editor.state instanceof FlowTabState) {
+                        const flowTabState = editor.state;
+                        runInAction(() => {
+                            flowTabState.runningFlow = undefined;
+                        });
+                    }
+                });
+            }
 
             runInAction(() => (this.isRuntimeMode = false));
         }
     };
 
     async stop() {
-        if (this.pumpTimeoutId) {
-            clearTimeout(this.pumpTimeoutId);
-            this.pumpTimeoutId = undefined;
+        if (!this.isRuntimeMode) {
+            return;
         }
 
-        while (this.isRunning) {
-            await new Promise(resolve => setTimeout(resolve));
+        if (this.DocumentStore.isDashboardProject) {
+            if (this.pumpTimeoutId) {
+                clearTimeout(this.pumpTimeoutId);
+                this.pumpTimeoutId = undefined;
+            }
+
+            while (this.isRunning) {
+                await new Promise(resolve => setTimeout(resolve));
+            }
+
+            this.runningFlows.forEach(runningFlow => runningFlow.finish());
+            EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
+
+            runInAction(() => {
+                this.isStopped = true;
+            });
+
+            await this.saveSettings();
+        } else {
+            await this.stopApplet();
         }
-
-        this.runningFlows.forEach(runningFlow => runningFlow.finish());
-        EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
-
-        runInAction(() => {
-            this.isStopped = true;
-        });
-
-        await this.saveSettings();
     }
 
     @computed get isRunning() {
@@ -187,6 +220,152 @@ export class RuntimeStoreClass {
             this.runningFlows.find(runningFlow => runningFlow.isRunning) !=
             undefined
         );
+    }
+
+    ////////////////////////////////////////
+
+    connection: Connection | undefined;
+
+    async startApplet() {
+        await this.DocumentStore.build();
+
+        const instrument = await new Promise<InstrumentObject | undefined>(
+            resolve => {
+                showDialog(
+                    <SelectInstrumentDialog
+                        callback={instrument => {
+                            resolve(instrument);
+                        }}
+                    />
+                );
+            }
+        );
+
+        if (!instrument) {
+            return false;
+        }
+
+        const toastId = notification.info("Uploading app...", {
+            autoClose: false
+        });
+
+        instrument.connection.connect();
+
+        await new Promise<void>(resolve => setTimeout(resolve, 1000));
+
+        const editor = instrument.getEditor();
+
+        const connection = getConnection(editor);
+        if (!connection || !instrument.isConnected) {
+            notification.update(toastId, {
+                type: notification.ERROR,
+                render: `Instrument not connected`,
+                autoClose: 1000
+            });
+            return;
+        }
+
+        this.connection = connection;
+
+        try {
+            await connection.acquire(false);
+        } catch (err) {
+            notification.update(toastId, {
+                type: notification.ERROR,
+                render: `Error: ${err.toString()}`,
+                autoClose: 1000
+            });
+            return false;
+        }
+
+        try {
+            const path = EEZStudio.remote.require("path");
+
+            const destinationFolderPath =
+                this.DocumentStore.getAbsoluteFilePath(
+                    this.DocumentStore.project.settings.build
+                        .destinationFolder || "."
+                );
+
+            const destinationFileName = `${path.basename(
+                this.DocumentStore.filePath,
+                ".eez-project"
+            )}.app`;
+
+            const sourceFilePath = `${destinationFolderPath}/${destinationFileName}`;
+
+            await new Promise<void>((resolve, reject) => {
+                const uploadInstructions = Object.assign(
+                    {},
+                    connection.instrument.defaultFileUploadInstructions,
+                    {
+                        sourceFilePath,
+                        destinationFileName,
+                        destinationFolderPath: "/Scripts"
+                    }
+                );
+
+                connection.upload(uploadInstructions, resolve, reject);
+            });
+
+            connection.command(`SYST:DEL 100`);
+
+            const runningScript = await connection.query(`SCR:RUN?`);
+            if (runningScript != "" && runningScript != `""`) {
+                connection.command(`SCR:STOP`);
+                connection.command(`SYST:DEL 100`);
+            }
+
+            connection.command(`SCR:RUN "/Scripts/${destinationFileName}"`);
+
+            notification.update(toastId, {
+                type: notification.SUCCESS,
+                render: `App started`,
+                autoClose: 1000
+            });
+            return true;
+        } catch (err) {
+            notification.update(toastId, {
+                type: notification.ERROR,
+                render: `Error: ${err.toString()}`,
+                autoClose: 1000
+            });
+            return false;
+        } finally {
+            connection.release();
+        }
+    }
+
+    async stopApplet() {
+        const connection = this.connection;
+        this.connection = undefined;
+
+        if (!connection) {
+            return;
+        }
+
+        if (!connection.isConnected) {
+            return;
+        }
+
+        try {
+            await connection.acquire(false);
+        } catch (err) {
+            notification.error(`Error: ${err.toString()}`);
+            return;
+        }
+
+        try {
+            const runningScript = await connection.query(`SCR:RUN?`);
+            if (runningScript != "" && runningScript != `""`) {
+                connection.command(`SCR:STOP`);
+                notification.success("App stopped");
+            }
+        } catch (err) {
+            notification.error(`Error: ${err.toString()}`);
+        } finally {
+            connection.release();
+        }
     }
 
     ////////////////////////////////////////

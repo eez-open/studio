@@ -91,6 +91,8 @@ export class ContainerWidget extends EmbeddedWidget {
     @observable shadow?: boolean;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 1,
+
         label: (widget: ContainerWidget) => {
             if (widget.name) {
                 return `${humanize(widget.type)}: ${widget.name}`;
@@ -260,6 +262,8 @@ export class ListWidget extends EmbeddedWidget {
     @observable gap?: number;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 2,
+
         properties: [
             {
                 name: "itemWidget",
@@ -379,6 +383,8 @@ export class GridWidget extends EmbeddedWidget {
     @observable gridFlow?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 3,
+
         properties: [
             {
                 name: "itemWidget",
@@ -510,6 +516,8 @@ export class SelectWidget extends EmbeddedWidget {
     _lastSelectedIndexInSelectWidget: number | undefined;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 4,
+
         properties: [
             {
                 name: "widgets",
@@ -780,6 +788,8 @@ export class LayoutViewWidget extends EmbeddedWidget {
     @observable context?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 15,
+
         properties: [
             {
                 name: "layout",
@@ -1168,6 +1178,8 @@ export class DisplayDataWidget extends EmbeddedWidget {
     @observable displayOption: DisplayOption;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 5,
+
         properties: [
             Object.assign(
                 makeStylePropertyInfo("focusStyle"),
@@ -1356,6 +1368,8 @@ export class TextWidget extends EmbeddedWidget {
     @observable focusStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 6,
+
         label: (widget: TextWidget) => {
             if (widget.text) {
                 return `${humanize(widget.type)}: ${widget.text}`;
@@ -1730,6 +1744,8 @@ export class MultilineTextWidget extends EmbeddedWidget {
     @observable hangingIndent: number;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 7,
+
         label: (widget: TextWidget) => {
             if (widget.text) {
                 return `${humanize(widget.type)}: ${widget.text}`;
@@ -1842,6 +1858,8 @@ export class RectangleWidget extends EmbeddedWidget {
     @observable invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 8,
+
         properties: [
             {
                 name: "invertColors",
@@ -2018,6 +2036,8 @@ export class BitmapWidget extends EmbeddedWidget {
     }
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 9,
+
         properties: [
             {
                 name: "bitmap",
@@ -2200,6 +2220,8 @@ export class ButtonWidget extends EmbeddedWidget {
     @observable disabledStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 10,
+
         properties: [
             makeTextPropertyInfo("text"),
             makeDataPropertyInfo("enabled"),
@@ -2315,6 +2337,8 @@ export class ToggleButtonWidget extends EmbeddedWidget {
     @observable text2?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 11,
+
         properties: [
             {
                 name: "text1",
@@ -2395,6 +2419,8 @@ export class ButtonGroupWidget extends EmbeddedWidget {
     @observable selectedStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 12,
+
         properties: [makeStylePropertyInfo("selectedStyle")],
 
         defaultValue: {
@@ -2551,6 +2577,8 @@ export class BarGraphWidget extends EmbeddedWidget {
     @observable line2Style: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 14,
+
         properties: [
             {
                 name: "orientation",
@@ -2897,6 +2925,8 @@ export class YTGraphWidget extends EmbeddedWidget {
     @observable y2Style: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 16,
+
         properties: [
             Object.assign(
                 makeStylePropertyInfo("y1Style"),
@@ -3027,6 +3057,8 @@ export class UpDownWidget extends EmbeddedWidget {
     @observable upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 17,
+
         properties: [
             makeStylePropertyInfo("buttonsStyle"),
             makeTextPropertyInfo("downButtonText", undefined, specificGroup),
@@ -3152,6 +3184,8 @@ export class ListGraphWidget extends EmbeddedWidget {
     @observable cursorStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 18,
+
         properties: [
             makeDataPropertyInfo("dwellData"),
             makeDataPropertyInfo("y1Data"),
@@ -3306,6 +3340,8 @@ export class AppViewWidget extends EmbeddedWidget {
     @observable page: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 19,
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -3359,6 +3395,8 @@ export class ScrollBarWidget extends EmbeddedWidget {
     @observable rightButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 20,
+
         properties: [
             makeStylePropertyInfo("thumbStyle"),
             makeStylePropertyInfo("buttonsStyle"),
@@ -3532,6 +3570,8 @@ registerClass(ScrollBarWidget);
 
 export class ProgressWidget extends EmbeddedWidget {
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 21,
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -3608,6 +3648,8 @@ registerClass(ProgressWidget);
 
 export class CanvasWidget extends EmbeddedWidget {
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: 22,
+
         defaultValue: {
             left: 0,
             top: 0,

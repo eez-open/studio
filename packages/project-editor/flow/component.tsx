@@ -64,6 +64,8 @@ import { Style } from "project-editor/features/style/style";
 import { ContainerWidget } from "project-editor/flow/widgets";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
+import { Struct } from "project-editor/features/page/build/pack";
+import { Assets } from "project-editor/features/page/build/assets";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -200,6 +202,7 @@ export function makeToggablePropertyToInput(
     propertyInfo: PropertyInfo
 ): PropertyInfo {
     return Object.assign(propertyInfo, {
+        toggableProperty: "input",
         propertyMenu(props: PropertyProps) {
             let menuItems: Electron.MenuItem[] = [];
 
@@ -267,6 +270,8 @@ export function makeToggablePropertyToOutput(
     propertyInfo: PropertyInfo
 ): PropertyInfo {
     return Object.assign(propertyInfo, {
+        toggableProperty: "output",
+
         propertyMenu(props: PropertyProps) {
             let menuItems: Electron.MenuItem[] = [];
 
@@ -753,6 +758,10 @@ export class Component extends EezObject {
         runningFlow: IRunningFlow,
         dispose: (() => void) | undefined
     ): Promise<(() => void) | undefined> {
+        return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets): Struct | undefined {
         return undefined;
     }
 }

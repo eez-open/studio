@@ -53,9 +53,10 @@ class Content extends React.Component {
 
         let editors;
 
-        let selectedItem = this.context.NavigationStore.getNavigationSelectedItemAsObject(
-            this.context.project
-        );
+        let selectedItem =
+            this.context.NavigationStore.getNavigationSelectedItemAsObject(
+                this.context.project
+            );
         if (selectedItem) {
             if (getClassInfo(selectedItem).editorComponent) {
                 editors = <Editors />;
@@ -158,7 +159,10 @@ export class ProjectEditor extends React.Component<{}, {}> {
                     <Content />
                 </>
             );
-        } else if (this.context.RuntimeStore.isRuntimeMode) {
+        } else if (
+            this.context.RuntimeStore.isRuntimeMode &&
+            this.context.isDashboardProject
+        ) {
             mainContent = (
                 <>
                     <Toolbar />

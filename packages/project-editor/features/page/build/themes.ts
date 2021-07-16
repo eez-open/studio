@@ -43,7 +43,7 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
 
         result.addField(new String(theme.name));
 
-        // widgets
+        // colors
         let colors = new ObjectList();
         theme.colors.forEach(color => {
             colors.addItem(buildColor(color));

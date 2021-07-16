@@ -208,6 +208,7 @@ export class Build extends EezObject {
                 type: PropertyType.Array,
                 typeClass: BuildFile,
                 hideInPropertyGrid: true,
+                showOnlyChildrenInTree: false,
                 enumerable: isFilesPropertyEnumerable
             },
             {
@@ -527,7 +528,7 @@ registerClass(ImportDirective);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class General extends EezObject {
-    @observable projectVersion: "v1" | "v2" | "v3";
+    @observable projectVersion: "v1" | "v2" | "v3" = "v3";
     @observable projectType: ProjectType;
     @observable scpiDocFolder?: string;
     @observable namespace: string;
@@ -620,7 +621,7 @@ export class General extends EezObject {
                     jsObject.projectType = ProjectType.MASTER_FIRMWARE;
                 } else {
                     if (!jsObject.projectVersion) {
-                        jsObject.projectVersion = "v2";
+                        jsObject.projectVersion = "v3";
                     }
 
                     if (jsObject.masterProject) {
@@ -739,6 +740,7 @@ function getProjectClassInfo() {
                         color.id = guid();
                     }
                 }
+
                 if (projectJs.themes) {
                     for (const theme of projectJs.themes) {
                         theme.id = guid();

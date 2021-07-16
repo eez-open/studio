@@ -1,12 +1,20 @@
+import {
+    getObjectFromStringPath,
+    getObjectPathAsString,
+    getProperty
+} from "project-editor/core/object";
+
 import * as output from "project-editor/core/output";
-import * as projectBuild from "project-editor/project/build";
+
 import {
     Project,
     BuildConfiguration,
-    getProject
+    getProject,
+    getFlow
 } from "project-editor/project/project";
-import { DataItem, findDataItem } from "project-editor/features/data/data";
-import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
+
+import * as projectBuild from "project-editor/project/build";
+
 import {
     Style,
     getStyleProperty,
@@ -14,19 +22,38 @@ import {
 } from "project-editor/features/style/style";
 import { Page, findPage } from "project-editor/features/page/page";
 import { Font, findFont } from "project-editor/features/font/font";
+import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Action, findAction } from "project-editor/features/action/action";
+import { DataItem, findDataItem } from "project-editor/features/data/data";
+import { Flow } from "project-editor/flow/flow";
+import { Component } from "project-editor/flow/component";
+
+import {
+    DataBuffer,
+    Struct,
+    UInt16,
+    UInt32,
+    UInt8ArrayField
+} from "project-editor/features/page/build/pack";
+
 import { buildGuiDocumentData } from "project-editor/features/page/build/pages";
 import { buildGuiStylesData } from "project-editor/features/page/build/styles";
+import { buildGuiFontsData } from "project-editor/features/page/build/fonts";
+import { buildGuiBitmapsData } from "project-editor/features/page/build/bitmaps";
+import { buildGuiColors } from "project-editor/features/page/build/themes";
+import { buildActionNames } from "project-editor/features/page/build/actions";
+import { buildDataItemNames } from "project-editor/features/page/build/data-items";
 import {
-    buildListData,
-    DataBuffer,
-    StringList,
-    Struct,
-    String
-} from "project-editor/features/page/build/pack";
-import { buildGuiFontsData } from "./fonts";
-import { buildGuiBitmapsData } from "./bitmaps";
-import { buildGuiColors } from "./themes";
+    buildFlowData,
+    FlowValue,
+    FLOW_VALUE_TYPE_NULL,
+    FLOW_VALUE_TYPE_UNDEFINED,
+    getComponentInputNames,
+    getComponentOutputNames,
+    getFlowValueType
+} from "project-editor/features/page/build/flows";
+
+const PATH_SEPARATOR = "//";
 
 export class Assets {
     projects: Project[];
@@ -38,8 +65,58 @@ export class Assets {
     fonts: Font[] = [];
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
+    flows: Flow[] = [];
 
-    map: any = {};
+    flowIndexes = new Map<Flow, number>();
+    componentIndexes = new Map<Component, number>();
+
+    nextValueIndex = 0;
+    componentInputValueIndexes = new Map<string, number>();
+    simpleValueIndexes = new Map<
+        undefined | boolean | number | string | object,
+        number
+    >();
+
+    flowWidgetDataIndexes = new Map<string, number>();
+    flowWidgetActionIndexes = new Map<string, number>();
+    flowWidgetDataIndexComponentInput = new Map<number, Struct>();
+    flowWidgetActionComponentOutput = new Map<number, Struct>();
+
+    values = [];
+
+    map: {
+        flows: {
+            flowIndex: number;
+            path: string;
+            pathReadable: string;
+            components: {
+                componentIndex: number;
+                path: string;
+                pathReadable: string;
+                inputs: number[][];
+                outputs: {
+                    targetComponentIndex: number;
+                    targetInputIndex: number;
+                }[][];
+            }[];
+        }[];
+        values: any[];
+        widgetDataItems: {
+            widgetDataItemIndex: number;
+            componentIndex: number;
+            inputIndex: number;
+        }[];
+        widgetActions: {
+            widgetActionIndex: number;
+            componentIndex: number;
+            outputIndex: number;
+        }[];
+    } = {
+        flows: [],
+        values: [],
+        widgetDataItems: [],
+        widgetActions: []
+    };
 
     get DocumentStore() {
         return this.rootProject._DocumentStore;
@@ -74,6 +151,9 @@ export class Assets {
         public rootProject: Project,
         buildConfiguration: BuildConfiguration | undefined
     ) {
+        this.getValueIndexFromJSON(undefined); // undefined has value index 0
+        this.getValueIndexFromJSON("null"); // null has value index 1
+
         this.projects = [];
         this.collectProjects(rootProject);
 
@@ -95,6 +175,11 @@ export class Assets {
 
             this.pages = this.getAssets<Page>(
                 project => project.pages,
+                assetIncludePredicate
+            );
+
+            this.flows = this.getAssets<Page | Action>(
+                project => [...project.pages, ...project.actions],
                 assetIncludePredicate
             );
         }
@@ -163,6 +248,12 @@ export class Assets {
     }
 
     getDataItemIndex(object: any, propertyName: string) {
+        if (this.DocumentStore.isAppletProject) {
+            return this.getFlowWidgetDataItemIndex(object, propertyName);
+        }
+        if (!getProperty(object, propertyName)) {
+            return 0;
+        }
         return this.getAssetIndex(
             object,
             propertyName,
@@ -172,6 +263,12 @@ export class Assets {
     }
 
     getActionIndex(object: any, propertyName: string) {
+        if (this.DocumentStore.isAppletProject) {
+            return this.getFlowWidgetActionIndex(object, propertyName);
+        }
+        if (!getProperty(object, propertyName)) {
+            return 0;
+        }
         return this.getAssetIndex(
             object,
             propertyName,
@@ -393,75 +490,265 @@ export class Assets {
             });
         });
     }
+
+    getFlowIndex(flow: Flow) {
+        let index = this.flowIndexes.get(flow);
+        if (index == undefined) {
+            index = this.flowIndexes.size;
+            this.flowIndexes.set(flow, index);
+        }
+        return index;
+    }
+
+    getComponentIndex(component: Component) {
+        let index = this.componentIndexes.get(component);
+        if (index == undefined) {
+            index = this.componentIndexes.size;
+            this.componentIndexes.set(component, index);
+        }
+        return index;
+    }
+
+    getComponentInputIndex(component: Component, inputName: string) {
+        return getComponentInputNames(component).findIndex(
+            input => input.name == inputName
+        );
+    }
+
+    getComponentInputValueIndex(
+        component: Component,
+        input: { name: string; type: "input" | "property" }
+    ) {
+        const path =
+            getObjectPathAsString(component) + PATH_SEPARATOR + input.name;
+        let index = this.componentInputValueIndexes.get(path);
+        if (index == undefined) {
+            if (input.type == "input") {
+                index = this.nextValueIndex++;
+                this.componentInputValueIndexes.set(path, index);
+            } else {
+                try {
+                    index = this.getValueIndexFromJSON(
+                        getProperty(component, input.name)
+                    );
+                } catch (err) {
+                    this.DocumentStore.OutputSectionsStore.write(
+                        output.Section.OUTPUT,
+                        output.Type.ERROR,
+                        err.toString(),
+                        component
+                    );
+                    index = -1;
+                }
+            }
+        }
+        return index;
+    }
+
+    getComponentOutputIndex(component: Component, outputName: string) {
+        return getComponentOutputNames(component).findIndex(
+            output => output.name == outputName
+        );
+    }
+
+    getValueIndexFromJSON(jsonStr: string | undefined) {
+        const value = jsonStr == undefined ? undefined : JSON.parse(jsonStr);
+        if (
+            typeof value == "undefined" ||
+            typeof value == "boolean" ||
+            typeof value == "number" ||
+            typeof value == "string" ||
+            value === null
+        ) {
+            let index = this.simpleValueIndexes.get(value);
+            if (index == undefined) {
+                index = this.nextValueIndex++;
+                this.simpleValueIndexes.set(value, index);
+            }
+            return index;
+        }
+        return -1;
+    }
+
+    getFlowWidgetDataItemIndex(object: any, propertyName: string) {
+        const path =
+            getObjectPathAsString(object) + PATH_SEPARATOR + propertyName;
+        let index = this.flowWidgetDataIndexes.get(path);
+        if (index == undefined) {
+            index = this.flowWidgetDataIndexes.size;
+            this.flowWidgetDataIndexes.set(path, index);
+        }
+        return -(index + 1);
+    }
+
+    getFlowWidgetActionIndex(object: any, propertyName: string) {
+        const path =
+            getObjectPathAsString(object) + PATH_SEPARATOR + propertyName;
+        let index = this.flowWidgetActionIndexes.get(path);
+        if (index == undefined) {
+            index = this.flowWidgetActionIndexes.size;
+            this.flowWidgetActionIndexes.set(path, index);
+        }
+        return -(index + 1);
+    }
+
+    registerComponentInput(
+        component: Component,
+        inputName: string,
+        componentInput: Struct
+    ) {
+        const path =
+            getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
+        let index = this.flowWidgetDataIndexes.get(path);
+        if (index != undefined) {
+            this.flowWidgetDataIndexComponentInput.set(index, componentInput);
+        }
+    }
+
+    registerComponentOutput(
+        component: Component,
+        outputName: string,
+        componentOutput: Struct
+    ) {
+        const path =
+            getObjectPathAsString(component) + PATH_SEPARATOR + outputName;
+        let index = this.flowWidgetActionIndexes.get(path);
+        if (index != undefined) {
+            this.flowWidgetActionComponentOutput.set(index, componentOutput);
+        }
+    }
+
+    get flowValues() {
+        const flowValues: FlowValue[] = [];
+
+        for (let [value, index] of this.simpleValueIndexes) {
+            flowValues.push({
+                index,
+                type: getFlowValueType(value),
+                value
+            });
+        }
+
+        for (let [path, index] of this.componentInputValueIndexes) {
+            const [componentObjectPath, inputName] = path.split(PATH_SEPARATOR);
+
+            let type = FLOW_VALUE_TYPE_UNDEFINED;
+            let value: undefined | null;
+            if (inputName === "@seqin") {
+                const component = getObjectFromStringPath(
+                    this.rootProject,
+                    componentObjectPath
+                );
+
+                const flow = getFlow(component);
+
+                if (
+                    !flow.connectionLines.find(
+                        connectionLine =>
+                            connectionLine.targetComponent == component &&
+                            connectionLine.input == inputName
+                    )
+                ) {
+                    // store null value if there is no connection line to "@seqin"
+                    type = FLOW_VALUE_TYPE_NULL;
+                    value = null;
+                }
+            }
+
+            flowValues.push({
+                index,
+                type,
+                value
+            });
+        }
+
+        flowValues.sort((a, b) => a.index - b.index);
+
+        return flowValues;
+    }
+
+    finalizeMap() {
+        this.map.values = this.flowValues;
+
+        this.flowWidgetDataIndexes.forEach((index, path) => {
+            const [componentObjectPath, inputName] = path.split(PATH_SEPARATOR);
+            const component = getObjectFromStringPath(
+                this.rootProject,
+                componentObjectPath
+            ) as Component;
+            this.map.widgetDataItems[index] = {
+                widgetDataItemIndex: index,
+                componentIndex: this.componentIndexes.get(component!)!,
+                inputIndex: getComponentInputNames(component).findIndex(
+                    input => input.name == inputName
+                )
+            };
+        });
+
+        this.flowWidgetActionIndexes.forEach((index, path) => {
+            const [componentObjectPath, outputName] =
+                path.split(PATH_SEPARATOR);
+            const component = getObjectFromStringPath(
+                this.rootProject,
+                componentObjectPath
+            ) as Component;
+
+            this.map.widgetActions[index] = {
+                widgetActionIndex: index,
+                componentIndex: this.componentIndexes.get(component!)!,
+                outputIndex: getComponentOutputNames(component).findIndex(
+                    output => output.name == outputName
+                )
+            };
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildActionNames(assets: Assets, dataBuffer: DataBuffer) {
-    return buildListData((document: Struct) => {
-        let actionNames = new StringList();
-        for (let i = 0; i < assets.actions.length; i++) {
-            actionNames.addItem(new String(assets.actions[i].name));
-        }
-        document.addField(actionNames);
-    }, dataBuffer);
-}
-
-function buildDataItemNames(assets: Assets, dataBuffer: DataBuffer) {
-    return buildListData((document: Struct) => {
-        let dataItemNames = new StringList();
-        for (let i = 0; i < assets.dataItems.length; i++) {
-            dataItemNames.addItem(new String(assets.dataItems[i].name));
-        }
-        document.addField(dataItemNames);
-    }, dataBuffer);
-}
-
-function buildPrologData(assets: Assets, uncompressedSize: number) {
-    let prolog = new DataBuffer();
-
-    prolog.packArray(new TextEncoder().encode("~eez"));
-
-    prolog.packArray(
-        new TextEncoder().encode(
-            EEZStudio.remote.app.getVersion().padEnd(8, " ").substring(0, 8)
-        )
-    );
-
-    prolog.packUInt16(3); // PROJECT VERSION: 3
-
-    prolog.packUInt16(
-        assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
-    );
-
-    prolog.packUInt32(uncompressedSize);
-
-    return prolog;
-}
-
 export async function buildGuiAssetsData(assets: Assets) {
+    function buildHeaderData(assets: Assets, uncompressedSize: number) {
+        let headerStruct = new Struct();
+
+        const tag = new TextEncoder().encode("~eez");
+        headerStruct.addField(new UInt8ArrayField(tag));
+
+        headerStruct.addField(new UInt16(3)); // PROJECT VERSION: 3
+
+        headerStruct.addField(
+            new UInt16(
+                assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
+            )
+        );
+
+        headerStruct.addField(new UInt32(uncompressedSize));
+
+        const headerDataBuffer = new DataBuffer();
+        headerStruct.packObject(headerDataBuffer);
+        return headerDataBuffer;
+    }
+
     const dataBuffer = new DataBuffer();
 
-    await dataBuffer.packRegions(
-        assets.DocumentStore.masterProject ? 7 : 5,
-        async i => {
-            if (i == 0) {
-                buildGuiDocumentData(assets, dataBuffer);
-            } else if (i == 1) {
-                buildGuiStylesData(assets, dataBuffer);
-            } else if (i == 2) {
-                await buildGuiFontsData(assets, dataBuffer);
-            } else if (i == 3) {
-                await buildGuiBitmapsData(assets, dataBuffer);
-            } else if (i == 4) {
-                buildGuiColors(assets, dataBuffer);
-            } else if (i == 5) {
-                buildActionNames(assets, dataBuffer);
-            } else if (i == 6) {
-                buildDataItemNames(assets, dataBuffer);
-            }
+    await dataBuffer.packRegions(8, async i => {
+        if (i == 0) {
+            buildGuiDocumentData(assets, dataBuffer);
+        } else if (i == 1) {
+            buildGuiStylesData(assets, dataBuffer);
+        } else if (i == 2) {
+            await buildGuiFontsData(assets, dataBuffer);
+        } else if (i == 3) {
+            await buildGuiBitmapsData(assets, dataBuffer);
+        } else if (i == 4) {
+            buildGuiColors(assets, dataBuffer);
+        } else if (i == 5) {
+            buildActionNames(assets, dataBuffer);
+        } else if (i == 6) {
+            buildDataItemNames(assets, dataBuffer);
+        } else if (i == 7) {
+            buildFlowData(assets, dataBuffer);
         }
-    );
+    });
 
     var uncompressedBuffer = Buffer.from(
         dataBuffer.buffer.slice(0, dataBuffer.offset)
@@ -475,12 +762,12 @@ export async function buildGuiAssetsData(assets: Assets) {
     );
     var compressedSize = LZ4.encodeBlock(uncompressedBuffer, compressedBuffer);
 
-    const prolog = buildPrologData(assets, uncompressedSize);
-    var prologBuffer = Buffer.from(prolog.buffer.slice(0, prolog.offset));
+    const header = buildHeaderData(assets, uncompressedSize);
+    var headerBuffer = Buffer.from(header.buffer.slice(0, header.offset));
 
-    const allData = Buffer.alloc(prologBuffer.length + compressedSize);
-    prologBuffer.copy(allData, 0, 0, prologBuffer.length);
-    compressedBuffer.copy(allData, prologBuffer.length, 0, compressedSize);
+    const allData = Buffer.alloc(headerBuffer.length + compressedSize);
+    headerBuffer.copy(allData, 0, 0, headerBuffer.length);
+    compressedBuffer.copy(allData, headerBuffer.length, 0, compressedSize);
 
     assets.DocumentStore.OutputSectionsStore.write(
         output.Section.OUTPUT,

@@ -137,7 +137,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
 
     // data
     let data = 0;
-    if (object instanceof Widget && object.data) {
+    if (object instanceof Widget) {
         data = assets.getDataItemIndex(object, "data");
     }
     result.addField(new UInt16(data));
@@ -145,9 +145,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
     // action
     let action: number = 0;
     if (object instanceof Widget) {
-        if (object.action) {
-            action = assets.getActionIndex(object, "action");
-        }
+        action = assets.getActionIndex(object, "action");
     }
     result.addField(new UInt16(action));
 
@@ -192,7 +190,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(childWidgets);
 
         let overlay = 0;
-        if (object instanceof ContainerWidget && object.overlay) {
+        if (object instanceof ContainerWidget) {
             overlay = assets.getDataItemIndex(object, "overlay");
         }
         specific.addField(new UInt16(overlay));
@@ -377,10 +375,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         );
 
         // line1Data
-        let line1Data = 0;
-        if (widget.line1Data) {
-            line1Data = assets.getDataItemIndex(widget, "line1Data");
-        }
+        let line1Data = assets.getDataItemIndex(widget, "line1Data");
 
         specific.addField(new UInt16(line1Data));
 
@@ -390,10 +385,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         );
 
         // line2Data
-        let line2Data = 0;
-        if (widget.line2Data) {
-            line2Data = assets.getDataItemIndex(widget, "line2Data");
-        }
+        let line2Data = assets.getDataItemIndex(widget, "line2Data");
 
         specific.addField(new UInt16(line2Data));
 
@@ -433,18 +425,12 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific = new Struct();
 
         // dwellData
-        let dwellData = 0;
-        if (widget.dwellData) {
-            dwellData = assets.getDataItemIndex(widget, "dwellData");
-        }
+        let dwellData = assets.getDataItemIndex(widget, "dwellData");
 
         specific.addField(new UInt16(dwellData));
 
         // y1Data
-        let y1Data = 0;
-        if (widget.y1Data) {
-            y1Data = assets.getDataItemIndex(widget, "y1Data");
-        }
+        let y1Data = assets.getDataItemIndex(widget, "y1Data");
 
         specific.addField(new UInt16(y1Data));
 
@@ -452,10 +438,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new UInt16(assets.getStyleIndex(widget, "y1Style")));
 
         // y2Data
-        let y2Data = 0;
-        if (widget.y2Data) {
-            y2Data = assets.getDataItemIndex(widget, "y2Data");
-        }
+        let y2Data = assets.getDataItemIndex(widget, "y2Data");
 
         specific.addField(new UInt16(y2Data));
 
@@ -463,10 +446,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new UInt16(assets.getStyleIndex(widget, "y2Style")));
 
         // cursorData
-        let cursorData = 0;
-        if (widget.cursorData) {
-            cursorData = assets.getDataItemIndex(widget, "cursorData");
-        }
+        let cursorData = assets.getDataItemIndex(widget, "cursorData");
 
         specific.addField(new UInt16(cursorData));
 
@@ -489,10 +469,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new String(text));
 
         // enabled
-        let enabledData = 0;
-        if (widget.enabled) {
-            enabledData = assets.getDataItemIndex(widget, "enabled");
-        }
+        let enabledData = assets.getDataItemIndex(widget, "enabled");
 
         specific.addField(new UInt16(enabledData));
 
@@ -547,10 +524,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new Int16(layout));
 
         // context
-        let context = 0;
-        if (widget.context) {
-            context = assets.getDataItemIndex(widget, "context");
-        }
+        let context = assets.getDataItemIndex(widget, "context");
         specific.addField(new UInt16(context));
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields

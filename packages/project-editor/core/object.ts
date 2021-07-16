@@ -42,9 +42,7 @@ export interface IPropertyGridGroupDefinition {
     title: string;
     position?: number;
 
-    menu?: (
-        object: IEezObject
-    ) =>
+    menu?: (object: IEezObject) =>
         | {
               label: string;
               click: () => void;
@@ -151,6 +149,7 @@ export interface PropertyInfo {
     partOfNavigation?: boolean;
     fileFilters?: any;
     isAssetName?: boolean;
+    toggableProperty?: "input" | "output";
 }
 
 export interface NavigationComponentProps {
@@ -265,6 +264,8 @@ export interface ClassInfo {
         object: IEezObject
     ) => IResizeHandler[] | undefined | false;
     open?: (object: IEezObject) => void;
+
+    flowComponentId?: number;
 }
 
 export function makeDerivedClassInfo(

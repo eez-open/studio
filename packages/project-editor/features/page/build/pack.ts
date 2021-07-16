@@ -39,6 +39,15 @@ export class DataBuffer {
         this.packUInt8(value >> 24);
     }
 
+    packFloat(value: number) {
+        const buffer = Buffer.allocUnsafe(4);
+        buffer.writeFloatLE(value);
+        this.packUInt8(buffer[0]);
+        this.packUInt8(buffer[1]);
+        this.packUInt8(buffer[2]);
+        this.packUInt8(buffer[3]);
+    }
+
     packUInt8AtOffset(offset: number, value: number) {
         this.buffer[offset] = value;
     }
@@ -105,8 +114,17 @@ abstract class Field {
 }
 
 export abstract class ObjectField extends Field {
-    objectOffset: number;
     objectSize: number;
+
+    _objectOffset: number;
+
+    get objectOffset() {
+        return this._objectOffset;
+    }
+
+    set objectOffset(value: number) {
+        this._objectOffset = value;
+    }
 
     abstract packObject(dataBuffer: DataBuffer): void;
 }
@@ -228,7 +246,7 @@ export class StringList extends Field {
 
     pack(dataBuffer: DataBuffer) {
         dataBuffer.packUInt32(this.items.length);
-        dataBuffer.packUInt32(8);
+        dataBuffer.packUInt32(8); // offset of the first string
         this.items.forEach(item => dataBuffer.packUInt32(item.objectOffset));
     }
 }
@@ -280,6 +298,22 @@ export class Color extends ObjectField {
     }
 }
 
+export class StructRef extends ObjectField {
+    constructor(public value: Struct) {
+        super();
+        this.value = value;
+        this.objectSize = 4;
+    }
+
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt32(this.objectOffset);
+    }
+
+    packObject(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt32(this.value.objectOffset);
+    }
+}
+
 export class UInt8 extends Field {
     constructor(public value: number) {
         super();
@@ -302,6 +336,17 @@ export class UInt16 extends Field {
     }
 }
 
+export class UInt32 extends Field {
+    constructor(public value: number) {
+        super();
+        this.size = 4;
+    }
+
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packUInt32(this.value);
+    }
+}
+
 export class Int16 extends Field {
     constructor(public value: number) {
         super();
@@ -310,6 +355,17 @@ export class Int16 extends Field {
 
     pack(dataBuffer: DataBuffer) {
         dataBuffer.packInt16(this.value);
+    }
+}
+
+export class Float extends Field {
+    constructor(public value: number) {
+        super();
+        this.size = 4;
+    }
+
+    pack(dataBuffer: DataBuffer) {
+        dataBuffer.packFloat(this.value);
     }
 }
 

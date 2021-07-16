@@ -5,20 +5,22 @@ import { Project, BuildConfiguration } from "project-editor/project/project";
 import { build as buildV1 } from "project-editor/features/page/build/build-v1";
 import { build as buildV2 } from "project-editor/features/page/build/build-v2";
 
-import { buildGuiFontsEnum } from "project-editor/features/page/build/fonts";
 import {
     Assets,
     buildGuiAssetsData,
     buildGuiAssetsDecl,
     buildGuiAssetsDef
 } from "project-editor/features/page/build/assets";
-import { buildGuiBitmapsEnum } from "project-editor/features/page/build/bitmaps";
+
+import { buildGuiPagesEnum } from "project-editor/features/page/build/pages";
 import { buildGuiStylesEnum } from "project-editor/features/page/build/styles";
+import { buildGuiFontsEnum } from "project-editor/features/page/build/fonts";
+import { buildGuiBitmapsEnum } from "project-editor/features/page/build/bitmaps";
 import {
     buildGuiThemesEnum,
     buildGuiColorsEnum
 } from "project-editor/features/page/build/themes";
-import { buildGuiPagesEnum } from "project-editor/features/page/build/pages";
+import { buildFlowDefs } from "project-editor/features/page/build/flows";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,6 +66,10 @@ export async function build(
 
     if (!sectionNames || sectionNames.indexOf("GUI_COLORS_ENUM") !== -1) {
         result.GUI_COLORS_ENUM = buildGuiColorsEnum(assets);
+    }
+
+    if (!sectionNames || sectionNames.indexOf("FLOW_DEFS") !== -1) {
+        result.FLOW_DEFS = buildFlowDefs(assets);
     }
 
     const buildAssetsDecl =
@@ -123,7 +129,12 @@ export async function build(
         }
 
         if (buildAssetsDataMap) {
-            result.GUI_ASSETS_DATA_MAP = JSON.stringify(assets.map);
+            assets.finalizeMap();
+            result.GUI_ASSETS_DATA_MAP = JSON.stringify(
+                assets.map,
+                undefined,
+                2
+            );
         }
     }
 

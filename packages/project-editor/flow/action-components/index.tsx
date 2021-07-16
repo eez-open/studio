@@ -29,6 +29,8 @@ import { findAction } from "project-editor/features/action/action";
 import { getFlow, getProject } from "project-editor/project/project";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { findPage } from "project-editor/features/page/page";
+import { Assets } from "project-editor/features/page/build/assets";
+import { Struct, UInt16 } from "project-editor/features/page/build/pack";
 
 const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
@@ -54,6 +56,8 @@ const LeftArrow = () => (
 
 export class StartActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1001,
+
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -72,6 +76,8 @@ registerClass(StartActionComponent);
 
 export class EndActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1002,
+
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -101,6 +107,8 @@ registerClass(EndActionComponent);
 
 export class InputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1003,
+
         properties: [
             {
                 name: "name",
@@ -142,6 +150,8 @@ registerClass(InputActionComponent);
 
 export class OutputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1004,
+
         properties: [
             {
                 name: "name",
@@ -202,6 +212,8 @@ registerClass(OutputActionComponent);
 
 export class GetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1005,
+
         properties: [
             {
                 name: "variable",
@@ -270,6 +282,8 @@ registerClass(GetVariableActionComponent);
 
 export class EvalActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1006,
+
         properties: [
             {
                 name: "expression",
@@ -434,6 +448,8 @@ const SetVariableBody = styled.div`
 
 export class SetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1007,
+
         properties: [
             {
                 name: "variable",
@@ -510,6 +526,8 @@ const DeclareVariableBody = styled.div`
 
 export class DeclareVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1008,
+
         properties: [
             {
                 name: "variable",
@@ -578,6 +596,8 @@ const CompareActionComponentDiv = styled.div`
 
 export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1009,
+
         properties: [
             makeToggablePropertyToInput({
                 name: "A",
@@ -738,6 +758,8 @@ registerClass(CompareActionComponent);
 
 export class IsTrueActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1010,
+
         properties: [
             makeToggablePropertyToInput({
                 name: "value",
@@ -803,6 +825,8 @@ registerClass(IsTrueActionComponent);
 
 export class ConstantActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1011,
+
         properties: [
             {
                 name: "value",
@@ -847,6 +871,12 @@ export class ConstantActionComponent extends ActionComponent {
         runningFlow.propagateValue(this, "value", JSON.parse(this.value));
         return undefined;
     }
+
+    buildFlowComponentSpecific(assets: Assets) {
+        let specific = new Struct();
+        specific.addField(new UInt16(assets.getValueIndexFromJSON(this.value)));
+        return specific;
+    }
 }
 
 registerClass(ConstantActionComponent);
@@ -855,6 +885,8 @@ registerClass(ConstantActionComponent);
 
 export class DateNowActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1012,
+
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 40">
                 <path d="M12 18H8v4h4v-4zm8 0h-4v4h4v-4zm8 0h-4v4h4v-4zm4-14h-2V0h-4v4H10V0H6v4H4C1.78 4 .02 5.8.02 8L0 36c0 2.2 1.78 4 4 4h28c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4zm0 32H4V14h28v22z" />
@@ -885,6 +917,8 @@ registerClass(DateNowActionComponent);
 
 export class ReadSettingActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1013,
+
         properties: [
             makeToggablePropertyToInput({
                 name: "key",
@@ -944,6 +978,8 @@ registerClass(ReadSettingActionComponent);
 
 export class WriteSettingsActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1014,
+
         properties: [
             makeToggablePropertyToInput({
                 name: "key",
@@ -1003,6 +1039,8 @@ registerClass(WriteSettingsActionComponent);
 
 export class LogActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1015,
+
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 448">
                 <path d="M223.988 0C128.473 0 46.934 59.804 14.727 144h34.639c9.396-20.484 22.457-39.35 38.868-55.762C124.497 51.973 172.709 32 223.988 32c51.286 0 99.504 19.973 135.771 56.239C396.027 124.505 416 172.719 416 224c0 51.285-19.973 99.501-56.239 135.765C323.494 396.029 275.275 416 223.988 416c-51.281 0-99.493-19.971-135.755-56.234C71.821 343.354 58.76 324.486 49.362 304H14.725c32.206 84.201 113.746 144 209.264 144C347.703 448 448 347.715 448 224 448 100.298 347.703 0 223.988 0z" />
@@ -1038,6 +1076,8 @@ registerClass(LogActionComponent);
 
 export class CallActionActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1016,
+
         properties: [
             makeToggablePropertyToInput({
                 name: "action",
@@ -1237,6 +1277,8 @@ const TrixEditor = observer(
 
 export class CommentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1017,
+
         properties: [
             {
                 name: "text",
@@ -1274,6 +1316,8 @@ registerClass(CommentActionComponent);
 
 export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1018,
+
         properties: [
             makeToggablePropertyToInput({
                 name: "milliseconds",
@@ -1305,6 +1349,10 @@ export class DelayActionComponent extends ActionComponent {
         );
         return undefined;
     }
+
+    buildFlowComponentSpecific(assets: Assets) {
+        return undefined;
+    }
 }
 
 registerClass(DelayActionComponent);
@@ -1313,6 +1361,8 @@ registerClass(DelayActionComponent);
 
 export class ErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1019,
+
         properties: [
             makeToggablePropertyToInput({
                 name: "message",
@@ -1354,6 +1404,8 @@ registerClass(ErrorActionComponent);
 
 export class CatchErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1020,
+
         properties: [],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
@@ -1395,6 +1447,8 @@ class CounterRunningState {
 
 export class CounterActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1021,
+
         properties: [
             {
                 name: "countValue",
@@ -1470,6 +1524,8 @@ registerClass(CounterActionComponent);
 
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1022,
+
         properties: [
             {
                 name: "page",

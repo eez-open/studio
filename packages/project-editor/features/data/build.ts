@@ -31,7 +31,9 @@ function buildDataFuncsDecl(projectDataItems: DataItem[]) {
         )}(DataOperationEnum operation, Cursor cursor, Value &value);`;
     });
 
-    return ["void data_none(DataOperationEnum operation, Cursor cursor, Value &value);"]
+    return [
+        "void data_none(DataOperationEnum operation, Cursor cursor, Value &value);"
+    ]
         .concat(dataItems)
         .join("\n");
 }
@@ -52,7 +54,7 @@ function buildDataArrayDef(projectDataItems: DataItem[]) {
 
     return `DataOperationsFunction g_dataOperationsFunctions[] = {\n${
         projectBuild.TAB
-        }data_none,\n${dataItems.join(",\n")}\n};`;
+    }data_none,\n${dataItems.join(",\n")}\n};`;
 }
 
 export function build(
@@ -76,7 +78,8 @@ export function build(
                         dataItem =>
                             !buildConfiguration ||
                             !dataItem.usedIn ||
-                            dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
+                            dataItem.usedIn.indexOf(buildConfiguration.name) !==
+                                -1
                     )
                 );
             }
