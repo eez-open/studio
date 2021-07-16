@@ -22,20 +22,24 @@ export interface IFlowContext {
     overrideRunningFlow(component: Component): IFlowContext;
 }
 
+export interface IVariable {
+    name: string;
+}
+
 export interface IDataContext {
     createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext;
-    createWithLocalVariables(): IDataContext;
+    createWithLocalVariables(variables: IVariable[]): IDataContext;
 
-    get(dataItemId: string): any;
-    set(dataItemId: string, value: any): void;
-    isVariableDeclared(dataItemId: string): boolean;
-    declare(dataItemId: string, value: any): void;
+    get(variableName: string): any;
+    set(variableName: string, value: any): void;
+    isVariableDeclared(variableName: string): boolean;
+    declare(variableName: string, value: any): void;
 
-    getEnumValue(dataItemId: string): number;
-    getBool(dataItemId: string): boolean;
-    getValueList(dataItemId: string): string[];
-    getMin(dataItemId: string): number;
-    getMax(dataItemId: string): number;
+    getEnumValue(variableName: string): number;
+    getBool(variableName: string): boolean;
+    getValueList(variableName: string): string[];
+    getMin(variableName: string): number;
+    getMax(variableName: string): number;
 }
 
 export interface IRunningFlow {

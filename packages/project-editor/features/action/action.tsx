@@ -11,7 +11,8 @@ import {
     NavigationComponent,
     EditorComponent,
     IEditorState,
-    getParent
+    getParent,
+    getAncestorOfType
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
 import {
@@ -89,9 +90,8 @@ class ActionFlowTabState extends FlowTabState {
     selectObject(object: IEezObject) {
         let ancestor: IEezObject | undefined;
         for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-            let item = this.componentContainerDisplayItem.getObjectAdapter(
-                ancestor
-            );
+            let item =
+                this.componentContainerDisplayItem.getObjectAdapter(ancestor);
             if (item) {
                 this.componentContainerDisplayItem.selectItems([item]);
                 return;
@@ -108,9 +108,10 @@ class ActionFlowTabState extends FlowTabState {
 
             let ancestor: IEezObject | undefined;
             for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-                let item = this.componentContainerDisplayItem.getObjectAdapter(
-                    ancestor
-                );
+                let item =
+                    this.componentContainerDisplayItem.getObjectAdapter(
+                        ancestor
+                    );
                 if (item) {
                     items.push(item);
                     break;
@@ -339,7 +340,29 @@ export class ActionsNavigation extends NavigationComponent {
             />
         );
 
-        return listNavigation;
+        const action = getAncestorOfType<Action>(
+            this.selectedObject,
+            Action.classInfo
+        );
+
+        return (
+            <Splitter
+                type="vertical"
+                persistId="action-editor/navigation-structure-1"
+                sizes={`100%|240px`}
+                childrenOverflow="hidden|hidden"
+            >
+                {listNavigation}
+                {action ? (
+                    <ListNavigation
+                        id={"action-editor/local-variables"}
+                        navigationObject={action.localVariables}
+                    />
+                ) : (
+                    <div />
+                )}
+            </Splitter>
+        );
 
         // if (this.props.navigationStore) {
         //     return listNavigation;

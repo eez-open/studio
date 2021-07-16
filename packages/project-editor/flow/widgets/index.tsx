@@ -45,7 +45,7 @@ import {
 import { Page, findPage } from "project-editor/features/page/page";
 import { findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
-import { findDataItem } from "project-editor/features/data/data";
+import { findVariable } from "project-editor/features/variable/variable";
 import {
     drawText,
     styleGetBorderRadius,
@@ -574,16 +574,16 @@ export class SelectWidget extends EmbeddedWidget {
                     messages.push(output.propertyNotSetMessage(object, "data"));
                 }
             } else {
-                let dataItem = findDataItem(getProject(object), object.data);
-                if (dataItem) {
+                let variable = findVariable(getProject(object), object.data);
+                if (variable) {
                     let enumItems: string[] = [];
-                    if (dataItem.type == "enum") {
+                    if (variable.type == "enum") {
                         try {
-                            enumItems = JSON.parse(dataItem.enumItems || "[]");
+                            enumItems = JSON.parse(variable.enumItems || "[]");
                         } catch (err) {
                             enumItems = [];
                         }
-                    } else if (dataItem.type == "boolean") {
+                    } else if (variable.type == "boolean") {
                         enumItems = ["0", "1"];
                     }
                     if (enumItems.length > object.widgets.length) {
@@ -637,19 +637,19 @@ export class SelectWidget extends EmbeddedWidget {
             let index = this.widgets.indexOf(childObject);
             if (index != -1) {
                 if (this.data) {
-                    let dataItem = findDataItem(getProject(this), this.data);
-                    if (dataItem) {
-                        if (dataItem.type == "enum") {
+                    let variable = findVariable(getProject(this), this.data);
+                    if (variable) {
+                        if (variable.type == "enum") {
                             let enumItems: string[];
                             try {
                                 enumItems = JSON.parse(
-                                    dataItem.enumItems || "[]"
+                                    variable.enumItems || "[]"
                                 );
                             } catch (err) {
                                 enumItems = [];
                                 console.error(
                                     "Invalid enum items",
-                                    dataItem,
+                                    variable,
                                     err
                                 );
                             }
@@ -660,7 +660,7 @@ export class SelectWidget extends EmbeddedWidget {
                                 );
                                 return enumItemLabel;
                             }
-                        } else if (dataItem.type == "boolean") {
+                        } else if (variable.type == "boolean") {
                             if (index == 0) {
                                 return "0";
                             } else if (index == 1) {
@@ -2637,7 +2637,7 @@ export class BarGraphWidget extends EmbeddedWidget {
             const project = getProject(object);
 
             if (object.line1Data) {
-                if (!findDataItem(project, object.line1Data)) {
+                if (!findVariable(project, object.line1Data)) {
                     messages.push(
                         output.propertyNotFoundMessage(object, "line1Data")
                     );
@@ -2649,7 +2649,7 @@ export class BarGraphWidget extends EmbeddedWidget {
             }
 
             if (object.line2Data) {
-                if (!findDataItem(project, object.line2Data)) {
+                if (!findVariable(project, object.line2Data)) {
                     messages.push(
                         output.propertyNotFoundMessage(object, "line2Data")
                     );
@@ -2967,7 +2967,7 @@ export class YTGraphWidget extends EmbeddedWidget {
 
             if (project.settings.general.projectVersion === "v1") {
                 if (object.y2Data) {
-                    if (!findDataItem(project, object.y2Data)) {
+                    if (!findVariable(project, object.y2Data)) {
                         messages.push(
                             output.propertyNotFoundMessage(object, "y2Data")
                         );
@@ -3221,7 +3221,7 @@ export class ListGraphWidget extends EmbeddedWidget {
             const project = getProject(object);
 
             if (object.dwellData) {
-                if (!findDataItem(project, object.dwellData)) {
+                if (!findVariable(project, object.dwellData)) {
                     messages.push(
                         output.propertyNotFoundMessage(object, "dwellData")
                     );
@@ -3233,7 +3233,7 @@ export class ListGraphWidget extends EmbeddedWidget {
             }
 
             if (object.y1Data) {
-                if (!findDataItem(project, object.y1Data)) {
+                if (!findVariable(project, object.y1Data)) {
                     messages.push(
                         output.propertyNotFoundMessage(object, "y1Data")
                     );
@@ -3243,7 +3243,7 @@ export class ListGraphWidget extends EmbeddedWidget {
             }
 
             if (object.y2Data) {
-                if (!findDataItem(project, object.y2Data)) {
+                if (!findVariable(project, object.y2Data)) {
                     messages.push(
                         output.propertyNotFoundMessage(object, "y2Data")
                     );
@@ -3253,7 +3253,7 @@ export class ListGraphWidget extends EmbeddedWidget {
             }
 
             if (object.cursorData) {
-                if (!findDataItem(project, object.cursorData)) {
+                if (!findVariable(project, object.cursorData)) {
                     messages.push(
                         output.propertyNotFoundMessage(object, "cursorData")
                     );

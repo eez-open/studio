@@ -10,7 +10,7 @@ import { Project, BuildConfiguration } from "project-editor/project/project";
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 import actionFeature from "project-editor/features/action/action";
-import dataFeature from "project-editor/features/data/data";
+import dataFeature from "project-editor/features/variable/variable";
 import extensionDefinitionsFeature from "project-editor/features/extension-definitions/extension-definitions";
 import pageFeature from "project-editor/features/page/page";
 import styleFeature from "project-editor/features/style/style";

@@ -92,7 +92,7 @@ import { OutputSections, OutputSection } from "project-editor/core/output";
 import { getProjectFeatures } from "project-editor/core/extensions";
 
 import * as SearchModule from "project-editor/core/search";
-import { DataContext } from "project-editor/features/data/data";
+import { DataContext } from "project-editor/features/variable/variable";
 import { CurrentSearch } from "project-editor/core/search";
 import { Project, getFlow, ProjectType } from "project-editor/project/project";
 

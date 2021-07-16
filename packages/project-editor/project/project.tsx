@@ -52,7 +52,7 @@ import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 import "project-editor/project/builtInFeatures";
 
 import { Action } from "project-editor/features/action/action";
-import { DataItem } from "project-editor/features/data/data";
+import { Variable } from "project-editor/features/variable/variable";
 import { Scpi } from "project-editor/features/scpi/scpi";
 import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
@@ -185,7 +185,7 @@ registerClass(BuildFile);
 
 function isFilesPropertyEnumerable(object: IEezObject): boolean {
     const project: Project = getProject(object);
-    return !!(project.pages || project.actions || project.data);
+    return !!(project.pages || project.actions || project.globalVariables);
 }
 
 export class Build extends EezObject {
@@ -730,6 +730,11 @@ function getProjectClassInfo() {
             label: () => "Project",
             properties: projectProperties,
             beforeLoadHook: (project: Project, projectJs: any) => {
+                if (projectJs.data) {
+                    projectJs.globalVariables = projectJs.data;
+                    delete projectJs.data;
+                }
+
                 if (projectJs.gui) {
                     Object.assign(projectJs, projectJs.gui);
                     delete projectJs.gui;
@@ -817,7 +822,7 @@ export class Project extends EezObject {
     _isReadOnly: boolean = false;
 
     @observable settings: Settings;
-    @observable data: DataItem[];
+    @observable globalVariables: Variable[];
     @observable actions: Action[];
     @observable pages: Page[];
     @observable styles: Style[];
@@ -855,9 +860,11 @@ export class Project extends EezObject {
     }
 
     @computed
-    get dataItemsMap() {
-        const map = new Map<String, DataItem>();
-        this.data.forEach(dataItem => map.set(dataItem.name, dataItem));
+    get globalVariablesMap() {
+        const map = new Map<String, Variable>();
+        this.globalVariables.forEach(globalVariable =>
+            map.set(globalVariable.name, globalVariable)
+        );
         return map;
     }
 
@@ -891,7 +898,10 @@ export class Project extends EezObject {
     @computed({ keepAlive: true })
     get allAssetsMaps() {
         return [
-            { path: "data", map: this.data && this.dataItemsMap },
+            {
+                path: "globalVariables",
+                map: this.globalVariables && this.globalVariablesMap
+            },
             { path: "actions", map: this.actions && this.actionsMap },
             { path: "pages", map: this.pagesMap },
             { path: "styles", map: this.stylesMap },

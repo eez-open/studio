@@ -11,6 +11,7 @@ import { IconAction } from "eez-studio-ui/action";
 
 import {
     EditorComponent,
+    getAncestorOfType,
     getParent,
     IEezObject,
     NavigationComponent
@@ -192,7 +193,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     this.pageTabState.runtimeViewState
                                 }
                                 onSavePersistantState={viewState =>
-                                    (this.pageTabState.runtimeViewState = viewState)
+                                    (this.pageTabState.runtimeViewState =
+                                        viewState)
                                 }
                                 frontFace={this.pageTabState.frontFace}
                                 runningFlow={this.pageTabState.runningFlow}
@@ -207,7 +209,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     this.pageTabState.editorViewState
                                 }
                                 onSavePersistantState={viewState =>
-                                    (this.pageTabState.editorViewState = viewState)
+                                    (this.pageTabState.editorViewState =
+                                        viewState)
                                 }
                                 frontFace={this.pageTabState.frontFace}
                             />
@@ -216,8 +219,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                         <FlipCardDiv>
                             <div
                                 className={classNames("flip-card-inner", {
-                                    "show-back-face": !this.pageTabState
-                                        .frontFace
+                                    "show-back-face":
+                                        !this.pageTabState.frontFace
                                 })}
                             >
                                 <div className="flip-card-front">
@@ -232,7 +235,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                                     .runtimeFrontViewState
                                             }
                                             onSavePersistantState={viewState =>
-                                                (this.pageTabState.runtimeFrontViewState = viewState)
+                                                (this.pageTabState.runtimeFrontViewState =
+                                                    viewState)
                                             }
                                             transitionIsActive={true}
                                             frontFace={true}
@@ -251,7 +255,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                                     .editorFrontViewState
                                             }
                                             onSavePersistantState={viewState =>
-                                                (this.pageTabState.editorFrontViewState = viewState)
+                                                (this.pageTabState.editorFrontViewState =
+                                                    viewState)
                                             }
                                             transitionIsActive={true}
                                             frontFace={true}
@@ -270,7 +275,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                                     .runtimeBackViewState
                                             }
                                             onSavePersistantState={viewState =>
-                                                (this.pageTabState.runtimeBackViewState = viewState)
+                                                (this.pageTabState.runtimeBackViewState =
+                                                    viewState)
                                             }
                                             transitionIsActive={true}
                                             frontFace={false}
@@ -289,7 +295,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                                     .editorBackViewState
                                             }
                                             onSavePersistantState={viewState =>
-                                                (this.pageTabState.editorBackViewState = viewState)
+                                                (this.pageTabState.editorBackViewState =
+                                                    viewState)
                                             }
                                             transitionIsActive={true}
                                             frontFace={false}
@@ -319,7 +326,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                     iconSize={16}
                     onClick={action(
                         () =>
-                            (this.context.UIStateStore.viewOptions.themesVisible = true)
+                            (this.context.UIStateStore.viewOptions.themesVisible =
+                                true)
                     )}
                     title="Show themes panel"
                 ></IconAction>
@@ -419,25 +427,17 @@ export class PageTabState extends FlowTabState {
 
         this.page = object as Page;
 
-        this.componentContainerDisplayItemEditorFrontFace = new PageTreeObjectAdapter(
-            this.page,
-            true
-        );
+        this.componentContainerDisplayItemEditorFrontFace =
+            new PageTreeObjectAdapter(this.page, true);
 
-        this.componentContainerDisplayItemEditorBackFace = new PageTreeObjectAdapter(
-            this.page,
-            false
-        );
+        this.componentContainerDisplayItemEditorBackFace =
+            new PageTreeObjectAdapter(this.page, false);
 
-        this.componentContainerDisplayItemRuntimeFrontFace = new PageTreeObjectAdapter(
-            this.page,
-            true
-        );
+        this.componentContainerDisplayItemRuntimeFrontFace =
+            new PageTreeObjectAdapter(this.page, true);
 
-        this.componentContainerDisplayItemRuntimeBackFace = new PageTreeObjectAdapter(
-            this.page,
-            false
-        );
+        this.componentContainerDisplayItemRuntimeBackFace =
+            new PageTreeObjectAdapter(this.page, false);
     }
 
     get flow() {
@@ -461,7 +461,8 @@ export class PageTabState extends FlowTabState {
     set frontFace(frontFace: boolean) {
         runInAction(() => {
             if (this.isRuntime) {
-                this.DocumentStore.UIStateStore.pageRuntimeFrontFace = frontFace;
+                this.DocumentStore.UIStateStore.pageRuntimeFrontFace =
+                    frontFace;
             } else {
                 this.DocumentStore.UIStateStore.pageEditorFrontFace = frontFace;
             }
@@ -575,19 +576,23 @@ export class PageTabState extends FlowTabState {
     saveState() {
         return {
             editorFront: {
-                selection: this.componentContainerDisplayItemEditorFrontFace.saveState(),
+                selection:
+                    this.componentContainerDisplayItemEditorFrontFace.saveState(),
                 transform: this.editorFrontViewState?.transform
             },
             editorBack: {
-                selection: this.componentContainerDisplayItemEditorBackFace.saveState(),
+                selection:
+                    this.componentContainerDisplayItemEditorBackFace.saveState(),
                 transform: this.editorBackViewState?.transform
             },
             runtimeFront: {
-                selection: this.componentContainerDisplayItemRuntimeFrontFace.saveState(),
+                selection:
+                    this.componentContainerDisplayItemRuntimeFrontFace.saveState(),
                 transform: this.runtimeFrontViewState?.transform
             },
             runtimeBack: {
-                selection: this.componentContainerDisplayItemRuntimeBackFace.saveState(),
+                selection:
+                    this.componentContainerDisplayItemRuntimeBackFace.saveState(),
                 transform: this.runtimeBackViewState?.transform
             }
         };
@@ -597,9 +602,8 @@ export class PageTabState extends FlowTabState {
     selectObject(object: IEezObject) {
         let ancestor: IEezObject | undefined;
         for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-            let item = this.componentContainerDisplayItem.getObjectAdapter(
-                ancestor
-            );
+            let item =
+                this.componentContainerDisplayItem.getObjectAdapter(ancestor);
             if (item) {
                 this.componentContainerDisplayItem.selectItems([item]);
                 return;
@@ -616,9 +620,10 @@ export class PageTabState extends FlowTabState {
 
             let ancestor: IEezObject | undefined;
             for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-                let item = this.componentContainerDisplayItem.getObjectAdapter(
-                    ancestor
-                );
+                let item =
+                    this.componentContainerDisplayItem.getObjectAdapter(
+                        ancestor
+                    );
                 if (item) {
                     items.push(item);
                     break;
@@ -726,13 +731,18 @@ export class PagesNavigation extends NavigationComponent {
             />
         );
 
+        const page = getAncestorOfType<Page>(
+            this.selectedObject,
+            Page.classInfo
+        );
+
         const navigation = this.context.RuntimeStore.isRuntimeMode ? (
             listNavigation
         ) : (
             <Splitter
                 type="vertical"
-                persistId="page-editor/navigation-structure"
-                sizes={`50%|50%`}
+                persistId="page-editor/navigation-structure-4"
+                sizes={`100%|240px|240px`}
                 childrenOverflow="hidden|hidden"
             >
                 {listNavigation}
@@ -751,6 +761,14 @@ export class PagesNavigation extends NavigationComponent {
                         )
                     }
                 />
+                {page ? (
+                    <ListNavigation
+                        id={"page-editor/local-variables"}
+                        navigationObject={page.localVariables}
+                    />
+                ) : (
+                    <div />
+                )}
             </Splitter>
         );
 

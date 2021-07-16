@@ -11,7 +11,10 @@ import {
     getProject
 } from "project-editor/project/project";
 
-import { DataItem, findDataItem } from "project-editor/features/data/data";
+import {
+    Variable,
+    findVariable
+} from "project-editor/features/variable/variable";
 
 import {
     getData as getBitmapData,
@@ -909,7 +912,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
     // data
     let data = 0;
     if (object instanceof Widget && object.data) {
-        data = assets.getDataItemIndex(object, "data");
+        data = assets.getGlobalVariableIndex(object, "data");
     }
     result.addField(new UInt16(data));
 
@@ -964,7 +967,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
 
         let overlay = 0;
         if (object instanceof ContainerWidget && object.overlay) {
-            overlay = assets.getDataItemIndex(object, "overlay");
+            overlay = assets.getGlobalVariableIndex(object, "overlay");
         }
         specific.addField(new UInt16(overlay));
 
@@ -1150,7 +1153,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // line1Data
         let line1Data = 0;
         if (widget.line1Data) {
-            line1Data = assets.getDataItemIndex(widget, "line1Data");
+            line1Data = assets.getGlobalVariableIndex(widget, "line1Data");
         }
 
         specific.addField(new UInt16(line1Data));
@@ -1163,7 +1166,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // line2Data
         let line2Data = 0;
         if (widget.line2Data) {
-            line2Data = assets.getDataItemIndex(widget, "line2Data");
+            line2Data = assets.getGlobalVariableIndex(widget, "line2Data");
         }
 
         specific.addField(new UInt16(line2Data));
@@ -1206,7 +1209,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // dwellData
         let dwellData = 0;
         if (widget.dwellData) {
-            dwellData = assets.getDataItemIndex(widget, "dwellData");
+            dwellData = assets.getGlobalVariableIndex(widget, "dwellData");
         }
 
         specific.addField(new UInt16(dwellData));
@@ -1214,7 +1217,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // y1Data
         let y1Data = 0;
         if (widget.y1Data) {
-            y1Data = assets.getDataItemIndex(widget, "y1Data");
+            y1Data = assets.getGlobalVariableIndex(widget, "y1Data");
         }
 
         specific.addField(new UInt16(y1Data));
@@ -1225,7 +1228,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // y2Data
         let y2Data = 0;
         if (widget.y2Data) {
-            y2Data = assets.getDataItemIndex(widget, "y2Data");
+            y2Data = assets.getGlobalVariableIndex(widget, "y2Data");
         }
 
         specific.addField(new UInt16(y2Data));
@@ -1236,7 +1239,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // cursorData
         let cursorData = 0;
         if (widget.cursorData) {
-            cursorData = assets.getDataItemIndex(widget, "cursorData");
+            cursorData = assets.getGlobalVariableIndex(widget, "cursorData");
         }
 
         specific.addField(new UInt16(cursorData));
@@ -1262,7 +1265,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // enabled
         let enabledData = 0;
         if (widget.enabled) {
-            enabledData = assets.getDataItemIndex(widget, "enabled");
+            enabledData = assets.getGlobalVariableIndex(widget, "enabled");
         }
 
         specific.addField(new UInt16(enabledData));
@@ -1320,7 +1323,7 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // context
         let context = 0;
         if (widget.context) {
-            context = assets.getDataItemIndex(widget, "context");
+            context = assets.getGlobalVariableIndex(widget, "context");
         }
         specific.addField(new UInt16(context));
     } else if (type == WIDGET_TYPE_APP_VIEW) {
@@ -1446,13 +1449,13 @@ function buildActionNames(assets: Assets, dataBuffer: DataBuffer) {
     }, dataBuffer);
 }
 
-function buildDataItemNames(assets: Assets, dataBuffer: DataBuffer) {
+function buildvariableNames(assets: Assets, dataBuffer: DataBuffer) {
     return buildListData((document: Struct) => {
-        let dataItemNames = new StringList();
-        for (let i = 0; i < assets.dataItems.length; i++) {
-            dataItemNames.addItem(new String(assets.dataItems[i].name));
+        let variableNames = new StringList();
+        for (let i = 0; i < assets.globalVariables.length; i++) {
+            variableNames.addItem(new String(assets.globalVariables[i].name));
         }
-        document.addField(dataItemNames);
+        document.addField(variableNames);
     }, dataBuffer);
 }
 
@@ -1475,7 +1478,7 @@ async function buildGuiAssetsData(assets: Assets) {
             } else if (i == 5) {
                 buildActionNames(assets, dataBuffer);
             } else if (i == 6) {
-                buildDataItemNames(assets, dataBuffer);
+                buildvariableNames(assets, dataBuffer);
             }
         }
     );
@@ -1527,7 +1530,7 @@ function buildGuiAssetsDef(data: Buffer) {
 class Assets {
     projects: Project[];
 
-    dataItems: DataItem[];
+    globalVariables: Variable[];
     actions: Action[];
     pages: Page[];
     styles: (Style | undefined)[];
@@ -1572,13 +1575,13 @@ class Assets {
         this.collectProjects(rootProject);
 
         {
-            const assetIncludePredicate = (asset: DataItem | Action | Page) =>
+            const assetIncludePredicate = (asset: Variable | Action | Page) =>
                 !buildConfiguration ||
                 !asset.usedIn ||
                 asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
-            this.dataItems = this.getAssets<DataItem>(
-                project => project.data,
+            this.globalVariables = this.getAssets<Variable>(
+                project => project.globalVariables,
                 assetIncludePredicate
             );
 
@@ -1656,12 +1659,12 @@ class Assets {
         return 0;
     }
 
-    getDataItemIndex(object: any, propertyName: string) {
+    getGlobalVariableIndex(object: any, propertyName: string) {
         return this.getAssetIndex(
             object,
             propertyName,
-            findDataItem,
-            this.dataItems
+            findVariable,
+            this.globalVariables
         );
     }
 

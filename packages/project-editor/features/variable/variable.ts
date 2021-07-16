@@ -14,25 +14,30 @@ import {
 import * as output from "project-editor/core/output";
 import { findReferencedObject, Project } from "project-editor/project/project";
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
-import { build } from "project-editor/features/data/build";
-import { metrics } from "project-editor/features/data/metrics";
-import type { IDataContext } from "project-editor/flow/flow-interfaces";
+import { build } from "project-editor/features/variable/build";
+import { metrics } from "project-editor/features/variable/metrics";
+import type {
+    IDataContext,
+    IVariable
+} from "project-editor/flow/flow-interfaces";
 import { getDocumentStore } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DataItem extends EezObject {
+export type VariableType =
+    | "integer"
+    | "float"
+    | "boolean"
+    | "string"
+    | "enum"
+    | "list"
+    | "struct"
+    | "date";
+
+export class Variable extends EezObject {
     @observable name: string;
     @observable description?: string;
-    @observable type:
-        | "integer"
-        | "float"
-        | "boolean"
-        | "string"
-        | "enum"
-        | "list"
-        | "struct"
-        | "date";
+    @observable type: VariableType;
     @observable enumItems: string;
     @observable defaultValue: string;
     @observable defaultValueList: string;
@@ -85,7 +90,7 @@ export class DataItem extends EezObject {
             {
                 name: "enumItems",
                 type: PropertyType.JSON,
-                hideInPropertyGrid: (object: DataItem) => {
+                hideInPropertyGrid: (object: Variable) => {
                     return object.type != "enum";
                 }
             },
@@ -116,7 +121,7 @@ export class DataItem extends EezObject {
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
-                    title: "New Data Item",
+                    title: "New Global Variable",
                     fields: [
                         {
                             name: "name",
@@ -136,18 +141,18 @@ export class DataItem extends EezObject {
             });
         },
         navigationComponent: ListNavigationWithProperties,
-        navigationComponentId: "data-items",
+        navigationComponentId: "global-variables",
         icon: "dns"
     };
 }
 
-registerClass(DataItem);
+registerClass(Variable);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findDataItem(project: Project, dataItemName: string) {
-    return findReferencedObject(project, "data", dataItemName) as
-        | DataItem
+export function findVariable(project: Project, variableName: string) {
+    return findReferencedObject(project, "globalVariables", variableName) as
+        | Variable
         | undefined;
 }
 
@@ -155,7 +160,7 @@ export function findDataItem(project: Project, dataItemName: string) {
 
 export class DataContext implements IDataContext {
     @observable localVariables: Map<string, any> | undefined = undefined;
-    @observable dataItemValues: Map<string, any>;
+    @observable runtimeValues: Map<string, any>;
 
     constructor(
         public project: Project,
@@ -165,7 +170,7 @@ export class DataContext implements IDataContext {
     ) {
         this.localVariables = localVariables;
         if (!parentDataContext) {
-            this.dataItemValues = new Map<string, any>();
+            this.runtimeValues = new Map<string, any>();
         }
     }
 
@@ -173,69 +178,70 @@ export class DataContext implements IDataContext {
         return new DataContext(this.project, this, defaultValueOverrides);
     }
 
-    createWithLocalVariables() {
-        return new DataContext(
-            this.project,
-            this,
-            undefined,
-            new Map<string, any>()
+    createWithLocalVariables(variables: IVariable[]) {
+        const localVariables = new Map<string, any>();
+
+        variables.forEach(variable =>
+            localVariables.set(variable.name, undefined)
         );
+
+        return new DataContext(this.project, this, undefined, localVariables);
     }
 
-    getDataItemValue(dataItem: DataItem | undefined): {
+    getRuntimeValue(variable: Variable | undefined): {
         hasValue: boolean;
         value: any;
     } {
         if (this.parentDataContext) {
-            return this.parentDataContext.getDataItemValue(dataItem);
+            return this.parentDataContext.getRuntimeValue(variable);
         }
 
-        if (dataItem) {
+        if (variable) {
             return {
-                hasValue: this.dataItemValues.has(dataItem.name),
-                value: this.dataItemValues.get(dataItem.name)
+                hasValue: this.runtimeValues.has(variable.name),
+                value: this.runtimeValues.get(variable.name)
             };
         } else {
             return { hasValue: false, value: undefined };
         }
     }
 
-    setDataItemValue(dataItemId: string, value: any) {
+    setRuntimeValue(variableName: string, value: any) {
         if (this.parentDataContext) {
-            this.parentDataContext.setDataItemValue(dataItemId, value);
+            this.parentDataContext.setRuntimeValue(variableName, value);
         } else {
-            const dataItem = findDataItem(this.project, dataItemId);
-            if (dataItem) {
-                this.dataItemValues.set(dataItemId, value);
+            const variable = findVariable(this.project, variableName);
+            if (variable) {
+                this.runtimeValues.set(variableName, value);
             } else {
-                throw `variable "${dataItemId}" not found`;
+                throw `variable "${variableName}" not found`;
             }
         }
     }
 
     @action
-    clearDataItemValues() {
-        this.dataItemValues.clear();
+    clearRuntimeValues() {
+        this.runtimeValues.clear();
     }
 
     @action
-    set(dataItemId: string, value: any) {
-        if (this.localVariables && this.localVariables.has(dataItemId)) {
-            this.localVariables.set(dataItemId, value);
+    set(variableName: string, value: any) {
+        if (this.localVariables && this.localVariables.has(variableName)) {
+            this.localVariables.set(variableName, value);
         } else {
-            this.setDataItemValue(dataItemId, value);
+            this.setRuntimeValue(variableName, value);
         }
     }
 
-    isVariableDeclared(dataItemId: string) {
-        const parts = dataItemId.split(".");
-        dataItemId = parts[0];
+    isVariableDeclared(variableName: string) {
+        const parts = variableName.split(".");
+        variableName = parts[0];
 
-        if (this.localVariables && this.localVariables.has(dataItemId)) {
+        if (this.localVariables && this.localVariables.has(variableName)) {
             return true;
         }
 
-        if (findDataItem(this.project, dataItemId)) {
+        if (findVariable(this.project, variableName)) {
             return true;
         }
 
@@ -253,80 +259,82 @@ export class DataContext implements IDataContext {
         localVariables.set(variableName, value);
     }
 
-    findDataItemDefaultValue(dataItemId: string): any {
+    findVariableDefaultValue(variableName: string): any {
         if (this.defaultValueOverrides) {
-            const defaultValue = this.defaultValueOverrides[dataItemId];
+            const defaultValue = this.defaultValueOverrides[variableName];
             if (defaultValue != undefined) {
                 return defaultValue;
             }
         }
         if (this.parentDataContext) {
-            return this.parentDataContext.findDataItemDefaultValue(dataItemId);
+            return this.parentDataContext.findVariableDefaultValue(
+                variableName
+            );
         }
         return undefined;
     }
 
-    findDataItem(dataItemId: string) {
-        let dataItem = findDataItem(this.project, dataItemId);
-        if (dataItem) {
-            const defaultValue = this.findDataItemDefaultValue(dataItemId);
+    findVariable(variableName: string) {
+        let variable = findVariable(this.project, variableName);
+        if (variable) {
+            const defaultValue = this.findVariableDefaultValue(variableName);
             if (defaultValue != undefined) {
-                return { ...dataItem, defaultValue };
+                return { ...variable, defaultValue };
             }
         }
-        return dataItem;
+        return variable;
     }
 
-    get(dataItemId: string): any {
-        if (!dataItemId) {
+    get(variableName: string): any {
+        if (!variableName) {
             return undefined;
         }
 
-        const parts = dataItemId.split(".");
-        dataItemId = parts[0];
+        const parts = variableName.split(".");
+        variableName = parts[0];
 
-        if (dataItemId === undefined) {
+        if (variableName === undefined) {
             return undefined;
         }
 
         let value: any = undefined;
 
-        if (this.localVariables && this.localVariables.has(dataItemId)) {
-            value = this.localVariables.get(dataItemId);
+        if (this.localVariables && this.localVariables.has(variableName)) {
+            value = this.localVariables.get(variableName);
         } else {
-            const dataItem = this.findDataItem(dataItemId);
-            const { hasValue, value: value_ } = this.getDataItemValue(dataItem);
+            const variable = this.findVariable(variableName);
+            const { hasValue, value: value_ } = this.getRuntimeValue(variable);
 
-            if (dataItem) {
+            if (variable) {
                 if (hasValue) {
                     value = value_;
                 } else {
-                    if (dataItem.defaultValue !== undefined) {
+                    if (variable.defaultValue !== undefined) {
                         if (
-                            dataItem.type == "integer" ||
-                            dataItem.type == "enum"
+                            variable.type == "integer" ||
+                            variable.type == "enum"
                         ) {
-                            value = parseInt(dataItem.defaultValue);
+                            value = parseInt(variable.defaultValue);
                             if (isNaN(value)) {
-                                value = dataItem.defaultValue;
-                                if (dataItem.enumItems.indexOf(value) == -1) {
+                                value = variable.defaultValue;
+                                if (variable.enumItems.indexOf(value) == -1) {
                                     console.error(
                                         "Invalid integer default value",
-                                        dataItem
+                                        variable
                                     );
                                 }
                             }
-                        } else if (dataItem.type == "float") {
-                            value = parseFloat(dataItem.defaultValue);
+                        } else if (variable.type == "float") {
+                            value = parseFloat(variable.defaultValue);
                             if (isNaN(value)) {
-                                value = dataItem.defaultValue;
+                                value = variable.defaultValue;
                                 console.error(
                                     "Invalid float default value",
-                                    dataItem
+                                    variable
                                 );
                             }
-                        } else if (dataItem.type == "boolean") {
-                            let defaultValue = dataItem.defaultValue
+                        } else if (variable.type == "boolean") {
+                            let defaultValue = variable.defaultValue
                                 .toString()
                                 .trim()
                                 .toLowerCase();
@@ -340,22 +348,22 @@ export class DataContext implements IDataContext {
                             } else {
                                 value = undefined;
                             }
-                        } else if (dataItem.type == "list") {
+                        } else if (variable.type == "list") {
                             try {
                                 value =
-                                    typeof dataItem.defaultValue === "string"
-                                        ? JSON.parse(dataItem.defaultValue)
-                                        : dataItem.defaultValue;
+                                    typeof variable.defaultValue === "string"
+                                        ? JSON.parse(variable.defaultValue)
+                                        : variable.defaultValue;
                             } catch (err) {
                                 value = [];
                                 console.error(
                                     "Invalid list default value",
-                                    dataItem,
+                                    variable,
                                     err
                                 );
                             }
                         } else {
-                            value = dataItem.defaultValue;
+                            value = variable.defaultValue;
                         }
                     } else {
                         value = undefined;
@@ -375,8 +383,8 @@ export class DataContext implements IDataContext {
         return value;
     }
 
-    getBool(dataItemId: string): boolean {
-        let value = this.get(dataItemId);
+    getBool(variableName: string): boolean {
+        let value = this.get(variableName);
 
         if (typeof value === "boolean") {
             return value;
@@ -389,19 +397,19 @@ export class DataContext implements IDataContext {
         return false;
     }
 
-    getEnumValue(dataItemId: string): number {
-        let value = this.get(dataItemId);
+    getEnumValue(variableName: string): number {
+        let value = this.get(variableName);
 
         if (typeof value === "boolean") {
             return value ? 1 : 0;
         } else if (typeof value === "number" && Number.isInteger(value)) {
             return value;
         } else if (typeof value === "string") {
-            let dataItem = this.findDataItem(dataItemId);
-            if (dataItem && dataItem.type == "enum") {
-                value = dataItem.enumItems.indexOf(value);
+            let variable = this.findVariable(variableName);
+            if (variable && variable.type == "enum") {
+                value = variable.enumItems.indexOf(value);
                 if (value == -1) {
-                    console.error("Invalid enum value", dataItem);
+                    console.error("Invalid enum value", variable);
                     return 0;
                 } else {
                     return value;
@@ -412,31 +420,31 @@ export class DataContext implements IDataContext {
         return 0;
     }
 
-    getMin(dataItemId: string): number {
-        let dataItem = this.findDataItem(dataItemId);
-        if (dataItem) {
-            return dataItem.defaultMinValue;
+    getMin(variableName: string): number {
+        let variable = this.findVariable(variableName);
+        if (variable) {
+            return variable.defaultMinValue;
         }
 
         return 0;
     }
 
-    getMax(dataItemId: string): number {
-        let dataItem = this.findDataItem(dataItemId);
-        if (dataItem) {
-            return dataItem.defaultMaxValue;
+    getMax(variableName: string): number {
+        let variable = this.findVariable(variableName);
+        if (variable) {
+            return variable.defaultMaxValue;
         }
 
         return 1;
     }
 
-    getValueList(dataItemId: string): string[] {
-        let dataItem = this.findDataItem(dataItemId);
-        if (dataItem) {
+    getValueList(variableName: string): string[] {
+        let variable = this.findVariable(variableName);
+        if (variable) {
             try {
-                return JSON.parse(dataItem.defaultValueList);
+                return JSON.parse(variable.defaultValueList);
             } catch (err) {
-                console.error("Invalid value list", dataItem, err);
+                console.error("Invalid value list", variable, err);
                 return [];
             }
         }
@@ -448,19 +456,19 @@ export class DataContext implements IDataContext {
 ////////////////////////////////////////////////////////////////////////////////
 
 export default {
-    name: "eezstudio-project-feature-data",
+    name: "eezstudio-project-feature-variables",
     version: "0.1.0",
-    description: "Project data",
+    description: "Variables support.",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     eezStudioExtension: {
-        displayName: "Data",
+        displayName: "Global Variables",
         implementation: {
             projectFeature: {
                 mandatory: false,
-                key: "data",
+                key: "globalVariables",
                 type: PropertyType.Array,
-                typeClass: DataItem,
+                typeClass: Variable,
                 icon: "dns",
                 create: () => {
                     return [];
@@ -472,7 +480,7 @@ export default {
                         messages.push(
                             new output.Message(
                                 output.Type.ERROR,
-                                "Max. 32000 data items are supported",
+                                "Max. 32000 global variables are supported",
                                 object
                             )
                         );

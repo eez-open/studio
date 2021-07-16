@@ -27,6 +27,10 @@ import {
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/core/commands";
 import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
+import {
+    Variable,
+    VariableType
+} from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -188,6 +192,12 @@ export abstract class Flow extends EezObject {
                 type: PropertyType.Array,
                 typeClass: ConnectionLine,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "localVariables",
+                type: PropertyType.Array,
+                typeClass: Variable,
+                hideInPropertyGrid: true
             }
         ],
         findPastePlaceInside: (
@@ -206,6 +216,45 @@ export abstract class Flow extends EezObject {
         },
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (!jsObject.localVariables) {
+                jsObject.localVariables = [];
+            }
+
+            if (jsObject.components) {
+                for (const component of jsObject.components) {
+                    if (component.type === "DeclareVariableActionComponent") {
+                        component.type = "SetVariableActionComponent";
+
+                        let localVariable = jsObject.localVariables.find(
+                            (localVariable: any) =>
+                                localVariable.name === component.variable
+                        );
+
+                        if (!localVariable) {
+                            let value;
+                            try {
+                                value = JSON.parse(component.value);
+                            } catch (err) {}
+
+                            let type: VariableType | undefined;
+
+                            if (typeof value === "number") {
+                                type = "float";
+                            } else if (typeof value === "boolean") {
+                                type = "boolean";
+                            } else if (typeof value === "string") {
+                                type = "string";
+                            }
+
+                            jsObject.localVariables.push({
+                                name: component.variable,
+                                type
+                            });
+                        }
+                    }
+                }
+            }
+
             if (jsObject.connectionLines) {
                 for (let i = 1; i < jsObject.connectionLines.length; i++) {
                     for (let j = 0; j < i; j++) {
@@ -227,6 +276,7 @@ export abstract class Flow extends EezObject {
 
     components: Component[];
     connectionLines: ConnectionLine[];
+    localVariables: Variable[];
 
     @computed get wiredComponents() {
         const components = new Map<string, Component>();

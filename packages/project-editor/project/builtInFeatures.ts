@@ -1,4 +1,4 @@
-import "project-editor/features/data/data";
+import "project-editor/features/variable/variable";
 import "project-editor/features/page/page";
 import "project-editor/features/style/style";
 import "project-editor/features/font/font";

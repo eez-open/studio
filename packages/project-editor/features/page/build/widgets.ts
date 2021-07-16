@@ -138,7 +138,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
     // data
     let data = 0;
     if (object instanceof Widget) {
-        data = assets.getDataItemIndex(object, "data");
+        data = assets.getGlobalVariableIndex(object, "data");
     }
     result.addField(new UInt16(data));
 
@@ -191,7 +191,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
 
         let overlay = 0;
         if (object instanceof ContainerWidget) {
-            overlay = assets.getDataItemIndex(object, "overlay");
+            overlay = assets.getGlobalVariableIndex(object, "overlay");
         }
         specific.addField(new UInt16(overlay));
 
@@ -375,7 +375,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         );
 
         // line1Data
-        let line1Data = assets.getDataItemIndex(widget, "line1Data");
+        let line1Data = assets.getGlobalVariableIndex(widget, "line1Data");
 
         specific.addField(new UInt16(line1Data));
 
@@ -385,7 +385,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         );
 
         // line2Data
-        let line2Data = assets.getDataItemIndex(widget, "line2Data");
+        let line2Data = assets.getGlobalVariableIndex(widget, "line2Data");
 
         specific.addField(new UInt16(line2Data));
 
@@ -425,12 +425,12 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific = new Struct();
 
         // dwellData
-        let dwellData = assets.getDataItemIndex(widget, "dwellData");
+        let dwellData = assets.getGlobalVariableIndex(widget, "dwellData");
 
         specific.addField(new UInt16(dwellData));
 
         // y1Data
-        let y1Data = assets.getDataItemIndex(widget, "y1Data");
+        let y1Data = assets.getGlobalVariableIndex(widget, "y1Data");
 
         specific.addField(new UInt16(y1Data));
 
@@ -438,7 +438,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new UInt16(assets.getStyleIndex(widget, "y1Style")));
 
         // y2Data
-        let y2Data = assets.getDataItemIndex(widget, "y2Data");
+        let y2Data = assets.getGlobalVariableIndex(widget, "y2Data");
 
         specific.addField(new UInt16(y2Data));
 
@@ -446,7 +446,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new UInt16(assets.getStyleIndex(widget, "y2Style")));
 
         // cursorData
-        let cursorData = assets.getDataItemIndex(widget, "cursorData");
+        let cursorData = assets.getGlobalVariableIndex(widget, "cursorData");
 
         specific.addField(new UInt16(cursorData));
 
@@ -469,7 +469,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new String(text));
 
         // enabled
-        let enabledData = assets.getDataItemIndex(widget, "enabled");
+        let enabledData = assets.getGlobalVariableIndex(widget, "enabled");
 
         specific.addField(new UInt16(enabledData));
 
@@ -524,7 +524,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         specific.addField(new Int16(layout));
 
         // context
-        let context = assets.getDataItemIndex(widget, "context");
+        let context = assets.getGlobalVariableIndex(widget, "context");
         specific.addField(new UInt16(context));
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields

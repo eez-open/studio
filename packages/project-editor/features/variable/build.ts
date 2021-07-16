@@ -3,30 +3,30 @@ import { BuildResult } from "project-editor/core/extensions";
 import { Project, BuildConfiguration } from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
-import { DataItem } from "project-editor/features/data/data";
+import { Variable } from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildDataEnum(projectDataItems: DataItem[]) {
-    let dataItems = projectDataItems.map(
-        (dataItem, i) =>
+function buildDataEnum(projectVariables: Variable[]) {
+    let variables = projectVariables.map(
+        (variable, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "DATA_ID_",
-                dataItem,
+                variable,
                 projectBuild.NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
     );
 
-    dataItems.unshift(`${projectBuild.TAB}DATA_ID_NONE = 0`);
+    variables.unshift(`${projectBuild.TAB}DATA_ID_NONE = 0`);
 
-    return `enum DataEnum {\n${dataItems.join(",\n")}\n};`;
+    return `enum DataEnum {\n${variables.join(",\n")}\n};`;
 }
 
-function buildDataFuncsDecl(projectDataItems: DataItem[]) {
-    let dataItems = projectDataItems.map(dataItem => {
+function buildDataFuncsDecl(projectVariables: Variable[]) {
+    let variables = projectVariables.map(variable => {
         return `void ${projectBuild.getName(
             "data_",
-            dataItem,
+            variable,
             projectBuild.NamingConvention.UnderscoreLowerCase
         )}(DataOperationEnum operation, Cursor cursor, Value &value);`;
     });
@@ -34,7 +34,7 @@ function buildDataFuncsDecl(projectDataItems: DataItem[]) {
     return [
         "void data_none(DataOperationEnum operation, Cursor cursor, Value &value);"
     ]
-        .concat(dataItems)
+        .concat(variables)
         .join("\n");
 }
 
@@ -42,19 +42,19 @@ function buildDataArrayDecl() {
     return "typedef void (*DataOperationsFunction)(DataOperationEnum operation, Cursor cursor, Value &value);\n\nextern DataOperationsFunction g_dataOperationsFunctions[];";
 }
 
-function buildDataArrayDef(projectDataItems: DataItem[]) {
-    let dataItems = projectDataItems.map(
-        dataItem =>
+function buildDataArrayDef(projectVariables: Variable[]) {
+    let variables = projectVariables.map(
+        variable =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "data_",
-                dataItem,
+                variable,
                 projectBuild.NamingConvention.UnderscoreLowerCase
             )}`
     );
 
     return `DataOperationsFunction g_dataOperationsFunctions[] = {\n${
         projectBuild.TAB
-    }data_none,\n${dataItems.join(",\n")}\n};`;
+    }data_none,\n${variables.join(",\n")}\n};`;
 }
 
 export function build(
@@ -65,20 +65,20 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
-        const projectDataItems = project.data.filter(
-            dataItem =>
+        const projectVariables = project.globalVariables.filter(
+            variable =>
                 !buildConfiguration ||
-                !dataItem.usedIn ||
-                dataItem.usedIn.indexOf(buildConfiguration.name) !== -1
+                !variable.usedIn ||
+                variable.usedIn.indexOf(buildConfiguration.name) !== -1
         );
         for (const importDirective of project.settings.general.imports) {
             if (importDirective.project) {
-                projectDataItems.push(
-                    ...importDirective.project.data.filter(
-                        dataItem =>
+                projectVariables.push(
+                    ...importDirective.project.globalVariables.filter(
+                        variable =>
                             !buildConfiguration ||
-                            !dataItem.usedIn ||
-                            dataItem.usedIn.indexOf(buildConfiguration.name) !==
+                            !variable.usedIn ||
+                            variable.usedIn.indexOf(buildConfiguration.name) !==
                                 -1
                     )
                 );
@@ -86,11 +86,11 @@ export function build(
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_ENUM") !== -1) {
-            result.DATA_ENUM = buildDataEnum(projectDataItems);
+            result.DATA_ENUM = buildDataEnum(projectVariables);
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_FUNCS_DECL") !== -1) {
-            result.DATA_FUNCS_DECL = buildDataFuncsDecl(projectDataItems);
+            result.DATA_FUNCS_DECL = buildDataFuncsDecl(projectVariables);
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DECL") !== -1) {
@@ -98,7 +98,7 @@ export function build(
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DEF") !== -1) {
-            result.DATA_ARRAY_DEF = buildDataArrayDef(projectDataItems);
+            result.DATA_ARRAY_DEF = buildDataArrayDef(projectVariables);
         }
 
         resolve(result);

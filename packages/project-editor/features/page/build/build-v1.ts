@@ -229,7 +229,8 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                 );
             } else {
                 if (object.type == "Container") {
-                    let widgetsItemChildren = item.children as DisplayItemChildrenArray;
+                    let widgetsItemChildren =
+                        item.children as DisplayItemChildrenArray;
                     widgetsItemChildren.forEach(child => {
                         enumWidget(treeNode, child, x, y);
                     });
@@ -237,9 +238,9 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                     let widget = object as ListWidget;
                     let itemWidget = widget.itemWidget;
                     if (itemWidget) {
-                        let itemWidgetItem = (item.children as DisplayItemChildrenObject)[
-                            "itemWidget"
-                        ];
+                        let itemWidgetItem = (
+                            item.children as DisplayItemChildrenObject
+                        )["itemWidget"];
 
                         const dataValue = getDocumentStore(
                             flowContainerDisplayItem.object
@@ -511,9 +512,9 @@ function getPageLayoutIndex(object: any, propertyName: string) {
     return getItem(pages, object, propertyName);
 }
 
-function getDataItemIndex(object: any, propertyName: string) {
-    const dataItems = getProject(object).data;
-    return getItem(dataItems, object, propertyName);
+function getGlobalVariableIndex(object: any, propertyName: string) {
+    const globalVariables = getProject(object).globalVariables;
+    return getItem(globalVariables, object, propertyName);
 }
 
 function getActionIndex(object: any, propertyName: string) {
@@ -1195,7 +1196,7 @@ function buildWidget(object: Widget | Page) {
     let data: number = 0;
     if (object instanceof Widget) {
         if (object.data) {
-            data = getDataItemIndex(object, "data");
+            data = getGlobalVariableIndex(object, "data");
         }
     }
     result.addField(new UInt8(data));
@@ -1423,7 +1424,7 @@ function buildWidget(object: Widget | Page) {
         // line1Data
         let line1Data: number | undefined = 0;
         if (widget.line1Data) {
-            line1Data = getDataItemIndex(widget, "line1Data");
+            line1Data = getGlobalVariableIndex(widget, "line1Data");
         }
 
         specific.addField(new UInt8(line1Data));
@@ -1439,7 +1440,7 @@ function buildWidget(object: Widget | Page) {
         // line2Data
         let line2Data: number | undefined = 0;
         if (widget.line2Data) {
-            line2Data = getDataItemIndex(widget, "line2Data");
+            line2Data = getGlobalVariableIndex(widget, "line2Data");
         }
 
         specific.addField(new UInt8(line2Data));
@@ -1466,7 +1467,7 @@ function buildWidget(object: Widget | Page) {
         // data2
         let y2Data: number | undefined = 0;
         if (widget.y2Data) {
-            y2Data = getDataItemIndex(widget, "y2Data");
+            y2Data = getGlobalVariableIndex(widget, "y2Data");
         }
 
         specific.addField(new UInt8(y2Data));
@@ -1515,7 +1516,7 @@ function buildWidget(object: Widget | Page) {
         // dwellData
         let dwellData: number | undefined = 0;
         if (widget.dwellData) {
-            dwellData = getDataItemIndex(widget, "dwellData");
+            dwellData = getGlobalVariableIndex(widget, "dwellData");
         }
 
         specific.addField(new UInt8(dwellData));
@@ -1523,7 +1524,7 @@ function buildWidget(object: Widget | Page) {
         // y1Data
         let y1Data: number | undefined = 0;
         if (widget.y1Data) {
-            y1Data = getDataItemIndex(widget, "y1Data");
+            y1Data = getGlobalVariableIndex(widget, "y1Data");
         }
 
         specific.addField(new UInt8(y1Data));
@@ -1539,7 +1540,7 @@ function buildWidget(object: Widget | Page) {
         // y2Data
         let y2Data: number | undefined = 0;
         if (widget.y2Data) {
-            y2Data = getDataItemIndex(widget, "y2Data");
+            y2Data = getGlobalVariableIndex(widget, "y2Data");
         }
 
         specific.addField(new UInt8(y2Data));
@@ -1555,7 +1556,7 @@ function buildWidget(object: Widget | Page) {
         // cursorData
         let cursorData: number | undefined = 0;
         if (widget.cursorData) {
-            cursorData = getDataItemIndex(widget, "cursorData");
+            cursorData = getGlobalVariableIndex(widget, "cursorData");
         }
 
         specific.addField(new UInt8(cursorData));
@@ -1584,7 +1585,7 @@ function buildWidget(object: Widget | Page) {
         // enabled
         let enabledData: number | undefined = 0;
         if (widget.enabled) {
-            enabledData = getDataItemIndex(widget, "enabled");
+            enabledData = getGlobalVariableIndex(widget, "enabled");
         }
 
         specific.addField(new UInt8(enabledData));

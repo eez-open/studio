@@ -136,7 +136,7 @@ export class RuntimeStoreClass {
                     this.DocumentStore.isDashboardProject;
 
                 if (this.DocumentStore.isDashboardProject) {
-                    this.DocumentStore.dataContext.clearDataItemValues();
+                    this.DocumentStore.dataContext.clearRuntimeValues();
                 }
 
                 this.queueIsEmpty = true;
@@ -912,7 +912,9 @@ export class RunningFlow {
         public component?: Component
     ) {
         this.dataContext =
-            this.RuntimeStore.DocumentStore.dataContext.createWithLocalVariables();
+            this.RuntimeStore.DocumentStore.dataContext.createWithLocalVariables(
+                flow.localVariables
+            );
     }
 
     get label() {

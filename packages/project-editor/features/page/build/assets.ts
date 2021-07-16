@@ -24,7 +24,10 @@ import { Page, findPage } from "project-editor/features/page/page";
 import { Font, findFont } from "project-editor/features/font/font";
 import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Action, findAction } from "project-editor/features/action/action";
-import { DataItem, findDataItem } from "project-editor/features/data/data";
+import {
+    Variable,
+    findVariable
+} from "project-editor/features/variable/variable";
 import { Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 
@@ -42,7 +45,7 @@ import { buildGuiFontsData } from "project-editor/features/page/build/fonts";
 import { buildGuiBitmapsData } from "project-editor/features/page/build/bitmaps";
 import { buildGuiColors } from "project-editor/features/page/build/themes";
 import { buildActionNames } from "project-editor/features/page/build/actions";
-import { buildDataItemNames } from "project-editor/features/page/build/data-items";
+import { buildVariableNames } from "project-editor/features/page/build/variables";
 import {
     buildFlowData,
     FlowValue,
@@ -58,7 +61,7 @@ const PATH_SEPARATOR = "//";
 export class Assets {
     projects: Project[];
 
-    dataItems: DataItem[];
+    globalVariables: Variable[];
     actions: Action[];
     pages: Page[];
     styles: (Style | undefined)[];
@@ -158,13 +161,13 @@ export class Assets {
         this.collectProjects(rootProject);
 
         {
-            const assetIncludePredicate = (asset: DataItem | Action | Page) =>
+            const assetIncludePredicate = (asset: Variable | Action | Page) =>
                 !buildConfiguration ||
                 !asset.usedIn ||
                 asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
-            this.dataItems = this.getAssets<DataItem>(
-                project => project.data,
+            this.globalVariables = this.getAssets<Variable>(
+                project => project.globalVariables,
                 assetIncludePredicate
             );
 
@@ -247,7 +250,7 @@ export class Assets {
         return 0;
     }
 
-    getDataItemIndex(object: any, propertyName: string) {
+    getGlobalVariableIndex(object: any, propertyName: string) {
         if (this.DocumentStore.isAppletProject) {
             return this.getFlowWidgetDataItemIndex(object, propertyName);
         }
@@ -257,8 +260,8 @@ export class Assets {
         return this.getAssetIndex(
             object,
             propertyName,
-            findDataItem,
-            this.dataItems
+            findVariable,
+            this.globalVariables
         );
     }
 
@@ -744,7 +747,7 @@ export async function buildGuiAssetsData(assets: Assets) {
         } else if (i == 5) {
             buildActionNames(assets, dataBuffer);
         } else if (i == 6) {
-            buildDataItemNames(assets, dataBuffer);
+            buildVariableNames(assets, dataBuffer);
         } else if (i == 7) {
             buildFlowData(assets, dataBuffer);
         }

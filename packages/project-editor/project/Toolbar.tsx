@@ -82,7 +82,7 @@ export class Toolbar extends React.Component {
             !this.context.isDashboardProject &&
             (this.context.project.pages ||
                 this.context.project.actions ||
-                this.context.project.data)
+                this.context.project.globalVariables)
         );
     }
 

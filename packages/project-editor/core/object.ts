@@ -850,13 +850,13 @@ export function getChildOfObject(
     return undefined;
 }
 
-export function getAncestorOfType(
+export function getAncestorOfType<T>(
     object: IEezObject,
     classInfo: ClassInfo
-): IEezObject | undefined {
+): T | undefined {
     if (object) {
         if (isObjectInstanceOf(object, classInfo)) {
-            return object;
+            return object as T;
         }
         return (
             getParent(object) && getAncestorOfType(getParent(object), classInfo)
