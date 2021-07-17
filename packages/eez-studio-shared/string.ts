@@ -33,6 +33,13 @@ export function underscore(string: string | undefined): string {
     return string;
 }
 
+export function pascalCase(string: string | undefined): string {
+    string = string || "";
+    return string.replace(/(\w)(\w*)/g, function (g0: any, g1: any, g2: any) {
+        return g1.toUpperCase() + g2.toLowerCase();
+    });
+}
+
 export function extname(string: string): string {
     var index = string.lastIndexOf(".");
     var ext = string.substring(index, string.length);

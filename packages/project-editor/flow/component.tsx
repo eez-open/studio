@@ -35,7 +35,8 @@ import {
     PropertyProps,
     generalGroup,
     isPropertyHidden,
-    getObjectPropertyDisplayName
+    getObjectPropertyDisplayName,
+    getProperty
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
@@ -66,6 +67,7 @@ import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import { Struct } from "project-editor/features/page/build/pack";
 import { Assets } from "project-editor/features/page/build/assets";
+import { compileExpression } from "./expression";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -80,7 +82,7 @@ export function makeDataPropertyInfo(
         name,
         displayName,
         type: PropertyType.ObjectReference,
-        referencedObjectCollectionPath: "data",
+        referencedObjectCollectionPath: "globalVariables",
         propertyGridGroup: propertyGridGroup || dataGroup,
         onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
@@ -533,14 +535,14 @@ export class Component extends EezObject {
             return true;
         },
 
-        check: (object: Component) => {
+        check: (component: Component) => {
             let messages: output.Message[] = [];
 
-            object.inputs.forEach(input => {
+            component.inputs.forEach(input => {
                 if (
-                    !getFlow(object).connectionLines.find(
+                    !getFlow(component).connectionLines.find(
                         connectionLine =>
-                            connectionLine.targetComponent === object &&
+                            connectionLine.targetComponent === component &&
                             connectionLine.input === input.name
                     )
                 ) {
@@ -550,17 +552,17 @@ export class Component extends EezObject {
                             `No connection to input "${
                                 input.displayName || input.name
                             }"`,
-                            object
+                            component
                         )
                     );
                 }
             });
 
-            object.outputs.forEach(componentOutput => {
+            component.outputs.forEach(componentOutput => {
                 if (
-                    !getFlow(object).connectionLines.find(
+                    !getFlow(component).connectionLines.find(
                         connectionLine =>
-                            connectionLine.sourceComponent === object &&
+                            connectionLine.sourceComponent === component &&
                             connectionLine.output === componentOutput.name
                     )
                 ) {
@@ -571,62 +573,84 @@ export class Component extends EezObject {
                                 componentOutput.displayName ||
                                 componentOutput.name
                             }" is not connected`,
-                            object
+                            component
                         )
                     );
                 }
             });
 
-            if (!(object instanceof ActionComponent)) {
-                if (object.left < 0) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "left")
-                        )
-                    );
+            if (
+                getDocumentStore(component).isAppletProject ||
+                getDocumentStore(component).isDashboardProject
+            ) {
+                if (!(component instanceof ActionComponent)) {
+                    if (component.left < 0) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Widget is outside of its parent",
+                                getChildOfObject(component, "left")
+                            )
+                        );
+                    }
+
+                    if (component.top < 0) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Widget is outside of its parent",
+                                getChildOfObject(component, "top")
+                            )
+                        );
+                    }
+
+                    if (
+                        component.left + component.width >
+                        getWidgetParent(component).width
+                    ) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Widget is outside of its parent",
+                                getChildOfObject(component, "width")
+                            )
+                        );
+                    }
+
+                    if (
+                        component.top + component.height >
+                        getWidgetParent(component).height
+                    ) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Widget is outside of its parent",
+                                getChildOfObject(component, "height")
+                            )
+                        );
+                    }
                 }
 
-                if (object.top < 0) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "top")
-                        )
-                    );
+                for (const propertyInfo of getClassInfo(component).properties) {
+                    if (propertyInfo.toggableProperty === "input") {
+                        try {
+                            compileExpression(
+                                component,
+                                getProperty(component, propertyInfo.name)
+                            );
+                        } catch (err) {
+                            new output.Message(
+                                output.Type.ERROR,
+                                "Invalid expression",
+                                getChildOfObject(component, propertyInfo.name)
+                            );
+                        }
+                    }
                 }
-
-                if (
-                    object.left + object.width >
-                    getWidgetParent(object).width
-                ) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "width")
-                        )
-                    );
-                }
-
-                if (
-                    object.top + object.height >
-                    getWidgetParent(object).height
-                ) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "height")
-                        )
-                    );
-                }
+            } else {
+                checkObjectReference(component, "data", messages);
+                checkObjectReference(component, "action", messages);
             }
-
-            checkObjectReference(object, "data", messages);
-            checkObjectReference(object, "action", messages);
 
             return messages;
         },

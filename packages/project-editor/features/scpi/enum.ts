@@ -87,7 +87,7 @@ export class ScpiEnum extends EezObject {
         label: (scpiEnum: ScpiEnum) => {
             return `${scpiEnum.name} (${scpiEnum.members
                 .map(member => member.name)
-                .join("|")})`;
+                .join(" | ")})`;
         },
         properties: [
             {
@@ -104,7 +104,7 @@ export class ScpiEnum extends EezObject {
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
-                    title: "New Enumaration",
+                    title: "New Enumeration",
                     fields: [
                         {
                             name: "name",

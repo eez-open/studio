@@ -28,7 +28,7 @@ export interface ExtensionImplementation {
         displayName?: string;
         type: PropertyType;
         typeClass: EezClass;
-        icon: string;
+        icon: string | React.ReactNode;
         create: () => any;
         check?: (object: IEezObject) => Message[];
         build?: (

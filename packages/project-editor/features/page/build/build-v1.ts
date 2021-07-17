@@ -513,7 +513,7 @@ function getPageLayoutIndex(object: any, propertyName: string) {
 }
 
 function getGlobalVariableIndex(object: any, propertyName: string) {
-    const globalVariables = getProject(object).globalVariables;
+    const globalVariables = getProject(object).variables.globalVariables;
     return getItem(globalVariables, object, propertyName);
 }
 

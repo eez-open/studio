@@ -578,11 +578,11 @@ export class SelectWidget extends EmbeddedWidget {
                 if (variable) {
                     let enumItems: string[] = [];
                     if (variable.type == "enum") {
-                        try {
-                            enumItems = JSON.parse(variable.enumItems || "[]");
-                        } catch (err) {
-                            enumItems = [];
-                        }
+                        const project = getProject(object);
+                        enumItems =
+                            project.variables.enumMap
+                                .get(variable.enum)
+                                ?.members.map(member => member.name) ?? [];
                     } else if (variable.type == "boolean") {
                         enumItems = ["0", "1"];
                     }
@@ -641,18 +641,12 @@ export class SelectWidget extends EmbeddedWidget {
                     if (variable) {
                         if (variable.type == "enum") {
                             let enumItems: string[];
-                            try {
-                                enumItems = JSON.parse(
-                                    variable.enumItems || "[]"
-                                );
-                            } catch (err) {
-                                enumItems = [];
-                                console.error(
-                                    "Invalid enum items",
-                                    variable,
-                                    err
-                                );
-                            }
+
+                            const project = getProject(this);
+                            enumItems =
+                                project.variables.enumMap
+                                    .get(variable.enum)
+                                    ?.members.map(member => member.name) ?? [];
 
                             if (index < enumItems.length) {
                                 let enumItemLabel = htmlEncode(

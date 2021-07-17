@@ -4,6 +4,7 @@ import { Project } from "project-editor/project/project";
 
 export function metrics(project: Project): { [key: string]: string | number } {
     return {
-        "Data items": project.globalVariables.length
+        "Global variables": project.variables.globalVariables.length,
+        Structures: project.variables.structures.length
     };
 }

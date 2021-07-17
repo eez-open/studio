@@ -167,7 +167,7 @@ export class Assets {
                 asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
             this.globalVariables = this.getAssets<Variable>(
-                project => project.globalVariables,
+                project => project.variables.globalVariables,
                 assetIncludePredicate
             );
 

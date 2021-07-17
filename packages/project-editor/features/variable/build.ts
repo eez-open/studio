@@ -65,7 +65,7 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
-        const projectVariables = project.globalVariables.filter(
+        const projectVariables = project.variables.globalVariables.filter(
             variable =>
                 !buildConfiguration ||
                 !variable.usedIn ||
@@ -74,7 +74,7 @@ export function build(
         for (const importDirective of project.settings.general.imports) {
             if (importDirective.project) {
                 projectVariables.push(
-                    ...importDirective.project.globalVariables.filter(
+                    ...importDirective.project.variables.globalVariables.filter(
                         variable =>
                             !buildConfiguration ||
                             !variable.usedIn ||

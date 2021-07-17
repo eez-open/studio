@@ -7,7 +7,7 @@ import {
     getFileNameWithoutExtension
 } from "eez-studio-shared/util-electron";
 import { _map, _keys, _filter, _max, _min } from "eez-studio-shared/algorithm";
-import { humanize } from "eez-studio-shared/string";
+import { humanize, pascalCase } from "eez-studio-shared/string";
 
 import {
     showGenericDialog,
@@ -52,7 +52,10 @@ import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 import "project-editor/project/builtInFeatures";
 
 import { Action } from "project-editor/features/action/action";
-import { Variable } from "project-editor/features/variable/variable";
+import {
+    ProjectVariables,
+    Variable
+} from "project-editor/features/variable/variable";
 import { Scpi } from "project-editor/features/scpi/scpi";
 import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
@@ -185,7 +188,11 @@ registerClass(BuildFile);
 
 function isFilesPropertyEnumerable(object: IEezObject): boolean {
     const project: Project = getProject(object);
-    return !!(project.pages || project.actions || project.globalVariables);
+    return !!(
+        project.pages ||
+        project.actions ||
+        project.variables.globalVariables
+    );
 }
 
 export class Build extends EezObject {
@@ -735,6 +742,73 @@ function getProjectClassInfo() {
                     delete projectJs.data;
                 }
 
+                if (projectJs.globalVariables) {
+                    projectJs.variables = {
+                        globalVariables: projectJs.globalVariables,
+                        structures: []
+                    };
+                    delete projectJs.globalVariables;
+                }
+
+                if (!projectJs.variables.enums) {
+                    projectJs.variables.enums = [];
+                }
+
+                const enums = projectJs.variables.enums as {
+                    name: string;
+                    members: {
+                        name: string;
+                        value: number;
+                    }[];
+                }[];
+
+                for (const globalVariable of projectJs.variables
+                    .globalVariables) {
+                    if (globalVariable.enumItems) {
+                        try {
+                            const enumItems = JSON.parse(
+                                globalVariable.enumItems
+                            );
+
+                            if (Array.isArray(enumItems)) {
+                                const prefix = pascalCase(globalVariable.name);
+                                let name = prefix;
+
+                                let i = 0;
+                                while (true) {
+                                    if (
+                                        !enums.find(
+                                            enumItem => enumItem.name == name
+                                        )
+                                    ) {
+                                        break;
+                                    }
+                                    name = prefix + i++;
+                                }
+
+                                const members = enumItems.map(
+                                    (name: string, value: number) => ({
+                                        name,
+                                        value
+                                    })
+                                );
+
+                                enums.push({
+                                    name,
+                                    members
+                                });
+
+                                globalVariable.enum = name;
+                            } else {
+                                globalVariable.enum = globalVariable.enumItems;
+                            }
+                        } catch (err) {
+                            globalVariable.enum = globalVariable.enumItems;
+                        }
+                        delete globalVariable.enumItems;
+                    }
+                }
+
                 if (projectJs.gui) {
                     Object.assign(projectJs, projectJs.gui);
                     delete projectJs.gui;
@@ -822,7 +896,7 @@ export class Project extends EezObject {
     _isReadOnly: boolean = false;
 
     @observable settings: Settings;
-    @observable globalVariables: Variable[];
+    @observable variables: ProjectVariables;
     @observable actions: Action[];
     @observable pages: Page[];
     @observable styles: Style[];
@@ -862,7 +936,7 @@ export class Project extends EezObject {
     @computed
     get globalVariablesMap() {
         const map = new Map<String, Variable>();
-        this.globalVariables.forEach(globalVariable =>
+        this.variables.globalVariables.forEach(globalVariable =>
             map.set(globalVariable.name, globalVariable)
         );
         return map;
@@ -900,7 +974,7 @@ export class Project extends EezObject {
         return [
             {
                 path: "globalVariables",
-                map: this.globalVariables && this.globalVariablesMap
+                map: this.variables.globalVariables && this.globalVariablesMap
             },
             { path: "actions", map: this.actions && this.actionsMap },
             { path: "pages", map: this.pagesMap },

@@ -1,4 +1,6 @@
-import { action, observable } from "mobx";
+import React from "react";
+import { computed, action, observable } from "mobx";
+import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
 
@@ -9,18 +11,49 @@ import {
     registerClass,
     IEezObject,
     EezObject,
-    PropertyType
+    PropertyType,
+    PropertyInfo,
+    NavigationComponent
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import { findReferencedObject, Project } from "project-editor/project/project";
-import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
+import {
+    ListNavigation,
+    ListNavigationWithProperties
+} from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/variable/build";
 import { metrics } from "project-editor/features/variable/metrics";
 import type {
     IDataContext,
     IVariable
 } from "project-editor/flow/flow-interfaces";
-import { getDocumentStore } from "project-editor/core/store";
+import {
+    getDocumentStore,
+    getObjectFromNavigationItem
+} from "project-editor/core/store";
+import { ProjectContext } from "project-editor/project/context";
+import { Splitter } from "eez-studio-ui/splitter";
+import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
+import { MenuNavigation } from "project-editor/components/MenuNavigation";
+
+const VariableIcon = (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="icon icon-tabler icon-tabler-variable"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 4c-2.5 5 -2.5 10 0 16m14 -16c2.5 5 2.5 10 0 16m-10 -11h1c1 0 1 1 2.016 3.527c.984 2.473 .984 3.473 1.984 3.473h1" />
+        <path d="M8 16c1.5 0 3 -2 4 -3.5s2.5 -3.5 4 -3.5" />
+    </svg>
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,15 +67,51 @@ export type VariableType =
     | "struct"
     | "date";
 
+const variableTypeProperty: PropertyInfo = {
+    name: "type",
+    type: PropertyType.Enum,
+    enumItems: [
+        {
+            id: "integer"
+        },
+        {
+            id: "float"
+        },
+        {
+            id: "boolean"
+        },
+        {
+            id: "string"
+        },
+        {
+            id: "enum"
+        },
+        {
+            id: "list"
+        },
+        {
+            id: "struct",
+            label: "Structure"
+        },
+        {
+            id: "date"
+        }
+    ]
+};
+
 export class Variable extends EezObject {
     @observable name: string;
     @observable description?: string;
+
     @observable type: VariableType;
-    @observable enumItems: string;
+    @observable enum: string;
+    @observable structure: string;
+
     @observable defaultValue: string;
     @observable defaultValueList: string;
     @observable defaultMinValue: number;
     @observable defaultMaxValue: number;
+
     @observable usedIn?: string[];
 
     static classInfo: ClassInfo = {
@@ -57,41 +126,21 @@ export class Variable extends EezObject {
                 name: "description",
                 type: PropertyType.MultilineText
             },
+            variableTypeProperty,
             {
-                name: "type",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "integer"
-                    },
-                    {
-                        id: "float"
-                    },
-                    {
-                        id: "boolean"
-                    },
-                    {
-                        id: "string"
-                    },
-                    {
-                        id: "enum"
-                    },
-                    {
-                        id: "list"
-                    },
-                    {
-                        id: "struct"
-                    },
-                    {
-                        id: "date"
-                    }
-                ]
-            },
-            {
-                name: "enumItems",
-                type: PropertyType.JSON,
+                name: "enum",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "variables/enums",
                 hideInPropertyGrid: (object: Variable) => {
                     return object.type != "enum";
+                }
+            },
+            {
+                name: "structure",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "variables/structures",
+                hideInPropertyGrid: (object: Variable) => {
+                    return object.type != "struct";
                 }
             },
             {
@@ -142,7 +191,7 @@ export class Variable extends EezObject {
         },
         navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "global-variables",
-        icon: "dns"
+        icon: VariableIcon
     };
 }
 
@@ -317,7 +366,8 @@ export class DataContext implements IDataContext {
                             value = parseInt(variable.defaultValue);
                             if (isNaN(value)) {
                                 value = variable.defaultValue;
-                                if (variable.enumItems.indexOf(value) == -1) {
+                                // TODO this is invalid check
+                                if (variable.enum.indexOf(value) == -1) {
                                     console.error(
                                         "Invalid integer default value",
                                         variable
@@ -407,7 +457,8 @@ export class DataContext implements IDataContext {
         } else if (typeof value === "string") {
             let variable = this.findVariable(variableName);
             if (variable && variable.type == "enum") {
-                value = variable.enumItems.indexOf(value);
+                // TODO this is invalid check
+                value = variable.enum.indexOf(value);
                 if (value == -1) {
                     console.error("Invalid enum value", variable);
                     return 0;
@@ -455,23 +506,353 @@ export class DataContext implements IDataContext {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class StructureField extends EezObject {
+    @observable name: string;
+    @observable type: VariableType;
+    @observable structure: string;
+    @observable enum: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            variableTypeProperty,
+            {
+                name: "enum",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "variables/enums",
+                hideInPropertyGrid: (object: Variable) => {
+                    return object.type != "enum";
+                }
+            },
+            {
+                name: "structure",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "variables/structures",
+                hideInPropertyGrid: (object: Variable) => {
+                    return object.type != "struct";
+                }
+            }
+        ],
+        defaultValue: {}
+    };
+}
+
+registerClass(StructureField);
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class StructureNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    @computed
+    get object() {
+        if (this.context.NavigationStore.selectedPanel) {
+            return this.context.NavigationStore.selectedPanel.selectedObject;
+        }
+        return this.context.NavigationStore.selectedObject;
+    }
+
+    render() {
+        let structures = this.context.project.variables.structures;
+
+        let selectedStructure = getObjectFromNavigationItem(
+            this.context.NavigationStore.getNavigationSelectedItem(structures)
+        ) as Structure;
+
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/navigation-${this.props.id}`}
+                sizes={`240px|100%`}
+                childrenOverflow="hidden"
+            >
+                <ListNavigation
+                    id={this.props.id}
+                    navigationObject={structures}
+                />
+                <PropertiesPanel object={selectedStructure} />
+            </Splitter>
+        );
+    }
+}
+
+export class Structure extends EezObject {
+    @observable name: string;
+    @observable fields: StructureField[];
+
+    static classInfo: ClassInfo = {
+        label: (structure: Structure) => {
+            return `${structure.name} (${structure.fields
+                .map(field => field.name)
+                .join(" | ")})`;
+        },
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "fields",
+                type: PropertyType.Array,
+                typeClass: StructureField
+            }
+        ],
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Structure",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        },
+        navigationComponent: StructureNavigation,
+        navigationComponentId: "project-variables-structures",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="icon icon-tabler icon-tabler-columns"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <line x1="4" y1="6" x2="9.5" y2="6" />
+                <line x1="4" y1="10" x2="9.5" y2="10" />
+                <line x1="4" y1="14" x2="9.5" y2="14" />
+                <line x1="4" y1="18" x2="9.5" y2="18" />
+                <line x1="14.5" y1="6" x2="20" y2="6" />
+                <line x1="14.5" y1="10" x2="20" y2="10" />
+                <line x1="14.5" y1="14" x2="20" y2="14" />
+                <line x1="14.5" y1="18" x2="20" y2="18" />
+            </svg>
+        )
+    };
+}
+
+registerClass(Structure);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class EnumMember extends EezObject {
+    @observable name: string;
+    @observable value: number;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "value",
+                type: PropertyType.Number
+            }
+        ],
+        defaultValue: {}
+    };
+}
+
+registerClass(EnumMember);
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class EnumNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    @computed
+    get object() {
+        if (this.context.NavigationStore.selectedPanel) {
+            return this.context.NavigationStore.selectedPanel.selectedObject;
+        }
+        return this.context.NavigationStore.selectedObject;
+    }
+
+    render() {
+        let enums = this.context.project.variables.enums;
+
+        let selectedEnum = getObjectFromNavigationItem(
+            this.context.NavigationStore.getNavigationSelectedItem(enums)
+        ) as Enum;
+
+        return (
+            <Splitter
+                type="horizontal"
+                persistId={`project-editor/navigation-${this.props.id}`}
+                sizes={`240px|100%`}
+                childrenOverflow="hidden"
+            >
+                <ListNavigation id={this.props.id} navigationObject={enums} />
+                <PropertiesPanel object={selectedEnum} />
+            </Splitter>
+        );
+    }
+}
+
+export class Enum extends EezObject {
+    @observable name: string;
+    @observable members: EnumMember[];
+
+    static classInfo: ClassInfo = {
+        label: (enumDef: Enum) => {
+            return `${enumDef.name} (${enumDef.members
+                .map(member => member.name)
+                .join(" | ")})`;
+        },
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "members",
+                type: PropertyType.Array,
+                typeClass: EnumMember
+            }
+        ],
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Enum",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        },
+        navigationComponent: EnumNavigation,
+        navigationComponentId: "project-variables-enums",
+        icon: "format_list_numbered"
+    };
+}
+
+registerClass(Enum);
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ProjectVariablesNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        return (
+            <MenuNavigation
+                id={this.props.id}
+                navigationObject={this.context.project.variables}
+            />
+        );
+    }
+}
+
+export class ProjectVariables extends EezObject {
+    @observable globalVariables: Variable[];
+    @observable structures: Structure[];
+    @observable enums: Enum[];
+
+    static classInfo: ClassInfo = {
+        label: () => "Variables",
+        properties: [
+            {
+                name: "globalVariables",
+                type: PropertyType.Array,
+                typeClass: Variable,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "structures",
+                type: PropertyType.Array,
+                typeClass: Structure,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "enums",
+                type: PropertyType.Array,
+                typeClass: Enum,
+                hideInPropertyGrid: true
+            }
+        ],
+        navigationComponent: ProjectVariablesNavigation,
+        navigationComponentId: "projectVariables",
+        defaultNavigationKey: "globalVariables",
+        icon: VariableIcon
+    };
+
+    @computed get enumMap() {
+        const map = new Map<string, Enum>();
+        for (const enumDef of this.enums) {
+            map.set(enumDef.name, enumDef);
+        }
+        return map;
+    }
+}
+
+registerClass(ProjectVariables);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export default {
     name: "eezstudio-project-feature-variables",
     version: "0.1.0",
-    description: "Variables support.",
+    description: "Variables, Structures and Enums",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
     eezStudioExtension: {
-        displayName: "Global Variables",
+        displayName: "Variables",
         implementation: {
             projectFeature: {
                 mandatory: false,
-                key: "globalVariables",
-                type: PropertyType.Array,
-                typeClass: Variable,
-                icon: "dns",
+                key: "variables",
+                type: PropertyType.Object,
+                typeClass: ProjectVariables,
+                icon: VariableIcon,
                 create: () => {
-                    return [];
+                    return {
+                        globalVariables: [],
+                        structures: [],
+                        enums: []
+                    };
                 },
                 check: (object: IEezObject[]) => {
                     let messages: output.Message[] = [];

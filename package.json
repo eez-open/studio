@@ -97,6 +97,7 @@
         "golden-layout": "^1.5.9",
         "immutability-helper": "^3.1.1",
         "jquery": "^3.5.1",
+        "jsep": "^0.4.0",
         "json-stable-stringify": "^1.0.1",
         "jspanel4": "^4.10.2",
         "lodash": "^4.17.15",
