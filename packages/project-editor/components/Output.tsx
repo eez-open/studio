@@ -1,4 +1,10 @@
-import { action, autorun } from "mobx";
+import {
+    observable,
+    action,
+    autorun,
+    runInAction,
+    IReactionDisposer
+} from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
 import React from "react";
 import classNames from "classnames";
@@ -108,6 +114,9 @@ class Messages extends React.Component {
 
     private divRef = React.createRef<any>();
 
+    dispose: IReactionDisposer;
+    @observable rows: React.ReactNode[];
+
     onSelectMessage(message: OutputMessage) {
         this.context.OutputSectionsStore.activeSection.selectMessage(message);
     }
@@ -123,31 +132,45 @@ class Messages extends React.Component {
     }
 
     componentDidMount() {
-        this.scrollToBottom();
+        // do not update rows immediatelly on messages change,
+        // this is massive performance improvement beacuse
+        // component is not refreshed after every message push
+        this.dispose = autorun(
+            () => {
+                let rows =
+                    this.context.OutputSectionsStore.activeSection.messages.map(
+                        message => (
+                            <Message
+                                key={message.id}
+                                message={message}
+                                onSelect={this.onSelectMessage.bind(this)}
+                            />
+                        )
+                    );
+
+                runInAction(() => {
+                    this.rows = rows;
+                });
+            },
+            {
+                delay: 100 // delay 100 ms before update
+            }
+        );
     }
 
     componentDidUpdate() {
         this.scrollToBottom();
     }
 
+    componentWillUnmount() {
+        this.dispose();
+    }
+
     render() {
-        // TODO this is workaround because for some reason componentDidUpdate is not called
-        setTimeout(() => this.scrollToBottom());
-
-        let rows = this.context.OutputSectionsStore.activeSection.messages.map(
-            message => (
-                <Message
-                    key={message.id}
-                    message={message}
-                    onSelect={this.onSelectMessage.bind(this)}
-                />
-            )
-        );
-
         return (
             <MessagesDiv ref={this.divRef}>
                 <table>
-                    <tbody>{rows}</tbody>
+                    <tbody>{this.rows}</tbody>
                 </table>
             </MessagesDiv>
         );
@@ -218,14 +241,14 @@ export class Output extends React.Component<{}, {}> {
     onKeyDown(event: any) {
         if (event.keyCode == 27) {
             // ESC KEY
-            this.context.UIStateStore.viewOptions.outputVisible = !this.context
-                .UIStateStore.viewOptions.outputVisible;
+            this.context.UIStateStore.viewOptions.outputVisible =
+                !this.context.UIStateStore.viewOptions.outputVisible;
         }
     }
 
     @action.bound onClose() {
-        this.context.UIStateStore.viewOptions.outputVisible = !this.context
-            .UIStateStore.viewOptions.outputVisible;
+        this.context.UIStateStore.viewOptions.outputVisible =
+            !this.context.UIStateStore.viewOptions.outputVisible;
     }
 
     render() {
