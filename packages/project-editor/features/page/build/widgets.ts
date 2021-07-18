@@ -53,10 +53,14 @@ const BAR_GRAPH_ORIENTATION_TOP_BOTTOM = 3;
 const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
-function buildWidgetText(text: string) {
+function buildWidgetText(text: string | undefined, defaultValue: string = "") {
+    if (!text) {
+        return defaultValue;
+    }
     try {
         return JSON.parse('"' + text + '"');
     } catch (e) {}
+
     return text;
 }
 
@@ -251,14 +255,9 @@ export function buildWidget(
         let widget = object as TextWidget;
 
         // text
-        const text = widget.text;
-        if (text) {
-            dataBuffer.writeObjectOffset(() =>
-                dataBuffer.writeString(buildWidgetText(text))
-            );
-        } else {
-            dataBuffer.writeUint32(0);
-        }
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(widget.text))
+        );
 
         // flags
         let flags: number = 0;
@@ -273,14 +272,9 @@ export function buildWidget(
         let widget = object as MultilineTextWidget;
 
         // text
-        const text = widget.text;
-        if (text) {
-            dataBuffer.writeObjectOffset(() =>
-                dataBuffer.writeString(buildWidgetText(text))
-            );
-        } else {
-            dataBuffer.writeUint32(0);
-        }
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(widget.text))
+        );
 
         // first line
         dataBuffer.writeInt16(widget.firstLineIndent || 0);
@@ -356,25 +350,13 @@ export function buildWidget(
         let widget = object as UpDownWidget;
 
         // down button text
-        let downButtonText: string;
-        if (widget.downButtonText) {
-            downButtonText = buildWidgetText(widget.downButtonText);
-        } else {
-            downButtonText = "<";
-        }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(downButtonText))
+            dataBuffer.writeString(buildWidgetText(widget.downButtonText, "<"))
         );
 
         // up button text
-        let upButtonText: string;
-        if (widget.upButtonText) {
-            upButtonText = buildWidgetText(widget.upButtonText);
-        } else {
-            upButtonText = ">";
-        }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(upButtonText))
+            dataBuffer.writeString(buildWidgetText(widget.upButtonText, ">"))
         );
 
         // buttonStyle
@@ -404,14 +386,8 @@ export function buildWidget(
         let widget = object as ButtonWidget;
 
         // text
-        let text: string;
-        if (widget.text) {
-            text = buildWidgetText(widget.text);
-        } else {
-            text = "";
-        }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(text))
+            dataBuffer.writeString(buildWidgetText(widget.text))
         );
 
         // enabled
@@ -425,25 +401,13 @@ export function buildWidget(
         let widget = object as ToggleButtonWidget;
 
         // text 1
-        let text1: string;
-        if (widget.text1) {
-            text1 = buildWidgetText(widget.text1);
-        } else {
-            text1 = "";
-        }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(text1))
+            dataBuffer.writeString(buildWidgetText(widget.text1))
         );
 
         // text 2
-        let text2: string;
-        if (widget.text2) {
-            text2 = buildWidgetText(widget.text2);
-        } else {
-            text2 = "";
-        }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(text2))
+            dataBuffer.writeString(buildWidgetText(widget.text2))
         );
     } else if (type == WIDGET_TYPE_BITMAP) {
         let widget = object as BitmapWidget;
@@ -481,25 +445,13 @@ export function buildWidget(
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "buttonsStyle"));
 
         // down button text
-        let leftButtonText: string;
-        if (widget.leftButtonText) {
-            leftButtonText = buildWidgetText(widget.leftButtonText);
-        } else {
-            leftButtonText = "<";
-        }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(leftButtonText))
+            dataBuffer.writeString(buildWidgetText(widget.leftButtonText, "<"))
         );
 
         // up button text
-        let rightButtonText: string;
-        if (widget.rightButtonText) {
-            rightButtonText = buildWidgetText(widget.rightButtonText);
-        } else {
-            rightButtonText = ">";
-        }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(rightButtonText))
+            dataBuffer.writeString(buildWidgetText(widget.rightButtonText, ">"))
         );
     } else if (type == WIDGET_TYPE_PROGRESS) {
     } else if (type == WIDGET_TYPE_CANVAS) {
