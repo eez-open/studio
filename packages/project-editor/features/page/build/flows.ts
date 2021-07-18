@@ -1,20 +1,7 @@
 import * as projectBuild from "project-editor/project/build";
 import * as output from "project-editor/core/output";
 
-import { Assets } from "project-editor/features/page/build/assets";
-import {
-    buildListData,
-    DataBuffer,
-    ObjectList,
-    ObjectPtr,
-    Struct,
-    UInt16,
-    UInt32,
-    UInt8,
-    String,
-    StructRef,
-    Float
-} from "project-editor/features/page/build/pack";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 import {
@@ -48,7 +35,12 @@ function getComponentTypes() {
         .sort((a, b) => getComponentId(a)! - getComponentId(b)!);
 }
 
-function buildComponent(flow: Flow, component: Component, assets: Assets) {
+function buildComponent(
+    flow: Flow,
+    component: Component,
+    assets: Assets,
+    dataBuffer: DataBuffer
+) {
     const componentIndex = assets.getComponentIndex(component);
 
     const flowIndex = assets.getFlowIndex(flow);
@@ -60,12 +52,10 @@ function buildComponent(flow: Flow, component: Component, assets: Assets) {
         outputs: []
     };
 
-    let result = new Struct();
-
     // type
     let flowComponentId = getClassInfo(component).flowComponentId;
     if (flowComponentId != undefined) {
-        result.addField(new UInt16(flowComponentId));
+        dataBuffer.writeUint16(flowComponentId);
     } else {
         assets.DocumentStore.OutputSectionsStore.write(
             output.Section.OUTPUT,
@@ -73,13 +63,19 @@ function buildComponent(flow: Flow, component: Component, assets: Assets) {
             "Component is not supported for the build target",
             component
         );
-        result.addField(new UInt16(0));
+        dataBuffer.writeUint16(0);
     }
 
-    // List of ComponentInput's
-    const componentInputs = new ObjectList();
-    getComponentInputNames(component).forEach(input => {
-        const componentInput = new Struct();
+    // reserved
+    dataBuffer.writeUint16(0);
+
+    // inputs
+    dataBuffer.writeArray(getComponentInputNames(component), input => {
+        assets.registerComponentInput(
+            component,
+            input.name,
+            dataBuffer.currentOffset
+        );
 
         const valueIndex = assets.getComponentInputValueIndex(component, input);
 
@@ -91,75 +87,57 @@ function buildComponent(flow: Flow, component: Component, assets: Assets) {
             mapInputs
         );
 
-        const values = new ObjectList();
-
-        const value = new Struct();
-        value.addField(new UInt16(valueIndex));
-        values.addItem(value);
-
-        componentInput.addField(values);
-
-        assets.registerComponentInput(component, input.name, componentInput);
-
-        componentInputs.addItem(componentInput);
+        dataBuffer.writeUint16(valueIndex);
     });
-    result.addField(componentInputs);
 
-    // List of ComponentOutput's
-    const componentOutputs = new ObjectList();
-    getComponentOutputNames(component).forEach(output => {
-        const componentOutput = new Struct();
+    // outputs
+    dataBuffer.writeArray(getComponentOutputNames(component), output => {
+        assets.registerComponentOutput(
+            component,
+            output.name,
+            dataBuffer.currentOffset
+        );
 
-        const connections = new ObjectList();
+        const connectionLines = flow.connectionLines.filter(
+            connectionLine =>
+                connectionLine.sourceComponent === component &&
+                connectionLine.output == output.name
+        );
 
         const mapOutputs: {
             targetComponentIndex: number;
             targetInputIndex: number;
         }[] = [];
 
-        flow.connectionLines
-            .filter(
-                connectionLine =>
-                    connectionLine.sourceComponent === component &&
-                    connectionLine.output == output.name
-            )
-            .forEach(connectionLine => {
-                const targetComponentIndex = connectionLine.targetComponent
-                    ? assets.getComponentIndex(connectionLine.targetComponent)
-                    : -1;
+        dataBuffer.writeArray(connectionLines, connectionLine => {
+            const targetComponentIndex = connectionLine.targetComponent
+                ? assets.getComponentIndex(connectionLine.targetComponent)
+                : -1;
 
-                const targetInputIndex = connectionLine.targetComponent
-                    ? assets.getComponentInputIndex(
-                          connectionLine.targetComponent,
-                          connectionLine.input
-                      )
-                    : -1;
+            const targetInputIndex = connectionLine.targetComponent
+                ? assets.getComponentInputIndex(
+                      connectionLine.targetComponent,
+                      connectionLine.input
+                  )
+                : -1;
 
-                mapOutputs.push({ targetComponentIndex, targetInputIndex });
-
-                const connection = new Struct();
-                connection.addField(new UInt16(targetComponentIndex));
-                connection.addField(new UInt8(targetInputIndex));
-                connections.addItem(connection);
+            mapOutputs.push({
+                targetComponentIndex,
+                targetInputIndex
             });
 
-        componentOutput.addField(connections);
+            dataBuffer.writeUint16(targetComponentIndex);
+            dataBuffer.writeUint8(targetInputIndex);
+        });
 
         assets.map.flows[flowIndex].components[componentIndex].outputs.push(
             mapOutputs
         );
-
-        assets.registerComponentOutput(component, output.name, componentOutput);
-
-        componentOutputs.addItem(componentOutput);
     });
-    result.addField(componentOutputs);
 
     // specific
     try {
-        result.addField(
-            new ObjectPtr(component.buildFlowComponentSpecific(assets))
-        );
+        component.buildFlowComponentSpecific(assets, dataBuffer);
     } catch (err) {
         assets.DocumentStore.OutputSectionsStore.write(
             output.Section.OUTPUT,
@@ -167,13 +145,10 @@ function buildComponent(flow: Flow, component: Component, assets: Assets) {
             err,
             component
         );
-        result.addField(new ObjectPtr(undefined));
     }
-
-    return result;
 }
 
-function buildFlow(flow: Flow, assets: Assets) {
+function buildFlow(flow: Flow, assets: Assets, dataBuffer: DataBuffer) {
     const flowIndex = assets.getFlowIndex(flow);
 
     assets.map.flows[flowIndex] = {
@@ -183,12 +158,7 @@ function buildFlow(flow: Flow, assets: Assets) {
         components: []
     };
 
-    let result = new Struct();
-
-    let componentList = new ObjectList();
-
-    const components = [];
-
+    const components: Component[] = [];
     const v = visitObjects(flow);
     while (true) {
         let visitResult = v.next();
@@ -202,34 +172,32 @@ function buildFlow(flow: Flow, assets: Assets) {
         }
     }
 
-    components.forEach(component => {
-        componentList.addItem(buildComponent(flow, component, assets));
-    });
-
-    result.addField(componentList);
-
-    return result;
+    dataBuffer.writeArray(components, component =>
+        buildComponent(flow, component, assets, dataBuffer)
+    );
 }
 
-function buildFlowValue(flowValue: FlowValue, assets: Assets) {
-    let result = new Struct();
-
-    result.addField(new UInt8(flowValue.type)); // type_
-    result.addField(new UInt8(0)); // uint_
-    result.addField(new UInt16(0)); // options_
+function buildFlowValue(
+    flowValue: FlowValue,
+    assets: Assets,
+    dataBuffer: DataBuffer
+) {
+    dataBuffer.writeUint8(flowValue.type); // type_
+    dataBuffer.writeUint8(0); // unit_
+    dataBuffer.writeUint16(0); // options_
 
     // union
     if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
-        result.addField(new UInt32(flowValue.value));
+        dataBuffer.writeUint32(flowValue.value);
     } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
-        result.addField(new Float(flowValue.value));
+        dataBuffer.writeFloat(flowValue.value);
     } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
-        result.addField(new String(flowValue.value));
+        dataBuffer.writeObjectOffset(() => {
+            dataBuffer.writeString(flowValue.value);
+        });
     } else {
-        result.addField(new UInt32(0));
+        dataBuffer.writeUint32(0);
     }
-
-    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -412,54 +380,53 @@ export function buildFlowDefs(assets: Assets) {
     return defs.join("\n\n");
 }
 
-export function buildFlowData(assets: Assets, dataBuffer: DataBuffer | null) {
-    return buildListData((document: Struct) => {
-        let flows = new ObjectList();
-        let flowValues = new ObjectList();
-        let widgetDataItems = new ObjectList();
-        let widgetActions = new ObjectList();
+export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
+    if (assets.DocumentStore.isAppletProject) {
+        dataBuffer.writeObjectOffset(() => {
+            dataBuffer.writeArray(assets.flows, flow =>
+                buildFlow(flow, assets, dataBuffer)
+            );
+            dataBuffer.writeArray(assets.flowValues, flowValue =>
+                buildFlowValue(flowValue, assets, dataBuffer)
+            );
 
-        if (assets.DocumentStore.isAppletProject) {
-            assets.flows.forEach(flow => {
-                flows.addItem(buildFlow(flow, assets));
-            });
-
-            assets.flowValues.forEach(flowValue => {
-                flowValues.addItem(buildFlowValue(flowValue, assets));
-            });
-
-            for (let i = 0; i < assets.flowWidgetDataIndexes.size; i++) {
-                const componentInput =
-                    assets.flowWidgetDataIndexComponentInput.get(i);
-                if (componentInput) {
-                    widgetDataItems.addItem(new StructRef(componentInput));
-                } else {
-                    assets.DocumentStore.OutputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.ERROR,
-                        "Widget data item input not found"
-                    );
+            dataBuffer.writeArray(
+                [...assets.flowWidgetDataIndexes.keys()],
+                (_, i) => {
+                    const componentInputOffset =
+                        assets.flowWidgetDataIndexComponentInput.get(i);
+                    if (componentInputOffset != undefined) {
+                        dataBuffer.writeUint32(componentInputOffset);
+                    } else {
+                        assets.DocumentStore.OutputSectionsStore.write(
+                            output.Section.OUTPUT,
+                            output.Type.ERROR,
+                            "Widget data item input not found"
+                        );
+                        dataBuffer.writeUint32(0);
+                    }
                 }
-            }
+            );
 
-            for (let i = 0; i < assets.flowWidgetActionIndexes.size; i++) {
-                const componentOutput =
-                    assets.flowWidgetActionComponentOutput.get(i);
-                if (componentOutput) {
-                    widgetActions.addItem(new StructRef(componentOutput));
-                } else {
-                    assets.DocumentStore.OutputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.ERROR,
-                        "Widget action output not found"
-                    );
+            dataBuffer.writeArray(
+                [...assets.flowWidgetActionIndexes.keys()],
+                (_, i) => {
+                    const componentOutputOffset =
+                        assets.flowWidgetActionComponentOutput.get(i);
+                    if (componentOutputOffset != undefined) {
+                        dataBuffer.writeUint32(componentOutputOffset);
+                    } else {
+                        assets.DocumentStore.OutputSectionsStore.write(
+                            output.Section.OUTPUT,
+                            output.Type.ERROR,
+                            "Widget action output not found"
+                        );
+                        dataBuffer.writeUint32(0);
+                    }
                 }
-            }
-        }
-
-        document.addField(flows);
-        document.addField(flowValues);
-        document.addField(widgetDataItems);
-        document.addField(widgetActions);
-    }, dataBuffer);
+            );
+        });
+    } else {
+        dataBuffer.writeUint32(0);
+    }
 }

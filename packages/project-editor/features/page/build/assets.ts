@@ -31,14 +31,6 @@ import {
 import { Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 
-import {
-    DataBuffer,
-    Struct,
-    UInt16,
-    UInt32,
-    UInt8ArrayField
-} from "project-editor/features/page/build/pack";
-
 import { buildGuiDocumentData } from "project-editor/features/page/build/pages";
 import { buildGuiStylesData } from "project-editor/features/page/build/styles";
 import { buildGuiFontsData } from "project-editor/features/page/build/fonts";
@@ -82,8 +74,8 @@ export class Assets {
 
     flowWidgetDataIndexes = new Map<string, number>();
     flowWidgetActionIndexes = new Map<string, number>();
-    flowWidgetDataIndexComponentInput = new Map<number, Struct>();
-    flowWidgetActionComponentOutput = new Map<number, Struct>();
+    flowWidgetDataIndexComponentInput = new Map<number, number>();
+    flowWidgetActionComponentOutput = new Map<number, number>();
 
     values = [];
 
@@ -215,8 +207,8 @@ export class Assets {
             );
         }
 
-        buildGuiDocumentData(this, null);
-        buildGuiStylesData(this, null);
+        buildGuiDocumentData(this, new DummyDataBuffer());
+        buildGuiStylesData(this, new DummyDataBuffer());
     }
 
     getAssetIndex<T>(
@@ -598,26 +590,32 @@ export class Assets {
     registerComponentInput(
         component: Component,
         inputName: string,
-        componentInput: Struct
+        componentInputOffset: number
     ) {
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
         let index = this.flowWidgetDataIndexes.get(path);
         if (index != undefined) {
-            this.flowWidgetDataIndexComponentInput.set(index, componentInput);
+            this.flowWidgetDataIndexComponentInput.set(
+                index,
+                componentInputOffset
+            );
         }
     }
 
     registerComponentOutput(
         component: Component,
         outputName: string,
-        componentOutput: Struct
+        componentOutputOffset: number
     ) {
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + outputName;
         let index = this.flowWidgetActionIndexes.get(path);
         if (index != undefined) {
-            this.flowWidgetActionComponentOutput.set(index, componentOutput);
+            this.flowWidgetActionComponentOutput.set(
+                index,
+                componentOutputOffset
+            );
         }
     }
 
@@ -709,68 +707,249 @@ export class Assets {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export async function buildGuiAssetsData(assets: Assets) {
-    function buildHeaderData(assets: Assets, uncompressedSize: number) {
-        let headerStruct = new Struct();
+export class DataBuffer {
+    buffer = Buffer.alloc(10 * 1024 * 1024);
+    currentOffset: number = 0;
+    writeLater: { currentOffset: number; callback: () => void }[] = [];
 
-        const tag = new TextEncoder().encode("~eez");
-        headerStruct.addField(new UInt8ArrayField(tag));
-
-        headerStruct.addField(new UInt16(3)); // PROJECT VERSION: 3
-
-        headerStruct.addField(
-            new UInt16(
-                assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
-            )
-        );
-
-        headerStruct.addField(new UInt32(uncompressedSize));
-
-        const headerDataBuffer = new DataBuffer();
-        headerStruct.packObject(headerDataBuffer);
-        return headerDataBuffer;
+    writeInt8(value: number) {
+        try {
+            this.buffer.writeInt8(value, this.currentOffset);
+        } catch (err) {
+            this.buffer.writeInt8(0, this.currentOffset);
+            console.error(err);
+        }
+        this.currentOffset += 1;
     }
 
+    writeUint8(value: number) {
+        this.buffer.writeUInt8(value, this.currentOffset);
+        this.currentOffset += 1;
+    }
+
+    writeInt16(value: number) {
+        if (this.currentOffset % 2) {
+            throw "invalid offset";
+        }
+        this.buffer.writeInt16LE(value, this.currentOffset);
+        this.currentOffset += 2;
+    }
+
+    writeUint16(value: number) {
+        if (this.currentOffset % 2) {
+            throw "invalid offset";
+        }
+        this.buffer.writeUInt16LE(value, this.currentOffset);
+        this.currentOffset += 2;
+    }
+
+    writeUint32(value: number) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset";
+        }
+        this.buffer.writeUInt32LE(value, this.currentOffset);
+        this.currentOffset += 4;
+    }
+
+    writeFloat(value: number) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset";
+        }
+        this.buffer.writeFloatLE(value, this.currentOffset);
+        this.currentOffset += 4;
+    }
+
+    writeUint8Array(array: Uint8Array | number[]) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset";
+        }
+        this.buffer.set(array, this.currentOffset);
+        this.currentOffset += array.length;
+        this.addPadding();
+    }
+
+    writeString(str: string) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset";
+        }
+        for (let i = 0; i < str.length; i++) {
+            this.writeUint8(str.charCodeAt(i));
+        }
+        this.writeUint8(0);
+        this.addPadding();
+    }
+
+    writeArray<T>(arr: T[], callback: (item: T, i: number) => void) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset";
+        }
+        if (arr.length > 0) {
+            this.writeUint32(arr.length);
+            this.writeObjectOffset(() => {
+                for (let i = 0; i < arr.length; i++) {
+                    this.writeObjectOffset(() => callback(arr[i], i));
+                }
+            });
+        } else {
+            this.writeUint32(0);
+            this.writeUint32(0);
+        }
+    }
+
+    writeNumberArray<T>(arr: T[], callback: (item: T, i: number) => void) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset";
+        }
+        if (arr.length > 0) {
+            this.writeUint32(arr.length);
+            this.writeObjectOffset(() => {
+                for (let i = 0; i < arr.length; i++) {
+                    callback(arr[i], i);
+                }
+            });
+        } else {
+            this.writeUint32(0);
+            this.writeUint32(0);
+        }
+    }
+
+    writeObjectOffset(callback: () => void) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset";
+        }
+        const currentOffset = this.currentOffset;
+        this.writeUint32(0);
+        this.writeLater.push({ currentOffset, callback });
+    }
+
+    addPadding() {
+        if (this.currentOffset % 4) {
+            const n = 4 - (this.currentOffset % 4);
+            for (let i = 0; i < n; ++i) {
+                this.writeUint8(0);
+            }
+        }
+    }
+
+    get size() {
+        return this.currentOffset;
+    }
+
+    finalize() {
+        for (let i = 0; i < this.writeLater.length; i++) {
+            const currentOffset = this.currentOffset;
+            this.writeLater[i].callback();
+            this.addPadding();
+            this.buffer.writeUInt32LE(
+                currentOffset,
+                this.writeLater[i].currentOffset
+            );
+        }
+
+        const buffer = Buffer.alloc(this.size);
+        this.buffer.copy(buffer, 0, 0, this.size);
+        this.buffer = buffer;
+    }
+
+    compress() {
+        const lz4ModuleName = "lz4";
+        const LZ4 = require(lz4ModuleName);
+        var compressedBuffer = Buffer.alloc(LZ4.encodeBound(this.size));
+        var compressedSize = LZ4.encodeBlock(this.buffer, compressedBuffer);
+        return { compressedBuffer, compressedSize };
+    }
+}
+
+export class DummyDataBuffer {
+    buffer = Buffer.alloc(0);
+    currentOffset = 0;
+    writeLater: { currentOffset: number; callback: () => void }[] = [];
+
+    writeInt8(value: number) {}
+
+    writeUint8(value: number) {}
+
+    writeInt16(value: number) {}
+
+    writeUint16(value: number) {}
+
+    writeUint32(value: number) {}
+
+    writeFloat(value: number) {}
+
+    writeUint8Array(array: Uint8Array | number[]) {}
+
+    writeString(str: string) {}
+
+    writeArray<T>(arr: T[], callback: (item: T, i: number) => void) {
+        if (arr.length > 0) {
+            for (let i = 0; i < arr.length; i++) {
+                callback(arr[i], i);
+            }
+        }
+    }
+
+    writeNumberArray<T>(arr: T[], callback: (item: T, i: number) => void) {}
+
+    writeObjectOffset(callback: () => void) {
+        callback();
+    }
+
+    addPadding() {}
+
+    get size() {
+        return 0;
+    }
+
+    finalize() {}
+
+    compress() {
+        return { compressedBuffer: this.buffer, compressedSize: 0 };
+    }
+}
+
+function buildHeaderData(
+    assets: Assets,
+    uncompressedSize: number,
+    dataBuffer: DataBuffer
+) {
+    const tag = new TextEncoder().encode("~eez");
+
+    dataBuffer.writeUint8Array(tag);
+
+    dataBuffer.writeUint16(3); // PROJECT VERSION: 3
+
+    dataBuffer.writeUint16(
+        assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
+    );
+
+    dataBuffer.writeUint32(uncompressedSize);
+}
+
+export async function buildGuiAssetsData(assets: Assets) {
     const dataBuffer = new DataBuffer();
 
-    await dataBuffer.packRegions(8, async i => {
-        if (i == 0) {
-            buildGuiDocumentData(assets, dataBuffer);
-        } else if (i == 1) {
-            buildGuiStylesData(assets, dataBuffer);
-        } else if (i == 2) {
-            await buildGuiFontsData(assets, dataBuffer);
-        } else if (i == 3) {
-            await buildGuiBitmapsData(assets, dataBuffer);
-        } else if (i == 4) {
-            buildGuiColors(assets, dataBuffer);
-        } else if (i == 5) {
-            buildActionNames(assets, dataBuffer);
-        } else if (i == 6) {
-            buildVariableNames(assets, dataBuffer);
-        } else if (i == 7) {
-            buildFlowData(assets, dataBuffer);
-        }
-    });
+    buildGuiDocumentData(assets, dataBuffer);
+    buildGuiStylesData(assets, dataBuffer);
+    await buildGuiFontsData(assets, dataBuffer);
+    await buildGuiBitmapsData(assets, dataBuffer);
+    buildGuiColors(assets, dataBuffer);
+    buildActionNames(assets, dataBuffer);
+    buildVariableNames(assets, dataBuffer);
+    buildFlowData(assets, dataBuffer);
 
-    var uncompressedBuffer = Buffer.from(
-        dataBuffer.buffer.slice(0, dataBuffer.offset)
-    );
-    const uncompressedSize = uncompressedBuffer.length;
+    dataBuffer.finalize();
 
-    const lz4ModuleName = "lz4";
-    const LZ4 = require(lz4ModuleName);
-    var compressedBuffer = Buffer.alloc(
-        LZ4.encodeBound(uncompressedBuffer.length)
-    );
-    var compressedSize = LZ4.encodeBlock(uncompressedBuffer, compressedBuffer);
+    const uncompressedSize = dataBuffer.size;
 
-    const header = buildHeaderData(assets, uncompressedSize);
-    var headerBuffer = Buffer.from(header.buffer.slice(0, header.offset));
+    const { compressedBuffer, compressedSize } = dataBuffer.compress();
 
-    const allData = Buffer.alloc(headerBuffer.length + compressedSize);
-    headerBuffer.copy(allData, 0, 0, headerBuffer.length);
-    compressedBuffer.copy(allData, headerBuffer.length, 0, compressedSize);
+    const headerBuffer = new DataBuffer();
+    buildHeaderData(assets, uncompressedSize, headerBuffer);
+
+    const allData = Buffer.alloc(headerBuffer.size + compressedSize);
+    headerBuffer.buffer.copy(allData, 0, 0, headerBuffer.size);
+    compressedBuffer.copy(allData, headerBuffer.size, 0, compressedSize);
 
     assets.DocumentStore.OutputSectionsStore.write(
         output.Section.OUTPUT,

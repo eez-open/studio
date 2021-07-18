@@ -65,8 +65,7 @@ import { Style } from "project-editor/features/style/style";
 import { ContainerWidget } from "project-editor/flow/widgets";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
-import { Struct } from "project-editor/features/page/build/pack";
-import { Assets } from "project-editor/features/page/build/assets";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { compileExpression } from "./expression";
 
 const { MenuItem } = EEZStudio.remote || {};
@@ -785,9 +784,7 @@ export class Component extends EezObject {
         return undefined;
     }
 
-    buildFlowComponentSpecific(assets: Assets): Struct | undefined {
-        return undefined;
-    }
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

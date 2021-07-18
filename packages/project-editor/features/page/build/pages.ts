@@ -1,12 +1,6 @@
 import * as projectBuild from "project-editor/project/build";
 
-import { Assets } from "project-editor/features/page/build/assets";
-import {
-    buildListData,
-    DataBuffer,
-    ObjectList,
-    Struct
-} from "project-editor/features/page/build/pack";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { buildWidget } from "project-editor/features/page/build/widgets";
 
 export function buildGuiPagesEnum(assets: Assets) {
@@ -24,15 +18,14 @@ export function buildGuiPagesEnum(assets: Assets) {
     return `enum PagesEnum {\n${pages.join(",\n")}\n};`;
 }
 
-export function buildGuiDocumentData(
-    assets: Assets,
-    dataBuffer: DataBuffer | null
-) {
-    return buildListData((document: Struct) => {
-        let pages = new ObjectList();
+export function buildGuiDocumentData(assets: Assets, dataBuffer: DataBuffer) {
+    if (dataBuffer) {
+        dataBuffer.writeArray(assets.pages, page =>
+            buildWidget(page, assets, dataBuffer)
+        );
+    } else {
         assets.pages.forEach(page => {
-            pages.addItem(buildWidget(page, assets));
+            buildWidget(page, assets, dataBuffer);
         });
-        document.addField(pages);
-    }, dataBuffer);
+    }
 }

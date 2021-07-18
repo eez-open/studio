@@ -1,14 +1,6 @@
 import * as projectBuild from "project-editor/project/build";
 import { Style } from "project-editor/features/style/style";
-import { Assets } from "project-editor/features/page/build/assets";
-import {
-    DataBuffer,
-    Struct,
-    UInt16,
-    UInt8,
-    ObjectList,
-    buildListData
-} from "project-editor/features/page/build/pack";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
@@ -40,13 +32,8 @@ export function buildGuiStylesEnum(assets: Assets) {
     return `enum StylesEnum {\n${styles.join(",\n")}\n};`;
 }
 
-export function buildGuiStylesData(
-    assets: Assets,
-    dataBuffer: DataBuffer | null
-) {
+export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
     function buildStyle(style: Style) {
-        let result = new Struct();
-
         // flags
         let flags = 0;
 
@@ -73,20 +60,20 @@ export function buildGuiStylesData(
             flags |= STYLE_FLAGS_BLINK;
         }
 
-        result.addField(new UInt16(flags));
+        dataBuffer.writeUint16(flags);
 
         // colors
         let backgroundColor = assets.getColorIndex(style, "backgroundColor");
         if (isNaN(backgroundColor)) {
             backgroundColor = 0;
         }
-        result.addField(new UInt16(backgroundColor));
+        dataBuffer.writeUint16(backgroundColor);
 
         let color = assets.getColorIndex(style, "color");
         if (isNaN(color)) {
             color = 0;
         }
-        result.addField(new UInt16(color));
+        dataBuffer.writeUint16(color);
 
         let activeBackgroundColor = assets.getColorIndex(
             style,
@@ -95,13 +82,13 @@ export function buildGuiStylesData(
         if (isNaN(activeBackgroundColor)) {
             activeBackgroundColor = 0;
         }
-        result.addField(new UInt16(activeBackgroundColor));
+        dataBuffer.writeUint16(activeBackgroundColor);
 
         let activeColor = assets.getColorIndex(style, "activeColor");
         if (isNaN(activeColor)) {
             activeColor = 0;
         }
-        result.addField(new UInt16(activeColor));
+        dataBuffer.writeUint16(activeColor);
 
         let focusBackgroundColor = assets.getColorIndex(
             style,
@@ -110,61 +97,55 @@ export function buildGuiStylesData(
         if (isNaN(focusBackgroundColor)) {
             focusBackgroundColor = 0;
         }
-        result.addField(new UInt16(focusBackgroundColor));
+        dataBuffer.writeUint16(focusBackgroundColor);
 
         let focusColor = assets.getColorIndex(style, "focusColor");
         if (isNaN(focusColor)) {
             focusColor = 0;
         }
-        result.addField(new UInt16(focusColor));
+        dataBuffer.writeUint16(focusColor);
 
-        result.addField(new UInt8(style.borderSizeRect.top));
-        result.addField(new UInt8(style.borderSizeRect.right));
-        result.addField(new UInt8(style.borderSizeRect.bottom));
-        result.addField(new UInt8(style.borderSizeRect.left));
+        dataBuffer.writeUint8(style.borderSizeRect.top);
+        dataBuffer.writeUint8(style.borderSizeRect.right);
+        dataBuffer.writeUint8(style.borderSizeRect.bottom);
+        dataBuffer.writeUint8(style.borderSizeRect.left);
 
-        result.addField(new UInt16(style.borderRadius || 0));
+        dataBuffer.writeUint16(style.borderRadius || 0);
 
         let borderColor = assets.getColorIndex(style, "borderColor");
         if (isNaN(borderColor)) {
             borderColor = 0;
         }
-        result.addField(new UInt16(borderColor));
+        dataBuffer.writeUint16(borderColor);
 
         // font
         let fontIndex = style.fontName
             ? assets.getFontIndex(style, "fontName")
             : 0;
-        result.addField(new UInt8(fontIndex));
+        dataBuffer.writeUint8(fontIndex);
 
         // opacity
-        result.addField(new UInt8(style.opacityProperty));
+        dataBuffer.writeUint8(style.opacityProperty);
 
         // padding
-        result.addField(new UInt8(style.paddingRect.top));
-        result.addField(new UInt8(style.paddingRect.right));
-        result.addField(new UInt8(style.paddingRect.bottom));
-        result.addField(new UInt8(style.paddingRect.left));
+        dataBuffer.writeUint8(style.paddingRect.top);
+        dataBuffer.writeUint8(style.paddingRect.right);
+        dataBuffer.writeUint8(style.paddingRect.bottom);
+        dataBuffer.writeUint8(style.paddingRect.left);
 
         // margin
-        result.addField(new UInt8(style.marginRect.top));
-        result.addField(new UInt8(style.marginRect.right));
-        result.addField(new UInt8(style.marginRect.bottom));
-        result.addField(new UInt8(style.marginRect.left));
-
-        return result;
+        dataBuffer.writeUint8(style.marginRect.top);
+        dataBuffer.writeUint8(style.marginRect.right);
+        dataBuffer.writeUint8(style.marginRect.bottom);
+        dataBuffer.writeUint8(style.marginRect.left);
     }
 
-    return buildListData((document: Struct) => {
-        let styles = new ObjectList();
-        if (!assets.DocumentStore.masterProject) {
-            const assetStyles = assets.styles.filter(
-                style => !!style
-            ) as Style[];
-            assetStyles.forEach(style => {
-                styles.addItem(buildStyle(style));
-            });
-        }
-        document.addField(styles);
-    }, dataBuffer);
+    let styles: Style[];
+    if (!assets.DocumentStore.masterProject) {
+        styles = assets.styles.filter(style => !!style) as Style[];
+    } else {
+        styles = [];
+    }
+
+    dataBuffer.writeArray(styles, buildStyle);
 }

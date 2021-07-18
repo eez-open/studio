@@ -1,15 +1,7 @@
 import { strToColor16 } from "eez-studio-shared/color";
 import * as projectBuild from "project-editor/project/build";
 import { Theme } from "project-editor/features/style/theme";
-import {
-    buildListData,
-    Color,
-    DataBuffer,
-    ObjectList,
-    Struct,
-    String
-} from "project-editor/features/page/build/pack";
-import { Assets } from "project-editor/features/page/build/assets";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 
 export function buildGuiThemesEnum(assets: Assets) {
     let themes = assets.rootProject.themes.map(
@@ -38,45 +30,31 @@ export function buildGuiColorsEnum(assets: Assets) {
 }
 
 export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
-    function buildTheme(theme: Theme) {
-        let result = new Struct();
-
-        result.addField(new String(theme.name));
-
-        // colors
-        let colors = new ObjectList();
-        theme.colors.forEach(color => {
-            colors.addItem(buildColor(color));
-        });
-
-        result.addField(colors);
-
-        return result;
-    }
-
     function buildColor(color: string) {
-        return new Color(strToColor16(color));
+        dataBuffer.writeUint16(strToColor16(color));
     }
 
-    return buildListData((document: Struct) => {
-        let themes = new ObjectList();
+    function buildTheme(theme: Theme) {
+        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(theme.name));
+        dataBuffer.writeNumberArray(theme.colors, buildColor);
+    }
 
-        if (!assets.DocumentStore.masterProject) {
-            assets.rootProject.themes.forEach(theme => {
-                themes.addItem(buildTheme(theme));
-            });
-        }
+    if (!assets.DocumentStore.masterProject) {
+        dataBuffer.writeObjectOffset(() => {
+            // no. of theme colors
+            dataBuffer.writeUint32(
+                assets.rootProject.themes.length > 0
+                    ? assets.rootProject.themes[0].colors.length
+                    : 0
+            );
 
-        document.addField(themes);
+            // themes
+            dataBuffer.writeArray(assets.rootProject.themes, buildTheme);
 
-        let colors = new ObjectList();
-
-        if (!assets.DocumentStore.masterProject) {
-            assets.colors.forEach(color => {
-                colors.addItem(buildColor(color));
-            });
-        }
-
-        document.addField(colors);
-    }, dataBuffer);
+            // colors
+            dataBuffer.writeNumberArray(assets.colors, buildColor);
+        });
+    } else {
+        dataBuffer.writeUint32(0);
+    }
 }

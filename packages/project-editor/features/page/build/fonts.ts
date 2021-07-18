@@ -1,9 +1,8 @@
 import { Font } from "project-editor/features/font/font";
-import { DataBuffer } from "project-editor/features/page/build/pack";
-import { Assets } from "project-editor/features/page/build/assets";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import * as projectBuild from "project-editor/project/build";
 
-export function getFontData(font: Font, dataBuffer: DataBuffer) {
+function buildFontData(font: Font, dataBuffer: DataBuffer) {
     /*
     Font header:
 
@@ -12,8 +11,8 @@ export function getFontData(font: Font, dataBuffer: DataBuffer) {
     1           descent             uint8
     2           encoding start      uint8
     3           encoding end        uint8
-    4           1st encoding offset uint16 BE (1 bpp) | uint32 LE (8 bpp)
-    6           2nd encoding offset uint16 BE (1 bpp) | uint32 LE (8 bpp)
+    4           1st encoding offset uint32 LE
+    6           2nd encoding offset uint32 LE
     ...
     */
 
@@ -26,6 +25,10 @@ export function getFontData(font: Font, dataBuffer: DataBuffer) {
     2             BBX height                uint8
     3             BBX xoffset               int8
     4             BBX yoffset               int8
+    5             reserved                  uint8
+    6             reserved                  uint8
+    7             reserved                  uint8
+    8             pixels                    uint8[]
 
     Note: byte 0 == 255 indicates empty glyph
     */
@@ -35,62 +38,34 @@ export function getFontData(font: Font, dataBuffer: DataBuffer) {
     const max = Math.max(...font.glyphs.map(g => g.encoding));
     const endEncoding = Number.isFinite(max) ? max : 127;
 
-    const offsetAtStart = dataBuffer.offset;
+    dataBuffer.writeUint8(font.ascent);
+    dataBuffer.writeUint8(font.descent);
+    dataBuffer.writeUint8(startEncoding);
+    dataBuffer.writeUint8(endEncoding);
 
-    if (startEncoding <= endEncoding) {
-        dataBuffer.packInt8(font.ascent);
-        dataBuffer.packInt8(font.descent);
-        dataBuffer.packInt8(startEncoding);
-        dataBuffer.packInt8(endEncoding);
+    if (startEncoding < 0 || endEncoding > 255 || startEncoding > endEncoding) {
+        throw "Invalid font";
+    }
 
-        for (let i = startEncoding; i <= endEncoding; i++) {
-            if (font.bpp === 8) {
-                dataBuffer.packInt8(0);
-                dataBuffer.packInt8(0);
-                dataBuffer.packInt8(0);
-                dataBuffer.packInt8(0);
-            } else {
-                dataBuffer.packInt8(0);
-                dataBuffer.packInt8(0);
-            }
-        }
-
-        for (let i = startEncoding; i <= endEncoding; i++) {
-            const offsetIndex =
-                4 + (i - startEncoding) * (font.bpp === 8 ? 4 : 2);
-            const offset = dataBuffer.offset - offsetAtStart;
-            if (font.bpp === 8) {
-                // uint32 LE
-                dataBuffer.packUInt32AtOffset(
-                    offsetAtStart + offsetIndex,
-                    offset
-                );
-            } else {
-                // uint16 BE
-                dataBuffer.packUInt8AtOffset(
-                    offsetAtStart + offsetIndex + 0,
-                    offset >> 8
-                );
-                dataBuffer.packUInt8AtOffset(
-                    offsetAtStart + offsetIndex + 1,
-                    offset & 0xff
-                );
-            }
-
+    for (let i = startEncoding; i <= endEncoding; i++) {
+        dataBuffer.writeObjectOffset(() => {
             let glyph = font.glyphs.find(glyph => glyph.encoding == i);
 
             if (glyph && glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
-                dataBuffer.packInt8(glyph.dx);
-                dataBuffer.packInt8(glyph.width);
-                dataBuffer.packInt8(glyph.height);
-                dataBuffer.packInt8(glyph.x);
-                dataBuffer.packInt8(glyph.y);
+                dataBuffer.writeInt8(glyph.dx);
+                dataBuffer.writeUint8(glyph.width);
+                dataBuffer.writeUint8(glyph.height);
+                dataBuffer.writeInt8(glyph.x);
+                dataBuffer.writeInt8(glyph.y);
+                dataBuffer.writeUint8(0); // reserved
+                dataBuffer.writeUint8(0); // reserved
+                dataBuffer.writeUint8(0); // reserved
 
-                dataBuffer.packArray(glyph.glyphBitmap.pixelArray);
+                dataBuffer.writeUint8Array(glyph.glyphBitmap.pixelArray);
             } else {
-                dataBuffer.packInt8(255);
+                dataBuffer.writeInt8(-128); // empty glyph
             }
-        }
+        });
     }
 }
 
@@ -110,13 +85,9 @@ export function buildGuiFontsEnum(assets: Assets) {
     return `enum FontsEnum {\n${fonts.join(",\n")}\n};`;
 }
 
-export async function buildGuiFontsData(
-    assets: Assets,
-    dataBuffer: DataBuffer
-) {
-    if (!assets.DocumentStore.masterProject) {
-        await dataBuffer.packRegions(assets.fonts.length, async (i: number) => {
-            getFontData(assets.fonts[i], dataBuffer);
-        });
-    }
+export function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
+    dataBuffer.writeArray(
+        !assets.DocumentStore.masterProject ? assets.fonts : [],
+        font => buildFontData(font, dataBuffer)
+    );
 }

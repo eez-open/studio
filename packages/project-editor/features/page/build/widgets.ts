@@ -19,16 +19,7 @@ import {
     ButtonGroupWidget,
     ScrollBarWidget
 } from "project-editor/flow/widgets";
-import { Assets } from "project-editor/features/page/build/assets";
-import {
-    Struct,
-    Int16,
-    UInt16,
-    UInt8,
-    ObjectList,
-    ObjectPtr,
-    String
-} from "project-editor/features/page/build/pack";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 
 const WIDGET_TYPE_NONE = 0;
 const WIDGET_TYPE_CONTAINER = 1;
@@ -69,9 +60,11 @@ function buildWidgetText(text: string) {
     return text;
 }
 
-export function buildWidget(object: Widget | Page, assets: Assets) {
-    let result = new Struct();
-
+export function buildWidget(
+    object: Widget | Page,
+    assets: Assets,
+    dataBuffer: DataBuffer
+) {
     // type
     let type: number;
     if (object instanceof Page) {
@@ -133,43 +126,40 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
             type = WIDGET_TYPE_NONE;
         }
     }
-    result.addField(new UInt8(type));
+    dataBuffer.writeUint8(type);
+    dataBuffer.writeUint8(0); // reserved
 
     // data
     let data = 0;
     if (object instanceof Widget) {
         data = assets.getGlobalVariableIndex(object, "data");
     }
-    result.addField(new UInt16(data));
+    dataBuffer.writeUint16(data);
 
     // action
     let action: number = 0;
     if (object instanceof Widget) {
         action = assets.getActionIndex(object, "action");
     }
-    result.addField(new UInt16(action));
+    dataBuffer.writeUint16(action);
 
     // x
-    result.addField(new Int16(object.left || 0));
+    dataBuffer.writeInt16(object.left || 0);
 
     // y
-    result.addField(new Int16(object.top || 0));
+    dataBuffer.writeInt16(object.top || 0);
 
     // width
-    result.addField(new Int16(object.width || 0));
+    dataBuffer.writeInt16(object.width || 0);
 
     // height
-    result.addField(new Int16(object.height || 0));
+    dataBuffer.writeInt16(object.height || 0);
 
     // style
-    result.addField(new UInt16(assets.getStyleIndex(object, "style")));
+    dataBuffer.writeUint16(assets.getStyleIndex(object, "style"));
 
     // specific
-    let specific: Struct | undefined;
-
     if (type == WIDGET_TYPE_CONTAINER) {
-        specific = new Struct();
-
         // widgets
         let widgets: Widget[] | undefined;
         if (object instanceof Page) {
@@ -180,20 +170,15 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
             widgets = (object as ContainerWidget).widgets;
         }
 
-        let childWidgets = new ObjectList();
-        if (widgets) {
-            widgets.forEach(childWidget => {
-                childWidgets.addItem(buildWidget(childWidget, assets));
-            });
-        }
-
-        specific.addField(childWidgets);
+        dataBuffer.writeArray(widgets, widget =>
+            buildWidget(widget, assets, dataBuffer)
+        );
 
         let overlay = 0;
         if (object instanceof ContainerWidget) {
             overlay = assets.getGlobalVariableIndex(object, "overlay");
         }
-        specific.addField(new UInt16(overlay));
+        dataBuffer.writeUint16(overlay);
 
         // flags
         let flags = 0;
@@ -210,84 +195,68 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
             }
         }
 
-        specific.addField(new UInt8(flags));
+        dataBuffer.writeUint8(flags);
     } else if (type == WIDGET_TYPE_SELECT) {
         let widget = object as SelectWidget;
-        specific = new Struct();
 
         // widgets
-        let childWidgets = new ObjectList();
-        if (widget.widgets) {
-            widget.widgets.forEach(childWidget => {
-                childWidgets.addItem(buildWidget(childWidget, assets));
-            });
-        }
-
-        specific.addField(childWidgets);
+        dataBuffer.writeArray(widget.widgets, widget =>
+            buildWidget(widget, assets, dataBuffer)
+        );
     } else if (type == WIDGET_TYPE_LIST) {
         let widget = object as ListWidget;
-        specific = new Struct();
-
-        // listType
-        specific.addField(
-            new UInt8(
-                widget.listType === "vertical"
-                    ? LIST_TYPE_VERTICAL
-                    : LIST_TYPE_HORIZONTAL
-            )
-        );
 
         // itemWidget
-        let itemWidget: Struct | undefined;
-        if (widget.itemWidget) {
-            itemWidget = buildWidget(widget.itemWidget, assets);
+        const itemWidget = widget.itemWidget;
+        if (itemWidget) {
+            dataBuffer.writeObjectOffset(() =>
+                buildWidget(itemWidget, assets, dataBuffer)
+            );
         } else {
-            itemWidget = undefined;
+            dataBuffer.writeUint32(0);
         }
 
-        specific.addField(new ObjectPtr(itemWidget));
+        // listType
+        dataBuffer.writeUint8(
+            widget.listType === "vertical"
+                ? LIST_TYPE_VERTICAL
+                : LIST_TYPE_HORIZONTAL
+        );
 
         // gap
-        specific.addField(new UInt8(widget.gap || 0));
+        dataBuffer.writeUint8(widget.gap || 0);
     } else if (type == WIDGET_TYPE_GRID) {
         let widget = object as GridWidget;
-        specific = new Struct();
-
-        // listType
-        specific.addField(
-            new UInt8(
-                widget.gridFlow === "column" ? GRID_FLOW_COLUMN : GRID_FLOW_ROW
-            )
-        );
 
         // itemWidget
-        let itemWidget: Struct | undefined;
-        if (widget.itemWidget) {
-            itemWidget = buildWidget(widget.itemWidget, assets);
+        const itemWidget = widget.itemWidget;
+        if (itemWidget) {
+            dataBuffer.writeObjectOffset(() =>
+                buildWidget(itemWidget, assets, dataBuffer)
+            );
         } else {
-            itemWidget = undefined;
+            dataBuffer.writeUint32(0);
         }
 
-        specific.addField(new ObjectPtr(itemWidget));
+        // gridFlow
+        dataBuffer.writeUint8(
+            widget.gridFlow === "column" ? GRID_FLOW_COLUMN : GRID_FLOW_ROW
+        );
     } else if (type == WIDGET_TYPE_DISPLAY_DATA) {
         let widget = object as DisplayDataWidget;
-        specific = new Struct();
 
         // displayOption
-        specific.addField(new UInt8(widget.displayOption || 0));
+        dataBuffer.writeUint8(widget.displayOption || 0);
     } else if (type == WIDGET_TYPE_TEXT) {
         let widget = object as TextWidget;
-        specific = new Struct();
 
         // text
-        let text: string;
-        if (widget.text) {
-            text = buildWidgetText(widget.text);
+        const text = widget.text;
+        if (text) {
+            dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text));
         } else {
-            text = "";
+            dataBuffer.writeUint32(0);
         }
-
-        specific.addField(new String(text));
 
         // flags
         let flags: number = 0;
@@ -297,29 +266,25 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
             flags |= 1 << 0;
         }
 
-        specific.addField(new UInt8(flags));
+        dataBuffer.writeInt8(flags);
     } else if (type == WIDGET_TYPE_MULTILINE_TEXT) {
         let widget = object as MultilineTextWidget;
-        specific = new Struct();
 
         // text
-        let text: string;
-        if (widget.text) {
-            text = buildWidgetText(widget.text);
+        const text = widget.text;
+        if (text) {
+            dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text));
         } else {
-            text = "";
+            dataBuffer.writeUint32(0);
         }
 
-        specific.addField(new String(text));
-
         // first line
-        specific.addField(new Int16(widget.firstLineIndent || 0));
+        dataBuffer.writeInt16(widget.firstLineIndent || 0);
 
         // hanging
-        specific.addField(new Int16(widget.hangingIndent || 0));
+        dataBuffer.writeInt16(widget.hangingIndent || 0);
     } else if (type == WIDGET_TYPE_RECTANGLE) {
         let widget = object as RectangleWidget;
-        specific = new Struct();
 
         // flags
         let flags: number = 0;
@@ -334,18 +299,33 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
             flags |= 1 << 1;
         }
 
-        specific.addField(new UInt8(flags));
+        dataBuffer.writeUint8(flags);
     } else if (type == WIDGET_TYPE_BUTTON_GROUP) {
         let widget = object as ButtonGroupWidget;
-        specific = new Struct();
 
         // selectedStyle
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "selectedStyle"))
-        );
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "selectedStyle"));
     } else if (type == WIDGET_TYPE_BAR_GRAPH) {
         let widget = object as BarGraphWidget;
-        specific = new Struct();
+
+        // textStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "textStyle"));
+
+        // line1Data
+        let line1Data = assets.getGlobalVariableIndex(widget, "line1Data");
+
+        dataBuffer.writeUint16(line1Data);
+
+        // line1Style
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "line1Style"));
+
+        // line2Data
+        let line2Data = assets.getGlobalVariableIndex(widget, "line2Data");
+
+        dataBuffer.writeUint16(line2Data);
+
+        // line2Style
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "line2Style"));
 
         // orientation
         let orientation: number;
@@ -367,40 +347,9 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
             orientation |= BAR_GRAPH_DO_NOT_DISPLAY_VALUE;
         }
 
-        specific.addField(new UInt8(orientation));
-
-        // textStyle
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "textStyle"))
-        );
-
-        // line1Data
-        let line1Data = assets.getGlobalVariableIndex(widget, "line1Data");
-
-        specific.addField(new UInt16(line1Data));
-
-        // line1Style
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "line1Style"))
-        );
-
-        // line2Data
-        let line2Data = assets.getGlobalVariableIndex(widget, "line2Data");
-
-        specific.addField(new UInt16(line2Data));
-
-        // line2Style
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "line2Style"))
-        );
+        dataBuffer.writeUint8(orientation);
     } else if (type == WIDGET_TYPE_UP_DOWN) {
         let widget = object as UpDownWidget;
-        specific = new Struct();
-
-        // buttonStyle
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "buttonsStyle"))
-        );
 
         // down button text
         let downButtonText: string;
@@ -409,8 +358,10 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         } else {
             downButtonText = "<";
         }
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(downButtonText)
+        );
 
-        specific.addField(new String(downButtonText));
         // up button text
         let upButtonText: string;
         if (widget.upButtonText) {
@@ -418,45 +369,35 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         } else {
             upButtonText = ">";
         }
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(upButtonText)
+        );
 
-        specific.addField(new String(upButtonText));
+        // buttonStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "buttonsStyle"));
     } else if (type == WIDGET_TYPE_LIST_GRAPH) {
         let widget = object as ListGraphWidget;
-        specific = new Struct();
 
         // dwellData
-        let dwellData = assets.getGlobalVariableIndex(widget, "dwellData");
-
-        specific.addField(new UInt16(dwellData));
-
-        // y1Data
-        let y1Data = assets.getGlobalVariableIndex(widget, "y1Data");
-
-        specific.addField(new UInt16(y1Data));
-
-        // y1Style
-        specific.addField(new UInt16(assets.getStyleIndex(widget, "y1Style")));
-
-        // y2Data
-        let y2Data = assets.getGlobalVariableIndex(widget, "y2Data");
-
-        specific.addField(new UInt16(y2Data));
-
-        // y2Style
-        specific.addField(new UInt16(assets.getStyleIndex(widget, "y2Style")));
-
-        // cursorData
-        let cursorData = assets.getGlobalVariableIndex(widget, "cursorData");
-
-        specific.addField(new UInt16(cursorData));
-
-        // cursorStyle
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "cursorStyle"))
+        dataBuffer.writeUint16(
+            assets.getGlobalVariableIndex(widget, "dwellData")
         );
+        // y1Data
+        dataBuffer.writeUint16(assets.getGlobalVariableIndex(widget, "y1Data"));
+        // y1Style
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "y1Style"));
+        // y2Data
+        dataBuffer.writeUint16(assets.getGlobalVariableIndex(widget, "y2Data"));
+        // y2Style
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "y2Style"));
+        // cursorData
+        dataBuffer.writeUint16(
+            assets.getGlobalVariableIndex(widget, "cursorData")
+        );
+        // cursorStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "cursorStyle"));
     } else if (type == WIDGET_TYPE_BUTTON) {
         let widget = object as ButtonWidget;
-        specific = new Struct();
 
         // text
         let text: string;
@@ -465,21 +406,17 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         } else {
             text = "";
         }
-
-        specific.addField(new String(text));
+        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text));
 
         // enabled
-        let enabledData = assets.getGlobalVariableIndex(widget, "enabled");
-
-        specific.addField(new UInt16(enabledData));
+        dataBuffer.writeUint16(
+            assets.getGlobalVariableIndex(widget, "enabled")
+        );
 
         // disabledStyle
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "disabledStyle"))
-        );
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "disabledStyle"));
     } else if (type == WIDGET_TYPE_TOGGLE_BUTTON) {
         let widget = object as ToggleButtonWidget;
-        specific = new Struct();
 
         // text 1
         let text1: string;
@@ -488,8 +425,7 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         } else {
             text1 = "";
         }
-
-        specific.addField(new String(text1));
+        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text1));
 
         // text 2
         let text2: string;
@@ -498,11 +434,9 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         } else {
             text2 = "";
         }
-
-        specific.addField(new String(text2));
+        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text2));
     } else if (type == WIDGET_TYPE_BITMAP) {
         let widget = object as BitmapWidget;
-        specific = new Struct();
 
         // bitmap
         let bitmap: number = 0;
@@ -510,37 +444,31 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
             bitmap = assets.getBitmapIndex(widget, "bitmap");
         }
 
-        specific.addField(new UInt8(bitmap));
+        dataBuffer.writeUint8(bitmap);
     } else if (type == WIDGET_TYPE_LAYOUT_VIEW) {
         let widget = object as LayoutViewWidget;
-        specific = new Struct();
 
         // layout
         let layout: number = 0;
         if (widget.layout) {
             layout = assets.getPageIndex(widget, "layout");
         }
-
-        specific.addField(new Int16(layout));
+        dataBuffer.writeInt16(layout);
 
         // context
-        let context = assets.getGlobalVariableIndex(widget, "context");
-        specific.addField(new UInt16(context));
+        dataBuffer.writeUint16(
+            assets.getGlobalVariableIndex(widget, "context")
+        );
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields
     } else if (type == WIDGET_TYPE_SCROLL_BAR) {
         let widget = object as ScrollBarWidget;
-        specific = new Struct();
 
         // thumbStyle
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "thumbStyle"))
-        );
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "thumbStyle"));
 
         // buttonStyle
-        specific.addField(
-            new UInt16(assets.getStyleIndex(widget, "buttonsStyle"))
-        );
+        dataBuffer.writeUint16(assets.getStyleIndex(widget, "buttonsStyle"));
 
         // down button text
         let leftButtonText: string;
@@ -549,7 +477,9 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         } else {
             leftButtonText = "<";
         }
-        specific.addField(new String(leftButtonText));
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(leftButtonText)
+        );
 
         // up button text
         let rightButtonText: string;
@@ -558,12 +488,10 @@ export function buildWidget(object: Widget | Page, assets: Assets) {
         } else {
             rightButtonText = ">";
         }
-        specific.addField(new String(rightButtonText));
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(rightButtonText)
+        );
     } else if (type == WIDGET_TYPE_PROGRESS) {
     } else if (type == WIDGET_TYPE_CANVAS) {
     }
-
-    result.addField(new ObjectPtr(specific));
-
-    return result;
 }

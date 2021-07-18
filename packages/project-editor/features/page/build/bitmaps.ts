@@ -1,12 +1,6 @@
 import * as projectBuild from "project-editor/project/build";
 import { getData as getBitmapData } from "project-editor/features/bitmap/bitmap";
-import { Assets } from "project-editor/features/page/build/assets";
-import {
-    DataBuffer,
-    Struct,
-    Int16,
-    UInt8ArrayField
-} from "project-editor/features/page/build/pack";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 
 export function buildGuiBitmapsEnum(assets: Assets) {
     let bitmaps = assets.bitmaps.map(
@@ -50,24 +44,18 @@ async function buildGuiBitmaps(assets: Assets) {
 
     return bitmaps;
 }
+
 export async function buildGuiBitmapsData(
     assets: Assets,
     dataBuffer: DataBuffer
 ) {
     const bitmaps = await buildGuiBitmaps(assets);
-    if (bitmaps) {
-        await dataBuffer.packRegions(bitmaps.length, async (i: number) => {
-            const bitmap = bitmaps[i];
 
-            const struct = new Struct();
-
-            struct.addField(new Int16(bitmap.width));
-            struct.addField(new Int16(bitmap.height));
-            struct.addField(new Int16(bitmap.bpp));
-            struct.addField(new Int16(0));
-            struct.addField(new UInt8ArrayField(bitmap.pixels));
-
-            struct.packObject(dataBuffer);
-        });
-    }
+    dataBuffer.writeArray(bitmaps || [], bitmap => {
+        dataBuffer.writeInt16(bitmap.width);
+        dataBuffer.writeInt16(bitmap.height);
+        dataBuffer.writeInt16(bitmap.bpp);
+        dataBuffer.writeInt16(0);
+        dataBuffer.writeUint8Array(bitmap.pixels);
+    });
 }

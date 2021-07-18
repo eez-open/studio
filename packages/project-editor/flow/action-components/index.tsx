@@ -29,8 +29,7 @@ import { findAction } from "project-editor/features/action/action";
 import { getFlow, getProject } from "project-editor/project/project";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { findPage } from "project-editor/features/page/page";
-import { Assets } from "project-editor/features/page/build/assets";
-import { Struct, UInt16 } from "project-editor/features/page/build/pack";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 
 const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
@@ -800,10 +799,8 @@ export class ConstantActionComponent extends ActionComponent {
         return undefined;
     }
 
-    buildFlowComponentSpecific(assets: Assets) {
-        let specific = new Struct();
-        specific.addField(new UInt16(assets.getValueIndexFromJSON(this.value)));
-        return specific;
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeUint16(assets.getValueIndexFromJSON(this.value));
     }
 }
 
@@ -1275,10 +1272,6 @@ export class DelayActionComponent extends ActionComponent {
         await new Promise<void>(resolve =>
             setTimeout(resolve, milliseconds ?? 0)
         );
-        return undefined;
-    }
-
-    buildFlowComponentSpecific(assets: Assets) {
         return undefined;
     }
 }

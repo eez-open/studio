@@ -29,11 +29,7 @@ import type {
     IFlowContext,
     IRunningFlow
 } from "project-editor/flow//flow-interfaces";
-import {
-    Struct,
-    UInt8ArrayField
-} from "project-editor/features/page/build/pack";
-import { Assets } from "project-editor/features/page/build/assets";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
 // Returns undefined if passed value is not a valid string.
@@ -1246,10 +1242,8 @@ export class ScpiActionComponent extends ActionComponent {
         return array.slice(0, index);
     }
 
-    buildFlowComponentSpecific(assets: Assets) {
-        let specific = new Struct();
-        specific.addField(new UInt8ArrayField(this.compileScpi(assets)));
-        return specific;
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeUint8Array(this.compileScpi(assets));
     }
 }
 
