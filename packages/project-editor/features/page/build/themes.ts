@@ -41,13 +41,6 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
 
     if (!assets.DocumentStore.masterProject) {
         dataBuffer.writeObjectOffset(() => {
-            // no. of theme colors
-            dataBuffer.writeUint32(
-                assets.rootProject.themes.length > 0
-                    ? assets.rootProject.themes[0].colors.length
-                    : 0
-            );
-
             // themes
             dataBuffer.writeArray(assets.rootProject.themes, buildTheme);
 

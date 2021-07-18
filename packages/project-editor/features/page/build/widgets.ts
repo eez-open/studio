@@ -253,7 +253,9 @@ export function buildWidget(
         // text
         const text = widget.text;
         if (text) {
-            dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text));
+            dataBuffer.writeObjectOffset(() =>
+                dataBuffer.writeString(buildWidgetText(text))
+            );
         } else {
             dataBuffer.writeUint32(0);
         }
@@ -273,7 +275,9 @@ export function buildWidget(
         // text
         const text = widget.text;
         if (text) {
-            dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text));
+            dataBuffer.writeObjectOffset(() =>
+                dataBuffer.writeString(buildWidgetText(text))
+            );
         } else {
             dataBuffer.writeUint32(0);
         }
@@ -359,7 +363,7 @@ export function buildWidget(
             downButtonText = "<";
         }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(downButtonText)
+            dataBuffer.writeString(buildWidgetText(downButtonText))
         );
 
         // up button text
@@ -370,7 +374,7 @@ export function buildWidget(
             upButtonText = ">";
         }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(upButtonText)
+            dataBuffer.writeString(buildWidgetText(upButtonText))
         );
 
         // buttonStyle
@@ -406,7 +410,9 @@ export function buildWidget(
         } else {
             text = "";
         }
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text));
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(text))
+        );
 
         // enabled
         dataBuffer.writeUint16(
@@ -425,7 +431,9 @@ export function buildWidget(
         } else {
             text1 = "";
         }
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text1));
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(text1))
+        );
 
         // text 2
         let text2: string;
@@ -434,7 +442,9 @@ export function buildWidget(
         } else {
             text2 = "";
         }
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(text2));
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(text2))
+        );
     } else if (type == WIDGET_TYPE_BITMAP) {
         let widget = object as BitmapWidget;
 
@@ -478,7 +488,7 @@ export function buildWidget(
             leftButtonText = "<";
         }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(leftButtonText)
+            dataBuffer.writeString(buildWidgetText(leftButtonText))
         );
 
         // up button text
@@ -489,7 +499,7 @@ export function buildWidget(
             rightButtonText = ">";
         }
         dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(rightButtonText)
+            dataBuffer.writeString(buildWidgetText(rightButtonText))
         );
     } else if (type == WIDGET_TYPE_PROGRESS) {
     } else if (type == WIDGET_TYPE_CANVAS) {

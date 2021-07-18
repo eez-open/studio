@@ -2,24 +2,42 @@ import { Font } from "project-editor/features/font/font";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import * as projectBuild from "project-editor/project/build";
 
+export function buildGuiFontsEnum(assets: Assets) {
+    let fonts = assets.fonts.map(
+        (font, i) =>
+            `${projectBuild.TAB}${projectBuild.getName(
+                "FONT_ID_",
+                font,
+                projectBuild.NamingConvention.UnderscoreUpperCase
+            )} = ${i + 1}`
+    );
+
+    // TODO what if font name is none!?
+    fonts.unshift(`${projectBuild.TAB}FONT_ID_NONE = 0`);
+
+    return `enum FontsEnum {\n${fonts.join(",\n")}\n};`;
+}
+
 function buildFontData(font: Font, dataBuffer: DataBuffer) {
     /*
-    Font header:
+    Font:
 
     offset
+    ------
     0           ascent              uint8
     1           descent             uint8
     2           encoding start      uint8
     3           encoding end        uint8
     4           1st encoding offset uint32 LE
-    6           2nd encoding offset uint32 LE
-    ...
+    8           2nd encoding offset uint32 LE
+    12          ...
     */
 
     /*
-    Glyph header:
+    Glyph:
 
     offset
+    ------
     0             DWIDTH                    int8
     1             BBX width                 uint8
     2             BBX height                uint8
@@ -67,22 +85,6 @@ function buildFontData(font: Font, dataBuffer: DataBuffer) {
             }
         });
     }
-}
-
-export function buildGuiFontsEnum(assets: Assets) {
-    let fonts = assets.fonts.map(
-        (font, i) =>
-            `${projectBuild.TAB}${projectBuild.getName(
-                "FONT_ID_",
-                font,
-                projectBuild.NamingConvention.UnderscoreUpperCase
-            )} = ${i + 1}`
-    );
-
-    // TODO what if font name is none!?
-    fonts.unshift(`${projectBuild.TAB}FONT_ID_NONE = 0`);
-
-    return `enum FontsEnum {\n${fonts.join(",\n")}\n};`;
 }
 
 export function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
