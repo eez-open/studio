@@ -147,7 +147,9 @@ async function getExtraResource() {
     const extraResource = [
         "./installation/extra-resources/catalog-version.json",
         "./installation/extra-resources/catalog.json"
-    ].concat(extensions);
+    ]
+        .concat(extensions)
+        .concat(["./resources/expression-grammar.pegjs"]);
 
     return extraResource.map((extraResourcePath: string) => ({
         from: extraResourcePath,

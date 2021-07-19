@@ -34,7 +34,9 @@ class ExtensionsCatalog {
             .then(catalog => {
                 runInAction(() => (this.catalog = catalog));
             })
-            .catch(error => notification.error(`Failed to load catalog (${error})`));
+            .catch(error =>
+                notification.error(`Failed to load catalog (${error})`)
+            );
 
         this.loadCatalogVersion()
             .then(catalogVersion => {
@@ -51,7 +53,9 @@ class ExtensionsCatalog {
                     this.checkNewVersionOfCatalog();
                 }
             })
-            .catch(error => notification.error(`Failed to load catalog version (${error})`));
+            .catch(error =>
+                notification.error(`Failed to load catalog version (${error})`)
+            );
     }
 
     get catalogPath() {
@@ -62,7 +66,9 @@ class ExtensionsCatalog {
         let catalogPath = this.catalogPath;
         if (!(await fileExists(catalogPath))) {
             if (isDev) {
-                catalogPath = path.resolve(`${__dirname}/../../../extensions/catalog.json`);
+                catalogPath = path.resolve(
+                    `${__dirname}/../../../resources/catalog.json`
+                );
             } else {
                 catalogPath = process.resourcesPath! + "/catalog.json";
             }
@@ -89,10 +95,11 @@ class ExtensionsCatalog {
         if (!catalogVersion) {
             if (isDev) {
                 catalogVersionPath = path.resolve(
-                    `${__dirname}/../../../extensions/catalog-version.json`
+                    `${__dirname}/../../../resources/catalog-version.json`
                 );
             } else {
-                catalogVersionPath = process.resourcesPath! + "/catalog-version.json";
+                catalogVersionPath =
+                    process.resourcesPath! + "/catalog-version.json";
             }
         }
 
@@ -132,8 +139,13 @@ class ExtensionsCatalog {
 
             req.addEventListener("load", async () => {
                 const catalogVersion = req.response;
-                catalogVersion.lastModified = new Date(catalogVersion.lastModified);
-                await writeJsObjectToFile(this.catalogVersionPath, catalogVersion);
+                catalogVersion.lastModified = new Date(
+                    catalogVersion.lastModified
+                );
+                await writeJsObjectToFile(
+                    this.catalogVersionPath,
+                    catalogVersion
+                );
                 resolve(catalogVersion);
             });
 

@@ -22,7 +22,7 @@ import { getAppStore } from "home/history";
 
 import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { Setup } from "home/setup";
-import "home/Workbench";
+import "home/workbench";
 
 ////////////////////////////////////////////////////////////////////////////////
 
