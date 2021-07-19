@@ -533,7 +533,7 @@ export class Assets {
                         err.toString(),
                         component
                     );
-                    index = -1;
+                    index = 65535;
                 }
             }
         }
@@ -562,7 +562,7 @@ export class Assets {
             }
             return index;
         }
-        return -1;
+        return 65535;
     }
 
     getFlowWidgetDataItemIndex(object: any, propertyName: string) {
@@ -734,7 +734,11 @@ export class DataBuffer {
         if (this.currentOffset % 2) {
             throw "invalid offset";
         }
-        this.buffer.writeUInt16LE(value, this.currentOffset);
+        try {
+            this.buffer.writeUInt16LE(value, this.currentOffset);
+        } catch (err) {
+            console.error(err);
+        }
         this.currentOffset += 2;
     }
 

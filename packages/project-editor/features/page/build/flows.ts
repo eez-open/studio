@@ -112,14 +112,14 @@ function buildComponent(
         dataBuffer.writeArray(connectionLines, connectionLine => {
             const targetComponentIndex = connectionLine.targetComponent
                 ? assets.getComponentIndex(connectionLine.targetComponent)
-                : -1;
+                : 65535;
 
             const targetInputIndex = connectionLine.targetComponent
                 ? assets.getComponentInputIndex(
                       connectionLine.targetComponent,
                       connectionLine.input
                   )
-                : -1;
+                : 255;
 
             mapOutputs.push({
                 targetComponentIndex,
