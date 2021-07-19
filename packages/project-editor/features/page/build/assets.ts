@@ -713,12 +713,7 @@ export class DataBuffer {
     writeLater: { currentOffset: number; callback: () => void }[] = [];
 
     writeInt8(value: number) {
-        try {
-            this.buffer.writeInt8(value, this.currentOffset);
-        } catch (err) {
-            this.buffer.writeInt8(0, this.currentOffset);
-            console.error(err);
-        }
+        this.buffer.writeInt8(value, this.currentOffset);
         this.currentOffset += 1;
     }
 

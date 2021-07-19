@@ -138,14 +138,14 @@ export function buildWidget(
     if (object instanceof Widget) {
         data = assets.getGlobalVariableIndex(object, "data");
     }
-    dataBuffer.writeUint16(data);
+    dataBuffer.writeInt16(data);
 
     // action
     let action: number = 0;
     if (object instanceof Widget) {
         action = assets.getActionIndex(object, "action");
     }
-    dataBuffer.writeUint16(action);
+    dataBuffer.writeInt16(action);
 
     // x
     dataBuffer.writeInt16(object.left || 0);
@@ -182,7 +182,6 @@ export function buildWidget(
         if (object instanceof ContainerWidget) {
             overlay = assets.getGlobalVariableIndex(object, "overlay");
         }
-        dataBuffer.writeUint16(overlay);
 
         // flags
         let flags = 0;
@@ -199,7 +198,10 @@ export function buildWidget(
             }
         }
 
-        dataBuffer.writeUint8(flags);
+        dataBuffer.writeUint16(flags);
+
+        // overlay
+        dataBuffer.writeInt16(overlay);
     } else if (type == WIDGET_TYPE_SELECT) {
         let widget = object as SelectWidget;
 
@@ -312,7 +314,7 @@ export function buildWidget(
         // line1Data
         let line1Data = assets.getGlobalVariableIndex(widget, "line1Data");
 
-        dataBuffer.writeUint16(line1Data);
+        dataBuffer.writeInt16(line1Data);
 
         // line1Style
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "line1Style"));
@@ -320,7 +322,7 @@ export function buildWidget(
         // line2Data
         let line2Data = assets.getGlobalVariableIndex(widget, "line2Data");
 
-        dataBuffer.writeUint16(line2Data);
+        dataBuffer.writeInt16(line2Data);
 
         // line2Style
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "line2Style"));
@@ -365,19 +367,19 @@ export function buildWidget(
         let widget = object as ListGraphWidget;
 
         // dwellData
-        dataBuffer.writeUint16(
+        dataBuffer.writeInt16(
             assets.getGlobalVariableIndex(widget, "dwellData")
         );
         // y1Data
-        dataBuffer.writeUint16(assets.getGlobalVariableIndex(widget, "y1Data"));
+        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "y1Data"));
         // y1Style
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "y1Style"));
         // y2Data
-        dataBuffer.writeUint16(assets.getGlobalVariableIndex(widget, "y2Data"));
+        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "y2Data"));
         // y2Style
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "y2Style"));
         // cursorData
-        dataBuffer.writeUint16(
+        dataBuffer.writeInt16(
             assets.getGlobalVariableIndex(widget, "cursorData")
         );
         // cursorStyle
@@ -391,9 +393,7 @@ export function buildWidget(
         );
 
         // enabled
-        dataBuffer.writeUint16(
-            assets.getGlobalVariableIndex(widget, "enabled")
-        );
+        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "enabled"));
 
         // disabledStyle
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "disabledStyle"));
@@ -418,7 +418,7 @@ export function buildWidget(
             bitmap = assets.getBitmapIndex(widget, "bitmap");
         }
 
-        dataBuffer.writeUint8(bitmap);
+        dataBuffer.writeInt16(bitmap);
     } else if (type == WIDGET_TYPE_LAYOUT_VIEW) {
         let widget = object as LayoutViewWidget;
 
@@ -430,9 +430,7 @@ export function buildWidget(
         dataBuffer.writeInt16(layout);
 
         // context
-        dataBuffer.writeUint16(
-            assets.getGlobalVariableIndex(widget, "context")
-        );
+        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "context"));
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields
     } else if (type == WIDGET_TYPE_SCROLL_BAR) {
