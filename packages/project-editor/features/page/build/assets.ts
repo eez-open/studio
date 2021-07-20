@@ -666,7 +666,11 @@ export class DataBuffer {
         if (this.currentOffset % 2) {
             throw "invalid offset";
         }
-        this.buffer.writeUInt16LE(value, this.currentOffset);
+        try {
+            this.buffer.writeUInt16LE(value, this.currentOffset);
+        } catch (err) {
+            console.error(err);
+        }
         this.currentOffset += 2;
     }
 
