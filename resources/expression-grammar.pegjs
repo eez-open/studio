@@ -559,9 +559,7 @@ UnaryExpression
     }
 
 UnaryOperator
-  = "++"
-  / "--"
-  / $("+" !"=")
+  = $("+" !"=")
   / $("-" !"=")
   / "~"
   / "!"
@@ -592,7 +590,6 @@ ShiftExpression
 
 ShiftOperator
   = $("<<"  !"=")
-  / $(">>>" !"=")
   / $(">>"  !"=")
 
 RelationalExpression
@@ -628,9 +625,7 @@ EqualityExpressionNoIn
     { return buildBinaryExpression(head, tail); }
 
 EqualityOperator
-  = "==="
-  / "!=="
-  / "=="
+  = "=="
   / "!="
 
 BitwiseANDExpression

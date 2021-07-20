@@ -1227,15 +1227,17 @@ export class ScpiActionComponent extends ActionComponent {
                     array[index++] = ch.codePointAt(0)!;
                 }
             } else if (part.tag == SCPI_PART_INPUT) {
-                const inputName = str.substring(1, str.length - 1);
-                array[index++] = assets.getComponentInputIndex(this, inputName);
+                // TODO
+                //const inputName = str.substring(1, str.length - 1);
+                //array[index++] = assets.getComponentInputIndex(this, inputName);
             } else if (part.tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
-                const outputName =
-                    str[0] == "{" ? str.substring(1, str.length - 1) : str;
-                array[index++] = assets.getComponentOutputIndex(
-                    this,
-                    outputName
-                );
+                // TODO
+                // const outputName =
+                //     str[0] == "{" ? str.substring(1, str.length - 1) : str;
+                // array[index++] = assets.getComponentOutputIndex(
+                //     this,
+                //     outputName
+                // );
             }
         }
 

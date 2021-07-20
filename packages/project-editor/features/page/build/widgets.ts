@@ -136,14 +136,14 @@ export function buildWidget(
     // data
     let data = 0;
     if (object instanceof Widget) {
-        data = assets.getGlobalVariableIndex(object, "data");
+        data = assets.getWidgetDataItemIndex(object, "data");
     }
     dataBuffer.writeInt16(data);
 
     // action
     let action: number = 0;
     if (object instanceof Widget) {
-        action = assets.getActionIndex(object, "action");
+        action = assets.getWidgetActionIndex(object, "action");
     }
     dataBuffer.writeInt16(action);
 
@@ -180,7 +180,7 @@ export function buildWidget(
 
         let overlay = 0;
         if (object instanceof ContainerWidget) {
-            overlay = assets.getGlobalVariableIndex(object, "overlay");
+            overlay = assets.getWidgetDataItemIndex(object, "overlay");
         }
 
         // flags
@@ -312,7 +312,7 @@ export function buildWidget(
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "textStyle"));
 
         // line1Data
-        let line1Data = assets.getGlobalVariableIndex(widget, "line1Data");
+        let line1Data = assets.getWidgetDataItemIndex(widget, "line1Data");
 
         dataBuffer.writeInt16(line1Data);
 
@@ -320,7 +320,7 @@ export function buildWidget(
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "line1Style"));
 
         // line2Data
-        let line2Data = assets.getGlobalVariableIndex(widget, "line2Data");
+        let line2Data = assets.getWidgetDataItemIndex(widget, "line2Data");
 
         dataBuffer.writeInt16(line2Data);
 
@@ -368,19 +368,19 @@ export function buildWidget(
 
         // dwellData
         dataBuffer.writeInt16(
-            assets.getGlobalVariableIndex(widget, "dwellData")
+            assets.getWidgetDataItemIndex(widget, "dwellData")
         );
         // y1Data
-        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "y1Data"));
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(widget, "y1Data"));
         // y1Style
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "y1Style"));
         // y2Data
-        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "y2Data"));
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(widget, "y2Data"));
         // y2Style
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "y2Style"));
         // cursorData
         dataBuffer.writeInt16(
-            assets.getGlobalVariableIndex(widget, "cursorData")
+            assets.getWidgetDataItemIndex(widget, "cursorData")
         );
         // cursorStyle
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "cursorStyle"));
@@ -393,7 +393,7 @@ export function buildWidget(
         );
 
         // enabled
-        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "enabled"));
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(widget, "enabled"));
 
         // disabledStyle
         dataBuffer.writeUint16(assets.getStyleIndex(widget, "disabledStyle"));
@@ -430,7 +430,7 @@ export function buildWidget(
         dataBuffer.writeInt16(layout);
 
         // context
-        dataBuffer.writeInt16(assets.getGlobalVariableIndex(widget, "context"));
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(widget, "context"));
     } else if (type == WIDGET_TYPE_APP_VIEW) {
         // no specific fields
     } else if (type == WIDGET_TYPE_SCROLL_BAR) {

@@ -9,11 +9,15 @@ import {
     getClassInfo,
     getHumanReadableObjectPath,
     getObjectPathAsString,
+    getProperty,
     IObjectClassInfo
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
+import { Variable } from "project-editor/features/variable/variable";
+import { CommentActionComponent } from "project-editor/flow/action-components";
+import { buildExpression } from "project-editor/flow/expression";
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -35,171 +39,6 @@ function getComponentTypes() {
         .sort((a, b) => getComponentId(a)! - getComponentId(b)!);
 }
 
-function buildComponent(
-    flow: Flow,
-    component: Component,
-    assets: Assets,
-    dataBuffer: DataBuffer
-) {
-    const componentIndex = assets.getComponentIndex(component);
-
-    const flowIndex = assets.getFlowIndex(flow);
-    assets.map.flows[flowIndex].components[componentIndex] = {
-        componentIndex,
-        path: getObjectPathAsString(component),
-        pathReadable: getHumanReadableObjectPath(component),
-        inputs: [],
-        outputs: []
-    };
-
-    // type
-    let flowComponentId = getClassInfo(component).flowComponentId;
-    if (flowComponentId != undefined) {
-        dataBuffer.writeUint16(flowComponentId);
-    } else {
-        assets.DocumentStore.OutputSectionsStore.write(
-            output.Section.OUTPUT,
-            output.Type.ERROR,
-            "Component is not supported for the build target",
-            component
-        );
-        dataBuffer.writeUint16(0);
-    }
-
-    // reserved
-    dataBuffer.writeUint16(0);
-
-    // inputs
-    dataBuffer.writeArray(getComponentInputNames(component), input => {
-        assets.registerComponentInput(
-            component,
-            input.name,
-            dataBuffer.currentOffset
-        );
-
-        const valueIndex = assets.getComponentInputValueIndex(component, input);
-
-        const mapInputs: number[] = [];
-
-        mapInputs.push(valueIndex);
-
-        assets.map.flows[flowIndex].components[componentIndex].inputs.push(
-            mapInputs
-        );
-
-        dataBuffer.writeUint16(valueIndex);
-    });
-
-    // outputs
-    dataBuffer.writeArray(getComponentOutputNames(component), output => {
-        assets.registerComponentOutput(
-            component,
-            output.name,
-            dataBuffer.currentOffset
-        );
-
-        const connectionLines = flow.connectionLines.filter(
-            connectionLine =>
-                connectionLine.sourceComponent === component &&
-                connectionLine.output == output.name
-        );
-
-        const mapOutputs: {
-            targetComponentIndex: number;
-            targetInputIndex: number;
-        }[] = [];
-
-        dataBuffer.writeArray(connectionLines, connectionLine => {
-            const targetComponentIndex = connectionLine.targetComponent
-                ? assets.getComponentIndex(connectionLine.targetComponent)
-                : -1;
-
-            const targetInputIndex = connectionLine.targetComponent
-                ? assets.getComponentInputIndex(
-                      connectionLine.targetComponent,
-                      connectionLine.input
-                  )
-                : -1;
-
-            mapOutputs.push({
-                targetComponentIndex,
-                targetInputIndex
-            });
-
-            dataBuffer.writeUint16(targetComponentIndex);
-            dataBuffer.writeUint8(targetInputIndex);
-        });
-
-        assets.map.flows[flowIndex].components[componentIndex].outputs.push(
-            mapOutputs
-        );
-    });
-
-    // specific
-    try {
-        component.buildFlowComponentSpecific(assets, dataBuffer);
-    } catch (err) {
-        assets.DocumentStore.OutputSectionsStore.write(
-            output.Section.OUTPUT,
-            output.Type.ERROR,
-            err,
-            component
-        );
-    }
-}
-
-function buildFlow(flow: Flow, assets: Assets, dataBuffer: DataBuffer) {
-    const flowIndex = assets.getFlowIndex(flow);
-
-    assets.map.flows[flowIndex] = {
-        flowIndex,
-        path: getObjectPathAsString(flow),
-        pathReadable: getHumanReadableObjectPath(flow),
-        components: []
-    };
-
-    const components: Component[] = [];
-    const v = visitObjects(flow);
-    while (true) {
-        let visitResult = v.next();
-        if (visitResult.done) {
-            break;
-        }
-        if (visitResult.value instanceof Component) {
-            const component = visitResult.value;
-            components.push(component);
-            assets.getComponentIndex(component);
-        }
-    }
-
-    dataBuffer.writeArray(components, component =>
-        buildComponent(flow, component, assets, dataBuffer)
-    );
-}
-
-function buildFlowValue(
-    flowValue: FlowValue,
-    assets: Assets,
-    dataBuffer: DataBuffer
-) {
-    dataBuffer.writeUint8(flowValue.type); // type_
-    dataBuffer.writeUint8(0); // unit_
-    dataBuffer.writeUint16(0); // options_
-
-    // union
-    if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
-        dataBuffer.writeUint32(flowValue.value);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
-        dataBuffer.writeFloat(flowValue.value);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
-        dataBuffer.writeObjectOffset(() => {
-            dataBuffer.writeString(flowValue.value);
-        });
-    } else {
-        dataBuffer.writeUint32(0);
-    }
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 export const FLOW_VALUE_TYPE_UNDEFINED = 0;
@@ -213,33 +52,6 @@ export const FLOW_VALUE_TYPE_INT32 = 7;
 export const FLOW_VALUE_TYPE_UINT32 = 8;
 export const FLOW_VALUE_TYPE_FLOAT = 9;
 export const FLOW_VALUE_TYPE_STRING = 10;
-
-export function getComponentInputNames(component: Component) {
-    const inputs: { name: string; type: "input" | "property" }[] = [
-        { name: "@seqin", type: "input" }
-    ];
-
-    for (const propertyInfo of getClassInfo(component).properties) {
-        if (propertyInfo.toggableProperty === "input") {
-            inputs.push({
-                name: propertyInfo.name,
-                type:
-                    !component.asInputProperties ||
-                    component.asInputProperties.indexOf(propertyInfo.name) == -1
-                        ? "property"
-                        : "input"
-            });
-        }
-    }
-
-    for (const componentInput of component.inputs) {
-        if (!inputs.find(input => input.name == componentInput.name)) {
-            inputs.push({ name: componentInput.name, type: "input" });
-        }
-    }
-
-    return inputs;
-}
 
 export function getComponentOutputNames(component: Component) {
     const outputs: { name: string; type: "output" | "property" }[] = [
@@ -283,7 +95,6 @@ export function getFlowValueType(value: any) {
 }
 
 export interface FlowValue {
-    index: number;
     type: number;
     value: any;
 }
@@ -381,15 +192,223 @@ export function buildFlowDefs(assets: Assets) {
 }
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
-    if (assets.DocumentStore.isAppletProject) {
-        dataBuffer.writeObjectOffset(() => {
-            dataBuffer.writeArray(assets.flows, flow =>
-                buildFlow(flow, assets, dataBuffer)
-            );
-            dataBuffer.writeArray(assets.flowValues, flowValue =>
-                buildFlowValue(flowValue, assets, dataBuffer)
+    function buildFlow(flow: Flow) {
+        assets.startFlowBuild(flow);
+
+        function buildComponent(component: Component) {
+            const componentIndex = componentIndexes.get(component)!;
+
+            const flowIndex = assets.getFlowIndex(flow);
+            assets.map.flows[flowIndex].components[componentIndex] = {
+                componentIndex,
+                path: getObjectPathAsString(component),
+                pathReadable: getHumanReadableObjectPath(component),
+                inputs: [],
+                outputs: []
+            };
+
+            // type
+            let flowComponentId = getClassInfo(component).flowComponentId;
+            if (flowComponentId != undefined) {
+                dataBuffer.writeUint16(flowComponentId);
+            } else {
+                assets.DocumentStore.OutputSectionsStore.write(
+                    output.Section.OUTPUT,
+                    output.Type.ERROR,
+                    "Component is not supported for the build target",
+                    component
+                );
+                dataBuffer.writeUint16(0);
+            }
+
+            // reserved
+            dataBuffer.writeUint16(0);
+
+            // inputs
+            dataBuffer.writeNumberArray(component.inputs, input => {
+                assets.registerComponentInput(
+                    component,
+                    input.name,
+                    dataBuffer.currentOffset
+                );
+
+                const inputIndex = assets.flow.getInputIndex(
+                    component,
+                    input.name
+                );
+
+                dataBuffer.writeUint16(inputIndex);
+
+                assets.map.flows[flowIndex].components[
+                    componentIndex
+                ].inputs.push(inputIndex);
+            });
+
+            // property values
+            dataBuffer.writeArray(
+                getClassInfo(component).properties.filter(
+                    propertyInfo => propertyInfo.toggableProperty === "input"
+                ),
+                propertyInfo => {
+                    if (
+                        component.asInputProperties &&
+                        component.asInputProperties.indexOf(
+                            propertyInfo.name
+                        ) != -1
+                    ) {
+                        // as input
+                        buildExpression(assets, component, propertyInfo.name);
+                    } else {
+                        // as property
+                        buildExpression(
+                            assets,
+                            component,
+                            getProperty(component, propertyInfo.name)
+                        );
+                    }
+                }
             );
 
+            // outputs
+            dataBuffer.writeArray(
+                getComponentOutputNames(component),
+                output => {
+                    assets.registerComponentOutput(
+                        component,
+                        output.name,
+                        dataBuffer.currentOffset
+                    );
+
+                    const connectionLines = flow.connectionLines.filter(
+                        connectionLine =>
+                            connectionLine.sourceComponent === component &&
+                            connectionLine.output == output.name
+                    );
+
+                    const mapOutputs: {
+                        targetComponentIndex: number;
+                        targetInputIndex: number;
+                    }[] = [];
+
+                    dataBuffer.writeArray(connectionLines, connectionLine => {
+                        const targetComponentIndex =
+                            connectionLine.targetComponent
+                                ? componentIndexes.get(
+                                      connectionLine.targetComponent
+                                  )!
+                                : -1;
+
+                        // TODO
+                        // const targetInputIndex = connectionLine.targetComponent
+                        //     ? assets.getComponentInputIndex(
+                        //           connectionLine.targetComponent,
+                        //           connectionLine.input
+                        //       )
+                        //     : -1;
+
+                        const targetInputIndex = 0;
+
+                        mapOutputs.push({
+                            targetComponentIndex,
+                            targetInputIndex
+                        });
+
+                        dataBuffer.writeUint16(targetComponentIndex);
+                        dataBuffer.writeUint8(targetInputIndex);
+                    });
+
+                    assets.map.flows[flowIndex].components[
+                        componentIndex
+                    ].outputs.push(mapOutputs);
+                }
+            );
+
+            // specific
+            try {
+                component.buildFlowComponentSpecific(assets, dataBuffer);
+            } catch (err) {
+                assets.DocumentStore.OutputSectionsStore.write(
+                    output.Section.OUTPUT,
+                    output.Type.ERROR,
+                    err,
+                    component
+                );
+            }
+        }
+
+        const flowIndex = assets.getFlowIndex(flow);
+
+        assets.map.flows[flowIndex] = {
+            flowIndex,
+            path: getObjectPathAsString(flow),
+            pathReadable: getHumanReadableObjectPath(flow),
+            components: []
+        };
+
+        const components: Component[] = [];
+        const componentIndexes = new Map<Component, number>();
+        const v = visitObjects(flow);
+        while (true) {
+            let visitResult = v.next();
+            if (visitResult.done) {
+                break;
+            }
+            if (visitResult.value instanceof Component) {
+                const component = visitResult.value;
+                if (!(component instanceof CommentActionComponent)) {
+                    componentIndexes.set(component, components.length);
+                    components.push(component);
+                }
+            }
+        }
+
+        dataBuffer.writeArray(components, buildComponent);
+
+        // localVariables
+        dataBuffer.writeArray(flow.localVariables, buildVariable);
+
+        // nInputValues
+        dataBuffer.writeUint16(assets.flow.inputIndexes.size);
+    }
+
+    function buildFlowValue(flowValue: FlowValue) {
+        dataBuffer.writeUint8(flowValue.type); // type_
+        dataBuffer.writeUint8(0); // unit_
+        dataBuffer.writeUint16(0); // options_
+
+        // union
+        if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
+            dataBuffer.writeUint32(flowValue.value);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
+            dataBuffer.writeFloat(flowValue.value);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
+            dataBuffer.writeObjectOffset(() => {
+                dataBuffer.writeString(flowValue.value);
+            });
+        } else {
+            dataBuffer.writeUint32(0);
+        }
+    }
+
+    function buildVariable(variable: Variable) {
+        buildFlowValue({
+            type: getFlowValueType(variable.defaultValue),
+            value: variable.defaultValue
+        });
+    }
+
+    if (assets.DocumentStore.isAppletProject) {
+        dataBuffer.writeObjectOffset(() => {
+            // flows
+            dataBuffer.writeArray(assets.flows, buildFlow);
+
+            // constants
+            dataBuffer.writeArray(assets.constants, buildFlowValue);
+
+            // globalVariables
+            dataBuffer.writeArray(assets.globalVariables, buildVariable);
+
+            // widgetDataItems
             dataBuffer.writeArray(
                 [...assets.flowWidgetDataIndexes.keys()],
                 (_, i) => {
@@ -408,6 +427,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                 }
             );
 
+            // widgetActions
             dataBuffer.writeArray(
                 [...assets.flowWidgetActionIndexes.keys()],
                 (_, i) => {

@@ -41,14 +41,28 @@ import { buildVariableNames } from "project-editor/features/page/build/variables
 import {
     buildFlowData,
     FlowValue,
-    FLOW_VALUE_TYPE_NULL,
-    FLOW_VALUE_TYPE_UNDEFINED,
-    getComponentInputNames,
     getComponentOutputNames,
     getFlowValueType
 } from "project-editor/features/page/build/flows";
 
-const PATH_SEPARATOR = "//";
+export const PATH_SEPARATOR = "//";
+
+class FlowAsset {
+    constructor(public flow: Flow) {}
+
+    inputIndexes = new Map<string, number>();
+
+    getInputIndex(component: Component, inputName: string) {
+        const path =
+            getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
+        let index = this.inputIndexes.get(path);
+        if (index == undefined) {
+            index = this.inputIndexes.size;
+            this.inputIndexes.set(path, index);
+        }
+        return index;
+    }
+}
 
 export class Assets {
     projects: Project[];
@@ -63,11 +77,9 @@ export class Assets {
     flows: Flow[] = [];
 
     flowIndexes = new Map<Flow, number>();
-    componentIndexes = new Map<Component, number>();
 
-    nextValueIndex = 0;
-    componentInputValueIndexes = new Map<string, number>();
-    simpleValueIndexes = new Map<
+    constants: FlowValue[] = [];
+    constantsMap = new Map<
         undefined | boolean | number | string | object,
         number
     >();
@@ -77,7 +89,7 @@ export class Assets {
     flowWidgetDataIndexComponentInput = new Map<number, number>();
     flowWidgetActionComponentOutput = new Map<number, number>();
 
-    values = [];
+    flow: FlowAsset;
 
     map: {
         flows: {
@@ -88,27 +100,29 @@ export class Assets {
                 componentIndex: number;
                 path: string;
                 pathReadable: string;
-                inputs: number[][];
+                inputs: number[];
                 outputs: {
                     targetComponentIndex: number;
                     targetInputIndex: number;
                 }[][];
             }[];
         }[];
-        values: any[];
+        constants: any[];
         widgetDataItems: {
             widgetDataItemIndex: number;
+            flowIndex: number;
             componentIndex: number;
             inputIndex: number;
         }[];
         widgetActions: {
             widgetActionIndex: number;
+            flowIndex: number;
             componentIndex: number;
             outputIndex: number;
         }[];
     } = {
         flows: [],
-        values: [],
+        constants: [],
         widgetDataItems: [],
         widgetActions: []
     };
@@ -146,8 +160,8 @@ export class Assets {
         public rootProject: Project,
         buildConfiguration: BuildConfiguration | undefined
     ) {
-        this.getValueIndexFromJSON(undefined); // undefined has value index 0
-        this.getValueIndexFromJSON("null"); // null has value index 1
+        this.getConstantIndexFromJSON(undefined); // undefined has value index 0
+        this.getConstantIndexFromJSON("null"); // null has value index 1
 
         this.projects = [];
         this.collectProjects(rootProject);
@@ -242,7 +256,7 @@ export class Assets {
         return 0;
     }
 
-    getGlobalVariableIndex(object: any, propertyName: string) {
+    getWidgetDataItemIndex(object: any, propertyName: string) {
         if (this.DocumentStore.isAppletProject) {
             return this.getFlowWidgetDataItemIndex(object, propertyName);
         }
@@ -257,7 +271,7 @@ export class Assets {
         );
     }
 
-    getActionIndex(object: any, propertyName: string) {
+    getWidgetActionIndex(object: any, propertyName: string) {
         if (this.DocumentStore.isAppletProject) {
             return this.getFlowWidgetActionIndex(object, propertyName);
         }
@@ -495,74 +509,22 @@ export class Assets {
         return index;
     }
 
-    getComponentIndex(component: Component) {
-        let index = this.componentIndexes.get(component);
-        if (index == undefined) {
-            index = this.componentIndexes.size;
-            this.componentIndexes.set(component, index);
-        }
-        return index;
-    }
-
-    getComponentInputIndex(component: Component, inputName: string) {
-        return getComponentInputNames(component).findIndex(
-            input => input.name == inputName
-        );
-    }
-
-    getComponentInputValueIndex(
-        component: Component,
-        input: { name: string; type: "input" | "property" }
-    ) {
-        const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + input.name;
-        let index = this.componentInputValueIndexes.get(path);
-        if (index == undefined) {
-            if (input.type == "input") {
-                index = this.nextValueIndex++;
-                this.componentInputValueIndexes.set(path, index);
-            } else {
-                try {
-                    index = this.getValueIndexFromJSON(
-                        getProperty(component, input.name)
-                    );
-                } catch (err) {
-                    this.DocumentStore.OutputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.ERROR,
-                        err.toString(),
-                        component
-                    );
-                    index = -1;
-                }
-            }
-        }
-        return index;
-    }
-
-    getComponentOutputIndex(component: Component, outputName: string) {
-        return getComponentOutputNames(component).findIndex(
-            output => output.name == outputName
-        );
-    }
-
-    getValueIndexFromJSON(jsonStr: string | undefined) {
+    getConstantIndexFromJSON(jsonStr: string | undefined) {
         const value = jsonStr == undefined ? undefined : JSON.parse(jsonStr);
-        if (
-            typeof value == "undefined" ||
-            typeof value == "boolean" ||
-            typeof value == "number" ||
-            typeof value == "string" ||
-            value === null
-        ) {
-            let index = this.simpleValueIndexes.get(value);
-            if (index == undefined) {
-                index = this.nextValueIndex++;
-                this.simpleValueIndexes.set(value, index);
-            }
-            return index;
+        let index = this.constantsMap.get(value);
+        if (index == undefined) {
+            index = this.constants.length;
+            this.constants.push({
+                type: getFlowValueType(value),
+                value
+            });
+            this.constantsMap.set(value, index);
         }
-        return -1;
+        return index;
+    }
+
+    startFlowBuild(flow: Flow) {
+        this.flow = new FlowAsset(flow);
     }
 
     getFlowWidgetDataItemIndex(object: any, propertyName: string) {
@@ -619,68 +581,29 @@ export class Assets {
         }
     }
 
-    get flowValues() {
-        const flowValues: FlowValue[] = [];
-
-        for (let [value, index] of this.simpleValueIndexes) {
-            flowValues.push({
-                index,
-                type: getFlowValueType(value),
-                value
-            });
-        }
-
-        for (let [path, index] of this.componentInputValueIndexes) {
-            const [componentObjectPath, inputName] = path.split(PATH_SEPARATOR);
-
-            let type = FLOW_VALUE_TYPE_UNDEFINED;
-            let value: undefined | null;
-            if (inputName === "@seqin") {
-                const component = getObjectFromStringPath(
-                    this.rootProject,
-                    componentObjectPath
-                );
-
-                const flow = getFlow(component);
-
-                if (
-                    !flow.connectionLines.find(
-                        connectionLine =>
-                            connectionLine.targetComponent == component &&
-                            connectionLine.input == inputName
-                    )
-                ) {
-                    // store null value if there is no connection line to "@seqin"
-                    type = FLOW_VALUE_TYPE_NULL;
-                    value = null;
-                }
-            }
-
-            flowValues.push({
-                index,
-                type,
-                value
-            });
-        }
-
-        flowValues.sort((a, b) => a.index - b.index);
-
-        return flowValues;
-    }
-
     finalizeMap() {
-        this.map.values = this.flowValues;
+        this.map.constants = this.constants;
 
         this.flowWidgetDataIndexes.forEach((index, path) => {
             const [componentObjectPath, inputName] = path.split(PATH_SEPARATOR);
+
             const component = getObjectFromStringPath(
                 this.rootProject,
                 componentObjectPath
             ) as Component;
+
+            const flow = getFlow(component)!;
+            const flowIndex = this.flowIndexes.get(flow)!;
+
+            const componentIndex = this.map.flows[flowIndex].components.find(
+                component => component.path == componentObjectPath
+            )!.componentIndex;
+
             this.map.widgetDataItems[index] = {
                 widgetDataItemIndex: index,
-                componentIndex: this.componentIndexes.get(component!)!,
-                inputIndex: getComponentInputNames(component).findIndex(
+                flowIndex,
+                componentIndex,
+                inputIndex: component.inputs.findIndex(
                     input => input.name == inputName
                 )
             };
@@ -689,14 +612,23 @@ export class Assets {
         this.flowWidgetActionIndexes.forEach((index, path) => {
             const [componentObjectPath, outputName] =
                 path.split(PATH_SEPARATOR);
+
             const component = getObjectFromStringPath(
                 this.rootProject,
                 componentObjectPath
             ) as Component;
 
+            const flow = getFlow(component)!;
+            const flowIndex = this.flowIndexes.get(flow)!;
+
+            const componentIndex = this.map.flows[flowIndex].components.find(
+                component => component.path == componentObjectPath
+            )!.componentIndex;
+
             this.map.widgetActions[index] = {
                 widgetActionIndex: index,
-                componentIndex: this.componentIndexes.get(component!)!,
+                flowIndex,
+                componentIndex,
                 outputIndex: getComponentOutputNames(component).findIndex(
                     output => output.name == outputName
                 )

@@ -800,7 +800,7 @@ export class ConstantActionComponent extends ActionComponent {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        dataBuffer.writeUint16(assets.getValueIndexFromJSON(this.value));
+        dataBuffer.writeUint16(assets.getConstantIndexFromJSON(this.value));
     }
 }
 
