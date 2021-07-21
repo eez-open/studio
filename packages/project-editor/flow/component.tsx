@@ -354,6 +354,41 @@ export function getWidgetParent(widget: Component | Page) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class CustomInput extends EezObject {
+    @observable name: string;
+    @observable type: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String
+            },
+            {
+                name: "type",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: PropertyType.String,
+                        label: "String"
+                    },
+                    {
+                        id: PropertyType.Boolean,
+                        label: "Boolean"
+                    },
+                    {
+                        id: PropertyType.Number,
+                        label: "Number"
+                    }
+                ]
+            }
+        ],
+        defaultValue: {}
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Component extends EezObject {
     @observable type: string;
 
@@ -364,8 +399,10 @@ export class Component extends EezObject {
 
     @observable wireID: string;
 
-    @observable asInputProperties: string[];
+    @observable customInputs: string;
+    @observable customOutputs: string;
 
+    @observable asInputProperties: string[];
     @observable asOutputProperties: string[];
 
     @observable _geometry: ComponentGeometry;
@@ -443,6 +480,12 @@ export class Component extends EezObject {
                 name: "wireID",
                 type: PropertyType.String,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "customInputs",
+                type: PropertyType.Array,
+                typeClass: CustomInput,
+                propertyGridGroup: specificGroup
             },
             {
                 name: "asInputProperties",
