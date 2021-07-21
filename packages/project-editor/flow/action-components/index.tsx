@@ -30,6 +30,7 @@ import { getFlow, getProject } from "project-editor/project/project";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import { evalExpression } from "project-editor/flow/expression";
 
 const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
@@ -800,7 +801,9 @@ export class ConstantActionComponent extends ActionComponent {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        dataBuffer.writeUint16(assets.getConstantIndexFromJSON(this.value));
+        dataBuffer.writeUint16(
+            assets.getConstantIndex(evalExpression(assets, this, this.value))
+        );
     }
 }
 

@@ -130,8 +130,7 @@ export function buildWidget(
             type = WIDGET_TYPE_NONE;
         }
     }
-    dataBuffer.writeUint8(type);
-    dataBuffer.writeUint8(0); // reserved
+    dataBuffer.writeUint16(type);
 
     // data
     let data = 0;

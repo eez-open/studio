@@ -765,6 +765,14 @@ export class Enum extends EezObject {
         navigationComponentId: "project-variables-enums",
         icon: "format_list_numbered"
     };
+
+    @computed get membersMap() {
+        const map = new Map<string, EnumMember>();
+        for (const member of this.members) {
+            map.set(member.name, member);
+        }
+        return map;
+    }
 }
 
 registerClass(Enum);

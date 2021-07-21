@@ -66,7 +66,7 @@ import { ContainerWidget } from "project-editor/flow/widgets";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { compileExpression } from "./expression";
+import { checkExpression } from "./expression";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -633,7 +633,7 @@ export class Component extends EezObject {
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (propertyInfo.toggableProperty === "input") {
                         try {
-                            compileExpression(
+                            checkExpression(
                                 component,
                                 getProperty(component, propertyInfo.name)
                             );
@@ -942,7 +942,15 @@ export class Widget extends Component {
                 }
             }
 
-            checkObjectReference(object, "data", messages);
+            const DocumentStore = getDocumentStore(object);
+
+            if (
+                !DocumentStore.isAppletProject &&
+                !DocumentStore.isDashboardProject
+            ) {
+                checkObjectReference(object, "data", messages);
+            }
+
             checkObjectReference(object, "action", messages);
 
             return messages;

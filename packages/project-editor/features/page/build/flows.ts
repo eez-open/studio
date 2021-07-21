@@ -193,10 +193,8 @@ export function buildFlowDefs(assets: Assets) {
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
     function buildFlow(flow: Flow) {
-        assets.startFlowBuild(flow);
-
         function buildComponent(component: Component) {
-            const componentIndex = componentIndexes.get(component)!;
+            const componentIndex = assets.getComponentIndex(component);
 
             const flowIndex = assets.getFlowIndex(flow);
             assets.map.flows[flowIndex].components[componentIndex] = {
@@ -232,7 +230,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                     dataBuffer.currentOffset
                 );
 
-                const inputIndex = assets.flow.getInputIndex(
+                const inputIndex = assets.getComponentInputIndex(
                     component,
                     input.name
                 );
@@ -257,11 +255,17 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                         ) != -1
                     ) {
                         // as input
-                        buildExpression(assets, component, propertyInfo.name);
+                        buildExpression(
+                            assets,
+                            dataBuffer,
+                            component,
+                            propertyInfo.name
+                        );
                     } else {
                         // as property
                         buildExpression(
                             assets,
+                            dataBuffer,
                             component,
                             getProperty(component, propertyInfo.name)
                         );
@@ -293,20 +297,17 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                     dataBuffer.writeArray(connectionLines, connectionLine => {
                         const targetComponentIndex =
                             connectionLine.targetComponent
-                                ? componentIndexes.get(
+                                ? assets.getComponentIndex(
                                       connectionLine.targetComponent
                                   )!
                                 : -1;
 
-                        // TODO
-                        // const targetInputIndex = connectionLine.targetComponent
-                        //     ? assets.getComponentInputIndex(
-                        //           connectionLine.targetComponent,
-                        //           connectionLine.input
-                        //       )
-                        //     : -1;
-
-                        const targetInputIndex = 0;
+                        const targetInputIndex = connectionLine.targetComponent
+                            ? assets.getComponentInputIndex(
+                                  connectionLine.targetComponent,
+                                  connectionLine.input
+                              )
+                            : -1;
 
                         mapOutputs.push({
                             targetComponentIndex,
@@ -342,11 +343,12 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             flowIndex,
             path: getObjectPathAsString(flow),
             pathReadable: getHumanReadableObjectPath(flow),
-            components: []
+            components: [],
+            widgetDataItems: [],
+            widgetActions: []
         };
 
         const components: Component[] = [];
-        const componentIndexes = new Map<Component, number>();
         const v = visitObjects(flow);
         while (true) {
             let visitResult = v.next();
@@ -356,7 +358,6 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             if (visitResult.value instanceof Component) {
                 const component = visitResult.value;
                 if (!(component instanceof CommentActionComponent)) {
-                    componentIndexes.set(component, components.length);
                     components.push(component);
                 }
             }
@@ -367,8 +368,50 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
         // localVariables
         dataBuffer.writeArray(flow.localVariables, buildVariable);
 
+        const flowState = assets.getFlowState(flow);
+
+        // widgetDataItems
+        dataBuffer.writeArray(
+            [...flowState.flowWidgetDataIndexes.keys()],
+            (_, i) => {
+                const componentInputOffset =
+                    flowState.flowWidgetDataIndexComponentInput.get(i);
+                if (componentInputOffset != undefined) {
+                    dataBuffer.writeUint32(componentInputOffset);
+                } else {
+                    assets.DocumentStore.OutputSectionsStore.write(
+                        output.Section.OUTPUT,
+                        output.Type.ERROR,
+                        "Widget data item input not found"
+                    );
+                    dataBuffer.writeUint32(0);
+                }
+            }
+        );
+
+        // widgetActions
+        dataBuffer.writeArray(
+            [...flowState.flowWidgetActionIndexes.keys()],
+            (_, i) => {
+                const componentOutputOffset =
+                    flowState.flowWidgetActionComponentOutput.get(i);
+                if (componentOutputOffset != undefined) {
+                    dataBuffer.writeUint32(componentOutputOffset);
+                } else {
+                    assets.DocumentStore.OutputSectionsStore.write(
+                        output.Section.OUTPUT,
+                        output.Type.ERROR,
+                        "Widget action output not found"
+                    );
+                    dataBuffer.writeUint32(0);
+                }
+            }
+        );
+
         // nInputValues
-        dataBuffer.writeUint16(assets.flow.inputIndexes.size);
+        dataBuffer.writeUint16(
+            assets.getFlowState(flow).componentInputIndexes.size
+        );
     }
 
     function buildFlowValue(flowValue: FlowValue) {
@@ -407,44 +450,6 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
 
             // globalVariables
             dataBuffer.writeArray(assets.globalVariables, buildVariable);
-
-            // widgetDataItems
-            dataBuffer.writeArray(
-                [...assets.flowWidgetDataIndexes.keys()],
-                (_, i) => {
-                    const componentInputOffset =
-                        assets.flowWidgetDataIndexComponentInput.get(i);
-                    if (componentInputOffset != undefined) {
-                        dataBuffer.writeUint32(componentInputOffset);
-                    } else {
-                        assets.DocumentStore.OutputSectionsStore.write(
-                            output.Section.OUTPUT,
-                            output.Type.ERROR,
-                            "Widget data item input not found"
-                        );
-                        dataBuffer.writeUint32(0);
-                    }
-                }
-            );
-
-            // widgetActions
-            dataBuffer.writeArray(
-                [...assets.flowWidgetActionIndexes.keys()],
-                (_, i) => {
-                    const componentOutputOffset =
-                        assets.flowWidgetActionComponentOutput.get(i);
-                    if (componentOutputOffset != undefined) {
-                        dataBuffer.writeUint32(componentOutputOffset);
-                    } else {
-                        assets.DocumentStore.OutputSectionsStore.write(
-                            output.Section.OUTPUT,
-                            output.Type.ERROR,
-                            "Widget action output not found"
-                        );
-                        dataBuffer.writeUint32(0);
-                    }
-                }
-            );
         });
     } else {
         dataBuffer.writeUint32(0);

@@ -2246,9 +2246,10 @@ export class ButtonWidget extends EmbeddedWidget {
                 messages.push(output.propertyNotSetMessage(object, "text"));
             }
 
+            const DocumentStore = getDocumentStore(object);
             if (
-                !getDocumentStore(object).isDashboardProject &&
-                !object.isInputProperty("enabled")
+                !DocumentStore.isDashboardProject &&
+                !DocumentStore.isAppletProject
             ) {
                 checkObjectReference(object, "enabled", messages, true);
             }

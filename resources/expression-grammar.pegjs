@@ -528,23 +528,8 @@ LeftHandSideExpression
   = CallExpression
   / MemberExpression
 
-PostfixExpression
-  = argument:LeftHandSideExpression _ operator:PostfixOperator {
-      return {
-        type: "UpdateExpression",
-        operator: operator,
-        argument: argument,
-        prefix: false
-      };
-    }
-  / LeftHandSideExpression
-
-PostfixOperator
-  = "++"
-  / "--"
-
 UnaryExpression
-  = PostfixExpression
+  = LeftHandSideExpression
   / operator:UnaryOperator __ argument:UnaryExpression {
       var type = (operator === "++" || operator === "--")
         ? "UpdateExpression"
