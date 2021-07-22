@@ -1,6 +1,6 @@
 import React from "react";
-import { computed, action, observable } from "mobx";
-import { observer } from "mobx-react";
+import { computed, action, observable, autorun, runInAction } from "mobx";
+import { disposeOnUnmount, observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
 
@@ -13,10 +13,16 @@ import {
     EezObject,
     PropertyType,
     PropertyInfo,
-    NavigationComponent
+    NavigationComponent,
+    PropertyProps,
+    getClassInfo
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
-import { findReferencedObject, Project } from "project-editor/project/project";
+import {
+    findReferencedObject,
+    getProject,
+    Project
+} from "project-editor/project/project";
 import {
     ListNavigation,
     ListNavigationWithProperties
@@ -35,6 +41,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { Splitter } from "eez-studio-ui/splitter";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
+import { humanize } from "eez-studio-shared/string";
+import { getPropertyValue } from "project-editor/components/PropertyGrid";
 
 const VariableIcon = (
     <svg
@@ -67,7 +75,7 @@ export type VariableType =
     | "struct"
     | "date";
 
-const variableTypeProperty: PropertyInfo = {
+export const variableTypeProperty: PropertyInfo = {
     name: "type",
     type: PropertyType.Enum,
     enumItems: [
@@ -96,8 +104,196 @@ const variableTypeProperty: PropertyInfo = {
         {
             id: "date"
         }
-    ]
+    ],
+    hideInPropertyGrid: true
 };
+
+export const variableTypeEnumProperty = {
+    name: "enum",
+    type: PropertyType.ObjectReference,
+    referencedObjectCollectionPath: "variables/enums",
+    hideInPropertyGrid: true
+};
+
+export const variableTypeStructProperty = {
+    name: "structure",
+    type: PropertyType.ObjectReference,
+    referencedObjectCollectionPath: "variables/structures",
+    hideInPropertyGrid: true
+};
+
+@observer
+export class VariableTypeUI extends React.Component<PropertyProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    ref = React.createRef<HTMLSelectElement>();
+
+    @observable _value: any = undefined;
+
+    @computed get typePropertyInfo() {
+        return getClassInfo(this.props.objects[0]).properties.find(
+            propertyInfo => propertyInfo.name === "type"
+        )!;
+    }
+
+    @computed get enumPropertyInfo() {
+        return getClassInfo(this.props.objects[0]).properties.find(
+            propertyInfo => propertyInfo.name === "enum"
+        )!;
+    }
+
+    @computed get structurePropertyInfo() {
+        return getClassInfo(this.props.objects[0]).properties.find(
+            propertyInfo => propertyInfo.name === "structure"
+        )!;
+    }
+
+    @disposeOnUnmount
+    changeDocumentDisposer = autorun(() => {
+        if (this.context.project) {
+            const getPropertyValueResultForType = getPropertyValue(
+                this.props.objects,
+                this.typePropertyInfo
+            );
+
+            const getPropertyValueResultForEnum = getPropertyValue(
+                this.props.objects,
+                this.enumPropertyInfo
+            );
+
+            const getPropertyValueResultForStructure = getPropertyValue(
+                this.props.objects,
+                this.structurePropertyInfo
+            );
+
+            const type = getPropertyValueResultForType
+                ? getPropertyValueResultForType.value
+                : "";
+
+            const enumValue = getPropertyValueResultForEnum
+                ? getPropertyValueResultForEnum.value
+                : "";
+
+            const structureValue = getPropertyValueResultForStructure
+                ? getPropertyValueResultForStructure.value
+                : "";
+
+            let value: string;
+            if (type == "enum" && enumValue) {
+                value = `enum:${enumValue}`;
+            } else if (type == "struct" && structureValue) {
+                value = `struct:${structureValue}`;
+            } else {
+                value = type;
+            }
+
+            runInAction(() => {
+                this._value = value;
+            });
+        }
+    });
+
+    componentDidMount() {
+        let el = this.ref.current;
+        if (el) {
+            $(el).on("focus", () => {
+                this.context.UndoManager.setCombineCommands(true);
+            });
+
+            $(el).on("blur", () => {
+                this.context.UndoManager.setCombineCommands(false);
+            });
+        }
+    }
+
+    onChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+
+        let type: string;
+        let enumValue: string | undefined;
+        let structure: string | undefined;
+        if (value.startsWith("enum:")) {
+            type = "enum";
+            enumValue = value.substr("enum:".length);
+            structure = undefined;
+        } else if (value.startsWith("struct:")) {
+            type = "enum";
+            enumValue = undefined;
+            structure = value.substr("struct:".length);
+        } else {
+            type = value;
+            enumValue = undefined;
+            structure = undefined;
+        }
+
+        runInAction(() => (this._value = value));
+
+        this.props.updateObject({
+            type,
+            enum: enumValue,
+            structure
+        });
+    };
+
+    render() {
+        const basicTypes = this.typePropertyInfo
+            .enumItems!.filter(
+                enumItem => enumItem.id != "struct" && enumItem.id != "enum"
+            )
+            .map(enumItem => {
+                const id = enumItem.id.toString();
+                return (
+                    <option key={id} value={id}>
+                        {enumItem.label || humanize(id)}
+                    </option>
+                );
+            });
+
+        basicTypes.unshift(<option key="__empty" value="" />);
+
+        const project = getProject(this.props.objects[0]);
+
+        const enums = project.variables.enums.map(enumDef => (
+            <option key="enums" value={`enum:${enumDef.name}`}>
+                {enumDef.name}
+            </option>
+        ));
+
+        const structures = project.variables.structures.map(struct => (
+            <option key="structs" value={`struct:${struct.name}`}>
+                {struct.name}
+            </option>
+        ));
+
+        return (
+            <select
+                ref={this.ref}
+                className="form-select"
+                value={this._value}
+                onChange={this.onChange}
+            >
+                {basicTypes}
+                {enums.length > 0 && (
+                    <optgroup label="Enumerations">{enums}</optgroup>
+                )}
+                {structures.length > 0 && (
+                    <optgroup label="Structures">{structures}</optgroup>
+                )}
+            </select>
+        );
+    }
+}
+
+export const variableTypeUIProperty = {
+    name: "variableTypeUI",
+    displayName: "Type",
+    type: PropertyType.Any,
+    computed: true,
+    propertyGridColumnComponent: VariableTypeUI
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class Variable extends EezObject {
     @observable name: string;
@@ -127,22 +323,9 @@ export class Variable extends EezObject {
                 type: PropertyType.MultilineText
             },
             variableTypeProperty,
-            {
-                name: "enum",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "variables/enums",
-                hideInPropertyGrid: (object: Variable) => {
-                    return object.type != "enum";
-                }
-            },
-            {
-                name: "structure",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "variables/structures",
-                hideInPropertyGrid: (object: Variable) => {
-                    return object.type != "struct";
-                }
-            },
+            variableTypeEnumProperty,
+            variableTypeStructProperty,
+            variableTypeUIProperty,
             {
                 name: "defaultValue",
                 type: PropertyType.MultilineText
@@ -520,24 +703,33 @@ export class StructureField extends EezObject {
                 unique: true
             },
             variableTypeProperty,
-            {
-                name: "enum",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "variables/enums",
-                hideInPropertyGrid: (object: Variable) => {
-                    return object.type != "enum";
-                }
-            },
-            {
-                name: "structure",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "variables/structures",
-                hideInPropertyGrid: (object: Variable) => {
-                    return object.type != "struct";
-                }
-            }
+            variableTypeEnumProperty,
+            variableTypeStructProperty,
+            variableTypeUIProperty
         ],
-        defaultValue: {}
+        defaultValue: {},
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Structure Field",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        }
     };
 }
 
@@ -675,7 +867,29 @@ export class EnumMember extends EezObject {
                 type: PropertyType.Number
             }
         ],
-        defaultValue: {}
+        defaultValue: {},
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Enum Member",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        }
     };
 }
 
@@ -824,7 +1038,12 @@ export class ProjectVariables extends EezObject {
         navigationComponent: ProjectVariablesNavigation,
         navigationComponentId: "projectVariables",
         defaultNavigationKey: "globalVariables",
-        icon: VariableIcon
+        icon: VariableIcon,
+        defaultValue: {
+            globalVariables: [],
+            structures: [],
+            enums: []
+        }
     };
 
     @computed get enumMap() {

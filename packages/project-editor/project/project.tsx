@@ -191,7 +191,7 @@ function isFilesPropertyEnumerable(object: IEezObject): boolean {
     return !!(
         project.pages ||
         project.actions ||
-        project.variables.globalVariables
+        (project.variables && project.variables.globalVariables)
     );
 }
 
@@ -477,7 +477,7 @@ export class ImportDirective {
                 displayName: "",
                 type: PropertyType.Any,
                 computed: true,
-                propertyGridComponent: ImportDirectiveCustomUI,
+                propertyGridRowComponent: ImportDirectiveCustomUI,
                 hideInPropertyGrid: (importObject: ImportDirective) =>
                     !importObject.project
             }
@@ -750,62 +750,68 @@ function getProjectClassInfo() {
                     delete projectJs.globalVariables;
                 }
 
-                if (!projectJs.variables.enums) {
-                    projectJs.variables.enums = [];
-                }
+                if (projectJs.variables) {
+                    if (!projectJs.variables.enums) {
+                        projectJs.variables.enums = [];
+                    }
 
-                const enums = projectJs.variables.enums as {
-                    name: string;
-                    members: {
+                    const enums = projectJs.variables.enums as {
                         name: string;
-                        value: number;
+                        members: {
+                            name: string;
+                            value: number;
+                        }[];
                     }[];
-                }[];
 
-                for (const globalVariable of projectJs.variables
-                    .globalVariables) {
-                    if (globalVariable.enumItems) {
-                        try {
-                            const enumItems = JSON.parse(
-                                globalVariable.enumItems
-                            );
-
-                            if (Array.isArray(enumItems)) {
-                                const prefix = pascalCase(globalVariable.name);
-                                let name = prefix;
-
-                                let i = 0;
-                                while (true) {
-                                    if (
-                                        !enums.find(
-                                            enumItem => enumItem.name == name
-                                        )
-                                    ) {
-                                        break;
-                                    }
-                                    name = prefix + i++;
-                                }
-
-                                const members = enumItems.map(
-                                    (name: string, value: number) => ({
-                                        name,
-                                        value
-                                    })
+                    for (const globalVariable of projectJs.variables
+                        .globalVariables) {
+                        if (globalVariable.enumItems) {
+                            try {
+                                const enumItems = JSON.parse(
+                                    globalVariable.enumItems
                                 );
 
-                                enums.push({
-                                    name,
-                                    members
-                                });
+                                if (Array.isArray(enumItems)) {
+                                    const prefix = pascalCase(
+                                        globalVariable.name
+                                    );
+                                    let name = prefix;
 
-                                globalVariable.enum = name;
-                            } else {
+                                    let i = 0;
+                                    while (true) {
+                                        if (
+                                            !enums.find(
+                                                enumItem =>
+                                                    enumItem.name == name
+                                            )
+                                        ) {
+                                            break;
+                                        }
+                                        name = prefix + i++;
+                                    }
+
+                                    const members = enumItems.map(
+                                        (name: string, value: number) => ({
+                                            name,
+                                            value
+                                        })
+                                    );
+
+                                    enums.push({
+                                        name,
+                                        members
+                                    });
+
+                                    globalVariable.enum = name;
+                                } else {
+                                    globalVariable.enum =
+                                        globalVariable.enumItems;
+                                }
+                            } catch (err) {
                                 globalVariable.enum = globalVariable.enumItems;
                             }
-                        } catch (err) {
-                            globalVariable.enum = globalVariable.enumItems;
+                            delete globalVariable.enumItems;
                         }
-                        delete globalVariable.enumItems;
                     }
                 }
 

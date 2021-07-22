@@ -45,7 +45,7 @@ import {
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
-import { getDocumentStore } from "project-editor/core/store";
+import { addItem, getDocumentStore } from "project-editor/core/store";
 
 import { getThemedColor } from "project-editor/features/style/theme";
 
@@ -58,12 +58,20 @@ import {
 
 import { ProjectContext } from "project-editor/project/context";
 import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
+import {
+    deleteObject,
+    insertObjectAfter,
+    insertObjectBefore
+} from "project-editor/core/commands";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getPropertyValue(objects: IEezObject[], propertyInfo: PropertyInfo) {
+export function getPropertyValue(
+    objects: IEezObject[],
+    propertyInfo: PropertyInfo
+) {
     if (objects.length === 0) {
         return undefined;
     }
@@ -343,7 +351,7 @@ class ThemedColorInput extends React.Component<{
 
         return (
             <label
-                className="form-control"
+                className="form-label"
                 style={{
                     color: isDark(color) ? "#fff" : undefined,
                     backgroundColor: color,
@@ -464,7 +472,7 @@ class ArrayElementProperty extends React.Component<{
                 </td>
             );
         } else {
-            return <td key={propertyInfo.name} />;
+            return null;
         }
     }
 }
@@ -474,19 +482,18 @@ class ArrayElementProperties extends React.Component<{
     object: IEezObject;
     readOnly: boolean;
     className?: string;
+    selected: boolean;
+    selectObject: (object: IEezObject) => void;
 }> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @bind
-    onRemove(event: any) {
-        event.preventDefault();
-        this.context.deleteObject(this.props.object);
-    }
-
     render() {
         return (
-            <tr>
+            <tr
+                className={classNames({ selected: this.props.selected })}
+                onClick={() => this.props.selectObject(this.props.object)}
+            >
                 {getClassInfo(this.props.object).properties.map(
                     propertyInfo => (
                         <ArrayElementProperty
@@ -497,15 +504,6 @@ class ArrayElementProperties extends React.Component<{
                         />
                     )
                 )}
-                <td>
-                    <Toolbar>
-                        <IconAction
-                            icon="material:delete"
-                            title="Remove parameter"
-                            onClick={this.onRemove}
-                        />
-                    </Toolbar>
-                </td>
             </tr>
         );
     }
@@ -523,8 +521,13 @@ class ArrayProperty extends React.Component<PropertyProps> {
             | undefined;
     }
 
-    @bind
-    onAdd(event: any) {
+    @observable selectedObject: IEezObject | undefined;
+
+    selectObject = action((object: IEezObject) => {
+        this.selectedObject = object;
+    });
+
+    onAdd = (event: any) => {
         event.preventDefault();
 
         this.context.UndoManager.setCombineCommands(true);
@@ -542,73 +545,214 @@ class ArrayProperty extends React.Component<PropertyProps> {
 
         const typeClass = this.props.propertyInfo.typeClass!;
 
-        if (!typeClass.classInfo.defaultValue) {
-            console.error(`Class "${typeClass.name}" is missing defaultValue`);
+        if (typeClass.classInfo.newItem) {
+            addItem(value);
         } else {
-            this.context.addObject(value, typeClass.classInfo.defaultValue);
-            this.context.UndoManager.setCombineCommands(false);
+            if (!typeClass.classInfo.defaultValue) {
+                console.error(
+                    `Class "${typeClass.name}" is missing defaultValue`
+                );
+            } else {
+                this.context.addObject(value, typeClass.classInfo.defaultValue);
+                this.context.UndoManager.setCombineCommands(false);
+            }
         }
-    }
+    };
+
+    onDelete = (event: any) => {
+        event.preventDefault();
+
+        if (this.selectedObject) {
+            this.context.deleteObject(this.selectedObject);
+        }
+    };
+
+    onMoveUp = action((event: any) => {
+        event.preventDefault();
+
+        if (this.value && this.selectedObject) {
+            const selectedObjectIndex = this.value.indexOf(this.selectedObject);
+            if (selectedObjectIndex > 0) {
+                this.context.UndoManager.setCombineCommands(true);
+
+                const objectBefore = this.value[selectedObjectIndex - 1];
+
+                deleteObject(this.selectedObject);
+                this.selectedObject = insertObjectBefore(
+                    objectBefore,
+                    this.selectedObject
+                );
+
+                this.context.UndoManager.setCombineCommands(false);
+            }
+        }
+    });
+
+    onMoveDown = action((event: any) => {
+        event.preventDefault();
+
+        if (this.value && this.selectedObject) {
+            const selectedObjectIndex = this.value.indexOf(this.selectedObject);
+            if (selectedObjectIndex < this.value.length - 1) {
+                this.context.UndoManager.setCombineCommands(true);
+
+                const objectAfter = this.value[selectedObjectIndex + 1];
+
+                deleteObject(this.selectedObject);
+                this.selectedObject = insertObjectAfter(
+                    objectAfter,
+                    this.selectedObject
+                );
+
+                this.context.UndoManager.setCombineCommands(false);
+            }
+        }
+    });
 
     render() {
         const { objects, propertyInfo } = this.props;
 
-        const addButton = (
-            <button className="btn btn-primary" onClick={this.onAdd}>
-                Add
-            </button>
-        );
+        const array = this.value ?? [];
 
-        if (!this.value || this.value.length === 0) {
-            return addButton;
-        }
+        const toolbar = (
+            <div className="array-property-toolbar d-flex justify-content-between">
+                <PropertyName {...this.props} />
+                <Toolbar>
+                    <IconAction
+                        icon="material:add"
+                        iconSize={16}
+                        onClick={this.onAdd}
+                        title="Add item"
+                    />
+                    <IconAction
+                        icon="material:delete"
+                        iconSize={16}
+                        onClick={this.onDelete}
+                        title="Delete item"
+                        enabled={this.selectedObject != undefined}
+                    />
+                    <IconAction
+                        icon={
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="icon icon-tabler icon-tabler-arrow-up"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                strokeWidth="2"
+                                stroke="currentColor"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path
+                                    stroke="none"
+                                    d="M0 0h24v24H0z"
+                                    fill="none"
+                                ></path>
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="18" y1="11" x2="12" y2="5"></line>
+                                <line x1="6" y1="11" x2="12" y2="5"></line>
+                            </svg>
+                        }
+                        iconSize={16}
+                        onClick={this.onMoveUp}
+                        title="Move up"
+                        enabled={
+                            array.length > 1 &&
+                            this.selectedObject != undefined &&
+                            array.indexOf(this.selectedObject) > 0
+                        }
+                    />
+                    <IconAction
+                        icon={
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="icon icon-tabler icon-tabler-arrow-down"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                strokeWidth="2"
+                                stroke="currentColor"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path
+                                    stroke="none"
+                                    d="M0 0h24v24H0z"
+                                    fill="none"
+                                ></path>
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="18" y1="13" x2="12" y2="19"></line>
+                                <line x1="6" y1="13" x2="12" y2="19"></line>
+                            </svg>
+                        }
+                        iconSize={16}
+                        onClick={this.onMoveDown}
+                        title="Move down"
+                        enabled={
+                            array.length > 1 &&
+                            this.selectedObject != undefined &&
+                            array.indexOf(this.selectedObject) <
+                                array.length - 1
+                        }
+                    />
+                </Toolbar>
+            </div>
+        );
 
         const typeClass = propertyInfo.typeClass!;
 
+        const properties = typeClass.classInfo.properties.filter(propertyInfo =>
+            isArrayElementPropertyVisible(propertyInfo)
+        );
         const tableContent = (
             <React.Fragment>
                 <thead>
                     <tr>
-                        {typeClass.classInfo.properties
-                            .filter(propertyInfo =>
-                                isArrayElementPropertyVisible(propertyInfo)
-                            )
-                            .map(propertyInfo => (
-                                <th
-                                    key={propertyInfo.name}
-                                    className={propertyInfo.name}
-                                >
-                                    {getObjectPropertyDisplayName(
-                                        objects[0],
-                                        propertyInfo
-                                    )}
-                                </th>
-                            ))}
+                        {properties.map(propertyInfo => (
+                            <th
+                                key={propertyInfo.name}
+                                className={propertyInfo.name}
+                                style={{
+                                    width: `${100 / properties.length}%`
+                                }}
+                            >
+                                {getObjectPropertyDisplayName(
+                                    objects[0],
+                                    propertyInfo
+                                )}
+                            </th>
+                        ))}
                     </tr>
                 </thead>
                 <tbody>
-                    {this.value &&
-                        this.value.map(object => (
-                            <ArrayElementProperties
-                                key={getId(object)}
-                                object={object}
-                                readOnly={this.props.readOnly}
-                            />
-                        ))}
+                    {array.map(object => (
+                        <ArrayElementProperties
+                            key={getId(object)}
+                            object={object}
+                            readOnly={this.props.readOnly}
+                            selected={object == this.selectedObject}
+                            selectObject={this.selectObject}
+                        />
+                    ))}
                 </tbody>
             </React.Fragment>
         );
 
+        const table = typeClass.classInfo.propertyGridTableComponent ? (
+            <typeClass.classInfo.propertyGridTableComponent>
+                {tableContent}
+            </typeClass.classInfo.propertyGridTableComponent>
+        ) : (
+            <table>{tableContent}</table>
+        );
+
         return (
-            <div className="array-property">
-                {typeClass.classInfo.propertyGridTableComponent ? (
-                    <typeClass.classInfo.propertyGridTableComponent>
-                        {tableContent}
-                    </typeClass.classInfo.propertyGridTableComponent>
-                ) : (
-                    <table>{tableContent}</table>
-                )}
-                {addButton}
+            <div className="array-property shadow-sm rounded">
+                {toolbar}
+                {array.length > 0 && table}
             </div>
         );
     }
@@ -1064,8 +1208,10 @@ class Property extends React.Component<PropertyProps> {
             );
         }
 
-        if (propertyInfo.propertyGridComponent) {
-            return <propertyInfo.propertyGridComponent {...this.props} />;
+        if (propertyInfo.propertyGridRowComponent) {
+            return <propertyInfo.propertyGridRowComponent {...this.props} />;
+        } else if (propertyInfo.propertyGridColumnComponent) {
+            return <propertyInfo.propertyGridColumnComponent {...this.props} />;
         } else if (
             propertyInfo.type === PropertyType.String &&
             propertyInfo.unique
@@ -1193,7 +1339,7 @@ class Property extends React.Component<PropertyProps> {
                 return (
                     <select
                         ref={(ref: any) => (this.select = ref)}
-                        className="form-control"
+                        className="form-select"
                         value={this._value !== undefined ? this._value : ""}
                         onChange={this.onChange}
                     >
@@ -1286,7 +1432,7 @@ class Property extends React.Component<PropertyProps> {
                     return (
                         <select
                             ref={(ref: any) => (this.select = ref)}
-                            className="form-control"
+                            className="form-select"
                             value={this._value || ""}
                             onChange={this.onChange}
                         >
@@ -1896,23 +2042,66 @@ const PropertyGridDiv = styled.div`
 
     .array-property {
         border: 1px solid ${props => props.theme.borderColor};
-        padding: 5px;
+        margin-bottom: 10px;
+
+        .form-control {
+            border: none;
+            padding: 0 0.5rem;
+        }
+
+        .form-select {
+            border: none;
+            padding: 0;
+        }
+
+        .input-group {
+            button {
+                padding: 0 0.25rem;
+            }
+        }
+
+        & > .array-property-toolbar {
+            border-bottom: 1px solid ${props => props.theme.borderColor};
+            background-color: ${props => props.theme.panelHeaderColor};
+            padding: 0 5px;
+        }
 
         & > table {
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 0;
 
             & > thead > tr > th {
-                padding-right: 10px;
-                font-weight: 500;
+                padding: 0 5px;
                 white-space: nowrap;
                 padding-bottom: 5px;
+                font-weight: normal;
+                border-bottom: 1px solid ${props => props.theme.borderColor};
+                text-align: center;
+                font-size: 80%;
             }
 
             & > tbody {
                 & > tr {
+                    &.selected {
+                        background-color: ${props =>
+                            props.theme.selectionBackgroundColor};
+                    }
+
                     & > td {
-                        padding: 4px;
+                        margin-right: 5px;
+
+                        border-right: 1px solid
+                            ${props => props.theme.borderColor};
+                        border-bottom: 1px solid
+                            ${props => props.theme.borderColor};
+
+                        padding: 2px 4px;
+
+                        &::last-child {
+                            width: 0;
+                            margin: none;
+                            border-right: none;
+                        }
                     }
                     & > td.inError {
                         background-color: #ffaaaa;
@@ -1994,7 +2183,10 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
 
     @bind
     updateObject(propertyValues: Object) {
-        this.context.UndoManager.setCombineCommands(true);
+        const wasCombineCommands = this.context.UndoManager.combineCommands;
+        if (!wasCombineCommands) {
+            this.context.UndoManager.setCombineCommands(true);
+        }
 
         this.objects.forEach(object => {
             if (isValue(object)) {
@@ -2003,7 +2195,9 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
             this.context.updateObject(object, propertyValues);
         });
 
-        this.context.UndoManager.setCombineCommands(false);
+        if (!wasCombineCommands) {
+            this.context.UndoManager.setCombineCommands(false);
+        }
     }
 
     render() {
@@ -2050,13 +2244,15 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
         for (let propertyInfo of properties) {
             const colSpan =
                 propertyInfo.type === PropertyType.Boolean ||
-                propertyInfo.type === PropertyType.Any ||
+                (propertyInfo.type === PropertyType.Any &&
+                    !propertyInfo.propertyGridColumnComponent) ||
                 (propertyInfo.propertyGridCollapsable &&
                     (!propertyCollapsedStore.isCollapsed(
                         objects[0],
                         propertyInfo
                     ) ||
-                        !propertyInfo.propertyGridCollapsableDefaultPropertyName));
+                        !propertyInfo.propertyGridCollapsableDefaultPropertyName)) ||
+                propertyInfo.type === PropertyType.Array;
 
             const propertyReadOnly = isAnyPropertyReadOnly(
                 objects,

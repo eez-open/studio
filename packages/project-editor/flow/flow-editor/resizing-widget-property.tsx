@@ -971,5 +971,5 @@ export const resizingProperty: PropertyInfo = {
     name: "resizing",
     type: PropertyType.Any,
     propertyGridGroup: geometryGroup,
-    propertyGridComponent: ResizingProperty
+    propertyGridRowComponent: ResizingProperty
 };

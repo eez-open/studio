@@ -167,7 +167,7 @@ class ColorItem extends React.Component<{
                         {this.colorObject.name}
                     </span>
                     <label
-                        className="form-control"
+                        className="form-label"
                         style={{ backgroundColor: this.themeColor }}
                         tabIndex={0}
                     >

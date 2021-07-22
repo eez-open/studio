@@ -23,13 +23,13 @@ import {
     makeToggablePropertyToInput
 } from "project-editor/flow/component";
 import { getConnection } from "instrument/window/connection";
-import { getFlow } from "project-editor/project/project";
 import { RunningFlow } from "project-editor/flow//runtime";
 import type {
     IFlowContext,
     IRunningFlow
 } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import { getDocumentStore } from "project-editor/core/store";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
 // Returns undefined if passed value is not a valid string.
@@ -911,11 +911,49 @@ export class ScpiActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
+        beforeLoadHook: (component: ScpiActionComponent, jsObject: any) => {
+            if (jsObject.scpi) {
+                if (!jsObject.customInputs && !jsObject.customOutputs) {
+                    jsObject.customInputs = [];
+                    jsObject.customOutputs = [];
+
+                    const parts = parseScpi(jsObject.scpi);
+                    for (const part of parts) {
+                        const tag = part.tag;
+                        const str = part.value!;
+
+                        if (tag == SCPI_PART_INPUT) {
+                            const inputName = str.substring(1, str.length - 1);
+
+                            jsObject.customInputs.push({
+                                name: inputName,
+                                type: PropertyType.String
+                            });
+                        } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
+                            const outputName =
+                                str[0] == "{"
+                                    ? str.substring(1, str.length - 1)
+                                    : str;
+
+                            jsObject.customOutputs.push({
+                                name: outputName,
+                                type: PropertyType.String
+                            });
+                        }
+                    }
+                }
+            }
+        },
         label: (component: ScpiActionComponent) => {
             const label = ActionComponent.classInfo.label!(component);
-            if (!component.isInputProperty("instrument")) {
+
+            if (
+                !getDocumentStore(component).isAppletProject &&
+                !component.isInputProperty("instrument")
+            ) {
                 return `${label} ${component.instrument}`;
             }
+
             return label;
         },
         icon: (
@@ -924,122 +962,11 @@ export class ScpiActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#FDD0A2",
-        updateObjectValueHook: (object: ScpiActionComponent, values: any) => {
-            if (values.scpi) {
-                const { inputs: inputsBefore, outputs: outputsBefore } =
-                    ScpiActionComponent.parse(object.scpi);
-
-                const { inputs: inputsAfter, outputs: outputsAfter } =
-                    ScpiActionComponent.parse(values.scpi);
-
-                const flow = getFlow(object);
-
-                inputsBefore.forEach((inputBefore, i) => {
-                    if (inputsAfter.indexOf(inputBefore) === -1) {
-                        if (inputsBefore.length === inputsAfter.length) {
-                            flow.rerouteConnectionLinesInput(
-                                object,
-                                inputBefore,
-                                inputsAfter[i]
-                            );
-                        } else {
-                            flow.deleteConnectionLinesToInput(
-                                object,
-                                inputBefore
-                            );
-                        }
-                    }
-                });
-
-                outputsBefore.forEach((outputBefore, i) => {
-                    if (outputsAfter.indexOf(outputBefore) === -1) {
-                        if (outputsBefore.length === outputsAfter.length) {
-                            flow.rerouteConnectionLinesOutput(
-                                object,
-                                outputBefore,
-                                outputsAfter[i]
-                            );
-                        } else {
-                            flow.deleteConnectionLinesFromOutput(
-                                object,
-                                outputBefore
-                            );
-                        }
-                    }
-                });
-            }
-        },
         componentPaletteGroupName: "Instrument"
     });
 
     @observable instrument: string;
     @observable scpi: string;
-
-    static readonly PARAMS_REGEXP = /\{([^\}]+)\}/;
-    static readonly QUERY_WITH_ASSIGNMENT_REGEXP =
-        /(?<outputName>[^\s]+)\s*=\s*(?<query>.+\?)(?<params>.*)/;
-    static readonly QUERY_REGEXP = /(?<query>.+\?)(?<params>.*)/;
-
-    static parse(scpi: string) {
-        const inputs = new Set<string>();
-        const outputs = new Set<string>();
-
-        const lines = scpi?.split("\n") ?? [];
-        lines.forEach(commandOrQueriesLine => {
-            const commandOrQueries = commandOrQueriesLine.split(";");
-            commandOrQueries.forEach(commandOrQuery => {
-                commandOrQuery = commandOrQuery.trim();
-
-                ScpiActionComponent.PARAMS_REGEXP.lastIndex = 0;
-                let str = commandOrQuery;
-                while (true) {
-                    let matches = str.match(ScpiActionComponent.PARAMS_REGEXP);
-                    if (!matches) {
-                        break;
-                    }
-                    const input = matches[1].trim();
-                    inputs.add(input);
-                    str = str.substring(matches.index! + matches[1].length);
-                }
-
-                const matches =
-                    ScpiActionComponent.QUERY_WITH_ASSIGNMENT_REGEXP.exec(
-                        commandOrQuery
-                    );
-                if (matches) {
-                    const output = matches.groups!.outputName.trim();
-                    outputs.add(output);
-                }
-            });
-        });
-
-        return {
-            inputs: Array.from(inputs.keys()),
-            outputs: Array.from(outputs.keys())
-        };
-    }
-
-    @computed get inputs() {
-        return [
-            ...super.inputs,
-            ...ScpiActionComponent.parse(this.scpi).inputs.map(input => ({
-                name: input,
-                displayName: input,
-                type: PropertyType.Any
-            }))
-        ];
-    }
-
-    @computed get outputs() {
-        return [
-            ...super.outputs,
-            ...ScpiActionComponent.parse(this.scpi).outputs.map(output => ({
-                name: output,
-                displayName: output,
-                type: PropertyType.Any
-            }))
-        ];
-    }
 
     getInstrumentObject(
         flowContext?: IFlowContext,
@@ -1094,110 +1021,69 @@ export class ScpiActionComponent extends ActionComponent {
         await connection.acquire(false);
 
         try {
-            const lines = this.scpi?.split("\n") ?? [];
-            for (let i = 0; i < lines.length; i++) {
-                const commandOrQueriesLine = lines[i];
-                const commandOrQueries = commandOrQueriesLine.split(";");
-                let offset = 0;
-                for (let j = 0; j < commandOrQueries.length; j++) {
-                    const commandOrQuery = commandOrQueries[j].trim();
+            let command = "";
 
-                    let command = commandOrQuery;
-                    ScpiActionComponent.PARAMS_REGEXP.lastIndex = 0;
-                    while (true) {
-                        let matches = command
-                            .substring(offset)
-                            .match(ScpiActionComponent.PARAMS_REGEXP);
-                        if (!matches) {
-                            break;
-                        }
+            const parts = parseScpi(this.scpi);
+            for (const part of parts) {
+                const tag = part.tag;
+                const str = part.value!;
 
-                        const input = matches[1].trim();
-                        const inputPropertyValue =
-                            runningFlow.getInputPropertyValue(this, input);
-                        if (
-                            inputPropertyValue &&
-                            inputPropertyValue.value != undefined
-                        ) {
-                            const value = inputPropertyValue.value.toString();
+                if (tag == SCPI_PART_STRING) {
+                    command += str;
+                } else if (tag == SCPI_PART_INPUT) {
+                    const inputName = str.substring(1, str.length - 1);
 
-                            const i = offset + matches.index!;
+                    const inputPropertyValue =
+                        runningFlow.getInputPropertyValue(this, inputName);
+                    if (
+                        inputPropertyValue &&
+                        inputPropertyValue.value != undefined
+                    ) {
+                        const value = inputPropertyValue.value.toString();
 
-                            command =
-                                command.substring(0, i) +
-                                value +
-                                command.substring(i + matches[1].length + 2);
+                        command += value;
+                    } else {
+                        throw `missing scpi parameter ${inputName}`;
+                    }
+                } else if (
+                    tag == SCPI_PART_QUERY_WITH_ASSIGNMENT ||
+                    tag == SCPI_PART_QUERY
+                ) {
+                    console.log(`SCPI QUERY [${instrument.name}]:`, command);
+                    let result = await connection.query(command);
+                    command = "";
+                    console.log(
+                        `SCPI QUERY RESULT [${instrument.name}]:`,
+                        result
+                    );
 
-                            offset = i + value.length;
-                        } else {
-                            throw `missing scpi parameter ${input}`;
-                        }
+                    if (typeof result === "object" && result.error) {
+                        throw result.error;
                     }
 
-                    const matches =
-                        ScpiActionComponent.QUERY_WITH_ASSIGNMENT_REGEXP.exec(
-                            command
-                        );
-
-                    if (matches) {
-                        const output = matches.groups!.outputName.trim();
-                        const query = matches.groups!.query.trim();
-                        const params = matches.groups!.params.trim();
-                        console.log(
-                            `SCPI QUERY [${instrument.name}]:`,
-                            `${query} ${params}`
-                        );
-                        let result = await connection.query(
-                            `${query} ${params}`
-                        );
-                        console.log(
-                            `SCPI QUERY RESULT [${instrument.name}]:`,
-                            result
-                        );
-                        if (typeof result === "object" && result.error) {
-                            throw result.error;
-                        }
-
+                    if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
                         const resultStr = parseScpiString(result);
                         if (resultStr) {
                             result = resultStr;
                         }
 
-                        runningFlow.propagateValue(this, output, result);
-                    } else {
-                        if (command.length > 0) {
-                            const matches =
-                                ScpiActionComponent.QUERY_REGEXP.exec(command);
-                            if (matches) {
-                                console.log(
-                                    `SCPI QUERY [${instrument.name}]:`,
-                                    command
-                                );
-                                const result = await connection.query(command);
-                                console.log(
-                                    `SCPI QUERY RESULT [${instrument.name}]:`,
-                                    result
-                                );
-                                if (
-                                    typeof result === "object" &&
-                                    result.error
-                                ) {
-                                    throw result.error;
-                                }
-                            } else {
-                                console.log(
-                                    `SCPI COMMAND [${instrument.name}]:`,
-                                    command
-                                );
-                                connection.command(command);
-                            }
-                        }
+                        const outputName =
+                            str[0] == "{"
+                                ? str.substring(1, str.length - 1)
+                                : str;
+
+                        runningFlow.propagateValue(this, outputName, result);
                     }
+                } else if (tag == SCPI_PART_COMMAND) {
+                    console.log(`SCPI COMMAND [${instrument.name}]:`, command);
+                    connection.command(command);
+                    command = "";
                 }
             }
         } finally {
             connection.release();
         }
+
         return undefined;
     }
 

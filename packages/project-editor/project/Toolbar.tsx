@@ -82,7 +82,8 @@ export class Toolbar extends React.Component {
             !this.context.isDashboardProject &&
             (this.context.project.pages ||
                 this.context.project.actions ||
-                this.context.project.variables.globalVariables)
+                (this.context.project.variables &&
+                    this.context.project.variables.globalVariables))
         );
     }
 
@@ -138,7 +139,7 @@ export class Toolbar extends React.Component {
                             <select
                                 title="Configuration"
                                 id="btn-toolbar-configuration"
-                                className="form-control"
+                                className="form-select"
                                 value={
                                     this.context.UIStateStore
                                         .selectedBuildConfiguration

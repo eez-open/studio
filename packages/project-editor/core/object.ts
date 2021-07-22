@@ -119,7 +119,10 @@ export interface PropertyInfo {
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     propertyGridGroup?: IPropertyGridGroupDefinition;
-    propertyGridComponent?:
+    propertyGridRowComponent?:
+        | React.ComponentClass<PropertyProps>
+        | React.FunctionComponent<PropertyProps>;
+    propertyGridColumnComponent?:
         | React.ComponentClass<PropertyProps>
         | React.FunctionComponent<PropertyProps>;
     propertyGridCollapsable?: boolean;

@@ -798,7 +798,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                 type: PropertyType.Any,
                 propertyGridGroup: specificGroup,
                 computed: true,
-                propertyGridComponent: LayoutViewPropertyGridUI,
+                propertyGridRowComponent: LayoutViewPropertyGridUI,
                 hideInPropertyGrid: (widget: LayoutViewWidget) => {
                     if (!widget.layout) {
                         return true;
@@ -2044,7 +2044,7 @@ export class BitmapWidget extends EmbeddedWidget {
                 type: PropertyType.Any,
                 propertyGridGroup: specificGroup,
                 computed: true,
-                propertyGridComponent: BitmapWidgetPropertyGridUI
+                propertyGridRowComponent: BitmapWidgetPropertyGridUI
             }
         ],
 

@@ -67,6 +67,13 @@ import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { checkExpression } from "./expression";
+import {
+    VariableType,
+    variableTypeEnumProperty,
+    variableTypeProperty,
+    variableTypeStructProperty,
+    variableTypeUIProperty
+} from "project-editor/features/variable/variable";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -356,35 +363,117 @@ export function getWidgetParent(widget: Component | Page) {
 
 export class CustomInput extends EezObject {
     @observable name: string;
-    @observable type: string;
+
+    @observable type: VariableType;
+    @observable enum: string;
+    @observable structure: string;
 
     static classInfo: ClassInfo = {
         properties: [
             {
                 name: "name",
-                type: PropertyType.String
+                type: PropertyType.String,
+                unique: true
             },
-            {
-                name: "type",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: PropertyType.String,
-                        label: "String"
-                    },
-                    {
-                        id: PropertyType.Boolean,
-                        label: "Boolean"
-                    },
-                    {
-                        id: PropertyType.Number,
-                        label: "Number"
-                    }
-                ]
-            }
+            variableTypeProperty,
+            variableTypeEnumProperty,
+            variableTypeStructProperty,
+            variableTypeUIProperty
         ],
-        defaultValue: {}
+        defaultValue: {},
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Component Input",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name,
+                    type: "string"
+                });
+            });
+        }
     };
+
+    get asPropertyType() {
+        return PropertyType.String;
+    }
+
+    get asPropertyInfo(): PropertyInfo {
+        return {
+            name: this.name,
+            type: this.asPropertyType,
+            displayName: this.name
+        };
+    }
+}
+
+export class CustomOutput extends EezObject {
+    @observable name: string;
+
+    @observable type: VariableType;
+    @observable enum: string;
+    @observable structure: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            variableTypeProperty,
+            variableTypeEnumProperty,
+            variableTypeStructProperty,
+            variableTypeUIProperty
+        ],
+        defaultValue: {},
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Component Output",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
+            });
+        }
+    };
+
+    get asPropertyType() {
+        return PropertyType.String;
+    }
+
+    get asPropertyInfo(): PropertyInfo {
+        return {
+            name: this.name,
+            type: this.asPropertyType,
+            displayName: this.name
+        };
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -399,8 +488,8 @@ export class Component extends EezObject {
 
     @observable wireID: string;
 
-    @observable customInputs: string;
-    @observable customOutputs: string;
+    @observable customInputs: CustomInput[];
+    @observable customOutputs: CustomOutput[];
 
     @observable asInputProperties: string[];
     @observable asOutputProperties: string[];
@@ -483,9 +572,26 @@ export class Component extends EezObject {
             },
             {
                 name: "customInputs",
+                displayName: "Inputs",
                 type: PropertyType.Array,
                 typeClass: CustomInput,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: generalGroup,
+                partOfNavigation: false,
+                defaultValue: []
+            },
+            {
+                name: "customOutputs",
+                displayName: "Outputs",
+                type: PropertyType.Array,
+                typeClass: CustomOutput,
+                propertyGridGroup: generalGroup,
+                partOfNavigation: false,
+                defaultValue: []
+            },
+            {
+                name: "catchError",
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "asInputProperties",
@@ -498,11 +604,6 @@ export class Component extends EezObject {
                 type: PropertyType.StringArray,
                 hideInPropertyGrid: true,
                 defaultValue: []
-            },
-            {
-                name: "catchError",
-                type: PropertyType.Boolean,
-                propertyGridGroup: generalGroup
             }
         ],
 
@@ -763,6 +864,9 @@ export class Component extends EezObject {
 
     get inputs() {
         return [
+            ...(this.customInputs ?? []).map(
+                customInput => customInput.asPropertyInfo
+            ),
             ...((this.asInputProperties ?? [])
                 .map(inputPropertyName =>
                     findPropertyByNameInClassInfo(
@@ -779,6 +883,9 @@ export class Component extends EezObject {
 
     get outputs() {
         const outputs = [
+            ...(this.customOutputs ?? []).map(
+                customOutput => customOutput.asPropertyInfo
+            ),
             ...((this.asOutputProperties ?? [])
                 .map(outputPropertyName =>
                     findPropertyByNameInClassInfo(
