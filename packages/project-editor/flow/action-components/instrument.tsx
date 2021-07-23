@@ -30,6 +30,7 @@ import type {
 } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { getDocumentStore } from "project-editor/core/store";
+import { buildExpression, buildAssignableExpression } from "../expression";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
 // Returns undefined if passed value is not a valid string.
@@ -534,7 +535,7 @@ function getScpiTokens(input: string) {
 }
 
 const SCPI_PART_STRING = 1;
-const SCPI_PART_INPUT = 2;
+const SCPI_PART_EXPR = 2;
 const SCPI_PART_QUERY_WITH_ASSIGNMENT = 3;
 const SCPI_PART_QUERY = 4;
 const SCPI_PART_COMMAND = 5;
@@ -542,7 +543,7 @@ const SCPI_PART_END = 6;
 
 type ScpiPartTag =
     | typeof SCPI_PART_STRING
-    | typeof SCPI_PART_INPUT
+    | typeof SCPI_PART_EXPR
     | typeof SCPI_PART_QUERY_WITH_ASSIGNMENT
     | typeof SCPI_PART_QUERY
     | typeof SCPI_PART_COMMAND
@@ -575,9 +576,9 @@ function parseScpi(input: string) {
         }
     }
 
-    function emitInput(token: Token) {
+    function emitExpression(token: Token) {
         parts.push({
-            tag: SCPI_PART_INPUT,
+            tag: SCPI_PART_EXPR,
             value: token.value
         });
     }
@@ -615,7 +616,7 @@ function parseScpi(input: string) {
             backtrackTokens.push(token);
         } else {
             if (token.tag == "input") {
-                emitInput(token);
+                emitExpression(token);
             } else if (token.tag == "end") {
                 emitEnd(token);
             } else if (
@@ -922,7 +923,7 @@ export class ScpiActionComponent extends ActionComponent {
                         const tag = part.tag;
                         const str = part.value!;
 
-                        if (tag == SCPI_PART_INPUT) {
+                        if (tag == SCPI_PART_EXPR) {
                             const inputName = str.substring(1, str.length - 1);
 
                             jsObject.customInputs.push({
@@ -1030,7 +1031,7 @@ export class ScpiActionComponent extends ActionComponent {
 
                 if (tag == SCPI_PART_STRING) {
                     command += str;
-                } else if (tag == SCPI_PART_INPUT) {
+                } else if (tag == SCPI_PART_EXPR) {
                     const inputName = str.substring(1, str.length - 1);
 
                     const inputPropertyValue =
@@ -1095,41 +1096,32 @@ export class ScpiActionComponent extends ActionComponent {
         );
     }
 
-    compileScpi(assets: Assets) {
-        const array = new Uint8Array(32 * 1024);
-
-        let index = 0;
-
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const parts = parseScpi(this.scpi);
         for (const part of parts) {
-            array[index++] = part.tag;
+            dataBuffer.writeUint8(part.tag);
 
             const str = part.value!;
 
             if (part.tag == SCPI_PART_STRING) {
-                array[index++] = str.length & 0xff;
-                array[index++] = str.length >> 8;
+                dataBuffer.writeUint16NonAligned(str.length);
                 for (const ch of str) {
-                    array[index++] = ch.codePointAt(0)!;
+                    dataBuffer.writeUint8(ch.codePointAt(0)!);
                 }
-            } else if (part.tag == SCPI_PART_INPUT) {
-                const inputName = str.substring(1, str.length - 1);
-                array[index++] = assets.getComponentInputIndex(this, inputName);
+            } else if (part.tag == SCPI_PART_EXPR) {
+                const expression = str.substring(1, str.length - 1);
+                buildExpression(assets, dataBuffer, this, expression);
             } else if (part.tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
-                const outputName =
+                const lValueExpression =
                     str[0] == "{" ? str.substring(1, str.length - 1) : str;
-                array[index++] = assets.getComponentInputIndex(
+                buildAssignableExpression(
+                    assets,
+                    dataBuffer,
                     this,
-                    outputName
+                    lValueExpression
                 );
             }
         }
-
-        return array.slice(0, index);
-    }
-
-    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        dataBuffer.writeUint8Array(this.compileScpi(assets));
     }
 }
 

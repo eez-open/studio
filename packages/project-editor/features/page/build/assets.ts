@@ -65,10 +65,14 @@ export class Assets {
             index: number;
             componentIndexes: Map<Component, number>;
             componentInputIndexes: Map<string, number>;
+
             flowWidgetDataIndexes: Map<string, number>;
+            flowWidgetDataIndexComponentPropertyOffset: Map<number, number>;
+            flowWidgetFromDataIndex: Map<number, Widget>;
+
             flowWidgetActionIndexes: Map<string, number>;
-            flowWidgetDataIndexComponentInput: Map<number, number>;
             flowWidgetActionComponentOutput: Map<number, number>;
+            flowWidgetFromActionIndex: Map<number, Widget>;
         }
     >();
 
@@ -247,9 +251,11 @@ export class Assets {
         if (this.DocumentStore.isAppletProject) {
             return this.getFlowWidgetDataItemIndex(object, propertyName);
         }
+
         if (!getProperty(object, propertyName)) {
             return 0;
         }
+
         return this.getAssetIndex(
             object,
             propertyName,
@@ -262,9 +268,11 @@ export class Assets {
         if (this.DocumentStore.isAppletProject) {
             return this.getFlowWidgetActionIndex(object, propertyName);
         }
+
         if (!getProperty(object, propertyName)) {
             return 0;
         }
+
         return this.getAssetIndex(
             object,
             propertyName,
@@ -495,9 +503,14 @@ export class Assets {
                 componentIndexes: new Map<Component, number>(),
                 componentInputIndexes: new Map<string, number>(),
                 flowWidgetDataIndexes: new Map<string, number>(),
+                flowWidgetDataIndexComponentPropertyOffset: new Map<
+                    number,
+                    number
+                >(),
+                flowWidgetFromDataIndex: new Map<number, Widget>(),
                 flowWidgetActionIndexes: new Map<string, number>(),
-                flowWidgetDataIndexComponentInput: new Map<number, number>(),
-                flowWidgetActionComponentOutput: new Map<number, number>()
+                flowWidgetActionComponentOutput: new Map<number, number>(),
+                flowWidgetFromActionIndex: new Map<number, Widget>()
             };
             this.flowStates.set(flow, flowState);
         }
@@ -555,6 +568,15 @@ export class Assets {
     }
 
     getFlowWidgetDataItemIndex(widget: Widget, propertyName: string) {
+        if (
+            !widget.asInputProperties ||
+            widget.asInputProperties.indexOf(propertyName) == -1
+        ) {
+            if (!getProperty(widget, propertyName)) {
+                return 0;
+            }
+        }
+
         const flowState = this.getFlowState(getFlow(widget));
         const path =
             getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
@@ -562,11 +584,21 @@ export class Assets {
         if (index == undefined) {
             index = flowState.flowWidgetDataIndexes.size;
             flowState.flowWidgetDataIndexes.set(path, index);
+            flowState.flowWidgetFromDataIndex.set(index, widget);
         }
         return -(index + 1);
     }
 
     getFlowWidgetActionIndex(widget: Widget, propertyName: string) {
+        if (
+            !widget.asOutputProperties ||
+            widget.asOutputProperties.indexOf(propertyName) == -1
+        ) {
+            if (!getProperty(widget, propertyName)) {
+                return 0;
+            }
+        }
+
         const flowState = this.getFlowState(getFlow(widget));
         const path =
             getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
@@ -574,23 +606,24 @@ export class Assets {
         if (index == undefined) {
             index = flowState.flowWidgetActionIndexes.size;
             flowState.flowWidgetActionIndexes.set(path, index);
+            flowState.flowWidgetFromActionIndex.set(index, widget);
         }
         return -(index + 1);
     }
 
-    registerComponentInput(
+    registerComponentProperty(
         component: Component,
-        inputName: string,
-        componentInputOffset: number
+        propertyName: string,
+        offset: number
     ) {
         const flowState = this.getFlowState(getFlow(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
+            getObjectPathAsString(component) + PATH_SEPARATOR + propertyName;
         let index = flowState.flowWidgetDataIndexes.get(path);
         if (index != undefined) {
-            flowState.flowWidgetDataIndexComponentInput.set(
+            flowState.flowWidgetDataIndexComponentPropertyOffset.set(
                 index,
-                componentInputOffset
+                offset
             );
         }
     }
@@ -703,11 +736,12 @@ export class DataBuffer {
         if (this.currentOffset % 2) {
             throw "invalid offset";
         }
-        try {
-            this.buffer.writeUInt16LE(value, this.currentOffset);
-        } catch (err) {
-            console.error(err);
-        }
+        this.buffer.writeUInt16LE(value, this.currentOffset);
+        this.currentOffset += 2;
+    }
+
+    writeUint16NonAligned(value: number) {
+        this.buffer.writeUInt16LE(value, this.currentOffset);
         this.currentOffset += 2;
     }
 
@@ -840,6 +874,8 @@ export class DummyDataBuffer {
     writeInt16(value: number) {}
 
     writeUint16(value: number) {}
+
+    writeUint16NonAligned(value: number) {}
 
     writeUint32(value: number) {}
 

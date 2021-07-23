@@ -347,39 +347,39 @@ export function checkExpression(component: Component, expression: string) {
     }
 }
 
+function makePushConstantInstruction(assets: Assets, value: any) {
+    return (
+        EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT |
+        assets.getConstantIndex(value)
+    );
+}
+
+function makePushInputInstruction(inputIndex: number) {
+    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT | inputIndex;
+}
+
+function makePushLocalVariableInstruction(localVariableIndex: number) {
+    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR | localVariableIndex;
+}
+
+function makePushGlobalVariableInstruction(globalVariableIndex: number) {
+    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR | globalVariableIndex;
+}
+
+function makeOperationInstruction(operationIndex: number) {
+    return EXPR_EVAL_INSTRUCTION_TYPE_OPERATION | operationIndex;
+}
+
+function makeEndInstruction() {
+    return EXPR_EVAL_INSTRUCTION_TYPE_END;
+}
+
 export function buildExpression(
     assets: Assets,
     dataBuffer: DataBuffer,
     component: Component,
     expression: string
 ) {
-    function makePushConstantInstruction(assets: Assets, value: any) {
-        return (
-            EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT |
-            assets.getConstantIndex(value)
-        );
-    }
-
-    function makePushInputInstruction(inputIndex: number) {
-        return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT | inputIndex;
-    }
-
-    function makePushLocalVariableInstruction(localVariableIndex: number) {
-        return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR | localVariableIndex;
-    }
-
-    function makePushGlobalVariableInstruction(globalVariableIndex: number) {
-        return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR | globalVariableIndex;
-    }
-
-    function makeOperationInstruction(operationIndex: number) {
-        return EXPR_EVAL_INSTRUCTION_TYPE_OPERATION | operationIndex;
-    }
-
-    function makeEndInstruction() {
-        return EXPR_EVAL_INSTRUCTION_TYPE_END;
-    }
-
     function buildNode(node: ExpressionTreeNode): number[] {
         if (node.type == "Literal") {
             return [makePushConstantInstruction(assets, node.value)];
@@ -554,10 +554,208 @@ export function buildExpression(
         instructions = buildNode(tree);
     }
 
-    dataBuffer.writeNumberArray(
-        [...instructions, makeEndInstruction()],
-        number => dataBuffer.writeUint16(number)
-    );
+    instructions.forEach(instruction => dataBuffer.writeUint16NonAligned);
+
+    dataBuffer.writeUint16NonAligned(makeEndInstruction());
+}
+
+export function buildAssignableExpression(
+    assets: Assets,
+    dataBuffer: DataBuffer,
+    component: Component,
+    expression: string
+) {
+    function buildNode(node: ExpressionTreeNode): number[] {
+        if (node.type == "Literal") {
+            return [makePushConstantInstruction(assets, node.value)];
+        }
+
+        if (node.type == "Identifier") {
+            const inputIndex = assets.findComponentInputIndex(
+                component,
+                node.name
+            );
+            if (inputIndex != -1) {
+                return [makePushInputInstruction(inputIndex)];
+            }
+
+            const flow = getFlow(component);
+            let localVariableIndex = flow.localVariables.findIndex(
+                localVariable => localVariable.name == node.name
+            );
+            if (localVariableIndex != -1) {
+                return [makePushLocalVariableInstruction(localVariableIndex)];
+            }
+
+            let globalVariableIndex = assets.globalVariables.findIndex(
+                globalVariable => globalVariable.name == node.name
+            );
+            if (globalVariableIndex != -1) {
+                return [makePushGlobalVariableInstruction(globalVariableIndex)];
+            }
+
+            throw `identifier '${node.name}' is neither input or local or global variable`;
+        }
+
+        if (node.type == "BinaryExpression") {
+            const operator = binaryOperators[node.operator];
+            if (!operator) {
+                throw `Unknown binary operator '${node.operator}'`;
+            }
+
+            return [
+                ...buildNode(node.left),
+                ...buildNode(node.right),
+                makeOperationInstruction(operationIndexes[operator.name])
+            ];
+        }
+
+        if (node.type == "LogicalExpression") {
+            const operator = logicalOperators[node.operator];
+            if (!operator) {
+                throw `Unknown logical operator '${node.operator}'`;
+            }
+
+            return [
+                ...buildNode(node.left),
+                ...buildNode(node.right),
+                makeOperationInstruction(operationIndexes[operator.name])
+            ];
+        }
+
+        if (node.type == "UnaryExpression") {
+            const operator = unaryOperators[node.operator];
+            if (!operator) {
+                throw `Unknown unary operator '${node.operator}'`;
+            }
+
+            return [
+                ...buildNode(node.argument),
+                makeOperationInstruction(operationIndexes[operator.name])
+            ];
+        }
+
+        if (node.type == "ConditionalExpression") {
+            return [
+                ...buildNode(node.test),
+                ...buildNode(node.consequent),
+                ...buildNode(node.alternate),
+                makeOperationInstruction(operationIndexes[CONDITIONAL_OPERATOR])
+            ];
+        }
+
+        if (node.type == "CallExpression") {
+            if (
+                node.callee.type != "MemberExpression" ||
+                node.callee.object.type != "Identifier" ||
+                node.callee.property.type != "Identifier"
+            ) {
+                throw "Invalid call expression";
+            }
+
+            let functionName = `${node.callee.object.name}.${node.callee.property.name}`;
+
+            const builtInFunction = builtInFunctions[functionName];
+            if (builtInFunction == undefined) {
+                throw `Unknown function '${functionName}'`;
+            }
+
+            const arity = builtInFunctions[functionName].arity;
+
+            if (node.arguments.length != arity) {
+                throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
+            }
+
+            return [
+                ...node.arguments.reduce(
+                    (instructions, node) => [
+                        ...instructions,
+                        ...buildNode(node)
+                    ],
+                    []
+                ),
+                operationIndexes[functionName]
+            ];
+        }
+
+        if (node.type == "MemberExpression") {
+            if (
+                node.object.type == "Identifier" &&
+                node.property.type == "Identifier"
+            ) {
+                const enumDef = assets.rootProject.variables.enumMap.get(
+                    node.object.name
+                );
+                if (enumDef) {
+                    const enumMember = enumDef.membersMap.get(
+                        node.property.name
+                    );
+                    if (!enumMember) {
+                        throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
+                    }
+                    return [
+                        makePushConstantInstruction(assets, enumMember.value)
+                    ];
+                }
+
+                const builtInConstantName = `${node.object.name}.${node.property.name}`;
+                const buildInConstantValue =
+                    builtInConstants[builtInConstantName];
+                if (buildInConstantValue != undefined) {
+                    return [
+                        makePushConstantInstruction(
+                            assets,
+                            buildInConstantValue
+                        )
+                    ];
+                }
+
+                throw `Unknown constant '${builtInConstantName}'`;
+            }
+
+            throw "Unsupported";
+        }
+
+        // TODO
+
+        // if (node.type == "ArrayExpression") {
+        // }
+
+        // if (node.type == "ObjectExpression") {
+        // }
+
+        throw `Unknown expression node "${node.type}"`;
+    }
+
+    function isAssignableExpression(node: ExpressionTreeNode): boolean {
+        if (node.type === "Identifier") {
+            return true;
+        }
+        if (node.type === "ConditionalExpression") {
+            return (
+                isAssignableExpression(node.consequent) &&
+                isAssignableExpression(node.alternate)
+            );
+        }
+        return false;
+    }
+
+    console.log("BUILD ASSIGNABLE EXPRESSION", assets, component, expression);
+
+    const tree: ExpressionTreeNode = expressionParser.parse(expression);
+    if (tree.type == "ConditionalExpression") {
+    } else if (tree.type == "Identifier") {
+    }
+
+    if (!isAssignableExpression(tree)) {
+        throw `Expression is not assignable`;
+    }
+
+    const instructions = buildNode(tree);
+
+    instructions.forEach(instruction => dataBuffer.writeUint16NonAligned);
+
+    dataBuffer.writeUint16NonAligned(makeEndInstruction());
 }
 
 export function evalExpression(
