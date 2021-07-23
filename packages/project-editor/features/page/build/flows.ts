@@ -124,7 +124,7 @@ export function buildFlowDefs(assets: Assets) {
         `enum ComponentTypes {\n${componentTypeEnumItems.join(",\n")}\n};`
     );
 
-    // enum Component_X_Inputs
+    // enum Component_X_Properties
     componentTypes.forEach(componentType => {
         const componentName = projectBuild.getName(
             "",
@@ -134,54 +134,25 @@ export function buildFlowDefs(assets: Assets) {
             projectBuild.NamingConvention.UnderscoreUpperCase
         );
 
-        let enumItems = componentType.objectClass.classInfo.properties
-            .filter(propertyInfo => propertyInfo.toggableProperty === "input")
-            .map(
-                (propertyInfo, i) =>
-                    `${projectBuild.TAB}${projectBuild.getName(
-                        `${componentName}_INPUT_`,
-                        {
-                            name: propertyInfo.name
-                        },
-                        projectBuild.NamingConvention.UnderscoreUpperCase
-                    )} = ${i + 1}`
+        const properties =
+            componentType.objectClass.classInfo.properties.filter(
+                propertyInfo => propertyInfo.toggableProperty === "input"
             );
 
-        if (enumItems.length > 0) {
-            defs.push(
-                `enum Component_${componentName}_Inputs {\n${enumItems.join(
-                    ",\n"
-                )}\n};`
-            );
-        }
-    });
-
-    // enum Component_X_Outputs
-    componentTypes.forEach(componentType => {
-        const componentName = projectBuild.getName(
-            "",
-            {
-                name: componentType.objectClass.name
-            },
-            projectBuild.NamingConvention.UnderscoreUpperCase
+        let enumItems = properties.map(
+            (propertyInfo, i) =>
+                `${projectBuild.TAB}${projectBuild.getName(
+                    `${componentName}_PROPERTY_`,
+                    {
+                        name: propertyInfo.name
+                    },
+                    projectBuild.NamingConvention.UnderscoreUpperCase
+                )} = ${i + 1}`
         );
 
-        let enumItems = componentType.objectClass.classInfo.properties
-            .filter(propertyInfo => propertyInfo.toggableProperty === "output")
-            .map(
-                (propertyInfo, i) =>
-                    `${projectBuild.TAB}${projectBuild.getName(
-                        `${componentName}_OUTPUT_`,
-                        {
-                            name: propertyInfo.name
-                        },
-                        projectBuild.NamingConvention.UnderscoreUpperCase
-                    )} = ${i + 1}`
-            );
-
         if (enumItems.length > 0) {
             defs.push(
-                `enum Component_${componentName}_Outputs {\n${enumItems.join(
+                `enum Component_${componentName}_Properties {\n${enumItems.join(
                     ",\n"
                 )}\n};`
             );
