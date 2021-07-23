@@ -54,9 +54,7 @@ export const FLOW_VALUE_TYPE_FLOAT = 9;
 export const FLOW_VALUE_TYPE_STRING = 10;
 
 export function getComponentOutputNames(component: Component) {
-    const outputs: { name: string; type: "output" | "property" }[] = [
-        { name: "@seqout", type: "output" }
-    ];
+    const outputs: { name: string; type: "output" | "property" }[] = [];
 
     for (const propertyInfo of getClassInfo(component).properties) {
         if (propertyInfo.toggableProperty === "output") {

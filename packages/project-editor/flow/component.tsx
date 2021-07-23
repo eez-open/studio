@@ -862,7 +862,7 @@ export class Component extends EezObject {
         );
     }
 
-    get inputs() {
+    @computed get inputs() {
         return [
             ...(this.customInputs ?? []).map(
                 customInput => customInput.asPropertyInfo
@@ -881,7 +881,7 @@ export class Component extends EezObject {
         ];
     }
 
-    get outputs() {
+    @computed get outputs() {
         const outputs = [
             ...(this.customOutputs ?? []).map(
                 customOutput => customOutput.asPropertyInfo
@@ -1461,9 +1461,9 @@ function renderActionComponent(
 ) {
     const classInfo = getClassInfo(actionNode);
 
-    const inputs = actionNode.inputs;
+    const inputs = actionNode.inputs.filter(output => output.name != "@seqin");
 
-    let outputs = actionNode.outputs;
+    let outputs = actionNode.outputs.filter(output => output.name != "@seqout");
 
     // move @error output to end
     let i = outputs.findIndex(output => output.name === "@error");
@@ -1538,6 +1538,26 @@ export class ActionComponent extends Component {
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: []
     });
+
+    @computed get inputs() {
+        return [
+            {
+                name: "@seqin",
+                type: PropertyType.Null
+            },
+            ...super.inputs
+        ];
+    }
+
+    @computed get outputs() {
+        return [
+            {
+                name: "@seqout",
+                type: PropertyType.Null
+            },
+            ...super.outputs
+        ];
+    }
 
     get autoSize() {
         return true;
