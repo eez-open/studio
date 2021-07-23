@@ -15,7 +15,10 @@ import {
 import { visitObjects } from "project-editor/core/search";
 import { Variable } from "project-editor/features/variable/variable";
 import { CommentActionComponent } from "project-editor/flow/action-components";
-import { buildExpression } from "project-editor/flow/expression";
+import {
+    buildExpression,
+    operationIndexes
+} from "project-editor/flow/expression";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -156,6 +159,24 @@ export function buildFlowDefs(assets: Assets) {
             );
         }
     });
+
+    // enum ComponentTypes
+    const operationEnumItems = [];
+    for (const operationName in operationIndexes) {
+        if (operationIndexes.hasOwnProperty(operationName)) {
+            operationEnumItems.push(
+                `${projectBuild.TAB}${projectBuild.getName(
+                    "OPERATION_TYPE_",
+                    {
+                        name: operationName
+                    },
+                    projectBuild.NamingConvention.UnderscoreUpperCase
+                )} = ${operationIndexes[operationName]}`
+            );
+        }
+    }
+
+    defs.push(`enum OperationTypes {\n${operationEnumItems.join(",\n")}\n};`);
 
     return defs.join("\n\n");
 }
@@ -383,8 +404,10 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
         );
 
         // nInputValues
-        dataBuffer.writeUint16(
-            assets.getFlowState(flow).componentInputIndexes.size
+        dataBuffer.writeLaterUint16(() =>
+            dataBuffer.writeUint16(
+                assets.getFlowState(flow).componentInputIndexes.size
+            )
         );
     }
 

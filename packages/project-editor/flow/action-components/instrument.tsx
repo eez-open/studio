@@ -1230,9 +1230,9 @@ export class SelectInstrumentActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "instrument",
                 type: PropertyType.Any
@@ -1277,9 +1277,9 @@ export class GetInstrumentActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
-    @computed get inputs() {
+    getInputs() {
         return [
-            ...super.inputs,
+            ...super.getInputs(),
             {
                 name: "id",
                 type: PropertyType.String
@@ -1287,9 +1287,9 @@ export class GetInstrumentActionComponent extends ActionComponent {
         ];
     }
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "instrument",
                 type: PropertyType.Any

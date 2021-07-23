@@ -681,19 +681,21 @@ export class Component extends EezObject {
         check: (component: Component) => {
             let messages: output.Message[] = [];
 
-            component.inputs.forEach(input => {
+            component.inputs.forEach(componentInput => {
                 if (
+                    componentInput.name != "@seqin" &&
                     !getFlow(component).connectionLines.find(
                         connectionLine =>
                             connectionLine.targetComponent === component &&
-                            connectionLine.input === input.name
+                            connectionLine.input === componentInput.name
                     )
                 ) {
                     messages.push(
                         new output.Message(
                             output.Type.ERROR,
                             `No connection to input "${
-                                input.displayName || input.name
+                                componentInput.displayName ||
+                                componentInput.name
                             }"`,
                             component
                         )
@@ -703,6 +705,7 @@ export class Component extends EezObject {
 
             component.outputs.forEach(componentOutput => {
                 if (
+                    componentOutput.name != "@seqout" &&
                     !getFlow(component).connectionLines.find(
                         connectionLine =>
                             connectionLine.sourceComponent === component &&
@@ -863,6 +866,10 @@ export class Component extends EezObject {
     }
 
     @computed get inputs() {
+        return this.getInputs();
+    }
+
+    getInputs() {
         return [
             ...(this.customInputs ?? []).map(
                 customInput => customInput.asPropertyInfo
@@ -882,6 +889,10 @@ export class Component extends EezObject {
     }
 
     @computed get outputs() {
+        return this.getOutputs();
+    }
+
+    getOutputs() {
         const outputs = [
             ...(this.customOutputs ?? []).map(
                 customOutput => customOutput.asPropertyInfo
@@ -1539,23 +1550,23 @@ export class ActionComponent extends Component {
         properties: []
     });
 
-    @computed get inputs() {
+    getInputs() {
         return [
             {
                 name: "@seqin",
                 type: PropertyType.Null
             },
-            ...super.inputs
+            ...super.getInputs()
         ];
     }
 
-    @computed get outputs() {
+    getOutputs() {
         return [
             {
                 name: "@seqout",
                 type: PropertyType.Null
             },
-            ...super.outputs
+            ...super.getOutputs()
         ];
     }
 
@@ -1611,7 +1622,7 @@ export class NotFoundComponent extends ActionComponent {
         componentHeaderColor: "#fc9b9b"
     });
 
-    @computed get inputs() {
+    getInputs() {
         return getFlow(this)
             .connectionLines.filter(
                 connectionLine => connectionLine.target == this.wireID
@@ -1622,7 +1633,7 @@ export class NotFoundComponent extends ActionComponent {
             }));
     }
 
-    @computed get outputs() {
+    getOutputs() {
         return getFlow(this)
             .connectionLines.filter(
                 connectionLine => connectionLine.source == this.wireID

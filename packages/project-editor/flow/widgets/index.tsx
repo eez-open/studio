@@ -938,14 +938,14 @@ export class LayoutViewWidget extends EmbeddedWidget {
         return layout;
     }
 
-    @computed get inputs() {
+    getInputs() {
         const page = findPage(getProject(this), this.layout);
         if (!page) {
-            return super.inputs;
+            return super.getInputs();
         }
 
         return [
-            ...super.inputs,
+            ...super.getInputs(),
             ...page.components
                 .filter(component => component instanceof StartActionComponent)
                 .map(() => ({
@@ -963,14 +963,14 @@ export class LayoutViewWidget extends EmbeddedWidget {
         ];
     }
 
-    @computed get outputs() {
+    getOutputs() {
         const page = findPage(getProject(this), this.layout);
         if (!page) {
-            return super.outputs;
+            return super.getOutputs();
         }
 
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             ...page.components
                 .filter(component => component instanceof EndActionComponent)
                 .map(() => ({
@@ -3756,9 +3756,9 @@ export class TextInputWidget extends Widget {
 
     @observable password: boolean;
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "value",
                 type: PropertyType.String

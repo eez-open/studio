@@ -712,7 +712,11 @@ export class Assets {
 export class DataBuffer {
     buffer = Buffer.alloc(10 * 1024 * 1024);
     currentOffset: number = 0;
-    writeLater: { currentOffset: number; callback: () => void }[] = [];
+    writeLaterList: { currentOffset: number; callback: () => void }[] = [];
+    writeLaterUint16List: {
+        currentOffset: number;
+        callback: () => void;
+    }[] = [];
 
     writeInt8(value: number) {
         this.buffer.writeInt8(value, this.currentOffset);
@@ -743,6 +747,12 @@ export class DataBuffer {
     writeUint16NonAligned(value: number) {
         this.buffer.writeUInt16LE(value, this.currentOffset);
         this.currentOffset += 2;
+    }
+
+    writeLaterUint16(callback: () => void) {
+        const currentOffset = this.currentOffset;
+        this.writeUint16(0);
+        this.writeLaterUint16List.push({ currentOffset, callback });
     }
 
     writeUint32(value: number) {
@@ -821,7 +831,7 @@ export class DataBuffer {
         }
         const currentOffset = this.currentOffset;
         this.writeUint32(0);
-        this.writeLater.push({ currentOffset, callback });
+        this.writeLaterList.push({ currentOffset, callback });
     }
 
     addPadding() {
@@ -838,15 +848,22 @@ export class DataBuffer {
     }
 
     finalize() {
-        for (let i = 0; i < this.writeLater.length; i++) {
+        for (let i = 0; i < this.writeLaterList.length; i++) {
             const currentOffset = this.currentOffset;
-            this.writeLater[i].callback();
+            this.writeLaterList[i].callback();
             this.addPadding();
             this.buffer.writeUInt32LE(
                 currentOffset,
-                this.writeLater[i].currentOffset
+                this.writeLaterList[i].currentOffset
             );
         }
+
+        const currentOffset = this.currentOffset;
+        for (let i = 0; i < this.writeLaterUint16List.length; i++) {
+            this.currentOffset = this.writeLaterUint16List[i].currentOffset;
+            this.writeLaterUint16List[i].callback();
+        }
+        this.currentOffset = currentOffset;
 
         const buffer = Buffer.alloc(this.size);
         this.buffer.copy(buffer, 0, 0, this.size);
@@ -865,7 +882,11 @@ export class DataBuffer {
 export class DummyDataBuffer {
     buffer = Buffer.alloc(0);
     currentOffset = 0;
-    writeLater: { currentOffset: number; callback: () => void }[] = [];
+    writeLaterList: { currentOffset: number; callback: () => void }[] = [];
+    writeLaterUint16List: {
+        currentOffset: number;
+        callback: () => void;
+    }[] = [];
 
     writeInt8(value: number) {}
 
@@ -876,6 +897,8 @@ export class DummyDataBuffer {
     writeUint16(value: number) {}
 
     writeUint16NonAligned(value: number) {}
+
+    writeLaterUint16(callback: () => void) {}
 
     writeUint32(value: number) {}
 

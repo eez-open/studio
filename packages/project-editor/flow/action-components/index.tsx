@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, computed, autorun, runInAction } from "mobx";
+import { observable, action, autorun, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -243,9 +243,9 @@ export class GetVariableActionComponent extends ActionComponent {
 
     @observable variable: string;
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "variable",
                 displayName: (component: GetVariableActionComponent) =>
@@ -372,9 +372,9 @@ export class EvalActionComponent extends ActionComponent {
         };
     }
 
-    @computed get inputs() {
+    getInputs() {
         return [
-            ...super.inputs,
+            ...super.getInputs(),
             ...EvalActionComponent.parse(this.expression).inputs.map(input => ({
                 name: input,
                 displayName: input,
@@ -383,9 +383,9 @@ export class EvalActionComponent extends ActionComponent {
         ];
     }
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "result",
                 type: PropertyType.Any
@@ -597,9 +597,9 @@ export class CompareActionComponent extends ActionComponent {
     @observable C: string;
     @observable operator: string;
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "True",
                 type: PropertyType.Null
@@ -719,9 +719,9 @@ export class IsTrueActionComponent extends ActionComponent {
 
     @observable value: any;
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "True",
                 displayName: "Yes",
@@ -785,8 +785,9 @@ export class ConstantActionComponent extends ActionComponent {
 
     @observable value: string;
 
-    @computed get outputs(): PropertyInfo[] {
+    getOutputs() {
         return [
+            ...super.getOutputs(),
             {
                 name: "value",
                 displayName: this.value,
@@ -823,9 +824,9 @@ export class DateNowActionComponent extends ActionComponent {
         componentHeaderColor: "#C0C0C0"
     });
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "value",
                 type: PropertyType.Any
@@ -864,9 +865,9 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     @observable key: string;
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "value",
                 type: PropertyType.Any
@@ -925,9 +926,9 @@ export class WriteSettingsActionComponent extends ActionComponent {
 
     @observable key: string;
 
-    @computed get inputs() {
+    getInputs() {
         return [
-            ...super.inputs,
+            ...super.getInputs(),
             {
                 name: "value",
                 type: PropertyType.Any
@@ -980,9 +981,9 @@ export class LogActionComponent extends ActionComponent {
 
     @observable countValue: number;
 
-    @computed get inputs() {
+    getInputs() {
         return [
-            ...super.outputs,
+            ...super.getInputs(),
             {
                 name: "value",
                 type: PropertyType.Any
@@ -1051,10 +1052,10 @@ export class CallActionActionComponent extends ActionComponent {
 
     @observable action: string;
 
-    @computed get inputs() {
+    getInputs() {
         const action = findAction(getProject(this), this.action);
         if (!action) {
-            return super.inputs;
+            return super.getInputs();
         }
 
         const inputs = action.components
@@ -1066,13 +1067,13 @@ export class CallActionActionComponent extends ActionComponent {
                 type: PropertyType.Any
             }));
 
-        return [...super.inputs, ...inputs];
+        return [...super.getInputs(), ...inputs];
     }
 
-    @computed get outputs() {
+    getOutputs() {
         const action = findAction(getProject(this), this.action);
         if (!action) {
-            return super.outputs;
+            return super.getOutputs();
         }
 
         const outputs = action.components
@@ -1084,7 +1085,7 @@ export class CallActionActionComponent extends ActionComponent {
                 type: PropertyType.Any
             }));
 
-        return [...super.outputs, ...outputs];
+        return [...super.getOutputs(), ...outputs];
     }
 
     async execute(runningFlow: RunningFlow) {
@@ -1339,9 +1340,9 @@ export class CatchErrorActionComponent extends ActionComponent {
         componentHeaderColor: "#FFAAAA"
     });
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "Message",
                 type: PropertyType.String
@@ -1405,9 +1406,9 @@ export class CounterActionComponent extends ActionComponent {
 
     @observable countValue: number;
 
-    @computed get outputs() {
+    getOutputs() {
         return [
-            ...super.outputs,
+            ...super.getOutputs(),
             {
                 name: "done",
                 type: PropertyType.Null

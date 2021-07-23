@@ -198,7 +198,7 @@ const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT = 1 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR = 2 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR = 3 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 4 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_END = 4 << 13;
+const EXPR_EVAL_INSTRUCTION_TYPE_END = 5 << 13;
 
 ////////////////////////////////////////////////////////////////////////////////
 
