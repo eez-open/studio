@@ -68,6 +68,7 @@ const VariableIcon = (
 export type VariableType =
     | "integer"
     | "float"
+    | "double"
     | "boolean"
     | "string"
     | "enum"
@@ -84,6 +85,9 @@ export const variableTypeProperty: PropertyInfo = {
         },
         {
             id: "float"
+        },
+        {
+            id: "double"
         },
         {
             id: "boolean"

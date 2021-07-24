@@ -53,8 +53,11 @@ export const FLOW_VALUE_TYPE_INT16 = 5;
 export const FLOW_VALUE_TYPE_UINT16 = 6;
 export const FLOW_VALUE_TYPE_INT32 = 7;
 export const FLOW_VALUE_TYPE_UINT32 = 8;
+export const FLOW_VALUE_TYPE_INT64 = 7;
+export const FLOW_VALUE_TYPE_UINT64 = 8;
 export const FLOW_VALUE_TYPE_FLOAT = 9;
-export const FLOW_VALUE_TYPE_STRING = 10;
+export const FLOW_VALUE_TYPE_DOUBLE = 10;
+export const FLOW_VALUE_TYPE_STRING = 11;
 
 export function getComponentOutputNames(component: Component) {
     const outputs: { name: string; type: "output" | "property" }[] = [];
@@ -86,7 +89,7 @@ export function getFlowValueType(value: any) {
     if (typeof value === "boolean") {
         return FLOW_VALUE_TYPE_BOOLEAN;
     } else if (typeof value === "number") {
-        return FLOW_VALUE_TYPE_FLOAT;
+        return FLOW_VALUE_TYPE_DOUBLE;
     } else if (typeof value === "string") {
         return FLOW_VALUE_TYPE_STRING;
     } else if (typeof value === "undefined") {

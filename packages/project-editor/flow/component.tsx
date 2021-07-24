@@ -577,6 +577,7 @@ export class Component extends EezObject {
                 typeClass: CustomInput,
                 propertyGridGroup: generalGroup,
                 partOfNavigation: false,
+                enumerable: false,
                 defaultValue: []
             },
             {
@@ -586,6 +587,7 @@ export class Component extends EezObject {
                 typeClass: CustomOutput,
                 propertyGridGroup: generalGroup,
                 partOfNavigation: false,
+                enumerable: false,
                 defaultValue: []
             },
             {

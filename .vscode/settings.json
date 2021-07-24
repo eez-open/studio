@@ -14,9 +14,10 @@
     "files.associations": {
         "iosfwd": "cpp",
         "xiosbase": "cpp",
-        "xlocale": "cpp"
+        "xlocale": "cpp",
+        "vector": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": true
 }
