@@ -30,7 +30,10 @@ import { getFlow, getProject } from "project-editor/project/project";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { evalExpression } from "project-editor/flow/expression";
+import {
+    buildAssignableExpression,
+    evalExpression
+} from "project-editor/flow/expression";
 
 const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
@@ -509,6 +512,10 @@ export class SetVariableActionComponent extends ActionComponent {
         let value = runningFlow.getPropertyValue(this, "value");
         runningFlow.setVariable(this, this.variable, value);
         return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        buildAssignableExpression(assets, dataBuffer, this, this.variable);
     }
 }
 

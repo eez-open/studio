@@ -374,174 +374,167 @@ function makeEndInstruction() {
     return EXPR_EVAL_INSTRUCTION_TYPE_END;
 }
 
+function buildExpressionNode(
+    assets: Assets,
+    component: Component,
+    node: ExpressionTreeNode
+): number[] {
+    if (node.type == "Literal") {
+        return [makePushConstantInstruction(assets, node.value)];
+    }
+
+    if (node.type == "Identifier") {
+        const inputIndex = assets.findComponentInputIndex(component, node.name);
+        if (inputIndex != -1) {
+            return [makePushInputInstruction(inputIndex)];
+        }
+
+        const flow = getFlow(component);
+        let localVariableIndex = flow.localVariables.findIndex(
+            localVariable => localVariable.name == node.name
+        );
+        if (localVariableIndex != -1) {
+            return [makePushLocalVariableInstruction(localVariableIndex)];
+        }
+
+        let globalVariableIndex = assets.globalVariables.findIndex(
+            globalVariable => globalVariable.name == node.name
+        );
+        if (globalVariableIndex != -1) {
+            return [makePushGlobalVariableInstruction(globalVariableIndex)];
+        }
+
+        throw `identifier '${node.name}' is neither input or local or global variable`;
+    }
+
+    if (node.type == "BinaryExpression") {
+        const operator = binaryOperators[node.operator];
+        if (!operator) {
+            throw `Unknown binary operator '${node.operator}'`;
+        }
+
+        return [
+            ...buildExpressionNode(assets, component, node.left),
+            ...buildExpressionNode(assets, component, node.right),
+            makeOperationInstruction(operationIndexes[operator.name])
+        ];
+    }
+
+    if (node.type == "LogicalExpression") {
+        const operator = logicalOperators[node.operator];
+        if (!operator) {
+            throw `Unknown logical operator '${node.operator}'`;
+        }
+
+        return [
+            ...buildExpressionNode(assets, component, node.left),
+            ...buildExpressionNode(assets, component, node.right),
+            makeOperationInstruction(operationIndexes[operator.name])
+        ];
+    }
+
+    if (node.type == "UnaryExpression") {
+        const operator = unaryOperators[node.operator];
+        if (!operator) {
+            throw `Unknown unary operator '${node.operator}'`;
+        }
+
+        return [
+            ...buildExpressionNode(assets, component, node.argument),
+            makeOperationInstruction(operationIndexes[operator.name])
+        ];
+    }
+
+    if (node.type == "ConditionalExpression") {
+        return [
+            ...buildExpressionNode(assets, component, node.test),
+            ...buildExpressionNode(assets, component, node.consequent),
+            ...buildExpressionNode(assets, component, node.alternate),
+            makeOperationInstruction(operationIndexes[CONDITIONAL_OPERATOR])
+        ];
+    }
+
+    if (node.type == "CallExpression") {
+        if (
+            node.callee.type != "MemberExpression" ||
+            node.callee.object.type != "Identifier" ||
+            node.callee.property.type != "Identifier"
+        ) {
+            throw "Invalid call expression";
+        }
+
+        let functionName = `${node.callee.object.name}.${node.callee.property.name}`;
+
+        const builtInFunction = builtInFunctions[functionName];
+        if (builtInFunction == undefined) {
+            throw `Unknown function '${functionName}'`;
+        }
+
+        const arity = builtInFunctions[functionName].arity;
+
+        if (node.arguments.length != arity) {
+            throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
+        }
+
+        return [
+            ...node.arguments.reduce(
+                (instructions, node) => [
+                    ...instructions,
+                    ...buildExpressionNode(assets, component, node)
+                ],
+                []
+            ),
+            operationIndexes[functionName]
+        ];
+    }
+
+    if (node.type == "MemberExpression") {
+        if (
+            node.object.type == "Identifier" &&
+            node.property.type == "Identifier"
+        ) {
+            const enumDef = assets.rootProject.variables.enumMap.get(
+                node.object.name
+            );
+            if (enumDef) {
+                const enumMember = enumDef.membersMap.get(node.property.name);
+                if (!enumMember) {
+                    throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
+                }
+                return [makePushConstantInstruction(assets, enumMember.value)];
+            }
+
+            const builtInConstantName = `${node.object.name}.${node.property.name}`;
+            const buildInConstantValue = builtInConstants[builtInConstantName];
+            if (buildInConstantValue != undefined) {
+                return [
+                    makePushConstantInstruction(assets, buildInConstantValue)
+                ];
+            }
+
+            throw `Unknown constant '${builtInConstantName}'`;
+        }
+
+        throw "Unsupported";
+    }
+
+    // TODO
+
+    // if (node.type == "ArrayExpression") {
+    // }
+
+    // if (node.type == "ObjectExpression") {
+    // }
+
+    throw `Unknown expression node "${node.type}"`;
+}
+
 export function buildExpression(
     assets: Assets,
     dataBuffer: DataBuffer,
     component: Component,
     expression: string
 ) {
-    function buildNode(node: ExpressionTreeNode): number[] {
-        if (node.type == "Literal") {
-            return [makePushConstantInstruction(assets, node.value)];
-        }
-
-        if (node.type == "Identifier") {
-            const inputIndex = assets.findComponentInputIndex(
-                component,
-                node.name
-            );
-            if (inputIndex != -1) {
-                return [makePushInputInstruction(inputIndex)];
-            }
-
-            const flow = getFlow(component);
-            let localVariableIndex = flow.localVariables.findIndex(
-                localVariable => localVariable.name == node.name
-            );
-            if (localVariableIndex != -1) {
-                return [makePushLocalVariableInstruction(localVariableIndex)];
-            }
-
-            let globalVariableIndex = assets.globalVariables.findIndex(
-                globalVariable => globalVariable.name == node.name
-            );
-            if (globalVariableIndex != -1) {
-                return [makePushGlobalVariableInstruction(globalVariableIndex)];
-            }
-
-            throw `identifier '${node.name}' is neither input or local or global variable`;
-        }
-
-        if (node.type == "BinaryExpression") {
-            const operator = binaryOperators[node.operator];
-            if (!operator) {
-                throw `Unknown binary operator '${node.operator}'`;
-            }
-
-            return [
-                ...buildNode(node.left),
-                ...buildNode(node.right),
-                makeOperationInstruction(operationIndexes[operator.name])
-            ];
-        }
-
-        if (node.type == "LogicalExpression") {
-            const operator = logicalOperators[node.operator];
-            if (!operator) {
-                throw `Unknown logical operator '${node.operator}'`;
-            }
-
-            return [
-                ...buildNode(node.left),
-                ...buildNode(node.right),
-                makeOperationInstruction(operationIndexes[operator.name])
-            ];
-        }
-
-        if (node.type == "UnaryExpression") {
-            const operator = unaryOperators[node.operator];
-            if (!operator) {
-                throw `Unknown unary operator '${node.operator}'`;
-            }
-
-            return [
-                ...buildNode(node.argument),
-                makeOperationInstruction(operationIndexes[operator.name])
-            ];
-        }
-
-        if (node.type == "ConditionalExpression") {
-            return [
-                ...buildNode(node.test),
-                ...buildNode(node.consequent),
-                ...buildNode(node.alternate),
-                makeOperationInstruction(operationIndexes[CONDITIONAL_OPERATOR])
-            ];
-        }
-
-        if (node.type == "CallExpression") {
-            if (
-                node.callee.type != "MemberExpression" ||
-                node.callee.object.type != "Identifier" ||
-                node.callee.property.type != "Identifier"
-            ) {
-                throw "Invalid call expression";
-            }
-
-            let functionName = `${node.callee.object.name}.${node.callee.property.name}`;
-
-            const builtInFunction = builtInFunctions[functionName];
-            if (builtInFunction == undefined) {
-                throw `Unknown function '${functionName}'`;
-            }
-
-            const arity = builtInFunctions[functionName].arity;
-
-            if (node.arguments.length != arity) {
-                throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-            }
-
-            return [
-                ...node.arguments.reduce(
-                    (instructions, node) => [
-                        ...instructions,
-                        ...buildNode(node)
-                    ],
-                    []
-                ),
-                operationIndexes[functionName]
-            ];
-        }
-
-        if (node.type == "MemberExpression") {
-            if (
-                node.object.type == "Identifier" &&
-                node.property.type == "Identifier"
-            ) {
-                const enumDef = assets.rootProject.variables.enumMap.get(
-                    node.object.name
-                );
-                if (enumDef) {
-                    const enumMember = enumDef.membersMap.get(
-                        node.property.name
-                    );
-                    if (!enumMember) {
-                        throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
-                    }
-                    return [
-                        makePushConstantInstruction(assets, enumMember.value)
-                    ];
-                }
-
-                const builtInConstantName = `${node.object.name}.${node.property.name}`;
-                const buildInConstantValue =
-                    builtInConstants[builtInConstantName];
-                if (buildInConstantValue != undefined) {
-                    return [
-                        makePushConstantInstruction(
-                            assets,
-                            buildInConstantValue
-                        )
-                    ];
-                }
-
-                throw `Unknown constant '${builtInConstantName}'`;
-            }
-
-            throw "Unsupported";
-        }
-
-        // TODO
-
-        // if (node.type == "ArrayExpression") {
-        // }
-
-        // if (node.type == "ObjectExpression") {
-        // }
-
-        throw `Unknown expression node "${node.type}"`;
-    }
-
     console.log("BUILD EXPRESSION", assets, component, expression);
 
     let instructions;
@@ -551,7 +544,7 @@ export function buildExpression(
         instructions = [makePushConstantInstruction(assets, expression)];
     } else {
         const tree: ExpressionTreeNode = expressionParser.parse(expression);
-        instructions = buildNode(tree);
+        instructions = buildExpressionNode(assets, component, tree);
     }
 
     instructions.push(makeEndInstruction());
@@ -567,168 +560,6 @@ export function buildAssignableExpression(
     component: Component,
     expression: string
 ) {
-    function buildNode(node: ExpressionTreeNode): number[] {
-        if (node.type == "Literal") {
-            return [makePushConstantInstruction(assets, node.value)];
-        }
-
-        if (node.type == "Identifier") {
-            const inputIndex = assets.findComponentInputIndex(
-                component,
-                node.name
-            );
-            if (inputIndex != -1) {
-                return [makePushInputInstruction(inputIndex)];
-            }
-
-            const flow = getFlow(component);
-            let localVariableIndex = flow.localVariables.findIndex(
-                localVariable => localVariable.name == node.name
-            );
-            if (localVariableIndex != -1) {
-                return [makePushLocalVariableInstruction(localVariableIndex)];
-            }
-
-            let globalVariableIndex = assets.globalVariables.findIndex(
-                globalVariable => globalVariable.name == node.name
-            );
-            if (globalVariableIndex != -1) {
-                return [makePushGlobalVariableInstruction(globalVariableIndex)];
-            }
-
-            throw `identifier '${node.name}' is neither input or local or global variable`;
-        }
-
-        if (node.type == "BinaryExpression") {
-            const operator = binaryOperators[node.operator];
-            if (!operator) {
-                throw `Unknown binary operator '${node.operator}'`;
-            }
-
-            return [
-                ...buildNode(node.left),
-                ...buildNode(node.right),
-                makeOperationInstruction(operationIndexes[operator.name])
-            ];
-        }
-
-        if (node.type == "LogicalExpression") {
-            const operator = logicalOperators[node.operator];
-            if (!operator) {
-                throw `Unknown logical operator '${node.operator}'`;
-            }
-
-            return [
-                ...buildNode(node.left),
-                ...buildNode(node.right),
-                makeOperationInstruction(operationIndexes[operator.name])
-            ];
-        }
-
-        if (node.type == "UnaryExpression") {
-            const operator = unaryOperators[node.operator];
-            if (!operator) {
-                throw `Unknown unary operator '${node.operator}'`;
-            }
-
-            return [
-                ...buildNode(node.argument),
-                makeOperationInstruction(operationIndexes[operator.name])
-            ];
-        }
-
-        if (node.type == "ConditionalExpression") {
-            return [
-                ...buildNode(node.test),
-                ...buildNode(node.consequent),
-                ...buildNode(node.alternate),
-                makeOperationInstruction(operationIndexes[CONDITIONAL_OPERATOR])
-            ];
-        }
-
-        if (node.type == "CallExpression") {
-            if (
-                node.callee.type != "MemberExpression" ||
-                node.callee.object.type != "Identifier" ||
-                node.callee.property.type != "Identifier"
-            ) {
-                throw "Invalid call expression";
-            }
-
-            let functionName = `${node.callee.object.name}.${node.callee.property.name}`;
-
-            const builtInFunction = builtInFunctions[functionName];
-            if (builtInFunction == undefined) {
-                throw `Unknown function '${functionName}'`;
-            }
-
-            const arity = builtInFunctions[functionName].arity;
-
-            if (node.arguments.length != arity) {
-                throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-            }
-
-            return [
-                ...node.arguments.reduce(
-                    (instructions, node) => [
-                        ...instructions,
-                        ...buildNode(node)
-                    ],
-                    []
-                ),
-                operationIndexes[functionName]
-            ];
-        }
-
-        if (node.type == "MemberExpression") {
-            if (
-                node.object.type == "Identifier" &&
-                node.property.type == "Identifier"
-            ) {
-                const enumDef = assets.rootProject.variables.enumMap.get(
-                    node.object.name
-                );
-                if (enumDef) {
-                    const enumMember = enumDef.membersMap.get(
-                        node.property.name
-                    );
-                    if (!enumMember) {
-                        throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
-                    }
-                    return [
-                        makePushConstantInstruction(assets, enumMember.value)
-                    ];
-                }
-
-                const builtInConstantName = `${node.object.name}.${node.property.name}`;
-                const buildInConstantValue =
-                    builtInConstants[builtInConstantName];
-                if (buildInConstantValue != undefined) {
-                    return [
-                        makePushConstantInstruction(
-                            assets,
-                            buildInConstantValue
-                        )
-                    ];
-                }
-
-                throw `Unknown constant '${builtInConstantName}'`;
-            }
-
-            throw "Unsupported";
-        }
-
-        // TODO
-
-        // if (node.type == "ArrayExpression") {
-        // }
-
-        // if (node.type == "ObjectExpression") {
-        // }
-
-        throw `Unknown expression node "${node.type}"`;
-    }
-
     function isAssignableExpression(node: ExpressionTreeNode): boolean {
         if (node.type === "Identifier") {
             return true;
@@ -745,15 +576,12 @@ export function buildAssignableExpression(
     console.log("BUILD ASSIGNABLE EXPRESSION", assets, component, expression);
 
     const tree: ExpressionTreeNode = expressionParser.parse(expression);
-    if (tree.type == "ConditionalExpression") {
-    } else if (tree.type == "Identifier") {
-    }
 
     if (!isAssignableExpression(tree)) {
         throw `Expression is not assignable`;
     }
 
-    const instructions = buildNode(tree);
+    const instructions = buildExpressionNode(assets, component, tree);
 
     instructions.push(makeEndInstruction());
 

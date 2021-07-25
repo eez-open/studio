@@ -214,7 +214,7 @@ export function buildFlowDefs(assets: Assets) {
                         name: propertyInfo.name
                     },
                     projectBuild.NamingConvention.UnderscoreUpperCase
-                )} = ${i + 1}`
+                )} = ${i}`
         );
 
         if (enumItems.length > 0) {
@@ -226,7 +226,7 @@ export function buildFlowDefs(assets: Assets) {
         }
     });
 
-    // enum ComponentTypes
+    // enum OperationTypes
     const operationEnumItems = [];
     for (const operationName in operationIndexes) {
         if (operationIndexes.hasOwnProperty(operationName)) {
@@ -279,18 +279,29 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             dataBuffer.writeUint16(0);
 
             // inputs
-            dataBuffer.writeNumberArray(component.inputs, input => {
-                const inputIndex = assets.getComponentInputIndex(
-                    component,
-                    input.name
-                );
+            dataBuffer.writeNumberArray(
+                component.inputs.filter(
+                    input =>
+                        input.name != "@seqin" ||
+                        flow.connectionLines.find(
+                            connectionLine =>
+                                connectionLine.targetComponent == component &&
+                                connectionLine.input == "@seqin"
+                        )
+                ),
+                input => {
+                    const inputIndex = assets.getComponentInputIndex(
+                        component,
+                        input.name
+                    );
 
-                dataBuffer.writeUint16(inputIndex);
+                    dataBuffer.writeUint16(inputIndex);
 
-                assets.map.flows[flowIndex].components[
-                    componentIndex
-                ].inputs.push(inputIndex);
-            });
+                    assets.map.flows[flowIndex].components[
+                        componentIndex
+                    ].inputs.push(inputIndex);
+                }
+            );
 
             // property values
             const properties = getClassInfo(component).properties.filter(
