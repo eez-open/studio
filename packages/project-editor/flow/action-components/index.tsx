@@ -803,7 +803,7 @@ export class ConstantActionComponent extends ActionComponent {
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint16(
-            assets.getConstantIndex(evalExpression(assets, this, this.value))
+            assets.getConstantIndex(evalExpression(assets, this.value))
         );
     }
 }

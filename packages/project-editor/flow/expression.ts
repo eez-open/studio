@@ -554,9 +554,11 @@ export function buildExpression(
         instructions = buildNode(tree);
     }
 
-    instructions.forEach(instruction => dataBuffer.writeUint16NonAligned);
+    instructions.push(makeEndInstruction());
 
-    dataBuffer.writeUint16NonAligned(makeEndInstruction());
+    instructions.forEach(instruction =>
+        dataBuffer.writeUint16NonAligned(instruction)
+    );
 }
 
 export function buildAssignableExpression(
@@ -753,16 +755,14 @@ export function buildAssignableExpression(
 
     const instructions = buildNode(tree);
 
-    instructions.forEach(instruction => dataBuffer.writeUint16NonAligned);
+    instructions.push(makeEndInstruction());
 
-    dataBuffer.writeUint16NonAligned(makeEndInstruction());
+    instructions.forEach(instruction =>
+        dataBuffer.writeUint16NonAligned(instruction)
+    );
 }
 
-export function evalExpression(
-    assets: Assets,
-    component: Component,
-    expression: string
-) {
+export function evalExpression(assets: Assets, expression: string) {
     function evalNode(node: ExpressionTreeNode): any {
         if (node.type == "Literal") {
             return node.value;
@@ -872,7 +872,7 @@ export function evalExpression(
         throw `Unknown expression node "${node.type}"`;
     }
 
-    console.log("EVAL EXPRESSION", assets, component, expression);
+    console.log("EVAL EXPRESSION", assets, expression);
 
     let value;
     if (expression == undefined) {
@@ -881,7 +881,12 @@ export function evalExpression(
         value = expression;
     } else {
         const tree: ExpressionTreeNode = expressionParser.parse(expression);
-        value = evalNode(tree);
+        try {
+            value = evalNode(tree);
+        } catch (err) {
+            console.error(err);
+            value = null;
+        }
     }
 
     return value;
