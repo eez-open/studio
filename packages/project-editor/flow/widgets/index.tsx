@@ -80,7 +80,58 @@ import {
 
 import { RunningFlow } from "project-editor/flow/runtime";
 
+import "project-editor/flow/widgets/plotly";
+import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import { buildWidget } from "project-editor/features/page/build/widgets";
+import {
+    WIDGET_TYPE_CONTAINER,
+    WIDGET_TYPE_LIST,
+    WIDGET_TYPE_GRID,
+    WIDGET_TYPE_SELECT,
+    WIDGET_TYPE_LAYOUT_VIEW,
+    WIDGET_TYPE_DISPLAY_DATA,
+    WIDGET_TYPE_TEXT,
+    WIDGET_TYPE_MULTILINE_TEXT,
+    WIDGET_TYPE_RECTANGLE,
+    WIDGET_TYPE_BITMAP,
+    WIDGET_TYPE_BUTTON,
+    WIDGET_TYPE_TOGGLE_BUTTON,
+    WIDGET_TYPE_BUTTON_GROUP,
+    WIDGET_TYPE_BAR_GRAPH,
+    WIDGET_TYPE_YT_GRAPH,
+    WIDGET_TYPE_UP_DOWN,
+    WIDGET_TYPE_LIST_GRAPH,
+    WIDGET_TYPE_APP_VIEW,
+    WIDGET_TYPE_SCROLL_BAR,
+    WIDGET_TYPE_PROGRESS,
+    WIDGET_TYPE_CANVAS,
+    WIDGET_TYPE_GAUGE
+} from "./widget_types";
+
 const { MenuItem } = EEZStudio.remote || {};
+
+const LIST_TYPE_VERTICAL = 1;
+const LIST_TYPE_HORIZONTAL = 2;
+
+const GRID_FLOW_ROW = 1;
+const GRID_FLOW_COLUMN = 2;
+
+const BAR_GRAPH_ORIENTATION_LEFT_RIGHT = 1;
+const BAR_GRAPH_ORIENTATION_RIGHT_LEFT = 2;
+const BAR_GRAPH_ORIENTATION_TOP_BOTTOM = 3;
+const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
+const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
+
+function buildWidgetText(text: string | undefined, defaultValue: string = "") {
+    if (!text) {
+        return defaultValue;
+    }
+    try {
+        return JSON.parse('"' + text + '"');
+    } catch (e) {}
+
+    return text;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +142,7 @@ export class ContainerWidget extends EmbeddedWidget {
     @observable shadow?: boolean;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 1,
+        flowComponentId: WIDGET_TYPE_CONTAINER,
 
         label: (widget: ContainerWidget) => {
             if (widget.name) {
@@ -250,6 +301,27 @@ export class ContainerWidget extends EmbeddedWidget {
             style.opacity = this.style.opacityProperty / 255;
         }
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // widgets
+        dataBuffer.writeArray(this.widgets, widget =>
+            buildWidget(widget, assets, dataBuffer)
+        );
+
+        let overlay = assets.getWidgetDataItemIndex(this, "overlay");
+
+        // flags
+        let flags = 0;
+
+        if (overlay && this.shadow) {
+            flags |= 1;
+        }
+
+        dataBuffer.writeUint16(flags);
+
+        // overlay
+        dataBuffer.writeInt16(overlay);
+    }
 }
 
 registerClass(ContainerWidget);
@@ -262,7 +334,7 @@ export class ListWidget extends EmbeddedWidget {
     @observable gap?: number;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 2,
+        flowComponentId: WIDGET_TYPE_LIST,
 
         properties: [
             {
@@ -372,6 +444,28 @@ export class ListWidget extends EmbeddedWidget {
             );
         });
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // itemWidget
+        const itemWidget = this.itemWidget;
+        if (itemWidget) {
+            dataBuffer.writeObjectOffset(() =>
+                buildWidget(itemWidget, assets, dataBuffer)
+            );
+        } else {
+            dataBuffer.writeUint32(0);
+        }
+
+        // listType
+        dataBuffer.writeUint8(
+            this.listType === "vertical"
+                ? LIST_TYPE_VERTICAL
+                : LIST_TYPE_HORIZONTAL
+        );
+
+        // gap
+        dataBuffer.writeUint8(this.gap || 0);
+    }
 }
 
 registerClass(ListWidget);
@@ -383,7 +477,7 @@ export class GridWidget extends EmbeddedWidget {
     @observable gridFlow?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 3,
+        flowComponentId: WIDGET_TYPE_GRID,
 
         properties: [
             {
@@ -498,6 +592,23 @@ export class GridWidget extends EmbeddedWidget {
             );
         });
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // itemWidget
+        const itemWidget = this.itemWidget;
+        if (itemWidget) {
+            dataBuffer.writeObjectOffset(() =>
+                buildWidget(itemWidget, assets, dataBuffer)
+            );
+        } else {
+            dataBuffer.writeUint32(0);
+        }
+
+        // gridFlow
+        dataBuffer.writeUint8(
+            this.gridFlow === "column" ? GRID_FLOW_COLUMN : GRID_FLOW_ROW
+        );
+    }
 }
 
 registerClass(GridWidget);
@@ -516,7 +627,7 @@ export class SelectWidget extends EmbeddedWidget {
     _lastSelectedIndexInSelectWidget: number | undefined;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 4,
+        flowComponentId: WIDGET_TYPE_SELECT,
 
         properties: [
             {
@@ -746,6 +857,13 @@ export class SelectWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // widgets
+        dataBuffer.writeArray(this.widgets, widget =>
+            buildWidget(widget, assets, dataBuffer)
+        );
+    }
 }
 
 registerClass(SelectWidget);
@@ -782,7 +900,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
     @observable context?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 15,
+        flowComponentId: WIDGET_TYPE_LAYOUT_VIEW,
 
         properties: [
             {
@@ -1147,6 +1265,18 @@ export class LayoutViewWidget extends EmbeddedWidget {
         }
         return undefined;
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // layout
+        let layout: number = 0;
+        if (this.layout) {
+            layout = assets.getPageIndex(this, "layout");
+        }
+        dataBuffer.writeInt16(layout);
+
+        // context
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "context"));
+    }
 }
 
 registerClass(LayoutViewWidget);
@@ -1172,7 +1302,7 @@ export class DisplayDataWidget extends EmbeddedWidget {
     @observable displayOption: DisplayOption;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 5,
+        flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
 
         properties: [
             Object.assign(
@@ -1349,6 +1479,11 @@ export class DisplayDataWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // displayOption
+        dataBuffer.writeUint8(this.displayOption || 0);
+    }
 }
 
 registerClass(DisplayDataWidget);
@@ -1362,7 +1497,7 @@ export class TextWidget extends EmbeddedWidget {
     @observable focusStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 6,
+        flowComponentId: WIDGET_TYPE_TEXT,
 
         label: (widget: TextWidget) => {
             if (widget.text) {
@@ -1475,6 +1610,23 @@ export class TextWidget extends EmbeddedWidget {
                 {super.render(flowContext)}
             </>
         );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // text
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.text))
+        );
+
+        // flags
+        let flags: number = 0;
+
+        // ignoreLuminocity
+        if (this.ignoreLuminocity) {
+            flags |= 1 << 0;
+        }
+
+        dataBuffer.writeInt8(flags);
     }
 }
 
@@ -1738,7 +1890,7 @@ export class MultilineTextWidget extends EmbeddedWidget {
     @observable hangingIndent: number;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 7,
+        flowComponentId: WIDGET_TYPE_MULTILINE_TEXT,
 
         label: (widget: TextWidget) => {
             if (widget.text) {
@@ -1841,6 +1993,19 @@ export class MultilineTextWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // text
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.text))
+        );
+
+        // first line
+        dataBuffer.writeInt16(this.firstLineIndent || 0);
+
+        // hanging
+        dataBuffer.writeInt16(this.hangingIndent || 0);
+    }
 }
 
 registerClass(MultilineTextWidget);
@@ -1852,7 +2017,7 @@ export class RectangleWidget extends EmbeddedWidget {
     @observable invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 8,
+        flowComponentId: WIDGET_TYPE_RECTANGLE,
 
         properties: [
             {
@@ -1969,6 +2134,23 @@ export class RectangleWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // flags
+        let flags: number = 0;
+
+        // invertColors
+        if (this.invertColors) {
+            flags |= 1 << 0;
+        }
+
+        // ignoreLuminocity
+        if (this.ignoreLuminocity) {
+            flags |= 1 << 1;
+        }
+
+        dataBuffer.writeUint8(flags);
+    }
 }
 
 registerClass(RectangleWidget);
@@ -2030,7 +2212,7 @@ export class BitmapWidget extends EmbeddedWidget {
     }
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 9,
+        flowComponentId: WIDGET_TYPE_BITMAP,
 
         properties: [
             {
@@ -2202,6 +2384,16 @@ export class BitmapWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // bitmap
+        let bitmap: number = 0;
+        if (this.bitmap) {
+            bitmap = assets.getBitmapIndex(this, "bitmap");
+        }
+
+        dataBuffer.writeInt16(bitmap);
+    }
 }
 
 registerClass(BitmapWidget);
@@ -2214,7 +2406,7 @@ export class ButtonWidget extends EmbeddedWidget {
     @observable disabledStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 10,
+        flowComponentId: WIDGET_TYPE_BUTTON,
 
         properties: [
             makeTextPropertyInfo("text"),
@@ -2321,6 +2513,19 @@ export class ButtonWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // text
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.text))
+        );
+
+        // enabled
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "enabled"));
+
+        // disabledStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "disabledStyle"));
+    }
 }
 
 registerClass(ButtonWidget);
@@ -2332,7 +2537,7 @@ export class ToggleButtonWidget extends EmbeddedWidget {
     @observable text2?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 11,
+        flowComponentId: WIDGET_TYPE_TOGGLE_BUTTON,
 
         properties: [
             {
@@ -2404,6 +2609,18 @@ export class ToggleButtonWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // text 1
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.text1))
+        );
+
+        // text 2
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.text2))
+        );
+    }
 }
 
 registerClass(ToggleButtonWidget);
@@ -2414,7 +2631,7 @@ export class ButtonGroupWidget extends EmbeddedWidget {
     @observable selectedStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 12,
+        flowComponentId: WIDGET_TYPE_BUTTON_GROUP,
 
         properties: [makeStylePropertyInfo("selectedStyle")],
 
@@ -2556,6 +2773,11 @@ export class ButtonGroupWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // selectedStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "selectedStyle"));
+    }
 }
 
 registerClass(ButtonGroupWidget);
@@ -2572,7 +2794,7 @@ export class BarGraphWidget extends EmbeddedWidget {
     @observable line2Style: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 14,
+        flowComponentId: WIDGET_TYPE_BAR_GRAPH,
 
         properties: [
             {
@@ -2908,6 +3130,49 @@ export class BarGraphWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // textStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "textStyle"));
+
+        // line1Data
+        let line1Data = assets.getWidgetDataItemIndex(this, "line1Data");
+
+        dataBuffer.writeInt16(line1Data);
+
+        // line1Style
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "line1Style"));
+
+        // line2Data
+        let line2Data = assets.getWidgetDataItemIndex(this, "line2Data");
+
+        dataBuffer.writeInt16(line2Data);
+
+        // line2Style
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "line2Style"));
+
+        // orientation
+        let orientation: number;
+        switch (this.orientation) {
+            case "left-right":
+                orientation = BAR_GRAPH_ORIENTATION_LEFT_RIGHT;
+                break;
+            case "right-left":
+                orientation = BAR_GRAPH_ORIENTATION_RIGHT_LEFT;
+                break;
+            case "top-bottom":
+                orientation = BAR_GRAPH_ORIENTATION_TOP_BOTTOM;
+                break;
+            default:
+                orientation = BAR_GRAPH_ORIENTATION_BOTTOM_TOP;
+        }
+
+        if (!this.displayValue) {
+            orientation |= BAR_GRAPH_DO_NOT_DISPLAY_VALUE;
+        }
+
+        dataBuffer.writeUint8(orientation);
+    }
 }
 
 registerClass(BarGraphWidget);
@@ -2920,7 +3185,7 @@ export class YTGraphWidget extends EmbeddedWidget {
     @observable y2Style: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 16,
+        flowComponentId: WIDGET_TYPE_YT_GRAPH,
 
         properties: [
             Object.assign(
@@ -3040,6 +3305,8 @@ export class YTGraphWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
 registerClass(YTGraphWidget);
@@ -3052,7 +3319,7 @@ export class UpDownWidget extends EmbeddedWidget {
     @observable upButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 17,
+        flowComponentId: WIDGET_TYPE_UP_DOWN,
 
         properties: [
             makeStylePropertyInfo("buttonsStyle"),
@@ -3163,6 +3430,21 @@ export class UpDownWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // down button text
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.downButtonText, "<"))
+        );
+
+        // up button text
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.upButtonText, ">"))
+        );
+
+        // buttonStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "buttonsStyle"));
+    }
 }
 
 registerClass(UpDownWidget);
@@ -3179,7 +3461,7 @@ export class ListGraphWidget extends EmbeddedWidget {
     @observable cursorStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 18,
+        flowComponentId: WIDGET_TYPE_LIST_GRAPH,
 
         properties: [
             makeDataPropertyInfo("dwellData"),
@@ -3325,6 +3607,25 @@ export class ListGraphWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // dwellData
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "dwellData"));
+        // y1Data
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "y1Data"));
+        // y1Style
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "y1Style"));
+        // y2Data
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "y2Data"));
+        // y2Style
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "y2Style"));
+        // cursorData
+        dataBuffer.writeInt16(
+            assets.getWidgetDataItemIndex(this, "cursorData")
+        );
+        // cursorStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "cursorStyle"));
+    }
 }
 
 registerClass(ListGraphWidget);
@@ -3335,7 +3636,7 @@ export class AppViewWidget extends EmbeddedWidget {
     @observable page: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 19,
+        flowComponentId: WIDGET_TYPE_APP_VIEW,
 
         defaultValue: {
             left: 0,
@@ -3377,6 +3678,8 @@ export class AppViewWidget extends EmbeddedWidget {
 
         return page.render(flowContext);
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
 registerClass(AppViewWidget);
@@ -3390,7 +3693,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
     @observable rightButtonText?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 20,
+        flowComponentId: WIDGET_TYPE_SCROLL_BAR,
 
         properties: [
             makeStylePropertyInfo("thumbStyle"),
@@ -3557,6 +3860,24 @@ export class ScrollBarWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // thumbStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "thumbStyle"));
+
+        // buttonStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "buttonsStyle"));
+
+        // down button text
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.leftButtonText, "<"))
+        );
+
+        // up button text
+        dataBuffer.writeObjectOffset(() =>
+            dataBuffer.writeString(buildWidgetText(this.rightButtonText, ">"))
+        );
+    }
 }
 
 registerClass(ScrollBarWidget);
@@ -3565,7 +3886,7 @@ registerClass(ScrollBarWidget);
 
 export class ProgressWidget extends EmbeddedWidget {
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 21,
+        flowComponentId: WIDGET_TYPE_PROGRESS,
 
         defaultValue: {
             left: 0,
@@ -3635,6 +3956,8 @@ export class ProgressWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
 registerClass(ProgressWidget);
@@ -3643,7 +3966,7 @@ registerClass(ProgressWidget);
 
 export class CanvasWidget extends EmbeddedWidget {
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
-        flowComponentId: 22,
+        flowComponentId: WIDGET_TYPE_CANVAS,
 
         defaultValue: {
             left: 0,
@@ -3694,9 +4017,79 @@ export class CanvasWidget extends EmbeddedWidget {
             </>
         );
     }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
 registerClass(CanvasWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class Gauge2Widget extends EmbeddedWidget {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_GAUGE,
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 128,
+            height: 128
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 1000 678.666015625"
+            >
+                <path d="M406 509.333c22.667-37.333 94-132 214-284S804.667 0 814 5.333c8 4-24 96.667-96 278s-118 290-138 326c-33.333 57.333-78.667 69.333-136 36s-70-78.667-38-136m94-380c-112 0-206.667 42.333-284 127s-116 188.333-116 311c0 20 .667 35.333 2 46 1.333 14.667-2.667 27-12 37s-20.667 15.667-34 17c-13.333 1.333-25.333-2.667-36-12-10.667-9.333-16.667-20.667-18-34 0-5.333-.333-14-1-26s-1-21.333-1-28c0-150.667 48.333-278 145-382s215-156 355-156c48 0 92.667 6 134 18l-70 86c-26.667-2.667-48-4-64-4m362 62c92 102.667 138 228 138 376 0 25.333-.667 44-2 56-1.333 13.333-6.667 24.333-16 33-9.333 8.667-20.667 13-34 13h-4c-14.667-2.667-26.333-9.333-35-20-8.667-10.667-12.333-22.667-11-36 1.333-9.333 2-24.667 2-46 0-100-26.667-189.333-80-268 4-9.333 10.667-26.333 20-51s16.667-43.667 22-57" />
+            </svg>
+        ),
+
+        check: (object: CanvasWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!object.data) {
+                messages.push(output.propertyNotSetMessage(object, "data"));
+            }
+
+            return messages;
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
+    });
+
+    render(flowContext: IFlowContext) {
+        return (
+            <>
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
+                    <ComponentCanvas
+                        flowContext={flowContext}
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            let widget = this;
+                            let style = widget.style;
+
+                            let x1 = 0;
+                            let y1 = 0;
+                            let x2 = this.width - 1;
+                            let y2 = this.height - 1;
+
+                            draw.setColor(style.backgroundColorProperty);
+                            draw.fillRect(ctx, x1, y1, x2, y2, 0);
+                        }}
+                    />
+                )}
+                {super.render(flowContext)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
+}
+
+registerClass(Gauge2Widget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3823,7 +4216,3 @@ export class TextInputWidget extends Widget {
 }
 
 registerClass(TextInputWidget);
-
-////////////////////////////////////////////////////////////////////////////////
-
-import "project-editor/flow/widgets/plotly";

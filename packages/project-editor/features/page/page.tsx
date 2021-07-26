@@ -50,6 +50,9 @@ import { Rect } from "eez-studio-shared/geometry";
 import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
 import { build } from "project-editor/features/page/build";
+import { Assets, DataBuffer } from "./build/assets";
+import { buildWidget } from "./build/widgets";
+import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/widgets/widget_types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -449,6 +452,33 @@ export class Page extends Flow {
             // forbid interaction with the content
             style.pointerEvents = "none";
         }
+    }
+
+    getWidgetType() {
+        return WIDGET_TYPE_CONTAINER;
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // widgets
+        const widgets = this.components.filter(
+            widget => widget instanceof Widget
+        ) as Widget[];
+
+        dataBuffer.writeArray(widgets, widget =>
+            buildWidget(widget, assets, dataBuffer)
+        );
+
+        // flags
+        let flags = 0;
+
+        if (this.closePageIfTouchedOutside) {
+            flags |= 2;
+        }
+
+        dataBuffer.writeUint16(flags);
+
+        // overlay
+        dataBuffer.writeInt16(0);
     }
 }
 

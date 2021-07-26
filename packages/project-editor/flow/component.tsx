@@ -63,6 +63,7 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 import { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import { ContainerWidget } from "project-editor/flow/widgets";
+import { WIDGET_TYPE_NONE } from "project-editor/flow/widgets/widget_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
@@ -1432,6 +1433,12 @@ export class Widget extends Component {
             </>
         );
     }
+
+    getWidgetType() {
+        return getClassInfo(this).flowComponentId ?? WIDGET_TYPE_NONE;
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
