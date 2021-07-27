@@ -107,9 +107,6 @@ export class StylesNavigation extends NavigationComponent {
 
     @computed
     get navigationObject() {
-        if (this.context.masterProject) {
-            return this.context.masterProject.styles;
-        }
         return this.props.navigationObject;
     }
 
@@ -134,93 +131,51 @@ export class StylesNavigation extends NavigationComponent {
     render() {
         if (this.props.navigationStore) {
             // used in select style dialog
-            if (this.context.masterProject) {
-                return (
+            return (
+                <Splitter
+                    type="horizontal"
+                    persistId="project-editor/styles-dialog"
+                    sizes="320px|100%|320px"
+                    childrenOverflow="hidden|hidden|hidden"
+                >
+                    <ListNavigation
+                        id={this.props.id}
+                        navigationObject={this.navigationObject}
+                        navigationStore={this.props.navigationStore}
+                        dragAndDropManager={this.props.dragAndDropManager}
+                        onDoubleClickItem={this.props.onDoubleClickItem}
+                    />
+
                     <Splitter
-                        type="horizontal"
-                        persistId={`project-editor/styles-dialog`}
-                        sizes={`320px|100%`}
+                        type="vertical"
+                        persistId={`project-editor/styles-dialog-middle-splitter`}
+                        sizes={`160px|100%`}
                         childrenOverflow="hidden|hidden"
                     >
-                        <ListNavigation
-                            id={this.props.id}
-                            navigationObject={this.navigationObject}
-                            navigationStore={this.props.navigationStore}
-                            dragAndDropManager={this.props.dragAndDropManager}
-                            onDoubleClickItem={this.props.onDoubleClickItem}
-                            filter={(style: Style) => !!style.id}
-                        />
-
-                        <Splitter
-                            type="vertical"
-                            persistId={`project-editor/styles-dialog-middle-splitter`}
-                            sizes={`160px|100%`}
-                            childrenOverflow="hidden|hidden"
-                        >
-                            {this.style ? (
-                                <StyleEditor
-                                    style={this.style}
-                                    width={Math.ceil(480 / 3)}
-                                    height={Math.ceil(272 / 3)}
-                                    text="A"
-                                />
-                            ) : (
-                                <div />
-                            )}
-                            <PropertiesPanel
-                                object={this.style}
-                                navigationStore={this.props.navigationStore}
+                        {this.style ? (
+                            <StyleEditor
+                                style={this.style}
+                                width={Math.ceil(480 / 3)}
+                                height={Math.ceil(272 / 3)}
+                                text="A"
                             />
-                        </Splitter>
-                    </Splitter>
-                );
-            } else {
-                return (
-                    <Splitter
-                        type="horizontal"
-                        persistId="project-editor/styles-dialog"
-                        sizes="320px|100%|320px"
-                        childrenOverflow="hidden|hidden|hidden"
-                    >
-                        <ListNavigation
-                            id={this.props.id}
-                            navigationObject={this.navigationObject}
+                        ) : (
+                            <div />
+                        )}
+                        <PropertiesPanel
+                            object={this.style}
                             navigationStore={this.props.navigationStore}
-                            dragAndDropManager={this.props.dragAndDropManager}
-                            onDoubleClickItem={this.props.onDoubleClickItem}
-                        />
-
-                        <Splitter
-                            type="vertical"
-                            persistId={`project-editor/styles-dialog-middle-splitter`}
-                            sizes={`160px|100%`}
-                            childrenOverflow="hidden|hidden"
-                        >
-                            {this.style ? (
-                                <StyleEditor
-                                    style={this.style}
-                                    width={Math.ceil(480 / 3)}
-                                    height={Math.ceil(272 / 3)}
-                                    text="A"
-                                />
-                            ) : (
-                                <div />
-                            )}
-                            <PropertiesPanel
-                                object={this.style}
-                                navigationStore={this.props.navigationStore}
-                            />
-                        </Splitter>
-
-                        <ThemesSideView
-                            navigationStore={
-                                new SimpleNavigationStoreClass(undefined)
-                            }
-                            dragAndDropManager={this.props.dragAndDropManager}
                         />
                     </Splitter>
-                );
-            }
+
+                    <ThemesSideView
+                        navigationStore={
+                            new SimpleNavigationStoreClass(undefined)
+                        }
+                        dragAndDropManager={this.props.dragAndDropManager}
+                    />
+                </Splitter>
+            );
         } else {
             // used in global navigation
             return (
@@ -1421,12 +1376,6 @@ export default {
                 icon: "format_color_fill",
                 create: () => [],
                 metrics,
-                enumerable: (
-                    object: IEezObject,
-                    propertyInfo: PropertyInfo
-                ) => {
-                    return !getDocumentStore(object).masterProjectEnabled;
-                },
                 toJsHook: (jsObject: Project, project: Project) => {
                     //
                     jsObject.colors.forEach((color: any) => delete color.id);

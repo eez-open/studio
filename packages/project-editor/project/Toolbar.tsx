@@ -159,11 +159,13 @@ export class Toolbar extends React.Component {
                                 title="Check"
                                 icon="material:check"
                                 onClick={() => this.context.check()}
+                                enabled={this.context.project.fullyLoaded}
                             />
                             <IconAction
                                 title="Build"
                                 icon="material:build"
                                 onClick={() => this.context.build()}
+                                enabled={this.context.project.fullyLoaded}
                             />
                         </div>
                     )}

@@ -89,7 +89,7 @@ export function makeDataPropertyInfo(
         name,
         displayName,
         type: PropertyType.ObjectReference,
-        referencedObjectCollectionPath: "globalVariables",
+        referencedObjectCollectionPath: "variables/globalVariables",
         propertyGridGroup: propertyGridGroup || dataGroup,
         onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
@@ -132,8 +132,6 @@ export function makeStylePropertyInfo(
         propertyGridGroup: styleGroup,
         propertyGridCollapsable: true,
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
-        propertyGridCollapsableEnabled: (object: IEezObject) =>
-            !getDocumentStore(object).masterProjectEnabled,
         enumerable: false,
         hideInPropertyGrid: (object: IEezObject) =>
             getDocumentStore(object).isDashboardProject

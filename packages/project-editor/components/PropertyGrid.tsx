@@ -63,6 +63,7 @@ import {
     insertObjectAfter,
     insertObjectBefore
 } from "project-editor/core/commands";
+import { theme } from "eez-studio-ui/theme";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -357,7 +358,13 @@ class ThemedColorInput extends React.Component<{
                     backgroundColor: color,
                     textAlign: "center",
                     cursor: "pointer",
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    width: "100%",
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: `1px solid ${theme.borderColor}`
                 }}
                 onDrop={this.onDrop}
                 onDragOver={this.onDragOver}

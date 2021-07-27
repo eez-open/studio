@@ -1297,17 +1297,31 @@ export class DocumentStoreClass {
         while (true) {
             const project = this.project;
             if (project) {
-                let i;
-                for (i = 0; i < project.settings.general.imports.length; i++) {
-                    if (
-                        project.settings.general.imports[i].project ===
-                        undefined
+                if (
+                    project.settings.general.masterProject &&
+                    project.masterProject == undefined
+                ) {
+                    // if masterProjectEnabled then wati for masterProject to load
+                } else {
+                    // wait for all imported projects to load
+                    let i;
+                    for (
+                        i = 0;
+                        i < project.settings.general.imports.length;
+                        i++
                     ) {
+                        if (
+                            project.settings.general.imports[i].project ===
+                            undefined
+                        ) {
+                            break;
+                        }
+                    }
+
+                    if (i == project.settings.general.imports.length) {
+                        runInAction(() => (project.fullyLoaded = true));
                         break;
                     }
-                }
-                if (i == project.settings.general.imports.length) {
-                    break;
                 }
             }
 

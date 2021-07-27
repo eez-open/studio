@@ -4026,8 +4026,22 @@ registerClass(CanvasWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Gauge2Widget extends EmbeddedWidget {
+    @observable min: string;
+    @observable max: string;
+    @observable threshold: string;
+    @observable barStyle: Style;
+    @observable thresholdStyle: Style;
+
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         flowComponentId: WIDGET_TYPE_GAUGE,
+
+        properties: [
+            makeDataPropertyInfo("min"),
+            makeDataPropertyInfo("max"),
+            makeDataPropertyInfo("threshold"),
+            makeStylePropertyInfo("barStyle"),
+            makeStylePropertyInfo("thresholdStyle")
+        ],
 
         defaultValue: {
             left: 0,
@@ -4086,7 +4100,22 @@ export class Gauge2Widget extends EmbeddedWidget {
         );
     }
 
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // min
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+
+        // max
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+
+        // threshold
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "threshold"));
+
+        // barStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "barStyle"));
+
+        // thresholdStyle
+        dataBuffer.writeUint16(assets.getStyleIndex(this, "thresholdStyle"));
+    }
 }
 
 registerClass(Gauge2Widget);

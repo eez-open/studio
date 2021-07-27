@@ -88,8 +88,7 @@ function buildFontData(font: Font, dataBuffer: DataBuffer) {
 }
 
 export function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
-    dataBuffer.writeArray(
-        !assets.DocumentStore.masterProject ? assets.fonts : [],
-        font => buildFontData(font, dataBuffer)
+    dataBuffer.writeArray(assets.fonts, font =>
+        buildFontData(font, dataBuffer)
     );
 }

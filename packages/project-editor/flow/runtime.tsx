@@ -251,9 +251,10 @@ export class RuntimeStoreClass {
 
         instrument.connection.connect();
 
-        await new Promise<void>(resolve => setTimeout(resolve, 1000));
-
         const editor = instrument.getEditor();
+        editor.onCreate();
+
+        await new Promise<void>(resolve => setTimeout(resolve, 1000));
 
         const connection = getConnection(editor);
         if (!connection || !instrument.isConnected) {

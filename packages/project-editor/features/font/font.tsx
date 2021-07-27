@@ -30,8 +30,7 @@ import {
     NavigationComponent,
     getParent,
     getId,
-    getLabel,
-    PropertyInfo
+    getLabel
 } from "project-editor/core/object";
 import {
     INavigationStore,
@@ -1142,16 +1141,16 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
 
     @action
     loadFont() {
-        let fontFilePath: string = this.props.values[
-            this.props.fieldProperties.options.fontFilePathField
-        ];
+        let fontFilePath: string =
+            this.props.values[
+                this.props.fieldProperties.options.fontFilePathField
+            ];
         if (!fontFilePath) {
             return;
         }
 
-        let fontBpp: number = this.props.values[
-            this.props.fieldProperties.options.fontBppField
-        ];
+        let fontBpp: number =
+            this.props.values[this.props.fieldProperties.options.fontBppField];
         if (!fontBpp) {
             return;
         }
@@ -1160,17 +1159,19 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
         let fontThreshold: number = 0;
 
         if (!fontFilePath.toLowerCase().endsWith(".bdf")) {
-            fontSize = this.props.values[
-                this.props.fieldProperties.options.fontSizeField
-            ];
+            fontSize =
+                this.props.values[
+                    this.props.fieldProperties.options.fontSizeField
+                ];
             if (!fontSize || fontSize < 6 || fontSize > 100) {
                 return;
             }
 
             if (fontBpp !== 8) {
-                fontThreshold = this.props.values[
-                    this.props.fieldProperties.options.fontThresholdField
-                ];
+                fontThreshold =
+                    this.props.values[
+                        this.props.fieldProperties.options.fontThresholdField
+                    ];
                 if (
                     !fontThreshold ||
                     fontThreshold < 1 ||
@@ -1212,9 +1213,8 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                 );
             } else {
                 extractFont({
-                    absoluteFilePath: this.context.getAbsoluteFilePath(
-                        fontFilePath
-                    ),
+                    absoluteFilePath:
+                        this.context.getAbsoluteFilePath(fontFilePath),
                     relativeFilePath: fontFilePath,
                     bpp: fontBpp,
                     size: fontSize,
@@ -1758,7 +1758,8 @@ export class FontEditor
         navigationStore?: INavigationStore;
         onDoubleClickItem?: (item: IEezObject) => void;
     }>
-    implements IPanel {
+    implements IPanel
+{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -2557,12 +2558,6 @@ export default {
                     return messages;
                 },
                 metrics: metrics,
-                enumerable: (
-                    object: IEezObject,
-                    propertyInfo: PropertyInfo
-                ) => {
-                    return !getDocumentStore(object).masterProjectEnabled;
-                },
                 toJsHook: (jsObject: Project, project: Project) => {
                     jsObject.fonts?.forEach(font =>
                         font.glyphs.forEach(glyph => {
@@ -2570,9 +2565,10 @@ export default {
                                 glyph.glyphBitmap &&
                                 glyph.glyphBitmap.pixelArray
                             ) {
-                                (glyph.glyphBitmap as any).pixelArray = serializePixelArray(
-                                    glyph.glyphBitmap.pixelArray
-                                );
+                                (glyph.glyphBitmap as any).pixelArray =
+                                    serializePixelArray(
+                                        glyph.glyphBitmap.pixelArray
+                                    );
                             }
                         })
                     );

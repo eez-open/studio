@@ -474,7 +474,7 @@ export class ImportDirective {
             },
             {
                 name: "customUI",
-                displayName: "",
+                displayName: "Actions",
                 type: PropertyType.Any,
                 computed: true,
                 propertyGridRowComponent: ImportDirectiveCustomUI,
@@ -900,6 +900,8 @@ class BuildAssetsMap {
 export class Project extends EezObject {
     _DocumentStore!: DocumentStoreClass;
     _isReadOnly: boolean = false;
+
+    @observable fullyLoaded = false;
 
     @observable settings: Settings;
     @observable variables: ProjectVariables;

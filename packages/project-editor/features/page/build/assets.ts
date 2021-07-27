@@ -185,7 +185,7 @@ export class Assets {
         }
 
         this.styles = [undefined];
-        if (!this.DocumentStore.masterProject) {
+        {
             this.getAssets<Style>(
                 project => project.styles,
                 style => style.id != undefined

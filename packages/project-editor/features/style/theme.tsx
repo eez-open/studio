@@ -298,7 +298,7 @@ export class ThemesSideView extends React.Component<{
         );
 
         let colors;
-        if (!this.context.masterProject && project.themes.length > 0) {
+        if (project.themes.length > 0) {
             colors = (
                 <ListNavigation
                     id="theme-colors"

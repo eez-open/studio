@@ -140,12 +140,6 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(style.marginRect.left);
     }
 
-    let styles: Style[];
-    if (!assets.DocumentStore.masterProject) {
-        styles = assets.styles.filter(style => !!style) as Style[];
-    } else {
-        styles = [];
-    }
-
+    const styles = assets.styles.filter(style => !!style);
     dataBuffer.writeArray(styles, buildStyle);
 }
