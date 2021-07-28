@@ -144,6 +144,12 @@ export class StylesNavigation extends NavigationComponent {
                         navigationStore={this.props.navigationStore}
                         dragAndDropManager={this.props.dragAndDropManager}
                         onDoubleClickItem={this.props.onDoubleClickItem}
+                        filter={(style: Style) =>
+                            this.context.project.masterProject ==
+                            getProject(style)
+                                ? style.id != undefined
+                                : true
+                        }
                     />
 
                     <Splitter

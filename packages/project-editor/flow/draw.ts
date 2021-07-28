@@ -379,11 +379,6 @@ export function drawText(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const SDL_BLENDMODE_NONE = 1;
-const SDL_BLENDMODE_BLEND = 2;
-
-function SDL_SetRenderDrawBlendMode(mode: number) {}
-
 interface ImageBuffer {
     width: number;
     height: number;
@@ -480,18 +475,6 @@ export function hlineRGBA(
     for (let x = x1; x <= x2; x++) {
         pixelRGBA(imageBuffer, x, y, r, g, b, a);
     }
-}
-
-export function hline(
-    imageBuffer: ImageBuffer,
-    x1: number,
-    x2: number,
-    y: number
-) {
-    let { r, g, b, a } = getColorRGB(fgColor);
-    a = Math.floor(a * 255);
-
-    hlineRGBA(imageBuffer, x1, x2, y, r, g, b, a);
 }
 
 export function aalineRGBA(
@@ -753,7 +736,7 @@ export function filledPolygonRGBA(
     let x2: number, y2: number;
     let ind1: number, ind2: number;
     let ints: number;
-    let gfxPrimitivesPolyInts: number[] | null = [];
+    let gfxPrimitivesPolyInts: number[] = [];
 
     /*
      * Sanity check number of edges
@@ -802,28 +785,21 @@ export function filledPolygonRGBA(
                 continue;
             }
             if ((y >= y1 && y < y2) || (y == maxy && y > y1 && y <= y2)) {
-                gfxPrimitivesPolyInts[ints++] = Math.floor(
-                    ((65536 * (y - y1)) / (y2 - y1)) * (x2 - x1) + 65536 * x1
+                gfxPrimitivesPolyInts[ints++] = Math.round(
+                    x1 + ((y - y1) * (x2 - x1)) / (y2 - y1)
                 );
             }
         }
 
         gfxPrimitivesPolyInts.sort();
 
-        /*
-         * Set color
-         */
-        SDL_SetRenderDrawBlendMode(
-            a == 255 ? SDL_BLENDMODE_NONE : SDL_BLENDMODE_BLEND
-        );
-
         for (i = 0; i < ints; i += 2) {
             xa = gfxPrimitivesPolyInts[i] + 1;
-            xa = (xa >> 16) + ((xa & 32768) >> 15);
             xb = gfxPrimitivesPolyInts[i + 1] - 1;
-            xb = (xb >> 16) + ((xb & 32768) >> 15);
-            hline(imageBuffer, xa, xb, y);
+            hlineRGBA(imageBuffer, xa, xb, y, r, g, b, a);
         }
+
+        gfxPrimitivesPolyInts = [];
     }
 }
 
@@ -843,8 +819,8 @@ function arcBarAsPolygon(
 
     let j = 0;
 
-    vx[j] = Math.floor(xCenter + (radius + width / 2.0) * Math.cos(fromAngle));
-    vy[j] = Math.floor(yCenter - (radius + width / 2.0) * Math.sin(fromAngle));
+    vx[j] = Math.round(xCenter + (radius + width / 2.0) * Math.cos(fromAngle));
+    vy[j] = Math.round(yCenter - (radius + width / 2.0) * Math.sin(fromAngle));
     j++;
 
     for (let i = 0; ; i++) {
@@ -853,22 +829,22 @@ function arcBarAsPolygon(
             break;
         }
         if (angle > fromAngle) {
-            vx[j] = Math.floor(
+            vx[j] = Math.round(
                 xCenter + (radius + width / 2.0) * Math.cos(angle)
             );
-            vy[j] = Math.floor(
+            vy[j] = Math.round(
                 yCenter - (radius + width / 2.0) * Math.sin(angle)
             );
             j++;
         }
     }
 
-    vx[j] = Math.floor(xCenter + (radius + width / 2.0) * Math.cos(toAngle));
-    vy[j] = Math.floor(yCenter - (radius + width / 2.0) * Math.sin(toAngle));
+    vx[j] = Math.round(xCenter + (radius + width / 2.0) * Math.cos(toAngle));
+    vy[j] = Math.round(yCenter - (radius + width / 2.0) * Math.sin(toAngle));
     j++;
 
-    vx[j] = Math.floor(xCenter + (radius - width / 2.0) * Math.cos(toAngle));
-    vy[j] = Math.floor(yCenter - (radius - width / 2.0) * Math.sin(toAngle));
+    vx[j] = Math.round(xCenter + (radius - width / 2.0) * Math.cos(toAngle));
+    vy[j] = Math.round(yCenter - (radius - width / 2.0) * Math.sin(toAngle));
     j++;
 
     for (let i = 0; ; i++) {
@@ -878,18 +854,18 @@ function arcBarAsPolygon(
         }
 
         if (angle < toAngle) {
-            vx[j] = Math.floor(
+            vx[j] = Math.round(
                 xCenter + (radius - width / 2.0) * Math.cos(angle)
             );
-            vy[j] = Math.floor(
+            vy[j] = Math.round(
                 yCenter - (radius - width / 2.0) * Math.sin(angle)
             );
             j++;
         }
     }
 
-    vx[j] = Math.floor(xCenter + (radius - width / 2.0) * Math.cos(fromAngle));
-    vy[j] = Math.floor(yCenter - (radius - width / 2.0) * Math.sin(fromAngle));
+    vx[j] = Math.round(xCenter + (radius - width / 2.0) * Math.cos(fromAngle));
+    vy[j] = Math.round(yCenter - (radius - width / 2.0) * Math.sin(fromAngle));
     j++;
 
     n = j;

@@ -510,17 +510,24 @@ export class ImportDirective {
         }
     };
 
+    get projectAbsoluteFilePath() {
+        const DocumentStore = getDocumentStore(this);
+        return DocumentStore.getAbsoluteFilePath(
+            this.projectFilePath,
+            getProject(this)
+        );
+    }
+
+    async loadProject() {
+        const DocumentStore = getDocumentStore(this);
+        await DocumentStore.loadExternalProject(this.projectAbsoluteFilePath);
+    }
+
     @computed({ keepAlive: true })
     get project(): Project | undefined {
         const DocumentStore = getDocumentStore(this);
-
         return this.projectFilePath
-            ? DocumentStore.loadExternalProject(
-                  DocumentStore.getAbsoluteFilePath(
-                      this.projectFilePath,
-                      getProject(this)
-                  )
-              )
+            ? DocumentStore.externalProjects.get(this.projectAbsoluteFilePath)
             : undefined;
     }
 
@@ -972,13 +979,23 @@ export class Project extends EezObject {
         return this.settings.general.namespace;
     }
 
+    get masterProjectAbsoluteFilePath() {
+        return this._DocumentStore.getAbsoluteFilePath(
+            this.settings.general.masterProject
+        );
+    }
+
+    async loadMasterProject() {
+        await this._DocumentStore.loadExternalProject(
+            this.masterProjectAbsoluteFilePath
+        );
+    }
+
     @computed({ keepAlive: true })
     get masterProject(): Project | undefined {
         return this.settings.general.masterProject
-            ? this._DocumentStore.loadExternalProject(
-                  this._DocumentStore.getAbsoluteFilePath(
-                      this.settings.general.masterProject
-                  )
+            ? this._DocumentStore.externalProjects.get(
+                  this.masterProjectAbsoluteFilePath
               )
             : undefined;
     }

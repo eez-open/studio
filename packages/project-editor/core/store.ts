@@ -1293,41 +1293,21 @@ export class DocumentStoreClass {
         }
     }
 
-    async waitUntilready() {
-        while (true) {
-            const project = this.project;
-            if (project) {
-                if (
-                    project.settings.general.masterProject &&
-                    project.masterProject == undefined
-                ) {
-                    // if masterProjectEnabled then wati for masterProject to load
-                } else {
-                    // wait for all imported projects to load
-                    let i;
-                    for (
-                        i = 0;
-                        i < project.settings.general.imports.length;
-                        i++
-                    ) {
-                        if (
-                            project.settings.general.imports[i].project ===
-                            undefined
-                        ) {
-                            break;
-                        }
-                    }
+    async loadAllExternalProjects() {
+        const project = this.project!;
 
-                    if (i == project.settings.general.imports.length) {
-                        runInAction(() => (project.fullyLoaded = true));
-                        break;
-                    }
-                }
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 10));
+        // load master project
+        if (project.settings.general.masterProject) {
+            await project.loadMasterProject();
         }
 
+        // load imported projects
+        for (let i = 0; i < project.settings.general.imports.length; i++) {
+            await project.settings.general.imports[i].loadProject();
+        }
+    }
+
+    startBackgroundCheck() {
         this.dispose4 = autorun(() => {
             // check the project in the background
             if (
@@ -1646,38 +1626,29 @@ export class DocumentStoreClass {
         return this.project.masterProject;
     }
 
-    loadExternalProject(filePath: string) {
-        if (filePath == this.filePath) {
-            return this.project;
+    async loadExternalProject(filePath: string) {
+        if (
+            filePath == this.filePath ||
+            this.externalProjects.get(filePath) ||
+            this.externalProjectsLoading.get(filePath)
+        ) {
+            // already loaded or loading
+            return;
         }
 
-        const project = this.externalProjects.get(filePath);
-        if (project) {
-            return project;
-        }
+        this.externalProjectsLoading.set(filePath, true);
 
-        if (!this.externalProjectsLoading.get(filePath)) {
-            this.externalProjectsLoading.set(filePath, true);
+        const project = await load(this, filePath);
 
-            (async () => {
-                const project = await load(this, filePath);
+        project._isReadOnly = true;
+        project._DocumentStore = this;
 
-                project._isReadOnly = true;
-                project._DocumentStore = this;
+        runInAction(() => {
+            this.externalProjects.set(filePath, project);
+            this.mapExternalProjectToAbsolutePath.set(project, filePath);
+        });
 
-                runInAction(() => {
-                    this.externalProjects.set(filePath, project);
-                    this.mapExternalProjectToAbsolutePath.set(
-                        project,
-                        filePath
-                    );
-                });
-
-                this.externalProjectsLoading.set(filePath, false);
-            })();
-        }
-
-        return undefined;
+        this.externalProjectsLoading.set(filePath, false);
     }
 
     getChildId() {

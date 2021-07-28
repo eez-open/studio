@@ -25,7 +25,9 @@ async function main() {
     } else {
         DocumentStore.newProject();
     }
-    DocumentStore.waitUntilready();
+
+    await DocumentStore.loadAllExternalProjects();
+    DocumentStore.startBackgroundCheck();
 
     ReactDOM.render(
         <ThemeProvider theme={theme}>

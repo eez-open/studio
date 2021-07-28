@@ -4027,11 +4027,27 @@ registerClass(CanvasWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function firstTick(n: number) {
+    const p = Math.pow(10, Math.floor(Math.log10(n / 6)));
+    let f = n / 6 / p;
+    let i;
+    if (f > 5) {
+        i = 10;
+    } else if (f > 2) {
+        i = 5;
+    } else {
+        i = 2;
+    }
+    return i * p;
+}
+
 export class Gauge2Widget extends EmbeddedWidget {
     @observable min: string;
     @observable max: string;
     @observable threshold: string;
     @observable barStyle: Style;
+    @observable valueStyle: Style;
+    @observable ticksStyle: Style;
     @observable thresholdStyle: Style;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
@@ -4042,6 +4058,8 @@ export class Gauge2Widget extends EmbeddedWidget {
             makeDataPropertyInfo("max"),
             makeDataPropertyInfo("threshold"),
             makeStylePropertyInfo("barStyle"),
+            makeStylePropertyInfo("valueStyle"),
+            makeStylePropertyInfo("ticksStyle"),
             makeStylePropertyInfo("thresholdStyle")
         ],
 
@@ -4098,6 +4116,7 @@ export class Gauge2Widget extends EmbeddedWidget {
                             const BORDER_WIDTH = 32;
                             const BAR_WIDTH = 16;
 
+                            // min
                             let min = evalExpression(flowContext, this.min);
 
                             if (
@@ -4108,6 +4127,7 @@ export class Gauge2Widget extends EmbeddedWidget {
                                 min = 0;
                             }
 
+                            // max
                             let max =
                                 evalExpression(flowContext, this.max) ?? 100;
 
@@ -4120,6 +4140,7 @@ export class Gauge2Widget extends EmbeddedWidget {
                                 max = min + 1.0;
                             }
 
+                            // value
                             let value =
                                 this.data &&
                                 evalExpression(flowContext, this.data);
@@ -4131,27 +4152,27 @@ export class Gauge2Widget extends EmbeddedWidget {
                                 value = min + (max - min) * 0.75;
                             }
 
-                            let barStyle = widget.style;
+                            let barStyle = widget.barStyle;
 
-                            const imageData = ctx.getImageData(
-                                0,
-                                0,
-                                this.width,
-                                this.height
-                            );
+                            let x = 0;
+                            let y = 0;
+                            let w = this.width;
+                            let h = this.height;
+
+                            const imageData = ctx.getImageData(x, y, w, h);
 
                             const imageBuffer = {
-                                width: this.width,
-                                height: this.height,
+                                width: w,
+                                height: h,
                                 pixels: imageData.data
                             };
 
                             draw.setColor(barStyle.colorProperty);
                             draw.fillArcBar(
                                 imageBuffer,
-                                this.left + this.width / 2,
-                                this.top + this.height - 4,
-                                (this.width - 8) / 2 - BORDER_WIDTH / 2,
+                                x + w / 2,
+                                y + h - 4,
+                                (w - 8) / 2 - BORDER_WIDTH / 2,
                                 remap(value, min, 180.0, max, 0.0),
                                 180.0,
                                 BAR_WIDTH
@@ -4160,15 +4181,15 @@ export class Gauge2Widget extends EmbeddedWidget {
                             draw.setColor(style.colorProperty);
                             draw.drawArcBar(
                                 imageBuffer,
-                                this.left + this.width / 2,
-                                this.top + this.height - 4,
-                                (this.width - 8) / 2 - BORDER_WIDTH / 2,
+                                x + w / 2,
+                                y + h - 4,
+                                (w - 8) / 2 - BORDER_WIDTH / 2,
                                 0.0,
                                 180.0,
                                 BORDER_WIDTH
                             );
 
-                            ctx.putImageData(imageData, 0, 0);
+                            ctx.putImageData(imageData, x, y);
                         }}
                     />
                 )}
@@ -4189,6 +4210,12 @@ export class Gauge2Widget extends EmbeddedWidget {
 
         // barStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "barStyle"));
+
+        // valueStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "valueStyle"));
+
+        // ticksStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "ticksStyle"));
 
         // thresholdStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "thresholdStyle"));
