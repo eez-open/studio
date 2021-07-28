@@ -57,6 +57,9 @@ class SelectItemDialog extends React.Component<{
     get allProjects() {
         return [
             this.context.project,
+            ...(this.context.project.masterProject
+                ? [this.context.project.masterProject]
+                : []),
             ...this.context.project.settings.general.imports
                 .filter(importDirective => !!importDirective.project)
                 .map(importDirective => importDirective.project!)

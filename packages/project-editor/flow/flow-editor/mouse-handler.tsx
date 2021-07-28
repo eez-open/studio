@@ -96,9 +96,8 @@ export class MouseHandler implements IMouseHandler {
 
         this.timeAtDown = new Date().getTime();
 
-        this.lastOffsetPoint = this.offsetPointAtDown = this.transform.pointerEventToOffsetPoint(
-            event
-        );
+        this.lastOffsetPoint = this.offsetPointAtDown =
+            this.transform.pointerEventToOffsetPoint(event);
         this.offsetDistance = { x: 0, y: 0 };
         this.distance = 0;
         this.movement = { x: 0, y: 0 };
@@ -765,6 +764,8 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
         let objects = context.viewState.selectedObjects;
 
+        context.document.DocumentStore.UndoManager.setCombineCommands(true);
+
         for (let i = 0; i < this.rects.length; i++) {
             let savedBoundingRect = this.savedBoundingRects[i];
             let savedRect = this.savedRects[i];
@@ -790,6 +791,8 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
                 objects[i].rect = rect;
             }
         }
+
+        context.document.DocumentStore.UndoManager.setCombineCommands(false);
     }
 
     up(context: IFlowContext) {
@@ -836,9 +839,8 @@ export class ConnectionLineMouseHandler extends MouseHandler {
         )!;
 
         const boundingClientRect = node.getBoundingClientRect();
-        const pageRect = context.viewState.transform.clientToOffsetRect(
-            boundingClientRect
-        );
+        const pageRect =
+            context.viewState.transform.clientToOffsetRect(boundingClientRect);
 
         this.startPoint = {
             x: pageRect.left + pageRect.width + 2,
@@ -877,9 +879,10 @@ export class ConnectionLineMouseHandler extends MouseHandler {
             )!;
 
             const boundingClientRect = node.getBoundingClientRect();
-            const pageRect = context.viewState.transform.clientToOffsetRect(
-                boundingClientRect
-            );
+            const pageRect =
+                context.viewState.transform.clientToOffsetRect(
+                    boundingClientRect
+                );
 
             this.endPoint = {
                 x: pageRect.left - 2,
@@ -955,9 +958,8 @@ export class ConnectionLineMouseHandler extends MouseHandler {
         const startClientPoint = this.transform.offsetToPagePoint(
             this.startPoint
         );
-        this.startPoint = context.viewState.transform.pageToOffsetPoint(
-            startClientPoint
-        );
+        this.startPoint =
+            context.viewState.transform.pageToOffsetPoint(startClientPoint);
 
         super.onTransformChanged(context);
     }

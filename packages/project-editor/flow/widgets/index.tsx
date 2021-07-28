@@ -107,6 +107,8 @@ import {
     WIDGET_TYPE_CANVAS,
     WIDGET_TYPE_GAUGE
 } from "./widget_types";
+import { evalExpression } from "../expression";
+import { remap } from "eez-studio-shared/util";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -2524,7 +2526,7 @@ export class ButtonWidget extends EmbeddedWidget {
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "enabled"));
 
         // disabledStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "disabledStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "disabledStyle"));
     }
 }
 
@@ -2776,7 +2778,7 @@ export class ButtonGroupWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // selectedStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "selectedStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "selectedStyle"));
     }
 }
 
@@ -3133,7 +3135,7 @@ export class BarGraphWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // textStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "textStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "textStyle"));
 
         // line1Data
         let line1Data = assets.getWidgetDataItemIndex(this, "line1Data");
@@ -3141,7 +3143,7 @@ export class BarGraphWidget extends EmbeddedWidget {
         dataBuffer.writeInt16(line1Data);
 
         // line1Style
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "line1Style"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "line1Style"));
 
         // line2Data
         let line2Data = assets.getWidgetDataItemIndex(this, "line2Data");
@@ -3149,7 +3151,7 @@ export class BarGraphWidget extends EmbeddedWidget {
         dataBuffer.writeInt16(line2Data);
 
         // line2Style
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "line2Style"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "line2Style"));
 
         // orientation
         let orientation: number;
@@ -3443,7 +3445,7 @@ export class UpDownWidget extends EmbeddedWidget {
         );
 
         // buttonStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "buttonsStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "buttonsStyle"));
     }
 }
 
@@ -3614,17 +3616,17 @@ export class ListGraphWidget extends EmbeddedWidget {
         // y1Data
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "y1Data"));
         // y1Style
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "y1Style"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "y1Style"));
         // y2Data
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "y2Data"));
         // y2Style
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "y2Style"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "y2Style"));
         // cursorData
         dataBuffer.writeInt16(
             assets.getWidgetDataItemIndex(this, "cursorData")
         );
         // cursorStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "cursorStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "cursorStyle"));
     }
 }
 
@@ -3863,10 +3865,10 @@ export class ScrollBarWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // thumbStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "thumbStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "thumbStyle"));
 
         // buttonStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "buttonsStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "buttonsStyle"));
 
         // down button text
         dataBuffer.writeObjectOffset(() =>
@@ -4092,6 +4094,81 @@ export class Gauge2Widget extends EmbeddedWidget {
 
                             draw.setColor(style.backgroundColorProperty);
                             draw.fillRect(ctx, x1, y1, x2, y2, 0);
+
+                            const BORDER_WIDTH = 32;
+                            const BAR_WIDTH = 16;
+
+                            let min = evalExpression(flowContext, this.min);
+
+                            if (
+                                !(typeof min == "number") ||
+                                isNaN(min) ||
+                                !isFinite(min)
+                            ) {
+                                min = 0;
+                            }
+
+                            let max =
+                                evalExpression(flowContext, this.max) ?? 100;
+
+                            if (
+                                !(typeof max == "number") ||
+                                isNaN(max) ||
+                                !isFinite(max) ||
+                                max <= min
+                            ) {
+                                max = min + 1.0;
+                            }
+
+                            let value =
+                                this.data &&
+                                evalExpression(flowContext, this.data);
+                            if (
+                                !(typeof value == "number") ||
+                                isNaN(value) ||
+                                !isFinite(value)
+                            ) {
+                                value = min + (max - min) * 0.75;
+                            }
+
+                            let barStyle = widget.style;
+
+                            const imageData = ctx.getImageData(
+                                0,
+                                0,
+                                this.width,
+                                this.height
+                            );
+
+                            const imageBuffer = {
+                                width: this.width,
+                                height: this.height,
+                                pixels: imageData.data
+                            };
+
+                            draw.setColor(barStyle.colorProperty);
+                            draw.fillArcBar(
+                                imageBuffer,
+                                this.left + this.width / 2,
+                                this.top + this.height - 4,
+                                (this.width - 8) / 2 - BORDER_WIDTH / 2,
+                                remap(value, min, 180.0, max, 0.0),
+                                180.0,
+                                BAR_WIDTH
+                            );
+
+                            draw.setColor(style.colorProperty);
+                            draw.drawArcBar(
+                                imageBuffer,
+                                this.left + this.width / 2,
+                                this.top + this.height - 4,
+                                (this.width - 8) / 2 - BORDER_WIDTH / 2,
+                                0.0,
+                                180.0,
+                                BORDER_WIDTH
+                            );
+
+                            ctx.putImageData(imageData, 0, 0);
                         }}
                     />
                 )}
@@ -4111,10 +4188,10 @@ export class Gauge2Widget extends EmbeddedWidget {
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "threshold"));
 
         // barStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "barStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "barStyle"));
 
         // thresholdStyle
-        dataBuffer.writeUint16(assets.getStyleIndex(this, "thresholdStyle"));
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "thresholdStyle"));
     }
 }
 

@@ -931,7 +931,13 @@ export class Project extends EezObject {
             );
         }
 
-        throw "unknwon project";
+        if (this._DocumentStore.project.masterProject == this) {
+            return getFileNameWithoutExtension(
+                this._DocumentStore.project.settings.general.masterProject
+            );
+        }
+
+        throw "unknown project";
     }
 
     @computed
@@ -981,7 +987,7 @@ export class Project extends EezObject {
     get allAssetsMaps() {
         return [
             {
-                path: "globalVariables",
+                path: "variables/globalVariables",
                 map: this.variables.globalVariables && this.globalVariablesMap
             },
             { path: "actions", map: this.actions && this.actionsMap },

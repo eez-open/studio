@@ -81,20 +81,19 @@ function calcComponentGeometry(
                 const rectPort = transform.clientToPageRect(
                     inputElement.getBoundingClientRect()
                 );
-                inputs[
-                    inputElement.getAttribute("data-connection-input-id")!
-                ] = {
-                    rect: {
-                        left: rectPort.left - rect.left,
-                        top: rectPort.top - rect.top,
-                        width: rectPort.width,
-                        height: rectPort.height
-                    },
-                    position: {
-                        x: rectPort.left - rect.left - 1,
-                        y: rectPort.top - rect.top + rectPort.height / 2
-                    }
-                };
+                inputs[inputElement.getAttribute("data-connection-input-id")!] =
+                    {
+                        rect: {
+                            left: rectPort.left - rect.left,
+                            top: rectPort.top - rect.top,
+                            width: rectPort.width,
+                            height: rectPort.height
+                        },
+                        position: {
+                            x: rectPort.left - rect.left - 1,
+                            y: rectPort.top - rect.top + rectPort.height / 2
+                        }
+                    };
             }
         );
 

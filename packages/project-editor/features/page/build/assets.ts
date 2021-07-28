@@ -229,8 +229,17 @@ export class Assets {
         if (asset) {
             let assetIndex = collection.indexOf(asset);
             if (assetIndex == -1) {
-                collection.push(asset);
-                assetIndex = collection.length - 1;
+                const isMasterProjectAsset =
+                    this.DocumentStore.masterProject &&
+                    getProject(asset) == this.DocumentStore.masterProject;
+
+                if (isMasterProjectAsset) {
+                    // TODO
+                    return 0;
+                } else {
+                    collection.push(asset);
+                    assetIndex = collection.length - 1;
+                }
             }
             assetIndex++;
             return this.DocumentStore.masterProject ? -assetIndex : assetIndex;
@@ -306,67 +315,68 @@ export class Assets {
         project: Project,
         styleNameOrObject: string | Style
     ): number {
-        if (this.DocumentStore.masterProject) {
-            if (typeof styleNameOrObject === "string") {
-                const styleName = styleNameOrObject;
-                const style = findStyle(project, styleName);
-                if (style && style.id != undefined) {
-                    return style.id;
+        if (typeof styleNameOrObject === "string") {
+            const styleName = styleNameOrObject;
+
+            for (let i = 1; i < this.styles.length; i++) {
+                const style = this.styles[i];
+                if (style && style.name == styleName) {
+                    return this.DocumentStore.masterProject ? -i : i;
                 }
-            } else {
-                const style = styleNameOrObject;
+            }
+
+            const style = findStyle(project, styleName);
+            if (style) {
+                const isMasterProjectStyle =
+                    this.DocumentStore.masterProject &&
+                    getProject(style) == this.DocumentStore.masterProject;
+
                 if (style.id != undefined) {
                     return style.id;
                 }
-                if (style.inheritFrom) {
-                    return this.doGetStyleIndex(project, style.inheritFrom);
+
+                if (!isMasterProjectStyle) {
+                    const styleIndex = this.addStyle(style);
+                    return this.DocumentStore.masterProject
+                        ? -styleIndex
+                        : styleIndex;
                 }
             }
         } else {
-            if (typeof styleNameOrObject === "string") {
-                const styleName = styleNameOrObject;
+            const style = styleNameOrObject;
 
-                for (let i = 1; i < this.styles.length; i++) {
-                    const style = this.styles[i];
-                    if (style && style.name == styleName) {
-                        return i;
-                    }
-                }
-
-                const style = findStyle(project, styleName);
-                if (style) {
-                    if (style.id != undefined) {
-                        return style.id;
-                    }
-
-                    return this.addStyle(style);
-                }
-            } else {
-                const style = styleNameOrObject;
-
-                if (style.inheritFrom) {
-                    const parentStyle = findStyle(project, style.inheritFrom);
-                    if (parentStyle) {
-                        if (style.compareTo(parentStyle)) {
-                            if (style.id != undefined) {
-                                return style.id;
-                            }
-                            return this.doGetStyleIndex(
-                                project,
-                                parentStyle.name
-                            );
+            if (style.inheritFrom) {
+                const parentStyle = findStyle(project, style.inheritFrom);
+                if (parentStyle) {
+                    if (style.compareTo(parentStyle)) {
+                        if (style.id != undefined) {
+                            return style.id;
                         }
+                        return this.doGetStyleIndex(project, parentStyle.name);
                     }
                 }
+            }
 
-                for (let i = 1; i < this.styles.length; i++) {
-                    const s = this.styles[i];
-                    if (s && style.compareTo(s)) {
-                        return i;
-                    }
+            for (let i = 1; i < this.styles.length; i++) {
+                const s = this.styles[i];
+                if (s && style.compareTo(s)) {
+                    return this.DocumentStore.masterProject ? -i : i;
                 }
+            }
 
-                return this.addStyle(style);
+            if (style.id) {
+                return style.id;
+            }
+
+            const isMasterProjectStyle =
+                this.DocumentStore.masterProject &&
+                getProject(style) == this.DocumentStore.masterProject;
+
+            if (!isMasterProjectStyle) {
+                const styleIndex = this.addStyle(style);
+                return this.DocumentStore.masterProject
+                    ? -styleIndex
+                    : styleIndex;
             }
         }
 
@@ -413,12 +423,21 @@ export class Assets {
     ) {
         let color = getStyleProperty(style, propertyName, false);
 
-        let colors = this.DocumentStore.project.colors;
+        // TODO: currently all colors are available from master project,
+        // we should add support for exporting colors (internal and exported),
+        // like we are doing for styles
+        let colors = this.DocumentStore.project.masterProject
+            ? this.DocumentStore.project.masterProject.colors
+            : this.DocumentStore.project.colors;
 
         for (let i = 0; i < colors.length; i++) {
             if (colors[i].name === color) {
                 return i;
             }
+        }
+
+        if (this.DocumentStore.project.masterProject) {
+            return 0;
         }
 
         for (let i = 0; i < this.colors.length; i++) {
@@ -736,7 +755,11 @@ export class DataBuffer {
     }
 
     writeUint8(value: number) {
-        this.buffer.writeUInt8(value, this.currentOffset);
+        try {
+            this.buffer.writeUInt8(value, this.currentOffset);
+        } catch (err) {
+            console.error(err);
+        }
         this.currentOffset += 1;
     }
 

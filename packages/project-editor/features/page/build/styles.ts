@@ -13,23 +13,19 @@ export const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
 export const STYLE_FLAGS_BLINK = 1 << 6;
 
 export function buildGuiStylesEnum(assets: Assets) {
-    let styles = assets.styles
-        .map((style, i) => {
-            if (style) {
-                return `${projectBuild.TAB}${projectBuild.getName(
-                    "STYLE_ID_",
-                    style.name ? style : "inline" + i,
-                    projectBuild.NamingConvention.UnderscoreUpperCase
-                )} = ${i}`;
-            } else {
-                return undefined;
-            }
-        })
-        .filter(style => !!style);
+    let styles = assets.styles.filter(style => !!style) as Style[];
 
-    styles.unshift(`${projectBuild.TAB}STYLE_ID_NONE = 0`);
+    const styleEnumItems = styles.map((style, i) => {
+        return `${projectBuild.TAB}${projectBuild.getName(
+            "STYLE_ID_",
+            style.name ? style : "inline" + i,
+            projectBuild.NamingConvention.UnderscoreUpperCase
+        )} = ${i}`;
+    });
 
-    return `enum StylesEnum {\n${styles.join(",\n")}\n};`;
+    styleEnumItems.unshift(`${projectBuild.TAB}STYLE_ID_NONE = 0`);
+
+    return `enum StylesEnum {\n${styleEnumItems.join(",\n")}\n};`;
 }
 
 export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {

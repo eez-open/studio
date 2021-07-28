@@ -17,7 +17,7 @@ import { Variable } from "project-editor/features/variable/variable";
 import { CommentActionComponent } from "project-editor/flow/action-components";
 import {
     buildExpression,
-    evalExpression,
+    evalConstantExpression,
     operationIndexes
 } from "project-editor/flow/expression";
 
@@ -129,7 +129,10 @@ function getFlowValue(assets: Assets, variable: Variable) {
         type = FLOW_VALUE_TYPE_UINT32;
     }
 
-    let value = evalExpression(assets, variable.defaultValue);
+    let value = evalConstantExpression(
+        assets.rootProject,
+        variable.defaultValue
+    );
 
     return {
         type,

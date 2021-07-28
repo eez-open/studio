@@ -643,12 +643,7 @@ export class Component extends EezObject {
         isPropertyMenuSupported: true,
 
         getRect: (object: Component) => {
-            return {
-                left: object.left,
-                top: object.top,
-                width: object._geometry?.width ?? 0,
-                height: object._geometry?.height ?? 0
-            };
+            return object.rect;
         },
         setRect: (object: Component, value: Rect) => {
             const props: Partial<Rect> = {};
@@ -661,11 +656,11 @@ export class Component extends EezObject {
                 props.top = value.top;
             }
 
-            if (value.width !== object._geometry?.width ?? 0) {
+            if (value.width !== object.width) {
                 props.width = value.width;
             }
 
-            if (value.height !== object._geometry?.height ?? 0) {
+            if (value.height !== object.height) {
                 props.height = value.height;
             }
 
@@ -730,54 +725,6 @@ export class Component extends EezObject {
                 getDocumentStore(component).isAppletProject ||
                 getDocumentStore(component).isDashboardProject
             ) {
-                if (!(component instanceof ActionComponent)) {
-                    if (component.left < 0) {
-                        messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
-                                "Widget is outside of its parent",
-                                getChildOfObject(component, "left")
-                            )
-                        );
-                    }
-
-                    if (component.top < 0) {
-                        messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
-                                "Widget is outside of its parent",
-                                getChildOfObject(component, "top")
-                            )
-                        );
-                    }
-
-                    if (
-                        component.left + component.width >
-                        getWidgetParent(component).width
-                    ) {
-                        messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
-                                "Widget is outside of its parent",
-                                getChildOfObject(component, "width")
-                            )
-                        );
-                    }
-
-                    if (
-                        component.top + component.height >
-                        getWidgetParent(component).height
-                    ) {
-                        messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
-                                "Widget is outside of its parent",
-                                getChildOfObject(component, "height")
-                            )
-                        );
-                    }
-                }
-
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (propertyInfo.toggableProperty === "input") {
                         try {
@@ -814,8 +761,19 @@ export class Component extends EezObject {
 
     set geometry(value: ComponentGeometry) {
         this._geometry = value;
-        this.width = this._geometry.width;
-        this.height = this._geometry.height;
+        if (this.autoSize) {
+            this.width = this._geometry.width;
+            this.height = this._geometry.height;
+        }
+    }
+
+    get rect() {
+        return {
+            left: this.left,
+            top: this.top,
+            width: this.width ?? 0,
+            height: this.height ?? 0
+        };
     }
 
     @computed

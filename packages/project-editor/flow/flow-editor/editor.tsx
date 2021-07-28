@@ -107,10 +107,8 @@ class DragSnapLinesOverlay extends React.Component {
                 {dragSnapLines.snapLines.render(dragSnapLines.flowContext!, {
                     left: flow.pageRect.left + dragComponent.left,
                     top: flow.pageRect.top + dragComponent.top,
-                    width:
-                        dragComponent._geometry?.width ?? dragComponent.width,
-                    height:
-                        dragComponent._geometry?.height ?? dragComponent.height
+                    width: dragComponent.rect.width,
+                    height: dragComponent.rect.height
                 })}
             </div>
         );
@@ -920,17 +918,18 @@ const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
 
     .EezStudio_FlowEditorSelection_SelectedObject {
         pointer-events: none;
-        border: 1px solid #333;
+        border: 1px solid ${props => props.theme.selectionBackgroundColor};
     }
 
     .EezStudio_FlowEditorSelection_BoundingRect {
-        border: 2px solid black;
+        border: 2px solid ${props => props.theme.selectionBackgroundColor};
         box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
     }
 
     .EezStudio_FlowEditorSelection_ResizeHandle {
         position: absolute;
-        background-color: rgba(0, 0, 0, 0.6);
+        background-color: white;
+        border: 1px solid ${props => props.theme.selectionBackgroundColor};
     }
 
     .EezStudio_FlowEditorSelection_SelectedObjectsParent {

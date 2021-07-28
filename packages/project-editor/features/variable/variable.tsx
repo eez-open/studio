@@ -134,6 +134,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
     ref = React.createRef<HTMLSelectElement>();
 
     @observable _value: any = undefined;
+    @observable updateCounter: number = 0;
 
     @computed get typePropertyInfo() {
         return getClassInfo(this.props.objects[0]).properties.find(
@@ -155,6 +156,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
 
     @disposeOnUnmount
     changeDocumentDisposer = autorun(() => {
+        this.updateCounter;
         if (this.context.project) {
             const getPropertyValueResultForType = getPropertyValue(
                 this.props.objects,
@@ -192,6 +194,10 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                 value = type;
             }
 
+            if (value == undefined) {
+                value = "";
+            }
+
             runInAction(() => {
                 this._value = value;
             });
@@ -209,6 +215,12 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                 this.context.UndoManager.setCombineCommands(false);
             });
         }
+    }
+
+    @action
+    componentDidUpdate() {
+        this.updateCounter++;
+        console.log(this.updateCounter);
     }
 
     onChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -387,9 +399,11 @@ registerClass(Variable);
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findVariable(project: Project, variableName: string) {
-    return findReferencedObject(project, "globalVariables", variableName) as
-        | Variable
-        | undefined;
+    return findReferencedObject(
+        project,
+        "variables/globalVariables",
+        variableName
+    ) as Variable | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

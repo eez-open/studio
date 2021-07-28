@@ -16,9 +16,8 @@ export function parseXmlString(xmlString: string) {
 }
 
 export function getBoundingClientRectOfChildNodes(element: Element) {
-    const {
-        BoundingRectBuilder
-    } = require("eez-studio-shared/geometry") as typeof GeometryModule;
+    const { BoundingRectBuilder } =
+        require("eez-studio-shared/geometry") as typeof GeometryModule;
     let boundingRectBuilder = new BoundingRectBuilder();
     element.childNodes.forEach(node => {
         if (node instanceof Element) {
@@ -31,9 +30,8 @@ export function getBoundingClientRectOfChildNodes(element: Element) {
 }
 
 export function getBoundingClientRectIncludingChildNodes(element: Element) {
-    const {
-        BoundingRectBuilder
-    } = require("eez-studio-shared/geometry") as typeof GeometryModule;
+    const { BoundingRectBuilder } =
+        require("eez-studio-shared/geometry") as typeof GeometryModule;
     let boundingRectBuilder = new BoundingRectBuilder();
     boundingRectBuilder.addRect(element.getBoundingClientRect());
     boundingRectBuilder.addRect(getBoundingClientRectOfChildNodes(element));
@@ -113,11 +111,8 @@ export function getMoment() {
     if (!moment) {
         moment = require("moment") as typeof MomentModule;
         require("moment-duration-format")(moment);
-        const {
-            getLocale,
-            getDateFormat,
-            getTimeFormat
-        } = require("eez-studio-shared/i10n") as typeof I10nModule;
+        const { getLocale, getDateFormat, getTimeFormat } =
+            require("eez-studio-shared/i10n") as typeof I10nModule;
         userLocale = getLocale();
         localeData = getMoment().localeData(userLocale);
         localeWeekdays = localeData.weekdays();
@@ -367,4 +362,14 @@ export function onSimpleMessage(
             }
         }
     );
+}
+
+export function remap(
+    x: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number
+) {
+    return y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);
 }

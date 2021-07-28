@@ -32,7 +32,7 @@ import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
     buildAssignableExpression,
-    evalExpression
+    evalConstantExpression
 } from "project-editor/flow/expression";
 
 const LeftArrow = () => (
@@ -810,7 +810,9 @@ export class ConstantActionComponent extends ActionComponent {
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint16(
-            assets.getConstantIndex(evalExpression(assets, this.value))
+            assets.getConstantIndex(
+                evalConstantExpression(assets.rootProject, this.value)
+            )
         );
     }
 }

@@ -37,7 +37,7 @@ export function buildWidget(
     dataBuffer.writeInt16(object.height || 0);
 
     // style
-    dataBuffer.writeUint16(assets.getStyleIndex(object, "style"));
+    dataBuffer.writeInt16(assets.getStyleIndex(object, "style"));
 
     // specific
     object.buildFlowWidgetSpecific(assets, dataBuffer);

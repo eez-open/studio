@@ -6,7 +6,8 @@ import { isDev } from "eez-studio-shared/util-electron";
 
 import { Component } from "./component";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { getFlow, getProject } from "project-editor/project/project";
+import { getFlow, getProject, Project } from "project-editor/project/project";
+import { IFlowContext } from "./flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -335,7 +336,7 @@ export function checkExpression(component: Component, expression: string) {
         throw `Unknown expression node "${node.type}"`;
     }
 
-    console.log("CHECK EXPRESSION", component, expression);
+    //console.log("CHECK EXPRESSION", component, expression);
 
     const project = getProject(component);
 
@@ -535,7 +536,7 @@ export function buildExpression(
     component: Component,
     expression: string
 ) {
-    console.log("BUILD EXPRESSION", assets, component, expression);
+    //console.log("BUILD EXPRESSION", assets, component, expression);
 
     let instructions;
     if (expression == undefined) {
@@ -573,7 +574,7 @@ export function buildAssignableExpression(
         return false;
     }
 
-    console.log("BUILD ASSIGNABLE EXPRESSION", assets, component, expression);
+    //console.log("BUILD ASSIGNABLE EXPRESSION", assets, component, expression);
 
     const tree: ExpressionTreeNode = expressionParser.parse(expression);
 
@@ -590,7 +591,7 @@ export function buildAssignableExpression(
     );
 }
 
-export function evalExpression(assets: Assets, expression: string) {
+export function evalConstantExpression(project: Project, expression: string) {
     function evalNode(node: ExpressionTreeNode): any {
         if (node.type == "Literal") {
             return node.value;
@@ -663,9 +664,7 @@ export function evalExpression(assets: Assets, expression: string) {
                 node.object.type == "Identifier" &&
                 node.property.type == "Identifier"
             ) {
-                const enumDef = assets.rootProject.variables.enumMap.get(
-                    node.object.name
-                );
+                const enumDef = project.variables.enumMap.get(node.object.name);
                 if (enumDef) {
                     const enumMember = enumDef.membersMap.get(
                         node.property.name
@@ -700,7 +699,138 @@ export function evalExpression(assets: Assets, expression: string) {
         throw `Unknown expression node "${node.type}"`;
     }
 
-    console.log("EVAL EXPRESSION", assets, expression);
+    //console.log("EVAL EXPRESSION", assets, expression);
+
+    let value;
+    if (expression == undefined) {
+        value = undefined;
+    } else if (typeof expression == "number") {
+        value = expression;
+    } else {
+        const tree: ExpressionTreeNode = expressionParser.parse(expression);
+        try {
+            value = evalNode(tree);
+        } catch (err) {
+            console.error(err);
+            value = null;
+        }
+    }
+
+    return value;
+}
+
+export function evalExpression(flowContext: IFlowContext, expression: string) {
+    function evalNode(node: ExpressionTreeNode): any {
+        if (node.type == "Literal") {
+            return node.value;
+        }
+
+        if (node.type == "Identifier") {
+            return flowContext.dataContext.get(node.name);
+        }
+
+        if (node.type == "BinaryExpression") {
+            const operator = binaryOperators[node.operator];
+            if (!operator) {
+                throw `Unknown binary operator: ${node.operator}`;
+            }
+
+            return operator.eval(evalNode(node.left), evalNode(node.right));
+        }
+
+        if (node.type == "LogicalExpression") {
+            const operator = logicalOperators[node.operator];
+            if (!operator) {
+                throw `Unknown logical operator: ${node.operator}`;
+            }
+
+            return operator.eval(evalNode(node.left), evalNode(node.right));
+        }
+
+        if (node.type == "UnaryExpression") {
+            const operator = unaryOperators[node.operator];
+            if (!operator) {
+                throw `Unknown unary operator: ${node.operator}`;
+            }
+
+            return operator.eval(evalNode(node.argument));
+        }
+
+        if (node.type == "ConditionalExpression") {
+            return evalNode(node.test)
+                ? evalNode(node.consequent)
+                : evalNode(node.alternate);
+        }
+
+        if (node.type == "CallExpression") {
+            if (
+                node.callee.type != "MemberExpression" ||
+                node.callee.object.type != "Identifier" ||
+                node.callee.property.type != "Identifier"
+            ) {
+                throw "Invalid call expression";
+            }
+
+            let functionName = `${node.callee.object.name}.${node.callee.property.name}`;
+
+            const builtInFunction = builtInFunctions[functionName];
+            if (builtInFunction == undefined) {
+                throw `Unknown function '${functionName}'`;
+            }
+
+            const arity = builtInFunction.arity;
+
+            if (node.arguments.length != arity) {
+                throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
+            }
+
+            return builtInFunction.eval(...node.arguments.map(evalNode));
+        }
+
+        if (node.type == "MemberExpression") {
+            if (
+                node.object.type == "Identifier" &&
+                node.property.type == "Identifier"
+            ) {
+                const enumDef =
+                    flowContext.document.DocumentStore.project.variables.enumMap.get(
+                        node.object.name
+                    );
+                if (enumDef) {
+                    const enumMember = enumDef.membersMap.get(
+                        node.property.name
+                    );
+                    if (!enumMember) {
+                        throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
+                    }
+                    return enumMember.value;
+                }
+
+                const builtInConstantName = `${node.object.name}.${node.property.name}`;
+                const buildInConstantValue =
+                    builtInConstants[builtInConstantName];
+                if (buildInConstantValue != undefined) {
+                    return buildInConstantValue;
+                }
+
+                throw `Unknown constant '${builtInConstantName}'`;
+            }
+
+            throw "Unsupported";
+        }
+
+        // TODO:
+
+        // if (node.type == "ArrayExpression") {
+        // }
+
+        // if (node.type == "ObjectExpression") {
+        // }
+
+        throw `Unknown expression node "${node.type}"`;
+    }
+
+    //console.log("EVAL EXPRESSION", assets, expression);
 
     let value;
     if (expression == undefined) {

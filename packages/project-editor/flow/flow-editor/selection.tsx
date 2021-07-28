@@ -168,8 +168,8 @@ export class Selection extends React.Component<
             const y = top + (resizeHandler.y * height) / 100;
 
             const style = {
-                left: Math.floor(x - A) + "px",
-                top: Math.floor(y - A) + "px",
+                left: x - A + "px",
+                top: y - A + "px",
                 width: B + "px",
                 height: B + "px",
                 cursor: resizeHandler.type
