@@ -41,12 +41,13 @@ export class CommandsTree {
             return nodes.map(
                 node =>
                     new CommandNode({
-                        id: node.mnemonic,
+                        id: node.mnemonic + (node.optional ? "_optional" : ""),
                         label: node.mnemonic,
                         selected: false,
                         expanded: false,
                         children: this.transform(node.nodes),
-                        commandSyntax: node.command && node.command.commandSyntax,
+                        commandSyntax:
+                            node.command && node.command.commandSyntax,
                         querySyntax: node.command && node.command.querySyntax
                     })
             );

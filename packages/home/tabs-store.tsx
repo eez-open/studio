@@ -359,6 +359,9 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         await DocumentStore.loadAllExternalProjects();
+        runInAction(() => {
+            DocumentStore.project.fullyLoaded = true;
+        });
         DocumentStore.startBackgroundCheck();
 
         return tabs.addProjectTab(DocumentStore);

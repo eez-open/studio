@@ -1,7 +1,7 @@
 /// <reference path="./globals.d.ts"/>
 import React from "react";
 import ReactDOM from "react-dom";
-import { configure } from "mobx";
+import { configure, runInAction } from "mobx";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
@@ -27,6 +27,9 @@ async function main() {
     }
 
     await DocumentStore.loadAllExternalProjects();
+    runInAction(() => {
+        DocumentStore.project.fullyLoaded = true;
+    });
     DocumentStore.startBackgroundCheck();
 
     ReactDOM.render(

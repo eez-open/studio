@@ -4105,14 +4105,6 @@ export class Gauge2Widget extends EmbeddedWidget {
                             let widget = this;
                             let style = widget.style;
 
-                            let x1 = 0;
-                            let y1 = 0;
-                            let x2 = this.width - 1;
-                            let y2 = this.height - 1;
-
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(ctx, x1, y1, x2, y2, 0);
-
                             const BORDER_WIDTH = 32;
                             const BAR_WIDTH = 16;
 
@@ -4154,42 +4146,176 @@ export class Gauge2Widget extends EmbeddedWidget {
 
                             let barStyle = widget.barStyle;
 
-                            let x = 0;
-                            let y = 0;
                             let w = this.width;
                             let h = this.height;
 
-                            const imageData = ctx.getImageData(x, y, w, h);
+                            const xCenter = w / 2;
+                            const yCenter = h - 12;
 
-                            const imageBuffer = {
-                                width: w,
-                                height: h,
-                                pixels: imageData.data
-                            };
+                            // frame
+                            if (w > 0 && h > 0) {
+                                let x1 = 0;
+                                let y1 = 0;
+                                let x2 = w - 1;
+                                let y2 = h - 1;
 
-                            draw.setColor(barStyle.colorProperty);
-                            draw.fillArcBar(
-                                imageBuffer,
-                                x + w / 2,
-                                y + h - 4,
-                                (w - 8) / 2 - BORDER_WIDTH / 2,
-                                remap(value, min, 180.0, max, 0.0),
-                                180.0,
-                                BAR_WIDTH
+                                const borderSize = style.borderSizeRect;
+                                let borderRadius =
+                                    styleGetBorderRadius(style) || 0;
+                                if (
+                                    borderSize.top > 0 ||
+                                    borderSize.right > 0 ||
+                                    borderSize.bottom > 0 ||
+                                    borderSize.left > 0
+                                ) {
+                                    draw.setColor(style.borderColorProperty);
+                                    draw.fillRect(
+                                        ctx,
+                                        x1,
+                                        y1,
+                                        x2,
+                                        y2,
+                                        borderRadius
+                                    );
+                                    x1 += borderSize.left;
+                                    y1 += borderSize.top;
+                                    x2 -= borderSize.right;
+                                    y2 -= borderSize.bottom;
+                                    borderRadius = Math.max(
+                                        borderRadius -
+                                            Math.max(
+                                                borderSize.top,
+                                                borderSize.right,
+                                                borderSize.bottom,
+                                                borderSize.left
+                                            ),
+                                        0
+                                    );
+                                }
+
+                                draw.setColor(style.backgroundColorProperty);
+                                draw.fillRect(
+                                    ctx,
+                                    x1,
+                                    y1,
+                                    x2,
+                                    y2,
+                                    borderRadius
+                                );
+                            }
+
+                            // draw border
+                            function arcBorder(
+                                xCenter: number,
+                                yCenter: number,
+                                radOuter: number,
+                                radInner: number
+                            ) {
+                                ctx.moveTo(xCenter - radOuter, yCenter);
+
+                                ctx.arcTo(
+                                    xCenter - radOuter,
+                                    yCenter - radOuter,
+
+                                    xCenter + radOuter,
+                                    yCenter - radOuter,
+
+                                    radOuter
+                                );
+
+                                ctx.arcTo(
+                                    xCenter + radOuter,
+                                    yCenter - radOuter,
+
+                                    xCenter + radOuter,
+                                    yCenter,
+
+                                    radOuter
+                                );
+
+                                ctx.lineTo(xCenter + radInner, yCenter);
+
+                                ctx.arcTo(
+                                    xCenter + radInner,
+                                    yCenter - radInner,
+
+                                    xCenter - radInner,
+                                    yCenter - radInner,
+
+                                    radInner
+                                );
+
+                                ctx.arcTo(
+                                    xCenter - radInner,
+                                    yCenter - radInner,
+
+                                    xCenter - radInner,
+                                    yCenter,
+
+                                    radInner
+                                );
+
+                                ctx.lineTo(xCenter - radOuter, yCenter);
+                            }
+
+                            const radBorderOuter = (w - 12) / 2;
+                            const radBorderInner =
+                                radBorderOuter - BORDER_WIDTH;
+                            ctx.beginPath();
+                            ctx.strokeStyle = style.colorProperty;
+                            ctx.lineWidth = 1.5;
+                            arcBorder(
+                                xCenter,
+                                yCenter,
+                                radBorderOuter,
+                                radBorderInner
                             );
+                            ctx.stroke();
 
-                            draw.setColor(style.colorProperty);
-                            draw.drawArcBar(
-                                imageBuffer,
-                                x + w / 2,
-                                y + h - 4,
-                                (w - 8) / 2 - BORDER_WIDTH / 2,
-                                0.0,
-                                180.0,
-                                BORDER_WIDTH
-                            );
+                            // draw bar
+                            function arcBar(
+                                xCenter: number,
+                                yCenter: number,
+                                rad: number
+                            ) {
+                                ctx.moveTo(xCenter - rad, yCenter);
 
-                            ctx.putImageData(imageData, x, y);
+                                ctx.arcTo(
+                                    xCenter - rad,
+                                    yCenter - rad,
+
+                                    xCenter + rad,
+                                    yCenter - rad,
+
+                                    rad
+                                );
+
+                                ctx.arcTo(
+                                    xCenter + rad,
+                                    yCenter - rad,
+
+                                    xCenter + rad,
+                                    yCenter,
+
+                                    rad
+                                );
+                            }
+
+                            const radBar = (w - 12) / 2 - BORDER_WIDTH / 2;
+                            const angle = remap(value, min, 0.0, max, 180.0);
+                            ctx.beginPath();
+                            ctx.strokeStyle = barStyle.colorProperty;
+                            ctx.lineWidth = BAR_WIDTH;
+                            ctx.setLineDash([
+                                (radBar * angle * Math.PI) / 180,
+                                radBar * Math.PI
+                            ]);
+                            arcBar(xCenter, yCenter, radBar);
+                            ctx.stroke();
+
+                            // draw ticks
+                            const ft = firstTick(6);
+                            console.log(ft);
                         }}
                     />
                 )}
