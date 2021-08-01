@@ -108,7 +108,7 @@ import {
     WIDGET_TYPE_GAUGE,
     WIDGET_TYPE_INPUT
 } from "./widget_types";
-import { evalExpression } from "../expression";
+import { buildAssignableExpression, evalExpression } from "../expression";
 import { remap } from "eez-studio-shared/util";
 
 const { MenuItem } = EEZStudio.remote || {};
@@ -4364,6 +4364,8 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     @observable precision: number;
     @observable unit: string;
 
+    @observable storeInto: string;
+
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         flowComponentId: WIDGET_TYPE_INPUT,
 
@@ -4393,6 +4395,11 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
                     widget.type == "text"
+            },
+            {
+                name: "storeInto",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -4538,6 +4545,11 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
 
         // precision
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "unit"));
+
+        //
+        dataBuffer.writeObjectOffset(() =>
+            buildAssignableExpression(assets, dataBuffer, this, this.storeInto)
+        );
     }
 }
 
