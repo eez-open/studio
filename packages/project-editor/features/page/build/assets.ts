@@ -38,10 +38,7 @@ import { buildGuiBitmapsData } from "project-editor/features/page/build/bitmaps"
 import { buildGuiColors } from "project-editor/features/page/build/themes";
 import { buildActionNames } from "project-editor/features/page/build/actions";
 import { buildVariableNames } from "project-editor/features/page/build/variables";
-import {
-    buildFlowData,
-    getComponentOutputNames
-} from "project-editor/features/page/build/flows";
+import { buildFlowData } from "project-editor/features/page/build/flows";
 import {
     FlowValue,
     getFlowValueType
@@ -734,7 +731,7 @@ export class Assets {
                     widgetActionIndex: index,
                     flowIndex,
                     componentIndex,
-                    outputIndex: getComponentOutputNames(component).findIndex(
+                    outputIndex: component.buildOutputs.findIndex(
                         output => output.name == outputName
                     )
                 };

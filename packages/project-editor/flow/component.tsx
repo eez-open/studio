@@ -885,6 +885,46 @@ export class Component extends EezObject {
         return outputs;
     }
 
+    @computed({ keepAlive: true })
+    get buildInputs() {
+        const flow = getFlow(this);
+        return this.inputs.filter(
+            input =>
+                input.name != "@seqin" ||
+                flow.connectionLines.find(
+                    connectionLine =>
+                        connectionLine.targetComponent == this &&
+                        connectionLine.input == "@seqin"
+                )
+        );
+    }
+
+    @computed({ keepAlive: true })
+    get buildOutputs() {
+        const outputs: { name: string; type: "output" | "property" }[] = [];
+
+        for (const propertyInfo of getClassInfo(this).properties) {
+            if (propertyInfo.toggableProperty === "output") {
+                outputs.push({
+                    name: propertyInfo.name,
+                    type:
+                        !this.asOutputProperties ||
+                        this.asOutputProperties.indexOf(propertyInfo.name) == -1
+                            ? "property"
+                            : "output"
+                });
+            }
+        }
+
+        for (const componentOutput of this.outputs) {
+            if (!outputs.find(output => output.name == componentOutput.name)) {
+                outputs.push({ name: componentOutput.name, type: "output" });
+            }
+        }
+
+        return outputs;
+    }
+
     @computed
     get isMoveable() {
         return true;

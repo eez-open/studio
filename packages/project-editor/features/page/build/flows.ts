@@ -40,32 +40,6 @@ function getComponentTypes() {
         .sort((a, b) => getComponentId(a)! - getComponentId(b)!);
 }
 
-export function getComponentOutputNames(component: Component) {
-    const outputs: { name: string; type: "output" | "property" }[] = [];
-
-    for (const propertyInfo of getClassInfo(component).properties) {
-        if (propertyInfo.toggableProperty === "output") {
-            outputs.push({
-                name: propertyInfo.name,
-                type:
-                    !component.asOutputProperties ||
-                    component.asOutputProperties.indexOf(propertyInfo.name) ==
-                        -1
-                        ? "property"
-                        : "output"
-            });
-        }
-    }
-
-    for (const componentOutput of component.outputs) {
-        if (!outputs.find(output => output.name == componentOutput.name)) {
-            outputs.push({ name: componentOutput.name, type: "output" });
-        }
-    }
-
-    return outputs;
-}
-
 function getFlowComponents(flow: Flow) {
     const components: Component[] = [];
     const v = visitObjects(flow);
@@ -118,29 +92,15 @@ function buildComponent(
     dataBuffer.writeUint16(0);
 
     // inputs
-    dataBuffer.writeNumberArray(
-        component.inputs.filter(
-            input =>
-                input.name != "@seqin" ||
-                flow.connectionLines.find(
-                    connectionLine =>
-                        connectionLine.targetComponent == component &&
-                        connectionLine.input == "@seqin"
-                )
-        ),
-        input => {
-            const inputIndex = assets.getComponentInputIndex(
-                component,
-                input.name
-            );
+    dataBuffer.writeNumberArray(component.buildInputs, input => {
+        const inputIndex = assets.getComponentInputIndex(component, input.name);
 
-            dataBuffer.writeUint16(inputIndex);
+        dataBuffer.writeUint16(inputIndex);
 
-            assets.map.flows[flowIndex].components[componentIndex].inputs.push(
-                inputIndex
-            );
-        }
-    );
+        assets.map.flows[flowIndex].components[componentIndex].inputs.push(
+            inputIndex
+        );
+    });
 
     // property values
     const properties = getClassInfo(component).properties.filter(
@@ -173,7 +133,7 @@ function buildComponent(
     });
 
     // outputs
-    const outputs = getComponentOutputNames(component);
+    const outputs = component.buildOutputs;
     outputs.forEach(output =>
         assets.registerComponentOutput(component, output.name, 0)
     );

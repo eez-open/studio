@@ -4516,6 +4516,12 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // storeInto
+        dataBuffer.writeObjectOffset(() => {
+            buildAssignableExpression(assets, dataBuffer, this, this.storeInto);
+            dataBuffer.addPadding();
+        });
+
         // flags
         let flags = 0;
 
@@ -4545,11 +4551,6 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
 
         // precision
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "unit"));
-
-        //
-        dataBuffer.writeObjectOffset(() =>
-            buildAssignableExpression(assets, dataBuffer, this, this.storeInto)
-        );
     }
 }
 

@@ -198,8 +198,9 @@ const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT = 0 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT = 1 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR = 2 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR = 3 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 4 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_END = 5 << 13;
+const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_OUTPUT = 4 << 13;
+const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 5 << 13;
+const EXPR_EVAL_INSTRUCTION_TYPE_END = 6 << 13;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -359,6 +360,10 @@ function makePushInputInstruction(inputIndex: number) {
     return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT | inputIndex;
 }
 
+function makePushOutputInstruction(outputIndex: number) {
+    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_OUTPUT | outputIndex;
+}
+
 function makePushLocalVariableInstruction(localVariableIndex: number) {
     return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR | localVariableIndex;
 }
@@ -378,16 +383,32 @@ function makeEndInstruction() {
 function buildExpressionNode(
     assets: Assets,
     component: Component,
-    node: ExpressionTreeNode
+    node: ExpressionTreeNode,
+    assignable: boolean
 ): number[] {
     if (node.type == "Literal") {
         return [makePushConstantInstruction(assets, node.value)];
     }
 
     if (node.type == "Identifier") {
-        const inputIndex = assets.findComponentInputIndex(component, node.name);
-        if (inputIndex != -1) {
-            return [makePushInputInstruction(inputIndex)];
+        if (assignable) {
+            const outputIndex = component.buildOutputs.findIndex(
+                output => output.name === node.name
+            );
+            if (outputIndex != -1) {
+                return [makePushOutputInstruction(outputIndex)];
+            }
+        } else {
+            const componentInputIndex = component.buildInputs.findIndex(
+                input => input.name == node.name
+            );
+            if (componentInputIndex != -1) {
+                const inputIndex = assets.getComponentInputIndex(
+                    component,
+                    node.name
+                );
+                return [makePushInputInstruction(inputIndex)];
+            }
         }
 
         const flow = getFlow(component);
@@ -415,8 +436,8 @@ function buildExpressionNode(
         }
 
         return [
-            ...buildExpressionNode(assets, component, node.left),
-            ...buildExpressionNode(assets, component, node.right),
+            ...buildExpressionNode(assets, component, node.left, assignable),
+            ...buildExpressionNode(assets, component, node.right, assignable),
             makeOperationInstruction(operationIndexes[operator.name])
         ];
     }
@@ -428,8 +449,8 @@ function buildExpressionNode(
         }
 
         return [
-            ...buildExpressionNode(assets, component, node.left),
-            ...buildExpressionNode(assets, component, node.right),
+            ...buildExpressionNode(assets, component, node.left, assignable),
+            ...buildExpressionNode(assets, component, node.right, assignable),
             makeOperationInstruction(operationIndexes[operator.name])
         ];
     }
@@ -441,16 +462,31 @@ function buildExpressionNode(
         }
 
         return [
-            ...buildExpressionNode(assets, component, node.argument),
+            ...buildExpressionNode(
+                assets,
+                component,
+                node.argument,
+                assignable
+            ),
             makeOperationInstruction(operationIndexes[operator.name])
         ];
     }
 
     if (node.type == "ConditionalExpression") {
         return [
-            ...buildExpressionNode(assets, component, node.test),
-            ...buildExpressionNode(assets, component, node.consequent),
-            ...buildExpressionNode(assets, component, node.alternate),
+            ...buildExpressionNode(assets, component, node.test, assignable),
+            ...buildExpressionNode(
+                assets,
+                component,
+                node.consequent,
+                assignable
+            ),
+            ...buildExpressionNode(
+                assets,
+                component,
+                node.alternate,
+                assignable
+            ),
             makeOperationInstruction(operationIndexes[CONDITIONAL_OPERATOR])
         ];
     }
@@ -481,7 +517,7 @@ function buildExpressionNode(
             ...node.arguments.reduce(
                 (instructions, node) => [
                     ...instructions,
-                    ...buildExpressionNode(assets, component, node)
+                    ...buildExpressionNode(assets, component, node, assignable)
                 ],
                 []
             ),
@@ -545,7 +581,7 @@ export function buildExpression(
         instructions = [makePushConstantInstruction(assets, expression)];
     } else {
         const tree: ExpressionTreeNode = expressionParser.parse(expression);
-        instructions = buildExpressionNode(assets, component, tree);
+        instructions = buildExpressionNode(assets, component, tree, false);
     }
 
     instructions.push(makeEndInstruction());
@@ -582,7 +618,7 @@ export function buildAssignableExpression(
         throw `Expression is not assignable`;
     }
 
-    const instructions = buildExpressionNode(assets, component, tree);
+    const instructions = buildExpressionNode(assets, component, tree, true);
 
     instructions.push(makeEndInstruction());
 
