@@ -40,10 +40,12 @@ import { buildActionNames } from "project-editor/features/page/build/actions";
 import { buildVariableNames } from "project-editor/features/page/build/variables";
 import {
     buildFlowData,
-    FlowValue,
-    getComponentOutputNames,
-    getFlowValueType
+    getComponentOutputNames
 } from "project-editor/features/page/build/flows";
+import {
+    FlowValue,
+    getFlowValueType
+} from "project-editor/features/page/build/value";
 
 export const PATH_SEPARATOR = "//";
 
@@ -67,7 +69,13 @@ export class Assets {
             componentInputIndexes: Map<string, number>;
 
             flowWidgetDataIndexes: Map<string, number>;
-            flowWidgetDataIndexComponentPropertyOffset: Map<number, number>;
+            flowWidgetDataIndexToComponentPropertyValue: Map<
+                number,
+                {
+                    componentIndex: number;
+                    propertyValueIndex: number;
+                }
+            >;
             flowWidgetFromDataIndex: Map<number, Widget>;
 
             flowWidgetActionIndexes: Map<string, number>;
@@ -245,13 +253,18 @@ export class Assets {
             return this.DocumentStore.masterProject ? -assetIndex : assetIndex;
         }
 
-        const message = output.propertyNotFoundMessage(object, propertyName);
-        this.DocumentStore.OutputSectionsStore.write(
-            output.Section.OUTPUT,
-            message.type,
-            message.text,
-            message.object
-        );
+        if (assetName != undefined) {
+            const message = output.propertyNotFoundMessage(
+                object,
+                propertyName
+            );
+            this.DocumentStore.OutputSectionsStore.write(
+                output.Section.OUTPUT,
+                message.type,
+                message.text,
+                message.object
+            );
+        }
 
         return 0;
     }
@@ -522,9 +535,12 @@ export class Assets {
                 componentIndexes: new Map<Component, number>(),
                 componentInputIndexes: new Map<string, number>(),
                 flowWidgetDataIndexes: new Map<string, number>(),
-                flowWidgetDataIndexComponentPropertyOffset: new Map<
+                flowWidgetDataIndexToComponentPropertyValue: new Map<
                     number,
-                    number
+                    {
+                        componentIndex: number;
+                        propertyValueIndex: number;
+                    }
                 >(),
                 flowWidgetFromDataIndex: new Map<number, Widget>(),
                 flowWidgetActionIndexes: new Map<string, number>(),
@@ -633,17 +649,18 @@ export class Assets {
     registerComponentProperty(
         component: Component,
         propertyName: string,
-        offset: number
+        componentIndex: number,
+        propertyValueIndex: number
     ) {
         const flowState = this.getFlowState(getFlow(component));
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + propertyName;
         let index = flowState.flowWidgetDataIndexes.get(path);
         if (index != undefined) {
-            flowState.flowWidgetDataIndexComponentPropertyOffset.set(
-                index,
-                offset
-            );
+            flowState.flowWidgetDataIndexToComponentPropertyValue.set(index, {
+                componentIndex,
+                propertyValueIndex
+            });
         }
     }
 

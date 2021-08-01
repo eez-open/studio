@@ -105,7 +105,8 @@ import {
     WIDGET_TYPE_SCROLL_BAR,
     WIDGET_TYPE_PROGRESS,
     WIDGET_TYPE_CANVAS,
-    WIDGET_TYPE_GAUGE
+    WIDGET_TYPE_GAUGE,
+    WIDGET_TYPE_INPUT
 } from "./widget_types";
 import { evalExpression } from "../expression";
 import { remap } from "eez-studio-shared/util";
@@ -4041,7 +4042,7 @@ function firstTick(n: number) {
     return i * p;
 }
 
-export class Gauge2Widget extends EmbeddedWidget {
+export class GaugeEmbeddedWidget extends EmbeddedWidget {
     @observable min: string;
     @observable max: string;
     @observable threshold: string;
@@ -4348,7 +4349,199 @@ export class Gauge2Widget extends EmbeddedWidget {
     }
 }
 
-registerClass(Gauge2Widget);
+registerClass(GaugeEmbeddedWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class InputEmbeddedWidget extends EmbeddedWidget {
+    @observable type: "text" | "number";
+
+    @observable password: boolean;
+
+    @observable min: number;
+    @observable max: number;
+
+    @observable precision: number;
+    @observable unit: string;
+
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_INPUT,
+
+        properties: [
+            {
+                ...makeDataPropertyInfo("min"),
+                displayName: (widget: InputEmbeddedWidget) =>
+                    widget.type === "text" ? "Min chars" : "Min"
+            },
+            {
+                ...makeDataPropertyInfo("max"),
+                displayName: (widget: InputEmbeddedWidget) =>
+                    widget.type === "text" ? "Max chars" : "Max"
+            },
+            {
+                ...makeDataPropertyInfo("precision"),
+                hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
+                    widget.type == "number"
+            },
+            {
+                ...makeDataPropertyInfo("unit"),
+                hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
+                    widget.type == "number"
+            },
+            {
+                name: "password",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
+                    widget.type == "text"
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 120,
+            height: 40
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M12 3a3 3 0 0 0 -3 3v12a3 3 0 0 0 3 3"></path>
+                <path d="M6 3a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3"></path>
+                <path d="M13 7h7a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-7"></path>
+                <path d="M5 7h-1a1 1 0 0 0 -1 1v8a1 1 0 0 0 1 1h1"></path>
+                <path d="M17 12h.01"></path>
+                <path d="M13 12h.01"></path>
+            </svg>
+        ),
+
+        check: (widget: InputEmbeddedWidget) => {
+            let messages: output.Message[] = [];
+
+            if (!widget.data) {
+                messages.push(output.propertyNotSetMessage(widget, "data"));
+            }
+
+            if (!widget.min) {
+                messages.push(output.propertyNotSetMessage(widget, "min"));
+            }
+
+            if (!widget.max) {
+                messages.push(output.propertyNotSetMessage(widget, "min"));
+            }
+
+            if (widget.type === "number") {
+                if (!widget.precision) {
+                    messages.push(
+                        output.propertyNotSetMessage(widget, "precision")
+                    );
+                }
+            }
+
+            if (widget.type === "number") {
+                if (!widget.unit) {
+                    messages.push(output.propertyNotSetMessage(widget, "unit"));
+                }
+            }
+
+            return messages;
+        },
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
+    });
+
+    render(flowContext: IFlowContext) {
+        return (
+            <>
+                {flowContext.document.DocumentStore
+                    .isDashboardProject ? null : (
+                    <ComponentCanvas
+                        flowContext={flowContext}
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            let text;
+
+                            if (this.data) {
+                                text = evalExpression(flowContext, this.data);
+                            }
+
+                            if (!text) {
+                                text = "";
+                            }
+
+                            if (this.type === "number") {
+                                let unit = evalExpression(
+                                    flowContext,
+                                    this.unit
+                                );
+                                if (unit) {
+                                    text += " " + unit;
+                                }
+                            }
+
+                            drawText(
+                                ctx,
+                                text,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                false
+                            );
+                        }}
+                    />
+                )}
+                {super.render(flowContext)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // flags
+        let flags = 0;
+
+        const INPUT_WIDGET_TYPE_TEXT = 0x0001;
+        const INPUT_WIDGET_TYPE_NUMBER = 0x0002;
+        const INPUT_WIDGET_PASSWORD_FLAG = 0x0100;
+
+        if (this.type === "text") {
+            flags |= INPUT_WIDGET_TYPE_TEXT;
+            if (this.password) {
+                flags |= INPUT_WIDGET_PASSWORD_FLAG;
+            }
+        } else if (this.type === "number") {
+            flags |= INPUT_WIDGET_TYPE_NUMBER;
+        }
+
+        dataBuffer.writeUint16(flags);
+
+        // min
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+
+        // max
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+
+        // precision
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "precision"));
+
+        // precision
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "unit"));
+    }
+}
+
+registerClass(InputEmbeddedWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 

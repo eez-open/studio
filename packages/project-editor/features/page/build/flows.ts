@@ -13,15 +13,12 @@ import {
     IObjectClassInfo
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
-import { Variable } from "project-editor/features/variable/variable";
 import { CommentActionComponent } from "project-editor/flow/action-components";
 import {
     buildExpression,
-    evalConstantExpression,
     operationIndexes
 } from "project-editor/flow/expression";
-
-///////////////////////////////////////////////////////////////////////////////
+import { buildFlowValue, getFlowValue } from "./value";
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -42,23 +39,6 @@ function getComponentTypes() {
         .filter(componentType => getComponentId(componentType) != undefined)
         .sort((a, b) => getComponentId(a)! - getComponentId(b)!);
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-export const FLOW_VALUE_TYPE_UNDEFINED = 0;
-export const FLOW_VALUE_TYPE_NULL = 1;
-export const FLOW_VALUE_TYPE_BOOLEAN = 2;
-export const FLOW_VALUE_TYPE_INT8 = 3;
-export const FLOW_VALUE_TYPE_UINT8 = 4;
-export const FLOW_VALUE_TYPE_INT16 = 5;
-export const FLOW_VALUE_TYPE_UINT16 = 6;
-export const FLOW_VALUE_TYPE_INT32 = 7;
-export const FLOW_VALUE_TYPE_UINT32 = 8;
-export const FLOW_VALUE_TYPE_INT64 = 9;
-export const FLOW_VALUE_TYPE_UINT64 = 10;
-export const FLOW_VALUE_TYPE_FLOAT = 11;
-export const FLOW_VALUE_TYPE_DOUBLE = 12;
-export const FLOW_VALUE_TYPE_STRING = 13;
 
 export function getComponentOutputNames(component: Component) {
     const outputs: { name: string; type: "output" | "property" }[] = [];
@@ -86,88 +66,281 @@ export function getComponentOutputNames(component: Component) {
     return outputs;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-export interface FlowValue {
-    type: number;
-    value: any;
-}
-
-export function getFlowValueType(value: any) {
-    if (typeof value === "boolean") {
-        return FLOW_VALUE_TYPE_BOOLEAN;
-    } else if (typeof value === "number") {
-        return FLOW_VALUE_TYPE_DOUBLE;
-    } else if (typeof value === "string") {
-        return FLOW_VALUE_TYPE_STRING;
-    } else if (typeof value === "undefined") {
-        return FLOW_VALUE_TYPE_UNDEFINED;
+function getFlowComponents(flow: Flow) {
+    const components: Component[] = [];
+    const v = visitObjects(flow);
+    while (true) {
+        let visitResult = v.next();
+        if (visitResult.done) {
+            break;
+        }
+        if (visitResult.value instanceof Component) {
+            const component = visitResult.value;
+            if (!(component instanceof CommentActionComponent)) {
+                components.push(component);
+            }
+        }
     }
-    return FLOW_VALUE_TYPE_NULL;
+    return components;
 }
 
-function getFlowValue(assets: Assets, variable: Variable) {
-    let type;
+function buildComponent(
+    assets: Assets,
+    dataBuffer: DataBuffer,
+    flow: Flow,
+    component: Component
+) {
+    const flowIndex = assets.getFlowIndex(flow);
+    const componentIndex = assets.getComponentIndex(component);
+    assets.map.flows[flowIndex].components[componentIndex] = {
+        componentIndex,
+        path: getObjectPathAsString(component),
+        pathReadable: getHumanReadableObjectPath(component),
+        inputs: [],
+        outputs: []
+    };
 
-    if (variable.type == "boolean") {
-        type = FLOW_VALUE_TYPE_BOOLEAN;
-    } else if (variable.type == "integer") {
-        type = FLOW_VALUE_TYPE_INT32;
-    } else if (variable.type == "float") {
-        type = FLOW_VALUE_TYPE_FLOAT;
-    } else if (variable.type == "double") {
-        type = FLOW_VALUE_TYPE_DOUBLE;
-    } else if (variable.type == "string") {
-        type = FLOW_VALUE_TYPE_STRING;
-    } else if (variable.type == "enum") {
-        type = FLOW_VALUE_TYPE_INT32;
-    } else if (variable.type == "list") {
-        type = FLOW_VALUE_TYPE_NULL;
-    } else if (variable.type == "struct") {
-        type = FLOW_VALUE_TYPE_NULL;
+    // type
+    let flowComponentId = getClassInfo(component).flowComponentId;
+    if (flowComponentId != undefined) {
+        dataBuffer.writeUint16(flowComponentId);
     } else {
-        type = FLOW_VALUE_TYPE_UINT32;
+        assets.DocumentStore.OutputSectionsStore.write(
+            output.Section.OUTPUT,
+            output.Type.ERROR,
+            "Component is not supported for the build target",
+            component
+        );
+        dataBuffer.writeUint16(0);
     }
 
-    let value = evalConstantExpression(
-        assets.rootProject,
-        variable.defaultValue
+    // reserved
+    dataBuffer.writeUint16(0);
+
+    // inputs
+    dataBuffer.writeNumberArray(
+        component.inputs.filter(
+            input =>
+                input.name != "@seqin" ||
+                flow.connectionLines.find(
+                    connectionLine =>
+                        connectionLine.targetComponent == component &&
+                        connectionLine.input == "@seqin"
+                )
+        ),
+        input => {
+            const inputIndex = assets.getComponentInputIndex(
+                component,
+                input.name
+            );
+
+            dataBuffer.writeUint16(inputIndex);
+
+            assets.map.flows[flowIndex].components[componentIndex].inputs.push(
+                inputIndex
+            );
+        }
     );
 
-    return {
-        type,
-        value
-    };
-}
+    // property values
+    const properties = getClassInfo(component).properties.filter(
+        propertyInfo => propertyInfo.toggableProperty === "input"
+    );
+    properties.forEach((propertyInfo, propertyValueIndex) =>
+        assets.registerComponentProperty(
+            component,
+            propertyInfo.name,
+            componentIndex,
+            propertyValueIndex
+        )
+    );
+    dataBuffer.writeArray(properties, propertyInfo => {
+        if (
+            component.asInputProperties &&
+            component.asInputProperties.indexOf(propertyInfo.name) != -1
+        ) {
+            // as input
+            buildExpression(assets, dataBuffer, component, propertyInfo.name);
+        } else {
+            // as property
+            buildExpression(
+                assets,
+                dataBuffer,
+                component,
+                getProperty(component, propertyInfo.name)
+            );
+        }
+    });
 
-function buildFlowValue(dataBuffer: DataBuffer, flowValue: FlowValue) {
-    dataBuffer.writeUint8(flowValue.type); // type_
-    dataBuffer.writeUint8(0); // unit_
-    dataBuffer.writeUint16(0); // options_
-    dataBuffer.writeUint32(0); // reserved_
-    // union
-    if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
-        dataBuffer.writeUint32(flowValue.value);
-        dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_INT32) {
-        dataBuffer.writeInt32(flowValue.value);
-        dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
-        dataBuffer.writeFloat(flowValue.value);
-        dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_DOUBLE) {
-        dataBuffer.writeDouble(flowValue.value);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
-        dataBuffer.writeObjectOffset(() => {
-            dataBuffer.writeString(flowValue.value);
+    // outputs
+    const outputs = getComponentOutputNames(component);
+    outputs.forEach(output =>
+        assets.registerComponentOutput(component, output.name, 0)
+    );
+    dataBuffer.writeArray(outputs, output => {
+        assets.registerComponentOutput(
+            component,
+            output.name,
+            dataBuffer.currentOffset
+        );
+
+        const connectionLines = flow.connectionLines.filter(
+            connectionLine =>
+                connectionLine.sourceComponent === component &&
+                connectionLine.output == output.name
+        );
+
+        const mapOutputs: {
+            targetComponentIndex: number;
+            targetInputIndex: number;
+        }[] = [];
+
+        dataBuffer.writeArray(connectionLines, connectionLine => {
+            const targetComponentIndex = connectionLine.targetComponent
+                ? assets.getComponentIndex(connectionLine.targetComponent)!
+                : -1;
+
+            const targetInputIndex = connectionLine.targetComponent
+                ? assets.getComponentInputIndex(
+                      connectionLine.targetComponent,
+                      connectionLine.input
+                  )
+                : -1;
+
+            mapOutputs.push({
+                targetComponentIndex,
+                targetInputIndex
+            });
+
+            dataBuffer.writeUint16(targetComponentIndex);
+            dataBuffer.writeUint8(targetInputIndex);
         });
-        dataBuffer.writeUint32(0);
-    } else {
-        dataBuffer.writeUint64(0);
+
+        assets.map.flows[flowIndex].components[componentIndex].outputs.push(
+            mapOutputs
+        );
+    });
+
+    // specific
+    try {
+        component.buildFlowComponentSpecific(assets, dataBuffer);
+    } catch (err) {
+        assets.DocumentStore.OutputSectionsStore.write(
+            output.Section.OUTPUT,
+            output.Type.ERROR,
+            err,
+            component
+        );
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
+    const flowIndex = assets.getFlowIndex(flow);
+
+    assets.map.flows[flowIndex] = {
+        flowIndex,
+        path: getObjectPathAsString(flow),
+        pathReadable: getHumanReadableObjectPath(flow),
+        components: [],
+        widgetDataItems: [],
+        widgetActions: []
+    };
+
+    // components
+    const components = getFlowComponents(flow);
+    dataBuffer.writeArray(components, component =>
+        buildComponent(assets, dataBuffer, flow, component)
+    );
+
+    // localVariables
+    dataBuffer.writeArray(
+        flow.localVariables,
+        localVariable =>
+            buildFlowValue(dataBuffer, getFlowValue(assets, localVariable)),
+        8
+    );
+
+    // widgetDataItems
+    const flowState = assets.getFlowState(flow);
+    dataBuffer.writeArray(
+        [...flowState.flowWidgetDataIndexes.keys()],
+        (_, i) => {
+            const componentPropertyValue =
+                flowState.flowWidgetDataIndexToComponentPropertyValue.get(i);
+            dataBuffer.writeUint16(componentPropertyValue!.componentIndex);
+            dataBuffer.writeUint16(componentPropertyValue!.propertyValueIndex);
+        }
+    );
+
+    // widgetActions
+    dataBuffer.writeNumberArray(
+        [...flowState.flowWidgetActionIndexes.keys()],
+        (_, i) => {
+            dataBuffer.writeFutureValue(
+                () => {
+                    dataBuffer.writeUint32(0);
+                },
+                () => {
+                    const componentOutputOffset =
+                        flowState.flowWidgetActionComponentOutput.get(i);
+                    if (componentOutputOffset != undefined) {
+                        dataBuffer.writeUint32(componentOutputOffset);
+                    } else {
+                        assets.DocumentStore.OutputSectionsStore.write(
+                            output.Section.OUTPUT,
+                            output.Type.ERROR,
+                            "Widget action output not found",
+                            flowState.flowWidgetFromActionIndex.get(i)
+                        );
+                        dataBuffer.writeUint32(0);
+                    }
+                }
+            );
+        }
+    );
+
+    // nInputValues
+    dataBuffer.writeFutureValue(
+        () => dataBuffer.writeUint16(0),
+        () =>
+            dataBuffer.writeUint16(
+                assets.getFlowState(flow).componentInputIndexes.size
+            )
+    );
+}
+
+export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
+    if (assets.DocumentStore.isAppletProject) {
+        dataBuffer.writeObjectOffset(() => {
+            // flows
+            dataBuffer.writeArray(assets.flows, flow =>
+                buildFlow(assets, dataBuffer, flow)
+            );
+
+            // constants
+            dataBuffer.writeFutureArray(() =>
+                dataBuffer.writeArray(
+                    assets.constants,
+                    constant => buildFlowValue(dataBuffer, constant),
+                    8
+                )
+            );
+
+            // globalVariables
+            dataBuffer.writeArray(
+                assets.globalVariables,
+                globalVariable =>
+                    buildFlowValue(
+                        dataBuffer,
+                        getFlowValue(assets, globalVariable)
+                    ),
+                8
+            );
+        });
+    } else {
+        dataBuffer.writeUint32(0);
+    }
+}
 
 export function buildFlowDefs(assets: Assets) {
     const defs = [];
@@ -248,298 +421,4 @@ export function buildFlowDefs(assets: Assets) {
     defs.push(`enum OperationTypes {\n${operationEnumItems.join(",\n")}\n};`);
 
     return defs.join("\n\n");
-}
-
-export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
-    function buildFlow(flow: Flow) {
-        function buildComponent(component: Component) {
-            const componentIndex = assets.getComponentIndex(component);
-
-            const flowIndex = assets.getFlowIndex(flow);
-            assets.map.flows[flowIndex].components[componentIndex] = {
-                componentIndex,
-                path: getObjectPathAsString(component),
-                pathReadable: getHumanReadableObjectPath(component),
-                inputs: [],
-                outputs: []
-            };
-
-            // type
-            let flowComponentId = getClassInfo(component).flowComponentId;
-            if (flowComponentId != undefined) {
-                dataBuffer.writeUint16(flowComponentId);
-            } else {
-                assets.DocumentStore.OutputSectionsStore.write(
-                    output.Section.OUTPUT,
-                    output.Type.ERROR,
-                    "Component is not supported for the build target",
-                    component
-                );
-                dataBuffer.writeUint16(0);
-            }
-
-            // reserved
-            dataBuffer.writeUint16(0);
-
-            // inputs
-            dataBuffer.writeNumberArray(
-                component.inputs.filter(
-                    input =>
-                        input.name != "@seqin" ||
-                        flow.connectionLines.find(
-                            connectionLine =>
-                                connectionLine.targetComponent == component &&
-                                connectionLine.input == "@seqin"
-                        )
-                ),
-                input => {
-                    const inputIndex = assets.getComponentInputIndex(
-                        component,
-                        input.name
-                    );
-
-                    dataBuffer.writeUint16(inputIndex);
-
-                    assets.map.flows[flowIndex].components[
-                        componentIndex
-                    ].inputs.push(inputIndex);
-                }
-            );
-
-            // property values
-            const properties = getClassInfo(component).properties.filter(
-                propertyInfo => propertyInfo.toggableProperty === "input"
-            );
-            properties.forEach(propertyInfo =>
-                assets.registerComponentProperty(
-                    component,
-                    propertyInfo.name,
-                    0
-                )
-            );
-            dataBuffer.writeArray(properties, propertyInfo => {
-                assets.registerComponentProperty(
-                    component,
-                    propertyInfo.name,
-                    dataBuffer.currentOffset
-                );
-
-                if (
-                    component.asInputProperties &&
-                    component.asInputProperties.indexOf(propertyInfo.name) != -1
-                ) {
-                    // as input
-                    buildExpression(
-                        assets,
-                        dataBuffer,
-                        component,
-                        propertyInfo.name
-                    );
-                } else {
-                    // as property
-                    buildExpression(
-                        assets,
-                        dataBuffer,
-                        component,
-                        getProperty(component, propertyInfo.name)
-                    );
-                }
-            });
-
-            // outputs
-            const outputs = getComponentOutputNames(component);
-            outputs.forEach(output =>
-                assets.registerComponentOutput(component, output.name, 0)
-            );
-            dataBuffer.writeArray(outputs, output => {
-                assets.registerComponentOutput(
-                    component,
-                    output.name,
-                    dataBuffer.currentOffset
-                );
-
-                const connectionLines = flow.connectionLines.filter(
-                    connectionLine =>
-                        connectionLine.sourceComponent === component &&
-                        connectionLine.output == output.name
-                );
-
-                const mapOutputs: {
-                    targetComponentIndex: number;
-                    targetInputIndex: number;
-                }[] = [];
-
-                dataBuffer.writeArray(connectionLines, connectionLine => {
-                    const targetComponentIndex = connectionLine.targetComponent
-                        ? assets.getComponentIndex(
-                              connectionLine.targetComponent
-                          )!
-                        : -1;
-
-                    const targetInputIndex = connectionLine.targetComponent
-                        ? assets.getComponentInputIndex(
-                              connectionLine.targetComponent,
-                              connectionLine.input
-                          )
-                        : -1;
-
-                    mapOutputs.push({
-                        targetComponentIndex,
-                        targetInputIndex
-                    });
-
-                    dataBuffer.writeUint16(targetComponentIndex);
-                    dataBuffer.writeUint8(targetInputIndex);
-                });
-
-                assets.map.flows[flowIndex].components[
-                    componentIndex
-                ].outputs.push(mapOutputs);
-            });
-
-            // specific
-            try {
-                component.buildFlowComponentSpecific(assets, dataBuffer);
-            } catch (err) {
-                assets.DocumentStore.OutputSectionsStore.write(
-                    output.Section.OUTPUT,
-                    output.Type.ERROR,
-                    err,
-                    component
-                );
-            }
-        }
-
-        const flowIndex = assets.getFlowIndex(flow);
-
-        assets.map.flows[flowIndex] = {
-            flowIndex,
-            path: getObjectPathAsString(flow),
-            pathReadable: getHumanReadableObjectPath(flow),
-            components: [],
-            widgetDataItems: [],
-            widgetActions: []
-        };
-
-        const components: Component[] = [];
-        const v = visitObjects(flow);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            if (visitResult.value instanceof Component) {
-                const component = visitResult.value;
-                if (!(component instanceof CommentActionComponent)) {
-                    components.push(component);
-                }
-            }
-        }
-
-        dataBuffer.writeArray(components, buildComponent);
-
-        // localVariables
-        dataBuffer.writeArray(
-            flow.localVariables,
-            localVariable =>
-                buildFlowValue(dataBuffer, getFlowValue(assets, localVariable)),
-            8
-        );
-
-        const flowState = assets.getFlowState(flow);
-
-        // widgetDataItems
-        dataBuffer.writeNumberArray(
-            [...flowState.flowWidgetDataIndexes.keys()],
-            (_, i) => {
-                dataBuffer.writeFutureValue(
-                    () => {
-                        dataBuffer.writeUint32(0);
-                    },
-                    () => {
-                        const offset =
-                            flowState.flowWidgetDataIndexComponentPropertyOffset.get(
-                                i
-                            );
-                        if (offset != undefined) {
-                            dataBuffer.writeUint32(offset);
-                        } else {
-                            assets.DocumentStore.OutputSectionsStore.write(
-                                output.Section.OUTPUT,
-                                output.Type.ERROR,
-                                "Widget data item input not found",
-                                flowState.flowWidgetFromDataIndex.get(i)
-                            );
-                            dataBuffer.writeUint32(0);
-                        }
-                    }
-                );
-            }
-        );
-
-        // widgetActions
-        dataBuffer.writeNumberArray(
-            [...flowState.flowWidgetActionIndexes.keys()],
-            (_, i) => {
-                dataBuffer.writeFutureValue(
-                    () => {
-                        dataBuffer.writeUint32(0);
-                    },
-                    () => {
-                        const componentOutputOffset =
-                            flowState.flowWidgetActionComponentOutput.get(i);
-                        if (componentOutputOffset != undefined) {
-                            dataBuffer.writeUint32(componentOutputOffset);
-                        } else {
-                            assets.DocumentStore.OutputSectionsStore.write(
-                                output.Section.OUTPUT,
-                                output.Type.ERROR,
-                                "Widget action output not found",
-                                flowState.flowWidgetFromActionIndex.get(i)
-                            );
-                            dataBuffer.writeUint32(0);
-                        }
-                    }
-                );
-            }
-        );
-
-        // nInputValues
-        dataBuffer.writeFutureValue(
-            () => dataBuffer.writeUint16(0),
-            () =>
-                dataBuffer.writeUint16(
-                    assets.getFlowState(flow).componentInputIndexes.size
-                )
-        );
-    }
-
-    if (assets.DocumentStore.isAppletProject) {
-        dataBuffer.writeObjectOffset(() => {
-            // flows
-            dataBuffer.writeArray(assets.flows, buildFlow);
-
-            // constants
-            dataBuffer.writeFutureArray(() =>
-                dataBuffer.writeArray(
-                    assets.constants,
-                    constant => buildFlowValue(dataBuffer, constant),
-                    8
-                )
-            );
-
-            // globalVariables
-            dataBuffer.writeArray(
-                assets.globalVariables,
-                globalVariable =>
-                    buildFlowValue(
-                        dataBuffer,
-                        getFlowValue(assets, globalVariable)
-                    ),
-                8
-            );
-        });
-    } else {
-        dataBuffer.writeUint32(0);
-    }
 }

@@ -21,3 +21,4 @@ export const WIDGET_TYPE_SCROLL_BAR = 20;
 export const WIDGET_TYPE_PROGRESS = 21;
 export const WIDGET_TYPE_CANVAS = 22;
 export const WIDGET_TYPE_GAUGE = 23;
+export const WIDGET_TYPE_INPUT = 24;

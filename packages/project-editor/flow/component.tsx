@@ -191,16 +191,19 @@ function getClassFromType(type: string) {
         return findClass("LayoutViewWidget");
     }
 
-    let widgetClass = findClass(type + "Widget");
-    if (!widgetClass) {
-        widgetClass = findClass(type);
+    let widgetClass;
+
+    widgetClass = findClass(type + "Widget");
+    if (widgetClass) {
+        return widgetClass;
     }
 
-    if (!widgetClass) {
-        widgetClass = NotFoundComponent;
+    widgetClass = findClass(type);
+    if (widgetClass) {
+        return widgetClass;
     }
 
-    return widgetClass;
+    return NotFoundComponent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,6 +519,8 @@ export class Component extends EezObject {
 
             if (type.endsWith("Widget")) {
                 type = type.substring(0, type.length - "Widget".length);
+            } else if (type.endsWith("EmbeddedWidget")) {
+                type = type.substring(0, type.length - "EmbeddedWidget".length);
             } else if (type.endsWith("ActionComponent")) {
                 type = type.substring(
                     0,

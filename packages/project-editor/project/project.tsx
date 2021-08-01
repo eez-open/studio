@@ -526,6 +526,11 @@ export class ImportDirective {
     @computed({ keepAlive: true })
     get project(): Project | undefined {
         const DocumentStore = getDocumentStore(this);
+
+        if (this.projectAbsoluteFilePath == DocumentStore.filePath) {
+            return DocumentStore.project;
+        }
+
         return this.projectFilePath
             ? DocumentStore.externalProjects.get(this.projectAbsoluteFilePath)
             : undefined;
@@ -1116,14 +1121,14 @@ export class Project extends EezObject {
         }
     }
 
-    @computed
+    @computed({ keepAlive: true })
     get pagesMap() {
         const map = new Map<String, Page>();
         this.pages.forEach(page => map.set(page.name, page));
         return map;
     }
 
-    @computed
+    @computed({ keepAlive: true })
     get stylesMap() {
         const map = new Map<String, Style>();
         if (this.styles) {
@@ -1160,7 +1165,7 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed
+    @computed({ keepAlive: true })
     get fontsMap() {
         const map = new Map<String, Font>();
         if (this.fonts) {
@@ -1169,7 +1174,7 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed
+    @computed({ keepAlive: true })
     get bitmapsMap() {
         const map = new Map<String, Bitmap>();
         if (this.bitmaps) {

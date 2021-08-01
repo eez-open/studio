@@ -37,6 +37,10 @@ function getLabel(componentClass: IObjectClassInfo) {
         name = componentClass.name;
     }
 
+    if (name.endsWith("EmbeddedWidget")) {
+        return name.substring(0, name.length - "EmbeddedWidget".length);
+    }
+
     if (name.endsWith("Widget")) {
         return name.substring(0, name.length - "Widget".length);
     }

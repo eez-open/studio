@@ -20,7 +20,7 @@ export function buildGuiStylesEnum(assets: Assets) {
             "STYLE_ID_",
             style.name ? style : "inline" + i,
             projectBuild.NamingConvention.UnderscoreUpperCase
-        )} = ${i}`;
+        )} = ${i + 1}`;
     });
 
     styleEnumItems.unshift(`${projectBuild.TAB}STYLE_ID_NONE = 0`);
