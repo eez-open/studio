@@ -76,7 +76,7 @@ const OtherReleases = observer(
                         </thead>
                         <tbody>
                             {otherReleases.map(release => (
-                                <tr>
+                                <tr key={release.version}>
                                     <td>{release.version}</td>
                                     <td>
                                         <button

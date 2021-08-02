@@ -108,7 +108,7 @@ import {
     WIDGET_TYPE_GAUGE,
     WIDGET_TYPE_INPUT
 } from "./widget_types";
-import { buildAssignableExpression, evalExpression } from "../expression";
+import { evalExpression } from "../expression";
 import { remap } from "eez-studio-shared/util";
 
 const { MenuItem } = EEZStudio.remote || {};
@@ -1567,24 +1567,36 @@ export class TextWidget extends EmbeddedWidget {
 
     render(flowContext: IFlowContext) {
         let text = "";
-        if (this.text) {
-            text = this.text;
-        } else {
-            if (this.isInputProperty("data") && flowContext.runningFlow) {
-                const inputPropertyValue =
-                    flowContext.runningFlow.getInputPropertyValue(this, "data");
-                if (
-                    inputPropertyValue !== undefined &&
-                    inputPropertyValue.value != undefined
-                ) {
-                    text = inputPropertyValue.value.toString();
-                }
+
+        if (flowContext.runningFlow) {
+            if (this.text) {
+                text = this.text;
             } else {
-                if (this.data) {
-                    text = flowContext.dataContext.get(this.data) as string;
+                if (this.isInputProperty("data") && flowContext.runningFlow) {
+                    const inputPropertyValue =
+                        flowContext.runningFlow.getInputPropertyValue(
+                            this,
+                            "data"
+                        );
+                    if (
+                        inputPropertyValue !== undefined &&
+                        inputPropertyValue.value != undefined
+                    ) {
+                        text = inputPropertyValue.value.toString();
+                    }
                 } else {
-                    text = this.name;
+                    if (this.data) {
+                        text = flowContext.dataContext.get(this.data) as string;
+                    } else {
+                        text = this.name;
+                    }
                 }
+            }
+        } else {
+            if (this.text) {
+                text = this.text;
+            } else {
+                text = `{${this.data}}`;
             }
         }
 
@@ -4364,8 +4376,6 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     @observable precision: number;
     @observable unit: string;
 
-    @observable storeInto: string;
-
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         flowComponentId: WIDGET_TYPE_INPUT,
 
@@ -4395,11 +4405,6 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
                     widget.type == "text"
-            },
-            {
-                name: "storeInto",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
             }
         ],
 
@@ -4477,25 +4482,7 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
                         flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let text;
-
-                            if (this.data) {
-                                text = evalExpression(flowContext, this.data);
-                            }
-
-                            if (!text) {
-                                text = "";
-                            }
-
-                            if (this.type === "number") {
-                                let unit = evalExpression(
-                                    flowContext,
-                                    this.unit
-                                );
-                                if (unit) {
-                                    text += " " + unit;
-                                }
-                            }
+                            let text = `{${this.data}}`;
 
                             drawText(
                                 ctx,
@@ -4516,12 +4503,6 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // storeInto
-        dataBuffer.writeObjectOffset(() => {
-            buildAssignableExpression(assets, dataBuffer, this, this.storeInto);
-            dataBuffer.addPadding();
-        });
-
         // flags
         let flags = 0;
 

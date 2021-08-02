@@ -33,10 +33,11 @@ import {
     findPropertyByNameInObject,
     findPropertyByNameInClassInfo,
     PropertyProps,
-    generalGroup,
     isPropertyHidden,
     getObjectPropertyDisplayName,
-    getProperty
+    getProperty,
+    getAncestorOfType,
+    flowGroup
 } from "project-editor/core/object";
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
@@ -382,7 +383,9 @@ export class CustomInput extends EezObject {
             variableTypeStructProperty,
             variableTypeUIProperty
         ],
+
         defaultValue: {},
+
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
@@ -405,6 +408,22 @@ export class CustomInput extends EezObject {
                     type: "string"
                 });
             });
+        },
+
+        updateObjectValueHook: (object: CustomInput, values: any) => {
+            if (values.name != undefined && object.name != values.name) {
+                const component = getAncestorOfType<Component>(
+                    object,
+                    Component.classInfo
+                );
+                if (component) {
+                    getFlow(component).rerouteConnectionLinesInput(
+                        component,
+                        object.name,
+                        values.name
+                    );
+                }
+            }
         }
     };
 
@@ -440,7 +459,9 @@ export class CustomOutput extends EezObject {
             variableTypeStructProperty,
             variableTypeUIProperty
         ],
+
         defaultValue: {},
+
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
@@ -462,6 +483,22 @@ export class CustomOutput extends EezObject {
                     name: result.values.name
                 });
             });
+        },
+
+        updateObjectValueHook: (object: CustomInput, values: any) => {
+            if (values.name != undefined && object.name != values.name) {
+                const component = getAncestorOfType<Component>(
+                    object,
+                    Component.classInfo
+                );
+                if (component) {
+                    getFlow(component).rerouteConnectionLinesOutput(
+                        component,
+                        object.name,
+                        values.name
+                    );
+                }
+            }
         }
     };
 
@@ -579,7 +616,7 @@ export class Component extends EezObject {
                 displayName: "Inputs",
                 type: PropertyType.Array,
                 typeClass: CustomInput,
-                propertyGridGroup: generalGroup,
+                propertyGridGroup: flowGroup,
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: []
@@ -589,7 +626,7 @@ export class Component extends EezObject {
                 displayName: "Outputs",
                 type: PropertyType.Array,
                 typeClass: CustomOutput,
-                propertyGridGroup: generalGroup,
+                propertyGridGroup: flowGroup,
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: []
@@ -597,7 +634,7 @@ export class Component extends EezObject {
             {
                 name: "catchError",
                 type: PropertyType.Boolean,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: flowGroup
             },
             {
                 name: "asInputProperties",

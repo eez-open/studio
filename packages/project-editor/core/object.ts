@@ -56,19 +56,19 @@ export const generalGroup: IPropertyGridGroupDefinition = {
     position: 0
 };
 
-export const geometryGroup: IPropertyGridGroupDefinition = {
-    id: "geometry",
-    title: "Position and size",
+export const specificGroup: IPropertyGridGroupDefinition = {
+    id: "specific",
+    title: "Specific",
     position: 1
 };
+export const dataGroup = specificGroup;
+export const actionsGroup = specificGroup;
 
-export const dataGroup: IPropertyGridGroupDefinition = {
-    id: "data",
-    title: "Data and actions",
+export const flowGroup: IPropertyGridGroupDefinition = {
+    id: "flow",
+    title: "Flow",
     position: 2
 };
-
-export const actionsGroup = dataGroup;
 
 export const styleGroup: IPropertyGridGroupDefinition = {
     id: "style",
@@ -76,9 +76,9 @@ export const styleGroup: IPropertyGridGroupDefinition = {
     position: 3
 };
 
-export const specificGroup: IPropertyGridGroupDefinition = {
-    id: "specific",
-    title: "Specific",
+export const geometryGroup: IPropertyGridGroupDefinition = {
+    id: "geometry",
+    title: "Position and size",
     position: 4
 };
 

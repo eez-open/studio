@@ -102,7 +102,12 @@ import {
     buildExtensions
 } from "project-editor/project/build";
 import { getAllMetrics } from "project-editor/project/metrics";
-import { ActionComponent, Component } from "project-editor/flow/component";
+import {
+    ActionComponent,
+    Component,
+    CustomInput,
+    CustomOutput
+} from "project-editor/flow/component";
 import { Page } from "project-editor/features/page/page";
 import {
     ConnectionLine,
@@ -1809,7 +1814,7 @@ export class DocumentStoreClass {
         let closeCombineCommands = false;
 
         if (object instanceof Component) {
-            const flow = getAncestorOfType(object, Flow.classInfo) as Flow;
+            const flow = getFlow(object);
 
             let keepConnectionLines =
                 options &&
@@ -1824,6 +1829,40 @@ export class DocumentStoreClass {
 
                 flow.deleteConnectionLines(object);
             }
+        }
+
+        if (object instanceof CustomInput) {
+            if (!this.UndoManager.combineCommands) {
+                this.UndoManager.setCombineCommands(true);
+                closeCombineCommands = true;
+            }
+
+            const component = getAncestorOfType<Component>(
+                object,
+                Component.classInfo
+            ) as Component;
+
+            getFlow(component).deleteConnectionLinesToInput(
+                component,
+                object.name
+            );
+        }
+
+        if (object instanceof CustomOutput) {
+            if (!this.UndoManager.combineCommands) {
+                this.UndoManager.setCombineCommands(true);
+                closeCombineCommands = true;
+            }
+
+            const component = getAncestorOfType<Component>(
+                object,
+                Component.classInfo
+            ) as Component;
+
+            getFlow(component).deleteConnectionLinesFromOutput(
+                component,
+                object.name
+            );
         }
 
         deleteObject(object);

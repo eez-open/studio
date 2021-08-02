@@ -685,12 +685,8 @@ export class ComponentState {
     }
 
     isReadyToRun() {
-        if (this.component instanceof LayoutViewWidget) {
-            return true;
-        }
-
         if (this.component instanceof Widget) {
-            return this.inputsData.size > 0;
+            return true;
         }
 
         if (this.component instanceof CatchErrorActionComponent) {
@@ -710,7 +706,8 @@ export class ComponentState {
 
         if (
             this.component.inputs.find(
-                input => !this.inputsData.has(input.name)
+                input =>
+                    input.name != "@seqin" && !this.inputsData.has(input.name)
             )
         ) {
             return false;
