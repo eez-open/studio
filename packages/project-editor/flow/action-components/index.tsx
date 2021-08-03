@@ -643,7 +643,7 @@ export class SwitchActionComponent extends ActionComponent {
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeArray(this.tests, test => {
-            dataBuffer.writeUint16(
+            dataBuffer.writeUint8(
                 this.buildOutputs.findIndex(
                     output => output.name == test.outputName
                 )

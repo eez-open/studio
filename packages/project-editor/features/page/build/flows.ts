@@ -174,6 +174,7 @@ function buildComponent(
 
             dataBuffer.writeUint16(targetComponentIndex);
             dataBuffer.writeUint8(targetInputIndex);
+            dataBuffer.writeUint8(connectionLine.input == "@seqin" ? 1 : 0);
         });
 
         assets.map.flows[flowIndex].components[componentIndex].outputs.push(
