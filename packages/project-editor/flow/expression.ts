@@ -20,6 +20,10 @@ const expressionParserGrammar = readFileSync(
 
 var expressionParser = peggy.generate(expressionParserGrammar);
 
+var identifierParser = peggy.generate(expressionParserGrammar, {
+    allowedStartRules: ["Identifier"]
+});
+
 ////////////////////////////////////////////////////////////////////////////////
 
 type ExpressionTreeNode =
@@ -148,6 +152,11 @@ const builtInFunctions: {
     "Math.log": {
         arity: 1,
         eval: (...args: any[]) => Math.log(args[0])
+    },
+
+    "String.find": {
+        arity: 2,
+        eval: (...args: any[]) => Math.log(args[0])
     }
 };
 
@@ -238,9 +247,12 @@ export function checkExpression(component: Component, expression: string) {
         }
 
         if (node.type == "BinaryExpression") {
-            const operator = binaryOperators[node.operator];
+            let operator = binaryOperators[node.operator];
             if (!operator) {
-                throw `Unknown binary operator '${node.operator}'`;
+                operator = logicalOperators[node.operator];
+                if (!operator) {
+                    throw `Unknown binary operator '${node.operator}'`;
+                }
             }
 
             checkNode(node.left);
@@ -430,9 +442,12 @@ function buildExpressionNode(
     }
 
     if (node.type == "BinaryExpression") {
-        const operator = binaryOperators[node.operator];
+        let operator = binaryOperators[node.operator];
         if (!operator) {
-            throw `Unknown binary operator '${node.operator}'`;
+            operator = logicalOperators[node.operator];
+            if (!operator) {
+                throw `Unknown binary operator '${node.operator}'`;
+            }
         }
 
         return [
@@ -521,7 +536,7 @@ function buildExpressionNode(
                 ],
                 []
             ),
-            operationIndexes[functionName]
+            makeOperationInstruction(operationIndexes[functionName])
         ];
     }
 
@@ -884,4 +899,13 @@ export function evalExpression(flowContext: IFlowContext, expression: string) {
     }
 
     return value;
+}
+
+export function isIdentifier(identifier: string) {
+    try {
+        const tree: ExpressionTreeNode = identifierParser.parse(identifier);
+        return tree && tree.type === "Identifier";
+    } catch (err) {
+        return false;
+    }
 }

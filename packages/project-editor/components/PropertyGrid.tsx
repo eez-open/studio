@@ -1130,10 +1130,16 @@ class Property extends React.Component<PropertyProps> {
                         name: this.props.propertyInfo.name,
                         type: "string",
                         validators: [
-                            validators.unique(
-                                this.props.objects[0],
-                                getParent(this.props.objects[0])
-                            )
+                            typeof this.props.propertyInfo.unique === "boolean"
+                                ? validators.unique(
+                                      this.props.objects[0],
+                                      getParent(this.props.objects[0])
+                                  )
+                                : this.props.propertyInfo.unique!(
+                                      this.props.objects[0],
+                                      getParent(this.props.objects[0]),
+                                      this.props.propertyInfo
+                                  )
                         ].concat(
                             this.props.propertyInfo.isOptional
                                 ? []
@@ -2288,6 +2294,13 @@ export class PropertyGrid extends React.Component<PropertyGridProps> {
                                 propertyInfo.type === PropertyType.Object
                         })}
                         colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}
+                        style={
+                            propertyInfo.type === PropertyType.Array
+                                ? {
+                                      width: "100%"
+                                  }
+                                : undefined
+                        }
                     >
                         <Property {...propertyProps} />
                     </td>

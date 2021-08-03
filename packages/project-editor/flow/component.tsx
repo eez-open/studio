@@ -68,12 +68,9 @@ import { WIDGET_TYPE_NONE } from "project-editor/flow/widgets/widget_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { checkExpression } from "./expression";
+import { checkExpression, isIdentifier } from "./expression";
 import {
-    VariableType,
-    variableTypeEnumProperty,
     variableTypeProperty,
-    variableTypeStructProperty,
     variableTypeUIProperty
 } from "project-editor/features/variable/variable";
 
@@ -364,23 +361,81 @@ export function getWidgetParent(widget: Component | Page) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function componentInputOrOutputUnique(
+    object: IEezObject,
+    parent: IEezObject,
+    collection: "inputs" | "outputs",
+    propertyInfo?: PropertyInfo
+) {
+    const oldName = propertyInfo
+        ? getProperty(object, propertyInfo.name)
+        : undefined;
+    const component = getAncestorOfType(
+        parent,
+        Component.classInfo
+    ) as Component;
+
+    return (object: any, ruleName: string) => {
+        if (!component) {
+            return "Not component descendant";
+        }
+
+        const newName = object[ruleName];
+        if (oldName != undefined && newName == oldName) {
+            return null;
+        }
+
+        if (!isIdentifier(newName)) {
+            return "Input name is not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
+        }
+
+        if (
+            ((component as any)[collection] as PropertyInfo[]).find(
+                inputOrOutput => inputOrOutput.name == newName
+            )
+        ) {
+            return "Input name is not unique";
+        }
+
+        return null;
+    };
+}
+
+export function componentInputUnique(
+    object: IEezObject,
+    parent: IEezObject,
+    propertyInfo?: PropertyInfo
+) {
+    return componentInputOrOutputUnique(object, parent, "inputs", propertyInfo);
+}
+
+export function componentOutputUnique(
+    object: IEezObject,
+    parent: IEezObject,
+    propertyInfo?: PropertyInfo
+) {
+    return componentInputOrOutputUnique(
+        object,
+        parent,
+        "outputs",
+        propertyInfo
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class CustomInput extends EezObject {
     @observable name: string;
-
-    @observable type: VariableType;
-    @observable enum: string;
-    @observable structure: string;
+    @observable type: string;
 
     static classInfo: ClassInfo = {
         properties: [
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: componentInputUnique
             },
             variableTypeProperty,
-            variableTypeEnumProperty,
-            variableTypeStructProperty,
             variableTypeUIProperty
         ],
 
@@ -396,7 +451,7 @@ export class CustomInput extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.unique({}, parent)
+                                componentInputUnique({}, parent)
                             ]
                         }
                     ]
@@ -442,21 +497,16 @@ export class CustomInput extends EezObject {
 
 export class CustomOutput extends EezObject {
     @observable name: string;
-
-    @observable type: VariableType;
-    @observable enum: string;
-    @observable structure: string;
+    @observable type: string;
 
     static classInfo: ClassInfo = {
         properties: [
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: componentOutputUnique
             },
             variableTypeProperty,
-            variableTypeEnumProperty,
-            variableTypeStructProperty,
             variableTypeUIProperty
         ],
 
@@ -471,7 +521,7 @@ export class CustomOutput extends EezObject {
                             name: "name",
                             type: "string",
                             validators: [
-                                validators.required,
+                                componentOutputUnique({}, parent),
                                 validators.unique({}, parent)
                             ]
                         }

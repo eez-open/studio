@@ -71,60 +71,21 @@ export type VariableType =
     | "double"
     | "boolean"
     | "string"
+    | "date"
     | "enum"
-    | "list"
     | "struct"
-    | "date";
+    | "array";
 
-export const variableTypeProperty: PropertyInfo = {
-    name: "type",
-    type: PropertyType.Enum,
-    enumItems: [
-        {
-            id: "integer"
-        },
-        {
-            id: "float"
-        },
-        {
-            id: "double"
-        },
-        {
-            id: "boolean"
-        },
-        {
-            id: "string"
-        },
-        {
-            id: "enum"
-        },
-        {
-            id: "list"
-        },
-        {
-            id: "struct",
-            label: "Structure"
-        },
-        {
-            id: "date"
-        }
-    ],
-    hideInPropertyGrid: true
-};
+const basicTypeNames = [
+    "integer",
+    "float",
+    "double",
+    "boolean",
+    "string",
+    "date"
+];
 
-export const variableTypeEnumProperty = {
-    name: "enum",
-    type: PropertyType.ObjectReference,
-    referencedObjectCollectionPath: "variables/enums",
-    hideInPropertyGrid: true
-};
-
-export const variableTypeStructProperty = {
-    name: "structure",
-    type: PropertyType.ObjectReference,
-    referencedObjectCollectionPath: "variables/structures",
-    hideInPropertyGrid: true
-};
+////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class VariableTypeUI extends React.Component<PropertyProps> {
@@ -133,24 +94,12 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
 
     ref = React.createRef<HTMLSelectElement>();
 
-    @observable _value: any = undefined;
+    @observable _type: string;
     @observable updateCounter: number = 0;
 
     @computed get typePropertyInfo() {
         return getClassInfo(this.props.objects[0]).properties.find(
             propertyInfo => propertyInfo.name === "type"
-        )!;
-    }
-
-    @computed get enumPropertyInfo() {
-        return getClassInfo(this.props.objects[0]).properties.find(
-            propertyInfo => propertyInfo.name === "enum"
-        )!;
-    }
-
-    @computed get structurePropertyInfo() {
-        return getClassInfo(this.props.objects[0]).properties.find(
-            propertyInfo => propertyInfo.name === "structure"
         )!;
     }
 
@@ -163,43 +112,16 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                 this.typePropertyInfo
             );
 
-            const getPropertyValueResultForEnum = getPropertyValue(
-                this.props.objects,
-                this.enumPropertyInfo
-            );
-
-            const getPropertyValueResultForStructure = getPropertyValue(
-                this.props.objects,
-                this.structurePropertyInfo
-            );
-
-            const type = getPropertyValueResultForType
+            let type = getPropertyValueResultForType
                 ? getPropertyValueResultForType.value
                 : "";
 
-            const enumValue = getPropertyValueResultForEnum
-                ? getPropertyValueResultForEnum.value
-                : "";
-
-            const structureValue = getPropertyValueResultForStructure
-                ? getPropertyValueResultForStructure.value
-                : "";
-
-            let value: string;
-            if (type == "enum" && enumValue) {
-                value = `enum:${enumValue}`;
-            } else if (type == "struct" && structureValue) {
-                value = `struct:${structureValue}`;
-            } else {
-                value = type;
-            }
-
-            if (value == undefined) {
-                value = "";
+            if (type == undefined) {
+                type = "";
             }
 
             runInAction(() => {
-                this._value = value;
+                this._type = type;
             });
         }
     });
@@ -220,64 +142,62 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
     @action
     componentDidUpdate() {
         this.updateCounter++;
-        console.log(this.updateCounter);
     }
 
     onChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = event.target.value;
+        const type = event.target.value;
 
-        let type: string;
-        let enumValue: string | undefined;
-        let structure: string | undefined;
-        if (value.startsWith("enum:")) {
-            type = "enum";
-            enumValue = value.substr("enum:".length);
-            structure = undefined;
-        } else if (value.startsWith("struct:")) {
-            type = "enum";
-            enumValue = undefined;
-            structure = value.substr("struct:".length);
-        } else {
-            type = value;
-            enumValue = undefined;
-            structure = undefined;
-        }
-
-        runInAction(() => (this._value = value));
+        runInAction(() => (this._type = type));
 
         this.props.updateObject({
-            type,
-            enum: enumValue,
-            structure
+            type
         });
     };
 
     render() {
-        const basicTypes = this.typePropertyInfo
-            .enumItems!.filter(
-                enumItem => enumItem.id != "struct" && enumItem.id != "enum"
-            )
-            .map(enumItem => {
-                const id = enumItem.id.toString();
-                return (
-                    <option key={id} value={id}>
-                        {enumItem.label || humanize(id)}
-                    </option>
-                );
-            });
+        const basicTypes = basicTypeNames.map(basicTypeName => {
+            return (
+                <option key={basicTypeName} value={basicTypeName}>
+                    {humanize(basicTypeName)}
+                </option>
+            );
+        });
 
         basicTypes.unshift(<option key="__empty" value="" />);
 
         const project = getProject(this.props.objects[0]);
 
         const enums = project.variables.enums.map(enumDef => (
-            <option key="enums" value={`enum:${enumDef.name}`}>
+            <option key={enumDef.name} value={`enum:${enumDef.name}`}>
                 {enumDef.name}
             </option>
         ));
 
         const structures = project.variables.structures.map(struct => (
-            <option key="structs" value={`struct:${struct.name}`}>
+            <option key={struct.name} value={`struct:${struct.name}`}>
+                {struct.name}
+            </option>
+        ));
+
+        const arrayOfBasicTypes = basicTypeNames.map(basicTypeName => {
+            return (
+                <option
+                    key={`array:${basicTypeName}`}
+                    value={`array:${basicTypeName}`}
+                >
+                    {humanize(basicTypeName)}
+                </option>
+            );
+        });
+
+        const arrayOfEnums = project.variables.enums.map(enumDef => (
+            <option key={enumDef.name} value={`array:enum:${enumDef.name}`}>
+                {enumDef.name}
+            </option>
+        ));
+
+        const arrayOfStructures = project.variables.structures.map(struct => (
+            <option key={struct.name} value={`array:struct:${struct.name}`}>
                 {struct.name}
             </option>
         ));
@@ -286,7 +206,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
             <select
                 ref={this.ref}
                 className="form-select"
-                value={this._value}
+                value={this._type}
                 onChange={this.onChange}
             >
                 {basicTypes}
@@ -295,6 +215,17 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                 )}
                 {structures.length > 0 && (
                     <optgroup label="Structures">{structures}</optgroup>
+                )}
+                <optgroup label="Array of">{arrayOfBasicTypes}</optgroup>
+                {arrayOfEnums.length > 0 && (
+                    <optgroup label="Array of Enumerations">
+                        {arrayOfEnums}
+                    </optgroup>
+                )}
+                {arrayOfStructures.length > 0 && (
+                    <optgroup label="Array of Structures">
+                        {arrayOfStructures}
+                    </optgroup>
                 )}
             </select>
         );
@@ -311,13 +242,33 @@ export const variableTypeUIProperty = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const variableTypeProperty: PropertyInfo = {
+    name: "type",
+    type: PropertyType.String,
+    hideInPropertyGrid: true
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+function migrateType(objectJS: any) {
+    if (objectJS.type == "list") {
+        objectJS.type = "array";
+    } else if (objectJS.type == "struct") {
+        objectJS.type = `struct:${objectJS.structure}`;
+        delete objectJS.structure;
+    } else if (objectJS.type == "enum") {
+        objectJS.type = `enum:${objectJS.enum}`;
+        delete objectJS.enum;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Variable extends EezObject {
     @observable name: string;
     @observable description?: string;
 
-    @observable type: VariableType;
-    @observable enum: string;
-    @observable structure: string;
+    @observable type: string;
 
     @observable defaultValue: string;
     @observable defaultValueList: string;
@@ -339,8 +290,6 @@ export class Variable extends EezObject {
                 type: PropertyType.MultilineText
             },
             variableTypeProperty,
-            variableTypeEnumProperty,
-            variableTypeStructProperty,
             variableTypeUIProperty,
             {
                 name: "defaultValue",
@@ -366,6 +315,9 @@ export class Variable extends EezObject {
                     getDocumentStore(object).isDashboardProject
             }
         ],
+        beforeLoadHook: (object: Variable, objectJS: any) => {
+            migrateType(objectJS);
+        },
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
@@ -404,6 +356,28 @@ export function findVariable(project: Project, variableName: string) {
         "variables/globalVariables",
         variableName
     ) as Variable | undefined;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function isInteger(variable: Variable) {
+    return variable.type == "integer";
+}
+
+function isEnum(variable: Variable) {
+    return variable.type.match(/enum\((.*)\)/) != null;
+}
+
+export function getEnum(variable: Variable) {
+    const result = variable.type.match(/enum:(.*)/);
+    if (result == null) {
+        return null;
+    }
+    return result[1];
+}
+
+function getEnumValues(variable: Variable): any[] {
+    return [];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -560,20 +534,22 @@ export class DataContext implements IDataContext {
                     value = value_;
                 } else {
                     if (variable.defaultValue !== undefined) {
-                        if (
-                            variable.type == "integer" ||
-                            variable.type == "enum"
-                        ) {
+                        if (isInteger(variable)) {
                             value = parseInt(variable.defaultValue);
                             if (isNaN(value)) {
-                                value = variable.defaultValue;
-                                // TODO this is invalid check
-                                if (variable.enum.indexOf(value) == -1) {
-                                    console.error(
-                                        "Invalid integer default value",
-                                        variable
-                                    );
-                                }
+                                console.error(
+                                    "Invalid integer default value",
+                                    variable
+                                );
+                            }
+                        } else if (isEnum(variable)) {
+                            // TODO this is invalid check
+                            value = variable.defaultValue;
+                            if (getEnumValues(variable).indexOf(value) == -1) {
+                                console.error(
+                                    "Invalid enum default value",
+                                    variable
+                                );
                             }
                         } else if (variable.type == "float") {
                             value = parseFloat(variable.defaultValue);
@@ -599,7 +575,7 @@ export class DataContext implements IDataContext {
                             } else {
                                 value = undefined;
                             }
-                        } else if (variable.type == "list") {
+                        } else if (variable.type == "array") {
                             try {
                                 value =
                                     typeof variable.defaultValue === "string"
@@ -608,7 +584,7 @@ export class DataContext implements IDataContext {
                             } catch (err) {
                                 value = [];
                                 console.error(
-                                    "Invalid list default value",
+                                    "Invalid array default value",
                                     variable,
                                     err
                                 );
@@ -657,9 +633,9 @@ export class DataContext implements IDataContext {
             return value;
         } else if (typeof value === "string") {
             let variable = this.findVariable(variableName);
-            if (variable && variable.type == "enum") {
+            if (variable && isEnum(variable)) {
                 // TODO this is invalid check
-                value = variable.enum.indexOf(value);
+                value = getEnumValues(variable).indexOf(value);
                 if (value == -1) {
                     console.error("Invalid enum value", variable);
                     return 0;
@@ -709,7 +685,7 @@ export class DataContext implements IDataContext {
 
 export class StructureField extends EezObject {
     @observable name: string;
-    @observable type: VariableType;
+    @observable type: string;
     @observable structure: string;
     @observable enum: string;
 
@@ -721,10 +697,11 @@ export class StructureField extends EezObject {
                 unique: true
             },
             variableTypeProperty,
-            variableTypeEnumProperty,
-            variableTypeStructProperty,
             variableTypeUIProperty
         ],
+        beforeLoadHook: (object: Variable, objectJS: any) => {
+            migrateType(objectJS);
+        },
         defaultValue: {},
         newItem: (parent: IEezObject) => {
             return showGenericDialog({

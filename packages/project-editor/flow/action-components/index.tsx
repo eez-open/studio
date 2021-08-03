@@ -10,7 +10,9 @@ import {
     makeDerivedClassInfo,
     PropertyInfo,
     specificGroup,
-    IEezObject
+    IEezObject,
+    EezObject,
+    ClassInfo
 } from "project-editor/core/object";
 import { getDocumentStore } from "project-editor/core/store";
 
@@ -21,6 +23,7 @@ import { guid } from "eez-studio-shared/guid";
 
 import {
     ActionComponent,
+    componentOutputUnique,
     makeToggablePropertyToInput
 } from "project-editor/flow/component";
 
@@ -32,6 +35,7 @@ import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
     buildAssignableExpression,
+    buildExpression,
     evalConstantExpression
 } from "project-editor/flow/expression";
 
@@ -55,6 +59,26 @@ const LeftArrow = () => (
         </svg>
     </div>
 );
+
+const RightArrow = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <line x1="15" y1="16" x2="19" y2="12"></line>
+        <line x1="15" y1="8" x2="19" y2="12"></line>
+    </svg>
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class StartActionComponent extends ActionComponent {
@@ -523,6 +547,116 @@ registerClass(SetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SwitchActionComponentDiv = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    white-space: nowrap;
+`;
+
+class SwitchTest extends EezObject {
+    @observable condition: string;
+    @observable outputName: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "condition",
+                type: PropertyType.String
+            },
+            {
+                name: "outputName",
+                type: PropertyType.String,
+                unique: componentOutputUnique
+            }
+        ],
+        defaultValue: {}
+    };
+}
+
+export class SwitchActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1009,
+
+        properties: [
+            {
+                name: "tests",
+                type: PropertyType.Array,
+                typeClass: SwitchTest,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            }
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M8 8a3.5 3 0 0 1 3.5 -3h1a3.5 3 0 0 1 3.5 3a3 3 0 0 1 -2 3a3 4 0 0 0 -2 4"></path>
+                <line x1="12" y1="19" x2="12" y2="19.01"></line>
+            </svg>
+        ),
+        componentHeaderColor: "#AAAA66",
+        defaultValue: {}
+    });
+
+    @observable tests: SwitchTest[];
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            ...this.tests
+                .filter(test => !!test.outputName)
+                .map(test => ({
+                    name: test.outputName,
+                    type: PropertyType.Null
+                }))
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <SwitchActionComponentDiv className="body">
+                {this.tests.map(test => (
+                    <div key={test.outputName}>
+                        {test.condition} <RightArrow /> {test.outputName}
+                    </div>
+                ))}
+            </SwitchActionComponentDiv>
+        );
+    }
+
+    async execute(runningFlow: RunningFlow) {
+        // TODO
+        return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeArray(this.tests, test => {
+            dataBuffer.writeUint16(
+                this.buildOutputs.findIndex(
+                    output => output.name == test.outputName
+                )
+            );
+            buildExpression(assets, dataBuffer, this, test.condition);
+        });
+    }
+}
+
+registerClass(SwitchActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const CompareActionComponentDiv = styled.div`
     display: flex;
     align-items: center;
@@ -978,7 +1112,26 @@ registerClass(WriteSettingsActionComponent);
 export class LogActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1015,
-
+        properties: [
+            makeToggablePropertyToInput({
+                name: "value",
+                type: PropertyType.String
+            })
+        ],
+        beforeLoadHook: (object: LogActionComponent, objectJS: any) => {
+            if (
+                !objectJS.hasOwnProperty("value") &&
+                objectJS.customInputs == undefined
+            ) {
+                objectJS.customInputs = [
+                    {
+                        name: "value",
+                        type: "string"
+                    }
+                ];
+                objectJS.value = "value";
+            }
+        },
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 448">
                 <path d="M223.988 0C128.473 0 46.934 59.804 14.727 144h34.639c9.396-20.484 22.457-39.35 38.868-55.762C124.497 51.973 172.709 32 223.988 32c51.286 0 99.504 19.973 135.771 56.239C396.027 124.505 416 172.719 416 224c0 51.285-19.973 99.501-56.239 135.765C323.494 396.029 275.275 416 223.988 416c-51.281 0-99.493-19.971-135.755-56.234C71.821 343.354 58.76 324.486 49.362 304H14.725c32.206 84.201 113.746 144 209.264 144C347.703 448 448 347.715 448 224 448 100.298 347.703 0 223.988 0z" />
@@ -988,21 +1141,10 @@ export class LogActionComponent extends ActionComponent {
         componentHeaderColor: "#C0DEED"
     });
 
-    @observable countValue: number;
-
-    getInputs() {
-        return [
-            ...super.getInputs(),
-            {
-                name: "value",
-                type: PropertyType.Any
-            }
-        ];
-    }
+    @observable value: string;
 
     async execute(runningFlow: RunningFlow) {
-        const componentState = runningFlow.getComponentState(this);
-        const value = componentState.getInputValue("value");
+        const value = runningFlow.getPropertyValue(this, "value");
         console.log(value);
         return undefined;
     }
@@ -1255,7 +1397,6 @@ registerClass(CommentActionComponent);
 export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1018,
-
         properties: [
             makeToggablePropertyToInput({
                 name: "milliseconds",

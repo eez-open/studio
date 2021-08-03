@@ -45,7 +45,10 @@ import {
 import { Page, findPage } from "project-editor/features/page/page";
 import { findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
-import { findVariable } from "project-editor/features/variable/variable";
+import {
+    findVariable,
+    getEnum
+} from "project-editor/features/variable/variable";
 import {
     drawText,
     styleGetBorderRadius,
@@ -693,10 +696,12 @@ export class SelectWidget extends EmbeddedWidget {
                     let enumItems: string[] = [];
                     if (variable.type == "enum") {
                         const project = getProject(object);
-                        enumItems =
-                            project.variables.enumMap
-                                .get(variable.enum)
-                                ?.members.map(member => member.name) ?? [];
+                        const enumName = getEnum(variable);
+                        enumItems = enumName
+                            ? project.variables.enumMap
+                                  .get(enumName)
+                                  ?.members.map(member => member.name) ?? []
+                            : [];
                     } else if (variable.type == "boolean") {
                         enumItems = ["0", "1"];
                     }
@@ -757,10 +762,12 @@ export class SelectWidget extends EmbeddedWidget {
                             let enumItems: string[];
 
                             const project = getProject(this);
-                            enumItems =
-                                project.variables.enumMap
-                                    .get(variable.enum)
-                                    ?.members.map(member => member.name) ?? [];
+                            const enumName = getEnum(variable);
+                            enumItems = enumName
+                                ? project.variables.enumMap
+                                      .get(enumName)
+                                      ?.members.map(member => member.name) ?? []
+                                : [];
 
                             if (index < enumItems.length) {
                                 let enumItemLabel = htmlEncode(

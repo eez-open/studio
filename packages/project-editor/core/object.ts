@@ -136,7 +136,16 @@ export interface PropertyInfo {
     defaultValue?: any;
     inheritable?: boolean;
     propertyMenu?: (props: PropertyProps) => Electron.MenuItem[];
-    unique?: boolean;
+    unique?:
+        | boolean
+        | ((
+              object: IEezObject,
+              parent: IEezObject,
+              propertyInfo: PropertyInfo
+          ) => (
+              object: any,
+              ruleName: string
+          ) => Promise<string | null> | string | null);
     skipSearch?: boolean;
     childLabel?: (childObject: IEezObject, childLabel: string) => string;
     check?: (object: IEezObject) => IMessage[];
