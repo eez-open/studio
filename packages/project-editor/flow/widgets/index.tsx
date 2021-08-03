@@ -47,7 +47,8 @@ import { findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
 import {
     findVariable,
-    getEnum
+    getEnum,
+    isEnumVariable
 } from "project-editor/features/variable/variable";
 import {
     drawText,
@@ -694,7 +695,7 @@ export class SelectWidget extends EmbeddedWidget {
                 let variable = findVariable(getProject(object), object.data);
                 if (variable) {
                     let enumItems: string[] = [];
-                    if (variable.type == "enum") {
+                    if (isEnumVariable(variable)) {
                         const project = getProject(object);
                         const enumName = getEnum(variable);
                         enumItems = enumName
@@ -758,7 +759,7 @@ export class SelectWidget extends EmbeddedWidget {
                 if (this.data) {
                     let variable = findVariable(getProject(this), this.data);
                     if (variable) {
-                        if (variable.type == "enum") {
+                        if (isEnumVariable(variable)) {
                             let enumItems: string[];
 
                             const project = getProject(this);

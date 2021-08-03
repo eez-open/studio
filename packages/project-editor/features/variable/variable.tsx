@@ -360,12 +360,20 @@ export function findVariable(project: Project, variableName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function isInteger(variable: Variable) {
+export function isInteger(variable: Variable) {
     return variable.type == "integer";
 }
 
-function isEnum(variable: Variable) {
-    return variable.type.match(/enum\((.*)\)/) != null;
+export function isEnumVariable(variable: Variable) {
+    return variable.type.match(/enum:(.*)/) != null;
+}
+
+export function isStructVariable(variable: Variable) {
+    return variable.type.match(/struct:(.*)/) != null;
+}
+
+export function isArrayVariable(variable: Variable) {
+    return variable.type.match(/array:(.*)/) != null;
 }
 
 export function getEnum(variable: Variable) {
@@ -542,7 +550,7 @@ export class DataContext implements IDataContext {
                                     variable
                                 );
                             }
-                        } else if (isEnum(variable)) {
+                        } else if (isEnumVariable(variable)) {
                             // TODO this is invalid check
                             value = variable.defaultValue;
                             if (getEnumValues(variable).indexOf(value) == -1) {
@@ -633,7 +641,7 @@ export class DataContext implements IDataContext {
             return value;
         } else if (typeof value === "string") {
             let variable = this.findVariable(variableName);
-            if (variable && isEnum(variable)) {
+            if (variable && isEnumVariable(variable)) {
                 // TODO this is invalid check
                 value = getEnumValues(variable).indexOf(value);
                 if (value == -1) {

@@ -1,5 +1,10 @@
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { Variable } from "project-editor/features/variable/variable";
+import {
+    isArrayVariable,
+    isEnumVariable,
+    isStructVariable,
+    Variable
+} from "project-editor/features/variable/variable";
 import { evalConstantExpression } from "project-editor/flow/expression";
 
 export const FLOW_VALUE_TYPE_UNDEFINED = 0;
@@ -48,11 +53,11 @@ export function getFlowValue(assets: Assets, variable: Variable) {
         type = FLOW_VALUE_TYPE_DOUBLE;
     } else if (variable.type == "string") {
         type = FLOW_VALUE_TYPE_ASSETS_STRING;
-    } else if (variable.type == "enum") {
+    } else if (isEnumVariable(variable)) {
         type = FLOW_VALUE_TYPE_INT32;
-    } else if (variable.type == "list") {
+    } else if (isStructVariable(variable)) {
         type = FLOW_VALUE_TYPE_NULL;
-    } else if (variable.type == "struct") {
+    } else if (isArrayVariable(variable)) {
         type = FLOW_VALUE_TYPE_NULL;
     } else {
         type = FLOW_VALUE_TYPE_UINT32;
