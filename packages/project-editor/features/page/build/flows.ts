@@ -17,8 +17,12 @@ import { CommentActionComponent } from "project-editor/flow/action-components";
 import {
     buildExpression,
     operationIndexes
-} from "project-editor/flow/expression";
-import { buildFlowValue, getFlowValue } from "./value";
+} from "project-editor/flow/expression/expression";
+import {
+    getVariableFlowValue,
+    buildConstantFlowValue,
+    buildVariableFlowValue
+} from "./value";
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -182,6 +186,23 @@ function buildComponent(
         );
     });
 
+    const errorCatchOutputIndex = component.buildOutputs.findIndex(
+        buildOutput => buildOutput.name == "@error"
+    );
+    if (errorCatchOutputIndex != -1) {
+        // errorCatchOutput
+        dataBuffer.writeInt16(errorCatchOutputIndex);
+
+        // logError
+        dataBuffer.writeUint16(component.logError ? 1 : 0);
+    } else {
+        // errorCatchOutput
+        dataBuffer.writeInt16(-1);
+
+        // logError
+        dataBuffer.writeUint16(1);
+    }
+
     // specific
     try {
         component.buildFlowComponentSpecific(assets, dataBuffer);
@@ -217,7 +238,10 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
     dataBuffer.writeArray(
         flow.localVariables,
         localVariable =>
-            buildFlowValue(dataBuffer, getFlowValue(assets, localVariable)),
+            buildVariableFlowValue(
+                dataBuffer,
+                getVariableFlowValue(assets, localVariable)
+            ),
         8
     );
 
@@ -282,7 +306,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             dataBuffer.writeFutureArray(() =>
                 dataBuffer.writeArray(
                     assets.constants,
-                    constant => buildFlowValue(dataBuffer, constant),
+                    constant => buildConstantFlowValue(dataBuffer, constant),
                     8
                 )
             );
@@ -291,9 +315,9 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             dataBuffer.writeArray(
                 assets.globalVariables,
                 globalVariable =>
-                    buildFlowValue(
+                    buildVariableFlowValue(
                         dataBuffer,
-                        getFlowValue(assets, globalVariable)
+                        getVariableFlowValue(assets, globalVariable)
                     ),
                 8
             );

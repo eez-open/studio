@@ -30,7 +30,10 @@ import type {
 } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { getDocumentStore } from "project-editor/core/store";
-import { buildExpression, buildAssignableExpression } from "../expression";
+import {
+    buildExpression,
+    buildAssignableExpression
+} from "project-editor/flow/expression/expression";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
 // Returns undefined if passed value is not a valid string.

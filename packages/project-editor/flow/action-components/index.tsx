@@ -37,7 +37,7 @@ import {
     buildAssignableExpression,
     buildExpression,
     evalConstantExpression
-} from "project-editor/flow/expression";
+} from "project-editor/flow/expression/expression";
 
 const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>

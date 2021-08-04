@@ -41,7 +41,7 @@ import { buildVariableNames } from "project-editor/features/page/build/variables
 import { buildFlowData } from "project-editor/features/page/build/flows";
 import {
     FlowValue,
-    getFlowValueType
+    getConstantFlowValueType
 } from "project-editor/features/page/build/value";
 
 export const PATH_SEPARATOR = "//";
@@ -558,7 +558,7 @@ export class Assets {
         if (index == undefined) {
             index = this.constants.length;
             this.constants.push({
-                type: getFlowValueType(value),
+                type: getConstantFlowValueType(value),
                 value
             });
             this.constantsMap.set(value, index);

@@ -112,7 +112,7 @@ import {
     WIDGET_TYPE_GAUGE,
     WIDGET_TYPE_INPUT
 } from "./widget_types";
-import { evalExpression } from "../expression";
+import { evalExpression } from "project-editor/flow/expression/expression";
 import { remap } from "eez-studio-shared/util";
 
 const { MenuItem } = EEZStudio.remote || {};

@@ -1,32 +1,157 @@
-import { readFileSync } from "fs";
-import { resolve } from "path";
-import peggy from "peggy";
-
-import { isDev } from "eez-studio-shared/util-electron";
-
-import { Component } from "./component";
+import { Component } from "project-editor/flow/component";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { getFlow, getProject, Project } from "project-editor/project/project";
-import { IFlowContext } from "./flow-interfaces";
+import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import {
+    binaryOperators,
+    builtInConstants,
+    builtInFunctions,
+    CONDITIONAL_OPERATOR,
+    logicalOperators,
+    operationIndexes,
+    unaryOperators
+} from "./operations";
+import { expressionParser, identifierParser } from "./grammar";
+import {
+    makeEndInstruction,
+    makeOperationInstruction,
+    makePushConstantInstruction,
+    makePushGlobalVariableInstruction,
+    makePushInputInstruction,
+    makePushLocalVariableInstruction,
+    makePushOutputInstruction
+} from "./instructions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const expressionParserGrammar = readFileSync(
-    isDev
-        ? resolve(`${__dirname}/../../../resources/expression-grammar.pegjs`)
-        : process.resourcesPath! + "/expression-grammar.pegjs",
-    "utf8"
-);
-
-var expressionParser = peggy.generate(expressionParserGrammar);
-
-var identifierParser = peggy.generate(expressionParserGrammar, {
-    allowedStartRules: ["Identifier"]
-});
+export { operationIndexes } from "./operations";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type ExpressionTreeNode =
+export function parseIdentifier(identifier: string) {
+    try {
+        const rootNode: ExpressionNode = identifierParser.parse(identifier);
+        return rootNode && rootNode.type === "Identifier";
+    } catch (err) {
+        return false;
+    }
+}
+
+export function checkExpression(component: Component, expression: string) {
+    if (expression == undefined) {
+    } else if (typeof expression == "number") {
+    } else {
+        checkExpressionNode(component, expressionParser.parse(expression));
+    }
+}
+
+export function buildExpression(
+    assets: Assets,
+    dataBuffer: DataBuffer,
+    component: Component,
+    expression: string
+) {
+    let instructions;
+    if (expression == undefined) {
+        instructions = [makePushConstantInstruction(assets, undefined)];
+    } else if (typeof expression == "number") {
+        instructions = [makePushConstantInstruction(assets, expression)];
+    } else {
+        instructions = buildExpressionNode(
+            assets,
+            component,
+            expressionParser.parse(expression),
+            false
+        );
+    }
+
+    instructions.push(makeEndInstruction());
+
+    instructions.forEach(instruction =>
+        dataBuffer.writeUint16NonAligned(instruction)
+    );
+}
+
+export function buildAssignableExpression(
+    assets: Assets,
+    dataBuffer: DataBuffer,
+    component: Component,
+    expression: string
+) {
+    function isAssignableExpression(node: ExpressionNode): boolean {
+        if (node.type === "Identifier") {
+            return true;
+        }
+        if (node.type === "ConditionalExpression") {
+            return (
+                isAssignableExpression(node.consequent) &&
+                isAssignableExpression(node.alternate)
+            );
+        }
+        return false;
+    }
+
+    const rootNode: ExpressionNode = expressionParser.parse(expression);
+
+    if (!isAssignableExpression(rootNode)) {
+        throw `Expression is not assignable`;
+    }
+
+    const instructions = buildExpressionNode(assets, component, rootNode, true);
+
+    instructions.push(makeEndInstruction());
+
+    instructions.forEach(instruction =>
+        dataBuffer.writeUint16NonAligned(instruction)
+    );
+}
+
+export function evalConstantExpression(project: Project, expression: string) {
+    let value;
+    if (expression == undefined) {
+        value = undefined;
+    } else if (typeof expression == "number") {
+        value = expression;
+    } else {
+        try {
+            value = evalConstantExpressionNode(
+                project,
+                expressionParser.parse(expression)
+            );
+        } catch (err) {
+            console.error(err);
+            value = null;
+        }
+    }
+
+    return value;
+}
+
+export function evalExpression(flowContext: IFlowContext, expression: string) {
+    let value;
+
+    if (expression == undefined) {
+        value = undefined;
+    } else if (typeof expression == "number") {
+        value = expression;
+    } else {
+        try {
+            value = evalExpressionInFlowContext(
+                flowContext,
+                expressionParser.parse(expression)
+            );
+        } catch (err) {
+            console.error(err);
+            value = null;
+        }
+    }
+
+    return value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+type ExpressionNode =
     | {
           type: "Literal";
           value: any;
@@ -38,183 +163,58 @@ type ExpressionTreeNode =
     | {
           type: "BinaryExpression";
           operator: string;
-          left: ExpressionTreeNode;
-          right: ExpressionTreeNode;
+          left: ExpressionNode;
+          right: ExpressionNode;
       }
     | {
           type: "LogicalExpression";
           operator: string;
-          left: ExpressionTreeNode;
-          right: ExpressionTreeNode;
+          left: ExpressionNode;
+          right: ExpressionNode;
       }
     | {
           type: "ArrayExpression";
-          elements: ExpressionTreeNode[];
+          elements: ExpressionNode[];
       }
     | {
           type: "ObjectExpression";
           properties: {
-              key: string;
-              value: ExpressionTreeNode;
+              key: {
+                  type: "Identifier";
+                  name: string;
+              };
+              value: ExpressionNode;
               kind: "init";
           }[];
       }
     | {
           type: "MemberExpression";
-          object: ExpressionTreeNode;
-          property: ExpressionTreeNode;
+          object: ExpressionNode;
+          property: ExpressionNode;
           computed: boolean;
       }
     | {
           type: "CallExpression";
-          callee: ExpressionTreeNode;
-          arguments: ExpressionTreeNode[];
+          callee: ExpressionNode;
+          arguments: ExpressionNode[];
       }
     | {
           type: "ConditionalExpression";
-          test: ExpressionTreeNode;
-          consequent: ExpressionTreeNode;
-          alternate: ExpressionTreeNode;
+          test: ExpressionNode;
+          consequent: ExpressionNode;
+          alternate: ExpressionNode;
       }
     | {
           type: "UnaryExpression";
           operator: string;
-          argument: ExpressionTreeNode;
+          argument: ExpressionNode;
       }
     | {
           type: "__Unknown";
       };
 
-////////////////////////////////////////////////////////////////////////////////
-
-const binaryOperators: {
-    [operator: string]: {
-        name: string;
-        eval: (a: any, b: any) => any;
-    };
-} = {
-    "+": { name: "add", eval: (a, b) => a + b },
-    "-": { name: "sub", eval: (a, b) => a - b },
-    "*": { name: "mul", eval: (a, b) => a * b },
-    "/": { name: "div", eval: (a, b) => a / b },
-    "%": { name: "mod", eval: (a, b) => a % b },
-    "<<": { name: "left_shift", eval: (a, b) => a << b },
-    ">>": { name: "right_shift", eval: (a, b) => a >> b },
-    "&": { name: "binary_and", eval: (a, b) => a & b },
-    "|": { name: "binary_or", eval: (a, b) => a | b },
-    "^": { name: "binary_xor", eval: (a, b) => a ^ b }
-};
-
-const logicalOperators: {
-    [operator: string]: {
-        name: string;
-        eval: (a: any, b: any) => any;
-    };
-} = {
-    "==": { name: "equal", eval: (a, b) => a == b },
-    "!=": { name: "not_equal", eval: (a, b) => a != b },
-    "<": { name: "less", eval: (a, b) => a < b },
-    ">": { name: "greater", eval: (a, b) => a > b },
-    "<=": { name: "less_or_equal", eval: (a, b) => a <= b },
-    ">=": { name: "greater_or_equal", eval: (a, b) => a >= b },
-    "&&": { name: "logical_and", eval: (a, b) => a && b },
-    "||": { name: "logical_or", eval: (a, b) => a || b }
-};
-
-const unaryOperators: {
-    [operator: string]: {
-        name: string;
-        eval: (a: any) => any;
-    };
-} = {
-    "+": { name: "unary_plus", eval: a => +a },
-    "-": { name: "unary_minus", eval: a => -a },
-    "~": { name: "binary_one_complement", eval: a => ~a },
-    "!": { name: "not", eval: a => !a }
-};
-
-const CONDITIONAL_OPERATOR = "conditional"; // {test} ? {consequent} : {alternate}
-
-const builtInFunctions: {
-    [name: string]: {
-        arity: number;
-        eval: (...args: any[]) => any;
-    };
-} = {
-    "Math.sin": {
-        arity: 1,
-        eval: (...args: any[]) => Math.sin(args[0])
-    },
-    "Math.cos": {
-        arity: 1,
-        eval: (...args: any[]) => Math.cos(args[0])
-    },
-    "Math.log": {
-        arity: 1,
-        eval: (...args: any[]) => Math.log(args[0])
-    },
-
-    "String.find": {
-        arity: 2,
-        eval: (...args: any[]) => Math.log(args[0])
-    }
-};
-
-const builtInConstants: {
-    [name: string]: number; // name => arity
-} = {
-    "Math.PI": Math.PI
-};
-
-export const operationIndexes: { [key: string]: number } = {};
-
-function buildOperationIndexes() {
-    let nextOperationIndex = 0;
-
-    for (const name in binaryOperators) {
-        if (binaryOperators.hasOwnProperty(name)) {
-            operationIndexes[binaryOperators[name].name] = nextOperationIndex++;
-        }
-    }
-
-    for (const name in logicalOperators) {
-        if (logicalOperators.hasOwnProperty(name)) {
-            operationIndexes[logicalOperators[name].name] =
-                nextOperationIndex++;
-        }
-    }
-
-    for (const name in unaryOperators) {
-        if (unaryOperators.hasOwnProperty(name)) {
-            operationIndexes[unaryOperators[name].name] = nextOperationIndex++;
-        }
-    }
-
-    operationIndexes[CONDITIONAL_OPERATOR] = nextOperationIndex++;
-
-    for (const name in builtInFunctions) {
-        if (builtInFunctions.hasOwnProperty(name)) {
-            operationIndexes[name] = nextOperationIndex++;
-        }
-    }
-}
-
-buildOperationIndexes();
-
-////////////////////////////////////////////////////////////////////////////////
-
-const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT = 0 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT = 1 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR = 2 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR = 3 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_OUTPUT = 4 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 5 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_END = 6 << 13;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function checkExpression(component: Component, expression: string) {
-    function checkNode(node: ExpressionTreeNode) {
+function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
+    function checkNode(node: ExpressionNode) {
         if (node.type == "Literal") {
             return;
         }
@@ -349,53 +349,15 @@ export function checkExpression(component: Component, expression: string) {
         throw `Unknown expression node "${node.type}"`;
     }
 
-    //console.log("CHECK EXPRESSION", component, expression);
-
     const project = getProject(component);
 
-    if (expression == undefined) {
-    } else if (typeof expression == "number") {
-    } else {
-        const tree: ExpressionTreeNode = expressionParser.parse(expression);
-        checkNode(tree);
-    }
-}
-
-function makePushConstantInstruction(assets: Assets, value: any) {
-    return (
-        EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT |
-        assets.getConstantIndex(value)
-    );
-}
-
-function makePushInputInstruction(inputIndex: number) {
-    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT | inputIndex;
-}
-
-function makePushOutputInstruction(outputIndex: number) {
-    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_OUTPUT | outputIndex;
-}
-
-function makePushLocalVariableInstruction(localVariableIndex: number) {
-    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR | localVariableIndex;
-}
-
-function makePushGlobalVariableInstruction(globalVariableIndex: number) {
-    return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR | globalVariableIndex;
-}
-
-function makeOperationInstruction(operationIndex: number) {
-    return EXPR_EVAL_INSTRUCTION_TYPE_OPERATION | operationIndex;
-}
-
-function makeEndInstruction() {
-    return EXPR_EVAL_INSTRUCTION_TYPE_END;
+    checkNode(rootNode);
 }
 
 function buildExpressionNode(
     assets: Assets,
     component: Component,
-    node: ExpressionTreeNode,
+    node: ExpressionNode,
     assignable: boolean
 ): number[] {
     if (node.type == "Literal") {
@@ -570,80 +532,22 @@ function buildExpressionNode(
         throw "Unsupported";
     }
 
-    // TODO
+    if (node.type == "ArrayExpression") {
+        console.log("TODO ArrayExpression", node);
+    }
 
-    // if (node.type == "ArrayExpression") {
-    // }
-
-    // if (node.type == "ObjectExpression") {
-    // }
+    if (node.type == "ObjectExpression") {
+        console.log("TODO ObjectExpression", node);
+    }
 
     throw `Unknown expression node "${node.type}"`;
 }
 
-export function buildExpression(
-    assets: Assets,
-    dataBuffer: DataBuffer,
-    component: Component,
-    expression: string
+function evalConstantExpressionNode(
+    project: Project,
+    rootNode: ExpressionNode
 ) {
-    //console.log("BUILD EXPRESSION", assets, component, expression);
-
-    let instructions;
-    if (expression == undefined) {
-        instructions = [makePushConstantInstruction(assets, undefined)];
-    } else if (typeof expression == "number") {
-        instructions = [makePushConstantInstruction(assets, expression)];
-    } else {
-        const tree: ExpressionTreeNode = expressionParser.parse(expression);
-        instructions = buildExpressionNode(assets, component, tree, false);
-    }
-
-    instructions.push(makeEndInstruction());
-
-    instructions.forEach(instruction =>
-        dataBuffer.writeUint16NonAligned(instruction)
-    );
-}
-
-export function buildAssignableExpression(
-    assets: Assets,
-    dataBuffer: DataBuffer,
-    component: Component,
-    expression: string
-) {
-    function isAssignableExpression(node: ExpressionTreeNode): boolean {
-        if (node.type === "Identifier") {
-            return true;
-        }
-        if (node.type === "ConditionalExpression") {
-            return (
-                isAssignableExpression(node.consequent) &&
-                isAssignableExpression(node.alternate)
-            );
-        }
-        return false;
-    }
-
-    //console.log("BUILD ASSIGNABLE EXPRESSION", assets, component, expression);
-
-    const tree: ExpressionTreeNode = expressionParser.parse(expression);
-
-    if (!isAssignableExpression(tree)) {
-        throw `Expression is not assignable`;
-    }
-
-    const instructions = buildExpressionNode(assets, component, tree, true);
-
-    instructions.push(makeEndInstruction());
-
-    instructions.forEach(instruction =>
-        dataBuffer.writeUint16NonAligned(instruction)
-    );
-}
-
-export function evalConstantExpression(project: Project, expression: string) {
-    function evalNode(node: ExpressionTreeNode): any {
+    function evalNode(node: ExpressionNode): any {
         if (node.type == "Literal") {
             return node.value;
         }
@@ -739,39 +643,31 @@ export function evalConstantExpression(project: Project, expression: string) {
             throw "Unsupported";
         }
 
-        // TODO:
+        if (node.type == "ArrayExpression") {
+            return node.elements.map(element => evalNode(element));
+        }
 
-        // if (node.type == "ArrayExpression") {
-        // }
+        if (node.type == "ObjectExpression") {
+            const object: any = {};
 
-        // if (node.type == "ObjectExpression") {
-        // }
+            for (const property of node.properties) {
+                object[property.key.name] = evalNode(property.value);
+            }
+
+            return object;
+        }
 
         throw `Unknown expression node "${node.type}"`;
     }
 
-    //console.log("EVAL EXPRESSION", assets, expression);
-
-    let value;
-    if (expression == undefined) {
-        value = undefined;
-    } else if (typeof expression == "number") {
-        value = expression;
-    } else {
-        const tree: ExpressionTreeNode = expressionParser.parse(expression);
-        try {
-            value = evalNode(tree);
-        } catch (err) {
-            console.error(err);
-            value = null;
-        }
-    }
-
-    return value;
+    return evalNode(rootNode);
 }
 
-export function evalExpression(flowContext: IFlowContext, expression: string) {
-    function evalNode(node: ExpressionTreeNode): any {
+function evalExpressionInFlowContext(
+    flowContext: IFlowContext,
+    rootNode: ExpressionNode
+) {
+    function evalNode(node: ExpressionNode): any {
         if (node.type == "Literal") {
             return node.value;
         }
@@ -881,31 +777,5 @@ export function evalExpression(flowContext: IFlowContext, expression: string) {
         throw `Unknown expression node "${node.type}"`;
     }
 
-    //console.log("EVAL EXPRESSION", assets, expression);
-
-    let value;
-    if (expression == undefined) {
-        value = undefined;
-    } else if (typeof expression == "number") {
-        value = expression;
-    } else {
-        const tree: ExpressionTreeNode = expressionParser.parse(expression);
-        try {
-            value = evalNode(tree);
-        } catch (err) {
-            console.error(err);
-            value = null;
-        }
-    }
-
-    return value;
-}
-
-export function isIdentifier(identifier: string) {
-    try {
-        const tree: ExpressionTreeNode = identifierParser.parse(identifier);
-        return tree && tree.type === "Identifier";
-    } catch (err) {
-        return false;
-    }
+    return evalNode(rootNode);
 }

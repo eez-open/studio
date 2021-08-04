@@ -68,7 +68,10 @@ import { WIDGET_TYPE_NONE } from "project-editor/flow/widgets/widget_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { checkExpression, isIdentifier } from "./expression";
+import {
+    checkExpression,
+    parseIdentifier
+} from "project-editor/flow/expression/expression";
 import {
     variableTypeProperty,
     variableTypeUIProperty
@@ -385,7 +388,7 @@ export function componentInputOrOutputUnique(
             return null;
         }
 
-        if (!isIdentifier(newName)) {
+        if (!parseIdentifier(newName)) {
             return "Input name is not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
         }
 
@@ -586,6 +589,7 @@ export class Component extends EezObject {
     @observable _geometry: ComponentGeometry;
 
     @observable catchError: boolean;
+    @observable logError: boolean;
 
     get autoSize() {
         return false;
@@ -685,6 +689,13 @@ export class Component extends EezObject {
                 name: "catchError",
                 type: PropertyType.Boolean,
                 propertyGridGroup: flowGroup
+            },
+            {
+                name: "logError",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flowGroup,
+                hideInPropertyGrid: (component: Component) =>
+                    !component.catchError
             },
             {
                 name: "asInputProperties",
