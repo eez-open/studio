@@ -335,16 +335,19 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 throw `Unknown constant '${builtInConstantName}'`;
             }
 
-            throw "Unsupported";
+            console.log("TODO check MemberExpression", node);
+            return;
         }
 
-        // TODO
+        if (node.type == "ArrayExpression") {
+            console.log("TODO check ArrayExpression", node);
+            return;
+        }
 
-        // if (node.type == "ArrayExpression") {
-        // }
-
-        // if (node.type == "ObjectExpression") {
-        // }
+        if (node.type == "ObjectExpression") {
+            console.log("TODO check ObjectExpression", node);
+            return;
+        }
 
         throw `Unknown expression node "${node.type}"`;
     }
@@ -529,15 +532,18 @@ function buildExpressionNode(
             throw `Unknown constant '${builtInConstantName}'`;
         }
 
-        throw "Unsupported";
+        console.log("TODO build MemberExpression", node);
+        return [];
     }
 
     if (node.type == "ArrayExpression") {
-        console.log("TODO ArrayExpression", node);
+        console.log("TODO build ArrayExpression", node);
+        return [];
     }
 
     if (node.type == "ObjectExpression") {
-        console.log("TODO ObjectExpression", node);
+        console.log("TODO build ObjectExpression", node);
+        return [];
     }
 
     throw `Unknown expression node "${node.type}"`;
@@ -640,7 +646,8 @@ function evalConstantExpressionNode(
                 throw `Unknown constant '${builtInConstantName}'`;
             }
 
-            throw "Unsupported";
+            console.log("TODO eval_constant MemberExpression", node);
+            return [];
         }
 
         if (node.type == "ArrayExpression") {
@@ -763,16 +770,19 @@ function evalExpressionInFlowContext(
                 throw `Unknown constant '${builtInConstantName}'`;
             }
 
-            throw "Unsupported";
+            console.log("TODO eval_in_flow MemberExpression", node);
+            return undefined;
         }
 
-        // TODO:
+        if (node.type == "ArrayExpression") {
+            console.log("TODO eval_in_flow ArrayExpression", node);
+            return undefined;
+        }
 
-        // if (node.type == "ArrayExpression") {
-        // }
-
-        // if (node.type == "ObjectExpression") {
-        // }
+        if (node.type == "ObjectExpression") {
+            console.log("TODO eval_in_flow ObjectExpression", node);
+            return undefined;
+        }
 
         throw `Unknown expression node "${node.type}"`;
     }
