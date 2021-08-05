@@ -363,28 +363,64 @@ export function findVariable(project: Project, variableName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function isInteger(variable: Variable) {
-    return variable.type == "integer";
+export function isIntegerType(type: string) {
+    return type == "integer";
 }
 
-export function isEnumVariable(variable: Variable) {
-    return variable.type.match(/enum:(.*)/) != null;
+export function isEnumType(type: string) {
+    return type.match(/enum:(.*)/) != null;
 }
 
-export function isStructVariable(variable: Variable) {
-    return variable.type.match(/struct:(.*)/) != null;
+export function isStructType(type: string) {
+    return type.match(/struct:(.*)/) != null;
 }
 
-export function isArrayVariable(variable: Variable) {
-    return variable.type.match(/array:(.*)/) != null;
+export function isArrayType(type: string) {
+    return type.match(/array:(.*)/) != null;
 }
 
-export function getEnum(variable: Variable) {
-    const result = variable.type.match(/enum:(.*)/);
+export function getArrayElementTypeFromType(type: string) {
+    const result = type.match(/array:(.*)/);
     if (result == null) {
         return null;
     }
     return result[1];
+}
+
+export function getStructTypeNameFromType(type: string) {
+    const result = type.match(/struct:(.*)/);
+    if (result == null) {
+        return null;
+    }
+    return result[1];
+}
+
+export function getEnumTypeNameFromType(type: string) {
+    const result = type.match(/enum:(.*)/);
+    if (result == null) {
+        return null;
+    }
+    return result[1];
+}
+
+export function isIntegerVariable(variable: Variable) {
+    return isIntegerType(variable.type);
+}
+
+export function isEnumVariable(variable: Variable) {
+    return isEnumType(variable.type);
+}
+
+export function isStructVariable(variable: Variable) {
+    return isStructType(variable.type);
+}
+
+export function isArrayVariable(variable: Variable) {
+    return isArrayType(variable.type);
+}
+
+export function getEnumTypeNameFromVariable(variable: Variable) {
+    return getEnumTypeNameFromType(variable.type);
 }
 
 function getEnumValues(variable: Variable): any[] {
@@ -545,7 +581,7 @@ export class DataContext implements IDataContext {
                     value = value_;
                 } else {
                     if (variable.defaultValue !== undefined) {
-                        if (isInteger(variable)) {
+                        if (isIntegerVariable(variable)) {
                             value = parseInt(variable.defaultValue);
                             if (isNaN(value)) {
                                 console.error(
@@ -1052,10 +1088,18 @@ export class ProjectVariables extends EezObject {
         }
     };
 
-    @computed get enumMap() {
+    @computed({ keepAlive: true }) get enumsMap() {
         const map = new Map<string, Enum>();
         for (const enumDef of this.enums) {
             map.set(enumDef.name, enumDef);
+        }
+        return map;
+    }
+
+    @computed({ keepAlive: true }) get structsMap() {
+        const map = new Map<string, Structure>();
+        for (const structure of this.structures) {
+            map.set(structure.name, structure);
         }
         return map;
     }

@@ -47,7 +47,7 @@ import { findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
 import {
     findVariable,
-    getEnum,
+    getEnumTypeNameFromVariable,
     isEnumVariable
 } from "project-editor/features/variable/variable";
 import {
@@ -697,9 +697,9 @@ export class SelectWidget extends EmbeddedWidget {
                     let enumItems: string[] = [];
                     if (isEnumVariable(variable)) {
                         const project = getProject(object);
-                        const enumName = getEnum(variable);
+                        const enumName = getEnumTypeNameFromVariable(variable);
                         enumItems = enumName
-                            ? project.variables.enumMap
+                            ? project.variables.enumsMap
                                   .get(enumName)
                                   ?.members.map(member => member.name) ?? []
                             : [];
@@ -763,9 +763,10 @@ export class SelectWidget extends EmbeddedWidget {
                             let enumItems: string[];
 
                             const project = getProject(this);
-                            const enumName = getEnum(variable);
+                            const enumName =
+                                getEnumTypeNameFromVariable(variable);
                             enumItems = enumName
-                                ? project.variables.enumMap
+                                ? project.variables.enumsMap
                                       .get(enumName)
                                       ?.members.map(member => member.name) ?? []
                                 : [];
@@ -4130,7 +4131,11 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
                             const BAR_WIDTH = 16;
 
                             // min
-                            let min = evalExpression(flowContext, this.min);
+                            let min = evalExpression(
+                                flowContext,
+                                this,
+                                this.min
+                            );
 
                             if (
                                 !(typeof min == "number") ||
@@ -4142,7 +4147,8 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
 
                             // max
                             let max =
-                                evalExpression(flowContext, this.max) ?? 100;
+                                evalExpression(flowContext, this, this.max) ??
+                                100;
 
                             if (
                                 !(typeof max == "number") ||
@@ -4156,7 +4162,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
                             // value
                             let value =
                                 this.data &&
-                                evalExpression(flowContext, this.data);
+                                evalExpression(flowContext, this, this.data);
                             if (
                                 !(typeof value == "number") ||
                                 isNaN(value) ||

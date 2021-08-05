@@ -21,7 +21,11 @@ import {
     makePushLocalVariableInstruction,
     makePushOutputInstruction
 } from "./instructions";
-import { VariableType } from "project-editor/features/variable/variable";
+import {
+    getArrayElementTypeFromType,
+    getStructTypeNameFromType,
+    VariableType
+} from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +46,9 @@ export function checkExpression(component: Component, expression: string) {
     if (expression == undefined) {
     } else if (typeof expression == "number") {
     } else {
-        checkExpressionNode(component, expressionParser.parse(expression));
+        const rootNode = expressionParser.parse(expression);
+        findValueTypeInExpressionNode(component, rootNode);
+        checkExpressionNode(component, rootNode);
     }
 }
 
@@ -90,6 +96,7 @@ export function buildAssignableExpression(
     }
 
     const rootNode: ExpressionNode = expressionParser.parse(expression);
+    findValueTypeInExpressionNode(component, rootNode);
 
     if (!isAssignableExpression(rootNode)) {
         throw `Expression is not assignable`;
@@ -125,7 +132,11 @@ export function evalConstantExpression(project: Project, expression: string) {
     return value;
 }
 
-export function evalExpression(flowContext: IFlowContext, expression: string) {
+export function evalExpression(
+    flowContext: IFlowContext,
+    component: Component,
+    expression: string
+) {
     let value;
 
     if (expression == undefined) {
@@ -134,10 +145,10 @@ export function evalExpression(flowContext: IFlowContext, expression: string) {
         value = expression;
     } else {
         try {
-            value = evalExpressionInFlowContext(
-                flowContext,
-                expressionParser.parse(expression)
-            );
+            const rootNode = expressionParser.parse(expression);
+            findValueTypeInExpressionNode(component, rootNode);
+
+            value = evalExpressionInFlowContext(flowContext, rootNode);
         } catch (err) {
             console.error(err);
             value = null;
@@ -252,6 +263,7 @@ function findValueTypeInExpressionNode(
         );
         if (globalVariable) {
             node.valueType = globalVariable.type as VariableType;
+            return;
         }
         throw `identifier '${node.name}' is neither input or local or global variable`;
     } else if (node.type == "BinaryExpression") {
@@ -262,6 +274,8 @@ function findValueTypeInExpressionNode(
                 throw `Unknown binary operator '${node.operator}'`;
             }
         }
+        findValueTypeInExpressionNode(component, node.left);
+        findValueTypeInExpressionNode(component, node.right);
         node.valueType = operator.getValueType(
             node.left.valueType,
             node.right.valueType
@@ -271,6 +285,8 @@ function findValueTypeInExpressionNode(
         if (!operator) {
             throw `Unknown logical operator '${node.operator}'`;
         }
+        findValueTypeInExpressionNode(component, node.left);
+        findValueTypeInExpressionNode(component, node.right);
         node.valueType = operator.getValueType(
             node.left.valueType,
             node.right.valueType
@@ -280,8 +296,11 @@ function findValueTypeInExpressionNode(
         if (!operator) {
             throw `Unknown unary operator '${node.operator}'`;
         }
+        findValueTypeInExpressionNode(component, node.argument);
         node.valueType = operator.getValueType(node.argument.valueType);
     } else if (node.type == "ConditionalExpression") {
+        findValueTypeInExpressionNode(component, node.consequent);
+        findValueTypeInExpressionNode(component, node.alternate);
         if (node.consequent.valueType != node.alternate.valueType) {
             throw "different types in conditional";
         }
@@ -308,14 +327,63 @@ function findValueTypeInExpressionNode(
             throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
         }
 
+        node.arguments.forEach(argument =>
+            findValueTypeInExpressionNode(component, argument)
+        );
+
         node.valueType = builtInFunction.getValueType(
             ...node.arguments.map(node => node.valueType)
         );
     } else if (node.type == "MemberExpression") {
+        findValueTypeInExpressionNode(component, node.object);
+        if (node.computed) {
+            const valueType = getArrayElementTypeFromType(
+                node.object.valueType
+            );
+            if (!valueType) {
+                throw `Array type expected but found '${node.object.valueType}'`;
+            }
+            node.valueType = valueType as VariableType;
+        } else {
+            let structTypeName = getStructTypeNameFromType(
+                node.object.valueType
+            );
+            if (!structTypeName) {
+                structTypeName = node.object.valueType;
+            }
+
+            const project = getProject(component);
+            const structure = project.variables.structsMap.get(structTypeName);
+            if (!structure) {
+                throw `Struct type expected but found '${node.object.valueType}'`;
+            }
+
+            if (node.property.type != "Identifier") {
+                throw `Invalid struct field type: '${node.property.type}'`;
+            }
+
+            const fieldName = node.property.name;
+
+            const field = structure.fields.find(
+                field => field.name == fieldName
+            );
+
+            if (!field) {
+                throw `Struc field not found: '${fieldName}'`;
+            }
+
+            node.valueType = field.type as VariableType;
+        }
         // TODO
     } else if (node.type == "ArrayExpression") {
+        node.elements.forEach(element =>
+            findValueTypeInExpressionNode(component, element)
+        );
         // TODO
     } else if (node.type == "ObjectExpression") {
+        node.properties.forEach(property =>
+            findValueTypeInExpressionNode(component, property.value)
+        );
         // TODO
     } else {
         throw `Unknown expression node "${node.type}"`;
@@ -423,7 +491,9 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 node.object.type == "Identifier" &&
                 node.property.type == "Identifier"
             ) {
-                const enumDef = project.variables.enumMap.get(node.object.name);
+                const enumDef = project.variables.enumsMap.get(
+                    node.object.name
+                );
                 if (enumDef) {
                     const enumMember = enumDef.membersMap.get(
                         node.property.name
@@ -619,7 +689,7 @@ function buildExpressionNode(
             node.object.type == "Identifier" &&
             node.property.type == "Identifier"
         ) {
-            const enumDef = assets.rootProject.variables.enumMap.get(
+            const enumDef = assets.rootProject.variables.enumsMap.get(
                 node.object.name
             );
             if (enumDef) {
@@ -734,7 +804,9 @@ function evalConstantExpressionNode(
                 node.object.type == "Identifier" &&
                 node.property.type == "Identifier"
             ) {
-                const enumDef = project.variables.enumMap.get(node.object.name);
+                const enumDef = project.variables.enumsMap.get(
+                    node.object.name
+                );
                 if (enumDef) {
                     const enumMember = enumDef.membersMap.get(
                         node.property.name
@@ -856,7 +928,7 @@ function evalExpressionInFlowContext(
                 node.property.type == "Identifier"
             ) {
                 const enumDef =
-                    flowContext.document.DocumentStore.project.variables.enumMap.get(
+                    flowContext.document.DocumentStore.project.variables.enumsMap.get(
                         node.object.name
                     );
                 if (enumDef) {
