@@ -21,6 +21,7 @@ import {
     makePushLocalVariableInstruction,
     makePushOutputInstruction
 } from "./instructions";
+import { VariableType } from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,12 +58,9 @@ export function buildExpression(
     } else if (typeof expression == "number") {
         instructions = [makePushConstantInstruction(assets, expression)];
     } else {
-        instructions = buildExpressionNode(
-            assets,
-            component,
-            expressionParser.parse(expression),
-            false
-        );
+        const rootNode = expressionParser.parse(expression);
+        findValueTypeInExpressionNode(component, rootNode);
+        instructions = buildExpressionNode(assets, component, rootNode, false);
     }
 
     instructions.push(makeEndInstruction());
@@ -155,26 +153,31 @@ type ExpressionNode =
     | {
           type: "Literal";
           value: any;
+          valueType: VariableType;
       }
     | {
           type: "Identifier";
           name: string;
+          valueType: VariableType;
       }
     | {
           type: "BinaryExpression";
           operator: string;
           left: ExpressionNode;
           right: ExpressionNode;
+          valueType: VariableType;
       }
     | {
           type: "LogicalExpression";
           operator: string;
           left: ExpressionNode;
           right: ExpressionNode;
+          valueType: VariableType;
       }
     | {
           type: "ArrayExpression";
           elements: ExpressionNode[];
+          valueType: VariableType;
       }
     | {
           type: "ObjectExpression";
@@ -186,32 +189,138 @@ type ExpressionNode =
               value: ExpressionNode;
               kind: "init";
           }[];
+          valueType: VariableType;
       }
     | {
           type: "MemberExpression";
           object: ExpressionNode;
           property: ExpressionNode;
           computed: boolean;
+          valueType: VariableType;
       }
     | {
           type: "CallExpression";
           callee: ExpressionNode;
           arguments: ExpressionNode[];
+          valueType: VariableType;
       }
     | {
           type: "ConditionalExpression";
           test: ExpressionNode;
           consequent: ExpressionNode;
           alternate: ExpressionNode;
+          valueType: VariableType;
       }
     | {
           type: "UnaryExpression";
           operator: string;
           argument: ExpressionNode;
+          valueType: VariableType;
       }
     | {
           type: "__Unknown";
+          valueType: VariableType;
       };
+
+function findValueTypeInExpressionNode(
+    component: Component,
+    node: ExpressionNode
+) {
+    if (node.type == "Literal") {
+        if (typeof node.value === "boolean") {
+            node.valueType = "boolean";
+        } else if (typeof node.value === "number") {
+            node.valueType = "double";
+        } else if (typeof node.value === "string") {
+            node.valueType = "string";
+        } else {
+            node.valueType = "undefined";
+        }
+    } else if (node.type == "Identifier") {
+        const flow = getFlow(component);
+        let localVariable = flow.localVariables.find(
+            localVariable => localVariable.name == node.name
+        );
+        if (localVariable) {
+            node.valueType = localVariable.type as VariableType;
+            return;
+        }
+
+        const project = getProject(component);
+        let globalVariable = project.variables.globalVariables.find(
+            globalVariable => globalVariable.name == node.name
+        );
+        if (globalVariable) {
+            node.valueType = globalVariable.type as VariableType;
+        }
+        throw `identifier '${node.name}' is neither input or local or global variable`;
+    } else if (node.type == "BinaryExpression") {
+        let operator = binaryOperators[node.operator];
+        if (!operator) {
+            operator = logicalOperators[node.operator];
+            if (!operator) {
+                throw `Unknown binary operator '${node.operator}'`;
+            }
+        }
+        node.valueType = operator.getValueType(
+            node.left.valueType,
+            node.right.valueType
+        );
+    } else if (node.type == "LogicalExpression") {
+        const operator = logicalOperators[node.operator];
+        if (!operator) {
+            throw `Unknown logical operator '${node.operator}'`;
+        }
+        node.valueType = operator.getValueType(
+            node.left.valueType,
+            node.right.valueType
+        );
+    } else if (node.type == "UnaryExpression") {
+        const operator = unaryOperators[node.operator];
+        if (!operator) {
+            throw `Unknown unary operator '${node.operator}'`;
+        }
+        node.valueType = operator.getValueType(node.argument.valueType);
+    } else if (node.type == "ConditionalExpression") {
+        if (node.consequent.valueType != node.alternate.valueType) {
+            throw "different types in conditional";
+        }
+        node.valueType = node.consequent.valueType;
+    } else if (node.type == "CallExpression") {
+        if (
+            node.callee.type != "MemberExpression" ||
+            node.callee.object.type != "Identifier" ||
+            node.callee.property.type != "Identifier"
+        ) {
+            throw "Invalid call expression";
+        }
+
+        let functionName = `${node.callee.object.name}.${node.callee.property.name}`;
+
+        const builtInFunction = builtInFunctions[functionName];
+        if (builtInFunction == undefined) {
+            throw `Unknown function '${functionName}'`;
+        }
+
+        const arity = builtInFunctions[functionName].arity;
+
+        if (node.arguments.length != arity) {
+            throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
+        }
+
+        node.valueType = builtInFunction.getValueType(
+            ...node.arguments.map(node => node.valueType)
+        );
+    } else if (node.type == "MemberExpression") {
+        // TODO
+    } else if (node.type == "ArrayExpression") {
+        // TODO
+    } else if (node.type == "ObjectExpression") {
+        // TODO
+    } else {
+        throw `Unknown expression node "${node.type}"`;
+    }
+}
 
 function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
     function checkNode(node: ExpressionNode) {

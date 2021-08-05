@@ -74,7 +74,10 @@ export type VariableType =
     | "date"
     | "enum"
     | "struct"
-    | "array";
+    | "array"
+    | "undefined"
+    | "null"
+    | "any";
 
 const basicTypeNames = [
     "integer",
