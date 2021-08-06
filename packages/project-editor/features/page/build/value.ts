@@ -29,6 +29,10 @@ export interface FlowValue {
 }
 
 export function getConstantFlowValueType(value: any) {
+    if (value === null) {
+        return FLOW_VALUE_TYPE_NULL;
+    }
+
     if (typeof value === "boolean") {
         return FLOW_VALUE_TYPE_BOOLEAN;
     } else if (typeof value === "number") {
@@ -40,6 +44,7 @@ export function getConstantFlowValueType(value: any) {
     } else if (typeof value === "undefined") {
         return FLOW_VALUE_TYPE_UNDEFINED;
     }
+
     return FLOW_VALUE_TYPE_NULL;
 }
 
@@ -58,8 +63,6 @@ export function getVariableFlowValue(assets: Assets, variable: Variable) {
         type = FLOW_VALUE_TYPE_ASSETS_STRING;
     } else if (isEnumVariable(variable)) {
         type = FLOW_VALUE_TYPE_INT32;
-    } else if (isStructVariable(variable)) {
-        type = FLOW_VALUE_TYPE_NULL;
     } else if (isArrayVariable(variable) || isStructVariable(variable)) {
         type = FLOW_VALUE_TYPE_ASSETS_ARRAY;
     } else {
@@ -133,9 +136,10 @@ function buildFlowValue(dataBuffer: DataBuffer, flowValue: FlowValue) {
                 }
             }
 
-            dataBuffer.writeUint32(flowValue.value.length);
+            dataBuffer.writeUint32(elements.length); // arraySize
+            dataBuffer.writeUint32(0); // reserved
             elements.forEach(element => buildFlowValue(dataBuffer, element));
-        });
+        }, 8);
         dataBuffer.writeUint32(0);
     } else {
         dataBuffer.writeUint64(0);

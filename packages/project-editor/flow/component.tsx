@@ -833,7 +833,8 @@ export class Component extends EezObject {
                         try {
                             checkExpression(
                                 component,
-                                getProperty(component, propertyInfo.name)
+                                getProperty(component, propertyInfo.name),
+                                false
                             );
                         } catch (err) {
                             new output.Message(

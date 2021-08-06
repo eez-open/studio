@@ -5,8 +5,9 @@ const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT = 1 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_LOCAL_VAR = 2 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR = 3 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_OUTPUT = 4 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 5 << 13;
-const EXPR_EVAL_INSTRUCTION_TYPE_END = 6 << 13;
+const EXPR_EVAL_INSTRUCTION_ARRAY_ELEMENT = 5 << 13;
+const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 6 << 13;
+const EXPR_EVAL_INSTRUCTION_TYPE_END = 7 << 13;
 
 export function makePushConstantInstruction(assets: Assets, value: any) {
     return (
@@ -29,6 +30,10 @@ export function makePushLocalVariableInstruction(localVariableIndex: number) {
 
 export function makePushGlobalVariableInstruction(globalVariableIndex: number) {
     return EXPR_EVAL_INSTRUCTION_TYPE_PUSH_GLOBAL_VAR | globalVariableIndex;
+}
+
+export function makeArrayElementInstruction() {
+    return EXPR_EVAL_INSTRUCTION_ARRAY_ELEMENT;
 }
 
 export function makeOperationInstruction(operationIndex: number) {

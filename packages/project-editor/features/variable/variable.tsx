@@ -363,24 +363,28 @@ export function findVariable(project: Project, variableName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ENUM_TYPE_REGEXP = /^enum:(.*)/;
+const STRUCT_TYPE_REGEXP = /^struct:(.*)/;
+const ARRAY_TYPE_REGEXP = /^array:(.*)/;
+
 export function isIntegerType(type: string) {
     return type == "integer";
 }
 
 export function isEnumType(type: string) {
-    return type.match(/enum:(.*)/) != null;
+    return type.match(ENUM_TYPE_REGEXP) != null;
 }
 
 export function isStructType(type: string) {
-    return type.match(/struct:(.*)/) != null;
+    return type.match(STRUCT_TYPE_REGEXP) != null;
 }
 
 export function isArrayType(type: string) {
-    return type.match(/array:(.*)/) != null;
+    return type.match(ARRAY_TYPE_REGEXP) != null;
 }
 
 export function getArrayElementTypeFromType(type: string) {
-    const result = type.match(/array:(.*)/);
+    const result = type.match(ARRAY_TYPE_REGEXP);
     if (result == null) {
         return null;
     }
@@ -388,7 +392,7 @@ export function getArrayElementTypeFromType(type: string) {
 }
 
 export function getStructTypeNameFromType(type: string) {
-    const result = type.match(/struct:(.*)/);
+    const result = type.match(STRUCT_TYPE_REGEXP);
     if (result == null) {
         return null;
     }
@@ -396,7 +400,7 @@ export function getStructTypeNameFromType(type: string) {
 }
 
 export function getEnumTypeNameFromType(type: string) {
-    const result = type.match(/enum:(.*)/);
+    const result = type.match(ENUM_TYPE_REGEXP);
     if (result == null) {
         return null;
     }
@@ -733,8 +737,6 @@ export class DataContext implements IDataContext {
 export class StructureField extends EezObject {
     @observable name: string;
     @observable type: string;
-    @observable structure: string;
-    @observable enum: string;
 
     static classInfo: ClassInfo = {
         properties: [
