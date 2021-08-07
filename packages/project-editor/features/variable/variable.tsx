@@ -345,7 +345,22 @@ export class Variable extends EezObject {
         },
         navigationComponent: ListNavigationWithProperties,
         navigationComponentId: "global-variables",
-        icon: VariableIcon
+        icon: VariableIcon,
+        check: (variable: Variable) => {
+            let messages: output.Message[] = [];
+
+            if (!variable.type) {
+                messages.push(output.propertyNotSetMessage(variable, "type"));
+            }
+
+            if (!variable.defaultValue) {
+                messages.push(
+                    output.propertyNotSetMessage(variable, "defaultValue")
+                );
+            }
+
+            return messages;
+        }
     };
 }
 

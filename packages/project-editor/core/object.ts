@@ -161,7 +161,10 @@ export interface PropertyInfo {
     partOfNavigation?: boolean;
     fileFilters?: any;
     isAssetName?: boolean;
-    toggableProperty?: "input" | "output";
+    toggableProperty?:
+        | "input"
+        | "output"
+        | ((DocumentStore: DocumentStoreClass) => "input" | "output");
 }
 
 export interface NavigationComponentProps {

@@ -6,6 +6,7 @@ import {
     Variable
 } from "project-editor/features/variable/variable";
 import { evalConstantExpression } from "project-editor/flow/expression/expression";
+import * as output from "project-editor/core/output";
 
 export const FLOW_VALUE_TYPE_UNDEFINED = 0;
 export const FLOW_VALUE_TYPE_NULL = 1;
@@ -51,22 +52,32 @@ export function getConstantFlowValueType(value: any) {
 export function getVariableFlowValue(assets: Assets, variable: Variable) {
     let type;
 
-    if (variable.type == "boolean") {
-        type = FLOW_VALUE_TYPE_BOOLEAN;
-    } else if (variable.type == "integer") {
-        type = FLOW_VALUE_TYPE_INT32;
-    } else if (variable.type == "float") {
-        type = FLOW_VALUE_TYPE_FLOAT;
-    } else if (variable.type == "double") {
-        type = FLOW_VALUE_TYPE_DOUBLE;
-    } else if (variable.type == "string") {
-        type = FLOW_VALUE_TYPE_ASSETS_STRING;
-    } else if (isEnumVariable(variable)) {
-        type = FLOW_VALUE_TYPE_INT32;
-    } else if (isArrayVariable(variable) || isStructVariable(variable)) {
-        type = FLOW_VALUE_TYPE_ASSETS_ARRAY;
+    if (variable.type) {
+        if (variable.type == "boolean") {
+            type = FLOW_VALUE_TYPE_BOOLEAN;
+        } else if (variable.type == "integer") {
+            type = FLOW_VALUE_TYPE_INT32;
+        } else if (variable.type == "float") {
+            type = FLOW_VALUE_TYPE_FLOAT;
+        } else if (variable.type == "double") {
+            type = FLOW_VALUE_TYPE_DOUBLE;
+        } else if (variable.type == "string") {
+            type = FLOW_VALUE_TYPE_ASSETS_STRING;
+        } else if (isEnumVariable(variable)) {
+            type = FLOW_VALUE_TYPE_INT32;
+        } else if (isArrayVariable(variable) || isStructVariable(variable)) {
+            type = FLOW_VALUE_TYPE_ASSETS_ARRAY;
+        } else {
+            type = FLOW_VALUE_TYPE_UINT32;
+        }
     } else {
-        type = FLOW_VALUE_TYPE_UINT32;
+        assets.DocumentStore.OutputSectionsStore.write(
+            output.Section.OUTPUT,
+            output.Type.ERROR,
+            "Variable type not set",
+            variable
+        );
+        type = FLOW_VALUE_TYPE_UNDEFINED;
     }
 
     let value = evalConstantExpression(

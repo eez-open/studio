@@ -14,7 +14,10 @@ import {
     EezObject,
     ClassInfo
 } from "project-editor/core/object";
-import { getDocumentStore } from "project-editor/core/store";
+import {
+    DocumentStoreClass,
+    getDocumentStore
+} from "project-editor/core/store";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
@@ -1159,18 +1162,28 @@ export class CallActionActionComponent extends ActionComponent {
         flowComponentId: 1016,
 
         properties: [
-            makeToggablePropertyToInput({
-                name: "action",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "actions",
-                propertyGridGroup: specificGroup,
-                onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-                    onSelectItem(object, propertyInfo, {
-                        title: propertyInfo.onSelectTitle!,
-                        width: 800
-                    }),
-                onSelectTitle: "Select Action"
-            })
+            makeToggablePropertyToInput(
+                {
+                    name: "action",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: "actions",
+                    propertyGridGroup: specificGroup,
+                    onSelect: (
+                        object: IEezObject,
+                        propertyInfo: PropertyInfo
+                    ) =>
+                        onSelectItem(object, propertyInfo, {
+                            title: propertyInfo.onSelectTitle!,
+                            width: 800
+                        }),
+                    onSelectTitle: "Select Action"
+                },
+                (DocumentStore: DocumentStoreClass) => {
+                    return DocumentStore.isDashboardProject
+                        ? "input"
+                        : undefined;
+                }
+            )
         ],
         label: (component: CallActionActionComponent) => {
             if (!component.action) {
@@ -1269,6 +1282,16 @@ export class CallActionActionComponent extends ActionComponent {
         const action = findAction(getProject(this), this.action);
         if (action) {
             getDocumentStore(this).NavigationStore.showObject(action);
+        }
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const action = findAction(getProject(this), this.action);
+        if (action) {
+            const actionIndex = assets.flows.indexOf(action);
+            dataBuffer.writeInt16(actionIndex);
+        } else {
+            dataBuffer.writeInt16(-1);
         }
     }
 }

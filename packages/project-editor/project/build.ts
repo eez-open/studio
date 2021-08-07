@@ -422,25 +422,24 @@ export async function build(
             Type.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
-    } finally {
-        // catch (err) {
-        //     if (err instanceof BuildException) {
-        //         OutputSections.write(
-        //             Section.OUTPUT,
-        //             Type.ERROR,
-        //             err.message,
-        //             err.object
-        //         );
-        //     } else {
-        //         OutputSections.write(
-        //             Section.OUTPUT,
-        //             Type.ERROR,
-        //             `Module build error: ${err}`
-        //         );
-        //     }
+    } catch (err) {
+        if (err instanceof BuildException) {
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                err.message,
+                err.object
+            );
+        } else {
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                `Module build error: ${err}`
+            );
+        }
 
-        //     showCheckResult(DocumentStore);
-        // }
+        showCheckResult(DocumentStore);
+    } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
 }
@@ -489,25 +488,24 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
             Type.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
-    } finally {
-        // catch (err) {
-        //     if (err instanceof BuildException) {
-        //         OutputSections.write(
-        //             Section.OUTPUT,
-        //             Type.ERROR,
-        //             err.message,
-        //             err.object
-        //         );
-        //     } else {
-        //         OutputSections.write(
-        //             Section.OUTPUT,
-        //             Type.ERROR,
-        //             `Module build error: ${err}`
-        //         );
-        //     }
+    } catch (err) {
+        if (err instanceof BuildException) {
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                err.message,
+                err.object
+            );
+        } else {
+            OutputSections.write(
+                Section.OUTPUT,
+                Type.ERROR,
+                `Module build error: ${err}`
+            );
+        }
 
-        //     showCheckResult(DocumentStore);
-        // }
+        showCheckResult(DocumentStore);
+    } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
 }

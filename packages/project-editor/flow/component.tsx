@@ -42,7 +42,8 @@ import {
 import { loadObject, objectToJS } from "project-editor/core/serialization";
 import {
     IContextMenuContext,
-    getDocumentStore
+    getDocumentStore,
+    DocumentStoreClass
 } from "project-editor/core/store";
 import * as output from "project-editor/core/output";
 
@@ -210,10 +211,11 @@ function getClassFromType(type: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function makeToggablePropertyToInput(
-    propertyInfo: PropertyInfo
+    propertyInfo: PropertyInfo,
+    toggableProperty?: (object: IEezObject) => "input" | undefined
 ): PropertyInfo {
     return Object.assign(propertyInfo, {
-        toggableProperty: "input",
+        toggableProperty: toggableProperty || "input",
         propertyMenu(props: PropertyProps) {
             let menuItems: Electron.MenuItem[] = [];
 
@@ -278,10 +280,11 @@ export function makeToggablePropertyToInput(
 }
 
 export function makeToggablePropertyToOutput(
-    propertyInfo: PropertyInfo
+    propertyInfo: PropertyInfo,
+    toggableProperty?: (object: IEezObject) => "output" | undefined
 ): PropertyInfo {
     return Object.assign(propertyInfo, {
-        toggableProperty: "output",
+        toggableProperty: toggableProperty || "output",
 
         propertyMenu(props: PropertyProps) {
             let menuItems: Electron.MenuItem[] = [];
@@ -348,6 +351,24 @@ export function makeToggablePropertyToOutput(
             );
         }
     } as Partial<PropertyInfo>);
+}
+
+export function isToggableProperty(
+    DocumentStore: DocumentStoreClass,
+    propertyInfo: PropertyInfo,
+    toggablePropertyType: "input" | "output"
+) {
+    if (!propertyInfo.toggableProperty) {
+        return false;
+    }
+
+    if (typeof propertyInfo.toggableProperty === "string") {
+        return propertyInfo.toggableProperty === toggablePropertyType;
+    }
+
+    return (
+        propertyInfo.toggableProperty(DocumentStore) === toggablePropertyType
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -824,12 +845,16 @@ export class Component extends EezObject {
                 }
             });
 
+            const DocumentStore = getDocumentStore(component);
+
             if (
-                getDocumentStore(component).isAppletProject ||
-                getDocumentStore(component).isDashboardProject
+                DocumentStore.isAppletProject ||
+                DocumentStore.isDashboardProject
             ) {
                 for (const propertyInfo of getClassInfo(component).properties) {
-                    if (propertyInfo.toggableProperty === "input") {
+                    if (
+                        isToggableProperty(DocumentStore, propertyInfo, "input")
+                    ) {
                         try {
                             checkExpression(
                                 component,
@@ -1002,8 +1027,10 @@ export class Component extends EezObject {
     get buildOutputs() {
         const outputs: { name: string; type: "output" | "property" }[] = [];
 
+        const DocumentStore = getDocumentStore(this);
+
         for (const propertyInfo of getClassInfo(this).properties) {
-            if (propertyInfo.toggableProperty === "output") {
+            if (isToggableProperty(DocumentStore, propertyInfo, "output")) {
                 outputs.push({
                     name: propertyInfo.name,
                     type:

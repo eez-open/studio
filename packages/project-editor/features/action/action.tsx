@@ -470,8 +470,13 @@ export class Action extends Flow {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).isDashboardProject
+                hideInPropertyGrid: (object: IEezObject) => {
+                    const DocumentStor = getDocumentStore(object);
+                    return (
+                        DocumentStor.isDashboardProject ||
+                        DocumentStor.isAppletProject
+                    );
+                }
             }
         ],
         beforeLoadHook: (action: Action, jsObject: any) => {
@@ -499,12 +504,14 @@ export class Action extends Flow {
                 },
                 values: {}
             }).then(result => {
+                const DocumentStore = getDocumentStore(parent);
                 return Promise.resolve(
                     Object.assign(
                         {
                             name: result.values.name
                         },
-                        getDocumentStore(parent).isDashboardProject
+                        DocumentStore.isDashboardProject ||
+                            DocumentStore.isAppletProject
                             ? ({
                                   implementationType: "flow",
                                   components: [],
