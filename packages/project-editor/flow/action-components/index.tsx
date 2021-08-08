@@ -172,6 +172,11 @@ export class InputActionComponent extends ActionComponent {
     });
 
     @observable name: string;
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const flow = getFlow(this);
+        dataBuffer.writeUint8(flow.inputComponents.indexOf(this));
+    }
 }
 
 registerClass(InputActionComponent);
@@ -233,6 +238,11 @@ export class OutputActionComponent extends ActionComponent {
             );
         }
         return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const flow = getFlow(this);
+        dataBuffer.writeUint8(flow.outputComponents.indexOf(this));
     }
 }
 
@@ -315,11 +325,11 @@ export class EvalActionComponent extends ActionComponent {
         flowComponentId: 1006,
 
         properties: [
-            {
+            makeToggablePropertyToInput({
                 name: "expression",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup
-            }
+            })
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
@@ -1222,14 +1232,13 @@ export class CallActionActionComponent extends ActionComponent {
             return super.getInputs();
         }
 
-        const inputs = action.components
-            .filter(component => component instanceof InputActionComponent)
-            .sort((a, b) => a.top - b.top)
-            .map((inputActionComponent: InputActionComponent) => ({
+        const inputs = action.inputComponents.map(
+            (inputActionComponent: InputActionComponent) => ({
                 name: inputActionComponent.wireID,
                 displayName: inputActionComponent.name,
                 type: PropertyType.Any
-            }));
+            })
+        );
 
         return [...super.getInputs(), ...inputs];
     }
@@ -1240,14 +1249,13 @@ export class CallActionActionComponent extends ActionComponent {
             return super.getOutputs();
         }
 
-        const outputs = action.components
-            .filter(component => component instanceof OutputActionComponent)
-            .sort((a, b) => a.top - b.top)
-            .map((outputActionComponent: OutputActionComponent) => ({
+        const outputs = action.outputComponents.map(
+            (outputActionComponent: OutputActionComponent) => ({
                 name: outputActionComponent.wireID,
                 displayName: outputActionComponent.name,
                 type: PropertyType.Any
-            }));
+            })
+        );
 
         return [...super.getOutputs(), ...outputs];
     }
@@ -1288,10 +1296,33 @@ export class CallActionActionComponent extends ActionComponent {
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const action = findAction(getProject(this), this.action);
         if (action) {
-            const actionIndex = assets.flows.indexOf(action);
-            dataBuffer.writeInt16(actionIndex);
+            const flowIndex = assets.flows.indexOf(action);
+            dataBuffer.writeInt16(flowIndex);
+
+            if (action.inputComponents.length > 0) {
+                dataBuffer.writeUint8(
+                    this.buildInputs.findIndex(
+                        input => input.name == action.inputComponents[0].wireID
+                    )
+                );
+            } else {
+                dataBuffer.writeUint8(0);
+            }
+
+            if (action.outputComponents.length > 0) {
+                dataBuffer.writeUint8(
+                    this.buildOutputs.findIndex(
+                        output =>
+                            output.name == action.outputComponents[0].wireID
+                    )
+                );
+            } else {
+                dataBuffer.writeUint8(0);
+            }
         } else {
             dataBuffer.writeInt16(-1);
+            dataBuffer.writeUint8(0);
+            dataBuffer.writeUint8(0);
         }
     }
 }

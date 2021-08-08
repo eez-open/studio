@@ -1288,6 +1288,42 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
         // context
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "context"));
+
+        // component index
+        dataBuffer.writeUint16(assets.getComponentIndex(this));
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const layoutPage = this.layoutPage;
+        if (layoutPage) {
+            const flowIndex = assets.flows.indexOf(layoutPage);
+            dataBuffer.writeInt16(flowIndex);
+
+            if (layoutPage.inputComponents.length > 0) {
+                dataBuffer.writeUint8(
+                    this.buildInputs.findIndex(
+                        input =>
+                            input.name == layoutPage.inputComponents[0].wireID
+                    )
+                );
+            } else {
+                dataBuffer.writeUint8(0);
+            }
+
+            if (layoutPage.outputComponents.length > 0) {
+                dataBuffer.writeUint8(
+                    this.buildOutputs.findIndex(
+                        output =>
+                            output.name == layoutPage.outputComponents[0].wireID
+                    )
+                );
+            } else {
+                dataBuffer.writeUint8(0);
+            }
+        } else {
+            dataBuffer.writeUint8(0);
+            dataBuffer.writeUint8(0);
+        }
     }
 }
 

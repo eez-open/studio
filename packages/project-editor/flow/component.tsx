@@ -1608,9 +1608,17 @@ function renderActionComponent(
 ) {
     const classInfo = getClassInfo(actionNode);
 
-    const inputs = actionNode.inputs.filter(output => output.name != "@seqin");
+    const inputs = actionNode.inputs.filter(input => input.name != "@seqin");
+    const hasSeqIn = !(
+        actionNode.type == "StartActionComponent" ||
+        actionNode.type == "InputActionComponent"
+    );
 
     let outputs = actionNode.outputs.filter(output => output.name != "@seqout");
+    const hasSeqOut = !(
+        actionNode.type == "EndActionComponent" ||
+        actionNode.type == "OutputActionComponent"
+    );
 
     // move @error output to end
     let i = outputs.findIndex(output => output.name === "@error");
@@ -1631,12 +1639,18 @@ function renderActionComponent(
                 <div className="title" style={titleStyle}>
                     <span
                         className="title-image"
-                        data-connection-input-id="@seqin"
+                        data-connection-input-id={
+                            hasSeqIn ? "@seqin" : undefined
+                        }
                     >
                         {classInfo.icon}
                     </span>
                     <span className="title-text">{getLabel(actionNode)}</span>
-                    <span data-connection-output-id="@seqout"></span>
+                    <span
+                        data-connection-output-id={
+                            hasSeqOut ? "@seqout" : undefined
+                        }
+                    ></span>
                 </div>
             </div>
             <div className="content">

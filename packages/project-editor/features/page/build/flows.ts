@@ -13,7 +13,10 @@ import {
     IObjectClassInfo
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
-import { CommentActionComponent } from "project-editor/flow/action-components";
+import {
+    CommentActionComponent,
+    OutputActionComponent
+} from "project-editor/flow/action-components";
 import {
     buildExpression,
     operationIndexes
@@ -161,7 +164,7 @@ function buildComponent(
 
         dataBuffer.writeArray(connectionLines, connectionLine => {
             const targetComponentIndex = connectionLine.targetComponent
-                ? assets.getComponentIndex(connectionLine.targetComponent)!
+                ? assets.getComponentIndex(connectionLine.targetComponent)
                 : -1;
 
             const targetInputIndex = connectionLine.targetComponent
@@ -178,7 +181,15 @@ function buildComponent(
 
             dataBuffer.writeUint16(targetComponentIndex);
             dataBuffer.writeUint8(targetInputIndex);
-            dataBuffer.writeUint8(connectionLine.input == "@seqin" ? 1 : 0);
+            dataBuffer.writeUint8(
+                connectionLine.input == "@seqin" &&
+                    !(
+                        connectionLine.targetComponent instanceof
+                        OutputActionComponent
+                    )
+                    ? 1
+                    : 0
+            );
         });
 
         assets.map.flows[flowIndex].components[componentIndex].outputs.push(
@@ -230,6 +241,9 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 
     // components
     const components = getFlowComponents(flow);
+    components.sort(
+        (a, b) => assets.getComponentIndex(a) - assets.getComponentIndex(b)
+    );
     dataBuffer.writeArray(components, component =>
         buildComponent(assets, dataBuffer, flow, component)
     );

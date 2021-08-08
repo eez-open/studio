@@ -31,6 +31,10 @@ import {
     Variable,
     VariableType
 } from "project-editor/features/variable/variable";
+import {
+    InputActionComponent,
+    OutputActionComponent
+} from "./action-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -413,6 +417,18 @@ export abstract class Flow extends EezObject {
     }
 
     abstract get pageRect(): Rect;
+
+    @computed get inputComponents() {
+        return this.components
+            .filter(component => component instanceof InputActionComponent)
+            .sort((a, b) => a.top - b.top) as InputActionComponent[];
+    }
+
+    @computed get outputComponents() {
+        return this.components
+            .filter(component => component instanceof OutputActionComponent)
+            .sort((a, b) => a.top - b.top) as OutputActionComponent[];
+    }
 
     abstract renderComponents(flowContext: IFlowContext): React.ReactNode;
 }
