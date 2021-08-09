@@ -2275,6 +2275,7 @@ registerClass(FontSource);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Font extends EezObject {
+    @observable id: number | undefined;
     @observable name: string;
     @observable description?: string;
     @observable source?: FontSource;
@@ -2289,10 +2290,16 @@ export class Font extends EezObject {
     static classInfo: ClassInfo = {
         properties: [
             {
+                name: "id",
+                type: PropertyType.Number,
+                isOptional: true,
+                unique: true,
+                defaultValue: undefined
+            },
+            {
                 name: "name",
                 type: PropertyType.String,
-                unique: true,
-                isAssetName: true
+                unique: true
             },
             {
                 name: "description",

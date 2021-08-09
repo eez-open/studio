@@ -244,6 +244,8 @@ type ExpressionNode =
           valueType: VariableType;
       };
 
+type NonComputedPropertyExpressionNode = ExpressionNode & { name: string };
+
 function findValueTypeInExpressionNode(
     component: Component,
     node: ExpressionNode,
@@ -1016,13 +1018,18 @@ function evalExpressionInFlowContext(
                 if (buildInConstantValue != undefined) {
                     return buildInConstantValue;
                 }
-
-                console.log("Unknown constant 4", node);
-
-                throw `Unknown constant '${builtInConstantName}'`;
             }
 
-            console.log("TODO eval_in_flow MemberExpression", node);
+            const object = evalNode(node.object);
+            if (object != undefined) {
+                const property = node.computed
+                    ? evalNode(node.property)
+                    : (node.property as NonComputedPropertyExpressionNode).name;
+                if (property != undefined) {
+                    return object[property];
+                }
+            }
+
             return undefined;
         }
 

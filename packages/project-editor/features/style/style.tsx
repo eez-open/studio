@@ -221,7 +221,6 @@ const idProperty: PropertyInfo = {
     inheritable: false,
     isOptional: true,
     unique: true,
-    isAssetName: true,
     hideInPropertyGrid: isWidgetParentOfStyle,
     defaultValue: undefined
 };

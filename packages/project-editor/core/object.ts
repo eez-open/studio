@@ -160,7 +160,6 @@ export interface PropertyInfo {
     embeddedImage?: boolean;
     partOfNavigation?: boolean;
     fileFilters?: any;
-    isAssetName?: boolean;
     toggableProperty?:
         | "input"
         | "output"

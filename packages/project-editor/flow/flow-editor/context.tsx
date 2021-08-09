@@ -29,6 +29,7 @@ import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
 import { guid } from "eez-studio-shared/guid";
+import { Flow } from "../flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -308,6 +309,7 @@ export class EditorFlowContext implements IFlowContext {
     @observable dragComponent: Component | undefined;
     frontFace: boolean;
     dataContext: IDataContext;
+    flow: Flow;
     runningFlow: IRunningFlow | undefined;
 
     containerId = guid();
@@ -331,6 +333,7 @@ export class EditorFlowContext implements IFlowContext {
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
         frontFace: boolean,
+        flow: Flow,
         runningFlow: IRunningFlow | undefined,
         options?: IEditorOptions,
         filterSnapLines?: (node: ITreeObjectAdapter) => boolean
@@ -340,6 +343,7 @@ export class EditorFlowContext implements IFlowContext {
         this.viewState.set(viewStatePersistantState, onSavePersistantState);
 
         this.frontFace = frontFace;
+        this.flow = flow;
         this.runningFlow = runningFlow;
 
         this.editorOptions = options || {
@@ -351,7 +355,10 @@ export class EditorFlowContext implements IFlowContext {
 
         this.editorOptions.filterSnapLines = filterSnapLines;
 
-        this.dataContext = this.document.DocumentStore.dataContext;
+        this.dataContext =
+            this.document.DocumentStore.dataContext.createWithLocalVariables(
+                flow.localVariables
+            );
     }
 
     destroy() {

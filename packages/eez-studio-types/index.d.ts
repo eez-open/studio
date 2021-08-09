@@ -106,11 +106,6 @@ interface IRunningFlow {
 
     getVariable(component: Component, variableName: string): any;
     setVariable(component: Component, variableName: string, value: any): void;
-    declareVariable(
-        component: Component,
-        variableName: string,
-        value: any
-    ): void;
 
     propagateValue(
         sourceComponent: Component,
@@ -122,6 +117,11 @@ interface IRunningFlow {
 
 interface IVariable {
     name: string;
+    type: string;
+    defaultValue: any;
+    defaultMinValue: any;
+    defaultMaxValue: any;
+    defaultValueList: any;
 }
 
 interface IDataContext {
@@ -130,8 +130,6 @@ interface IDataContext {
 
     get(variableName: string): any;
     set(variableName: string, value: any): void;
-    isVariableDeclared(variableName: string): boolean;
-    declare(variableName: string, value: any): void;
 
     getEnumValue(variableName: string): number;
     getBool(variableName: string): boolean;

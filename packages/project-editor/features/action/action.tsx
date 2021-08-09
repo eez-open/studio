@@ -442,8 +442,7 @@ export class Action extends Flow {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true,
-                isAssetName: true
+                unique: true
             },
             {
                 name: "description",

@@ -304,13 +304,11 @@ export class GetVariableActionComponent extends ActionComponent {
         let lastValue: any = undefined;
 
         return autorun(() => {
-            if (runningFlow.isVariableDeclared(this, this.variable)) {
-                const value = runningFlow.getVariable(this, this.variable);
-                if (first || value !== lastValue) {
-                    first = false;
-                    lastValue = value;
-                    runningFlow.propagateValue(this, "variable", value);
-                }
+            const value = runningFlow.getVariable(this, this.variable);
+            if (first || value !== lastValue) {
+                first = false;
+                lastValue = value;
+                runningFlow.propagateValue(this, "variable", value);
             }
         });
     }

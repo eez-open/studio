@@ -138,8 +138,7 @@ export class Bitmap extends EezObject {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true,
-                isAssetName: true
+                unique: true
             },
             {
                 name: "description",
@@ -313,8 +312,12 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
 
             ctx.drawImage(image, 0, 0);
 
-            let imageData = ctx.getImageData(0, 0, image.width, image.height)
-                .data;
+            let imageData = ctx.getImageData(
+                0,
+                0,
+                image.width,
+                image.height
+            ).data;
 
             let pixels = new Uint8Array(
                 (bitmap.bpp === 32 ? 4 : 2) * image.width * image.height

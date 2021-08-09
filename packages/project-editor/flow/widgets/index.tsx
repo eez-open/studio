@@ -4085,24 +4085,11 @@ registerClass(CanvasWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function firstTick(n: number) {
-    const p = Math.pow(10, Math.floor(Math.log10(n / 6)));
-    let f = n / 6 / p;
-    let i;
-    if (f > 5) {
-        i = 10;
-    } else if (f > 2) {
-        i = 5;
-    } else {
-        i = 2;
-    }
-    return i * p;
-}
-
 export class GaugeEmbeddedWidget extends EmbeddedWidget {
     @observable min: string;
     @observable max: string;
     @observable threshold: string;
+    @observable unit: string;
     @observable barStyle: Style;
     @observable valueStyle: Style;
     @observable ticksStyle: Style;
@@ -4115,6 +4102,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             makeDataPropertyInfo("min"),
             makeDataPropertyInfo("max"),
             makeDataPropertyInfo("threshold"),
+            makeDataPropertyInfo("unit"),
             makeStylePropertyInfo("barStyle"),
             makeStylePropertyInfo("valueStyle"),
             makeStylePropertyInfo("ticksStyle"),
@@ -4152,6 +4140,334 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
     });
 
     render(flowContext: IFlowContext) {
+        let widget = this;
+        let style = widget.style;
+
+        // draw border
+        function arcBorder(
+            ctx: CanvasRenderingContext2D,
+            xCenter: number,
+            yCenter: number,
+            radOuter: number,
+            radInner: number
+        ) {
+            if (radOuter < 0 || radInner < 0) {
+                return;
+            }
+
+            ctx.moveTo(xCenter - radOuter, yCenter);
+
+            ctx.arcTo(
+                xCenter - radOuter,
+                yCenter - radOuter,
+                xCenter + radOuter,
+                yCenter - radOuter,
+                radOuter
+            );
+
+            ctx.arcTo(
+                xCenter + radOuter,
+                yCenter - radOuter,
+                xCenter + radOuter,
+                yCenter,
+                radOuter
+            );
+
+            ctx.lineTo(xCenter + radInner, yCenter);
+
+            ctx.arcTo(
+                xCenter + radInner,
+                yCenter - radInner,
+                xCenter - radInner,
+                yCenter - radInner,
+                radInner
+            );
+
+            ctx.arcTo(
+                xCenter - radInner,
+                yCenter - radInner,
+                xCenter - radInner,
+                yCenter,
+                radInner
+            );
+
+            ctx.lineTo(xCenter - radOuter, yCenter);
+        }
+
+        // draw bar
+        function arcBar(
+            ctx: CanvasRenderingContext2D,
+            xCenter: number,
+            yCenter: number,
+            rad: number
+        ) {
+            if (rad < 0) {
+                return;
+            }
+
+            ctx.moveTo(xCenter - rad, yCenter);
+
+            ctx.arcTo(
+                xCenter - rad,
+                yCenter - rad,
+
+                xCenter + rad,
+                yCenter - rad,
+
+                rad
+            );
+
+            ctx.arcTo(
+                xCenter + rad,
+                yCenter - rad,
+
+                xCenter + rad,
+                yCenter,
+
+                rad
+            );
+        }
+
+        function firstTick(n: number) {
+            const p = Math.pow(10, Math.floor(Math.log10(n / 6)));
+            let f = n / 6 / p;
+            let i;
+            if (f > 5) {
+                i = 10;
+            } else if (f > 2) {
+                i = 5;
+            } else {
+                i = 2;
+            }
+            return i * p;
+        }
+
+        const drawGauge = (ctx: CanvasRenderingContext2D) => {
+            // min
+            let min = evalExpression(flowContext, this, this.min);
+            let max = evalExpression(flowContext, this, this.max);
+            let value =
+                this.data && evalExpression(flowContext, this, this.data);
+            let unit =
+                this.data && evalExpression(flowContext, this, this.unit);
+
+            if (
+                !(typeof min == "number") ||
+                isNaN(min) ||
+                !isFinite(min) ||
+                !(typeof max == "number") ||
+                isNaN(max) ||
+                !isFinite(max) ||
+                !(typeof value == "number") ||
+                isNaN(value) ||
+                !isFinite(value) ||
+                min >= max
+            ) {
+                min = 0;
+                max = 1.0;
+                value = 0;
+            } else {
+                if (value < min) {
+                    value = min;
+                } else if (value > max) {
+                    value = max;
+                }
+            }
+
+            let valueStyle = widget.valueStyle;
+            let barStyle = widget.barStyle;
+            let ticksStyle = widget.ticksStyle;
+
+            let w = this.width;
+            let h = this.height;
+
+            // frame
+            if (w > 0 && h > 0) {
+                let x1 = 0;
+                let y1 = 0;
+                let x2 = w - 1;
+                let y2 = h - 1;
+
+                const borderSize = style.borderSizeRect;
+                let borderRadius = styleGetBorderRadius(style) || 0;
+                if (
+                    borderSize.top > 0 ||
+                    borderSize.right > 0 ||
+                    borderSize.bottom > 0 ||
+                    borderSize.left > 0
+                ) {
+                    draw.setColor(style.borderColorProperty);
+                    draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                    x1 += borderSize.left;
+                    y1 += borderSize.top;
+                    x2 -= borderSize.right;
+                    y2 -= borderSize.bottom;
+                    borderRadius = Math.max(
+                        borderRadius -
+                            Math.max(
+                                borderSize.top,
+                                borderSize.right,
+                                borderSize.bottom,
+                                borderSize.left
+                            ),
+                        0
+                    );
+                }
+
+                draw.setColor(style.backgroundColorProperty);
+                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+            }
+
+            const PADDING_HORZ = 56;
+            const TICK_LINE_LENGTH = 5;
+            const TICK_LINE_WIDTH = 1;
+            const TICK_TEXT_GAP = 1;
+
+            const xCenter = w / 2;
+            const yCenter = h - 12;
+
+            // draw border
+            const radBorderOuter = (w - PADDING_HORZ) / 2;
+
+            const BORDER_WIDTH = Math.round(radBorderOuter / 3);
+            const BAR_WIDTH = BORDER_WIDTH / 2;
+
+            const radBorderInner = radBorderOuter - BORDER_WIDTH;
+            ctx.beginPath();
+            ctx.strokeStyle = style.colorProperty;
+            ctx.lineWidth = 1.5;
+            arcBorder(ctx, xCenter, yCenter, radBorderOuter, radBorderInner);
+            ctx.stroke();
+
+            // draw bar
+            const radBar = (w - PADDING_HORZ) / 2 - BORDER_WIDTH / 2;
+            const angle = remap(value, min, 0.0, max, 180.0);
+            ctx.beginPath();
+            ctx.strokeStyle = barStyle.colorProperty;
+            ctx.lineWidth = BAR_WIDTH;
+            ctx.setLineDash([
+                (radBar * angle * Math.PI) / 180,
+                radBar * Math.PI
+            ]);
+            arcBar(ctx, xCenter, yCenter, radBar);
+            ctx.stroke();
+
+            // draw ticks
+            const ticksfont = styleGetFont(ticksStyle);
+            const ft = firstTick(max - min);
+            const ticksRad = radBorderOuter + 1;
+            for (let tickValue = min; tickValue <= max; tickValue += ft) {
+                const tickAngleDeg = remap(tickValue, min, 180.0, max, 0.0);
+                if (tickAngleDeg <= 180.0) {
+                    const tickAngle = (tickAngleDeg * Math.PI) / 180;
+                    const x1 = xCenter + ticksRad * Math.cos(tickAngle);
+                    const y1 = yCenter - ticksRad * Math.sin(tickAngle);
+
+                    const x2 =
+                        xCenter +
+                        (ticksRad + TICK_LINE_LENGTH) * Math.cos(tickAngle);
+                    const y2 =
+                        yCenter -
+                        (ticksRad + TICK_LINE_LENGTH) * Math.sin(tickAngle);
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = ticksStyle.colorProperty;
+                    ctx.lineWidth = TICK_LINE_WIDTH;
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+
+                    if (ticksfont) {
+                        const tickText = unit
+                            ? `${tickValue} ${unit}`
+                            : tickValue.toString();
+
+                        const tickTextWidth = draw.measureStr(
+                            tickText,
+                            ticksfont,
+                            -1
+                        );
+                        if (tickAngleDeg == 180.0) {
+                            drawText(
+                                ctx,
+                                tickText,
+                                xCenter -
+                                    radBorderOuter -
+                                    TICK_TEXT_GAP -
+                                    tickTextWidth,
+                                y2 - TICK_TEXT_GAP - ticksfont.ascent,
+                                tickTextWidth,
+                                ticksfont.ascent,
+                                ticksStyle,
+                                false
+                            );
+                        } else if (tickAngleDeg > 90.0) {
+                            drawText(
+                                ctx,
+                                tickText,
+                                x2 - TICK_TEXT_GAP - tickTextWidth,
+                                y2 - TICK_TEXT_GAP - ticksfont.ascent,
+                                tickTextWidth,
+                                ticksfont.ascent,
+                                ticksStyle,
+                                false
+                            );
+                        } else if (tickAngleDeg == 90.0) {
+                            drawText(
+                                ctx,
+                                tickText,
+                                x2 - tickTextWidth / 2,
+                                y2 - TICK_TEXT_GAP - ticksfont.ascent,
+                                tickTextWidth,
+                                ticksfont.ascent,
+                                ticksStyle,
+                                false
+                            );
+                        } else if (tickAngleDeg > 0) {
+                            drawText(
+                                ctx,
+                                tickText,
+                                x2 + TICK_TEXT_GAP,
+                                y2 - TICK_TEXT_GAP - ticksfont.ascent,
+                                tickTextWidth,
+                                ticksfont.ascent,
+                                ticksStyle,
+                                false
+                            );
+                        } else {
+                            drawText(
+                                ctx,
+                                tickText,
+                                xCenter + radBorderOuter + TICK_TEXT_GAP,
+                                y2 - TICK_TEXT_GAP - ticksfont.ascent,
+                                tickTextWidth,
+                                ticksfont.ascent,
+                                ticksStyle,
+                                false
+                            );
+                        }
+                    }
+                }
+            }
+
+            // draw value
+            const font = styleGetFont(valueStyle);
+            if (font) {
+                const valueText = unit ? `${value} ${unit}` : value.toString();
+                const valueTextWidth = draw.measureStr(valueText, font, -1);
+                drawText(
+                    ctx,
+                    valueText,
+                    xCenter - valueTextWidth / 2,
+                    yCenter - font.height,
+                    valueTextWidth,
+                    font.height,
+                    valueStyle,
+                    false
+                );
+            }
+        };
+
         return (
             <>
                 {flowContext.document.DocumentStore
@@ -4159,227 +4475,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let widget = this;
-                            let style = widget.style;
-
-                            const BORDER_WIDTH = 32;
-                            const BAR_WIDTH = 16;
-
-                            // min
-                            let min = evalExpression(
-                                flowContext,
-                                this,
-                                this.min
-                            );
-
-                            if (
-                                !(typeof min == "number") ||
-                                isNaN(min) ||
-                                !isFinite(min)
-                            ) {
-                                min = 0;
-                            }
-
-                            // max
-                            let max =
-                                evalExpression(flowContext, this, this.max) ??
-                                100;
-
-                            if (
-                                !(typeof max == "number") ||
-                                isNaN(max) ||
-                                !isFinite(max) ||
-                                max <= min
-                            ) {
-                                max = min + 1.0;
-                            }
-
-                            // value
-                            let value =
-                                this.data &&
-                                evalExpression(flowContext, this, this.data);
-                            if (
-                                !(typeof value == "number") ||
-                                isNaN(value) ||
-                                !isFinite(value)
-                            ) {
-                                value = min + (max - min) * 0.75;
-                            }
-
-                            let barStyle = widget.barStyle;
-
-                            let w = this.width;
-                            let h = this.height;
-
-                            const xCenter = w / 2;
-                            const yCenter = h - 12;
-
-                            // frame
-                            if (w > 0 && h > 0) {
-                                let x1 = 0;
-                                let y1 = 0;
-                                let x2 = w - 1;
-                                let y2 = h - 1;
-
-                                const borderSize = style.borderSizeRect;
-                                let borderRadius =
-                                    styleGetBorderRadius(style) || 0;
-                                if (
-                                    borderSize.top > 0 ||
-                                    borderSize.right > 0 ||
-                                    borderSize.bottom > 0 ||
-                                    borderSize.left > 0
-                                ) {
-                                    draw.setColor(style.borderColorProperty);
-                                    draw.fillRect(
-                                        ctx,
-                                        x1,
-                                        y1,
-                                        x2,
-                                        y2,
-                                        borderRadius
-                                    );
-                                    x1 += borderSize.left;
-                                    y1 += borderSize.top;
-                                    x2 -= borderSize.right;
-                                    y2 -= borderSize.bottom;
-                                    borderRadius = Math.max(
-                                        borderRadius -
-                                            Math.max(
-                                                borderSize.top,
-                                                borderSize.right,
-                                                borderSize.bottom,
-                                                borderSize.left
-                                            ),
-                                        0
-                                    );
-                                }
-
-                                draw.setColor(style.backgroundColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    x1,
-                                    y1,
-                                    x2,
-                                    y2,
-                                    borderRadius
-                                );
-                            }
-
-                            // draw border
-                            function arcBorder(
-                                xCenter: number,
-                                yCenter: number,
-                                radOuter: number,
-                                radInner: number
-                            ) {
-                                ctx.moveTo(xCenter - radOuter, yCenter);
-
-                                ctx.arcTo(
-                                    xCenter - radOuter,
-                                    yCenter - radOuter,
-
-                                    xCenter + radOuter,
-                                    yCenter - radOuter,
-
-                                    radOuter
-                                );
-
-                                ctx.arcTo(
-                                    xCenter + radOuter,
-                                    yCenter - radOuter,
-
-                                    xCenter + radOuter,
-                                    yCenter,
-
-                                    radOuter
-                                );
-
-                                ctx.lineTo(xCenter + radInner, yCenter);
-
-                                ctx.arcTo(
-                                    xCenter + radInner,
-                                    yCenter - radInner,
-
-                                    xCenter - radInner,
-                                    yCenter - radInner,
-
-                                    radInner
-                                );
-
-                                ctx.arcTo(
-                                    xCenter - radInner,
-                                    yCenter - radInner,
-
-                                    xCenter - radInner,
-                                    yCenter,
-
-                                    radInner
-                                );
-
-                                ctx.lineTo(xCenter - radOuter, yCenter);
-                            }
-
-                            const radBorderOuter = (w - 12) / 2;
-                            const radBorderInner =
-                                radBorderOuter - BORDER_WIDTH;
-                            ctx.beginPath();
-                            ctx.strokeStyle = style.colorProperty;
-                            ctx.lineWidth = 1.5;
-                            arcBorder(
-                                xCenter,
-                                yCenter,
-                                radBorderOuter,
-                                radBorderInner
-                            );
-                            ctx.stroke();
-
-                            // draw bar
-                            function arcBar(
-                                xCenter: number,
-                                yCenter: number,
-                                rad: number
-                            ) {
-                                ctx.moveTo(xCenter - rad, yCenter);
-
-                                ctx.arcTo(
-                                    xCenter - rad,
-                                    yCenter - rad,
-
-                                    xCenter + rad,
-                                    yCenter - rad,
-
-                                    rad
-                                );
-
-                                ctx.arcTo(
-                                    xCenter + rad,
-                                    yCenter - rad,
-
-                                    xCenter + rad,
-                                    yCenter,
-
-                                    rad
-                                );
-                            }
-
-                            const radBar = (w - 12) / 2 - BORDER_WIDTH / 2;
-                            const angle = remap(value, min, 0.0, max, 180.0);
-                            ctx.beginPath();
-                            ctx.strokeStyle = barStyle.colorProperty;
-                            ctx.lineWidth = BAR_WIDTH;
-                            ctx.setLineDash([
-                                (radBar * angle * Math.PI) / 180,
-                                radBar * Math.PI
-                            ]);
-                            arcBar(xCenter, yCenter, radBar);
-                            ctx.stroke();
-
-                            // draw ticks
-                            const ft = firstTick(6);
-                            console.log(ft);
-                        }}
+                        draw={drawGauge}
                     />
                 )}
                 {super.render(flowContext)}
@@ -4396,6 +4492,9 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
 
         // threshold
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "threshold"));
+
+        // unit
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "unit"));
 
         // barStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "barStyle"));

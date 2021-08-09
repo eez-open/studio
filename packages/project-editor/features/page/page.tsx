@@ -165,7 +165,6 @@ export class Page extends Flow {
                 name: "name",
                 type: PropertyType.String,
                 unique: true,
-                isAssetName: true,
                 propertyGridGroup: generalGroup
             },
             {

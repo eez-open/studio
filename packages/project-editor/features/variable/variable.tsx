@@ -285,8 +285,7 @@ export class Variable extends EezObject {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true,
-                isAssetName: true
+                unique: true
             },
             {
                 name: "description",
@@ -449,36 +448,43 @@ function getEnumValues(variable: Variable): any[] {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DataContext implements IDataContext {
-    @observable localVariables: Map<string, any> | undefined = undefined;
+    project: Project;
+    parentDataContext: DataContext | undefined;
+    defaultValueOverrides: any;
+    localVariables: Map<string, IVariable> | undefined = undefined;
     @observable runtimeValues: Map<string, any>;
 
     constructor(
-        public project: Project,
-        public parentDataContext?: DataContext,
-        public defaultValueOverrides?: any,
-        localVariables?: Map<string, any>
+        project: Project,
+        parentDataContext?: DataContext,
+        defaultValueOverrides?: any,
+        localVariables?: Map<string, IVariable>
     ) {
-        this.localVariables = localVariables;
+        this.project = project;
+
+        this.parentDataContext = parentDataContext;
         if (!parentDataContext) {
             this.runtimeValues = new Map<string, any>();
         }
+
+        this.defaultValueOverrides = defaultValueOverrides;
+
+        this.localVariables = localVariables;
     }
 
     createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext {
         return new DataContext(this.project, this, defaultValueOverrides);
     }
 
-    createWithLocalVariables(variables: IVariable[]) {
+    createWithLocalVariables(variablesArray: IVariable[]) {
         const localVariables = new Map<string, any>();
-
-        variables.forEach(variable =>
-            localVariables.set(variable.name, undefined)
-        );
-
+        variablesArray.forEach(variable => {
+            localVariables.set(variable.name, variable);
+        });
         return new DataContext(this.project, this, undefined, localVariables);
     }
 
-    getRuntimeValue(variable: Variable | undefined): {
+    getRuntimeValue(variable: IVariable | undefined): {
         hasValue: boolean;
         value: any;
     } {
@@ -516,37 +522,7 @@ export class DataContext implements IDataContext {
 
     @action
     set(variableName: string, value: any) {
-        if (this.localVariables && this.localVariables.has(variableName)) {
-            this.localVariables.set(variableName, value);
-        } else {
-            this.setRuntimeValue(variableName, value);
-        }
-    }
-
-    isVariableDeclared(variableName: string) {
-        const parts = variableName.split(".");
-        variableName = parts[0];
-
-        if (this.localVariables && this.localVariables.has(variableName)) {
-            return true;
-        }
-
-        if (findVariable(this.project, variableName)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    @action
-    declare(variableName: string, value: any) {
-        const localVariables = this.localVariables;
-
-        if (!localVariables) {
-            throw "data context without local variables";
-        }
-
-        localVariables.set(variableName, value);
+        this.setRuntimeValue(variableName, value);
     }
 
     findVariableDefaultValue(variableName: string): any {
@@ -564,14 +540,25 @@ export class DataContext implements IDataContext {
         return undefined;
     }
 
-    findVariable(variableName: string) {
-        let variable = findVariable(this.project, variableName);
-        if (variable) {
-            const defaultValue = this.findVariableDefaultValue(variableName);
-            if (defaultValue != undefined) {
-                return { ...variable, defaultValue };
+    findVariable(variableName: string): IVariable | undefined {
+        let variable: IVariable | undefined;
+
+        // find local variable
+        if (this.localVariables && this.localVariables.has(variableName)) {
+            variable = this.localVariables.get(variableName);
+        }
+
+        if (!variable) {
+            if (this.parentDataContext) {
+                return this.parentDataContext.findVariable(variableName);
             }
         }
+
+        if (!variable) {
+            // find global variable
+            variable = findVariable(this.project, variableName);
+        }
+
         return variable;
     }
 
@@ -589,78 +576,79 @@ export class DataContext implements IDataContext {
 
         let value: any = undefined;
 
-        if (this.localVariables && this.localVariables.has(variableName)) {
-            value = this.localVariables.get(variableName);
-        } else {
-            const variable = this.findVariable(variableName);
-            const { hasValue, value: value_ } = this.getRuntimeValue(variable);
+        const variable = this.findVariable(variableName);
+        const { hasValue, value: value_ } = this.getRuntimeValue(variable);
 
-            if (variable) {
-                if (hasValue) {
-                    value = value_;
-                } else {
-                    if (variable.defaultValue !== undefined) {
-                        if (isIntegerVariable(variable)) {
-                            value = parseInt(variable.defaultValue);
-                            if (isNaN(value)) {
-                                console.error(
-                                    "Invalid integer default value",
-                                    variable
-                                );
-                            }
-                        } else if (isEnumVariable(variable)) {
-                            // TODO this is invalid check
-                            value = variable.defaultValue;
-                            if (getEnumValues(variable).indexOf(value) == -1) {
-                                console.error(
-                                    "Invalid enum default value",
-                                    variable
-                                );
-                            }
-                        } else if (variable.type == "float") {
-                            value = parseFloat(variable.defaultValue);
-                            if (isNaN(value)) {
-                                value = variable.defaultValue;
-                                console.error(
-                                    "Invalid float default value",
-                                    variable
-                                );
-                            }
-                        } else if (variable.type == "boolean") {
-                            let defaultValue = variable.defaultValue
-                                .toString()
-                                .trim()
-                                .toLowerCase();
-                            if (defaultValue == "1" || defaultValue == "true") {
-                                value = true;
-                            } else if (
-                                defaultValue == "0" ||
-                                defaultValue == "false"
-                            ) {
-                                value = false;
-                            } else {
-                                value = undefined;
-                            }
-                        } else if (variable.type == "array") {
-                            try {
-                                value =
-                                    typeof variable.defaultValue === "string"
-                                        ? JSON.parse(variable.defaultValue)
-                                        : variable.defaultValue;
-                            } catch (err) {
-                                value = [];
-                                console.error(
-                                    "Invalid array default value",
-                                    variable,
-                                    err
-                                );
-                            }
+        if (variable) {
+            if (hasValue) {
+                value = value_;
+            } else {
+                let defaultValue = this.findVariableDefaultValue(variableName);
+                if (defaultValue == undefined) {
+                    defaultValue = variable.defaultValue;
+                }
+
+                if (defaultValue !== undefined) {
+                    if (isIntegerVariable(variable)) {
+                        value = parseInt(defaultValue);
+                        if (isNaN(value)) {
+                            console.error(
+                                "Invalid integer default value",
+                                variable
+                            );
+                        }
+                    } else if (isEnumVariable(variable)) {
+                        // TODO this is invalid check
+                        value = defaultValue;
+                        if (getEnumValues(variable).indexOf(value) == -1) {
+                            console.error(
+                                "Invalid enum default value",
+                                variable
+                            );
+                        }
+                    } else if (variable.type == "float") {
+                        value = parseFloat(defaultValue);
+                        if (isNaN(value)) {
+                            value = defaultValue;
+                            console.error(
+                                "Invalid float default value",
+                                variable
+                            );
+                        }
+                    } else if (variable.type == "boolean") {
+                        defaultValue = defaultValue
+                            .toString()
+                            .trim()
+                            .toLowerCase();
+                        if (defaultValue == "1" || defaultValue == "true") {
+                            value = true;
+                        } else if (
+                            defaultValue == "0" ||
+                            defaultValue == "false"
+                        ) {
+                            value = false;
                         } else {
-                            value = variable.defaultValue;
+                            value = undefined;
+                        }
+                    } else if (variable.type == "array") {
+                        try {
+                            value =
+                                typeof defaultValue === "string"
+                                    ? JSON.parse(defaultValue)
+                                    : defaultValue;
+                        } catch (err) {
+                            value = [];
+                            console.error(
+                                "Invalid array default value",
+                                variable,
+                                err
+                            );
                         }
                     } else {
-                        value = undefined;
+                        value = defaultValue;
                     }
+                } else {
+                    value = undefined;
                 }
             }
         }

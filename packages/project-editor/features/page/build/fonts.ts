@@ -3,7 +3,8 @@ import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import * as projectBuild from "project-editor/project/build";
 
 export function buildGuiFontsEnum(assets: Assets) {
-    let fonts = assets.fonts.map(
+    const fontAssets = assets.fonts.filter(font => !!font) as Font[];
+    let fonts = fontAssets.map(
         (font, i) =>
             `${projectBuild.TAB}${projectBuild.getName(
                 "FONT_ID_",
@@ -88,7 +89,6 @@ function buildFontData(font: Font, dataBuffer: DataBuffer) {
 }
 
 export function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
-    dataBuffer.writeArray(assets.fonts, font =>
-        buildFontData(font, dataBuffer)
-    );
+    const fonts = assets.fonts.filter(font => !!font) as Font[];
+    dataBuffer.writeArray(fonts, font => buildFontData(font, dataBuffer));
 }

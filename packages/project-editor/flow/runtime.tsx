@@ -994,10 +994,6 @@ export class RunningFlow {
         return this.getComponentState(component).runningState;
     }
 
-    isVariableDeclared(component: Component, variableName: string): any {
-        return this.dataContext.isVariableDeclared(variableName);
-    }
-
     setComponentRunningState<T>(component: Component, runningState: T) {
         this.getComponentState(component).runningState = runningState;
     }
@@ -1008,10 +1004,6 @@ export class RunningFlow {
 
     setVariable(component: Component, variableName: string, value: any) {
         return this.dataContext.set(variableName, value);
-    }
-
-    declareVariable(component: Component, variableName: string, value: any) {
-        return this.dataContext.declare(variableName, value);
     }
 
     @computed get isRunning(): boolean {

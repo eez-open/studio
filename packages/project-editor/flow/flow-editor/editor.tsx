@@ -1021,14 +1021,15 @@ export class FlowEditor
 
         const flowContext = new EditorFlowContext();
 
+        const flow = this.props.widgetContainer.object as Flow;
+
         flowContext.set(
             new FlowDocument(this.props.widgetContainer, flowContext),
             viewStatePersistantState,
             this.props.onSavePersistantState,
             this.props.frontFace,
-            this.context.RuntimeStore.getRunningFlow(
-                this.props.widgetContainer.object as Flow
-            ),
+            flow,
+            this.context.RuntimeStore.getRunningFlow(flow),
             this.options,
             this.filterSnapLines
         );

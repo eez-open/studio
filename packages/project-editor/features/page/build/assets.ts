@@ -21,7 +21,7 @@ import {
     findStyle
 } from "project-editor/features/style/style";
 import { Page, findPage } from "project-editor/features/page/page";
-import { Font, findFont } from "project-editor/features/font/font";
+import { findFont, Font } from "project-editor/features/font/font";
 import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Action, findAction } from "project-editor/features/action/action";
 import {
@@ -53,7 +53,7 @@ export class Assets {
     actions: Action[];
     pages: Page[];
     styles: (Style | undefined)[];
-    fonts: Font[] = [];
+    fonts: (Font | undefined)[] = [];
     bitmaps: Bitmap[] = [];
     colors: string[] = [];
     flows: Flow[] = [];
@@ -190,32 +190,29 @@ export class Assets {
         }
 
         this.styles = [undefined];
-        {
-            this.getAssets<Style>(
-                project => project.styles,
-                style => style.id != undefined
-            ).forEach(style => this.addStyle(style));
+        this.getAssets<Style>(
+            project => project.styles,
+            style => style.id != undefined
+        ).forEach(style => this.addStyle(style));
+        this.getAssets<Style>(
+            project => project.styles,
+            style => style.alwaysBuild
+        ).forEach(style => this.addStyle(style));
 
-            this.getAssets<Style>(
-                project => project.styles,
-                style => style.alwaysBuild
-            ).forEach(style => this.addStyle(style));
-        }
+        this.fonts = [undefined];
+        this.getAssets<Font>(
+            project => project.fonts,
+            font => font.id != undefined
+        ).forEach(font => this.addFont(font));
+        this.getAssets<Font>(
+            project => project.fonts,
+            (font: Font) => font.alwaysBuild
+        ).forEach(font => this.addFont(font));
 
-        {
-            const assetIncludePredicate = (asset: Font | Bitmap) =>
-                asset.alwaysBuild;
-
-            this.fonts = this.getAssets<Font>(
-                project => project.fonts,
-                assetIncludePredicate
-            );
-
-            this.bitmaps = this.getAssets<Bitmap>(
-                project => project.bitmaps,
-                assetIncludePredicate
-            );
-        }
+        this.bitmaps = this.getAssets<Bitmap>(
+            project => project.bitmaps,
+            (bitmap: Bitmap) => bitmap.alwaysBuild
+        );
 
         buildGuiDocumentData(this, new DummyDataBuffer());
         buildGuiStylesData(this, new DummyDataBuffer());
@@ -321,6 +318,23 @@ export class Assets {
         return this.styles.length - 1;
     }
 
+    addFont(font: Font) {
+        if (font.id != undefined) {
+            this.fonts[font.id] = font;
+            return;
+        }
+
+        for (let i = 1; i < this.fonts.length; i++) {
+            if (this.fonts[i] == undefined) {
+                this.fonts[i] = font;
+                return;
+            }
+        }
+
+        this.fonts.push(font);
+        return;
+    }
+
     doGetStyleIndex(
         project: Project,
         styleNameOrObject: string | Style
@@ -408,7 +422,20 @@ export class Assets {
     }
 
     getFontIndex(object: any, propertyName: string) {
-        return this.getAssetIndex(object, propertyName, findFont, this.fonts);
+        let fontName: string | undefined = object[propertyName];
+        for (let i = 1; i < this.fonts.length; i++) {
+            const font = this.fonts[i];
+            if (font && font.name == fontName) {
+                return this.DocumentStore.masterProject ? -i : i;
+            }
+        }
+        const font = findFont(this.DocumentStore.project, fontName);
+        if (font) {
+            if (font.id != undefined) {
+                return font.id;
+            }
+        }
+        return 0;
     }
 
     getBitmapIndex(object: any, propertyName: string) {
