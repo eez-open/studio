@@ -299,6 +299,13 @@ export const builtInFunctions: {
         getValueType: (...args: VariableType[]) => VariableType;
     };
 } = {
+    "Flow.it": {
+        arity: 1,
+        eval: (...args: any[]) => 0,
+        getValueType: (...args: VariableType[]) => {
+            return "integer";
+        }
+    },
     "Math.sin": {
         arity: 1,
         eval: (...args: any[]) => Math.sin(args[0]),

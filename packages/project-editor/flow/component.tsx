@@ -409,7 +409,11 @@ export function componentInputOrOutputUnique(
             return null;
         }
 
-        if (!parseIdentifier(newName)) {
+        let isIdentifier = false;
+        try {
+            isIdentifier = parseIdentifier(newName);
+        } catch (err) {}
+        if (!isIdentifier) {
             return "Input name is not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
         }
 

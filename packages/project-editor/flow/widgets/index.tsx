@@ -112,7 +112,10 @@ import {
     WIDGET_TYPE_GAUGE,
     WIDGET_TYPE_INPUT
 } from "./widget_types";
-import { evalExpression } from "project-editor/flow/expression/expression";
+import {
+    evalConstantExpression,
+    evalExpression
+} from "project-editor/flow/expression/expression";
 import { remap } from "eez-studio-shared/util";
 
 const { MenuItem } = EEZStudio.remote || {};
@@ -420,9 +423,14 @@ export class ListWidget extends EmbeddedWidget {
             return null;
         }
 
-        const dataValue = this.data
-            ? flowContext.dataContext.get(this.data)
-            : 0;
+        let dataValue = this.data ? flowContext.dataContext.get(this.data) : 0;
+
+        if (flowContext.document.DocumentStore.isAppletProject) {
+            dataValue = evalConstantExpression(
+                flowContext.document.DocumentStore.project,
+                dataValue
+            );
+        }
 
         if (!dataValue || !Array.isArray(dataValue)) {
             return null;
@@ -2515,10 +2523,6 @@ export class ButtonWidget extends EmbeddedWidget {
         if (!text) {
             text = this.text;
         }
-        let style =
-            this.enabled && flowContext.dataContext.getBool(this.enabled)
-                ? this.style
-                : this.disabledStyle;
 
         let buttonEnabled = false;
         if (flowContext.runningFlow) {
@@ -2529,7 +2533,31 @@ export class ButtonWidget extends EmbeddedWidget {
             if (value == undefined || value.value) {
                 buttonEnabled = true;
             }
+        } else {
+            if (this.enabled) {
+                if (flowContext.document.DocumentStore.isAppletProject) {
+                    try {
+                        const value = evalConstantExpression(
+                            flowContext.document.DocumentStore.project,
+                            this.enabled
+                        );
+
+                        if (
+                            typeof value == "number" ||
+                            typeof value == "boolean"
+                        ) {
+                            buttonEnabled = !!value;
+                        }
+                    } catch (err) {}
+                } else {
+                    buttonEnabled = flowContext.dataContext.getBool(
+                        this.enabled
+                    );
+                }
+            }
         }
+
+        let style = buttonEnabled ? this.style : this.disabledStyle;
 
         return (
             <>
@@ -4515,7 +4543,7 @@ registerClass(GaugeEmbeddedWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class InputEmbeddedWidget extends EmbeddedWidget {
-    @observable type: "text" | "number";
+    @observable inputType: "text" | "number";
 
     @observable password: boolean;
 
@@ -4530,30 +4558,44 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
 
         properties: [
             {
+                name: "inputType",
+                type: PropertyType.Enum,
+                propertyGridGroup: specificGroup,
+                enumItems: [
+                    {
+                        id: "number"
+                    },
+                    {
+                        id: "text"
+                    }
+                ]
+            },
+            {
                 ...makeDataPropertyInfo("min"),
                 displayName: (widget: InputEmbeddedWidget) =>
-                    widget.type === "text" ? "Min chars" : "Min"
+                    widget.inputType === "text" ? "Min chars" : "Min"
             },
             {
                 ...makeDataPropertyInfo("max"),
                 displayName: (widget: InputEmbeddedWidget) =>
-                    widget.type === "text" ? "Max chars" : "Max"
+                    widget.inputType === "text" ? "Max chars" : "Max"
             },
             {
                 ...makeDataPropertyInfo("precision"),
                 hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
-                    widget.type == "number"
+                    widget.inputType != "number"
             },
             {
                 ...makeDataPropertyInfo("unit"),
                 hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
-                    widget.type == "number"
+                    widget.inputType != "number"
             },
             {
                 name: "password",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
-                    widget.type == "text"
+                    widget.inputType != "text",
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -4561,7 +4603,8 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
             left: 0,
             top: 0,
             width: 120,
-            height: 40
+            height: 40,
+            inputType: "number"
         },
 
         icon: (
@@ -4659,12 +4702,12 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
         const INPUT_WIDGET_TYPE_NUMBER = 0x0002;
         const INPUT_WIDGET_PASSWORD_FLAG = 0x0100;
 
-        if (this.type === "text") {
+        if (this.inputType === "text") {
             flags |= INPUT_WIDGET_TYPE_TEXT;
             if (this.password) {
                 flags |= INPUT_WIDGET_PASSWORD_FLAG;
             }
-        } else if (this.type === "number") {
+        } else if (this.inputType === "number") {
             flags |= INPUT_WIDGET_TYPE_NUMBER;
         }
 

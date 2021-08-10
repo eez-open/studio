@@ -5,6 +5,7 @@ import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { Flow } from "project-editor/flow/flow";
 import { Component, isToggableProperty } from "project-editor/flow/component";
 import {
+    getChildOfObject,
     getClassesDerivedFrom,
     getClassInfo,
     getHumanReadableObjectPath,
@@ -26,6 +27,7 @@ import {
     buildConstantFlowValue,
     buildVariableFlowValue
 } from "./value";
+import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -122,20 +124,36 @@ function buildComponent(
         )
     );
     dataBuffer.writeArray(properties, propertyInfo => {
-        if (
-            component.asInputProperties &&
-            component.asInputProperties.indexOf(propertyInfo.name) != -1
-        ) {
-            // as input
-            buildExpression(assets, dataBuffer, component, propertyInfo.name);
-        } else {
-            // as property
-            buildExpression(
-                assets,
-                dataBuffer,
-                component,
-                getProperty(component, propertyInfo.name)
+        try {
+            if (
+                component.asInputProperties &&
+                component.asInputProperties.indexOf(propertyInfo.name) != -1
+            ) {
+                // as input
+                buildExpression(
+                    assets,
+                    dataBuffer,
+                    component,
+                    propertyInfo.name
+                );
+            } else {
+                // as property
+                buildExpression(
+                    assets,
+                    dataBuffer,
+                    component,
+                    getProperty(component, propertyInfo.name)
+                );
+            }
+        } catch (err) {
+            assets.DocumentStore.OutputSectionsStore.write(
+                output.Section.OUTPUT,
+                output.Type.ERROR,
+                err,
+                getChildOfObject(component, propertyInfo.name)
             );
+
+            dataBuffer.writeUint16NonAligned(makeEndInstruction());
         }
     });
 

@@ -9,10 +9,14 @@ const EXPR_EVAL_INSTRUCTION_ARRAY_ELEMENT = 5 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 6 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_END = 7 << 13;
 
-export function makePushConstantInstruction(assets: Assets, value: any) {
+export function makePushConstantInstruction(
+    assets: Assets,
+    value: any,
+    valueType?: string
+) {
     return (
         EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT |
-        assets.getConstantIndex(value)
+        assets.getConstantIndex(value, valueType)
     );
 }
 

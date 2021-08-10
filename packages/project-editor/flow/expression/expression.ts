@@ -24,7 +24,9 @@ import {
 } from "./instructions";
 import {
     getArrayElementTypeFromType,
+    getEnumTypeNameFromType,
     getStructTypeNameFromType,
+    isEnumType,
     VariableType
 } from "project-editor/features/variable/variable";
 
@@ -51,7 +53,12 @@ export function checkExpression(
     if (expression == undefined) {
     } else if (typeof expression == "number") {
     } else {
-        const rootNode = expressionParser.parse(expression);
+        let rootNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
         findValueTypeInExpressionNode(component, rootNode, assignable);
         checkExpressionNode(component, rootNode);
     }
@@ -64,12 +71,20 @@ export function buildExpression(
     expression: string
 ) {
     let instructions;
-    if (expression == undefined) {
+    if (
+        expression == undefined ||
+        (typeof expression == "string" && expression.length == 0)
+    ) {
         instructions = [makePushConstantInstruction(assets, undefined)];
     } else if (typeof expression == "number") {
         instructions = [makePushConstantInstruction(assets, expression)];
     } else {
-        const rootNode = expressionParser.parse(expression);
+        let rootNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
         findValueTypeInExpressionNode(component, rootNode, false);
         instructions = buildExpressionNode(assets, component, rootNode, false);
     }
@@ -103,7 +118,13 @@ export function buildAssignableExpression(
         return false;
     }
 
-    const rootNode: ExpressionNode = expressionParser.parse(expression);
+    let rootNode;
+    try {
+        rootNode = expressionParser.parse(expression);
+    } catch (err) {
+        throw `Expression error: ${err}`;
+    }
+
     findValueTypeInExpressionNode(component, rootNode, true);
 
     if (!isAssignableExpression(rootNode)) {
@@ -127,11 +148,15 @@ export function evalConstantExpression(project: Project, expression: string) {
     } else if (typeof expression == "number") {
         value = expression;
     } else {
+        let rootNode;
         try {
-            value = evalConstantExpressionNode(
-                project,
-                expressionParser.parse(expression)
-            );
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+
+        try {
+            value = evalConstantExpressionNode(project, rootNode);
         } catch (err) {
             console.error(err);
             value = null;
@@ -153,8 +178,14 @@ export function evalExpression(
     } else if (typeof expression == "number") {
         value = expression;
     } else {
+        let rootNode;
         try {
-            const rootNode = expressionParser.parse(expression);
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+
+        try {
             findValueTypeInExpressionNode(component, rootNode, false);
 
             value = evalExpressionInFlowContext(flowContext, rootNode);
@@ -251,6 +282,8 @@ function findValueTypeInExpressionNode(
     node: ExpressionNode,
     assignable: boolean
 ) {
+    const project = getProject(component);
+
     if (node.type == "Literal") {
         if (typeof node.value === "boolean") {
             node.valueType = "boolean";
@@ -289,7 +322,6 @@ function findValueTypeInExpressionNode(
             return;
         }
 
-        const project = getProject(component);
         let globalVariable = project.variables.globalVariables.find(
             globalVariable => globalVariable.name == node.name
         );
@@ -297,7 +329,13 @@ function findValueTypeInExpressionNode(
             node.valueType = globalVariable.type as VariableType;
             return;
         }
-        throw `identifier '${node.name}' is neither input or local or global variable`;
+
+        let enumDef = project.variables.enumsMap.get(node.name);
+        if (!enumDef) {
+            throw `identifier '${node.name}' is neither input or local or global variable or enum`;
+        }
+
+        node.valueType = `enum:${node.name}` as VariableType;
     } else if (node.type == "BinaryExpression") {
         let operator = binaryOperators[node.operator];
         if (!operator) {
@@ -368,45 +406,58 @@ function findValueTypeInExpressionNode(
         );
     } else if (node.type == "MemberExpression") {
         findValueTypeInExpressionNode(component, node.object, assignable);
-        if (node.computed) {
-            const valueType = getArrayElementTypeFromType(
-                node.object.valueType
-            );
-            if (!valueType) {
-                throw `Array type expected but found '${node.object.valueType}'`;
-            }
-            node.valueType = valueType as VariableType;
-        } else {
-            let structTypeName = getStructTypeNameFromType(
-                node.object.valueType
-            );
-            if (!structTypeName) {
-                structTypeName = node.object.valueType;
-            }
-
-            const project = getProject(component);
-            const structure = project.variables.structsMap.get(structTypeName);
-            if (!structure) {
-                throw `Struct type expected but found '${node.object.valueType}'`;
-            }
-
+        if (isEnumType(node.object.valueType)) {
+            const enumName = getEnumTypeNameFromType(node.object.valueType)!;
+            const enumDef = project.variables.enumsMap.get(enumName)!;
             if (node.property.type != "Identifier") {
-                throw `Invalid struct field type: '${node.property.type}'`;
+                throw `Invalid enum field type: '${node.property.type}'`;
             }
-
-            const fieldName = node.property.name;
-
-            const field = structure.fields.find(
-                field => field.name == fieldName
-            );
-
-            if (!field) {
-                throw `Struc field not found: '${fieldName}'`;
+            const enumMember = enumDef.membersMap.get(node.property.name);
+            if (!enumMember) {
+                throw `Enum member '${node.property.name}' not found in enum '${enumName}'`;
             }
+            node.valueType = "integer";
+        } else {
+            if (node.computed) {
+                const valueType = getArrayElementTypeFromType(
+                    node.object.valueType
+                );
+                if (!valueType) {
+                    throw `Array type expected but found '${node.object.valueType}'`;
+                }
+                node.valueType = valueType as VariableType;
+            } else {
+                let structTypeName = getStructTypeNameFromType(
+                    node.object.valueType
+                );
+                if (!structTypeName) {
+                    structTypeName = node.object.valueType;
+                }
 
-            node.valueType = field.type as VariableType;
+                const project = getProject(component);
+                const structure =
+                    project.variables.structsMap.get(structTypeName);
+                if (!structure) {
+                    throw `Struct type expected but found '${node.object.valueType}'`;
+                }
+
+                if (node.property.type != "Identifier") {
+                    throw `Invalid struct field type: '${node.property.type}'`;
+                }
+
+                const fieldName = node.property.name;
+
+                const field = structure.fields.find(
+                    field => field.name == fieldName
+                );
+
+                if (!field) {
+                    throw `Struc field not found: '${fieldName}'`;
+                }
+
+                node.valueType = field.type as VariableType;
+            }
         }
-        // TODO
     } else if (node.type == "ArrayExpression") {
         node.elements.forEach(element =>
             findValueTypeInExpressionNode(component, element, assignable)
@@ -731,14 +782,24 @@ function buildExpressionNode(
                 if (!enumMember) {
                     throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
                 }
-                return [makePushConstantInstruction(assets, enumMember.value)];
+                return [
+                    makePushConstantInstruction(
+                        assets,
+                        enumMember.value,
+                        "integer"
+                    )
+                ];
             }
 
             const builtInConstantName = `${node.object.name}.${node.property.name}`;
             const buildInConstantValue = builtInConstants[builtInConstantName];
             if (buildInConstantValue != undefined) {
                 return [
-                    makePushConstantInstruction(assets, buildInConstantValue)
+                    makePushConstantInstruction(
+                        assets,
+                        buildInConstantValue.value,
+                        buildInConstantValue.valueType
+                    )
                 ];
             }
         }
@@ -892,8 +953,6 @@ function evalConstantExpressionNode(
                 if (buildInConstantValue != undefined) {
                     return buildInConstantValue;
                 }
-
-                console.log("Unknown constant 3", node);
 
                 throw `Unknown constant '${builtInConstantName}'`;
             }

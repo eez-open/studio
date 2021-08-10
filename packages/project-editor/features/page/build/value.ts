@@ -1,8 +1,8 @@
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
-    isArrayVariable,
-    isEnumVariable,
-    isStructVariable,
+    isArrayType,
+    isEnumType,
+    isStructType,
     Variable
 } from "project-editor/features/variable/variable";
 import { evalConstantExpression } from "project-editor/flow/expression/expression";
@@ -29,9 +29,33 @@ export interface FlowValue {
     value: any;
 }
 
-export function getConstantFlowValueType(value: any) {
+function getValueType(valueType: string) {
+    if (valueType == "boolean") {
+        return FLOW_VALUE_TYPE_BOOLEAN;
+    } else if (valueType == "integer") {
+        return FLOW_VALUE_TYPE_INT32;
+    } else if (valueType == "float") {
+        return FLOW_VALUE_TYPE_FLOAT;
+    } else if (valueType == "double") {
+        return FLOW_VALUE_TYPE_DOUBLE;
+    } else if (valueType == "string") {
+        return FLOW_VALUE_TYPE_ASSETS_STRING;
+    } else if (isEnumType(valueType)) {
+        return FLOW_VALUE_TYPE_INT32;
+    } else if (isArrayType(valueType) || isStructType(valueType)) {
+        return FLOW_VALUE_TYPE_ASSETS_ARRAY;
+    } else {
+        return FLOW_VALUE_TYPE_UINT32;
+    }
+}
+
+export function getConstantFlowValueType(value: any, valueType?: string) {
     if (value === null) {
         return FLOW_VALUE_TYPE_NULL;
+    }
+
+    if (valueType) {
+        return getValueType(valueType);
     }
 
     if (typeof value === "boolean") {
@@ -53,23 +77,7 @@ export function getVariableFlowValue(assets: Assets, variable: Variable) {
     let type;
 
     if (variable.type) {
-        if (variable.type == "boolean") {
-            type = FLOW_VALUE_TYPE_BOOLEAN;
-        } else if (variable.type == "integer") {
-            type = FLOW_VALUE_TYPE_INT32;
-        } else if (variable.type == "float") {
-            type = FLOW_VALUE_TYPE_FLOAT;
-        } else if (variable.type == "double") {
-            type = FLOW_VALUE_TYPE_DOUBLE;
-        } else if (variable.type == "string") {
-            type = FLOW_VALUE_TYPE_ASSETS_STRING;
-        } else if (isEnumVariable(variable)) {
-            type = FLOW_VALUE_TYPE_INT32;
-        } else if (isArrayVariable(variable) || isStructVariable(variable)) {
-            type = FLOW_VALUE_TYPE_ASSETS_ARRAY;
-        } else {
-            type = FLOW_VALUE_TYPE_UINT32;
-        }
+        type = getValueType(variable.type);
     } else {
         assets.DocumentStore.OutputSectionsStore.write(
             output.Section.OUTPUT,

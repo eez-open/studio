@@ -580,12 +580,12 @@ export class Assets {
         return this.getFlowState(flow).index;
     }
 
-    getConstantIndex(value: any) {
+    getConstantIndex(value: any, valueType?: string) {
         let index = this.constantsMap.get(value);
         if (index == undefined) {
             index = this.constants.length;
             this.constants.push({
-                type: getConstantFlowValueType(value),
+                type: getConstantFlowValueType(value, valueType),
                 value
             });
             this.constantsMap.set(value, index);
