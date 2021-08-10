@@ -425,14 +425,22 @@ export class ListWidget extends EmbeddedWidget {
 
         let dataValue = this.data ? flowContext.dataContext.get(this.data) : 0;
 
-        if (flowContext.document.DocumentStore.isAppletProject) {
-            dataValue = evalConstantExpression(
-                flowContext.document.DocumentStore.project,
-                dataValue
-            );
+        if (!dataValue) {
+            return null;
         }
 
-        if (!dataValue || !Array.isArray(dataValue)) {
+        if (!Array.isArray(dataValue)) {
+            if (flowContext.document.DocumentStore.isAppletProject) {
+                try {
+                    dataValue = evalConstantExpression(
+                        flowContext.document.DocumentStore.project,
+                        dataValue
+                    );
+                } catch (err) {}
+            }
+        }
+
+        if (!Array.isArray(dataValue)) {
             return null;
         }
 
