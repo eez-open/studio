@@ -461,15 +461,10 @@ export class DataContext implements IDataContext {
         localVariables?: Map<string, IVariable>
     ) {
         this.project = project;
-
         this.parentDataContext = parentDataContext;
-        if (!parentDataContext) {
-            this.runtimeValues = new Map<string, any>();
-        }
-
         this.defaultValueOverrides = defaultValueOverrides;
-
         this.localVariables = localVariables;
+        this.runtimeValues = new Map<string, any>();
     }
 
     createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext {
@@ -488,29 +483,35 @@ export class DataContext implements IDataContext {
         hasValue: boolean;
         value: any;
     } {
-        if (this.parentDataContext) {
-            return this.parentDataContext.getRuntimeValue(variable);
+        if (variable) {
+            if (this.runtimeValues.has(variable.name)) {
+                return {
+                    hasValue: this.runtimeValues.has(variable.name),
+                    value: this.runtimeValues.get(variable.name)
+                };
+            }
+
+            if (this.parentDataContext) {
+                return this.parentDataContext.getRuntimeValue(variable);
+            }
         }
 
-        if (variable) {
-            return {
-                hasValue: this.runtimeValues.has(variable.name),
-                value: this.runtimeValues.get(variable.name)
-            };
-        } else {
-            return { hasValue: false, value: undefined };
-        }
+        return { hasValue: false, value: undefined };
     }
 
     setRuntimeValue(variableName: string, value: any) {
-        if (this.parentDataContext) {
-            this.parentDataContext.setRuntimeValue(variableName, value);
+        if (this.localVariables && this.localVariables.has(variableName)) {
+            this.runtimeValues.set(variableName, value);
         } else {
-            const variable = findVariable(this.project, variableName);
-            if (variable) {
-                this.runtimeValues.set(variableName, value);
+            if (this.parentDataContext) {
+                this.parentDataContext.setRuntimeValue(variableName, value);
             } else {
-                throw `variable "${variableName}" not found`;
+                const variable = findVariable(this.project, variableName);
+                if (variable) {
+                    this.runtimeValues.set(variableName, value);
+                } else {
+                    throw `variable "${variableName}" not found`;
+                }
             }
         }
     }

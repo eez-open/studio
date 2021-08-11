@@ -57,8 +57,8 @@ interface ClassInfo {
 declare class Component {
     static classInfo: ClassInfo;
 
-    get inputs(): PropertyInfo[];
-    get outputs(): PropertyInfo[];
+    getInputs(): PropertyInfo[];
+    getOutputs(): PropertyInfo[];
 
     execute(
         runningFlow: IRunningFlow,
