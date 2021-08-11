@@ -1126,7 +1126,8 @@ export class LogActionComponent extends ActionComponent {
         properties: [
             makeToggablePropertyToInput({
                 name: "value",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             })
         ],
         beforeLoadHook: (object: LogActionComponent, objectJS: any) => {

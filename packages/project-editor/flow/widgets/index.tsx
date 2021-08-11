@@ -4360,7 +4360,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             const TICK_TEXT_GAP = 1;
 
             const xCenter = w / 2;
-            const yCenter = h - 12;
+            const yCenter = h - 8;
 
             // draw border
             const radBorderOuter = (w - PADDING_HORZ) / 2;
