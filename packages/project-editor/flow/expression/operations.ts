@@ -1,15 +1,16 @@
 import { VariableType } from "project-editor/features/variable/variable";
+import { IFlowContext } from "../flow-interfaces";
 
 export const binaryOperators: {
     [operator: string]: {
         name: string;
-        eval: (a: any, b: any) => any;
+        eval: (flowContext: IFlowContext | undefined, a: any, b: any) => any;
         getValueType: (a: VariableType, b: VariableType) => VariableType;
     };
 } = {
     "+": {
         name: "add",
-        eval: (a, b) => a + b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a + b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (
                 a != "integer" &&
@@ -41,7 +42,7 @@ export const binaryOperators: {
     },
     "-": {
         name: "sub",
-        eval: (a, b) => a - b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a - b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
@@ -60,7 +61,7 @@ export const binaryOperators: {
     },
     "*": {
         name: "mul",
-        eval: (a, b) => a * b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a * b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
@@ -79,7 +80,7 @@ export const binaryOperators: {
     },
     "/": {
         name: "div",
-        eval: (a, b) => a / b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a / b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
@@ -98,7 +99,7 @@ export const binaryOperators: {
     },
     "%": {
         name: "mod",
-        eval: (a, b) => a % b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a % b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer") {
                 return "undefined";
@@ -111,7 +112,7 @@ export const binaryOperators: {
     },
     "<<": {
         name: "left_shift",
-        eval: (a, b) => a << b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a << b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer") {
                 return "undefined";
@@ -124,7 +125,7 @@ export const binaryOperators: {
     },
     ">>": {
         name: "right_shift",
-        eval: (a, b) => a >> b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a >> b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer") {
                 return "undefined";
@@ -137,7 +138,7 @@ export const binaryOperators: {
     },
     "&": {
         name: "binary_and",
-        eval: (a, b) => a & b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a & b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer") {
                 return "undefined";
@@ -150,7 +151,7 @@ export const binaryOperators: {
     },
     "|": {
         name: "binary_or",
-        eval: (a, b) => a | b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a | b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer") {
                 return "undefined";
@@ -163,7 +164,7 @@ export const binaryOperators: {
     },
     "^": {
         name: "binary_xor",
-        eval: (a, b) => a ^ b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a ^ b,
         getValueType: (a: VariableType, b: VariableType) => {
             if (a != "integer") {
                 return "undefined";
@@ -179,62 +180,62 @@ export const binaryOperators: {
 export const logicalOperators: {
     [operator: string]: {
         name: string;
-        eval: (a: any, b: any) => any;
+        eval: (flowContext: IFlowContext | undefined, a: any, b: any) => any;
         getValueType: (a: VariableType, b: VariableType) => VariableType;
     };
 } = {
     "==": {
         name: "equal",
-        eval: (a, b) => a == b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a == b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
     },
     "!=": {
         name: "not_equal",
-        eval: (a, b) => a != b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a != b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
     },
     "<": {
         name: "less",
-        eval: (a, b) => a < b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a < b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
     },
     ">": {
         name: "greater",
-        eval: (a, b) => a > b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a > b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
     },
     "<=": {
         name: "less_or_equal",
-        eval: (a, b) => a <= b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a <= b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
     },
     ">=": {
         name: "greater_or_equal",
-        eval: (a, b) => a >= b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a >= b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
     },
     "&&": {
         name: "logical_and",
-        eval: (a, b) => a && b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a && b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
     },
     "||": {
         name: "logical_or",
-        eval: (a, b) => a || b,
+        eval: (flowContext: IFlowContext | undefined, a, b) => a || b,
         getValueType: (a: VariableType, b: VariableType) => {
             return "boolean";
         }
@@ -244,13 +245,13 @@ export const logicalOperators: {
 export const unaryOperators: {
     [operator: string]: {
         name: string;
-        eval: (a: any) => any;
+        eval: (flowContext: IFlowContext | undefined, a: any) => any;
         getValueType: (a: VariableType) => VariableType;
     };
 } = {
     "+": {
         name: "unary_plus",
-        eval: a => +a,
+        eval: (flowContext: IFlowContext | undefined, a) => +a,
         getValueType: (a: VariableType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
@@ -260,7 +261,7 @@ export const unaryOperators: {
     },
     "-": {
         name: "unary_minus",
-        eval: a => -a,
+        eval: (flowContext: IFlowContext | undefined, a) => -a,
         getValueType: (a: VariableType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
@@ -270,7 +271,7 @@ export const unaryOperators: {
     },
     "~": {
         name: "binary_one_complement",
-        eval: a => ~a,
+        eval: (flowContext: IFlowContext | undefined, a) => ~a,
         getValueType: (a: VariableType) => {
             if (a != "integer") {
                 return "undefined";
@@ -280,7 +281,7 @@ export const unaryOperators: {
     },
     "!": {
         name: "not",
-        eval: a => !a,
+        eval: (flowContext: IFlowContext | undefined, a) => !a,
         getValueType: (a: VariableType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
@@ -295,20 +296,26 @@ export const CONDITIONAL_OPERATOR = "conditional"; // {test} ? {consequent} : {a
 export const builtInFunctions: {
     [name: string]: {
         arity: number;
-        eval: (...args: any[]) => any;
+        eval: (flowContext: IFlowContext | undefined, ...args: any[]) => any;
         getValueType: (...args: VariableType[]) => VariableType;
     };
 } = {
     "Flow.it": {
         arity: 1,
-        eval: (...args: any[]) => 0,
+        eval: (flowContext: IFlowContext | undefined, ...args: any[]) => {
+            if (flowContext) {
+                return flowContext.dataContext.get("$it");
+            }
+            return 0;
+        },
         getValueType: (...args: VariableType[]) => {
             return "integer";
         }
     },
     "Math.sin": {
         arity: 1,
-        eval: (...args: any[]) => Math.sin(args[0]),
+        eval: (flowContext: IFlowContext | undefined, ...args: any[]) =>
+            Math.sin(args[0]),
         getValueType: (...args: VariableType[]) => {
             if (
                 args[0] != "integer" &&
@@ -325,7 +332,8 @@ export const builtInFunctions: {
     },
     "Math.cos": {
         arity: 1,
-        eval: (...args: any[]) => Math.cos(args[0]),
+        eval: (flowContext: IFlowContext | undefined, ...args: any[]) =>
+            Math.cos(args[0]),
         getValueType: (...args: VariableType[]) => {
             if (
                 args[0] != "integer" &&
@@ -342,7 +350,8 @@ export const builtInFunctions: {
     },
     "Math.log": {
         arity: 1,
-        eval: (...args: any[]) => Math.log(args[0]),
+        eval: (flowContext: IFlowContext | undefined, ...args: any[]) =>
+            Math.log(args[0]),
         getValueType: (...args: VariableType[]) => {
             if (
                 args[0] != "integer" &&
@@ -360,7 +369,8 @@ export const builtInFunctions: {
 
     "String.find": {
         arity: 2,
-        eval: (...args: any[]) => Math.log(args[0]),
+        eval: (flowContext: IFlowContext | undefined, ...args: any[]) =>
+            Math.log(args[0]),
         getValueType: (...args: VariableType[]) => {
             if (args[0] != "string" && args[1] != "string") {
                 return "undefined";

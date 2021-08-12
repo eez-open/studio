@@ -560,6 +560,17 @@ export class DataContext implements IDataContext {
             variable = findVariable(this.project, variableName);
         }
 
+        if (variableName === "$it") {
+            return {
+                name: "$it",
+                type: "integer",
+                defaultValue: 0,
+                defaultMinValue: undefined,
+                defaultMaxValue: undefined,
+                defaultValueList: undefined
+            };
+        }
+
         return variable;
     }
 

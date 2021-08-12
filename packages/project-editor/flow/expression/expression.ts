@@ -872,12 +872,19 @@ function evalConstantExpressionNode(
         }
 
         if (node.type == "BinaryExpression") {
-            const operator = binaryOperators[node.operator];
+            let operator = binaryOperators[node.operator];
             if (!operator) {
-                throw `Unknown binary operator: ${node.operator}`;
+                operator = logicalOperators[node.operator];
+                if (!operator) {
+                    throw `Unknown binary operator '${node.operator}'`;
+                }
             }
 
-            return operator.eval(evalNode(node.left), evalNode(node.right));
+            return operator.eval(
+                undefined,
+                evalNode(node.left),
+                evalNode(node.right)
+            );
         }
 
         if (node.type == "LogicalExpression") {
@@ -886,7 +893,11 @@ function evalConstantExpressionNode(
                 throw `Unknown logical operator: ${node.operator}`;
             }
 
-            return operator.eval(evalNode(node.left), evalNode(node.right));
+            return operator.eval(
+                undefined,
+                evalNode(node.left),
+                evalNode(node.right)
+            );
         }
 
         if (node.type == "UnaryExpression") {
@@ -895,7 +906,7 @@ function evalConstantExpressionNode(
                 throw `Unknown unary operator: ${node.operator}`;
             }
 
-            return operator.eval(evalNode(node.argument));
+            return operator.eval(undefined, evalNode(node.argument));
         }
 
         if (node.type == "ConditionalExpression") {
@@ -926,7 +937,10 @@ function evalConstantExpressionNode(
                 throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
             }
 
-            return builtInFunction.eval(...node.arguments.map(evalNode));
+            return builtInFunction.eval(
+                undefined,
+                ...node.arguments.map(evalNode)
+            );
         }
 
         if (node.type == "MemberExpression") {
@@ -995,12 +1009,19 @@ function evalExpressionInFlowContext(
         }
 
         if (node.type == "BinaryExpression") {
-            const operator = binaryOperators[node.operator];
+            let operator = binaryOperators[node.operator];
             if (!operator) {
-                throw `Unknown binary operator: ${node.operator}`;
+                operator = logicalOperators[node.operator];
+                if (!operator) {
+                    throw `Unknown binary operator '${node.operator}'`;
+                }
             }
 
-            return operator.eval(evalNode(node.left), evalNode(node.right));
+            return operator.eval(
+                flowContext,
+                evalNode(node.left),
+                evalNode(node.right)
+            );
         }
 
         if (node.type == "LogicalExpression") {
@@ -1009,7 +1030,11 @@ function evalExpressionInFlowContext(
                 throw `Unknown logical operator: ${node.operator}`;
             }
 
-            return operator.eval(evalNode(node.left), evalNode(node.right));
+            return operator.eval(
+                flowContext,
+                evalNode(node.left),
+                evalNode(node.right)
+            );
         }
 
         if (node.type == "UnaryExpression") {
@@ -1018,7 +1043,7 @@ function evalExpressionInFlowContext(
                 throw `Unknown unary operator: ${node.operator}`;
             }
 
-            return operator.eval(evalNode(node.argument));
+            return operator.eval(flowContext, evalNode(node.argument));
         }
 
         if (node.type == "ConditionalExpression") {
@@ -1049,7 +1074,10 @@ function evalExpressionInFlowContext(
                 throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
             }
 
-            return builtInFunction.eval(...node.arguments.map(evalNode));
+            return builtInFunction.eval(
+                flowContext,
+                ...node.arguments.map(evalNode)
+            );
         }
 
         if (node.type == "MemberExpression") {

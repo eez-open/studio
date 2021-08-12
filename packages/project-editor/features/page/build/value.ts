@@ -21,8 +21,8 @@ export const FLOW_VALUE_TYPE_INT64 = 9;
 export const FLOW_VALUE_TYPE_UINT64 = 10;
 export const FLOW_VALUE_TYPE_FLOAT = 11;
 export const FLOW_VALUE_TYPE_DOUBLE = 12;
-export const FLOW_VALUE_TYPE_ASSETS_STRING = 13;
-export const FLOW_VALUE_TYPE_ASSETS_ARRAY = 14;
+export const FLOW_VALUE_TYPE_STRING = 13;
+export const FLOW_VALUE_TYPE_ARRAY = 14;
 
 export interface FlowValue {
     type: number;
@@ -39,11 +39,11 @@ function getValueType(valueType: string) {
     } else if (valueType == "double") {
         return FLOW_VALUE_TYPE_DOUBLE;
     } else if (valueType == "string") {
-        return FLOW_VALUE_TYPE_ASSETS_STRING;
+        return FLOW_VALUE_TYPE_STRING;
     } else if (isEnumType(valueType)) {
         return FLOW_VALUE_TYPE_INT32;
     } else if (isArrayType(valueType) || isStructType(valueType)) {
-        return FLOW_VALUE_TYPE_ASSETS_ARRAY;
+        return FLOW_VALUE_TYPE_ARRAY;
     } else {
         return FLOW_VALUE_TYPE_UINT32;
     }
@@ -63,9 +63,9 @@ export function getConstantFlowValueType(value: any, valueType?: string) {
     } else if (typeof value === "number") {
         return FLOW_VALUE_TYPE_DOUBLE;
     } else if (typeof value === "string") {
-        return FLOW_VALUE_TYPE_ASSETS_STRING;
+        return FLOW_VALUE_TYPE_STRING;
     } else if (typeof value === "object") {
-        return FLOW_VALUE_TYPE_ASSETS_ARRAY;
+        return FLOW_VALUE_TYPE_ARRAY;
     } else if (typeof value === "undefined") {
         return FLOW_VALUE_TYPE_UNDEFINED;
     }
@@ -130,12 +130,12 @@ function buildFlowValue(dataBuffer: DataBuffer, flowValue: FlowValue) {
         dataBuffer.writeUint32(0);
     } else if (flowValue.type == FLOW_VALUE_TYPE_DOUBLE) {
         dataBuffer.writeDouble(flowValue.value);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_ASSETS_STRING) {
+    } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
         dataBuffer.writeObjectOffset(() => {
             dataBuffer.writeString(flowValue.value);
         });
         dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_ASSETS_ARRAY) {
+    } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY) {
         dataBuffer.writeObjectOffset(() => {
             let elements: FlowValue[];
             if (Array.isArray(flowValue.value)) {

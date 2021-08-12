@@ -112,11 +112,9 @@ import {
     WIDGET_TYPE_GAUGE,
     WIDGET_TYPE_INPUT
 } from "./widget_types";
-import {
-    evalConstantExpression,
-    evalExpression
-} from "project-editor/flow/expression/expression";
+import { evalExpression } from "project-editor/flow/expression/expression";
 import { remap } from "eez-studio-shared/util";
+import { roundNumber } from "eez-studio-shared/roundNumber";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -432,10 +430,7 @@ export class ListWidget extends EmbeddedWidget {
         if (!Array.isArray(dataValue)) {
             if (flowContext.document.DocumentStore.isAppletProject) {
                 try {
-                    dataValue = evalConstantExpression(
-                        flowContext.document.DocumentStore.project,
-                        dataValue
-                    );
+                    dataValue = evalExpression(flowContext, this, dataValue);
                 } catch (err) {}
             }
         }
@@ -456,11 +451,20 @@ export class ListWidget extends EmbeddedWidget {
                 yListItem += i * (itemWidget.height + gap);
             }
 
+            let flowContext1;
+            if (flowContext.document.DocumentStore.isAppletProject) {
+                flowContext1 = flowContext.overrideDataContext({
+                    $it: i
+                });
+            } else {
+                flowContext1 = flowContext.overrideDataContext(dataValue[i]);
+            }
+
             return (
                 <ComponentEnclosure
                     key={i}
                     component={itemWidget}
-                    flowContext={flowContext.overrideDataContext(dataValue[i])}
+                    flowContext={flowContext1}
                     left={xListItem}
                     top={yListItem}
                 />
@@ -849,7 +853,24 @@ export class SelectWidget extends EmbeddedWidget {
         }
 
         if (this.data) {
-            let index: number = flowContext.dataContext.getEnumValue(this.data);
+            let index: number;
+            if (flowContext.document.DocumentStore.isAppletProject) {
+                let indexValue;
+                try {
+                    indexValue = evalExpression(flowContext, this, this.data);
+                } catch (err) {
+                    indexValue = 0;
+                }
+                if (typeof indexValue === "number") {
+                    index = indexValue;
+                } else if (typeof indexValue === "boolean") {
+                    index = indexValue ? 1 : 0;
+                } else {
+                    index = 0;
+                }
+            } else {
+                index = flowContext.dataContext.getEnumValue(this.data);
+            }
             if (index >= 0 && index < this.widgets.length) {
                 return index;
             }
@@ -1657,7 +1678,18 @@ export class TextWidget extends EmbeddedWidget {
             if (this.text) {
                 text = this.text;
             } else {
-                text = `{${this.data}}`;
+                if (this.data) {
+                    if (flowContext.document.DocumentStore.isAppletProject) {
+                        try {
+                            text = evalExpression(flowContext, this, this.data);
+                        } catch (err) {}
+                    } else {
+                        text = flowContext.dataContext.get(this.data) as string;
+                    }
+                }
+                if (text == undefined) {
+                    text = this.name;
+                }
             }
         }
 
@@ -2545,8 +2577,9 @@ export class ButtonWidget extends EmbeddedWidget {
             if (this.enabled) {
                 if (flowContext.document.DocumentStore.isAppletProject) {
                     try {
-                        const value = evalConstantExpression(
-                            flowContext.document.DocumentStore.project,
+                        const value = evalExpression(
+                            flowContext,
+                            this,
                             this.enabled
                         );
 
@@ -4284,6 +4317,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             let max = evalExpression(flowContext, this, this.max);
             let value =
                 this.data && evalExpression(flowContext, this, this.data);
+            let threshold = evalExpression(flowContext, this, this.threshold);
             let unit =
                 this.data && evalExpression(flowContext, this, this.unit);
 
@@ -4313,6 +4347,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             let valueStyle = widget.valueStyle;
             let barStyle = widget.barStyle;
             let ticksStyle = widget.ticksStyle;
+            let thresholdStyle = widget.thresholdStyle;
 
             let w = this.width;
             let h = this.height;
@@ -4358,6 +4393,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             const TICK_LINE_LENGTH = 5;
             const TICK_LINE_WIDTH = 1;
             const TICK_TEXT_GAP = 1;
+            const THRESHOLD_LINE_WIDTH = 2;
 
             const xCenter = w / 2;
             const yCenter = h - 8;
@@ -4388,11 +4424,37 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             arcBar(ctx, xCenter, yCenter, radBar);
             ctx.stroke();
 
+            // draw threshold
+            const thresholdAngleDeg = remap(threshold, min, 180.0, max, 0);
+            if (thresholdAngleDeg >= 0 && thresholdAngleDeg <= 180.0) {
+                const tickAngle = (thresholdAngleDeg * Math.PI) / 180;
+                const x1 =
+                    xCenter + (radBar - BAR_WIDTH / 2) * Math.cos(tickAngle);
+                const y1 =
+                    yCenter - (radBar - BAR_WIDTH / 2) * Math.sin(tickAngle);
+
+                const x2 =
+                    xCenter + (radBar + BAR_WIDTH / 2) * Math.cos(tickAngle);
+                const y2 =
+                    yCenter - (radBar + BAR_WIDTH / 2) * Math.sin(tickAngle);
+
+                ctx.beginPath();
+                ctx.strokeStyle = thresholdStyle.colorProperty;
+                ctx.lineWidth = THRESHOLD_LINE_WIDTH;
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+
             // draw ticks
             const ticksfont = styleGetFont(ticksStyle);
             const ft = firstTick(max - min);
             const ticksRad = radBorderOuter + 1;
-            for (let tickValue = min; tickValue <= max; tickValue += ft) {
+            for (let tickValueIndex = 0; ; tickValueIndex++) {
+                const tickValue = roundNumber(min + tickValueIndex * ft, 9);
+                if (tickValue > max) {
+                    break;
+                }
                 const tickAngleDeg = remap(tickValue, min, 180.0, max, 0.0);
                 if (tickAngleDeg <= 180.0) {
                     const tickAngle = (tickAngleDeg * Math.PI) / 180;
