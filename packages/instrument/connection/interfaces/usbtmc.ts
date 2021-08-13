@@ -534,7 +534,9 @@ export class Instrument {
                 usb.LIBUSB_TRANSFER_TYPE_BULK
             ) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
-                    this.bulk_in_ep = this.iface.endpoints[i] as usbTypes.InEndpoint;
+                    this.bulk_in_ep = this.iface.endpoints[
+                        i
+                    ] as usbTypes.InEndpoint;
                 } else {
                     this.bulk_out_ep = this.iface.endpoints[
                         i
@@ -1060,7 +1062,7 @@ export class Instrument {
         await this.write_raw(Buffer.from(message, encoding));
     }
 
-    async read(num: number = -1, encoding: string = "binary") {
+    async read(num: number = -1, encoding: BufferEncoding = "binary") {
         // Read string from instrument
         return (await this.read_raw(num)).toString(encoding);
     }
@@ -1342,7 +1344,8 @@ export class UsbTmcInterface implements CommunicationInterface {
                                 .finally(() => {
                                     //console.log("finally");
                                     if (that.closeConnectionToInstrument) {
-                                        that.closeConnectionToInstrument = false;
+                                        that.closeConnectionToInstrument =
+                                            false;
                                         instrument.close();
                                         that.instrument = undefined;
                                     } else {
@@ -1353,8 +1356,6 @@ export class UsbTmcInterface implements CommunicationInterface {
                     }
 
                     read();
-
-
                 })
                 .catch(err => {
                     this.host.setError(
