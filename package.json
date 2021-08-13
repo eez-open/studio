@@ -33,7 +33,7 @@
     },
     "devDependencies": {
         "@types/archiver": "^2.1.2",
-        "@types/better-sqlite3": "^5.4.1",
+        "@types/better-sqlite3": "^5.4.3",
         "@types/bootstrap": "^5.0.16",
         "@types/chokidar": "^2.1.3",
         "@types/classnames": "^2.2.10",
@@ -83,7 +83,7 @@
         "@popperjs/core": "^2.9.2",
         "app-module-path": "^2.2.0",
         "archiver": "^2.1.1",
-        "better-sqlite3": "^7.1.2",
+        "better-sqlite3": "^7.4.3",
         "bind-decorator": "^1.0.11",
         "bootstrap": "^5.0.2",
         "chokidar": "^3.4.0",
