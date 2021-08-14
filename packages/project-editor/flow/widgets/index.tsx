@@ -4792,8 +4792,11 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
         // precision
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "precision"));
 
-        // precision
+        // unit
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "unit"));
+
+        // component index
+        dataBuffer.writeUint16(assets.getComponentIndex(this));
     }
 }
 
