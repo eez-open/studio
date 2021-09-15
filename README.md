@@ -87,18 +87,23 @@ Download `eezstudio-mac.zip`, unpack and move `eezstudio.app` to Applications.
 
 Download and start `EEZ_Studio_setup.exe`.
 
+### Nix
+There is a Nix flake that provides a derivation for EEZ Studio or an overlay
+that provides that derivation. They can be used to install the project using
+[Nix package manager](https://nixos.org/).
+
 ### Build and run from source (all operating systems)
 
 -   Install `Node.JS 8.9.x` or newer
 -   Install `node-gyp`, more information at https://github.com/nodejs/node-gyp#installation
 
-Only Linux:
+#### Only Linux:
 
 ```
 sudo apt-get install build-essential libudev-dev
 ```
 
-All platforms:
+#### All platforms:
 
 ```
 git clone https://github.com/eez-open/studio
@@ -117,6 +122,17 @@ Create distribution packages:
 
 ```
 npm run dist
+```
+
+#### Nix
+To build:
+```
+nix build 'github:eez-open/studio'
+```
+
+To start:
+```
+nix run 'github:eez-open/studio'
 ```
 
 ## USB TMC

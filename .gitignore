@@ -22,3 +22,6 @@ tools/freetype-tools/FreeType-Emscripten
 
 **/*.eez-project-ui-state
 **/*.eez-project-runtime-settings
+
+# nix build
+/result*

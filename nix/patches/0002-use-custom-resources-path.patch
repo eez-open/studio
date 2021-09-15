@@ -1,0 +1,14 @@
+diff --git a/packages/project-editor/flow/expression/grammar.ts b/packages/project-editor/flow/expression/grammar.ts
+index a0d9871..19c9761 100644
+--- a/packages/project-editor/flow/expression/grammar.ts
++++ b/packages/project-editor/flow/expression/grammar.ts
+@@ -4,6 +4,9 @@ import peggy from "peggy";
+ 
+ import { isDev } from "eez-studio-shared/util-electron";
+ 
++// path to the resources directory
++(process.resourcesPath as string) = process.env["ELECTRON_RESOURCES_PATH"]!;
++
+ const expressionParserGrammar = readFileSync(
+     isDev
+         ? resolve(`${__dirname}/../../../../resources/expression-grammar.pegjs`)
