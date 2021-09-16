@@ -2,7 +2,6 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { compareVersions } from "eez-studio-shared/util";
-import { styled } from "eez-studio-ui/styled-components";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
@@ -15,37 +14,6 @@ import { ModulesSection } from "instrument/bb3/components/modules-section/Module
 import { ScriptsSection } from "instrument/bb3/components/scripts-section/ScriptsSection";
 import { ListsSection } from "instrument/bb3/components/lists-section/ListsSection";
 import { LatestHistoryItemSection } from "instrument/bb3/components/LatestHistoryItemSection";
-
-const GRID_GAP = 40;
-
-const StartPageContainer = styled.div`
-    padding: ${GRID_GAP / 2}px;
-
-    display: grid;
-    grid-gap: ${GRID_GAP}px;
-    align-items: start;
-
-    @media (min-width: 1200px) {
-        grid-template-columns: repeat(
-            2,
-            calc(100% / 2 - (2 - 1) * ${GRID_GAP}px / 2)
-        );
-    }
-
-    section {
-        margin-top: ${GRID_GAP}px;
-
-        padding: ${GRID_GAP / 2}px;
-
-        &:first-child {
-            margin-top: 0;
-        }
-    }
-
-    .EezStudio_Toolbar {
-        background-color: transparent !important;
-    }
-`;
 
 export const StartPage = observer(
     ({
@@ -62,7 +30,7 @@ export const StartPage = observer(
         }
 
         return (
-            <StartPageContainer>
+            <div className="EezStudio_BB3_StartPageContainer">
                 <div>
                     {isConnected && <ShortcutsSection appStore={appStore} />}
                     <LatestHistoryItemSection bb3Instrument={bb3Instrument} />
@@ -88,7 +56,7 @@ export const StartPage = observer(
                         <ListsSection bb3Instrument={bb3Instrument} />
                     )}
                 </div>
-            </StartPageContainer>
+            </div>
         );
     }
 );

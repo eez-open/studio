@@ -102,6 +102,10 @@ export class Assets {
                     targetInputIndex: number;
                 }[][];
             }[];
+            localVariables: {
+                index: number;
+                name: string;
+            }[];
             widgetDataItems: {
                 widgetDataItemIndex: number;
                 flowIndex: number;
@@ -116,7 +120,10 @@ export class Assets {
             }[];
         }[];
         constants: any[];
-        globalVariables: any[];
+        globalVariables: {
+            index: number;
+            name: string;
+        }[];
     } = {
         flows: [],
         constants: [],

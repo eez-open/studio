@@ -11,7 +11,6 @@ import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
-import { styled } from "eez-studio-ui/styled-components";
 import { SearchInput } from "eez-studio-ui/search-input";
 
 import {
@@ -40,37 +39,9 @@ import { Panel } from "project-editor/components/Panel";
 
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ProjectContext } from "project-editor/project/context";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const SortableTitleDiv = styled.div`
-    flex-grow: 1;
-    margin-top: 5px;
-    margin-left: 5px;
-    font-weight: 600;
-    color: ${props => props.theme.darkTextColor};
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    background-repeat: no-repeat;
-    background-position: center left;
-    background-position-y: 2px;
-    padding-left: 20px;
-    cursor: pointer;
-
-    &.sort-asc {
-        background-image: url("../eez-studio-ui/_images/col_sort_asc.png");
-    }
-
-    &.sort-desc {
-        background-image: url("../eez-studio-ui/_images/col_sort_desc.png");
-    }
-
-    &.sort-none {
-        background-image: url("../eez-studio-ui/_images/col_sort_enabled.png");
-    }
-`;
 
 @observer
 export class SortableTitle extends React.Component<{
@@ -93,12 +64,15 @@ export class SortableTitle extends React.Component<{
         const { title, direction } = this.props;
 
         return (
-            <SortableTitleDiv
-                className={"sort-" + direction}
+            <div
+                className={classNames(
+                    "EezStudio_SortableTitle",
+                    "sort-" + direction
+                )}
                 onClick={this.onClicked}
             >
                 {title}
-            </SortableTitleDiv>
+            </div>
         );
     }
 }
@@ -181,15 +155,6 @@ class DeleteButton extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ListWithSearchInputContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    & > :first-child {
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-    }
-`;
-
 interface ListNavigationProps {
     id: string;
     title?: string;
@@ -209,7 +174,8 @@ interface ListNavigationProps {
 @observer
 export class ListNavigation
     extends React.Component<ListNavigationProps>
-    implements IPanel {
+    implements IPanel
+{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -261,9 +227,10 @@ export class ListNavigation
     get selectedObject() {
         const navigationStore =
             this.props.navigationStore || this.context.NavigationStore;
-        const navigationSelectedItem = navigationStore.getNavigationSelectedItem(
-            this.props.navigationObject
-        );
+        const navigationSelectedItem =
+            navigationStore.getNavigationSelectedItem(
+                this.props.navigationObject
+            );
         return (
             getObjectFromNavigationItem(navigationSelectedItem) ||
             navigationStore.selectedObject
@@ -386,14 +353,14 @@ export class ListNavigation
 
         if (this.props.searchInput == undefined || this.props.searchInput) {
             body = (
-                <ListWithSearchInputContainer>
+                <div className="EezStudio_ListWithSearchInputContainer">
                     <SearchInput
                         searchText={this.searchText}
                         onChange={this.onSearchChange}
                         onKeyDown={this.onSearchChange}
                     />
                     {body}
-                </ListWithSearchInputContainer>
+                </div>
             );
         }
 

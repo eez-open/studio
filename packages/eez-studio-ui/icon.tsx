@@ -2,42 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import classnames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
-
 const MATERIAL_PREFIX = "material:";
-
-const IconWithOverlayContainer = styled.span`
-    position: relative;
-`;
-
-const IconOverlay = styled.span`
-    display: inline-block;
-    position: absolute;
-    font-size: 8px;
-    line-height: 12px;
-    font-weight: bold;
-    background-color: #eee;
-    border: 1px solid #bbb;
-    padding: 0 1px;
-    left: 12px;
-    top: 12px;
-`;
-
-const AttentionContainer = styled.div`
-    display: inline-block;
-    position: relative;
-`;
-
-const AttentionDiv = styled.div`
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    bottom: -2px;
-    right: -2px;
-    background-color: red;
-    border-radius: 3px;
-    box-shadow: 0px 0px 6px 2px rgba(255, 0, 0, 0.3);
-`;
 
 @observer
 export class Icon extends React.Component<
@@ -86,10 +51,12 @@ export class Icon extends React.Component<
 
                 if (this.props.overlayText) {
                     result = (
-                        <IconWithOverlayContainer>
+                        <div className="EezStudio_IconWithOverlayContainer">
                             {iconEl}
-                            <IconOverlay>{this.props.overlayText}</IconOverlay>
-                        </IconWithOverlayContainer>
+                            <span className="EezStudio_IconOverlay">
+                                {this.props.overlayText}
+                            </span>
+                        </div>
                     );
                 } else {
                     result = iconEl;
@@ -125,10 +92,10 @@ export class Icon extends React.Component<
 
         if (this.props.attention) {
             return (
-                <AttentionContainer>
+                <div className="EezStudio_AttentionContainer">
                     {result}
-                    <AttentionDiv />
-                </AttentionContainer>
+                    <div className="EezStudio_AttentionDiv" />
+                </div>
             );
         }
 

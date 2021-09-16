@@ -8,7 +8,6 @@ import { readBinaryFile } from "eez-studio-shared/util-electron";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
 
-import styled from "eez-studio-ui/styled-components";
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
@@ -29,7 +28,10 @@ import { Scrapbook } from "instrument/window/history/scrapbook";
 
 import { showAddNoteDialog } from "instrument/window/note-dialog";
 
-import { detectFileType, extractColumnFromCSVHeuristically } from "instrument/connection/file-type";
+import {
+    detectFileType,
+    extractColumnFromCSVHeuristically
+} from "instrument/connection/file-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -150,7 +152,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
             okButtonTitle: "Add chart",
             onOk: () => {
                 const multiWaveformDefinition = {
-                    waveformLinks: keys(this.props.appStore.selectedHistoryItems).map(id => ({
+                    waveformLinks: keys(
+                        this.props.appStore.selectedHistoryItems
+                    ).map(id => ({
                         id
                     }))
                 };
@@ -274,7 +278,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                                         key={activityLogTool.id}
                                         icon={activityLogTool.icon}
                                         title={activityLogTool.title}
-                                        onClick={() => activityLogTool.handler(controller)}
+                                        onClick={() =>
+                                            activityLogTool.handler(controller)
+                                        }
                                     />
                                 );
                             }
@@ -308,14 +314,19 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
 
             if (appStore.deletedItemsHistory.deletedCount > 0) {
                 const style =
-                    appStore.history.selection.items.length === 0 ? { marginLeft: 20 } : undefined;
+                    appStore.history.selection.items.length === 0
+                        ? { marginLeft: 20 }
+                        : undefined;
 
                 tools.push(
                     <ButtonAction
                         key="deletedItems"
                         text={`Deleted Items (${appStore.deletedItemsHistory.deletedCount})`}
                         title="Show deleted items"
-                        onClick={appStore.navigationStore.navigateToDeletedHistoryItems}
+                        onClick={
+                            appStore.navigationStore
+                                .navigateToDeletedHistoryItems
+                        }
                         className="btn-sm"
                         style={style}
                     />
@@ -328,31 +339,6 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export const HistoryContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-`;
-
-const HistoryHeader = styled.div`
-    flex-shrink: 0;
-    flex-grow: 0;
-    padding: 10px;
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-    background-color: #d7f8da;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-`;
-
-export const HistoryBody = styled.div`
-    flex-grow: 1;
-    overflow: auto;
-`;
 
 @observer
 export class HistoryView extends React.Component<{
@@ -372,7 +358,9 @@ export class HistoryView extends React.Component<{
             this.sideDock.updateSize();
         }
 
-        this.animationFrameRequestId = window.requestAnimationFrame(this.frameAnimation);
+        this.animationFrameRequestId = window.requestAnimationFrame(
+            this.frameAnimation
+        );
     }
 
     componentDidMount() {
@@ -411,75 +399,96 @@ export class HistoryView extends React.Component<{
     registerComponents(factory: any) {
         const appStore = this.props.appStore;
 
-        factory.registerComponent("SearchResults", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <div
-                        style={{
-                            position: "absolute",
-                            width: "100%",
-                            height: "100%",
-                            display: "flex"
-                        }}
-                    >
-                        <SearchResults history={appStore.history} />
-                    </div>
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "SearchResults",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme()}>
+                        <div
+                            style={{
+                                position: "absolute",
+                                width: "100%",
+                                height: "100%",
+                                display: "flex"
+                            }}
+                        >
+                            <SearchResults history={appStore.history} />
+                        </div>
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
 
-        factory.registerComponent("Filters", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <FiltersComponent appStore={appStore} />
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "Filters",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme()}>
+                        <FiltersComponent appStore={appStore} />
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
 
-        factory.registerComponent("Calendar", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <div
-                        style={{
-                            height: "100%",
-                            overflow: "auto"
-                        }}
-                    >
-                        <Calendar history={appStore.history} />
-                    </div>
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "Calendar",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme()}>
+                        <div
+                            style={{
+                                height: "100%",
+                                overflow: "auto"
+                            }}
+                        >
+                            <Calendar history={appStore.history} />
+                        </div>
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
 
-        factory.registerComponent("Sessions", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <div
-                        style={{
-                            position: "absolute",
-                            width: "100%",
-                            height: "100%",
-                            display: "flex"
-                        }}
-                    >
-                        <SessionList appStore={appStore} history={appStore.history} />
-                    </div>
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "Sessions",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme()}>
+                        <div
+                            style={{
+                                position: "absolute",
+                                width: "100%",
+                                height: "100%",
+                                display: "flex"
+                            }}
+                        >
+                            <SessionList
+                                appStore={appStore}
+                                history={appStore.history}
+                            />
+                        </div>
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
 
-        factory.registerComponent("Scrapbook", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <Scrapbook appStore={appStore} history={appStore.history} />
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "Scrapbook",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme()}>
+                        <Scrapbook
+                            appStore={appStore}
+                            history={appStore.history}
+                        />
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
     }
 
     get searchResultsItem() {
@@ -584,7 +593,11 @@ export class HistoryView extends React.Component<{
                 content = [
                     {
                         type: "stack",
-                        content: [this.calendarItem, this.filtersItem, this.scrapbookItem]
+                        content: [
+                            this.calendarItem,
+                            this.filtersItem,
+                            this.scrapbookItem
+                        ]
                     }
                 ];
             }
@@ -602,21 +615,29 @@ export class HistoryView extends React.Component<{
     renderHistoryComponentWithTools(historyComponent: JSX.Element) {
         const appStore = this.props.appStore;
         return (
-            <HistoryContainer className="EezStudio_History_Container">
+            <div className="EezStudio_HistoryContainer">
                 {appStore.selectHistoryItemsSpecification && (
-                    <HistoryHeader className="EezStudio_SlideInDownTransition">
+                    <div className="EezStudio_HistoryHeader EezStudio_SlideInDownTransition">
                         <div>
                             {appStore.selectedHistoryItems.size > 0
                                 ? `${appStore.selectedHistoryItems.size} selected`
-                                : appStore.selectHistoryItemsSpecification.message}
+                                : appStore.selectHistoryItemsSpecification
+                                      .message}
                         </div>
                         <Toolbar>
                             {appStore.selectedHistoryItems.size > 0 && (
                                 <ButtonAction
-                                    text={appStore.selectHistoryItemsSpecification.okButtonText}
-                                    title={appStore.selectHistoryItemsSpecification.okButtonTitle}
+                                    text={
+                                        appStore.selectHistoryItemsSpecification
+                                            .okButtonText
+                                    }
+                                    title={
+                                        appStore.selectHistoryItemsSpecification
+                                            .okButtonTitle
+                                    }
                                     className={
-                                        appStore.selectHistoryItemsSpecification.alertDanger
+                                        appStore.selectHistoryItemsSpecification
+                                            .alertDanger
                                             ? "btn-danger"
                                             : "btn-primary"
                                     }
@@ -630,22 +651,27 @@ export class HistoryView extends React.Component<{
                                 onClick={this.onSelectHistoryItemsCancel}
                             />
                         </Toolbar>
-                    </HistoryHeader>
+                    </div>
                 )}
-                <HistoryBody
+                <div
+                    className="EezStudio_HistoryBody"
                     onClick={event => {
                         if (
-                            $(event.target).closest(".EezStudio_HistoryItemEnclosure").length === 0
+                            $(event.target).closest(
+                                ".EezStudio_HistoryItemEnclosure"
+                            ).length === 0
                         ) {
                             // deselect all items
-                            this.props.appStore.history.selection.selectItems([]);
+                            this.props.appStore.history.selection.selectItems(
+                                []
+                            );
                         }
                     }}
                     tabIndex={0}
                 >
                     {historyComponent}
-                </HistoryBody>
-            </HistoryContainer>
+                </div>
+            </div>
         );
     }
 
@@ -664,9 +690,15 @@ export class HistoryView extends React.Component<{
             return historyComponent;
         }
 
-        const historyComponentWithTools = this.renderHistoryComponentWithTools(historyComponent);
+        const historyComponentWithTools =
+            this.renderHistoryComponentWithTools(historyComponent);
 
-        let input = <SearchInput searchText={this.searchText} onChange={this.onSearchChange} />;
+        let input = (
+            <SearchInput
+                searchText={this.searchText}
+                onChange={this.onSearchChange}
+            />
+        );
 
         let layoutId = "layout/3";
         if (this.props.appStore.history.search.searchActive) {
@@ -704,20 +736,28 @@ export function moveToBottomOfHistory(historyView: HistoryView | undefined) {
     }
 }
 
-export function showHistoryItem(historyView: HistoryView | undefined, historyItem: IHistoryItem) {
+export function showHistoryItem(
+    historyView: HistoryView | undefined,
+    historyItem: IHistoryItem
+) {
     if (historyView && historyView.history) {
         historyView.history.showHistoryItem(historyItem);
     }
 }
 
 export function showSessionsList(navigationStore: INavigationStore) {
-    const sideDock = navigationStore.mainHistoryView && navigationStore.mainHistoryView.sideDock;
+    const sideDock =
+        navigationStore.mainHistoryView &&
+        navigationStore.mainHistoryView.sideDock;
     if (sideDock) {
         if (!sideDock.isOpen) {
             sideDock.toggleIsOpen();
         } else {
             if (sideDock.dockablePanels) {
-                const items = sideDock.dockablePanels.goldenLayout.root.getItemsById("sessions");
+                const items =
+                    sideDock.dockablePanels.goldenLayout.root.getItemsById(
+                        "sessions"
+                    );
                 if (items.length === 1) {
                     items[0].parent.setActiveContentItem(items[0]);
                 }

@@ -5,22 +5,10 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import styled from "eez-studio-ui/styled-components";
-
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const CreatedHistoryItemDiv = styled(HistoryItemDiv)`
-    padding: 0;
-
-    p {
-        position: relative;
-        padding: 0px 10px;
-        display: inline-block;
-    }
-`;
 
 @observer
 export class CreatedHistoryItemComponent extends React.Component<
@@ -41,15 +29,15 @@ export class CreatedHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <CreatedHistoryItemDiv>
+            <div className="EezStudio_CreatedHistoryItem">
                 <p>
-                    <HistoryItemDate>
+                    <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
-                    </HistoryItemDate>
+                    </small>
                     <span>Instrument {this.type}!</span>
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
-            </CreatedHistoryItemDiv>
+            </div>
         );
     }
 }

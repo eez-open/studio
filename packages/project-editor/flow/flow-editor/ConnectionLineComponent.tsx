@@ -11,10 +11,10 @@ import { OutputActionComponent } from "../action-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const lineColor = theme.connectionLineColor;
-const seqLineColor = theme.seqConnectionLineColor;
-const selectedLineColor = theme.selectedConnectionLineColor;
-const activeLineColor = theme.activeConnectionLineColor;
+const lineColor = () => theme().connectionLineColor;
+const seqLineColor = () => theme().seqConnectionLineColor;
+const selectedLineColor = () => theme().selectedConnectionLineColor;
+const activeLineColor = () => theme().activeConnectionLineColor;
 
 const strokeWidth = 1.2;
 const seqStrokeWidth = 1.2;
@@ -143,14 +143,17 @@ const ConnectionLineShape = observer(
 export const LineMarkers = () => (
     <svg style={{ width: 0, height: 0 }}>
         <defs>
-            <LineStartMarker id="lineStart" color={lineColor} />
-            <LineEndMarker id="lineEnd" color={lineColor} />
-            <LineStartMarker id="seqLineStart" color={seqLineColor} />
-            <LineEndMarker id="seqLineEnd" color={seqLineColor} />
-            <LineStartMarker id="selectedLineStart" color={selectedLineColor} />
-            <LineEndMarker id="selectedLineEnd" color={selectedLineColor} />
-            <LineStartMarker id="activeLineStart" color={activeLineColor} />
-            <LineEndMarker id="activeLineEnd" color={activeLineColor} />
+            <LineStartMarker id="lineStart" color={lineColor()} />
+            <LineEndMarker id="lineEnd" color={lineColor()} />
+            <LineStartMarker id="seqLineStart" color={seqLineColor()} />
+            <LineEndMarker id="seqLineEnd" color={seqLineColor()} />
+            <LineStartMarker
+                id="selectedLineStart"
+                color={selectedLineColor()}
+            />
+            <LineEndMarker id="selectedLineEnd" color={selectedLineColor()} />
+            <LineStartMarker id="activeLineStart" color={activeLineColor()} />
+            <LineEndMarker id="activeLineEnd" color={activeLineColor()} />
         </defs>
     </svg>
 );

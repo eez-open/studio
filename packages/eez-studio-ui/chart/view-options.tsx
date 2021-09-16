@@ -3,11 +3,13 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
 import { Checkbox, Radio } from "eez-studio-ui/properties";
-import { ChartsController, ChartController, globalViewOptions } from "eez-studio-ui/chart/chart";
+import {
+    ChartsController,
+    ChartController,
+    globalViewOptions
+} from "eez-studio-ui/chart/chart";
 import { WaveformRenderAlgorithm } from "eez-studio-ui/chart/render";
-import { SideDockViewContainer } from "eez-studio-ui/side-dock";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,9 +39,14 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
         const chartsController = props.chartsController;
         const viewOptions = chartsController.viewOptions;
 
-        const xSteps = viewOptions.axesLines.steps && viewOptions.axesLines.steps.x;
+        const xSteps =
+            viewOptions.axesLines.steps && viewOptions.axesLines.steps.x;
         this.xAxisSteps = xSteps
-            ? xSteps.map(step => chartsController.xAxisController.unit.formatValue(step)).join(", ")
+            ? xSteps
+                  .map(step =>
+                      chartsController.xAxisController.unit.formatValue(step)
+                  )
+                  .join(", ")
             : "";
 
         this.yAxisSteps = chartsController.chartControllers.map(
@@ -51,9 +58,9 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
                 return ySteps
                     ? ySteps
                           .map(step =>
-                              chartsController.chartControllers[i].yAxisController.unit.formatValue(
-                                  step
-                              )
+                              chartsController.chartControllers[
+                                  i
+                              ].yAxisController.unit.formatValue(step)
                           )
                           .join(", ")
                     : "";
@@ -66,8 +73,11 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
         const chartsController = this.props.chartsController;
         const viewOptions = chartsController.viewOptions;
 
-        const yAxisSteps = chartsController.chartControllers.filter(chartController => !chartController.yAxisController.isDigital).map(
-            (chartController: ChartController, i: number) => {
+        const yAxisSteps = chartsController.chartControllers
+            .filter(
+                chartController => !chartController.yAxisController.isDigital
+            )
+            .map((chartController: ChartController, i: number) => {
                 const yAxisController = chartController.yAxisController;
 
                 return (
@@ -80,34 +90,46 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
                                     error: this.yAxisStepsError[i]
                                 })}
                                 value={this.yAxisSteps[i]}
-                                onChange={action((event: React.ChangeEvent<HTMLInputElement>) => {
-                                    this.yAxisSteps[i] = event.target.value;
+                                onChange={action(
+                                    (
+                                        event: React.ChangeEvent<HTMLInputElement>
+                                    ) => {
+                                        this.yAxisSteps[i] = event.target.value;
 
-                                    const steps = event.target.value
-                                        .split(",")
-                                        .map(value => yAxisController.unit.parseValue(value));
+                                        const steps = event.target.value
+                                            .split(",")
+                                            .map(value =>
+                                                yAxisController.unit.parseValue(
+                                                    value
+                                                )
+                                            );
 
-                                    if (
-                                        steps.length === 0 ||
-                                        !steps.every(
-                                            step =>
-                                                step != null &&
-                                                step >= yAxisController.unit.units[0]
-                                        )
-                                    ) {
-                                        this.yAxisStepsError[i] = true;
-                                    } else {
-                                        this.yAxisStepsError[i] = false;
-                                        steps.sort();
-                                        viewOptions.setAxesLinesStepsY(i, steps as number[]);
+                                        if (
+                                            steps.length === 0 ||
+                                            !steps.every(
+                                                step =>
+                                                    step != null &&
+                                                    step >=
+                                                        yAxisController.unit
+                                                            .units[0]
+                                            )
+                                        ) {
+                                            this.yAxisStepsError[i] = true;
+                                        } else {
+                                            this.yAxisStepsError[i] = false;
+                                            steps.sort();
+                                            viewOptions.setAxesLinesStepsY(
+                                                i,
+                                                steps as number[]
+                                            );
+                                        }
                                     }
-                                })}
+                                )}
                             />
                         </td>
                     </tr>
                 );
-            }
-        );
+            });
 
         return (
             <div className="EezStudio_ChartViewOptions_DynamicAxisLines_Properties">
@@ -127,8 +149,11 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
                                     })}
                                     value={this.xAxisSteps}
                                     onChange={action(
-                                        (event: React.ChangeEvent<HTMLInputElement>) => {
-                                            this.xAxisSteps = event.target.value;
+                                        (
+                                            event: React.ChangeEvent<HTMLInputElement>
+                                        ) => {
+                                            this.xAxisSteps =
+                                                event.target.value;
 
                                             const steps = event.target.value
                                                 .split(",")
@@ -145,15 +170,18 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
                                                     step =>
                                                         step != null &&
                                                         step >=
-                                                            chartsController.xAxisController.unit
-                                                                .units[0]
+                                                            chartsController
+                                                                .xAxisController
+                                                                .unit.units[0]
                                                 )
                                             ) {
                                                 this.xAxisStepsError = true;
                                             } else {
                                                 this.xAxisStepsError = false;
                                                 steps.sort();
-                                                viewOptions.setAxesLinesStepsX(steps as number[]);
+                                                viewOptions.setAxesLinesStepsX(
+                                                    steps as number[]
+                                                );
                                             }
                                         }
                                     )}
@@ -223,18 +251,28 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
                                     min={2}
                                     max={100}
                                     className={classNames("form-control", {
-                                        error: this.majorSubdivisionHorizontalError
+                                        error: this
+                                            .majorSubdivisionHorizontalError
                                     })}
                                     value={this.majorSubdivisionHorizontal}
                                     onChange={action((event: any) => {
-                                        this.majorSubdivisionHorizontal = event.target.value;
+                                        this.majorSubdivisionHorizontal =
+                                            event.target.value;
 
-                                        const value = parseInt(event.target.value);
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
 
-                                        if (isNaN(value) || value < 2 || value > 100) {
-                                            this.majorSubdivisionHorizontalError = true;
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 100
+                                        ) {
+                                            this.majorSubdivisionHorizontalError =
+                                                true;
                                         } else {
-                                            this.majorSubdivisionHorizontalError = false;
+                                            this.majorSubdivisionHorizontalError =
+                                                false;
                                             viewOptions.setAxesLinesMajorSubdivisionHorizontal(
                                                 value
                                             );
@@ -251,13 +289,22 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
                                     className="form-control"
                                     value={this.majorSubdivisionVertical}
                                     onChange={action((event: any) => {
-                                        this.majorSubdivisionVertical = event.target.value;
+                                        this.majorSubdivisionVertical =
+                                            event.target.value;
 
-                                        const value = parseInt(event.target.value);
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
 
-                                        if (isNaN(value) || value < 2 || value > 100) {
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 100
+                                        ) {
                                         } else {
-                                            viewOptions.setAxesLinesMajorSubdivisionVertical(value);
+                                            viewOptions.setAxesLinesMajorSubdivisionVertical(
+                                                value
+                                            );
                                         }
                                     })}
                                 />
@@ -273,11 +320,18 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
                                     className="form-control"
                                     value={this.minorSubdivisionHorizontal}
                                     onChange={action((event: any) => {
-                                        this.minorSubdivisionHorizontal = event.target.value;
+                                        this.minorSubdivisionHorizontal =
+                                            event.target.value;
 
-                                        const value = parseInt(event.target.value);
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
 
-                                        if (isNaN(value) || value < 2 || value > 10) {
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 10
+                                        ) {
                                         } else {
                                             viewOptions.setAxesLinesMinorSubdivisionHorizontal(
                                                 value
@@ -295,13 +349,22 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
                                     className="form-control"
                                     value={this.minorSubdivisionVertical}
                                     onChange={action((event: any) => {
-                                        this.minorSubdivisionVertical = event.target.value;
+                                        this.minorSubdivisionVertical =
+                                            event.target.value;
 
-                                        const value = parseInt(event.target.value);
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
 
-                                        if (isNaN(value) || value < 2 || value > 10) {
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 10
+                                        ) {
                                         } else {
-                                            viewOptions.setAxesLinesMinorSubdivisionVertical(value);
+                                            viewOptions.setAxesLinesMinorSubdivisionVertical(
+                                                value
+                                            );
                                         }
                                     })}
                                 />
@@ -315,29 +378,6 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ChartViewOptionsContainer = styled(SideDockViewContainer)`
-    .EezStudio_ChartViewOptions_DynamicAxisLines_Properties {
-        margin-bottom: 10px;
-        input {
-            width: 160px;
-        }
-    }
-
-    .EezStudio_ChartViewOptions_FixedAxisLines_Properties {
-        input {
-            width: 40px;
-        }
-    }
-`;
-
-const GlobalOptionsContainer = styled.div`
-    margin-top: 10px;
-    border-top: 1px solid ${props => props.theme.borderColor};
-    padding-top: 10px;
-    margin-bottom: 5px;
-    font-weight: bold;
-`;
 
 export interface ChartViewOptionsProps {
     showRenderAlgorithm: boolean;
@@ -355,7 +395,7 @@ export class ChartViewOptions extends React.Component<
         const viewOptions = chartsController.viewOptions;
 
         return (
-            <ChartViewOptionsContainer>
+            <div className="EezStudio_ChartViewOptionsContainer">
                 <div>
                     <div className="EezStudio_SideDockView_PropertyLabel">
                         Axes lines subdivision:
@@ -363,21 +403,29 @@ export class ChartViewOptions extends React.Component<
                     <div className="EezStudio_SideDockView_Property">
                         <Radio
                             checked={viewOptions.axesLines.type === "dynamic"}
-                            onChange={action(() => viewOptions.setAxesLinesType("dynamic"))}
+                            onChange={action(() =>
+                                viewOptions.setAxesLinesType("dynamic")
+                            )}
                         >
                             Dynamic
                         </Radio>
                         {viewOptions.axesLines.type === "dynamic" && (
-                            <DynamicSubdivisionOptions chartsController={chartsController} />
+                            <DynamicSubdivisionOptions
+                                chartsController={chartsController}
+                            />
                         )}
                         <Radio
                             checked={viewOptions.axesLines.type === "fixed"}
-                            onChange={action(() => viewOptions.setAxesLinesType("fixed"))}
+                            onChange={action(() =>
+                                viewOptions.setAxesLinesType("fixed")
+                            )}
                         >
                             Fixed
                         </Radio>
                         {viewOptions.axesLines.type === "fixed" && (
-                            <FixedSubdivisionOptions chartsController={chartsController} />
+                            <FixedSubdivisionOptions
+                                chartsController={chartsController}
+                            />
                         )}
                     </div>
                     <div className="EezStudio_SideDockView_PropertyLabel">
@@ -402,9 +450,12 @@ export class ChartViewOptions extends React.Component<
                                 title="Chart rendering algorithm"
                                 value={globalViewOptions.renderAlgorithm}
                                 onChange={action(
-                                    (event: React.ChangeEvent<HTMLSelectElement>) =>
-                                        (globalViewOptions.renderAlgorithm = event.target
-                                            .value as WaveformRenderAlgorithm)
+                                    (
+                                        event: React.ChangeEvent<HTMLSelectElement>
+                                    ) =>
+                                        (globalViewOptions.renderAlgorithm =
+                                            event.target
+                                                .value as WaveformRenderAlgorithm)
                                 )}
                             >
                                 <option value="avg">Average</option>
@@ -435,12 +486,15 @@ export class ChartViewOptions extends React.Component<
                             Show zoom in/out buttons
                         </Checkbox>
                     </div>
-                    <GlobalOptionsContainer>Global options:</GlobalOptionsContainer>
+                    <div className="EezStudio_GlobalOptionsContainer">
+                        Global options:
+                    </div>
                     <div>
                         <Checkbox
                             checked={globalViewOptions.enableZoomAnimations}
                             onChange={action((checked: boolean) => {
-                                globalViewOptions.enableZoomAnimations = checked;
+                                globalViewOptions.enableZoomAnimations =
+                                    checked;
                             })}
                         >
                             Enable zoom in/out animations
@@ -462,7 +516,8 @@ export class ChartViewOptions extends React.Component<
                                 checked={globalViewOptions.showSampledData}
                                 onChange={action(
                                     (checked: boolean) =>
-                                        (globalViewOptions.showSampledData = checked)
+                                        (globalViewOptions.showSampledData =
+                                            checked)
                                 )}
                             >
                                 Show sampled data
@@ -470,7 +525,7 @@ export class ChartViewOptions extends React.Component<
                         </div>
                     )}
                 </div>
-            </ChartViewOptionsContainer>
+            </div>
         );
     }
 }

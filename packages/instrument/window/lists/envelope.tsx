@@ -5,13 +5,16 @@ import { bind } from "bind-decorator";
 
 import { clamp, objectClone } from "eez-studio-shared/util";
 import { _max, _range } from "eez-studio-shared/algorithm";
-import { Point, pointDistance, closestPointOnSegment } from "eez-studio-shared/geometry";
+import {
+    Point,
+    pointDistance,
+    closestPointOnSegment
+} from "eez-studio-shared/geometry";
 import { capitalize } from "eez-studio-shared/string";
 import { IUnit, TIME_UNIT } from "eez-studio-shared/units";
 
 import { validators } from "eez-studio-shared/validation";
 
-import styled from "eez-studio-ui/styled-components";
 import { VerticalHeaderWithBody, Body } from "eez-studio-ui/header-with-body";
 import {
     AxisController,
@@ -31,7 +34,11 @@ import {
 } from "eez-studio-ui/chart/chart";
 import { showPopup } from "eez-studio-ui/popup";
 import { Toolbar } from "eez-studio-ui/toolbar";
-import { ButtonAction, DropdownButtonAction, DropdownItem } from "eez-studio-ui/action";
+import {
+    ButtonAction,
+    DropdownButtonAction,
+    DropdownItem
+} from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { InstrumentObject } from "instrument/instrument-object";
@@ -86,7 +93,9 @@ export function createEmptyEnvelopeListData(
     props: { duration: number; numSamples: number },
     instrument: InstrumentObject
 ) {
-    const envelopeListData = objectClone(getDefaultEnvelopeListData(instrument));
+    const envelopeListData = objectClone(
+        getDefaultEnvelopeListData(instrument)
+    );
     envelopeListData.duration = props.duration;
     envelopeListData.numSamples = props.numSamples;
     envelopeListData.voltage[1].time = props.duration;
@@ -108,15 +117,20 @@ export class EnvelopeListData extends BaseListData {
     constructor(list: BaseList, props: any) {
         super(list, props);
 
-        const defaultEnvelopeListData = getDefaultEnvelopeListData(list.$eez_noser_instrument);
+        const defaultEnvelopeListData = getDefaultEnvelopeListData(
+            list.$eez_noser_instrument
+        );
 
         this.duration = props.duration || defaultEnvelopeListData.duration;
-        this.numSamples = props.numSamples || defaultEnvelopeListData.numSamples;
+        this.numSamples =
+            props.numSamples || defaultEnvelopeListData.numSamples;
 
         this.voltage = props.voltage || defaultEnvelopeListData.voltage;
         this.current = props.current || defaultEnvelopeListData.current;
 
-        this.timeAxisModel = new EnveloperListTimeAxisModel(list as EnvelopeList);
+        this.timeAxisModel = new EnveloperListTimeAxisModel(
+            list as EnvelopeList
+        );
     }
 
     toJS() {
@@ -152,7 +166,11 @@ export class EnvelopeListData extends BaseListData {
 export class EnvelopeList extends BaseList {
     @observable data: EnvelopeListData;
 
-    constructor(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
+    constructor(
+        props: any,
+        appStore: InstrumentAppStore,
+        instrument: InstrumentObject
+    ) {
         super(props, appStore, instrument);
         this.type = "envelope";
         this.data = new EnvelopeListData(this, props.data);
@@ -166,7 +184,10 @@ export class EnvelopeList extends BaseList {
         );
     }
 
-    createChartsController(displayOption: ChartsDisplayOption, mode: ChartMode): ChartsController {
+    createChartsController(
+        displayOption: ChartsDisplayOption,
+        mode: ChartMode
+    ): ChartsController {
         return createEnvelopeChartsController(this, displayOption, mode);
     }
 
@@ -208,15 +229,19 @@ export class EnvelopeList extends BaseList {
         }
 
         let timeTemp = [0];
-        const minDwell = this.$eez_noser_appStore.instrument!.listsMinDwellProperty;
-        const maxDwell = this.$eez_noser_appStore.instrument!.listsMaxDwellProperty;
+        const minDwell =
+            this.$eez_noser_appStore.instrument!.listsMinDwellProperty;
+        const maxDwell =
+            this.$eez_noser_appStore.instrument!.listsMaxDwellProperty;
         for (let i = 1; i < timeN.length; i++) {
             let dt = timeN[i] - timeTemp[timeTemp.length - 1];
             while (dt > maxDwell) {
                 timeTemp.push(timeTemp[timeTemp.length - 1] + maxDwell);
                 dt -= maxDwell;
             }
-            timeTemp.push(timeTemp[timeTemp.length - 1] + Math.max(dt, minDwell));
+            timeTemp.push(
+                timeTemp[timeTemp.length - 1] + Math.max(dt, minDwell)
+            );
         }
 
         timeN = timeTemp;
@@ -226,7 +251,10 @@ export class EnvelopeList extends BaseList {
         iVoltage = 1;
         iCurrent = 1;
         for (let i = 1; i < timeN.length; i++) {
-            while (iVoltage < voltage.length && voltage[iVoltage].time < timeN[i]) {
+            while (
+                iVoltage < voltage.length &&
+                voltage[iVoltage].time < timeN[i]
+            ) {
                 iVoltage++;
             }
             if (iVoltage === voltage.length) {
@@ -235,12 +263,17 @@ export class EnvelopeList extends BaseList {
                 voltageN.push(
                     voltage[iVoltage - 1].value +
                         ((timeN[i] - voltage[iVoltage - 1].time) /
-                            (voltage[iVoltage].time - voltage[iVoltage - 1].time)) *
-                            (voltage[iVoltage].value - voltage[iVoltage - 1].value)
+                            (voltage[iVoltage].time -
+                                voltage[iVoltage - 1].time)) *
+                            (voltage[iVoltage].value -
+                                voltage[iVoltage - 1].value)
                 );
             }
 
-            while (iCurrent < current.length && current[iCurrent].time < timeN[i]) {
+            while (
+                iCurrent < current.length &&
+                current[iCurrent].time < timeN[i]
+            ) {
                 iCurrent++;
             }
             if (iCurrent === current.length) {
@@ -249,8 +282,10 @@ export class EnvelopeList extends BaseList {
                 currentN.push(
                     current[iCurrent - 1].value +
                         ((timeN[i] - current[iCurrent - 1].time) /
-                            (current[iCurrent].time - current[iCurrent - 1].time)) *
-                            (current[iCurrent].value - current[iCurrent - 1].value)
+                            (current[iCurrent].time -
+                                current[iCurrent - 1].time)) *
+                            (current[iCurrent].value -
+                                current[iCurrent - 1].value)
                 );
             }
         }
@@ -260,12 +295,14 @@ export class EnvelopeList extends BaseList {
                 if (timeN[i] > duration) {
                     voltageN[i] =
                         voltageN[i - 1] +
-                        ((duration - timeN[i - 1]) / (timeN[i] - timeN[i - 1])) *
+                        ((duration - timeN[i - 1]) /
+                            (timeN[i] - timeN[i - 1])) *
                             (voltageN[i] - voltageN[i - 1]);
 
                     currentN[i] =
                         currentN[i - 1] +
-                        ((duration - timeN[i - 1]) / (timeN[i] - timeN[i - 1])) *
+                        ((duration - timeN[i - 1]) /
+                            (timeN[i] - timeN[i - 1])) *
                             (currentN[i] - currentN[i - 1]);
 
                     timeN[i] = duration;
@@ -288,7 +325,10 @@ export class EnvelopeList extends BaseList {
         let N = numSamples;
 
         for (let i = 1; i < timeN.length; i++) {
-            if (voltageN[i] === voltageN[i - 1] && currentN[i] === currentN[i - 1]) {
+            if (
+                voltageN[i] === voltageN[i - 1] &&
+                currentN[i] === currentN[i - 1]
+            ) {
                 N--;
             } else {
                 T += timeN[i] - timeN[i - 1];
@@ -302,7 +342,10 @@ export class EnvelopeList extends BaseList {
         for (let i = 1; i < timeN.length; i++) {
             let dt = timeN[i] - timeN[i - 1];
 
-            if (voltageN[i] === voltageN[i - 1] && currentN[i] === currentN[i - 1]) {
+            if (
+                voltageN[i] === voltageN[i - 1] &&
+                currentN[i] === currentN[i - 1]
+            ) {
                 dwellS.push(dt);
                 voltageS.push(voltageN[i]);
                 currentS.push(currentN[i]);
@@ -317,8 +360,14 @@ export class EnvelopeList extends BaseList {
                     let dwell = (dt - dwellSum) / (n - j);
                     dwellS.push(dwell);
 
-                    voltageS.push(voltageN[i - 1] + ((dwellSum + dwell / 2) * dVoltage) / dt);
-                    currentS.push(currentN[i - 1] + ((dwellSum + dwell / 2) * dCurrent) / dt);
+                    voltageS.push(
+                        voltageN[i - 1] +
+                            ((dwellSum + dwell / 2) * dVoltage) / dt
+                    );
+                    currentS.push(
+                        currentN[i - 1] +
+                            ((dwellSum + dwell / 2) * dCurrent) / dt
+                    );
 
                     dwellSum += dwell;
                 }
@@ -347,7 +396,8 @@ export class EnvelopeList extends BaseList {
     @computed
     get powerLimitError() {
         for (let i = 0; i < this.tableListData.dwell.length; i++) {
-            let power = this.tableListData.voltage[i] * this.tableListData.current[i];
+            let power =
+                this.tableListData.voltage[i] * this.tableListData.current[i];
             if (!checkPower(power, this.$eez_noser_instrument)) {
                 return getPowerLimitErrorMessage(this.$eez_noser_instrument);
             }
@@ -374,27 +424,6 @@ class EnveloperListTimeAxisModel extends ListAxisModel {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const EditEnvelopeValueContainer = styled.div`
-    pointer-events: all;
-
-    td {
-        padding-top: 4px;
-        padding-bottom: 4px;
-    }
-
-    .separator {
-        border-top: 1px solid ${props => props.theme.borderColor};
-    }
-
-    td:not(:first-child) {
-        padding-left: 10px;
-    }
-
-    label {
-        white-space: nowrap;
-    }
-`;
 
 @observer
 class EditEnvelopeValue extends React.Component<
@@ -423,7 +452,8 @@ class EditEnvelopeValue extends React.Component<
         this.onValueChange = this.onValueChange.bind(this);
     }
 
-    @observable time = this.props.time && this.props.timeUnit.formatValue(this.props.time);
+    @observable time =
+        this.props.time && this.props.timeUnit.formatValue(this.props.time);
     @observable timeError: string | undefined;
     @observable value = this.props.valueUnit.formatValue(this.props.value);
     @observable valueError: string | undefined;
@@ -436,7 +466,8 @@ class EditEnvelopeValue extends React.Component<
         return (
             !this.timeError &&
             !this.valueError &&
-            (this.props.time !== this.lastTime || this.props.value !== this.lastValue)
+            (this.props.time !== this.lastTime ||
+                this.props.value !== this.lastValue)
         );
     }
 
@@ -484,7 +515,7 @@ class EditEnvelopeValue extends React.Component<
 
     render() {
         return (
-            <EditEnvelopeValueContainer>
+            <div className="EezStudio_EditEnvelopeValueContainer">
                 <table>
                     <tbody>
                         <tr>
@@ -522,12 +553,16 @@ class EditEnvelopeValue extends React.Component<
                         {this.timeError && (
                             <tr>
                                 <td />
-                                <td className="text-danger">{this.timeError}</td>
+                                <td className="text-danger">
+                                    {this.timeError}
+                                </td>
                             </tr>
                         )}
                         <tr>
                             <td>
-                                <label>{capitalize(this.props.valueUnit.name)}</label>
+                                <label>
+                                    {capitalize(this.props.valueUnit.name)}
+                                </label>
                             </td>
                             <td>
                                 <input
@@ -541,7 +576,9 @@ class EditEnvelopeValue extends React.Component<
                         {this.valueError && (
                             <tr>
                                 <td />
-                                <td className="text-danger">{this.valueError}</td>
+                                <td className="text-danger">
+                                    {this.valueError}
+                                </td>
                             </tr>
                         )}
                         <tr>
@@ -555,14 +592,17 @@ class EditEnvelopeValue extends React.Component<
                                     Save
                                 </button>
                                 &nbsp;
-                                <button className="btn btn-default" onClick={this.props.onClose}>
+                                <button
+                                    className="btn btn-default"
+                                    onClick={this.props.onClose}
+                                >
                                     Cancel
                                 </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-            </EditEnvelopeValueContainer>
+            </div>
         );
     }
 }
@@ -592,12 +632,15 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
     cursor: "move";
 
     get list() {
-        return (this.lineController.yAxisController.chartsController as EnvelopeChartsController)
-            .list;
+        return (
+            this.lineController.yAxisController
+                .chartsController as EnvelopeChartsController
+        ).list;
     }
 
     get xAxisController() {
-        return this.lineController.yAxisController.chartsController.xAxisController;
+        return this.lineController.yAxisController.chartsController
+            .xAxisController;
     }
 
     get yAxisController() {
@@ -611,7 +654,8 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
     get isDragged() {
         return (
             new Date().getTime() - this.startTime > CONF_DRAG_TIME_THRESHOLD ||
-            pointDistance(this.startPoint, this.lastPoint) > CONF_DRAG_DISTANCE_THRESHOLD
+            pointDistance(this.startPoint, this.lastPoint) >
+                CONF_DRAG_DISTANCE_THRESHOLD
         );
     }
 
@@ -663,7 +707,13 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         }
     }
 
-    editPoint(index: number, oldTime: number, oldValue: number, newTime: number, newValue: number) {
+    editPoint(
+        index: number,
+        oldTime: number,
+        oldValue: number,
+        newTime: number,
+        newValue: number
+    ) {
         // we will remove unnecessary points
         if (
             index - 1 >= 0 &&
@@ -732,7 +782,12 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
                         this.values[index - 2].value = newValue;
                     }),
                     undo: action(() => {
-                        this.values.splice(index - 2, 0, removedPoint1, removedPoint2);
+                        this.values.splice(
+                            index - 2,
+                            0,
+                            removedPoint1,
+                            removedPoint2
+                        );
                         this.values[index].time = oldTime;
                         this.values[index].value = oldValue;
                     })
@@ -757,7 +812,12 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
                         this.values[index].value = newValue;
                     }),
                     undo: action(() => {
-                        this.values.splice(index + 1, 0, removedPoint1, removedPoint2);
+                        this.values.splice(
+                            index + 1,
+                            0,
+                            removedPoint1,
+                            removedPoint2
+                        );
                         this.values[index].time = oldTime;
                         this.values[index].value = oldValue;
                     })
@@ -783,7 +843,10 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
                     })
                 }
             );
-        } else if (index + 2 < this.values.length && this.values[index + 2].time === newTime) {
+        } else if (
+            index + 2 < this.values.length &&
+            this.values[index + 2].time === newTime
+        ) {
             // remove next point
             const removedPoint = this.values[index + 1];
             this.list.$eez_noser_appStore.undoManager.addCommand(
@@ -823,7 +886,11 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         }
     }
 
-    up(point: SVGPoint | undefined, event: PointerEvent | undefined, cancel: boolean) {
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ) {
         if (this.isChanged) {
             const oldTime = this.startEnvelopeValue.time;
             const oldValue = this.startEnvelopeValue.value;
@@ -835,12 +902,20 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
                 const newTime = this.values[this.valueIndex].time;
                 const newValue = this.values[this.valueIndex].value;
 
-                this.editPoint(this.valueIndex, oldTime, oldValue, newTime, newValue);
+                this.editPoint(
+                    this.valueIndex,
+                    oldTime,
+                    oldValue,
+                    newTime,
+                    newValue
+                );
             }
         }
 
         if (!this.isDragged && !this.newValue) {
-            const target = $(this.chartView.svg).find(`[data-value-index=${this.valueIndex}]`);
+            const target = $(this.chartView.svg).find(
+                `[data-value-index=${this.valueIndex}]`
+            );
             if (target.length) {
                 this.showEditEnvelopePointPopup(target[0]);
             }
@@ -925,7 +1000,13 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
                     const newTime = this.values[this.valueIndex].time;
                     const newValue = this.values[this.valueIndex].value;
 
-                    this.editPoint(this.valueIndex, oldTime, oldValue, newTime, newValue);
+                    this.editPoint(
+                        this.valueIndex,
+                        oldTime,
+                        oldValue,
+                        newTime,
+                        newValue
+                    );
                 }}
                 onRemove={onRemove}
             />
@@ -952,7 +1033,9 @@ export class EnvelopeLineController extends LineController {
     }
 
     get list() {
-        return (this.yAxisController.chartsController as EnvelopeChartsController).list;
+        return (
+            this.yAxisController.chartsController as EnvelopeChartsController
+        ).list;
     }
 
     @computed
@@ -1047,7 +1130,8 @@ export class EnvelopeLineController extends LineController {
             value: cursor.value
         };
         this.values.splice(cursor.valueIndex, 0, newValue);
-        cursor.error = time < 0 ? "Time must be >= 0" : this.list.powerLimitError;
+        cursor.error =
+            time < 0 ? "Time must be >= 0" : this.list.powerLimitError;
         this.values.splice(cursor.valueIndex, 1);
 
         cursor.addPoint = !cursor.error;
@@ -1065,7 +1149,10 @@ export class EnvelopeLineController extends LineController {
             valueIndex = this.values.length;
         }
 
-        if (valueIndex - 2 >= 0 && this.values[valueIndex - 2].time === value.time) {
+        if (
+            valueIndex - 2 >= 0 &&
+            this.values[valueIndex - 2].time === value.time
+        ) {
             valueIndex--;
             const oldValue = this.values[valueIndex];
             this.list.$eez_noser_appStore.undoManager.addCommand(
@@ -1097,31 +1184,54 @@ export class EnvelopeLineController extends LineController {
             );
         }
 
-        const mouseHandler = new DragEnvelopePointMouseHandler(chartView, valueIndex, this);
+        const mouseHandler = new DragEnvelopePointMouseHandler(
+            chartView,
+            valueIndex,
+            this
+        );
 
         mouseHandler.newValue = true;
 
         return mouseHandler;
     }
 
-    onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
+    onDragStart(
+        chartView: ChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined {
         let valueIndex = parseInt(
-            $(event.target!).closest("[data-value-index]").attr("data-value-index") || ""
+            $(event.target!)
+                .closest("[data-value-index]")
+                .attr("data-value-index") || ""
         );
 
         let lineControllerId = $(event.target!)
             .closest("[data-line-controller-id]")
             .attr("data-line-controller-id");
 
-        if (typeof valueIndex === "number" && !isNaN(valueIndex) && lineControllerId === this.id) {
+        if (
+            typeof valueIndex === "number" &&
+            !isNaN(valueIndex) &&
+            lineControllerId === this.id
+        ) {
             // move existing value
-            return new DragEnvelopePointMouseHandler(chartView, valueIndex, this);
+            return new DragEnvelopePointMouseHandler(
+                chartView,
+                valueIndex,
+                this
+            );
         }
         return undefined;
     }
 
     render(clipId: string) {
-        return <EnvelopeLineView key={this.id} envelopeLineController={this} clipId={clipId} />;
+        return (
+            <EnvelopeLineView
+                key={this.id}
+                envelopeLineController={this}
+                clipId={clipId}
+            />
+        );
     }
 
     closestPoint(point: Point): Point | undefined {
@@ -1232,13 +1342,6 @@ class EnvelopeLines extends React.Component<
     }
 }
 
-const EnvelopeValueCircle = styled.circle`
-    stroke-width: 2;
-    stroke-opacity: 0.8;
-    fill-opacity: 0;
-    cursor: move;
-`;
-
 @observer
 class EnvelopeValue extends React.Component<
     {
@@ -1269,7 +1372,8 @@ class EnvelopeValue extends React.Component<
             axisModel
         } = this.props;
         return (
-            <EnvelopeValueCircle
+            <circle
+                className="EezStudio_EnvelopeValueCircle"
                 data-value-index={index}
                 cx={chartLeft + (value.time - xFrom) * xScale}
                 cy={chartBottom - (value.value - yFrom) * yScale}
@@ -1329,8 +1433,12 @@ export class EnvelopeLineView extends React.Component<
     render() {
         return (
             <g clipPath={`url(#${this.props.clipId})`}>
-                <EnvelopeLines envelopeLineController={this.props.envelopeLineController} />
-                <EnvelopeValues envelopeLineController={this.props.envelopeLineController} />
+                <EnvelopeLines
+                    envelopeLineController={this.props.envelopeLineController}
+                />
+                <EnvelopeValues
+                    envelopeLineController={this.props.envelopeLineController}
+                />
             </g>
         );
     }
@@ -1339,7 +1447,10 @@ export class EnvelopeLineView extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsController }, {}> {
+class EnvelopeChartsHeader extends React.Component<
+    { chartsController: ChartsController },
+    {}
+> {
     get list() {
         return (this.props.chartsController as EnvelopeChartsController).list;
     }
@@ -1376,7 +1487,8 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                         validators: [
                             validators.rangeInclusive(
                                 1,
-                                this.list.$eez_noser_appStore.instrument!.listsMaxPointsProperty
+                                this.list.$eez_noser_appStore.instrument!
+                                    .listsMaxPointsProperty
                             )
                         ]
                     }
@@ -1574,7 +1686,9 @@ class EnvelopeChartsHeader extends React.Component<{ chartsController: ChartsCon
                             />
                         </DropdownButtonAction>
                     </Toolbar>
-                    <CommonTools chartsController={this.props.chartsController} />
+                    <CommonTools
+                        chartsController={this.props.chartsController}
+                    />
                 </Toolbar>
             </ListChartViewHeader>
         );
@@ -1588,7 +1702,10 @@ interface EnvelopeDetailsViewProps {
 }
 
 @observer
-export class EnvelopeDetailsView extends React.Component<EnvelopeDetailsViewProps, {}> {
+export class EnvelopeDetailsView extends React.Component<
+    EnvelopeDetailsViewProps,
+    {}
+> {
     @observable list: EnvelopeList = this.props.list;
 
     @computed
@@ -1608,9 +1725,14 @@ export class EnvelopeDetailsView extends React.Component<EnvelopeDetailsViewProp
     render() {
         return (
             <VerticalHeaderWithBody>
-                <EnvelopeChartsHeader chartsController={this.chartsController} />
+                <EnvelopeChartsHeader
+                    chartsController={this.chartsController}
+                />
                 <Body>
-                    <ChartsView chartsController={this.chartsController} tabIndex={0} />
+                    <ChartsView
+                        chartsController={this.chartsController}
+                        tabIndex={0}
+                    />
                 </Body>
             </VerticalHeaderWithBody>
         );
@@ -1620,7 +1742,11 @@ export class EnvelopeDetailsView extends React.Component<EnvelopeDetailsViewProp
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EnvelopeChartsController extends ChartsController {
-    constructor(public list: EnvelopeList, mode: ChartMode, xAxisModel: IAxisModel) {
+    constructor(
+        public list: EnvelopeList,
+        mode: ChartMode,
+        xAxisModel: IAxisModel
+    ) {
         super(mode, xAxisModel, list.data.viewOptions);
     }
 
@@ -1635,19 +1761,27 @@ export class EnvelopeChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 class EnvelopeChartController extends ChartController {
-    constructor(chartsController: EnvelopeChartsController, displayOption: ChartsDisplayOption) {
+    constructor(
+        chartsController: EnvelopeChartsController,
+        displayOption: ChartsDisplayOption
+    ) {
         super(chartsController, displayOption);
     }
 
     customRender() {
-        const envelopeChartsController = this.chartsController as EnvelopeChartsController;
+        const envelopeChartsController = this
+            .chartsController as EnvelopeChartsController;
         const data = envelopeChartsController.list.data;
-        const invalidRegion = envelopeChartsController.xAxisController.maxValue - data.duration;
+        const invalidRegion =
+            envelopeChartsController.xAxisController.maxValue - data.duration;
         if (invalidRegion > 0) {
             let x =
                 Math.round(
                     this.chartsController.chartLeft +
-                        Math.max(this.xAxisController.valueToPx(data.duration), 0)
+                        Math.max(
+                            this.xAxisController.valueToPx(data.duration),
+                            0
+                        )
                 ) + 0.5;
             if (x < this.chartsController.chartRight) {
                 let width = this.xAxisController.valueToPx(invalidRegion);
@@ -1656,7 +1790,13 @@ class EnvelopeChartController extends ChartController {
 
                 // render invalid region
                 return (
-                    <rect x={x} y={y} width={width} height={height} fill="rgba(255, 0, 0, 0.1)" />
+                    <rect
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={height}
+                        fill="rgba(255, 0, 0, 0.1)"
+                    />
                 );
             }
         }
@@ -1667,11 +1807,17 @@ class EnvelopeChartController extends ChartController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getLineControllers(list: EnvelopeList, axisController: AxisController) {
+function getLineControllers(
+    list: EnvelopeList,
+    axisController: AxisController
+) {
     const lineControllers: ILineController[] = [];
 
     lineControllers.push(
-        new EnvelopeLineController("envelope-" + axisController.position, axisController)
+        new EnvelopeLineController(
+            "envelope-" + axisController.position,
+            axisController
+        )
     );
 
     if (globalViewOptions.showSampledData) {
@@ -1691,27 +1837,42 @@ export function createEnvelopeChartsController(
     displayOption: ChartsDisplayOption,
     mode: ChartMode
 ) {
-    const chartsController = new EnvelopeChartsController(list, mode, list.data.timeAxisModel);
+    const chartsController = new EnvelopeChartsController(
+        list,
+        mode,
+        list.data.timeAxisModel
+    );
 
     const charts: ChartController[] = [];
 
     if (displayOption === "both") {
-        const chartController = new EnvelopeChartController(chartsController, displayOption);
+        const chartController = new EnvelopeChartController(
+            chartsController,
+            displayOption
+        );
 
         chartController.createYAxisController(list.data.voltageAxisModel);
-        chartController.createYAxisControllerOnRightSide(list.data.currentAxisModel);
+        chartController.createYAxisControllerOnRightSide(
+            list.data.currentAxisModel
+        );
 
         chartController.lineControllers.push(
             ...getLineControllers(list, chartController.yAxisController)
         );
         chartController.lineControllers.push(
-            ...getLineControllers(list, chartController.yAxisControllerOnRightSide!)
+            ...getLineControllers(
+                list,
+                chartController.yAxisControllerOnRightSide!
+            )
         );
 
         charts.push(chartController);
     } else {
         if (displayOption === "voltage" || displayOption === "split") {
-            const chartController = new EnvelopeChartController(chartsController, "voltage");
+            const chartController = new EnvelopeChartController(
+                chartsController,
+                "voltage"
+            );
             chartController.createYAxisController(list.data.voltageAxisModel);
             chartController.lineControllers.push(
                 ...getLineControllers(list, chartController.yAxisController)
@@ -1720,7 +1881,10 @@ export function createEnvelopeChartsController(
         }
 
         if (displayOption === "current" || displayOption === "split") {
-            const chartController = new EnvelopeChartController(chartsController, "current");
+            const chartController = new EnvelopeChartController(
+                chartsController,
+                "current"
+            );
             chartController.createYAxisController(list.data.currentAxisModel);
             chartController.lineControllers.push(
                 ...getLineControllers(list, chartController.yAxisController)

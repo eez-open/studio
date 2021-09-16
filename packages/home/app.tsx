@@ -5,7 +5,6 @@ import update from "immutability-helper";
 
 import { stringCompare } from "eez-studio-shared/string";
 
-import styled from "eez-studio-ui/styled-components";
 import {
     VerticalHeaderWithBody,
     Header,
@@ -56,33 +55,6 @@ class AddTabPopupStuff {
 const theAddTabPopupStuff = new AddTabPopupStuff();
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const Container = styled.div`
-    display: grid;
-    grid-column-gap: 1rem;
-    grid-row-gap: 1rem;
-    grid-template-columns: auto auto;
-
-    & > div.EezStudio_ListContainer {
-        min-width: 400px;
-        height: 240px;
-        grid-column-start: span 2;
-    }
-
-    & > button {
-        min-width: 200px;
-        display: flex;
-        align-items: center;
-        & > span {
-            padding-left: 5px;
-            white-space: nowrap;
-        }
-    }
-
-    & > div.EezStudio_SessionInfoContainer {
-        grid-column-start: span 2;
-    }
-`;
 
 const AddTabPopup = observer(() => {
     let instrumentsList;
@@ -153,55 +125,23 @@ const AddTabPopup = observer(() => {
     if (theAddTabPopupStuff.sessionInfo) {
         sessionInfo = (
             <div className="EezStudio_SessionInfoContainer">
-                <SessionInfoContainer>
-                    <SessionInfo appStore={appStore} />
-                </SessionInfoContainer>
+                <SessionInfo appStore={appStore} />
             </div>
         );
     }
 
     return (
         <div>
-            <Container>
+            <div className="EezStudio_AddTabPopupContainer">
                 {instrumentsList}
                 {theRestTabsList}
                 {sessionInfo}
-            </Container>
+            </div>
         </div>
     );
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const SessionInfoContainer = styled.div`
-    flex-grow: 0;
-    padding: 5px 10px;
-`;
-
-const AppHeader = styled(Header)`
-    display: flex;
-    flex-direction: row;
-    background-color: ${props => props.theme.panelHeaderColor};
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-`;
-
-const TabContainer = styled.div`
-    flex-grow: 1;
-
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-
-    & > div {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-    }
-`;
 
 @observer
 class AppComponent extends React.Component {
@@ -229,7 +169,7 @@ class AppComponent extends React.Component {
 
         return (
             <VerticalHeaderWithBody>
-                <AppHeader>
+                <Header className="EezStudio_AppHeader">
                     <TabsView
                         tabs={tabs.tabs}
                         addTabPopup={this.addTabPopup}
@@ -248,14 +188,15 @@ class AppComponent extends React.Component {
                         )}
                     />
                     {appStore.history.sessions.activeSession && (
-                        <SessionInfoContainer>
+                        <div className="EezStudio_SessionInfoContainer">
                             <SessionInfo appStore={appStore} />
-                        </SessionInfoContainer>
+                        </div>
                     )}
-                </AppHeader>
+                </Header>
                 <Body>
                     {tabs.tabs.map(tab => (
-                        <TabContainer
+                        <div
+                            className="EezStudio_TabContainer"
                             key={tab.id}
                             style={{
                                 visibility:
@@ -266,7 +207,7 @@ class AppComponent extends React.Component {
                             }}
                         >
                             {tab.render()}
-                        </TabContainer>
+                        </div>
                     ))}
                 </Body>
             </VerticalHeaderWithBody>

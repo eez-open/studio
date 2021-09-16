@@ -1,11 +1,15 @@
 import React from "react";
-import { observable, computed, action, reaction, IReactionDisposer } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    reaction,
+    IReactionDisposer
+} from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
 import classNames from "classnames";
 
 import { capitalize } from "eez-studio-shared/string";
-
-import styled from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,74 +43,6 @@ interface ISortOrderItem {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const StyledTable = styled.table`
-    cursor: default;
-
-    tbody > tr.selected {
-        background-color: ${props => props.theme.nonFocusedSelectionBackgroundColor};
-        color: ${props => props.theme.nonFocusedSelectionColor};
-    }
-
-    .EezStudio_Toolbar {
-        visibility: hidden;
-    }
-
-    > tbody > tr:hover {
-        .EezStudio_Toolbar {
-            visibility: visible;
-        }
-    }
-
-    > tbody > tr.selected {
-        .EezStudio_Toolbar {
-            visibility: visible;
-        }
-
-        .EezStudio_Action {
-            color: white;
-        }
-
-        .EezStudio_Action:hover {
-            color: #aaa;
-        }
-    }
-
-    &:focus {
-        > tbody > tr:hover {
-            background-color: ${props => props.theme.hoverBackgroundColor};
-            color: ${props => props.theme.hoverColor};
-        }
-
-        > tbody > tr.selected {
-            background-color: ${props => props.theme.selectionBackgroundColor};
-            color: ${props => props.theme.selectionColor};
-        }
-    }
-
-    th,
-    td {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    th.sort-enabled {
-        background-repeat: no-repeat;
-        background-position: center left;
-        background-image: url("../eez-studio-ui/_images/col_sort_enabled.png");
-        padding-left: 20px;
-        cursor: pointer;
-    }
-
-    th.sort-asc {
-        background-image: url("../eez-studio-ui/_images/col_sort_asc.png");
-    }
-
-    th.sort-desc {
-        background-image: url("../eez-studio-ui/_images/col_sort_desc.png");
-    }
-`;
-
 @observer
 export class Table extends React.Component<ITableProps> {
     @observable sortOrder: ISortOrderItem[];
@@ -122,7 +58,10 @@ export class Table extends React.Component<ITableProps> {
         this.saveSortOrderDisposer = reaction(
             () => JSON.stringify(this.sortOrder),
             sortOrderJSON => {
-                localStorage.setItem(this.props.persistId + "/sort-order", sortOrderJSON);
+                localStorage.setItem(
+                    this.props.persistId + "/sort-order",
+                    sortOrderJSON
+                );
             }
         );
     }
@@ -133,13 +72,19 @@ export class Table extends React.Component<ITableProps> {
 
     @action
     updateSortOrder(props: ITableProps) {
-        let sortOrderJSON = localStorage.getItem(props.persistId + "/sort-order");
+        let sortOrderJSON = localStorage.getItem(
+            props.persistId + "/sort-order"
+        );
         let sortOrder: ISortOrderItem[];
         if (sortOrderJSON) {
             sortOrder = JSON.parse(sortOrderJSON);
         } else {
             sortOrder = props.columns
-                .filter(column => column.sortEnabled && column.name !== props.defaultSortColumn)
+                .filter(
+                    column =>
+                        column.sortEnabled &&
+                        column.name !== props.defaultSortColumn
+                )
                 .map(column => ({
                     columnName: column.name,
                     asc: true
@@ -239,10 +184,13 @@ export class Table extends React.Component<ITableProps> {
     }
 
     render() {
-        let className = classNames("table", this.props.className);
+        let className = classNames(
+            "table EezStudio_Table",
+            this.props.className
+        );
 
         return (
-            <StyledTable className={className} tabIndex={-1}>
+            <div className={className} tabIndex={-1}>
                 <thead>
                     <tr>
                         {this.props.columns.map(column => (
@@ -274,7 +222,7 @@ export class Table extends React.Component<ITableProps> {
                         </tr>
                     ))}
                 </tbody>
-            </StyledTable>
+            </div>
         );
     }
 }

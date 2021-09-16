@@ -2,8 +2,6 @@ import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
-
 import {
     IEezObject,
     getChildren,
@@ -18,23 +16,6 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const NavigationMenuItemContainer = styled.div`
-    display: block;
-    cursor: pointer;
-    padding: 4px;
-    background-color: ${props => props.theme.panelHeaderColor};
-    color: #999;
-    border: 0;
-
-    &:hover:not(.selected) {
-        color: #333;
-    }
-
-    &.selected {
-        color: ${props => props.theme.selectionBackgroundColor};
-    }
-`;
 
 interface NavigationMenuItemProps {
     navigationObject: IEezObject;
@@ -60,7 +41,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     }
 
     render() {
-        let className = classNames({
+        let className = classNames("EezStudio_NavigationMenuItemContainer", {
             selected: compareNavigationItem(
                 this.context.NavigationStore.getNavigationSelectedItem(
                     this.props.navigationObject
@@ -72,23 +53,19 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
         let icon = getClassInfo(this.props.item).icon || "extension";
 
         return (
-            <NavigationMenuItemContainer
+            <div
                 className={className}
                 title={objectToString(this.props.item)}
                 onClick={this.onClick}
             >
                 <i className="material-icons md-24">{icon}</i>
-            </NavigationMenuItemContainer>
+                <span>{objectToString(this.props.item)}</span>
+            </div>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const MenuContainer = styled.div`
-    background-color: ${props => props.theme.panelHeaderColor};
-    border-right: 1px solid ${props => props.theme.borderColor};
-`;
 
 @observer
 class Menu extends React.Component<{
@@ -112,21 +89,18 @@ class Menu extends React.Component<{
             />
         ));
         return (
-            <MenuContainer tabIndex={0} onFocus={this.onFocus.bind(this)}>
+            <div
+                className="EezStudio_MenuContainer"
+                tabIndex={0}
+                onFocus={this.onFocus.bind(this)}
+            >
                 {navigationItems}
-            </MenuContainer>
+            </div>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const MenuNavigationContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: row;
-    min-height: 0;
-`;
 
 @observer
 export class MenuNavigation extends React.Component<
@@ -141,12 +115,13 @@ export class MenuNavigation extends React.Component<
 
     render() {
         let subNavigation: JSX.Element | undefined;
-        let selectedItem = this.context.NavigationStore.getNavigationSelectedItemAsObject(
-            this.props.navigationObject
-        );
+        let selectedItem =
+            this.context.NavigationStore.getNavigationSelectedItemAsObject(
+                this.props.navigationObject
+            );
         if (selectedItem) {
-            let NavigationComponent = getClassInfo(selectedItem)
-                .navigationComponent;
+            let NavigationComponent =
+                getClassInfo(selectedItem).navigationComponent;
             if (NavigationComponent) {
                 subNavigation = (
                     <NavigationComponent
@@ -161,10 +136,10 @@ export class MenuNavigation extends React.Component<
         }
 
         return (
-            <MenuNavigationContainer>
+            <div className="EezStudio_MenuNavigationContainer">
                 <Menu navigationObject={this.props.navigationObject} />
                 {subNavigation}
-            </MenuNavigationContainer>
+            </div>
         );
     }
 }

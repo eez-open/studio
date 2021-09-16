@@ -11,7 +11,6 @@ import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
 import { TabsView } from "eez-studio-ui/tabs";
-import styled from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";
 
 import {
@@ -25,20 +24,6 @@ import { ProjectContext } from "project-editor/project/context";
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const MessageRow = styled.tr`
-    cursor: pointer;
-
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    &.selected {
-        background-color: ${props =>
-            props.theme.nonFocusedSelectionBackgroundColor};
-        color: ${props => props.theme.nonFocusedSelectionColor};
-    }
-`;
 
 @observer
 class Message extends React.Component<
@@ -73,12 +58,12 @@ class Message extends React.Component<
             text = text.substring(0, MAX_OUTPUT_MESSAGE_TEXT_SIZE) + "...";
         }
 
-        let className = classNames("message-item", {
+        let className = classNames("message-item EezStudio_MessageRow", {
             selected: this.props.message.selected
         });
 
         return (
-            <MessageRow
+            <tr
                 className={className}
                 onClick={() => this.props.onSelect(this.props.message)}
             >
@@ -86,26 +71,12 @@ class Message extends React.Component<
                     {icon} {text}
                 </td>
                 <td>{objectPath}</td>
-            </MessageRow>
+            </tr>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const MessagesDiv = styled.div`
-    flex-grow: 1;
-    overflow: auto;
-    height: 100%;
-    table {
-        width: 100%;
-
-        td:nth-child(2) {
-            padding-left: 20px;
-            width: 100%;
-        }
-    }
-`;
 
 @observer
 class Messages extends React.Component {
@@ -168,56 +139,16 @@ class Messages extends React.Component {
 
     render() {
         return (
-            <MessagesDiv ref={this.divRef}>
+            <div className="EezStudio_Messages" ref={this.divRef}>
                 <table>
                     <tbody>{this.rows}</tbody>
                 </table>
-            </MessagesDiv>
+            </div>
         );
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const OutputDiv = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-
-    &:focus {
-        .message-item {
-            &:hover {
-                background-color: ${props => props.theme.hoverBackgroundColor};
-                color: ${props => props.theme.hoverColor};
-            }
-
-            &.selected {
-                background-color: ${props =>
-                    props.theme.selectionBackgroundColor};
-                color: ${props => props.theme.selectionColor};
-                * {
-                    background-color: ${props =>
-                        props.theme.selectionBackgroundColor};
-                    color: ${props => props.theme.selectionColor};
-                }
-            }
-        }
-    }
-`;
-
-const TabsViewContainer = styled.div`
-    flex-grow: 0;
-    flex-shrink: 0;
-    display: flex;
-    justify-content: space-between;
-    background-color: ${props => props.theme.panelHeaderColor};
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-
-    > .EezStudio_Action {
-        margin-right: 8px;
-    }
-`;
 
 @observer
 export class Output extends React.Component<{}, {}> {
@@ -253,12 +184,13 @@ export class Output extends React.Component<{}, {}> {
 
     render() {
         return (
-            <OutputDiv
+            <div
+                className="EezStudio_Output"
                 tabIndex={0}
                 onFocus={this.onFocus}
                 onKeyDown={this.onKeyDown}
             >
-                <TabsViewContainer>
+                <div className="EezStudio_TabsViewContainer">
                     <TabsView
                         tabs={this.context.OutputSectionsStore.sections}
                     />
@@ -268,9 +200,9 @@ export class Output extends React.Component<{}, {}> {
                         onClick={this.onClose}
                         title="Close output panel"
                     ></IconAction>
-                </TabsViewContainer>
+                </div>
                 <Messages />
-            </OutputDiv>
+            </div>
         );
     }
 }

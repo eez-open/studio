@@ -66,29 +66,15 @@ function formatEncoding(encoding: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const SelectGlyphDialogFieldsEnclosureDiv = styled.div`
-    width: 100%;
-    height: 100%;
-
-    > table {
-        width: 100%;
-        height: 100%;
-
-        > tbody > tr:nth-child(3) > td:nth-child(2) {
-            width: 100%;
-            height: 100%;
-            position: relative;
-
-            > div {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-            }
-        }
+class SelectGlyphDialogFieldsEnclosure extends React.Component {
+    render() {
+        return (
+            <div className="EezStudio_SelectGlyphDialogFieldsEnclosure">
+                {this.props.children}
+            </div>
+        );
     }
-`;
+}
 
 export function browseGlyph(glyph: Glyph) {
     function isFont(obj: any) {
@@ -162,7 +148,7 @@ export function browseGlyph(glyph: Glyph) {
                 title,
                 width: 1200
             },
-            fieldsEnclosureDiv: SelectGlyphDialogFieldsEnclosureDiv
+            fieldsEnclosureDiv: SelectGlyphDialogFieldsEnclosure
         }
     }).then(result => {
         return {
@@ -1049,11 +1035,6 @@ registerClass(Glyph);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const GlyphSelectFieldContainerDiv = styled.div`
-    border: 1px solid ${props => props.theme.borderColor};
-    display: flex;
-`;
-
 @observer
 export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> {
     static contextType = ProjectContext;
@@ -1290,7 +1271,8 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
     render() {
         if (this.font) {
             return (
-                <GlyphSelectFieldContainerDiv
+                <div
+                    className="EezStudio_GlyphSelectFieldContainer"
                     ref={(ref: any) => (this.glyphsContainer = ref)}
                 >
                     <Glyphs
@@ -1300,7 +1282,7 @@ export class GlyphSelectFieldType extends React.Component<IFieldComponentProps> 
                         onSelectGlyph={this.onSelectGlyph.bind(this)}
                         onDoubleClickGlyph={this.onDoubleClickGlyph.bind(this)}
                     />
-                </GlyphSelectFieldContainerDiv>
+                </div>
             );
         } else {
             return (
@@ -1384,74 +1366,6 @@ const GlyphComponent = observer(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const GlyphsDiv = styled.div`
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-
-    > div:nth-child(1) {
-        flex-grow: 0;
-        flex-shrink: 0;
-        padding: 5px;
-        background-color: ${props => props.theme.panelHeaderColor};
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-        > div {
-            flex-wrap: nowrap;
-
-            > input {
-                margin-left: 4px;
-                margin-top: 3px;
-                width: 100%;
-                height: 28px;
-            }
-        }
-    }
-
-    > div:nth-child(2) {
-        flex-grow: 1;
-        overflow: auto;
-
-        ul {
-            list-style: none;
-            padding: 5px;
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        li {
-            margin: 5px;
-            border: 2px solid #eee;
-            padding: 5px;
-            background-color: white;
-            cursor: pointer;
-
-            &.selected {
-                border: 2px solid
-                    ${props => props.theme.selectionBackgroundColor};
-            }
-
-            & > div {
-                display: flex;
-                align-items: center;
-                flex-direction: column;
-
-                & > div {
-                    text-align: center;
-                }
-
-                & > div {
-                    position: "relative";
-                    width: 100px;
-                    overflow: visible;
-                    white-space: nowrap;
-                    font-size: 80%;
-                    font-family: monospace;
-                }
-            }
-        }
-    }
-`;
 
 @observer
 class Glyphs extends React.Component<{
@@ -1575,7 +1489,7 @@ class Glyphs extends React.Component<{
         }
 
         return (
-            <GlyphsDiv>
+            <div className="EezStudio_Glyphs">
                 <div>
                     <div className="btn-toolbar" role="toolbar">
                         <SearchInput
@@ -1593,7 +1507,7 @@ class Glyphs extends React.Component<{
                 <div>
                     <ul ref={ref => (this.list = ref!)}>{glyphs}</ul>
                 </div>
-            </GlyphsDiv>
+            </div>
         );
     }
 }

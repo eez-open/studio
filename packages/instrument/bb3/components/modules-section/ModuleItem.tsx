@@ -4,20 +4,10 @@ import classNames from "classnames";
 
 import { compareVersions } from "eez-studio-shared/util";
 import { Loader } from "eez-studio-ui/loader";
-import styled from "eez-studio-ui/styled-components";
 
 import { Module } from "instrument/bb3/objects/Module";
 import { openLink } from "instrument/bb3/helpers";
 import { MODULE_FIRMWARE_RELEASES_PAGE } from "instrument/bb3/conf";
-
-const OtherReleasesDiv = styled.div`
-    margin-top: 10px;
-
-    a[aria-expanded="true"] .chevron-right {
-        transition: 0.3s transform ease-in-out;
-        transform: rotate(90deg);
-    }
-`;
 
 const OtherReleases = observer(
     ({
@@ -47,7 +37,7 @@ const OtherReleases = observer(
         }
 
         return (
-            <OtherReleasesDiv>
+            <div className="EezStudio_BB3_OtherReleases">
                 <p>
                     <a
                         className="btn btn-light"
@@ -110,7 +100,7 @@ const OtherReleases = observer(
                         </tbody>
                     </table>
                 </div>
-            </OtherReleasesDiv>
+            </div>
         );
     }
 );

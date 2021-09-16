@@ -10,24 +10,26 @@ import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { Section } from "instrument/bb3/components/Section";
 
-export const ShortcutsSection = observer(({ appStore }: { appStore: InstrumentAppStore }) => {
-    return (
-        <Section
-            title="Shortcuts"
-            body={
-                <ShortcutsToolbar
-                    appStore={appStore}
-                    executeShortcut={shortcut => {
-                        executeShortcut(appStore, shortcut);
-                    }}
-                    style={{
-                        border: 0,
-                        backgroundColor: theme.panelHeaderColor,
-                        padding: 0,
-                        margin: 0
-                    }}
-                />
-            }
-        />
-    );
-});
+export const ShortcutsSection = observer(
+    ({ appStore }: { appStore: InstrumentAppStore }) => {
+        return (
+            <Section
+                title="Shortcuts"
+                body={
+                    <ShortcutsToolbar
+                        appStore={appStore}
+                        executeShortcut={shortcut => {
+                            executeShortcut(appStore, shortcut);
+                        }}
+                        style={{
+                            border: 0,
+                            backgroundColor: theme().panelHeaderColor,
+                            padding: 0,
+                            margin: 0
+                        }}
+                    />
+                }
+            />
+        );
+    }
+);

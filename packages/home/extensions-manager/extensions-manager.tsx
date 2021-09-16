@@ -25,7 +25,6 @@ import {
 } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 
-import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
     VerticalHeaderWithBody,
@@ -303,9 +302,10 @@ export class ExtensionInMasterView extends React.Component<
 > {
     @computed
     get extensionInstalled() {
-        const extensionVersions = extensionsManagerStore.getExtensionVersionsById(
-            this.props.extension.id
-        );
+        const extensionVersions =
+            extensionsManagerStore.getExtensionVersionsById(
+                this.props.extension.id
+            );
         return extensionVersions && extensionVersions.installedVersion;
     }
 
@@ -504,9 +504,8 @@ class MasterView extends React.Component {
                                     (
                                         event: React.ChangeEvent<HTMLSelectElement>
                                     ) =>
-                                        (extensionsManagerStore.viewFilter = parseInt(
-                                            event.currentTarget.value
-                                        ))
+                                        (extensionsManagerStore.viewFilter =
+                                            parseInt(event.currentTarget.value))
                                 )}
                             >
                                 <option value={ViewFilter.ALL.toString()}>
@@ -859,44 +858,6 @@ export function downloadAndInstallExtension(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ExtensionDetailsHeader = styled(Header)`
-    display: flex;
-    flex-direction: row;
-    padding: 10px;
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-    * {
-        user-select: auto;
-    }
-
-    pre {
-        font-family: inherit;
-        font-size: 100%;
-        white-space: pre-wrap;
-    }
-`;
-
-const ExtensionDetailsHeaderImageContainer = styled.div`
-    flex-grow: 0;
-    flex-shrink: 0;
-    padding-right: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-`;
-
-const ExtensionDetailsHeaderProperties = styled.div`
-    flex-grow: 1;
-    flex-shrink: 0;
-    width: 0;
-`;
-
-const ExtensionDetailsHeaderPropertiesNameAndVersion = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-`;
-
 @observer
 export class DetailsView extends React.Component {
     @observable selectedVersion: string;
@@ -1130,8 +1091,8 @@ export class DetailsView extends React.Component {
 
         return (
             <VerticalHeaderWithBody>
-                <ExtensionDetailsHeader>
-                    <ExtensionDetailsHeaderImageContainer>
+                <Header className="EezStudio_ExtensionDetailsHeader">
+                    <div className="EezStudio_ExtensionDetailsHeaderImageContainer">
                         <img src={extension.image} width={256} />
                         {extension.type == "instrument" && (
                             <a
@@ -1142,20 +1103,20 @@ export class DetailsView extends React.Component {
                                 Change image
                             </a>
                         )}
-                    </ExtensionDetailsHeaderImageContainer>
-                    <ExtensionDetailsHeaderProperties>
-                        <ExtensionDetailsHeaderPropertiesNameAndVersion>
+                    </div>
+                    <div className="EezStudio_ExtensionDetailsHeaderProperties">
+                        <div className="EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion">
                             <h5>{extension.displayName || extension.name}</h5>
                             <div className="form-inline">
                                 <label
-                                    className="my-1 mr-2"
+                                    className="my-1 me-2"
                                     htmlFor="EezStudio_Extension_Details_VersionSelect"
                                 >
                                     Versions:
                                 </label>
                                 <select
                                     id="EezStudio_Extension_Details_VersionSelect"
-                                    className="custom-select my-1 mr-sm-2"
+                                    className="custom-select my-1 me-sm-2"
                                     value={this.selectedVersion}
                                     onChange={action(
                                         (
@@ -1178,7 +1139,7 @@ export class DetailsView extends React.Component {
                                     )}
                                 </select>
                             </div>
-                        </ExtensionDetailsHeaderPropertiesNameAndVersion>
+                        </div>
                         <div>{DetailsView.getFullDescription(extension)}</div>
                         <div>{extension.author}</div>
                         <div style={{ marginBottom: "10px" }}>
@@ -1226,8 +1187,8 @@ export class DetailsView extends React.Component {
                                 />
                             )}
                         </Toolbar>
-                    </ExtensionDetailsHeaderProperties>
-                </ExtensionDetailsHeader>
+                    </div>
+                </Header>
                 <Body>
                     <ExtensionSections extension={extension} />
                 </Body>

@@ -22,7 +22,6 @@ import {
     RangeProperty,
     ButtonProperty
 } from "eez-studio-ui/properties";
-import styled from "eez-studio-ui/styled-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -128,10 +127,6 @@ export class RadioGroupProperty extends React.Component<
         );
     }
 }
-
-const Card = styled.div`
-    margin-left: 20px;
-`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -457,9 +452,13 @@ export class GenericDialog extends React.Component<
                                         }}
                                     >
                                         <div>{children}</div>
-                                        <Card>
+                                        <div
+                                            style={{
+                                                marginLeft: 20
+                                            }}
+                                        >
                                             <img src={image} />
-                                        </Card>
+                                        </div>
                                     </div>
                                 );
                             }

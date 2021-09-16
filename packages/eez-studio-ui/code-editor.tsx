@@ -3,12 +3,12 @@ import { bind } from "bind-decorator";
 
 import { guid } from "eez-studio-shared/guid";
 
-import styled from "eez-studio-ui/styled-components";
 import { PropertyEnclosure } from "eez-studio-ui/properties";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 import { addScript } from "eez-studio-shared/dom";
+import classNames from "classnames";
 
 function createEditor(
     element: HTMLElement,
@@ -112,10 +112,6 @@ function openSearchbox(editor: any) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const CodeEditorDiv = styled.div`
-    flex-grow: 1;
-`;
 
 export type CodeEditorMode =
     | "c_cpp"
@@ -244,9 +240,12 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
 
     render() {
         return (
-            <CodeEditorDiv
+            <div
                 ref={(ref: any) => (this.element = ref!)}
-                className={this.props.className}
+                className={classNames(
+                    "EezStudio_CodeEditor",
+                    this.props.className
+                )}
                 style={this.props.style}
                 tabIndex={this.props.tabIndex}
             />

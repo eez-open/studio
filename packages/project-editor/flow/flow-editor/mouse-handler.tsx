@@ -272,10 +272,10 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
                         width: this.rubberBendRect.width,
                         height: this.rubberBendRect.height,
                         backgroundColor: addAlphaToColor(
-                            theme.selectionBackgroundColor,
+                            theme().selectionBackgroundColor,
                             0.5
                         ),
-                        border: `1px solid ${theme.selectionBackgroundColor}`
+                        border: `1px solid ${theme().selectionBackgroundColor}`
                     }}
                 />
             )

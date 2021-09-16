@@ -5,22 +5,11 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import styled from "eez-studio-ui/styled-components";
-
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { HistoryItem } from "instrument/window/history/item";
 import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const AnswerHistoryItemDiv = styled(HistoryItemDiv)`
-    background-color: lightblue;
-    margin-left: 40px;
-    max-width: calc(100% - 40px);
-    pre {
-        user-select: text;
-    }
-`;
 
 @observer
 export class AnswerHistoryItemComponent extends React.Component<
@@ -47,7 +36,9 @@ export class AnswerHistoryItemComponent extends React.Component<
         if (message.length > 1024 && !this.showAll) {
             content = (
                 <PreventDraggable tag="div">
-                    <pre className={textClassName}>{message.slice(0, 1024)}</pre>
+                    <pre className={textClassName}>
+                        {message.slice(0, 1024)}
+                    </pre>
                     <div style={{ margin: "5px 0" }}>
                         <button
                             className="btn btn-sm"
@@ -67,15 +58,15 @@ export class AnswerHistoryItemComponent extends React.Component<
         }
 
         return (
-            <AnswerHistoryItemDiv>
+            <div className="EezStudio_AnswerHistoryItem">
                 <p>
-                    <HistoryItemDate>
+                    <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
-                    </HistoryItemDate>
+                    </small>
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
                 {content}
-            </AnswerHistoryItemDiv>
+            </div>
         );
     }
 }

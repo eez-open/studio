@@ -8,7 +8,6 @@ import { _filter, _map, _each } from "eez-studio-shared/algorithm";
 import { hasClass } from "eez-studio-shared/dom";
 
 import { Icon } from "eez-studio-ui/icon";
-import styled from "eez-studio-ui/styled-components";
 
 import {
     ITreeAdapter,
@@ -170,149 +169,6 @@ const TreeRow = observer(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const TreeDiv = styled.div`
-    flex-grow: 1;
-    overflow: auto;
-    padding: 5px;
-    border: 2px dashed transparent;
-    height: 100%;
-    position: relative;
-
-    & > div {
-        position: absolute;
-        min-width: calc(100% - 10px);
-        padding-bottom: 5px;
-    }
-
-    &.zero-level .tree-row-label {
-        margin-left: 0 !important;
-    }
-
-    &:not(.drag-source) {
-        .tree-row:not(.drag-source) {
-            &.selected {
-                background-color: ${props =>
-                    props.theme.nonFocusedSelectionBackgroundColor};
-                color: ${props => props.theme.nonFocusedSelectionColor};
-            }
-        }
-
-        &:focus {
-            .tree-row:not(.drag-source) {
-                &:hover {
-                    background-color: ${props =>
-                        props.theme.hoverBackgroundColor};
-                    color: ${props => props.theme.hoverColor};
-                }
-
-                &.focused {
-                    background-color: ${props =>
-                        props.theme.focusBackgroundColor};
-                    color: ${props => props.theme.focusColor};
-                }
-
-                &.selected {
-                    background-color: ${props =>
-                        props.theme.selectionBackgroundColor};
-                    color: ${props => props.theme.selectionColor};
-                }
-            }
-        }
-    }
-
-    .tree-row {
-        white-space: nowrap;
-
-        &.drag-source {
-            background-color: ${props => props.theme.dragSourceBackgroundColor};
-            color: ${props => props.theme.dragSourceColor};
-        }
-
-        &.drop-target {
-            background-color: ${props => props.theme.dropTargetBackgroundColor};
-            color: ${props => props.theme.dropTargetColor};
-        }
-
-        .tree-row-label {
-            display: inline-block;
-            margin-left: 18px;
-        }
-
-        .tree-row-triangle {
-            color: #333;
-        }
-
-        .tree-row-triangle:hover {
-            color: #666;
-        }
-
-        &:hover {
-            & > .EditIcon {
-                visibility: visible;
-            }
-        }
-
-        & > .EditIcon {
-            cursor: pointer;
-            float: right;
-            visibility: hidden;
-            color: ${props => props.theme.actionTextColor};
-            &:hover {
-                color: ${props => props.theme.actionHoverColor};
-            }
-        }
-
-        &.selected {
-            & > .EditIcon {
-                color: white;
-                &:hover {
-                    color: #ddd;
-                }
-            }
-        }
-    }
-
-    .DropMark {
-        position: absolute;
-        height: 0;
-
-        > div:nth-child(1) {
-            position: relative;
-            left: -2px;
-            top: 0;
-            height: 2px;
-            border-top: 2px solid ${props => props.theme.dropPlaceColor};
-
-            > div:nth-child(1) {
-                position: relative;
-                top: -5px;
-                width: 0;
-                height: 0;
-                border-top: 4px solid transparent;
-                border-bottom: 4px solid transparent;
-                border-left: 4px solid ${props => props.theme.dropPlaceColor};
-            }
-
-            > div:nth-child(2) {
-                position: relative;
-                top: -13px;
-                left: calc(100% - 4px);
-                width: 0;
-                height: 0;
-                border-top: 4px solid transparent;
-                border-bottom: 4px solid transparent;
-                border-right: 4px solid ${props => props.theme.dropPlaceColor};
-            }
-        }
-
-        > div:nth-child(2) {
-            position: relative;
-            width: 1px;
-            border-left: 1px solid ${props => props.theme.dropPlaceColor};
-        }
-    }
-`;
 
 interface TreeProps {
     treeAdapter: ITreeAdapter;
@@ -871,7 +727,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         const { treeAdapter, tabIndex, onFocus, onEditItem, renderItem } =
             this.props;
 
-        const className = classNames({
+        const className = classNames("EezStudio_Tree", {
             "drag-source":
                 treeAdapter.draggableAdapter &&
                 treeAdapter.draggableAdapter.isDragging,
@@ -879,7 +735,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         });
 
         return (
-            <TreeDiv
+            <div
                 className={className}
                 tabIndex={tabIndex}
                 onKeyDown={this.onKeyDown}
@@ -930,7 +786,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                         />
                     )}
                 </div>
-            </TreeDiv>
+            </div>
         );
     }
 }

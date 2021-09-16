@@ -1,0 +1,91 @@
+import React from "react";
+import { observer } from "mobx-react";
+import { bind } from "bind-decorator";
+import { isDark } from "eez-studio-shared/color";
+import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
+import { getProperty } from "project-editor/core/object";
+import { getThemedColor } from "project-editor/features/style/theme";
+import { ProjectContext } from "project-editor/project/context";
+import { theme } from "eez-studio-ui/theme";
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ThemedColorInput extends React.Component<{
+    value: any;
+    onChange: (newValue: any) => void;
+    readOnly: boolean;
+}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    @bind
+    onDragOver(event: React.DragEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var data = getEezStudioDataFromDragEvent(this.context, event);
+        if (data && data.objectClassName === "Color" && data.object) {
+            event.dataTransfer.dropEffect = "copy";
+        }
+    }
+
+    @bind
+    onDrop(event: React.DragEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        var data = getEezStudioDataFromDragEvent(this.context, event);
+        if (data && data.objectClassName === "Color" && data.object) {
+            this.props.onChange(getProperty(data.object, "name"));
+        }
+    }
+
+    @bind
+    async onChange(event: React.ChangeEvent<HTMLInputElement>) {
+        const color = event.target.value;
+        // const color16bits = to16bitsColor(color);
+        // if (!compareColors(color, color16bits)) {
+        //     await info(
+        //         "Selected color is using more then 16 bits (i.e. 5-6-5 RGB color scheme).",
+        //         "It will be saved as is but it will be truncated to 16 bits before displaying and building."
+        //     );
+        // }
+        this.props.onChange(color);
+    }
+
+    render() {
+        const { value, readOnly } = this.props;
+
+        const color = getThemedColor(this.context, value);
+
+        return (
+            <label
+                className="form-label"
+                style={{
+                    color: isDark(color) ? "#fff" : undefined,
+                    backgroundColor: color,
+                    textAlign: "center",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    width: "100%",
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: `1px solid ${theme().borderColor}`
+                }}
+                onDrop={this.onDrop}
+                onDragOver={this.onDragOver}
+            >
+                <input
+                    type="color"
+                    hidden
+                    value={value}
+                    onChange={this.onChange}
+                    readOnly={readOnly}
+                />
+                {value}
+            </label>
+        );
+    }
+}

@@ -23,7 +23,6 @@ import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { SAMPLING_RATE_UNIT } from "eez-studio-shared/units";
 import { IActivityLogEntry, logUpdate } from "eez-studio-shared/activity-log";
 
-import styled from "eez-studio-ui/styled-components";
 import * as UiPropertiesModule from "eez-studio-ui/properties";
 import { Balloon } from "eez-studio-ui/balloon";
 import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
@@ -42,11 +41,7 @@ import {
 } from "instrument/window/note-dialog";
 
 import { IAppStore } from "instrument/window/history/history";
-import {
-    HistoryItem,
-    HistoryItemDiv,
-    HistoryItemDate
-} from "instrument/window/history/item";
+import { HistoryItem } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import { Waveform, convertToCsv } from "instrument/window/waveform/generic";
@@ -55,47 +50,6 @@ import { convertDlogToCsv } from "instrument/connection/file-type-utils";
 import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const FileHistoryItemDiv = styled(HistoryItemDiv)`
-    display: flex;
-    flex-direction: row;
-    background-color: lightsteelblue;
-    padding: 10px;
-    overflow: auto;
-
-    .EezStudio_Toolbar {
-        margin-top: 5px;
-    }
-
-    .EezStudio_HistoryItem_File_Note {
-        position: relative;
-        margin: auto;
-        overflow: visible;
-        border-radius: 0;
-        padding: 0;
-        margin-top: 10px;
-        min-width: 240px;
-
-        .EezStudio_Toolbar {
-            position: absolute;
-            display: none;
-            top: 5px;
-            right: 5px;
-        }
-
-        &:hover .EezStudio_Toolbar {
-            display: block;
-        }
-    }
-
-    .EezStudio_HistoryItem_File_NoNote {
-        margin-bottom: 10px;
-    }
-
-    .EezStudio_HistoryItemText * {
-        user-select: auto;
-    }
-`;
 
 @observer
 class ImagePreview extends React.Component<{
@@ -590,9 +544,9 @@ export class FileHistoryItemComponent extends React.Component<
         }
 
         return (
-            <FileHistoryItemDiv>
+            <div className="EezStudio_FileHistoryItem">
                 <Icon
-                    className="mr-3"
+                    className="me-3"
                     icon={
                         this.props.historyItem.direction === "upload"
                             ? "material:file_upload"
@@ -604,14 +558,14 @@ export class FileHistoryItemComponent extends React.Component<
                 />
                 <div>
                     <p>
-                        <HistoryItemDate>
+                        <small className="EezStudio_HistoryItemDate text-muted">
                             {formatDateTimeLong(this.props.historyItem.date)}
-                        </HistoryItemDate>
+                        </small>
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
                     {body}
                 </div>
-            </FileHistoryItemDiv>
+            </div>
         );
     }
 }

@@ -253,6 +253,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
         path: getObjectPathAsString(flow),
         pathReadable: getHumanReadableObjectPath(flow),
         components: [],
+        localVariables: [],
         widgetDataItems: [],
         widgetActions: []
     };
@@ -267,6 +268,12 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
     );
 
     // localVariables
+    assets.map.flows[flowIndex].localVariables = flow.localVariables.map(
+        (localVariable, index) => ({
+            index,
+            name: localVariable.name
+        })
+    );
     dataBuffer.writeArray(
         flow.localVariables,
         localVariable =>
@@ -344,6 +351,12 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             );
 
             // globalVariables
+            assets.map.globalVariables = assets.globalVariables.map(
+                (globalVariable, index) => ({
+                    index,
+                    name: globalVariable.name
+                })
+            );
             dataBuffer.writeArray(
                 assets.globalVariables,
                 globalVariable =>

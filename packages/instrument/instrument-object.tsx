@@ -20,7 +20,6 @@ import { IUnit } from "eez-studio-shared/units";
 import { db } from "eez-studio-shared/db";
 import { _defer } from "eez-studio-shared/algorithm";
 
-import styled from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 
 import * as MainWindowModule from "main/window";
@@ -74,47 +73,6 @@ const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
     image: "../eez-studio-ui/_images/object-implementation-not-found.svg",
     properties: {}
 };
-
-const InstrumentContent = styled.div`
-    width: 100%;
-    height: 100%;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-
-    & > * {
-        flex-grow: 0;
-        flex-shrink: 0;
-        overflow-wrap: anywhere;
-    }
-
-    img {
-        display: block;
-        object-fit: contain;
-        width: 100%;
-    }
-`;
-
-const InstrumentConnectionState = styled.div`
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-
-    span:nth-child(1) {
-        border-radius: 8px;
-        width: 16px;
-        height: 16px;
-        margin-right: 5px;
-    }
-`;
-
-const InstrumentLabel = styled.div`
-    font-weight: bold;
-`;
 
 export class InstrumentObject {
     constructor(props: IInstrumentObjectProps) {
@@ -629,10 +587,10 @@ export class InstrumentObject {
         const { Icon } = require("eez-studio-ui/icon");
 
         return (
-            <InstrumentContent>
+            <div className="EezStudio_InstrumentContent">
                 {this.image && <img src={this.image} draggable={false} />}
-                <InstrumentLabel>{this.name}</InstrumentLabel>
-                <InstrumentConnectionState>
+                <div className="EezStudio_InstrumentLabel">{this.name}</div>
+                <div className="EezStudio_InstrumentConnectionState">
                     <span
                         style={{
                             backgroundColor: this.connectionState.color
@@ -642,8 +600,8 @@ export class InstrumentObject {
                     {this.connectionState.error && (
                         <Icon className="text-danger" icon="material:error" />
                     )}
-                </InstrumentConnectionState>
-            </InstrumentContent>
+                </div>
+            </div>
         );
     }
 

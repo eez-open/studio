@@ -4,9 +4,12 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
-import { VerticalHeaderWithBody, Header, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    Header,
+    Body
+} from "eez-studio-ui/header-with-body";
 
 @observer
 export class DockablePanels extends React.Component<{
@@ -59,7 +62,10 @@ export class DockablePanels extends React.Component<{
         } else {
             if (this.containerDiv) {
                 try {
-                    this.goldenLayout = new GoldenLayout(this.layoutConfig, this.containerDiv);
+                    this.goldenLayout = new GoldenLayout(
+                        this.layoutConfig,
+                        this.containerDiv
+                    );
                     this.props.registerComponents(this.goldenLayout);
                     this.goldenLayout.on("stateChanged", this.onStateChanged);
                     this.goldenLayout.init();
@@ -83,15 +89,22 @@ export class DockablePanels extends React.Component<{
             if (this.props.onStateChanged) {
                 this.props.onStateChanged(this.goldenLayout.toConfig());
             } else if (this.props.layoutId) {
-                localStorage.setItem(this.props.layoutId, JSON.stringify(this.layoutState));
+                localStorage.setItem(
+                    this.props.layoutId,
+                    JSON.stringify(this.layoutState)
+                );
             }
         }
     }
 
     updateSize() {
         if (this.goldenLayout) {
-            const rect = this.containerDiv!.parentElement!.getBoundingClientRect();
-            if (this.lastWidth !== rect.width || this.lastHeight !== rect.height) {
+            const rect =
+                this.containerDiv!.parentElement!.getBoundingClientRect();
+            if (
+                this.lastWidth !== rect.width ||
+                this.lastHeight !== rect.height
+            ) {
                 this.goldenLayout.updateSize(rect.width, rect.height);
                 this.lastWidth = rect.width;
                 this.lastHeight = rect.height;
@@ -149,13 +162,18 @@ export class SideDock extends React.Component<{
         super(props);
 
         this.isOpen =
-            localStorage.getItem(this.props.persistId + "/is-open") === "0" ? false : true;
+            localStorage.getItem(this.props.persistId + "/is-open") === "0"
+                ? false
+                : true;
     }
 
     @action.bound
     toggleIsOpen() {
         this.isOpen = !this.isOpen;
-        localStorage.setItem(this.props.persistId + "/is-open", this.isOpen ? "1" : "0");
+        localStorage.setItem(
+            this.props.persistId + "/is-open",
+            this.isOpen ? "1" : "0"
+        );
     }
 
     updateSize() {
@@ -169,7 +187,12 @@ export class SideDock extends React.Component<{
             EezStudio_SideDockSwitch_Closed: !this.isOpen
         });
 
-        const dockSwitcher = <div className={dockSwitcherClassName} onClick={this.toggleIsOpen} />;
+        const dockSwitcher = (
+            <div
+                className={dockSwitcherClassName}
+                onClick={this.toggleIsOpen}
+            />
+        );
 
         let sideDock;
 
@@ -228,71 +251,3 @@ export class SideDock extends React.Component<{
         }
     }
 }
-
-export const SideDockViewContainer = styled.div`
-    height: 100%;
-    overflow: auto;
-    padding: 10px;
-
-    .EezStudio_SideDockView_PropertyLabel:not(:last-child) {
-        margin-bottom: 5px;
-    }
-
-    .EezStudio_SideDockView_Property:not(:last-child) {
-        margin-bottom: 5px;
-    }
-
-    .EezStudio_SideDockView_Property {
-        margin-left: 16px;
-    }
-
-    table {
-        margin-left: 16px;
-        font-size: 80%;
-
-        td {
-            text-align: center;
-        }
-
-        td:first-child {
-            max-width: 120px;
-            text-align: left;
-            padding-right: 4px;
-        }
-
-        input {
-            padding: 0;
-            padding-left: 5px;
-        }
-    }
-
-    & > div {
-        padding-bottom: 10px;
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-        margin-bottom: 10px;
-    }
-
-    & > div:last-child {
-        padding-bottom: 0;
-        margin-bottom: 0;
-        border-bottom: none;
-    }
-
-    & > .EezStudio_AxisRulersProperties {
-        border-bottom: 0;
-        margin-bottom: 0;
-
-        .EezStudio_SideDockView_Property {
-            margin-left: 0;
-        }
-
-        td:nth-child(1) {
-            padding-right: 0;
-        }
-
-        td:nth-child(3),
-        td:nth-child(5) {
-            padding-left: 5px;
-        }
-    }
-`;

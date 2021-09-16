@@ -45,15 +45,13 @@ export class NavigationStore {
             icon: "material:navigate_next",
             title: "Terminal",
             renderContent: () => {
-                const {
-                    render
-                } = require("instrument/window/terminal/terminal") as typeof TerminalModule;
+                const { render } =
+                    require("instrument/window/terminal/terminal") as typeof TerminalModule;
                 return appStore.instrument ? render(this.appStore) : <div />;
             },
             renderToolbarButtons: () => {
-                const {
-                    renderToolbarButtons
-                } = require("instrument/window/terminal/terminal") as typeof TerminalModule;
+                const { renderToolbarButtons } =
+                    require("instrument/window/terminal/terminal") as typeof TerminalModule;
                 return appStore.instrument ? (
                     renderToolbarButtons(this.appStore)
                 ) : (
@@ -68,9 +66,8 @@ export class NavigationStore {
             icon: "",
             title: "",
             renderContent: () => {
-                const {
-                    DeletedHistoryItemsView
-                } = require("instrument/window/history/deleted-history-items-view") as typeof DeletedHistoryItemsModule;
+                const { DeletedHistoryItemsView } =
+                    require("instrument/window/history/deleted-history-items-view") as typeof DeletedHistoryItemsModule;
                 return (
                     <DeletedHistoryItemsView
                         appStore={this.appStore}
@@ -79,9 +76,8 @@ export class NavigationStore {
                 );
             },
             renderToolbarButtons: () => {
-                const {
-                    DeletedHistoryItemsTools
-                } = require("instrument/window/history/deleted-history-items-view") as typeof DeletedHistoryItemsModule;
+                const { DeletedHistoryItemsTools } =
+                    require("instrument/window/history/deleted-history-items-view") as typeof DeletedHistoryItemsModule;
                 return <DeletedHistoryItemsTools appStore={this.appStore} />;
             }
         };
@@ -91,15 +87,13 @@ export class NavigationStore {
             icon: "material:slideshow",
             title: "Scripts",
             renderContent: () => {
-                const {
-                    render
-                } = require("instrument/window/scripts") as typeof ScriptsModule;
+                const { render } =
+                    require("instrument/window/scripts") as typeof ScriptsModule;
                 return render(this.appStore);
             },
             renderToolbarButtons: () => {
-                const {
-                    toolbarButtonsRender
-                } = require("instrument/window/scripts") as typeof ScriptsModule;
+                const { toolbarButtonsRender } =
+                    require("instrument/window/scripts") as typeof ScriptsModule;
                 return toolbarButtonsRender(this.appStore);
             }
         };
@@ -107,17 +101,15 @@ export class NavigationStore {
         this.shortcutsAndGroupsNavigationItem = {
             id: "shortcutsAndGroups",
             icon: "material:playlist_play",
-            title: "Shortcuts and Groups",
+            title: "Shortcuts",
             renderContent: () => {
-                const {
-                    render
-                } = require("instrument/window/shortcuts") as typeof ShortcutsModule;
+                const { render } =
+                    require("instrument/window/shortcuts") as typeof ShortcutsModule;
                 return render(this.appStore);
             },
             renderToolbarButtons: () => {
-                const {
-                    toolbarButtonsRender
-                } = require("instrument/window/shortcuts") as typeof ShortcutsModule;
+                const { toolbarButtonsRender } =
+                    require("instrument/window/shortcuts") as typeof ShortcutsModule;
                 return toolbarButtonsRender(this.appStore);
             }
         };
@@ -127,15 +119,13 @@ export class NavigationStore {
             icon: "material:timeline",
             title: "Lists",
             renderContent: () => {
-                const {
-                    render
-                } = require("instrument/window/lists/lists") as typeof ListsModule;
+                const { render } =
+                    require("instrument/window/lists/lists") as typeof ListsModule;
                 return appStore.instrument ? render(this.appStore) : <div />;
             },
             renderToolbarButtons: () => {
-                const {
-                    toolbarButtonsRender
-                } = require("instrument/window/lists/lists") as typeof ListsModule;
+                const { toolbarButtonsRender } =
+                    require("instrument/window/lists/lists") as typeof ListsModule;
                 return toolbarButtonsRender(this.appStore);
             }
         };
@@ -165,15 +155,13 @@ export class NavigationStore {
                 icon: "material:dashboard",
                 title: "Start Page",
                 renderContent: () => {
-                    const {
-                        render
-                    } = require("instrument/bb3") as typeof Bb3Module;
+                    const { render } =
+                        require("instrument/bb3") as typeof Bb3Module;
                     return render(this.appStore);
                 },
                 renderToolbarButtons: () => {
-                    const {
-                        toolbarButtonsRender
-                    } = require("instrument/bb3") as typeof Bb3Module;
+                    const { toolbarButtonsRender } =
+                        require("instrument/bb3") as typeof Bb3Module;
                     return toolbarButtonsRender(this.appStore);
                 }
             };

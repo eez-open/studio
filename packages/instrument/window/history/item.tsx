@@ -2,12 +2,12 @@ import React from "react";
 import { observable } from "mobx";
 
 import { formatDuration } from "eez-studio-shared/util";
-import { IActivityLogEntry, loadData, logDelete } from "eez-studio-shared/activity-log";
-
-import styled from "eez-studio-ui/styled-components";
-
+import {
+    IActivityLogEntry,
+    loadData,
+    logDelete
+} from "eez-studio-shared/activity-log";
 import { IAppStore } from "instrument/window/history/history";
-
 import { itemsStore, getSource } from "notebook/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +38,10 @@ export class HistoryItem implements IHistoryItem {
     @observable selected: boolean;
     deleted: boolean;
 
-    constructor(activityLogEntry: IActivityLogEntry, public appStore: IAppStore) {
+    constructor(
+        activityLogEntry: IActivityLogEntry,
+        public appStore: IAppStore
+    ) {
         this.id = activityLogEntry.id;
         this.sid = activityLogEntry.sid;
         this.oid = activityLogEntry.oid;
@@ -114,7 +117,7 @@ export class HistoryItem implements IHistoryItem {
             if (source) {
                 return (
                     <p>
-                        <HistoryItemDate>{`Source: ${source.instrumentName}`}</HistoryItemDate>
+                        <small className="EezStudio_HistoryItemDate text-muted">{`Source: ${source.instrumentName}`}</small>
                     </p>
                 );
             }
@@ -122,27 +125,3 @@ export class HistoryItem implements IHistoryItem {
         return null;
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const HistoryItemDiv = styled.div`
-    border-radius: 8px;
-    padding: 0px 10px;
-    overflow: visible;
-
-    p,
-    pre {
-        margin-bottom: 0;
-    }
-
-    pre {
-        user-select: auto;
-    }
-`;
-
-export const HistoryItemDate = styled.small.attrs({
-    className: "EezStudio_HistoryItemDate text-muted"
-})`
-    padding-right: 10px;
-    user-select: auto;
-`;

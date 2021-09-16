@@ -14,30 +14,39 @@ import { IAppStore } from "instrument/window/history/history";
 import { HistoryListComponent } from "instrument/window/history/list-component";
 import { SearchResults } from "instrument/window/history/search-results";
 import { Calendar } from "instrument/window/history/calendar";
-import { HistoryContainer, HistoryBody } from "instrument/window/history/history-view";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class DeletedHistoryItemsTools extends React.Component<{ appStore: IAppStore }> {
+export class DeletedHistoryItemsTools extends React.Component<{
+    appStore: IAppStore;
+}> {
     render() {
         let actions = [];
 
-        if (this.props.appStore.deletedItemsHistory.selection.items.length > 0) {
+        if (
+            this.props.appStore.deletedItemsHistory.selection.items.length > 0
+        ) {
             actions.push(
                 <IconAction
                     key="restore"
                     icon="material:restore"
                     title="Restore selected history items"
                     style={{ marginLeft: 20 }}
-                    onClick={this.props.appStore.deletedItemsHistory.restoreSelectedHistoryItems}
+                    onClick={
+                        this.props.appStore.deletedItemsHistory
+                            .restoreSelectedHistoryItems
+                    }
                 />,
                 <IconAction
                     key="purge"
                     color="#dc3545"
                     icon="material:delete_forever"
                     title="Purge selected history items"
-                    onClick={this.props.appStore.deletedItemsHistory.deleteSelectedHistoryItems}
+                    onClick={
+                        this.props.appStore.deletedItemsHistory
+                            .deleteSelectedHistoryItems
+                    }
                 />
             );
         } else {
@@ -55,8 +64,12 @@ export class DeletedHistoryItemsTools extends React.Component<{ appStore: IAppSt
 
         actions.push(
             <span key="deletedItems" style={{ paddingRight: 10 }}>
-                {`${this.props.appStore.deletedItemsHistory.deletedCount} deleted ${
-                    this.props.appStore.deletedItemsHistory.deletedCount !== 1 ? "items" : "item"
+                {`${
+                    this.props.appStore.deletedItemsHistory.deletedCount
+                } deleted ${
+                    this.props.appStore.deletedItemsHistory.deletedCount !== 1
+                        ? "items"
+                        : "item"
                 }`}
             </span>
         );
@@ -93,7 +106,9 @@ export class DeletedHistoryItemsView extends React.Component<{
             this.sideDock.updateSize();
         }
 
-        this.animationFrameRequestId = window.requestAnimationFrame(this.frameAnimation);
+        this.animationFrameRequestId = window.requestAnimationFrame(
+            this.frameAnimation
+        );
     }
 
     componentDidMount() {
@@ -119,39 +134,47 @@ export class DeletedHistoryItemsView extends React.Component<{
     registerComponents(factory: any) {
         const appStore = this.props.appStore;
 
-        factory.registerComponent("SearchResults", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <div
-                        style={{
-                            position: "absolute",
-                            width: "100%",
-                            height: "100%",
-                            display: "flex"
-                        }}
-                    >
-                        <SearchResults history={appStore.deletedItemsHistory} />
-                    </div>
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "SearchResults",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme()}>
+                        <div
+                            style={{
+                                position: "absolute",
+                                width: "100%",
+                                height: "100%",
+                                display: "flex"
+                            }}
+                        >
+                            <SearchResults
+                                history={appStore.deletedItemsHistory}
+                            />
+                        </div>
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
 
-        factory.registerComponent("Calendar", function (container: any, props: any) {
-            ReactDOM.render(
-                <ThemeProvider theme={theme}>
-                    <div
-                        style={{
-                            height: "100%",
-                            overflow: "auto"
-                        }}
-                    >
-                        <Calendar history={appStore.deletedItemsHistory} />
-                    </div>
-                </ThemeProvider>,
-                container.getElement()[0]
-            );
-        });
+        factory.registerComponent(
+            "Calendar",
+            function (container: any, props: any) {
+                ReactDOM.render(
+                    <ThemeProvider theme={theme()}>
+                        <div
+                            style={{
+                                height: "100%",
+                                overflow: "auto"
+                            }}
+                        >
+                            <Calendar history={appStore.deletedItemsHistory} />
+                        </div>
+                    </ThemeProvider>,
+                    container.getElement()[0]
+                );
+            }
+        );
     }
 
     get searchResultsComponent() {
@@ -182,7 +205,10 @@ export class DeletedHistoryItemsView extends React.Component<{
             content = [
                 {
                     type: "stack",
-                    content: [this.searchResultsComponent, this.calendarComponent]
+                    content: [
+                        this.searchResultsComponent,
+                        this.calendarComponent
+                    ]
                 }
             ];
         } else {
@@ -213,24 +239,34 @@ export class DeletedHistoryItemsView extends React.Component<{
         );
 
         const historyComponentWithTools = (
-            <HistoryContainer className="EezStudio_DeletedHistory_Container">
-                <HistoryBody
+            <div className="EezStudio_DeletedHistoryContainer">
+                <div
+                    className="EezStudio_HistoryBody"
                     onClick={event => {
                         if (
-                            $(event.target).closest(".EezStudio_HistoryItemEnclosure").length === 0
+                            $(event.target).closest(
+                                ".EezStudio_HistoryItemEnclosure"
+                            ).length === 0
                         ) {
                             // deselect all items
-                            this.props.appStore.deletedItemsHistory.selection.selectItems([]);
+                            this.props.appStore.deletedItemsHistory.selection.selectItems(
+                                []
+                            );
                         }
                     }}
                     tabIndex={0}
                 >
                     {historyComponent}
-                </HistoryBody>
-            </HistoryContainer>
+                </div>
+            </div>
         );
 
-        let input = <SearchInput searchText={this.searchText} onChange={this.onSearchChange} />;
+        let input = (
+            <SearchInput
+                searchText={this.searchText}
+                onChange={this.onSearchChange}
+            />
+        );
 
         let layoutId =
             "layout/2" +

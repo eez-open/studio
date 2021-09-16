@@ -169,6 +169,7 @@ interface ThemeInterface {
     selectedConnectionLineColor: string;
     activeConnectionLineColor: string;
     connectionLineInTheMakingColor: string;
+    activeTabBackgroundColor: string;
 }
 
 interface IFlow {

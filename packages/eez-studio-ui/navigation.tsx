@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
-import { styled } from "eez-studio-ui/styled-components";
 
 export interface INavigationItem {
     id: string;
@@ -12,24 +11,6 @@ export interface INavigationItem {
     position?: string;
     attention?: boolean;
 }
-
-const NavigationItemLi = styled.li`
-    &.selected {
-        a {
-            color: ${props => props.theme.selectionBackgroundColor};
-        }
-    }
-
-    &:not(.selected) {
-        a {
-            color: #999;
-        }
-
-        a:hover {
-            color: #333;
-        }
-    }
-`;
 
 @observer
 export class NavigationItem extends React.Component<
@@ -57,44 +38,24 @@ export class NavigationItem extends React.Component<
         });
 
         return (
-            <NavigationItemLi className={className}>
-                <a href="#" title={this.props.item.title} onClick={this.handleClick}>
-                    <Icon icon={this.props.item.icon!} attention={this.props.item.attention} />
+            <div
+                className={classNames("EezStudio_NavigationItemLi", className)}
+            >
+                <a
+                    href="#"
+                    title={this.props.item.title}
+                    onClick={this.handleClick}
+                >
+                    <Icon
+                        icon={this.props.item.icon!}
+                        attention={this.props.item.attention}
+                    />
+                    <span>{this.props.item.title}</span>
                 </a>
-            </NavigationItemLi>
+            </div>
         );
     }
 }
-
-const NavigationDiv = styled.div`
-    height: 100%;
-    margin: 0;
-    background-color: ${props => props.theme.panelHeaderColor};
-    border-right: 1px solid ${props => props.theme.borderColor};
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-
-    & > ul {
-        padding: 7px;
-        margin-bottom: 0;
-    }
-
-    & > ul:nth-child(1) {
-        .NavigationItem {
-            width: 24px;
-            margin-bottom: 7px;
-            position: relative;
-        }
-    }
-
-    & > ul:nth-child(2) {
-        .NavigationItem {
-            margin-top: 7px;
-            position: relative;
-        }
-    }
-`;
 
 @observer
 export class Navigation extends React.Component<
@@ -107,10 +68,12 @@ export class Navigation extends React.Component<
 > {
     render() {
         return (
-            <NavigationDiv>
+            <div className="EezStudio_NavigationDiv">
                 <ul className="list-unstyled">
                     {this.props.items
-                        .filter(item => !item.position || item.position === "top")
+                        .filter(
+                            item => !item.position || item.position === "top"
+                        )
                         .map(item => (
                             <NavigationItem
                                 key={item.id}
@@ -132,7 +95,7 @@ export class Navigation extends React.Component<
                             />
                         ))}
                 </ul>
-            </NavigationDiv>
+            </div>
         );
     }
 }

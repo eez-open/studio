@@ -4,9 +4,11 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import { IActivityLogEntry, activityLogStore } from "eez-studio-shared/activity-log";
+import {
+    IActivityLogEntry,
+    activityLogStore
+} from "eez-studio-shared/activity-log";
 
-import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
@@ -26,16 +28,9 @@ import {
 import { saveTableListData } from "instrument/window/lists/lists";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ListHistoryItemDiv = styled(HistoryItemDiv)`
-    background-color: #f5f5f5;
-    padding: 10px;
-    display: flex;
-    flex-direction: row;
-`;
 
 @observer
 export class ListHistoryItemComponent extends React.Component<
@@ -76,13 +71,17 @@ export class ListHistoryItemComponent extends React.Component<
 
     @computed
     get listId() {
-        return this.props.historyItem.appStore!.findListIdByName(this.message.listName);
+        return this.props.historyItem.appStore!.findListIdByName(
+            this.message.listName
+        );
     }
 
     @action.bound
     onOpen() {
         if (this.listId) {
-            this.props.historyItem.appStore!.navigationStore.changeSelectedListId(this.listId);
+            this.props.historyItem.appStore!.navigationStore.changeSelectedListId(
+                this.listId
+            );
         }
     }
 
@@ -99,13 +98,13 @@ export class ListHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <ListHistoryItemDiv>
-                <Icon className="mr-3" icon={"material:timeline"} size={48} />
+            <div className="EezStudio_ListHistoryItem">
+                <Icon className="me-3" icon={"material:timeline"} size={48} />
                 <div>
                     <p>
-                        <HistoryItemDate>
+                        <small className="EezStudio_HistoryItemDate text-muted">
                             {formatDateTimeLong(this.props.historyItem.date)}
-                        </HistoryItemDate>
+                        </small>
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
                     <div>
@@ -114,7 +113,9 @@ export class ListHistoryItemComponent extends React.Component<
                                 ? `Instrument list saved as "${this.message.listName}"`
                                 : `List "${this.message.listName}" sent to instrument`)}
                     </div>
-                    {this.message.error && <div className="text-danger">{this.message.error}</div>}
+                    {this.message.error && (
+                        <div className="text-danger">{this.message.error}</div>
+                    )}
                     {this.list && <ChartPreview data={this.list} />}
                     {
                         <Toolbar>
@@ -135,7 +136,7 @@ export class ListHistoryItemComponent extends React.Component<
                         </Toolbar>
                     }
                 </div>
-            </ListHistoryItemDiv>
+            </div>
         );
     }
 }

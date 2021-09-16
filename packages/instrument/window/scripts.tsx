@@ -269,20 +269,6 @@ export class ScriptsModel implements IModel {
     }
 }
 
-const ScriptsContainer = styled.div`
-    position: relative;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    & > .ace_editor {
-        flex-grow: 1;
-    }
-`;
-
 @observer
 export class ScriptView extends React.Component<
     { appStore: InstrumentAppStore },
@@ -327,7 +313,7 @@ export class ScriptView extends React.Component<
         }
 
         return (
-            <ScriptsContainer>
+            <div className="EezStudio_BB3_ScriptsContainer">
                 {scriptsModel.errorMessage && (
                     <AlertDanger
                         className="mb-0"
@@ -337,7 +323,7 @@ export class ScriptView extends React.Component<
                     </AlertDanger>
                 )}
                 {codeEditor}
-            </ScriptsContainer>
+            </div>
         );
     }
 }

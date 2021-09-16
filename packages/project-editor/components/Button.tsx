@@ -1,10 +1,4 @@
 import React from "react";
-import styled from "eez-studio-ui/styled-components";
-
-const StyledButton = styled.button`
-    font-size: 0;
-    padding: 6px;
-`;
 
 export class Button extends React.Component<
     {
@@ -23,7 +17,7 @@ export class Button extends React.Component<
     };
 
     render() {
-        let className = "btn btn-xs btn-default";
+        let className = "btn btn-xs btn-default EezStudio_Button";
         if (this.props.active) {
             className += " active";
         }
@@ -46,7 +40,7 @@ export class Button extends React.Component<
         }
 
         return (
-            <StyledButton
+            <button
                 type="button"
                 className={className}
                 title={this.props.title}
@@ -54,7 +48,7 @@ export class Button extends React.Component<
                 disabled={this.props.disabled}
             >
                 {content}
-            </StyledButton>
+            </button>
         );
     }
 }

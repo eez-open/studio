@@ -16,7 +16,6 @@ import { _uniqWith } from "eez-studio-shared/algorithm";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
-import styled from "eez-studio-ui/styled-components";
 import { Draggable } from "eez-studio-ui/draggable";
 import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
 import { Splitter } from "eez-studio-ui/splitter";
@@ -2236,19 +2235,6 @@ const SVG_ICON_ZOOM_IN: SvgIcon = {
     viewBox: "0 0 12.759932518005371 13.592938423156738"
 };
 
-const SvgButtonGroup = styled.g`
-    fill: #999;
-
-    :hover {
-        fill: #333;
-    }
-
-    :active {
-        transition: transform 100ms;
-        transform: scale(0.9);
-    }
-`;
-
 @observer
 class SvgButton extends React.Component<
     {
@@ -2282,7 +2268,7 @@ class SvgButton extends React.Component<
 
         return (
             <g transform={`translate(${tx}, ${ty}) scale(${sx}, ${sy})`}>
-                <SvgButtonGroup onClick={onClick}>
+                <g className="EezStudio_SvgButtonGroup" onClick={onClick}>
                     <rect
                         x={viewBox.x}
                         y={viewBox.y}
@@ -2291,7 +2277,7 @@ class SvgButton extends React.Component<
                         fillOpacity="0"
                     />
                     <path d={icon.path} />
-                </SvgButtonGroup>
+                </g>
             </g>
         );
     }
@@ -3243,7 +3229,7 @@ class Cursor implements ICursor {
         if (this.cursorElement) {
             let content = document.createElement("div");
             ReactDOM.render(
-                <ThemeProvider theme={theme}>
+                <ThemeProvider theme={theme()}>
                     <CursorPopover cursor={this} />
                 </ThemeProvider>,
                 content
@@ -3729,46 +3715,6 @@ export class ChartView extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const HelpViewDiv = styled.div`
-    padding: 20px;
-    font-size: 18px;
-
-    overflow-x: hidden;
-    overflow-y: auto;
-    height: 100%;
-
-    td {
-        height: 90px;
-        white-space: nowrap;
-    }
-
-    td:first-child {
-        display: flex;
-        vertical-align: center;
-        justify-content: flex-end;
-        align-items: center;
-    }
-
-    .key {
-        font-size: 16px;
-        color: #0094ff;
-        margin-top: 10px;
-        margin-right: 5px;
-        border: 1px solid #0094ff;
-        padding: 0 8px;
-        border-radius: 8px;
-    }
-
-    .text {
-        display: inline-block;
-        margin: 10px 10px 0 8px;
-    }
-
-    .arrow {
-        margin-top: 10px;
-    }
-`;
-
 function Arrow() {
     return (
         <svg
@@ -3793,7 +3739,7 @@ function Arrow() {
 
 function HelpView(props: any) {
     return (
-        <HelpViewDiv>
+        <div className="EezStudio_HelpView">
             <table>
                 <tbody>
                     <tr>
@@ -3889,7 +3835,7 @@ function HelpView(props: any) {
                     </tr>
                 </tbody>
             </table>
-        </HelpViewDiv>
+        </div>
     );
 }
 
@@ -4009,7 +3955,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "RulersDockView",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme}>
+                    <ThemeProvider theme={theme()}>
                         <RulersDockView
                             chartsController={chartsController}
                             {...props}
@@ -4024,7 +3970,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "MeasurementsDockView",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme}>
+                    <ThemeProvider theme={theme()}>
                         <MeasurementsDockView
                             measurementsController={
                                 chartsController.measurementsController
@@ -4041,7 +3987,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "ChartViewOptions",
             function (container: any, props: ChartViewOptionsProps) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme}>
+                    <ThemeProvider theme={theme()}>
                         <ChartViewOptions
                             chartsController={chartsController}
                             {...props}
@@ -4056,7 +4002,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "BookmarksView",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme}>
+                    <ThemeProvider theme={theme()}>
                         <BookmarksView chartsController={chartsController} />
                     </ThemeProvider>,
                     container.getElement()[0]
@@ -4068,7 +4014,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "HelpView",
             function (container: any, props: ChartViewOptionsProps) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme}>
+                    <ThemeProvider theme={theme()}>
                         <HelpView {...props} />
                     </ThemeProvider>,
                     container.getElement()[0]

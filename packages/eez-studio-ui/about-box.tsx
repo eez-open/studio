@@ -4,12 +4,14 @@ import { observer } from "mobx-react";
 
 import { formatDateTimeLong, compareVersions } from "eez-studio-shared/util";
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
-import { styled } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
-const STUDIO_RELEASES_URL = "https://api.github.com/repos/eez-open/studio/releases";
-const STUDIO_SPECIFIC_RELEASE_URL = "https://github.com/eez-open/studio/releases/tag/";
-const STUDIO_HOME_PAGE_URL = "https://www.envox.hr/eez/studio/studio-introduction.html";
+const STUDIO_RELEASES_URL =
+    "https://api.github.com/repos/eez-open/studio/releases";
+const STUDIO_SPECIFIC_RELEASE_URL =
+    "https://github.com/eez-open/studio/releases/tag/";
+const STUDIO_HOME_PAGE_URL =
+    "https://www.envox.hr/eez/studio/studio-introduction.html";
 const STUDIO_GITHUB_PAGE_URL = "https://github.com/eez-open/studio";
 
 const GET_LATEST_VERSION_MIN_DURATION = 1000;
@@ -34,7 +36,10 @@ async function getLatestVersion() {
                         if (
                             release.tag_name !== "nightly-build" &&
                             (!latestReleaseVersion ||
-                                compareVersions(release.tag_name, latestReleaseVersion) > 1)
+                                compareVersions(
+                                    release.tag_name,
+                                    latestReleaseVersion
+                                ) > 1)
                         ) {
                             latestReleaseVersion = release.tag_name;
                         }
@@ -47,7 +52,10 @@ async function getLatestVersion() {
                     if (duration >= GET_LATEST_VERSION_MIN_DURATION) {
                         resolve(latestReleaseVersion);
                     } else {
-                        setTimeout(() => resolve(latestReleaseVersion!), 1000 - duration);
+                        setTimeout(
+                            () => resolve(latestReleaseVersion!),
+                            1000 - duration
+                        );
                     }
                 } else {
                     reject();
@@ -63,38 +71,6 @@ async function getLatestVersion() {
         req.send();
     });
 }
-
-const Container = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    .EezStudio_Logo {
-        margin-bottom: 10px;
-    }
-
-    .EezStudio_AppName {
-        margin-bottom: 10px;
-    }
-
-    .EezStudio_BuildDate {
-        font-size: 80%;
-        margin-bottom: 10px;
-    }
-
-    .EezStudio_VersionInfo {
-        display: flex;
-        margin-bottom: 5px;
-
-        > span {
-            margin-left: 10px;
-        }
-    }
-
-    .EezStudio_CheckForUpdate {
-        margin-bottom: 10px;
-    }
-`;
 
 @observer
 class AboutBox extends React.Component {
@@ -143,7 +119,12 @@ class AboutBox extends React.Component {
             );
         } else {
             if (this.latestVersion) {
-                if (compareVersions(this.latestVersion, this.packageJSON.version) > 0) {
+                if (
+                    compareVersions(
+                        this.latestVersion,
+                        this.packageJSON.version
+                    ) > 0
+                ) {
                     versionInfo = (
                         <>
                             There is a newer version {this.latestVersion} (
@@ -151,7 +132,10 @@ class AboutBox extends React.Component {
                                 href="#"
                                 onClick={event => {
                                     event.preventDefault();
-                                    openLink(STUDIO_SPECIFIC_RELEASE_URL + this.latestVersion);
+                                    openLink(
+                                        STUDIO_SPECIFIC_RELEASE_URL +
+                                            this.latestVersion
+                                    );
                                 }}
                             >
                                 download
@@ -178,7 +162,7 @@ class AboutBox extends React.Component {
 
         return (
             <Dialog cancelButtonText="Close">
-                <Container>
+                <div className="EezStudio_AboutBox">
                     <div className="EezStudio_Logo">
                         <img
                             src="../eez-studio-ui/_images/eez_logo.png"
@@ -195,7 +179,10 @@ class AboutBox extends React.Component {
                             href="#"
                             onClick={event => {
                                 event.preventDefault();
-                                openLink(STUDIO_SPECIFIC_RELEASE_URL + this.packageJSON.version);
+                                openLink(
+                                    STUDIO_SPECIFIC_RELEASE_URL +
+                                        this.packageJSON.version
+                                );
                             }}
                         >
                             release notes
@@ -238,7 +225,7 @@ class AboutBox extends React.Component {
                             GitHub
                         </a>
                     </div>
-                </Container>
+                </div>
             </Dialog>
         );
     }

@@ -2,28 +2,11 @@ import React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "eez-studio-ui/styled-components";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import { ButtonAction, TextAction, IconAction } from "eez-studio-ui/action";
-
 import { IAppStore } from "instrument/window/history/history";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const SessionInfoContainer = styled.div`
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    span {
-        margin-right: 10px;
-    }
-    span:nth-child(2) {
-        font-weight: 500;
-    }
-    button {
-        white-space: nowrap;
-    }
-`;
 
 @observer
 export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
@@ -41,7 +24,9 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
             <IconAction
                 icon="material:list"
                 title="View sessions list"
-                onClick={this.props.appStore.navigationStore.navigateToSessionsList}
+                onClick={
+                    this.props.appStore.navigationStore.navigateToSessionsList
+                }
             />
         );
 
@@ -51,7 +36,12 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
             body = (
                 <React.Fragment>
                     <span>Active session:</span>
-                    <span>{this.props.appStore.history.sessions.activeSession.sessionName}</span>
+                    <span>
+                        {
+                            this.props.appStore.history.sessions.activeSession
+                                .sessionName
+                        }
+                    </span>
                     <ButtonAction
                         text="Close"
                         title="Close active session"
@@ -67,13 +57,15 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
                     <TextAction
                         text="Start Session"
                         title="Start a new session"
-                        onClick={this.props.appStore.history.sessions.startNewSession}
+                        onClick={
+                            this.props.appStore.history.sessions.startNewSession
+                        }
                     />
                     {viewSessionsList}
                 </React.Fragment>
             );
         }
 
-        return <SessionInfoContainer>{body}</SessionInfoContainer>;
+        return <div className="EezStudio_SessionInfoContainer">{body}</div>;
     }
 }

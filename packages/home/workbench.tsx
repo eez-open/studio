@@ -8,7 +8,6 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
-import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
@@ -247,37 +246,9 @@ export class WorkbenchToolbar extends React.Component {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const HistoryContainerDiv = styled.div`
-    display: flex;
-    flex-direction: column;
-    background-color: ${props => props.theme.panelHeaderColor};
-    height: 100%;
-`;
-
-const HistoryContentDiv = styled.div`
-    display: flex;
-    flex-direction: row;
-    flex-grow: 1;
-    background-color: white;
-    overflow: auto;
-`;
-
-const PanelTitleDiv = styled.div`
-    display: flex;
-    flex-direction: row;
-    padding: 5px 10px;
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-    font-weight: bold;
-`;
-
-const InstrumentDetailsEnclosure = styled.div`
-    background-color: ${props => props.theme.panelHeaderColor};
-    min-height: 100%;
-`;
-
 export class PanelTitle extends React.Component<{ title?: string }, {}> {
     render() {
-        return <PanelTitleDiv>{this.props.title}</PanelTitleDiv>;
+        return <div className="EezStudio_PanelTitle">{this.props.title}</div>;
     }
 }
 
@@ -291,15 +262,15 @@ export class Properties extends React.Component<{
         }
 
         let history = (
-            <HistoryContainerDiv>
+            <div className="EezStudio_HistoryContainer">
                 <PanelTitle title="History" />
-                <HistoryContentDiv>
+                <div className="EezStudio_HistoryContent">
                     <HistorySection
                         oids={[this.props.selectedInstrument.id]}
                         simple={true}
                     />
-                </HistoryContentDiv>
-            </HistoryContainerDiv>
+                </div>
+            </div>
         );
 
         return (
@@ -308,9 +279,9 @@ export class Properties extends React.Component<{
                 sizes={"100%|240px"}
                 persistId={"home/designer/properties/splitter"}
             >
-                <InstrumentDetailsEnclosure>
+                <div className="EezStudio_InstrumentDetailsEnclosure">
                     {this.props.selectedInstrument.details}
-                </InstrumentDetailsEnclosure>
+                </div>
                 {history}
             </Splitter>
         );
@@ -318,16 +289,6 @@ export class Properties extends React.Component<{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const InstrumentComponentEnclosure = styled.div`
-    width: 240px;
-
-    &.selected {
-        background-color: ${props =>
-            props.theme.selectionBackgroundColor}!important;
-        color: ${props => props.theme.selectionColor};
-    }
-`;
 
 @observer
 class InstrumentComponent extends React.Component<
@@ -346,10 +307,13 @@ class InstrumentComponent extends React.Component<
         const { instrument } = this.props;
 
         return (
-            <InstrumentComponentEnclosure
-                className={classNames("shadow p-3 m-3 bg-body rounded", {
-                    selected: this.props.isSelected
-                })}
+            <div
+                className={classNames(
+                    "EezStudio_InstrumentComponentEnclosure shadow p-3 m-3 bg-body rounded",
+                    {
+                        selected: this.props.isSelected
+                    }
+                )}
                 onClick={() => this.props.selectInstrument(instrument)}
                 onDoubleClick={this.open}
                 onContextMenu={() => {
@@ -360,15 +324,10 @@ class InstrumentComponent extends React.Component<
                 }}
             >
                 {instrument.content}
-            </InstrumentComponentEnclosure>
+            </div>
         );
     }
 }
-
-const WorkbenchDocumentDiv = styled.div`
-    margin: 10px;
-    min-height: calc(100% - 20px);
-`;
 
 @observer
 export class WorkbenchDocumentComponent extends React.Component<{
@@ -377,7 +336,7 @@ export class WorkbenchDocumentComponent extends React.Component<{
 }> {
     render() {
         return (
-            <WorkbenchDocumentDiv className="d-flex flex-wrap justify-content-center align-items-center">
+            <div className="EezStudio_WorkbenchDocument d-flex flex-wrap justify-content-center align-items-center">
                 {workbenchDocument.instruments
                     .sort((a, b) => stringCompare(a.name, b.name))
                     .map(obj => (
@@ -388,7 +347,7 @@ export class WorkbenchDocumentComponent extends React.Component<{
                             selectInstrument={this.props.selectInstrument}
                         />
                     ))}
-            </WorkbenchDocumentDiv>
+            </div>
         );
     }
 }

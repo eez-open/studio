@@ -31,7 +31,6 @@ import { extensions } from "eez-studio-shared/extensions/extensions";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
-import styled from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";
 import { DockablePanels } from "eez-studio-ui/side-dock";
 import {
@@ -39,7 +38,6 @@ import {
     IFieldProperties,
     FieldComponent
 } from "eez-studio-ui/generic-dialog";
-import { SideDockViewContainer } from "eez-studio-ui/side-dock";
 import * as notification from "eez-studio-ui/notification";
 import { cssTransition } from "react-toastify";
 
@@ -874,28 +872,6 @@ export class MeasurementsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ChartContainerDiv = styled.div`
-    flex-grow: 1;
-    flex-direction: column;
-
-    background-color: #f0f0f0;
-    display: flex;
-    padding-top: 10px;
-
-    > div {
-        flex-grow: 1;
-        border-top: 1px solid #ddd;
-    }
-
-    height: 100%;
-
-    & > .EezStudio_ChartView {
-        position: static;
-        width: auto;
-        height: auto;
-    }
-`;
-
 @observer
 export class MeasurementValue extends React.Component<{
     measurement: Measurement;
@@ -959,9 +935,9 @@ export class MeasurementValue extends React.Component<{
             require("eez-studio-ui/chart/generic-chart") as typeof GenericChartModule;
 
         return (
-            <ChartContainerDiv>
+            <div className="EezStudio_ChartContainerDiv">
                 <GenericChart chart={measurementResult.result} />
-            </ChartContainerDiv>
+            </div>
         );
     }
 }
@@ -1032,15 +1008,6 @@ class MeasurementResultField extends FieldComponent {
 
 const INPUT_FILED_NAME = "___input___";
 const RESULT_FILED_NAME = "___result___";
-
-const ActionsContainer = styled.div`
-    padding: 5px 0 15px;
-    text-align: right;
-
-    & > button {
-        margin-left: 10px;
-    }
-`;
 
 @observer
 class MeasurementComponent extends React.Component<{
@@ -1338,7 +1305,7 @@ class MeasurementComponent extends React.Component<{
                     <td>{measurement.name}</td>
                     {content}
                     <td style={{ paddingRight: 20 }}>
-                        <ActionsContainer>
+                        <div className="EezStudio_ActionsContainer">
                             <IconAction
                                 icon="material:content_copy"
                                 iconSize={16}
@@ -1365,7 +1332,7 @@ class MeasurementComponent extends React.Component<{
                                 }}
                             />
                             {this.deleteAction}
-                        </ActionsContainer>
+                        </div>
                     </td>
                 </tr>
             </React.Fragment>
@@ -1374,72 +1341,6 @@ class MeasurementComponent extends React.Component<{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const MeasurementsDockViewContainer = styled(SideDockViewContainer)`
-    table {
-        margin-left: 0;
-    }
-
-    & > div {
-        border: none;
-        padding-bottom: 0;
-        margin-bottom: 5px;
-
-        & > table {
-            width: 100%;
-
-            font-size: 80%;
-
-            border-spacing: 1px 5px;
-            border-collapse: separate;
-
-            & > tbody > tr > td {
-                text-align: center;
-                background-color: #e5e5e5;
-                padding: 5px;
-                vertical-align: top;
-                line-height: 22px;
-            }
-
-            & > tbody > tr > td:first-child {
-                white-space: nowrap;
-                text-align: left;
-                font-weight: bold;
-                min-width: 80px;
-            }
-        }
-    }
-
-    .EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty
-        > .EezStudio_SideDockView_PropertyLabel
-        > span {
-        display: inline-block;
-        margin-right: 10px;
-    }
-
-    .EezStudio_MeasurementsSideDockView_SelectedChartIndexProperty
-        > .EezStudio_SideDockView_PropertyLabel
-        > select {
-        width: auto;
-        display: inline-block;
-    }
-
-    .EezStudio_PropertyList {
-        td {
-            vertical-align: center;
-        }
-
-        td:nth-child(1) {
-            min-width: 50px;
-        }
-
-        tr.EezStudio_MeasurementsSideDockView_MeasurementResult_Enclosure {
-            td:nth-child(1) {
-                font-weight: bold;
-            }
-        }
-    }
-`;
 
 @observer
 export class MeasurementsDockView extends React.Component<{
@@ -1486,7 +1387,7 @@ export class MeasurementsDockView extends React.Component<{
 
     render() {
         return (
-            <MeasurementsDockViewContainer>
+            <div className="EezStudio_MeasurementsDockViewContainer">
                 {this.props.measurementsController.refreshRequired && (
                     <button
                         className="btn btn-primary"
@@ -1554,7 +1455,7 @@ export class MeasurementsDockView extends React.Component<{
                         </div>
                     </div>
                 )}
-            </MeasurementsDockViewContainer>
+            </div>
         );
     }
 }
@@ -1584,7 +1485,7 @@ export class ChartMeasurements extends React.Component<{
                 if (measurement) {
                     const div: HTMLDivElement = container.getElement()[0];
                     ReactDOM.render(
-                        <ThemeProvider theme={theme}>
+                        <ThemeProvider theme={theme()}>
                             <MeasurementValue
                                 measurement={measurement}
                                 inDockablePanel={true}

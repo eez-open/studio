@@ -9,7 +9,6 @@ import {
     filterNumber
 } from "eez-studio-shared/validation";
 
-import styled from "eez-studio-ui/styled-components";
 import { IListNode, List } from "eez-studio-ui/list";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Splitter } from "eez-studio-ui/splitter";
@@ -39,22 +38,6 @@ export interface ICommandNode extends ITreeNode {
     commandSyntax?: ICommandSyntax;
     querySyntax?: IQuerySyntax;
 }
-
-const CommandSyntaxContainerDiv = styled.div`
-    display: flex;
-    flex-direction: column;
-    padding: 20px 10px;
-`;
-
-const ParametersDiv = styled.div`
-    font-size: 80%;
-    padding-top: 5px;
-    padding-left: 20px;
-    padding-bottom: 10px;
-    & > table > tbody > tr > td {
-        padding: 2px;
-    }
-`;
 
 @observer
 export class CommandSyntax extends React.Component<
@@ -232,20 +215,21 @@ export class CommandSyntax extends React.Component<
 
     render() {
         return (
-            <CommandSyntaxContainerDiv>
+            <div className="EezStudio_CommandSyntaxContainer">
                 <h5>{this.props.commandSyntax.name}</h5>
-                <ParametersDiv>
+                <div className="EezStudio_Parameters">
                     <PropertyList>
                         {this.props.commandSyntax.parameters.map(parameter => {
                             const suggestions: string[] = [];
 
                             for (let i = 0; i < parameter.type.length; ++i) {
                                 if (parameter.type[i].type === "discrete") {
-                                    const enumeration = this.props.appStore.commandsTree.enums.find(
-                                        enumeration =>
-                                            enumeration.name ===
-                                            parameter.type[i].enumeration
-                                    );
+                                    const enumeration =
+                                        this.props.appStore.commandsTree.enums.find(
+                                            enumeration =>
+                                                enumeration.name ===
+                                                parameter.type[i].enumeration
+                                        );
                                     if (enumeration) {
                                         enumeration.members.forEach(member =>
                                             suggestions.push(member.name)
@@ -280,7 +264,7 @@ export class CommandSyntax extends React.Component<
                             );
                         })}
                     </PropertyList>
-                </ParametersDiv>
+                </div>
                 <div>
                     <button
                         className="btn btn-secondary btn-sm"
@@ -301,35 +285,10 @@ export class CommandSyntax extends React.Component<
                             </button>
                         )}
                 </div>
-            </CommandSyntaxContainerDiv>
+            </div>
         );
     }
 }
-
-const CommandSyntaxes = styled.div`
-    & > div:not(first-child) {
-        border-top: 1px solid ${props => props.theme.borderColor};
-    }
-`;
-
-const CommandsBrowserTree = styled(VerticalHeaderWithBody)`
-    > div:nth-child(1) {
-        padding: 1px;
-        padding-top: 2px;
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-    }
-`;
-
-const CommandsBrowserSyntax = styled.div``;
-
-const CommandsBrowserHelp = styled.div`
-    flex-grow: 1;
-    display: flex;
-    iframe {
-        border: 0;
-        flex-grow: 1;
-    }
-`;
 
 @observer
 export class CommandsBrowser extends React.Component<
@@ -429,7 +388,7 @@ export class CommandsBrowser extends React.Component<
         let help;
         if (this.selectedNode) {
             syntax = (
-                <CommandSyntaxes className="">
+                <div className="EezStudio_CommandSyntaxes">
                     {this.selectedNode.commandSyntax && (
                         <CommandSyntax
                             appStore={this.props.appStore}
@@ -444,7 +403,7 @@ export class CommandsBrowser extends React.Component<
                             copyCommand={this.copyCommand}
                         />
                     )}
-                </CommandSyntaxes>
+                </div>
             );
 
             let helpLink =
@@ -461,7 +420,7 @@ export class CommandsBrowser extends React.Component<
                 sizes="240px|100%"
                 persistId="instrument/window/commands-browser/splitter1"
             >
-                <CommandsBrowserTree>
+                <VerticalHeaderWithBody className="EezStudio_CommandsBrowserTree">
                     <Header>
                         <SearchInput
                             searchText={this.searchText}
@@ -470,18 +429,16 @@ export class CommandsBrowser extends React.Component<
                         />
                     </Header>
                     <Body tabIndex={0}>{leftSideBody}</Body>
-                </CommandsBrowserTree>
+                </VerticalHeaderWithBody>
                 <Splitter
                     type="horizontal"
                     sizes="400px|100%"
                     persistId="instrument/window/commands-browser/splitter2"
                 >
-                    <CommandsBrowserSyntax className="">
+                    <div className="EezStudio_CommandsBrowserSyntax">
                         {syntax}
-                    </CommandsBrowserSyntax>
-                    <CommandsBrowserHelp className="">
-                        {help}
-                    </CommandsBrowserHelp>
+                    </div>
+                    <div className="EezStudio_CommandsBrowserHelp">{help}</div>
                 </Splitter>
             </Splitter>
         );

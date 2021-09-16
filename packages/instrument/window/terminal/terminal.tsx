@@ -3,7 +3,6 @@ import { observable, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
 import { IconAction } from "eez-studio-ui/action";
 
@@ -11,7 +10,10 @@ import { InstrumentAppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";
 
 import { ISession } from "instrument/window/history/session/store";
-import { HistoryView, HistoryTools } from "instrument/window/history/history-view";
+import {
+    HistoryView,
+    HistoryTools
+} from "instrument/window/history/history-view";
 
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
@@ -58,34 +60,6 @@ const terminalState = new TerminalState();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const InputContainer = styled.div`
-    background-color: ${props => props.theme.panelHeaderColor};
-    padding: 10px;
-    display: flex;
-    flex-direction: row;
-    flex-grow: 0;
-    flex-shrink: 0;
-
-    div:nth-child(1) {
-        flex-shrink: 0;
-    }
-
-    div:nth-child(2) {
-        flex-grow: 1;
-        padding-left: 7px;
-
-        input {
-            padding-left: 5px;
-            padding-right: 5px;
-            width: 100%;
-        }
-    }
-
-    div:nth-child(3) {
-        flex-shrink: 0;
-    }
-`;
-
 @observer
 class Input extends React.Component<
     {
@@ -127,7 +101,8 @@ class Input extends React.Component<
 
     componentDidUpdate() {
         if (this.moveCursorToTheEnd) {
-            this.input.selectionStart = this.input.selectionEnd = terminalState.command.length;
+            this.input.selectionStart = this.input.selectionEnd =
+                terminalState.command.length;
             this.moveCursorToTheEnd = false;
         }
     }
@@ -170,7 +145,10 @@ class Input extends React.Component<
 
             this.historyItemIndex = historyItemIndex;
 
-            if (this.historyItemIndex < 0 || this.historyItemIndex >= this.commandsHistory.length) {
+            if (
+                this.historyItemIndex < 0 ||
+                this.historyItemIndex >= this.commandsHistory.length
+            ) {
                 return undefined;
             }
 
@@ -191,7 +169,10 @@ class Input extends React.Component<
 
             this.historyItemIndex = historyItemIndex;
 
-            if (this.historyItemIndex < 0 || this.historyItemIndex >= this.commandsHistory.length) {
+            if (
+                this.historyItemIndex < 0 ||
+                this.historyItemIndex >= this.commandsHistory.length
+            ) {
                 return undefined;
             }
 
@@ -220,7 +201,7 @@ class Input extends React.Component<
 
     render() {
         return (
-            <InputContainer>
+            <div className="EezStudio_InputContainer">
                 <div>
                     <IconAction
                         icon="material:help"
@@ -236,40 +217,33 @@ class Input extends React.Component<
                         onKeyDown={this.handleKeyDown}
                         value={terminalState.command}
                         onChange={this.handleChange}
-                        disabled={!this.props.appStore.instrument!.connection.isConnected}
+                        disabled={
+                            !this.props.appStore.instrument!.connection
+                                .isConnected
+                        }
                     />
                 </div>
                 <div>
                     <IconAction
                         icon="material:play_arrow"
                         onClick={this.handleSendCommandClick}
-                        enabled={this.props.appStore.instrument!.connection.isConnected}
+                        enabled={
+                            this.props.appStore.instrument!.connection
+                                .isConnected
+                        }
                         title="Run command"
                     />
                 </div>
-            </InputContainer>
+            </div>
         );
     }
 }
 
-const TerminalBodyContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-`;
-
-const TerminalBody = styled.div`
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-    flex-grow: 1;
-    overflow: auto;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-`;
-
 @observer
-export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, {}> {
+export class Terminal extends React.Component<
+    { appStore: InstrumentAppStore },
+    {}
+> {
     @bind
     onSelectHistoryItemsCancel() {
         this.props.appStore.selectHistoryItems(undefined);
@@ -288,20 +262,22 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
         const instrument = appStore.instrument!;
 
         const terminal = (
-            <TerminalBodyContainer>
-                <TerminalBody>
+            <div className="EezStudio_TerminalBodyContainer">
+                <div className="EezStudio_TerminalBody">
                     <HistoryView
                         appStore={this.props.appStore}
                         persistId={"instrument/window/history"}
                     />
-                </TerminalBody>
+                </div>
                 <Input
                     appStore={appStore}
                     sendCommand={() => {
                         instrument.connection.send(terminalState.command);
                         terminalState.command = "";
                     }}
-                    sendFileToInstrumentHandler={instrument.sendFileToInstrumentHandler}
+                    sendFileToInstrumentHandler={
+                        instrument.sendFileToInstrumentHandler
+                    }
                 />
                 <ShortcutsToolbar
                     appStore={appStore}
@@ -309,7 +285,7 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
                         executeShortcut(this.props.appStore, shortcut);
                     }}
                 />
-            </TerminalBodyContainer>
+            </div>
         );
 
         if (!appStore.helpVisible) {
@@ -323,7 +299,10 @@ export class Terminal extends React.Component<{ appStore: InstrumentAppStore }, 
                 persistId={"instrument/window/terminal/splitter"}
             >
                 {terminal}
-                <CommandsBrowser appStore={this.props.appStore} host={terminalState} />
+                <CommandsBrowser
+                    appStore={this.props.appStore}
+                    host={terminalState}
+                />
             </Splitter>
         );
     }

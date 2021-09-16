@@ -122,7 +122,8 @@ export class Dialog extends React.Component<
                 position: "right",
                 onClick: this.handleSumbit,
                 disabled:
-                    this.disableButtons || (this.props.okEnabled ? !this.props.okEnabled() : false),
+                    this.disableButtons ||
+                    (this.props.okEnabled ? !this.props.okEnabled() : false),
                 style: {},
                 text: this.props.okButtonText || "OK"
             });
@@ -131,7 +132,10 @@ export class Dialog extends React.Component<
         return (
             <BootstrapDialog
                 modal={this.props.modal}
-                open={this.open && (this.props.open === undefined || this.props.open)}
+                open={
+                    this.open &&
+                    (this.props.open === undefined || this.props.open)
+                }
                 size={this.props.size}
                 title={this.props.title}
                 onSubmit={this.handleSumbit}
@@ -162,7 +166,10 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
         element.id = opts.id;
     }
 
-    ReactDOM.render(<ThemeProvider theme={theme}>{dialog}</ThemeProvider>, element);
+    ReactDOM.render(
+        <ThemeProvider theme={theme()}>{dialog}</ThemeProvider>,
+        element
+    );
 
     if (opts && opts.jsPanel) {
         element.style.position = "absolute";
@@ -177,7 +184,10 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             theme: "primary",
             headerTitle: opts.jsPanel.title,
             panelSize: {
-                width: Math.min(Math.round(window.innerWidth * 0.8), opts.jsPanel.width),
+                width: Math.min(
+                    Math.round(window.innerWidth * 0.8),
+                    opts.jsPanel.width
+                ),
                 height: Math.round(window.innerHeight * 0.8)
             },
             content: element,

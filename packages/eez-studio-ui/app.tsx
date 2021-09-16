@@ -9,7 +9,7 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 import { Navigation, INavigationItem } from "eez-studio-ui/navigation";
-import { styled } from "eez-studio-ui/styled-components";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -17,13 +17,6 @@ export interface IRootNavigationItem extends INavigationItem {
     renderContent: () => JSX.Element;
     selectItem?: (itemId: string) => void;
 }
-
-const Container = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-`;
 
 @observer
 export class AppRootComponent extends React.Component<
@@ -65,7 +58,7 @@ export class AppRootComponent extends React.Component<
         // }
 
         return (
-            <Container className={this.props.className}>
+            <div className={classNames("EezStudio_App", this.props.className)}>
                 <VerticalHeaderWithBody>
                     <Header>{this.props.appBar}</Header>
                     <Body>
@@ -78,17 +71,22 @@ export class AppRootComponent extends React.Component<
                                 />
                             </Header>
                             {this.props.navigationItems.map(item => (
-                                <Body visible={item === this.props.selectedItem} key={item.id}>
+                                <Body
+                                    visible={item === this.props.selectedItem}
+                                    key={item.id}
+                                >
                                     {item === this.props.selectedItem
                                         ? this.renderContent(item)
-                                        : this.renderContentIfRenderedBefore(item)}
+                                        : this.renderContentIfRenderedBefore(
+                                              item
+                                          )}
                                 </Body>
                             ))}
                         </HorizontalHeaderWithBody>
                     </Body>
                 </VerticalHeaderWithBody>
                 {devTools}
-            </Container>
+            </div>
         );
     }
 }

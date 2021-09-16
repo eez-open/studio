@@ -9,7 +9,6 @@ import { closestByClass } from "eez-studio-shared/dom";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Checkbox } from "eez-studio-ui/properties";
-import { SideDockViewContainer } from "eez-studio-ui/side-dock";
 import {
     ChartsController,
     ChartView,
@@ -851,7 +850,7 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
 
     render() {
         return (
-            <SideDockViewContainer>
+            <div className="EezStudio_SideDockViewContainer">
                 <div className="EezStudio_AxisRulersProperties">
                     <div className="EezStudio_SideDockView_PropertyLabel">
                         <Checkbox
@@ -1048,7 +1047,7 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
                             )}
                     </div>
                 ))}
-            </SideDockViewContainer>
+            </div>
         );
     }
 }

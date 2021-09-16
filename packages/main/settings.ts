@@ -33,6 +33,8 @@ class Settings {
     locale: string;
     dateFormat: string;
     timeFormat: string;
+
+    isDarkTheme: boolean;
 }
 
 export const settings = new Settings();
@@ -73,19 +75,26 @@ export function loadSettings() {
                 settings.locale = settingsJs.locale;
                 settings.dateFormat = settingsJs.dateFormat;
                 settings.timeFormat = settingsJs.timeFormat;
+                settings.isDarkTheme = settingsJs.isDarkTheme;
             } catch (parseError) {
                 console.log(data);
                 console.error(parseError);
             }
         } catch (readFileError) {
-            console.info(`Settings file "${getSettingsFilePath()}" doesn't exists.`);
+            console.info(
+                `Settings file "${getSettingsFilePath()}" doesn't exists.`
+            );
         }
     })();
 }
 
 export function saveSettings() {
     try {
-        fs.writeFileSync(getSettingsFilePath(), JSON.stringify(settings, null, 2), "utf8");
+        fs.writeFileSync(
+            getSettingsFilePath(),
+            JSON.stringify(settings, null, 2),
+            "utf8"
+        );
     } catch (writeFileError) {
         console.error(writeFileError);
     }
@@ -103,7 +112,9 @@ export function findMruIndex(mruItemFilePath: string) {
 function isValidWindowState(windowState: WindowState) {
     if (windowState && windowState.bounds && windowState.displayBounds) {
         // check if the display where the window was last open is still available
-        var displayBounds = screen.getDisplayMatching(windowState.bounds).bounds;
+        var displayBounds = screen.getDisplayMatching(
+            windowState.bounds
+        ).bounds;
         if (
             windowState.displayBounds.x == displayBounds.x &&
             windowState.displayBounds.y == displayBounds.y &&
@@ -145,14 +156,21 @@ export function settingsSetWindowBoundsIntoParams(
     }
 }
 
-export function settingsRegisterWindow(windowId: string, window: Electron.BrowserWindow) {
+export function settingsRegisterWindow(
+    windowId: string,
+    window: Electron.BrowserWindow
+) {
     let stateChangeTimer: any;
     let normalWindowBounds: Electron.Rectangle | undefined;
 
     function updateState() {
         var windowBounds = window.getBounds();
 
-        if (!window.isMaximized() && !window.isMinimized() && !window.isFullScreen()) {
+        if (
+            !window.isMaximized() &&
+            !window.isMinimized() &&
+            !window.isFullScreen()
+        ) {
             normalWindowBounds = Object.assign({}, windowBounds);
         }
 
@@ -276,6 +294,15 @@ export function setFirstTime(value: boolean) {
     saveSettings();
 }
 
+function getIsDarkTheme() {
+    return settings.isDarkTheme;
+}
+
+function setIsDarkTheme(value: boolean) {
+    settings.isDarkTheme = value;
+    saveSettings();
+}
+
 ipcMain.on("saveSettings", function () {
     saveSettings();
 });
@@ -318,4 +345,12 @@ ipcMain.on("getFirstTime", function (event: any) {
 
 ipcMain.on("setFirstTime", function (event: any, value: boolean) {
     setFirstTime(value);
+});
+
+ipcMain.on("getIsDarkTheme", function (event: any) {
+    event.returnValue = getIsDarkTheme();
+});
+
+ipcMain.on("setIsDarkTheme", function (event: any, value: boolean) {
+    setIsDarkTheme(value);
 });

@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, computed, action, runInAction, reaction, toJS } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    reaction,
+    toJS
+} from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -8,7 +15,6 @@ import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
 import { TIME_UNIT } from "eez-studio-shared/units";
 
-import styled from "eez-studio-ui/styled-components";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import {
     TextInputProperty,
@@ -17,7 +23,11 @@ import {
     SelectFromListProperty
 } from "eez-studio-ui/properties";
 import { IListNode, ListItem } from "eez-studio-ui/list";
-import { ChartMode, ChartsController, IAxisModel } from "eez-studio-ui/chart/chart";
+import {
+    ChartMode,
+    ChartsController,
+    IAxisModel
+} from "eez-studio-ui/chart/chart";
 import { Icon } from "eez-studio-ui/icon";
 
 import { RulersModel } from "eez-studio-ui/chart/rulers";
@@ -26,7 +36,7 @@ import { MeasurementsModel } from "eez-studio-ui/chart/measurements";
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
-import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { HistoryItem } from "instrument/window/history/item";
 
 import {
     Waveform,
@@ -72,17 +82,6 @@ export class MultiWaveformChartsController extends ChartsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ChartHistoryItemDiv = styled(HistoryItemDiv)`
-    background-color: #f5f5f5;
-    padding: 10px;
-    display: flex;
-    flex-direction: row;
-
-    .EezStudio_ChartPreview:not(.zoom) .EezStudio_ChartView svg.EezStudio_Chart_XAxis {
-        height: 24px;
-    }
-`;
-
 @observer
 export class ChartHistoryItemComponent extends React.Component<
     {
@@ -94,17 +93,21 @@ export class ChartHistoryItemComponent extends React.Component<
 
     render() {
         return (
-            <ChartHistoryItemDiv>
-                <Icon className="mr-3" icon={"material:insert_chart"} size={48} />
+            <div className="EezStudio_ChartHistoryItem">
+                <Icon
+                    className="me-3"
+                    icon={"material:insert_chart"}
+                    size={48}
+                />
                 <div>
                     <p>
-                        <HistoryItemDate>
+                        <small className="EezStudio_HistoryItemDate text-muted">
                             {formatDateTimeLong(this.props.historyItem.date)}
-                        </HistoryItemDate>
+                        </small>
                     </p>
                     <ChartPreview data={this.props.historyItem} />
                 </div>
-            </ChartHistoryItemDiv>
+            </div>
         );
     }
 }
@@ -318,11 +321,12 @@ export class MultiWaveform extends HistoryItem {
 
         chartsController.chartControllers = this.linkedWaveforms.map(
             (linkedWaveform: ILinkedWaveform, i: number) => {
-                const chartController = linkedWaveform.waveform.createChartController(
-                    chartsController,
-                    linkedWaveform.waveform.id,
-                    linkedWaveform.yAxisModel
-                );
+                const chartController =
+                    linkedWaveform.waveform.createChartController(
+                        chartsController,
+                        linkedWaveform.waveform.id,
+                        linkedWaveform.yAxisModel
+                    );
 
                 return chartController;
             }
@@ -400,7 +404,9 @@ class WaveformLinkProperties {
                 key="colorInverse"
                 name="Color inverse"
                 value={this.props.colorInverse || "#000000"}
-                onChange={action((value: string) => (this.props.colorInverse = value))}
+                onChange={action(
+                    (value: string) => (this.props.colorInverse = value)
+                )}
             />
         ];
     }
@@ -414,19 +420,6 @@ interface IJoinedWaveformLinkAndDefinitionProperties {
     waveformDefinitionProperties: WaveformDefinitionProperties;
 }
 
-const MultiWaveformConfigurationDialogBody = styled.div`
-    display: flex;
-    position: relative;
-
-    .EezStudio_PropertyList:nth-child(1) {
-        width: 30%;
-    }
-
-    .EezStudio_PropertyList:nth-child(2) {
-        width: 70%;
-    }
-`;
-
 @observer
 class MultiWaveformConfigurationDialog extends React.Component<
     {
@@ -439,7 +432,9 @@ class MultiWaveformConfigurationDialog extends React.Component<
         (linkedWaveform: ILinkedWaveform, i: number) => {
             return {
                 linkedWaveform,
-                waveformLinkProperties: new WaveformLinkProperties(linkedWaveform),
+                waveformLinkProperties: new WaveformLinkProperties(
+                    linkedWaveform
+                ),
                 waveformDefinitionProperties: new WaveformDefinitionProperties(
                     linkedWaveform.waveform.waveformDefinition
                 )
@@ -447,21 +442,28 @@ class MultiWaveformConfigurationDialog extends React.Component<
         }
     );
 
-    @observable.shallow selectedWaveform: IJoinedWaveformLinkAndDefinitionProperties = this
-        .waveforms[0];
+    @observable.shallow
+    selectedWaveform: IJoinedWaveformLinkAndDefinitionProperties =
+        this.waveforms[0];
 
     @computed
     get waveformListNodes(): IListNode[] {
-        return this.waveforms.map(joinedWaveformLinkAndDefinitionProperties => ({
-            id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform.waveformLink.id,
-            data: joinedWaveformLinkAndDefinitionProperties,
-            selected: joinedWaveformLinkAndDefinitionProperties === this.selectedWaveform
-        }));
+        return this.waveforms.map(
+            joinedWaveformLinkAndDefinitionProperties => ({
+                id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
+                    .waveformLink.id,
+                data: joinedWaveformLinkAndDefinitionProperties,
+                selected:
+                    joinedWaveformLinkAndDefinitionProperties ===
+                    this.selectedWaveform
+            })
+        );
     }
 
     @bind
     renderWaveformListNode(node: IListNode) {
-        let waveformLinkProperties = node.data as IJoinedWaveformLinkAndDefinitionProperties;
+        let waveformLinkProperties =
+            node.data as IJoinedWaveformLinkAndDefinitionProperties;
 
         const errors =
             waveformLinkProperties.waveformLinkProperties.errors ||
@@ -470,7 +472,10 @@ class MultiWaveformConfigurationDialog extends React.Component<
 
         return (
             <ListItem
-                label={waveformLinkProperties.waveformLinkProperties.props.label || "<no label>"}
+                label={
+                    waveformLinkProperties.waveformLinkProperties.props.label ||
+                    "<no label>"
+                }
                 rightIcon={errors ? "material:error_outline" : undefined}
                 rightIconClassName="text-danger"
             />
@@ -489,11 +494,14 @@ class MultiWaveformConfigurationDialog extends React.Component<
         for (let i = 0; i < this.waveforms.length; i++) {
             const waveformLinkProperties = this.waveforms[i];
 
-            if (!(await waveformLinkProperties.waveformLinkProperties.checkValidity())) {
+            if (
+                !(await waveformLinkProperties.waveformLinkProperties.checkValidity())
+            ) {
                 anyError = true;
             }
 
-            const waveformProperties = waveformLinkProperties.waveformDefinitionProperties;
+            const waveformProperties =
+                waveformLinkProperties.waveformDefinitionProperties;
             if (waveformProperties) {
                 if (!(await waveformProperties.checkValidity())) {
                     anyError = true;
@@ -512,13 +520,19 @@ class MultiWaveformConfigurationDialog extends React.Component<
         }[] = [];
 
         // update chart history item (if changed)
-        const waveformLinks = this.waveforms.map(joinedWaveformLinkAndDefinitionProperties => ({
-            id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform.waveformLink.id,
-            label: joinedWaveformLinkAndDefinitionProperties.waveformLinkProperties.props.label,
-            color: joinedWaveformLinkAndDefinitionProperties.waveformLinkProperties.props.color,
-            colorInverse:
-                joinedWaveformLinkAndDefinitionProperties.waveformLinkProperties.props.colorInverse
-        }));
+        const waveformLinks = this.waveforms.map(
+            joinedWaveformLinkAndDefinitionProperties => ({
+                id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
+                    .waveformLink.id,
+                label: joinedWaveformLinkAndDefinitionProperties
+                    .waveformLinkProperties.props.label,
+                color: joinedWaveformLinkAndDefinitionProperties
+                    .waveformLinkProperties.props.color,
+                colorInverse:
+                    joinedWaveformLinkAndDefinitionProperties
+                        .waveformLinkProperties.props.colorInverse
+            })
+        );
         if (
             !objectEqual(
                 waveformLinks,
@@ -542,25 +556,31 @@ class MultiWaveformConfigurationDialog extends React.Component<
         // update waveform history item's (if changed)
         this.waveforms.forEach(joinedWaveformLinkAndDefinitionProperties => {
             const waveformHistoryItemMessage = JSON.parse(
-                joinedWaveformLinkAndDefinitionProperties.linkedWaveform.waveform.message
+                joinedWaveformLinkAndDefinitionProperties.linkedWaveform
+                    .waveform.message
             );
 
             if (
                 !objectEqual(
-                    joinedWaveformLinkAndDefinitionProperties.waveformDefinitionProperties
-                        .propsValidated,
+                    joinedWaveformLinkAndDefinitionProperties
+                        .waveformDefinitionProperties.propsValidated,
                     waveformHistoryItemMessage.waveformDefinition
                 )
             ) {
-                const newWaveformHistoryItemMessage = Object.assign(waveformHistoryItemMessage, {
-                    waveformDefinition:
-                        joinedWaveformLinkAndDefinitionProperties.waveformDefinitionProperties
-                            .propsValidated
-                });
+                const newWaveformHistoryItemMessage = Object.assign(
+                    waveformHistoryItemMessage,
+                    {
+                        waveformDefinition:
+                            joinedWaveformLinkAndDefinitionProperties
+                                .waveformDefinitionProperties.propsValidated
+                    }
+                );
 
                 changedHistoryItems.push({
-                    id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform.waveform.id,
-                    oid: joinedWaveformLinkAndDefinitionProperties.linkedWaveform.waveform.oid,
+                    id: joinedWaveformLinkAndDefinitionProperties.linkedWaveform
+                        .waveform.id,
+                    oid: joinedWaveformLinkAndDefinitionProperties
+                        .linkedWaveform.waveform.oid,
                     message: JSON.stringify(newWaveformHistoryItemMessage)
                 });
             }
@@ -588,7 +608,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
     render() {
         return (
             <Dialog size="medium" onOk={this.handleSubmit}>
-                <MultiWaveformConfigurationDialogBody>
+                <div className="EezStudio_MultiWaveformConfigurationDialogBody">
                     <PropertyList>
                         <SelectFromListProperty
                             nodes={this.waveformListNodes}
@@ -601,7 +621,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
                         {this.selectedWaveform.waveformDefinitionProperties &&
                             this.selectedWaveform.waveformDefinitionProperties.render()}
                     </PropertyList>
-                </MultiWaveformConfigurationDialogBody>
+                </div>
             </Dialog>
         );
     }

@@ -5,7 +5,6 @@ import { observer } from "mobx-react";
 
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { PropertyList, SelectProperty } from "eez-studio-ui/properties";
-import { styled } from "eez-studio-ui/styled-components";
 
 import {
     IEezObject,
@@ -34,11 +33,6 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const SelectItemDialogDiv = styled.div`
-    flex-grow: 1;
-    display: flex;
-`;
 
 @observer
 class SelectItemDialog extends React.Component<{
@@ -215,7 +209,7 @@ class SelectItemDialog extends React.Component<{
                     )
                 }
             >
-                <SelectItemDialogDiv>
+                <div className="EezStudio_SelectItemDialog">
                     <NavigationComponent
                         id={
                             getClassInfo(this.collectionObject!)
@@ -226,7 +220,7 @@ class SelectItemDialog extends React.Component<{
                         dragAndDropManager={this.dragAndDropManager}
                         onDoubleClickItem={this.onOk}
                     />
-                </SelectItemDialogDiv>
+                </div>
             </Dialog>
         );
     }

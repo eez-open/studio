@@ -1,7 +1,6 @@
 import { computed, observable, action } from "mobx";
 import React from "react";
 import { observer } from "mobx-react";
-import styled from "eez-studio-ui/styled-components";
 
 import {
     ClassInfo,
@@ -37,23 +36,6 @@ import * as output from "project-editor/core/output";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const BitmapEditorContainer = styled.div`
-    flex-shrink: 1;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* align horizontal */
-    align-items: center; /* align vertical */
-    max-height: 100%;
-
-    & > img {
-        background-color: transparent;
-        max-width: 100%;
-        max-height: calc(100% - 50px);
-        margin-bottom: 25px;
-    }
-`;
-
 @observer
 class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
     render() {
@@ -64,7 +46,7 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
         }
 
         return (
-            <BitmapEditorContainer>
+            <div className="EezStudio_BitmapEditorContainer">
                 <img
                     src={bitmap.image}
                     style={{ backgroundColor: bitmap.backgroundColor }}
@@ -73,7 +55,7 @@ class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
                     Dimension: {bitmap.imageElement.width} x{" "}
                     {bitmap.imageElement.height}
                 </h4>
-            </BitmapEditorContainer>
+            </div>
         );
     }
 }

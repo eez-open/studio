@@ -5,6 +5,7 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import {
     findPropertyByChildObject,
+    getClass,
     getParent,
     IEezObject,
     isValue
@@ -66,10 +67,19 @@ export class PropertiesPanel extends React.Component<{
     }
 
     render() {
+        let title;
+        if (this.objects.length == 0) {
+            title = "Properties";
+        } else if (this.objects.length == 1) {
+            title = `Properties (${getClass(this.objects[0]).name})`;
+        } else {
+            title = `Properties (multiple objects)`;
+        }
+
         return (
             <Panel
                 id="properties"
-                title="Properties"
+                title={title}
                 body={
                     <PropertyGrid
                         objects={this.objects}

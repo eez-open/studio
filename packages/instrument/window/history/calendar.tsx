@@ -11,8 +11,6 @@ import {
     getWeekNumber
 } from "eez-studio-shared/util";
 
-import styled from "eez-studio-ui/styled-components";
-
 import { History } from "instrument/window/history/history";
 
 @observer
@@ -74,13 +72,19 @@ export class Month extends React.Component<{ history: History; month: Date }> {
     element: HTMLElement | null;
 
     componentDidMount() {
-        if (this.element && this.props.history.calendar.isSelectedMonth(this.props.month)) {
+        if (
+            this.element &&
+            this.props.history.calendar.isSelectedMonth(this.props.month)
+        ) {
             this.element.scrollIntoView({ block: "end" });
         }
     }
 
     componentDidUpdate() {
-        if (this.element && this.props.history.calendar.isSelectedMonth(this.props.month)) {
+        if (
+            this.element &&
+            this.props.history.calendar.isSelectedMonth(this.props.month)
+        ) {
             this.element.scrollIntoView({ block: "nearest", behavior: "auto" });
         }
     }
@@ -92,7 +96,12 @@ export class Month extends React.Component<{ history: History; month: Date }> {
 
         // 1st row contains day of week names
         for (let i = 0; i < 7; i++) {
-            days.push(<DayOfWeek key={"dow" + i} dayOfWeek={(getFirstDayOfWeek() + i) % 7} />);
+            days.push(
+                <DayOfWeek
+                    key={"dow" + i}
+                    dayOfWeek={(getFirstDayOfWeek() + i) % 7}
+                />
+            );
         }
 
         // 8th column of the 1st row is empty (8th column contains week number)
@@ -107,9 +116,15 @@ export class Month extends React.Component<{ history: History; month: Date }> {
                 day.setDate(day.getDate() + i);
 
                 if (day.getMonth() === month.getMonth()) {
-                    days.push(<Day key={i} history={this.props.history} day={day} />);
+                    days.push(
+                        <Day key={i} history={this.props.history} day={day} />
+                    );
                 } else {
-                    if (day.getMonth() != month.getMonth() && day > month && col === 0) {
+                    if (
+                        day.getMonth() != month.getMonth() &&
+                        day > month &&
+                        col === 0
+                    ) {
                         return days;
                     }
                     // empty cell
@@ -147,93 +162,6 @@ export class Month extends React.Component<{ history: History; month: Date }> {
     }
 }
 
-const HistoryCalendar = styled.div`
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    & > div {
-        margin: 1px;
-        margin-bottom: 11px;
-        padding: 5px;
-        border: 1px solid ${props => props.theme.borderColor};
-        background: white;
-
-        &.selected {
-            margin: 0px;
-            margin-bottom: 10px;
-            border: 2px solid ${props => props.theme.selectionBackgroundColor};
-        }
-    }
-
-    & > div:last-child {
-        margin-bottom: 1px;
-
-        &.selected {
-            margin-bottom: 0px;
-        }
-    }
-
-    & > div > div:nth-child(1) {
-        font-weight: bold;
-    }
-
-    & > div > div:nth-child(2) {
-        line-height: 20px;
-        display: grid;
-        grid-template-columns: 28px 28px 28px 28px 28px 28px 28px 35px;
-        grid-template-rows: 33px;
-        padding-left: 33px;
-        padding-top: 5px;
-        padding-bottom: 5px;
-    }
-
-    & > div > div:nth-child(2) > div {
-        display: inline-block;
-        padding: 2px;
-        border: 2px solid white;
-        text-align: center;
-        font-size: 12px;
-
-        &.WeekNumber {
-            justify-self: right;
-        }
-
-        &.selected {
-            border: 2px solid ${props => props.theme.selectionBackgroundColor};
-        }
-
-        & > div {
-            width: 20px;
-            height: 20px;
-            cursor: default;
-        }
-
-        &.activity-level-0 > div {
-            background-color: #ebedf0;
-        }
-
-        &.activity-level-1 > div {
-            background-color: #c6e48b;
-        }
-
-        &.activity-level-2 > div {
-            background-color: #7bc96f;
-        }
-
-        &.activity-level-3 > div {
-            background-color: #239a3b;
-            color: white;
-        }
-
-        &.activity-level-4 > div {
-            background-color: #196127;
-            color: white;
-        }
-    }
-`;
-
 @observer
 export class Calendar extends React.Component<{ history: History }> {
     render() {
@@ -258,6 +186,6 @@ export class Calendar extends React.Component<{ history: History }> {
             month.setMonth(month.getMonth() + 1);
         }
 
-        return <HistoryCalendar>{months}</HistoryCalendar>;
+        return <div className="EezStudio_HistoryCalendar">{months}</div>;
     }
 }

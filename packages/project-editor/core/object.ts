@@ -41,13 +41,6 @@ export interface IPropertyGridGroupDefinition {
     id: string;
     title: string;
     position?: number;
-
-    menu?: (object: IEezObject) =>
-        | {
-              label: string;
-              click: () => void;
-          }[]
-        | undefined;
 }
 
 export const generalGroup: IPropertyGridGroupDefinition = {

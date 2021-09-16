@@ -21,13 +21,15 @@ import {
     setTimeFormat
 } from "eez-studio-shared/i10n";
 import { formatBytes } from "eez-studio-shared/formatBytes";
-import { addAlphaToColor } from "eez-studio-shared/color";
 
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 
-import styled from "eez-studio-ui/styled-components";
-import { PropertyList, SelectProperty } from "eez-studio-ui/properties";
+import {
+    BooleanProperty,
+    PropertyList,
+    SelectProperty
+} from "eez-studio-ui/properties";
 import { FileInputProperty } from "eez-studio-ui/properties-electron";
 import * as notification from "eez-studio-ui/notification";
 import { PanelHeader } from "eez-studio-ui/header-with-body";
@@ -42,7 +44,18 @@ const CONF_DATABASE_COMPACT_ADVISE_PERIOD = 30 * 24 * 60 * 60 * 1000; // 30 days
 const TIME_OF_LAST_DATABASE_COMPACT_OPERATION_ITEM_NAME =
     "/home/settings/timeOfLastDatabaseCompactOperation";
 
-export const COMPACT_DATABASE_MESSAGE = "It is advisable to compact database every 30 days.";
+export const COMPACT_DATABASE_MESSAGE =
+    "It is advisable to compact database every 30 days.";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const getIsDarkTheme = function () {
+    return EEZStudio.electron.ipcRenderer.sendSync("getIsDarkTheme");
+};
+
+const setIsDarkTheme = function (value: boolean) {
+    EEZStudio.electron.ipcRenderer.send("setIsDarkTheme", value);
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,6 +72,7 @@ class SettingsController {
     @observable databaseSize: number;
     @observable timeOfLastDatabaseCompactOperation: Date;
     @observable _isCompactDatabaseAdvisable: boolean;
+    @observable isDarkTheme: boolean = getIsDarkTheme();
 
     constructor() {
         var fs = require("fs");
@@ -68,6 +82,8 @@ class SettingsController {
         this.updateTimeOfLastDatabaseCompact();
 
         setInterval(this.updateTimeOfLastDatabaseCompact, 60 * 1000);
+
+        this.switchTheme();
     }
 
     @action.bound
@@ -89,13 +105,17 @@ class SettingsController {
         }
 
         this._isCompactDatabaseAdvisable =
-            new Date().getTime() - this.timeOfLastDatabaseCompactOperation.getTime() >
+            new Date().getTime() -
+                this.timeOfLastDatabaseCompactOperation.getTime() >
             CONF_DATABASE_COMPACT_ADVISE_PERIOD;
     }
 
     @computed
     get isCompactDatabaseAdvisable() {
-        return this.databasePath === this.activeDatabasePath && this._isCompactDatabaseAdvisable;
+        return (
+            this.databasePath === this.activeDatabasePath &&
+            this._isCompactDatabaseAdvisable
+        );
     }
 
     @computed
@@ -130,6 +150,45 @@ class SettingsController {
     onTimeFormatChanged(value: string) {
         this.timeFormat = value;
         setTimeFormat(value);
+    }
+
+    @action.bound
+    onIsDarkThemeChanged(value: boolean) {
+        this.isDarkTheme = value;
+        setIsDarkTheme(value);
+        this.switchTheme();
+    }
+
+    switchTheme() {
+        const content = document.getElementById(
+            "EezStudio_Content"
+        ) as HTMLDivElement;
+        content.style.opacity = "0";
+
+        const bootstrapLinkElement = document.getElementById(
+            "bootstrap-css"
+        ) as HTMLLinkElement;
+
+        const mainLinkElement = document.getElementById(
+            "main-css"
+        ) as HTMLLinkElement;
+
+        if (this.isDarkTheme) {
+            bootstrapLinkElement.href =
+                "../../node_modules/bootstrap-dark-5/dist/css/bootstrap-night.min.css";
+
+            mainLinkElement.href =
+                "../eez-studio-ui/_stylesheets/main-dark.css";
+        } else {
+            bootstrapLinkElement.href =
+                "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
+
+            mainLinkElement.href = "../eez-studio-ui/_stylesheets/main.css";
+        }
+
+        setTimeout(() => {
+            content.style.opacity = "";
+        }, 500);
     }
 
     @bind
@@ -169,12 +228,6 @@ export const settingsController = new SettingsController();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const CompactDatabaseDialogTable = styled.table`
-    & td {
-        padding: 5px;
-    }
-`;
-
 @observer
 class CompactDatabaseDialog extends React.Component<{}, {}> {
     @observable sizeBefore: number;
@@ -185,7 +238,9 @@ class CompactDatabaseDialog extends React.Component<{}, {}> {
         super(props);
 
         var fs = require("fs");
-        this.sizeBefore = fs.statSync(settingsController.activeDatabasePath).size;
+        this.sizeBefore = fs.statSync(
+            settingsController.activeDatabasePath
+        ).size;
     }
 
     async componentDidMount() {
@@ -200,11 +255,15 @@ class CompactDatabaseDialog extends React.Component<{}, {}> {
 
             runInAction(() => {
                 var fs = require("fs");
-                this.sizeAfter = fs.statSync(settingsController.activeDatabasePath).size;
+                this.sizeAfter = fs.statSync(
+                    settingsController.activeDatabasePath
+                ).size;
 
                 settingsController.databaseSize = this.sizeAfter!;
 
-                this.sizeReduced = (100 * (this.sizeBefore - this.sizeAfter!)) / this.sizeBefore;
+                this.sizeReduced =
+                    (100 * (this.sizeBefore - this.sizeAfter!)) /
+                    this.sizeBefore;
                 if (this.sizeReduced < 1) {
                     this.sizeReduced = Math.round(100 * this.sizeReduced) / 100;
                 } else if (this.sizeReduced < 10) {
@@ -227,7 +286,7 @@ class CompactDatabaseDialog extends React.Component<{}, {}> {
                 cancelButtonText="Close"
                 cancelDisabled={this.sizeAfter === undefined}
             >
-                <CompactDatabaseDialogTable>
+                <table className="EezStudio_CompactDatabaseDialogTable">
                     <tbody>
                         <tr>
                             <td>Size before</td>
@@ -247,13 +306,15 @@ class CompactDatabaseDialog extends React.Component<{}, {}> {
                             <tr>
                                 <td>Size reduced by </td>
                                 <td>
-                                    {formatBytes(this.sizeBefore - this.sizeAfter!)} or{" "}
-                                    {this.sizeReduced}%
+                                    {formatBytes(
+                                        this.sizeBefore - this.sizeAfter!
+                                    )}{" "}
+                                    or {this.sizeReduced}%
                                 </td>
                             </tr>
                         )}
                     </tbody>
-                </CompactDatabaseDialogTable>
+                </table>
             </Dialog>
         );
     }
@@ -261,45 +322,20 @@ class CompactDatabaseDialog extends React.Component<{}, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const HomeSettingsBody = styled.div`
-    padding: 50px 0;
-    margin: auto;
-    max-width: 640px;
-`;
-
-const HomeSettingsBar = styled(PanelHeader)`
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    text-align: right;
-    border-bottom-width: 0;
-    border-top-width: 1px;
-`;
-
-const DatabaseCompactDiv = styled.div`
-    margin-top: 10px;
-    border: 1px solid ${props => props.theme.borderColor};
-    padding: 5px;
-
-    &.databaseCompactIsAdvisable {
-        background-color: ${props => addAlphaToColor(props.theme.errorColor, 0.3)};
-    }
-
-    & > div {
-        margin-bottom: 5px;
-    }
-`;
-
 @observer
 export class Settings extends React.Component {
     render() {
-        const databaseCompactDivClassName = classNames({
-            databaseCompactIsAdvisable: settingsController.isCompactDatabaseAdvisable
-        });
+        const databaseCompactDivClassName = classNames(
+            "EezStudio_DatabaseCompactDiv",
+            {
+                databaseCompactIsAdvisable:
+                    settingsController.isCompactDatabaseAdvisable
+            }
+        );
 
         return (
             <div>
-                <HomeSettingsBody>
+                <div className="EezStudio_HomeSettingsBody">
                     <PropertyList>
                         <FileInputProperty
                             name="Database location"
@@ -310,20 +346,24 @@ export class Settings extends React.Component {
                             <td />
                             <td>
                                 <div className="btn-toolbar">
-                                    <div className="btn-group mr-2">
+                                    <div className="btn-group me-2">
                                         <button
                                             type="button"
                                             className="btn btn-secondary btn-sm"
-                                            onClick={settingsController.createNewDatabase}
+                                            onClick={
+                                                settingsController.createNewDatabase
+                                            }
                                         >
                                             Create New Database
                                         </button>
                                     </div>
-                                    <div className="btn-group mr-2">
+                                    <div className="btn-group me-2">
                                         <button
                                             type="button"
                                             className="btn btn-secondary btn-sm"
-                                            onClick={settingsController.showDatabasePathInFolder}
+                                            onClick={
+                                                settingsController.showDatabasePathInFolder
+                                            }
                                         >
                                             Show in Folder
                                         </button>
@@ -331,10 +371,15 @@ export class Settings extends React.Component {
                                 </div>
                                 {settingsController.databasePath ===
                                     settingsController.activeDatabasePath && (
-                                    <DatabaseCompactDiv className={databaseCompactDivClassName}>
+                                    <div
+                                        className={databaseCompactDivClassName}
+                                    >
                                         <div>
                                             Database size is{" "}
-                                            {formatBytes(settingsController.databaseSize)}.
+                                            {formatBytes(
+                                                settingsController.databaseSize
+                                            )}
+                                            .
                                         </div>
                                         <div>
                                             Database compacted{" "}
@@ -344,18 +389,22 @@ export class Settings extends React.Component {
                                             .
                                         </div>
                                         {settingsController.isCompactDatabaseAdvisable && (
-                                            <div>{COMPACT_DATABASE_MESSAGE}</div>
+                                            <div>
+                                                {COMPACT_DATABASE_MESSAGE}
+                                            </div>
                                         )}
-                                        <div className="btn-group mr-2">
+                                        <div className="btn-group me-2">
                                             <button
                                                 type="button"
                                                 className="btn btn-secondary btn-sm"
-                                                onClick={settingsController.compactDatabase}
+                                                onClick={
+                                                    settingsController.compactDatabase
+                                                }
                                             >
                                                 Compact Database
                                             </button>
                                         </div>
-                                    </DatabaseCompactDiv>
+                                    </div>
                                 )}
                             </td>
                         </tr>
@@ -367,7 +416,10 @@ export class Settings extends React.Component {
                             {Object.keys(LOCALES)
                                 .slice()
                                 .sort((a, b) =>
-                                    stringCompare((LOCALES as any)[a], (LOCALES as any)[b])
+                                    stringCompare(
+                                        (LOCALES as any)[a],
+                                        (LOCALES as any)[b]
+                                    )
                                 )
                                 .map(locale => (
                                     <option key={locale} value={locale}>
@@ -381,7 +433,10 @@ export class Settings extends React.Component {
                             onChange={settingsController.onDateFormatChanged}
                         >
                             {DATE_FORMATS.map(dateFormat => (
-                                <option key={dateFormat.format} value={dateFormat.format}>
+                                <option
+                                    key={dateFormat.format}
+                                    value={dateFormat.format}
+                                >
                                     {moment(new Date())
                                         .locale(settingsController.locale)
                                         .format(dateFormat.format)}
@@ -394,19 +449,27 @@ export class Settings extends React.Component {
                             onChange={settingsController.onTimeFormatChanged}
                         >
                             {TIME_FORMATS.map(timeFormat => (
-                                <option key={timeFormat.format} value={timeFormat.format}>
+                                <option
+                                    key={timeFormat.format}
+                                    value={timeFormat.format}
+                                >
                                     {moment(new Date())
                                         .locale(settingsController.locale)
                                         .format(timeFormat.format)}
                                 </option>
                             ))}
                         </SelectProperty>
+                        <BooleanProperty
+                            name={`Dark theme`}
+                            value={settingsController.isDarkTheme}
+                            onChange={settingsController.onIsDarkThemeChanged}
+                        />
                     </PropertyList>
-                </HomeSettingsBody>
+                </div>
 
                 {settingsController.restartRequired && (
-                    <HomeSettingsBar>
-                        <div className="btn-group mr-2">
+                    <PanelHeader className="EezStudio_HomeSettingsBar">
+                        <div className="btn-group me-2">
                             <button
                                 className="btn btn-primary EezStudio_PulseTransition"
                                 onClick={settingsController.restart}
@@ -414,7 +477,7 @@ export class Settings extends React.Component {
                                 Restart
                             </button>
                         </div>
-                    </HomeSettingsBar>
+                    </PanelHeader>
                 )}
             </div>
         );

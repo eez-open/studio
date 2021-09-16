@@ -1,29 +1,18 @@
 import React from "react";
 import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
-
-const Input = styled.input`
-    padding: 2px 5px;
-    width: 100%;
-    border: none;
-    &.empty {
-        font-family: "Material Icons";
-    }
-`;
-
 export class SearchInput extends React.Component<{
     searchText: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }> {
     render() {
-        let className = classNames({
+        let className = classNames("EezStudio_SearchInput", {
             empty: !this.props.searchText
         });
 
         return (
-            <Input
+            <input
                 type="text"
                 placeholder="&#xe8b6;"
                 className={className}

@@ -6,7 +6,6 @@ import { DndProvider, useDrag, useDrop, DropTargetMonitor } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { XYCoord } from "dnd-core";
 
-import styled from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
 import { IconAction } from "eez-studio-ui/action";
@@ -252,140 +251,6 @@ export const TabView: React.FC<TabViewProps> = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const TabsViewContainer = styled.div`
-    flex-grow: 1;
-
-    height: 37px;
-    margin: 0;
-
-    display: flex;
-    min-width: 0;
-    flex: 1;
-
-    & > div.EezStudio_Tab {
-        min-width: 0;
-        max-width: 200px;
-        flex: 1;
-
-        overflow: hidden;
-
-        height: 37px;
-        border-right: 1px solid ${props => props.theme.borderColor};
-        padding-left: 10px;
-        padding-right: 5px;
-        cursor: pointer;
-        font-style: italic;
-
-        &.permanent {
-            font-style: normal;
-        }
-
-        &.active {
-            background-color: white;
-            font-weight: bold;
-            border-bottom: 3px solid
-                ${props => props.theme.selectionBackgroundColor};
-        }
-
-        & > div {
-            display: flex;
-            align-items: center;
-            height: 30px;
-            padding-top: 4px;
-            align-content: space-between;
-            white-space: nowrap;
-
-            & > img:first-child {
-                flex-shrink: 0;
-            }
-
-            & > span.title {
-                padding-left: 5px;
-                flex-grow: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                text-align: left;
-            }
-
-            & > i.close {
-                position: relative;
-                font-size: 14px;
-                padding-top: 3px;
-
-                &:hover {
-                    color: red;
-                }
-            }
-        }
-    }
-
-    & > div.EezStudio_AddTab {
-        position: relative;
-
-        & > button {
-            margin: 3px 4px;
-            padding: 3px;
-            cursor: pointer;
-            &:hover {
-                background: #ddd;
-            }
-        }
-
-        & > div {
-            position: absolute;
-
-            &.alignRight {
-                right: 0;
-            }
-
-            z-index: 1000;
-
-            padding: 5px;
-            overflow: hidden;
-
-            visibility: hidden;
-            &.open {
-                visibility: visible;
-            }
-
-            & > div {
-                transform: translateY(-100%);
-                opacity: 0;
-
-                padding: 10px;
-                background-color: white;
-                border-radius: 4px;
-                box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.25);
-            }
-
-            &.open > div {
-                transition: all 0.1s;
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-    }
-
-    &::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-    }
-
-    &:hover {
-        &::-webkit-scrollbar {
-            height: 2px;
-        }
-
-        &::-webkit-scrollbar-track {
-            background: ${props => props.theme.scrollTrackColor};
-        }
-
-        &::-webkit-scrollbar-thumb {
-            background: ${props => props.theme.scrollThumbColor};
-        }
-    }
-`;
-
 const AddTabButton = observer(
     ({ popup, attention }: { popup: React.ReactNode; attention?: boolean }) => {
         const [open, setOpen] = React.useState<boolean>(false);
@@ -468,7 +333,7 @@ export class TabsView extends React.Component<{
 
     render() {
         return (
-            <TabsViewContainer ref={this.ref}>
+            <div className="EezStudio_TabsView" ref={this.ref}>
                 {this.el && (
                     <DndProvider backend={HTML5Backend}>
                         {this.props.tabs.map((tab, index) => (
@@ -487,7 +352,7 @@ export class TabsView extends React.Component<{
                         attention={this.props.addTabAttention}
                     />
                 )}
-            </TabsViewContainer>
+            </div>
         );
     }
 }

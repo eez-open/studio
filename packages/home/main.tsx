@@ -3,6 +3,7 @@ import "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
 import { configure } from "mobx";
+import { observer } from "mobx-react";
 
 import { theme } from "eez-studio-ui/theme";
 import { ThemeProvider } from "eez-studio-ui/styled-components";
@@ -106,6 +107,19 @@ EEZStudio.electron.ipcRenderer.on("command-palette", () => {
     }
 });
 
+@observer
+class Main extends React.Component {
+    render() {
+        return (
+            <ThemeProvider theme={theme()}>
+                {this.props.children}
+                {notification.container}
+                <LineMarkers />
+            </ThemeProvider>
+        );
+    }
+}
+
 async function main() {
     const { loadExtensions } = await import(
         "eez-studio-shared/extensions/extensions"
@@ -116,11 +130,9 @@ async function main() {
 
     const { App } = await import("home/app");
     ReactDOM.render(
-        <ThemeProvider theme={theme}>
+        <Main>
             <App />
-            {notification.container}
-            <LineMarkers />
-        </ThemeProvider>,
+        </Main>,
         document.getElementById("EezStudio_Content")
     );
 

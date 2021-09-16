@@ -328,8 +328,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 style.width = SPLITTER_SIZE + "px";
                 style.height = "100%";
 
-                style.borderLeft = "1px solid " + theme.borderColor;
-                style.borderRight = "1px solid " + theme.borderColor;
+                style.borderLeft = "1px solid " + theme().borderColor;
+                style.borderRight = "1px solid " + theme().borderColor;
             } else {
                 style.cursor = "row-resize";
                 style.left = 0;
@@ -337,8 +337,8 @@ export class Splitter extends React.Component<SplitterProps, {}> {
                 style.width = "100%";
                 style.height = SPLITTER_SIZE + "px";
 
-                style.borderTop = "1px solid " + theme.borderColor;
-                style.borderBottom = "1px solid " + theme.borderColor;
+                style.borderTop = "1px solid " + theme().borderColor;
+                style.borderBottom = "1px solid " + theme().borderColor;
             }
 
             splitterStyles.push(style);
@@ -353,7 +353,6 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         };
 
         const className = classNames(
-            "EezStudio_Splitter",
             this.props.type === "horizontal"
                 ? "EezStudio_Splitter_Horizontal"
                 : "EezStudio_Splitter_Vertical"
@@ -361,7 +360,6 @@ export class Splitter extends React.Component<SplitterProps, {}> {
 
         return (
             <div
-                className={this.props.className}
                 ref={element => (this.element = element)}
                 style={style}
                 tabIndex={this.props.tabIndex}
@@ -430,7 +428,7 @@ class SplitterThumb extends React.Component<
         return (
             <div
                 ref={ref => this.draggable.attach(ref)}
-                className={className}
+                className={classNames("EezStudio_SplitterThumbDiv", className)}
                 style={style}
             />
         );

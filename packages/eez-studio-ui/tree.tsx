@@ -135,7 +135,7 @@ interface TreeProps {
 export class Tree extends React.Component<TreeProps, {}> {
     render() {
         return (
-            <div className="EezStudio_Tree" tabIndex={0}>
+            <div className="EezStudio_SimpleTree" tabIndex={0}>
                 <TreeRow
                     showOnlyChildren={this.props.showOnlyChildren}
                     node={this.props.rootNode}

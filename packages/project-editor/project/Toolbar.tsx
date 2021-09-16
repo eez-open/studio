@@ -80,6 +80,7 @@ export class Toolbar extends React.Component {
     get isBuildConfigurationSelectorVisible() {
         return (
             !this.context.isDashboardProject &&
+            !this.context.isAppletProject &&
             (this.context.project.pages ||
                 this.context.project.actions ||
                 (this.context.project.variables &&

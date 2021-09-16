@@ -5,20 +5,12 @@ import { observer } from "mobx-react";
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import styled from "eez-studio-ui/styled-components";
 import { Icon } from "eez-studio-ui/icon";
 
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ScriptHistoryItemDiv = styled(HistoryItemDiv)`
-    background-color: #f5f5f5;
-    padding: 10px;
-    display: flex;
-    flex-direction: row;
-`;
 
 @observer
 export class ScriptHistoryItemComponent extends React.Component<
@@ -29,32 +21,38 @@ export class ScriptHistoryItemComponent extends React.Component<
 > {
     render() {
         return (
-            <ScriptHistoryItemDiv>
-                <Icon className="mr-3" icon={"material:slideshow"} size={48} />
+            <div className="EezStudio_ScriptHistoryItem">
+                <Icon className="me-3" icon={"material:slideshow"} size={48} />
                 <div>
                     <p>
-                        <HistoryItemDate>
+                        <small className="EezStudio_HistoryItemDate text-muted">
                             {formatDateTimeLong(this.props.historyItem.date)}
-                        </HistoryItemDate>
+                        </small>
                     </p>
                     {this.props.historyItem.sourceDescriptionElement}
                     <table className="table">
                         <tbody>
                             <tr>
                                 <td>Name</td>
-                                <td>{this.props.historyItem.scriptMessage.name}</td>
+                                <td>
+                                    {this.props.historyItem.scriptMessage.name}
+                                </td>
                             </tr>
                             <tr>
                                 <td>Type</td>
-                                <td>{this.props.historyItem.scriptMessage.type}</td>
+                                <td>
+                                    {this.props.historyItem.scriptMessage.type}
+                                </td>
                             </tr>
-                            {this.props.historyItem.scriptMessage.parameters && (
+                            {this.props.historyItem.scriptMessage
+                                .parameters && (
                                 <tr>
                                     <td>Parameters</td>
                                     <td>
                                         <pre>
                                             {JSON.stringify(
-                                                this.props.historyItem.scriptMessage.parameters
+                                                this.props.historyItem
+                                                    .scriptMessage.parameters
                                             )}
                                         </pre>
                                     </td>
@@ -64,9 +62,13 @@ export class ScriptHistoryItemComponent extends React.Component<
                                 <tr>
                                     <td>Result:</td>
                                     <td>
-                                        {this.props.historyItem.scriptMessage.error ? (
+                                        {this.props.historyItem.scriptMessage
+                                            .error ? (
                                             <div className="text-danger">
-                                                {this.props.historyItem.scriptMessage.error}
+                                                {
+                                                    this.props.historyItem
+                                                        .scriptMessage.error
+                                                }
                                             </div>
                                         ) : (
                                             "Success"
@@ -77,7 +79,7 @@ export class ScriptHistoryItemComponent extends React.Component<
                         </tbody>
                     </table>
                 </div>
-            </ScriptHistoryItemDiv>
+            </div>
         );
     }
 }

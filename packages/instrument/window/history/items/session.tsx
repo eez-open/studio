@@ -6,43 +6,10 @@ import classNames from "classnames";
 import { formatDuration, formatDateTimeLong } from "eez-studio-shared/util";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import styled from "eez-studio-ui/styled-components";
-
 import { IAppStore } from "instrument/window/history/history";
-import { HistoryItem, HistoryItemDiv, HistoryItemDate } from "instrument/window/history/item";
+import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const AnswerHistoryItemDiv = styled(HistoryItemDiv)`
-    &.EezStudio_HistoryItem_SessionStart {
-        margin-top: 10px;
-        padding-top: 10px;
-        padding-bottom: 40px;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        background: linear-gradient(rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0));
-    }
-
-    &.EezStudio_HistoryItem_SessionClose {
-        margin-bottom: 10px;
-        padding-top: 40px;
-        padding-bottom: 10px;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        background: linear-gradient(rgba(255, 0, 0, 0), rgba(255, 0, 0, 0.1));
-    }
-
-    .EezStudio_HistoryItemDate {
-        color: #333 !important;
-    }
-
-    .EezStudio_HistoryItem_SessionName {
-        padding-left: 10px;
-        color: #333;
-        font-size: 110%;
-        font-weight: bold;
-    }
-`;
 
 @observer
 export class SessionHistoryItemComponent extends React.Component<
@@ -52,7 +19,7 @@ export class SessionHistoryItemComponent extends React.Component<
     {}
 > {
     render() {
-        let className = classNames({
+        let className = classNames("EezStudio_SessionHistoryItem", {
             EezStudio_HistoryItem_SessionStart:
                 this.props.historyItem.type === "activity-log/session-start",
             EezStudio_HistoryItem_SessionClose:
@@ -60,16 +27,17 @@ export class SessionHistoryItemComponent extends React.Component<
         });
 
         return (
-            <AnswerHistoryItemDiv className={className}>
+            <div className={className}>
                 <p>
-                    <HistoryItemDate>
+                    <small className="EezStudio_HistoryItemDate text-muted">
                         {formatDateTimeLong(this.props.historyItem.date)}
-                    </HistoryItemDate>
+                    </small>
                     <span className="EezStudio_HistoryItem_SessionName">
                         {this.props.historyItem.sessionName}
                     </span>
                     <span className="EezStudio_HistoryItem_SessionState">
-                        {this.props.historyItem.type === "activity-log/session-start"
+                        {this.props.historyItem.type ===
+                        "activity-log/session-start"
                             ? ` - Started`
                             : ` - Closed, Duration: ${formatDuration(
                                   this.props.historyItem.duration
@@ -77,7 +45,7 @@ export class SessionHistoryItemComponent extends React.Component<
                     </span>
                 </p>
                 {this.props.historyItem.sourceDescriptionElement}
-            </AnswerHistoryItemDiv>
+            </div>
         );
     }
 }
@@ -102,7 +70,9 @@ export class SessionHistoryItem extends HistoryItem {
             }
         } else {
             if (this.sid) {
-                const sessionStart = this.appStore.history.getHistoryItemById(this.sid);
+                const sessionStart = this.appStore.history.getHistoryItemById(
+                    this.sid
+                );
                 if (sessionStart instanceof SessionHistoryItem) {
                     return sessionStart.sessionName;
                 }
@@ -114,7 +84,9 @@ export class SessionHistoryItem extends HistoryItem {
     @computed
     get duration(): number {
         if (this.sid) {
-            const sessionStart = this.appStore.history.getHistoryItemById(this.sid);
+            const sessionStart = this.appStore.history.getHistoryItemById(
+                this.sid
+            );
             if (sessionStart instanceof SessionHistoryItem) {
                 return this.date.getTime() - sessionStart.date.getTime();
             }

@@ -258,7 +258,7 @@ export default {
             projectFeature: {
                 mandatory: false,
                 key: "extensionDefinitions",
-                displayName: "IEXT definitions",
+                displayName: "IEXT defs",
                 type: PropertyType.Array,
                 typeClass: ExtensionDefinition,
                 icon: "extension",

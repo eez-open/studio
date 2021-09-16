@@ -4,7 +4,6 @@ import classNames from "classnames";
 
 import { compareVersions } from "eez-studio-shared/util";
 import { Loader } from "eez-studio-ui/loader";
-import styled from "eez-studio-ui/styled-components";
 
 import {
     FIRMWARE_RELEASES_PAGE,
@@ -14,15 +13,6 @@ import { openLink } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { Section } from "instrument/bb3/components/Section";
 import { DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
-
-const OtherReleasesDiv = styled.div`
-    margin-top: 10px;
-
-    a[aria-expanded="true"] .chevron-right {
-        transition: 0.3s transform ease-in-out;
-        transform: rotate(90deg);
-    }
-`;
 
 const OtherReleases = observer(
     ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
@@ -52,7 +42,7 @@ const OtherReleases = observer(
         }
 
         return (
-            <OtherReleasesDiv>
+            <div className="EezStudio_OtherReleases">
                 <p>
                     <a
                         className="btn btn-light"
@@ -114,7 +104,7 @@ const OtherReleases = observer(
                         </tbody>
                     </table>
                 </div>
-            </OtherReleasesDiv>
+            </div>
         );
     }
 );

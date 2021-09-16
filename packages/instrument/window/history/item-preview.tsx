@@ -7,7 +7,11 @@ import { bind } from "bind-decorator";
 import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
-import { VerticalHeaderWithBody, PanelHeader, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    PanelHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -88,7 +92,10 @@ class ZoomedPreview extends React.Component<{
 
     render() {
         return ReactDOM.createPortal(
-            <ZoomedPreviewBody className={this.props.className} onContextMenu={this.onContextMenu}>
+            <ZoomedPreviewBody
+                className={this.props.className}
+                onContextMenu={this.onContextMenu}
+            >
                 <PanelHeader>
                     {this.props.toolbar || <Toolbar />}
                     <Toolbar>
@@ -109,62 +116,6 @@ class ZoomedPreview extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const UnzoomedPreviewBody = styled.div`
-    cursor: zoom-in;
-
-    &.EezStudio_ImagePreview {
-        img {
-            background-color: black;
-            width: 480px;
-        }
-    }
-
-    &.EezStudio_PdfPreview {
-        & > img {
-            pointer-events: none;
-            width: 240px;
-        }
-        & > div > WebView {
-            pointer-events: none;
-            width: 300px;
-            height: 400px;
-            overflow: hidden;
-        }
-    }
-
-    &.EezStudio_ChartPreview {
-        background-color: white;
-        padding: 8px;
-
-        cursor: zoom-in;
-
-        svg {
-            pointer-events: none;
-        }
-
-        .EezStudio_ChartView {
-            position: static;
-            width: 640px;
-            /*
-            svg {
-                height: 200px;
-            }
-            */
-            svg.EezStudio_Chart_XAxis {
-                height: 24px;
-            }
-        }
-
-        &.EezStudio_ChartPreview_BlackBackground {
-            background-color: black;
-        }
-
-        .EezStudio_ChartView svg {
-            height: 162px;
-        }
-    }
-`;
-
 @observer
 class UnzoomedPreview extends React.Component<{
     className?: string;
@@ -172,9 +123,15 @@ class UnzoomedPreview extends React.Component<{
 }> {
     render() {
         return (
-            <UnzoomedPreviewBody className={this.props.className} onClick={this.props.toggleZoom}>
+            <div
+                className={classNames(
+                    "EezStudio_UnzoomedPreviewBody",
+                    this.props.className
+                )}
+                onClick={this.props.toggleZoom}
+            >
                 {this.props.children}
-            </UnzoomedPreviewBody>
+            </div>
         );
     }
 }
@@ -198,7 +155,10 @@ export class HistoryItemPreview extends React.Component<{
     }
 
     render() {
-        const className = classNames("EezStudio_ItemPreview", this.props.className);
+        const className = classNames(
+            "EezStudio_ItemPreview",
+            this.props.className
+        );
 
         if (this.props.zoom) {
             return (
@@ -213,7 +173,10 @@ export class HistoryItemPreview extends React.Component<{
             );
         } else {
             return (
-                <UnzoomedPreview className={className} toggleZoom={this.toggleZoom}>
+                <UnzoomedPreview
+                    className={className}
+                    toggleZoom={this.toggleZoom}
+                >
                     {this.props.children}
                 </UnzoomedPreview>
             );

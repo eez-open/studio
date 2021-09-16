@@ -8,31 +8,6 @@ import classNames from "classnames";
 import { IDialogComponentProps } from "eez-studio-ui/dialog";
 import { Icon } from "eez-studio-ui/icon";
 import { IconAction } from "eez-studio-ui/action";
-import { styled } from "eez-studio-ui/styled-components";
-
-////////////////////////////////////////////////////////////////////////////////
-
-const NonModalDialogContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    & > :nth-child(1) {
-        flex-grow: 1;
-        display: flex;
-        overflow: auto;
-    }
-    & > :nth-child(2) {
-        padding: 10px;
-        display: flex;
-        justify-content: "flex-end";
-        border-top: 1px solid ${props => props.theme.borderColor};
-        background-color: ${props => props.theme.panelHeaderColor};
-
-        & > button {
-            margin-left: 10px;
-        }
-    }
-`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,13 +108,13 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
 
         if (props.modal != undefined && !props.modal) {
             return (
-                <NonModalDialogContainer>
+                <div className="EezStudio_NonModalDialogContainer">
                     <div>{props.children}</div>
                     <div>
                         {this.props.additionalFooterControl}
                         {buttons}
                     </div>
-                </NonModalDialogContainer>
+                </div>
             );
         }
 

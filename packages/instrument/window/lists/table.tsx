@@ -19,7 +19,11 @@ import { validators } from "eez-studio-shared/validation";
 
 import { theme } from "eez-studio-ui/theme";
 import styled from "eez-studio-ui/styled-components";
-import { VerticalHeaderWithBody, Body, ToolbarHeader } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    Body,
+    ToolbarHeader
+} from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
     AxisController,
@@ -34,7 +38,11 @@ import {
     globalViewOptions
 } from "eez-studio-ui/chart/chart";
 import { Toolbar } from "eez-studio-ui/toolbar";
-import { ButtonAction, DropdownButtonAction, DropdownItem } from "eez-studio-ui/action";
+import {
+    ButtonAction,
+    DropdownButtonAction,
+    DropdownItem
+} from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { InstrumentObject } from "instrument/instrument-object";
@@ -114,7 +122,11 @@ export class TableListData extends BaseListData {
 export class TableList extends BaseList {
     @observable data: TableListData;
 
-    constructor(props: any, appStore: InstrumentAppStore, instrument: InstrumentObject) {
+    constructor(
+        props: any,
+        appStore: InstrumentAppStore,
+        instrument: InstrumentObject
+    ) {
         super(props, appStore, instrument);
         this.type = "table";
         this.data = new TableListData(this, props.data);
@@ -122,24 +134,37 @@ export class TableList extends BaseList {
 
     @computed
     get numPoints() {
-        return Math.max(this.data.dwell.length, this.data.current.length, this.data.voltage.length);
+        return Math.max(
+            this.data.dwell.length,
+            this.data.current.length,
+            this.data.voltage.length
+        );
     }
 
     @computed
     get isMaxPointsReached() {
-        return this.numPoints >= this.$eez_noser_appStore.instrument!.listsMaxPointsProperty;
+        return (
+            this.numPoints >=
+            this.$eez_noser_appStore.instrument!.listsMaxPointsProperty
+        );
     }
 
     getMaxTime() {
         let max = 0;
         const dwellData = this.data.dwell;
         for (let i = 0; i < this.numPoints; i++) {
-            max += i < dwellData.length ? dwellData[i] : dwellData[dwellData.length - 1];
+            max +=
+                i < dwellData.length
+                    ? dwellData[i]
+                    : dwellData[dwellData.length - 1];
         }
         return max;
     }
 
-    createChartsController(displayOption: ChartsDisplayOption, mode: ChartMode): ChartsController {
+    createChartsController(
+        displayOption: ChartsDisplayOption,
+        mode: ChartMode
+    ): ChartsController {
         return createTableChartsController(this, displayOption, mode);
     }
 
@@ -191,7 +216,8 @@ export class TableLineController extends LineController {
     }
 
     get list() {
-        return (this.yAxisController.chartsController as TableChartsController).list;
+        return (this.yAxisController.chartsController as TableChartsController)
+            .list;
     }
 
     @computed
@@ -206,7 +232,9 @@ export class TableLineController extends LineController {
 
     @computed
     get values(): number[] {
-        return this.tableData[this.yAxisController.unit.name as "voltage" | "current"];
+        return this.tableData[
+            this.yAxisController.unit.name as "voltage" | "current"
+        ];
     }
 
     @computed
@@ -236,7 +264,13 @@ export class TableLineController extends LineController {
     }
 
     render(clipId: string) {
-        return <TableLineView key={this.id} tableLineController={this} clipId={clipId} />;
+        return (
+            <TableLineView
+                key={this.id}
+                tableLineController={this}
+                clipId={clipId}
+            />
+        );
     }
 }
 
@@ -263,16 +297,24 @@ export class TableLineView extends React.Component<
         for (let i = 0; i < size; i++) {
             if (i === 0) {
                 path = `M${chartLeft + xAxisController.valueToPx(0)} ${
-                    chartBottom - yAxisController.valueToPx((values.length > 0 && values[0]) || 0)
+                    chartBottom -
+                    yAxisController.valueToPx(
+                        (values.length > 0 && values[0]) || 0
+                    )
                 }`;
             } else {
                 if (i < values.length) {
-                    path += " v " + -(values[i] - (values[i - 1] || 0)) * yAxisController.scale;
+                    path +=
+                        " v " +
+                        -(values[i] - (values[i - 1] || 0)) *
+                            yAxisController.scale;
                 }
             }
             path +=
                 " h " +
-                (i < dwells.length ? dwells[i] : dwells[dwells.length - 1] || 1) *
+                (i < dwells.length
+                    ? dwells[i]
+                    : dwells[dwells.length - 1] || 1) *
                     xAxisController.scale;
         }
 
@@ -292,7 +334,10 @@ export class TableLineView extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function executeCommand(list: TableList, modificator: (data: TableListData) => void) {
+function executeCommand(
+    list: TableList,
+    modificator: (data: TableListData) => void
+) {
     let oldData = objectClone(list.data);
     let newData = objectClone(list.data);
 
@@ -325,7 +370,10 @@ function cellKeyFromUnit(unit: IUnit): CellKey {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class TableChartsHeader extends React.Component<{ chartsController: ChartsController }, {}> {
+class TableChartsHeader extends React.Component<
+    { chartsController: ChartsController },
+    {}
+> {
     get list() {
         return (this.props.chartsController as TableChartsController).list;
     }
@@ -398,7 +446,9 @@ class TableChartsHeader extends React.Component<{ chartsController: ChartsContro
                         title="Edit properties"
                         onClick={this.editProperties}
                     />
-                    <CommonTools chartsController={this.props.chartsController} />
+                    <CommonTools
+                        chartsController={this.props.chartsController}
+                    />
                 </Toolbar>
             </ListChartViewHeader>
         );
@@ -413,12 +463,6 @@ interface CellProps {
     onFocus: () => void;
     setError(error: string | undefined): void;
 }
-
-const CellTd = styled.td`
-    &.selected {
-        background-color: ${props => addAlphaToColor(props.theme.selectionBackgroundColor, 0.1)};
-    }
-`;
 
 @observer
 class Cell extends React.Component<CellProps, {}> {
@@ -438,7 +482,11 @@ class Cell extends React.Component<CellProps, {}> {
 
     @bind
     onBlur(e: React.FocusEvent<HTMLElement>) {
-        this.props.onChange(this.props.index, this.props.unit, (e.target as HTMLElement).innerText);
+        this.props.onChange(
+            this.props.index,
+            this.props.unit,
+            (e.target as HTMLElement).innerText
+        );
     }
 
     static focusNext(element: HTMLElement, offset: number) {
@@ -501,7 +549,11 @@ class Cell extends React.Component<CellProps, {}> {
                 e.stopPropagation();
                 Cell.focusNext(e.target as HTMLElement, 4);
             } else if (e.key === "ArrowLeft") {
-                if (e.altKey || e.metaKey || Cell.getCaretPosition(e.target as Element) === 0) {
+                if (
+                    e.altKey ||
+                    e.metaKey ||
+                    Cell.getCaretPosition(e.target as Element) === 0
+                ) {
                     e.preventDefault();
                     e.stopPropagation();
                     Cell.focusNext(e.target as HTMLElement, -1);
@@ -524,13 +576,16 @@ class Cell extends React.Component<CellProps, {}> {
     render() {
         const { index, unit, onFocus } = this.props;
         const className = classNames(
+            "EezStudio_CellTd",
             `EezStudio_TableListEditor_Cell_${index}_${cellKeyFromUnit(unit)}`,
             {
-                selected: index === selectedCell.index && cellKeyFromUnit(unit) === selectedCell.key
+                selected:
+                    index === selectedCell.index &&
+                    cellKeyFromUnit(unit) === selectedCell.key
             }
         );
         return (
-            <CellTd
+            <td
                 className={className}
                 contentEditable
                 suppressContentEditableWarning
@@ -539,7 +594,7 @@ class Cell extends React.Component<CellProps, {}> {
                 onKeyDown={this.onKeyDown}
             >
                 {this.value}
-            </CellTd>
+            </td>
         );
     }
 }
@@ -580,7 +635,8 @@ export class Table extends React.Component<
     onValueChange(index: number, unit: IUnit, value: string) {
         let key = cellKeyFromUnit(unit);
         let array = this.data[key];
-        let currentValue = array && index < array.length ? array[index] : undefined;
+        let currentValue =
+            array && index < array.length ? array[index] : undefined;
         let numValue = unit.parseValue(value);
         if (numValue != currentValue) {
             if (typeof numValue !== "number") {
@@ -641,7 +697,9 @@ export class Table extends React.Component<
                 // }
 
                 if (numValue <= 0) {
-                    $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
+                    $(
+                        `.EezStudio_TableListEditor_Cell_${index}_${key}`
+                    ).focus();
                     this.props.setError("Invalid value");
                     return;
                 }
@@ -694,7 +752,9 @@ export class Table extends React.Component<
                                 unit={TIME_UNIT_NO_CUSTOM_FORMAT}
                                 value={this.getValue(index, "dwell")}
                                 onChange={this.onValueChange}
-                                onFocus={() => this.props.onCellFocus(index, "dwell")}
+                                onFocus={() =>
+                                    this.props.onCellFocus(index, "dwell")
+                                }
                                 setError={this.props.setError}
                             />
                             <Cell
@@ -702,7 +762,9 @@ export class Table extends React.Component<
                                 unit={VOLTAGE_UNIT}
                                 value={this.getValue(index, "voltage")}
                                 onChange={this.onValueChange}
-                                onFocus={() => this.props.onCellFocus(index, "voltage")}
+                                onFocus={() =>
+                                    this.props.onCellFocus(index, "voltage")
+                                }
                                 setError={this.props.setError}
                             />
                             <Cell
@@ -710,7 +772,9 @@ export class Table extends React.Component<
                                 unit={CURRENT_UNIT}
                                 value={this.getValue(index, "current")}
                                 onChange={this.onValueChange}
-                                onFocus={() => this.props.onCellFocus(index, "current")}
+                                onFocus={() =>
+                                    this.props.onCellFocus(index, "current")
+                                }
                                 setError={this.props.setError}
                             />
                         </tr>
@@ -781,7 +845,10 @@ interface TableDetailsViewProps {
 }
 
 @observer
-export class TableDetailsView extends React.Component<TableDetailsViewProps, {}> {
+export class TableDetailsView extends React.Component<
+    TableDetailsViewProps,
+    {}
+> {
     @observable list: TableList = this.props.list;
 
     @computed
@@ -847,7 +914,9 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
             });
 
             setTimeout(() => {
-                $(`.EezStudio_TableListEditor_Cell_${index + 1}_${key}`).focus();
+                $(
+                    `.EezStudio_TableListEditor_Cell_${index + 1}_${key}`
+                ).focus();
             }, 10);
         }
     }
@@ -875,7 +944,9 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
     }
 
     get canClearColumn() {
-        return selectedCell.index < this.props.list.data[selectedCell.key].length;
+        return (
+            selectedCell.index < this.props.list.data[selectedCell.key].length
+        );
     }
 
     @bind
@@ -955,9 +1026,14 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                 className="EezStudio_TableListEditor_Details"
             >
                 <VerticalHeaderWithBody>
-                    <TableChartsHeader chartsController={this.chartsController} />
+                    <TableChartsHeader
+                        chartsController={this.chartsController}
+                    />
                     <Body>
-                        <ChartsView chartsController={this.chartsController} tabIndex={0} />
+                        <ChartsView
+                            chartsController={this.chartsController}
+                            tabIndex={0}
+                        />
                     </Body>
                 </VerticalHeaderWithBody>
 
@@ -999,10 +1075,15 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
                                 onClick={this.deleteAllFromCursor}
                                 disabled={!this.canDeleteAllFromCursor}
                             />
-                            <DropdownItem text="Delete all" onClick={this.deleteAll} />
+                            <DropdownItem
+                                text="Delete all"
+                                onClick={this.deleteAll}
+                            />
                         </DropdownButtonAction>
                         {this.list.isMaxPointsReached && (
-                            <div className="text-success">Max no. of points reached.</div>
+                            <div className="text-success">
+                                Max no. of points reached.
+                            </div>
                         )}
                         {<div className="text-danger">{this.error}</div>}
                     </TableListEditorToolbarHeader>
@@ -1022,7 +1103,11 @@ export class TableDetailsView extends React.Component<TableDetailsViewProps, {}>
 ////////////////////////////////////////////////////////////////////////////////
 
 class TableChartsController extends ChartsController {
-    constructor(public list: TableList, mode: ChartMode, xAxisModel: IAxisModel) {
+    constructor(
+        public list: TableList,
+        mode: ChartMode,
+        xAxisModel: IAxisModel
+    ) {
         super(mode, xAxisModel, list.data.viewOptions);
     }
 
@@ -1037,11 +1122,17 @@ class TableChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 class TableChartController extends ChartController {
-    constructor(chartsController: TableChartsController, displayOption: ChartsDisplayOption) {
+    constructor(
+        chartsController: TableChartsController,
+        displayOption: ChartsDisplayOption
+    ) {
         super(chartsController, displayOption);
     }
 
-    onDragStart(chartView: ChartView, event: PointerEvent): MouseHandler | undefined {
+    onDragStart(
+        chartView: ChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined {
         let point = this.chartView!.transformEventPoint(event);
         const pointTime = this.xAxisController.pxToValue(point.x);
 
@@ -1066,7 +1157,9 @@ class TableChartController extends ChartController {
                     selectedCell.index = i;
                 });
                 setTimeout(() => {
-                    $(`.EezStudio_TableListEditor_Cell_${i}_${selectedCell.key}`).focus();
+                    $(
+                        `.EezStudio_TableListEditor_Cell_${i}_${selectedCell.key}`
+                    ).focus();
                 }, 10);
                 return;
             }
@@ -1112,7 +1205,7 @@ class TableChartController extends ChartController {
         let height = this.chartsController.chartHeight;
 
         const fill = addAlphaToColor(
-            theme.selectionBackgroundColor,
+            theme().selectionBackgroundColor,
             globalViewOptions.blackBackground ? 0.4 : 0.1
         );
 
@@ -1127,25 +1220,36 @@ export function createTableChartsController(
     displayOption: ChartsDisplayOption,
     mode: ChartMode
 ) {
-    const chartsController = new TableChartsController(list, mode, list.data.timeAxisModel);
+    const chartsController = new TableChartsController(
+        list,
+        mode,
+        list.data.timeAxisModel
+    );
 
     const charts: ChartController[] = [];
 
     if (displayOption === "both") {
-        const chartController = new TableChartController(chartsController, displayOption);
+        const chartController = new TableChartController(
+            chartsController,
+            displayOption
+        );
 
         chartController.createYAxisController(list.data.voltageAxisModel);
-        chartController.createYAxisControllerOnRightSide(list.data.currentAxisModel);
+        chartController.createYAxisControllerOnRightSide(
+            list.data.currentAxisModel
+        );
 
         chartController.lineControllers.push(
             new TableLineController(
-                "envelope-sample-data-" + chartController.yAxisController.position,
+                "envelope-sample-data-" +
+                    chartController.yAxisController.position,
                 chartController.yAxisController
             )
         );
         chartController.lineControllers.push(
             new TableLineController(
-                "envelope-sample-data-" + chartController.yAxisControllerOnRightSide!.position,
+                "envelope-sample-data-" +
+                    chartController.yAxisControllerOnRightSide!.position,
                 chartController.yAxisControllerOnRightSide!
             )
         );
@@ -1153,11 +1257,15 @@ export function createTableChartsController(
         charts.push(chartController);
     } else {
         if (displayOption === "voltage" || displayOption === "split") {
-            const chartController = new TableChartController(chartsController, "voltage");
+            const chartController = new TableChartController(
+                chartsController,
+                "voltage"
+            );
             chartController.createYAxisController(list.data.voltageAxisModel);
             chartController.lineControllers.push(
                 new TableLineController(
-                    "envelope-sample-data-" + chartController.yAxisController.position,
+                    "envelope-sample-data-" +
+                        chartController.yAxisController.position,
                     chartController.yAxisController
                 )
             );
@@ -1165,11 +1273,15 @@ export function createTableChartsController(
         }
 
         if (displayOption === "current" || displayOption === "split") {
-            const chartController = new TableChartController(chartsController, "current");
+            const chartController = new TableChartController(
+                chartsController,
+                "current"
+            );
             chartController.createYAxisController(list.data.currentAxisModel);
             chartController.lineControllers.push(
                 new TableLineController(
-                    "envelope-sample-data-" + chartController.yAxisController.position,
+                    "envelope-sample-data-" +
+                        chartController.yAxisController.position,
                     chartController.yAxisController
                 )
             );

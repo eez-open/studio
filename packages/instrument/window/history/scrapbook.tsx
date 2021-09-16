@@ -2,7 +2,6 @@ import React from "react";
 import { observable, action, reaction } from "mobx";
 import { observer } from "mobx-react";
 
-import { styled } from "eez-studio-ui/styled-components";
 import {
     activityLogStore,
     IActivityLogEntry
@@ -195,74 +194,6 @@ export function getScrapbookStore() {
     return _theScrapbook;
 }
 
-const Container = styled.div`
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    padding: 10px;
-
-    overflow: auto;
-
-    display: grid;
-    grid-auto-flow: row dense;
-    grid-auto-columns: max-content;
-    grid-auto-rows: max-content;
-
-    background-color: white;
-`;
-
-const DropMark = styled.div`
-    position: absolute;
-    width: 2px;
-    background-color: ${props => props.theme.dropPlaceColor};
-
-    > div:nth-child(1) {
-        position: absolute;
-        left: -3px;
-        width: 0;
-        height: 0;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-top: 4px solid ${props => props.theme.dropPlaceColor};
-    }
-
-    > div:nth-child(2) {
-        position: absolute;
-        left: -3px;
-        bottom: 0;
-        width: 0;
-        height: 0;
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-bottom: 4px solid ${props => props.theme.dropPlaceColor};
-    }
-`;
-
-const HeaderContainer = styled.div`
-    flex-grow: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    label {
-        white-space: nowrap;
-    }
-
-    div:nth-child(2) {
-        display: flex;
-        align-items: center;
-
-        > span {
-            white-space: nowrap;
-            margin-right: 10px;
-        }
-
-        > input {
-            max-width: 200px;
-        }
-    }
-`;
-
 @observer
 export class Scrapbook extends React.Component<{
     appStore: IAppStore;
@@ -377,7 +308,7 @@ export class Scrapbook extends React.Component<{
                 }}
             >
                 <ToolbarHeader>
-                    <HeaderContainer>
+                    <div className="EezStudio_HeaderContainer">
                         <div className="form-check">
                             <label className="form-check-label">
                                 <input
@@ -409,11 +340,11 @@ export class Scrapbook extends React.Component<{
                                 className="form-range"
                             />
                         </div>
-                    </HeaderContainer>
+                    </div>
                 </ToolbarHeader>
                 <Body tabIndex={0}>
-                    <Container
-                        className="EezStudio_Scrapbook_Container"
+                    <div
+                        className="EezStudio_ScrapbookContainer"
                         ref={this.setDiv}
                         onDragOver={this.onDragOver}
                         onDragLeave={this.onDragLeave}
@@ -451,7 +382,8 @@ export class Scrapbook extends React.Component<{
                             showInHistory={this.showInHistory}
                         />
                         {this.dropMarkLeft != undefined && (
-                            <DropMark
+                            <div
+                                className="EezStudio_DropMark"
                                 style={{
                                     left: this.dropMarkLeft,
                                     top: this.dropMarkTop,
@@ -460,9 +392,9 @@ export class Scrapbook extends React.Component<{
                             >
                                 <div />
                                 <div />
-                            </DropMark>
+                            </div>
                         )}
-                    </Container>
+                    </div>
                 </Body>
             </VerticalHeaderWithBody>
         );

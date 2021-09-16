@@ -1,20 +1,9 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { styled } from "eez-studio-ui/styled-components";
-
 import { getConnection } from "instrument/window/connection";
 
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
-
-const Container = styled.div`
-    & > button {
-        margin-left: 10px;
-        &:first-child {
-            margin-left: 0;
-        }
-    }
-`;
 
 export const ListsSectionGlobalActions = observer(
     ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
@@ -27,7 +16,7 @@ export const ListsSectionGlobalActions = observer(
         }
 
         return (
-            <Container>
+            <div className="EezStudio_BB3_ListsSectionGlobalActions">
                 {bb3Instrument.canDownloadAllLists && (
                     <button
                         className="btn btn-sm btn-primary text-nowrap"
@@ -45,7 +34,7 @@ export const ListsSectionGlobalActions = observer(
                         Upload All
                     </button>
                 )}
-            </Container>
+            </div>
         );
     }
 );

@@ -42,7 +42,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 import { humanize } from "eez-studio-shared/string";
-import { getPropertyValue } from "project-editor/components/PropertyGrid";
+import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
 
 const VariableIcon = (
     <svg

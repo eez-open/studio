@@ -48,11 +48,15 @@ export class ConnectionLine extends EezObject {
 
     static classInfo: ClassInfo = {
         label: (connectionLine: ConnectionLine) => {
-            return `${getLabel(connectionLine.sourceComponent!)}@${humanize(
-                connectionLine.output
-            )} ➝ ${getLabel(connectionLine.targetComponent!)}@${humanize(
-                connectionLine.input
-            )}`;
+            return `${
+                connectionLine.sourceComponent
+                    ? getLabel(connectionLine.sourceComponent)
+                    : "UNKNOWN"
+            }@${humanize(connectionLine.output)} ➝ ${
+                connectionLine.targetComponent
+                    ? getLabel(connectionLine.targetComponent)
+                    : "UNKNOWN"
+            }@${humanize(connectionLine.input)}`;
         },
 
         properties: [

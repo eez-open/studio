@@ -2,48 +2,8 @@ import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
-
 import { ChartBookmark, ChartsController } from "eez-studio-ui/chart/chart";
 import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
-
-const BookmarksTableContainer = styled.div`
-    background-color: white;
-    overflow: auto;
-    width: calc(100% - 20px);
-    height: calc(100% - 20px);
-    margin: 10px;
-    padding: 10px;
-    border: 1px solid ${props => props.theme.borderColor};
-
-    table {
-        width: 100%;
-
-        tr {
-            cursor: pointer;
-            font-size: 90%;
-
-            /* &:nth-child(2n+1) {
-                background-color: ${props => props.theme.borderColor};
-            } */
-
-            &.selected {
-                background-color: ${props =>
-                    props.theme.selectionBackgroundColor};
-                color: white;
-            }
-
-            td:nth-child(1),
-            td:nth-child(2) {
-                padding-right: 10px;
-            }
-
-            td:nth-child(3) {
-                width: 100%;
-            }
-        }
-    }
-`;
 
 @observer
 export class Bookmark extends React.Component<{
@@ -54,13 +14,8 @@ export class Bookmark extends React.Component<{
     onClick: () => void;
 }> {
     render() {
-        const {
-            chartsController,
-            index,
-            bookmark,
-            selected,
-            onClick
-        } = this.props;
+        const { chartsController, index, bookmark, selected, onClick } =
+            this.props;
 
         let className = classNames({
             selected
@@ -118,7 +73,10 @@ export class BookmarksView extends React.Component<{
         }
 
         return (
-            <BookmarksTableContainer ref={ref => (this.div = ref!)}>
+            <div
+                className="EezStudio_BookmarksTableContainer"
+                ref={ref => (this.div = ref!)}
+            >
                 <table>
                     <tbody>
                         {chartsController.bookmarks.map((bookmark, i) => (
@@ -137,7 +95,7 @@ export class BookmarksView extends React.Component<{
                         ))}
                     </tbody>
                 </table>
-            </BookmarksTableContainer>
+            </div>
         );
     }
 }

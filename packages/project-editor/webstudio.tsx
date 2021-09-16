@@ -33,7 +33,7 @@ async function main() {
     DocumentStore.startBackgroundCheck();
 
     ReactDOM.render(
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={theme()}>
             <ProjectContext.Provider value={DocumentStore}>
                 <ProjectEditor />
             </ProjectContext.Provider>

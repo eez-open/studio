@@ -70,30 +70,31 @@ function getNavigationStore(DocumentStore: DocumentStoreClass) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ColorItemSpan = styled.span`
+const ColorItemDiv = styled.div`
     width: calc(100% - 20px);
 
+    display: flex !important;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
     & > span {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+        flex-grow: 1;
+        flex-shrink: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-        & > span {
-            flex-grow: 1;
-            flex-shrink: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        & > label {
-            cursor: pointer;
-            flex-grow: 0;
-            flex-shrink: 0;
-            width: 30px;
-            height: 15px;
-            margin: 3px 0 3px 5px;
-        }
+    & > input {
+        cursor: pointer;
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: 24px;
+        height: 15px;
+        margin: 3px 5px 3px 3px;
+        border: none;
+        padding: 0;
     }
 `;
 
@@ -161,30 +162,21 @@ class ColorItem extends React.Component<{
 
     render() {
         return (
-            <ColorItemSpan className="tree-row-label">
-                <span>
-                    <span title={this.colorObject.name}>
-                        {this.colorObject.name}
-                    </span>
-                    <label
-                        className="form-label"
-                        style={{ backgroundColor: this.themeColor }}
-                        tabIndex={0}
-                    >
-                        <input
-                            type="color"
-                            hidden
-                            value={
-                                this.changedThemeColor !== undefined
-                                    ? this.changedThemeColor
-                                    : this.themeColor
-                            }
-                            onChange={this.onChange}
-                            tabIndex={0}
-                        />
-                    </label>
+            <ColorItemDiv className="tree-row-label">
+                <input
+                    type="color"
+                    value={
+                        this.changedThemeColor !== undefined
+                            ? this.changedThemeColor
+                            : this.themeColor
+                    }
+                    onChange={this.onChange}
+                    tabIndex={0}
+                />
+                <span title={this.colorObject.name}>
+                    {this.colorObject.name}
                 </span>
-            </ColorItemSpan>
+            </ColorItemDiv>
         );
     }
 }

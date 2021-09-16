@@ -1398,7 +1398,7 @@ const RuntimePanelDiv = styled.div`
     display: flex;
     flex-direction: column;
 
-    .EezStudio_Tree {
+    .EezStudio_SimpleTree {
         overflow: auto;
     }
 
@@ -1689,6 +1689,15 @@ export class RuntimeToolbar extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
+    showDebugInfo = action(() => {
+        this.context.NavigationStore.setSelection([
+            this.context.RuntimeStore.selectedPage
+        ]);
+
+        this.context.UIStateStore.showDebugInfo =
+            !this.context.UIStateStore.showDebugInfo;
+    });
+
     render() {
         return (
             <div className="btn-group">
@@ -1705,11 +1714,7 @@ export class RuntimeToolbar extends React.Component {
                 <IconAction
                     title="Debug"
                     icon="material:adb"
-                    onClick={action(
-                        () =>
-                            (this.context.UIStateStore.showDebugInfo =
-                                !this.context.UIStateStore.showDebugInfo)
-                    )}
+                    onClick={this.showDebugInfo}
                     selected={this.context.UIStateStore.showDebugInfo}
                     attention={this.context.RuntimeStore.hasError}
                 />

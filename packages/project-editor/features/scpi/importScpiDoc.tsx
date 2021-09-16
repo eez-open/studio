@@ -1686,7 +1686,7 @@ export function showImportScpiDocDialog(DocumentStore: DocumentStoreClass) {
     let el = document.createElement("div");
     document.body.appendChild(el);
     ReactDOM.render(
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={theme()}>
             <ProjectContext.Provider value={DocumentStore}>
                 <ImportScpiDocDialog
                     onHidden={() => {

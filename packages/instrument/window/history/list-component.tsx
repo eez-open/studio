@@ -6,9 +6,7 @@ import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { _debounce } from "eez-studio-shared/algorithm";
-import { addAlphaToColor } from "eez-studio-shared/color";
 
-import styled from "eez-studio-ui/styled-components";
 import { Icon } from "eez-studio-ui/icon";
 
 import { Waveform } from "instrument/window/waveform/generic";
@@ -28,107 +26,6 @@ const CONF_AUTO_RELOAD_Y_THRESHOLD = 20;
 export const CLIPBOARD_DATA_TYPE = "application/eez-studio-history-item";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const HistoryItemEnclosure = styled.div`
-    margin-bottom: 5px;
-
-    & > input {
-        float: left;
-        margin-top: 3px;
-        margin-right: 5px;
-        width: 15px;
-        height: 15px;
-    }
-
-    border: 2px solid transparent;
-    padding: 1px;
-
-    &.selected {
-        border: 2px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    &.EezStudio_HistoryItemEnclosure_Session {
-        width: 100%;
-    }
-
-    &.disablePreview .EezStudio_ItemPreview {
-        pointer-events: none;
-    }
-
-    &.thumbs {
-        .EezStudio_HistoryItemDate {
-            display: none;
-        }
-
-        .EezStudio_HistoryItemText {
-            display: none;
-        }
-
-        .EezStudio_Toolbar {
-            display: none;
-        }
-
-        .EezStudio_Icon {
-            display: none;
-        }
-
-        .EezStudio_ChartPreview {
-            padding: 0 !important;
-        }
-
-        .EezStudio_ItemPreview > img,
-        .EezStudio_ChartView_Preview {
-            width: 240px;
-        }
-
-        .EezStudio_ChartView_Preview {
-            height: 240px;
-            overflow: auto;
-            padding: 0;
-        }
-
-        .EezStudio_HistoryItem_File_Note {
-            min-width: auto;
-        }
-
-        .EezStudio_Chart_Title {
-            visibility: hidden;
-        }
-
-        .EezStudio_ChartContainer {
-            pointer-events: none;
-        }
-    }
-`;
-
-const HistoryItemRenderError = styled.div`
-    background-color: ${props => addAlphaToColor(props.theme.errorColor, 0.3)};
-    border-radius: 8px;
-    padding: 10px;
-`;
-
-let CachedHistoryItemThumbnailEnclosure = HistoryItemEnclosure;
-let cachedHistoryItemThumbnailEnclosureThumbnailSize = 240;
-
-function getThumbnailEnclosure(thumbnailSize: number) {
-    if (thumbnailSize != cachedHistoryItemThumbnailEnclosureThumbnailSize) {
-        cachedHistoryItemThumbnailEnclosureThumbnailSize = thumbnailSize;
-
-        CachedHistoryItemThumbnailEnclosure = styled(HistoryItemEnclosure)`
-            &.thumbs {
-                .EezStudio_ItemPreview > img,
-                .EezStudio_ChartView_Preview {
-                    width: ${thumbnailSize}px;
-                }
-                .EezStudio_ChartView_Preview {
-                    height: ${thumbnailSize}px;
-                }
-            }
-        `;
-    }
-
-    return CachedHistoryItemThumbnailEnclosure;
-}
 
 class ErrorBoundary extends React.Component<
     { id: string },
@@ -150,9 +47,9 @@ class ErrorBoundary extends React.Component<
     render() {
         if (this.state.hasError) {
             return (
-                <HistoryItemRenderError>
+                <div className="EezStudio_HistoryItemRenderError">
                     Error while rendering history item {this.props.id}!
-                </HistoryItemRenderError>
+                </div>
             );
         }
 
@@ -219,16 +116,19 @@ export class HistoryItems extends React.Component<{
                 this.props.viewType
             );
 
-            let Enclosure = HistoryItemEnclosure;
-
+            let style;
             if (this.props.viewType === "thumbs") {
-                Enclosure = getThumbnailEnclosure(this.props.thumbnailSize);
+                style = {
+                    "--historyItemThumbnailSize":
+                        this.props.thumbnailSize + "px"
+                } as React.CSSProperties;
             }
 
             return (
-                <Enclosure
+                <div
                     key={historyItem.id}
                     className={className}
+                    style={style}
                     onMouseDown={event => {
                         if (event.target instanceof HTMLAnchorElement) {
                             // ignore <a>
@@ -371,7 +271,7 @@ export class HistoryItems extends React.Component<{
                         />
                     )}
                     <ErrorBoundary id={historyItem.id}>{element}</ErrorBoundary>
-                </Enclosure>
+                </div>
             );
         });
     }
@@ -397,13 +297,6 @@ class LoadMoreButton extends React.Component<{
 }
 
 ///
-
-const HistoryListComponentContainer = styled.div`
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-`;
 
 interface HistoryListComponentProps {
     appStore: IAppStore;
@@ -651,7 +544,8 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
 
     render() {
         return (
-            <HistoryListComponentContainer
+            <div
+                className="EezStudio_HistoryListComponentContainer"
                 ref={(ref: any) => {
                     let div = findDOMNode(ref);
                     if (div && div.parentElement) {
@@ -703,7 +597,7 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                         loadMore={this.loadNewer}
                     />
                 )}
-            </HistoryListComponentContainer>
+            </div>
         );
     }
 }

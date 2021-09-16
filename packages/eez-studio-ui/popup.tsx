@@ -9,7 +9,7 @@ export function showPopup(targetElement: Element, popupElement: JSX.Element) {
     let content = document.createElement("div");
     content.tabIndex = 0;
     ReactDOM.render(
-        <ThemeProvider theme={theme}>{popupElement}</ThemeProvider>,
+        <ThemeProvider theme={theme()}>{popupElement}</ThemeProvider>,
         content
     );
 
