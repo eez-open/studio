@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed } from "mobx";
 import { observer } from "mobx-react";
-import styled from "eez-studio-ui/styled-components";
 
 import { _map, _zipObject } from "eez-studio-shared/algorithm";
 import { strToColor16 } from "eez-studio-shared/color";
@@ -69,16 +68,6 @@ export function isWidgetParentOfStyle(object: IEezObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const Image = styled.img`
-    display: block;
-    margin: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-`;
-
 @observer
 export class StyleEditor extends React.Component<{
     width: number;
@@ -94,7 +83,12 @@ export class StyleEditor extends React.Component<{
         canvas.height = height;
         drawStylePreview(canvas, style, text);
 
-        return <Image src={canvas.toDataURL()} />;
+        return (
+            <img
+                className="EezStudio_StyleEditorImg"
+                src={canvas.toDataURL()}
+            />
+        );
     }
 }
 

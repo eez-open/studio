@@ -2,8 +2,6 @@ import React from "react";
 import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
 
-import styled from "eez-studio-ui/styled-components";
-
 import { ProjectContext } from "project-editor/project/context";
 import { IListNode, List } from "eez-studio-ui/list";
 import { SearchInput } from "eez-studio-ui/search-input";
@@ -11,33 +9,6 @@ import { SearchInput } from "eez-studio-ui/search-input";
 import { Command, commands } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const WrapperDiv = styled.div`
-    z-index: 1000;
-    position: absolute;
-    top: 0;
-    left: calc(50% - 300px);
-    width: 600px;
-    height: 500px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-
-    background-color: rgb(243, 243, 243);
-    color: rgb(97, 97, 97);
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 0px 8px 2px;
-
-    input {
-        width: 100%;
-    }
-
-    & > div {
-        flex-grow: 1;
-        background-color: white;
-        margin-top: 10px;
-        border: 1px solid ${props => props.theme.borderColor};
-    }
-`;
 
 @observer
 export class CommandPalette extends React.Component {
@@ -140,7 +111,10 @@ export class CommandPalette extends React.Component {
 
     render() {
         return (
-            <WrapperDiv ref={this.wrapperRef}>
+            <div
+                className="EezStudio_CommandPaletteWrapper"
+                ref={this.wrapperRef}
+            >
                 <SearchInput
                     searchText={this.searchText}
                     onChange={this.onChangeSearchText}
@@ -151,7 +125,7 @@ export class CommandPalette extends React.Component {
                     selectNode={this.selectCommand}
                     renderNode={this.renderCommand}
                 />
-            </WrapperDiv>
+            </div>
         );
     }
 }

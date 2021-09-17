@@ -3,7 +3,6 @@ import { action } from "mobx";
 import { observer } from "mobx-react";
 import update from "immutability-helper";
 
-import styled from "eez-studio-ui/styled-components";
 import { TabsView } from "eez-studio-ui/tabs";
 import { getEditorComponent } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
@@ -30,19 +29,6 @@ class Editor extends React.Component<{}, {}> {
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
-const EditorsDiv = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    > div:nth-child(1) {
-        background-color: ${props => props.theme.panelHeaderColor};
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-    }
-    > div:nth-child(2) {
-        flex-grow: 1;
-        display: flex;
-    }
-`;
 
 @observer
 export class Editors extends React.Component<{}, {}> {
@@ -51,15 +37,16 @@ export class Editors extends React.Component<{}, {}> {
 
     render() {
         return (
-            <EditorsDiv>
+            <div className="EezStudio_ProjectEditors">
                 <div>
                     <TabsView
                         tabs={this.context.EditorsStore.editors}
                         moveTab={action(
                             (dragIndex: number, hoverIndex: number) => {
-                                const tab = this.context.EditorsStore.editors[
-                                    dragIndex
-                                ];
+                                const tab =
+                                    this.context.EditorsStore.editors[
+                                        dragIndex
+                                    ];
 
                                 this.context.EditorsStore.editors = update(
                                     this.context.EditorsStore.editors,
@@ -77,7 +64,7 @@ export class Editors extends React.Component<{}, {}> {
                 <div id="eez-project-active-editor">
                     <Editor />
                 </div>
-            </EditorsDiv>
+            </div>
         );
     }
 }

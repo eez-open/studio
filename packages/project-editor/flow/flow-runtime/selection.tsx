@@ -4,18 +4,12 @@ import { computed } from "mobx";
 
 import { Rect, rectExpand } from "eez-studio-shared/geometry";
 
-import styled from "eez-studio-ui/styled-components";
-
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { IMouseHandler } from "project-editor/flow/flow-editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const SelectionDiv = styled.div`
-    position: absolute;
-`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,9 +95,9 @@ export class Selection extends React.Component<
         }
 
         return (
-            <SelectionDiv className="EezStudio_FlowRuntimeSelection">
+            <div className="EezStudio_FlowRuntimeSelection">
                 {isSelectionVisible && selectedObjectRectsElement}
-            </SelectionDiv>
+            </div>
         );
     }
 }

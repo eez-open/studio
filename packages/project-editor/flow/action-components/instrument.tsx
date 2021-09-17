@@ -11,7 +11,6 @@ import {
     specificGroup
 } from "project-editor/core/object";
 
-import { styled } from "eez-studio-ui/styled-components";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { IListNode, ListItem } from "eez-studio-ui/list";
 import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";
@@ -892,14 +891,6 @@ function parseScpi(input: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ScpiDiv = styled.div`
-    padding-top: 0 !important;
-    & > div:first-child {
-        white-space: nowrap;
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-    }
-`;
-
 export class ScpiActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1023,
@@ -1093,9 +1084,9 @@ export class ScpiActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <ScpiDiv className="body">
+            <div className="body EezStudio_Scpi">
                 <pre>{this.scpi}</pre>
-            </ScpiDiv>
+            </div>
         );
     }
 

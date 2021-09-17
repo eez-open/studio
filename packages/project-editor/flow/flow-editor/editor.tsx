@@ -12,7 +12,11 @@ import {
     Rect,
     rectContains
 } from "eez-studio-shared/geometry";
-import { closestByClass, closestBySelector } from "eez-studio-shared/dom";
+import {
+    attachCssToElement,
+    closestByClass,
+    closestBySelector
+} from "eez-studio-shared/dom";
 
 import type {
     IDocument,
@@ -29,7 +33,6 @@ import {
     getObjectIdsInsideRect,
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/flow-editor/bounding-rects";
-import styled from "eez-studio-ui/styled-components";
 
 import {
     IEezObject,
@@ -881,104 +884,6 @@ export class Canvas extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface FlowEditorCanvasContainerParams {
-    projectCss: string;
-}
-
-const FlowEditorCanvasContainer = styled.div<FlowEditorCanvasContainerParams>`
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: white;
-
-    cursor: default;
-
-    & > * {
-        user-select: none;
-    }
-
-    & > div {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    /* make sure focus outline is fully visible */
-    left: 2px;
-    top: 2px;
-    width: calc(100% - 4px);
-    height: calc(100% - 4px);
-    & > div {
-        left: 1px;
-        top: 1px;
-        width: calc(100% - 2px);
-        height: calc(100% - 2px);
-    }
-
-    .EezStudio_FlowEditorSelection_SelectedObject {
-        pointer-events: none;
-        border: 1px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    .EezStudio_FlowEditorSelection_BoundingRect {
-        border: 2px solid ${props => props.theme.selectionBackgroundColor};
-        box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
-    }
-
-    .EezStudio_FlowEditorSelection_ResizeHandle {
-        position: absolute;
-        background-color: white;
-        border: 1px solid ${props => props.theme.selectionBackgroundColor};
-    }
-
-    .EezStudio_FlowEditorSelection_SelectedObjectsParent {
-        pointer-events: none;
-        border: 2px dotted magenta;
-    }
-
-    [data-connection-output-id]:hover {
-        color: ${props => props.theme.selectionColor}!important;
-        background-color: ${props =>
-            props.theme.selectionBackgroundColor}!important;
-        cursor: crosshair;
-    }
-
-    .title [data-connection-output-id]:hover {
-        color: ${props => props.theme.lightSelectionColor}!important;
-        background-color: ${props =>
-            props.theme.lightSelectionBackgroundColor}!important;
-    }
-
-    .connection-line-path {
-        marker-start: url(#lineStart);
-        marker-end: url(#lineEnd);
-
-        stroke: ${props => props.theme.connectionLineColor};
-
-        &.seq {
-            stroke: ${props => props.theme.seqConnectionLineColor};
-            marker-start: url(#seqLineStart);
-            marker-end: url(#seqLineEnd);
-        }
-
-        &.selected {
-            stroke: ${props => props.theme.selectedConnectionLineColor};
-            marker-start: url(#selectedLineStart);
-            marker-end: url(#selectedLineEnd);
-        }
-    }
-
-    .connection-line:hover .connection-line-path {
-        stroke: ${props => props.theme.selectedConnectionLineColor} !important;
-        marker-start: url(#selectedLineStart) !important;
-        marker-end: url(#selectedLineEnd) !important;
-        fill: none;
-    }
-
-    ${props => props.projectCss}
-`;
-
 @observer
 export class FlowEditor
     extends React.Component<{
@@ -1063,7 +968,16 @@ export class FlowEditor
         return false;
     }
 
+    disposeCSS: (() => void) | undefined;
+
     componentDidMount() {
+        if (this.divRef.current) {
+            this.disposeCSS = attachCssToElement(
+                this.divRef.current,
+                this.context.project.settings.general.css
+            );
+        }
+
         this.divRef.current?.addEventListener(
             "ensure-selection-visible",
             this.ensureSelectionVisible
@@ -1083,6 +997,10 @@ export class FlowEditor
             "ensure-selection-visible",
             this.ensureSelectionVisible
         );
+
+        if (this.disposeCSS) {
+            this.disposeCSS();
+        }
     }
 
     ensureSelectionVisible = () => {
@@ -1333,7 +1251,8 @@ export class FlowEditor
         const flow = this.props.widgetContainer.object as Flow;
 
         return (
-            <FlowEditorCanvasContainer
+            <div
+                className="EezStudio_FlowEditorCanvasContainer"
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
                 tabIndex={0}
@@ -1342,7 +1261,6 @@ export class FlowEditor
                 onDrop={this.onDrop}
                 onDragLeave={this.onDragLeave}
                 onKeyDown={this.onKeyDown}
-                projectCss={this.context.project.settings.general.css}
             >
                 <Canvas
                     flowContext={this.flowContext}
@@ -1370,7 +1288,7 @@ export class FlowEditor
                         </>
                     )}
                 </Canvas>
-            </FlowEditorCanvasContainer>
+            </div>
         );
     }
 }

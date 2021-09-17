@@ -3,8 +3,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { configure, runInAction } from "mobx";
 
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 
 import { DocumentStoreClass } from "project-editor/core/store";
@@ -33,13 +31,13 @@ async function main() {
     DocumentStore.startBackgroundCheck();
 
     ReactDOM.render(
-        <ThemeProvider theme={theme()}>
+        <>
             <ProjectContext.Provider value={DocumentStore}>
                 <ProjectEditor />
             </ProjectContext.Provider>
             {notification.container}
             <LineMarkers />
-        </ThemeProvider>,
+        </>,
         document.getElementById("EezStudio_Content")
     );
 }

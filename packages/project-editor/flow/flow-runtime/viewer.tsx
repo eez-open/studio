@@ -11,8 +11,6 @@ import {
     rectContains
 } from "eez-studio-shared/geometry";
 
-import styled from "eez-studio-ui/styled-components";
-
 import type {
     IDocument,
     IViewStatePersistantState,
@@ -32,6 +30,7 @@ import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineC
 import { Selection } from "project-editor/flow/flow-runtime/selection";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
 import { Component } from "project-editor/flow/component";
+import { attachCssToElement } from "eez-studio-shared/dom";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -306,87 +305,6 @@ export class Canvas extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface FlowViewerCanvasContainerParams {
-    projectCss: string;
-}
-
-const FlowViewerCanvasContainer = styled.div<FlowViewerCanvasContainerParams>`
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: white;
-
-    * {
-        user-select: text;
-    }
-
-    & > * {
-        user-select: none;
-    }
-
-    & > div {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    /* make sure focus outline is fully visible */
-    left: 2px;
-    top: 2px;
-    width: calc(100% - 4px);
-    height: calc(100% - 4px);
-
-    & > div {
-        left: 1px;
-        top: 1px;
-        width: calc(100% - 2px);
-        height: calc(100% - 2px);
-    }
-
-    .EezStudio_FlowRuntimeSelection_SelectedObject {
-        border: 3px dashed ${props => props.theme.selectionBackgroundColor};
-        border-radius: 6px;
-    }
-
-    .connection-line-path {
-        stroke: ${props => props.theme.connectionLineColor};
-        marker-start: url(#lineStart);
-        marker-end: url(#lineEnd);
-
-        &.seq {
-            stroke: ${props => props.theme.seqConnectionLineColor};
-            marker-start: url(#seqLineStart);
-            marker-end: url(#seqLineEnd);
-        }
-
-        &.selected {
-            stroke: ${props => props.theme.selectedConnectionLineColor};
-            marker-start: url(#selectedLineStart);
-            marker-end: url(#selectedLineEnd);
-        }
-
-        &.active {
-            stroke: ${props => props.theme.activeConnectionLineColor};
-            stroke-dasharray: 10;
-            animation: dash 10s linear infinite;
-            marker-start: url(#activeLineStart);
-            marker-end: url(#activeLineEnd);
-        }
-    }
-
-    @keyframes dash {
-        from {
-            stroke-dashoffset: 0;
-        }
-        to {
-            stroke-dashoffset: -600;
-        }
-    }
-
-    ${props => props.projectCss}
-`;
-
 @observer
 export class FlowViewer
     extends React.Component<{
@@ -448,11 +366,24 @@ export class FlowViewer
         return flowContext;
     }
 
+    disposeCSS: (() => void) | undefined;
+
     componentDidMount() {
+        if (this.divRef.current) {
+            this.disposeCSS = attachCssToElement(
+                this.divRef.current,
+                this.context.project.settings.general.css
+            );
+        }
+
         this.divRef.current?.addEventListener(
             "ensure-selection-visible",
             this.ensureSelectionVisible
         );
+
+        if (this.disposeCSS) {
+            this.disposeCSS();
+        }
     }
 
     componentDidCatch(error: any, info: any) {
@@ -566,13 +497,13 @@ export class FlowViewer
         this.runningFlow;
 
         return (
-            <FlowViewerCanvasContainer
+            <div
+                className="EezStudio_FlowViewerCanvasContainer"
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
                 tabIndex={0}
                 onFocus={this.focusHander}
                 onDoubleClick={this.onDoubleClick}
-                projectCss={this.context.project.settings.general.css}
             >
                 <Canvas
                     flowContext={this.flowContext}
@@ -595,7 +526,7 @@ export class FlowViewer
                         </>
                     )}
                 </Canvas>
-            </FlowViewerCanvasContainer>
+            </div>
         );
     }
 }

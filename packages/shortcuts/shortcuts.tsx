@@ -6,7 +6,6 @@ import { bind } from "bind-decorator";
 
 import { objectEqual } from "eez-studio-shared/util";
 
-import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { confirm } from "eez-studio-ui/dialog-electron";
@@ -448,33 +447,6 @@ export function isSameShortcutFromDifferentExtension(
     return objectEqual(s1js, s2js);
 }
 
-const ShortcutsTable = styled(Table)`
-    th.colColor {
-        background-position: 12px center;
-    }
-
-    .colAction {
-        white-space: normal;
-        pre {
-            margin-bottom: 0;
-        }
-    }
-
-    .colColor {
-        div {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-        }
-        padding-right: 0;
-    }
-
-    .colActions {
-        white-space: nowrap;
-    }
-`;
-
 @observer
 export class Shortcuts extends React.Component<
     {
@@ -596,7 +568,8 @@ export class Shortcuts extends React.Component<
 
     render() {
         return (
-            <ShortcutsTable
+            <Table
+                className="EezStudio_ShortcutsTable"
                 persistId="shortcuts/shortcuts"
                 columns={this.columns}
                 rows={this.rows}

@@ -29,8 +29,6 @@ import {
 } from "eez-studio-shared/extensions/extension";
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
 import { IconAction } from "eez-studio-ui/action";
 import { DockablePanels } from "eez-studio-ui/side-dock";
 import {
@@ -1485,12 +1483,10 @@ export class ChartMeasurements extends React.Component<{
                 if (measurement) {
                     const div: HTMLDivElement = container.getElement()[0];
                     ReactDOM.render(
-                        <ThemeProvider theme={theme()}>
-                            <MeasurementValue
-                                measurement={measurement}
-                                inDockablePanel={true}
-                            />
-                        </ThemeProvider>,
+                        <MeasurementValue
+                            measurement={measurement}
+                            inDockablePanel={true}
+                        />,
                         div
                     );
                 }

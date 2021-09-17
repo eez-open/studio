@@ -4,9 +4,6 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import bind from "bind-decorator";
 
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
-
 import { BootstrapDialog } from "project-editor/components/BootstrapDialog";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,10 +163,7 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
         element.id = opts.id;
     }
 
-    ReactDOM.render(
-        <ThemeProvider theme={theme()}>{dialog}</ThemeProvider>,
-        element
-    );
+    ReactDOM.render(dialog, element);
 
     if (opts && opts.jsPanel) {
         element.style.position = "absolute";

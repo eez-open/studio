@@ -4,8 +4,6 @@ import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
 import { SearchInput } from "eez-studio-ui/search-input";
@@ -138,20 +136,16 @@ export class DeletedHistoryItemsView extends React.Component<{
             "SearchResults",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <div
-                            style={{
-                                position: "absolute",
-                                width: "100%",
-                                height: "100%",
-                                display: "flex"
-                            }}
-                        >
-                            <SearchResults
-                                history={appStore.deletedItemsHistory}
-                            />
-                        </div>
-                    </ThemeProvider>,
+                    <div
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex"
+                        }}
+                    >
+                        <SearchResults history={appStore.deletedItemsHistory} />
+                    </div>,
                     container.getElement()[0]
                 );
             }
@@ -161,16 +155,14 @@ export class DeletedHistoryItemsView extends React.Component<{
             "Calendar",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <div
-                            style={{
-                                height: "100%",
-                                overflow: "auto"
-                            }}
-                        >
-                            <Calendar history={appStore.deletedItemsHistory} />
-                        </div>
-                    </ThemeProvider>,
+                    <div
+                        style={{
+                            height: "100%",
+                            overflow: "auto"
+                        }}
+                    >
+                        <Calendar history={appStore.deletedItemsHistory} />
+                    </div>,
                     container.getElement()[0]
                 );
             }

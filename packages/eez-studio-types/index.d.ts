@@ -1,6 +1,5 @@
 import React from "react";
 import mobx from "mobx";
-import { ThemedStyledInterface } from "styled-components";
 
 interface IEezObject {}
 
@@ -140,36 +139,12 @@ interface IDataContext {
 
 interface ThemeInterface {
     borderColor: string;
-    darkBorderColor: string;
     panelHeaderColor: string;
     selectionBackgroundColor: string;
-    selectionColor: string;
-    lightSelectionBackgroundColor: string;
-    lightSelectionColor: string;
-    tableBorderColor: string;
-    nonFocusedSelectionBackgroundColor: string;
-    nonFocusedSelectionColor: string;
-    hoverBackgroundColor: string;
-    hoverColor: string;
-    scrollTrackColor: string;
-    scrollThumbColor: string;
-    darkTextColor: string;
-    focusBackgroundColor: string;
-    focusColor: string;
-    dragSourceBackgroundColor: string;
-    dragSourceColor: string;
-    dropTargetBackgroundColor: string;
-    dropTargetColor: string;
-    dropPlaceColor: string;
-    errorColor: string;
-    actionTextColor: string;
-    actionHoverColor: string;
     connectionLineColor: string;
-    seqConnectionLineColor: string;
     selectedConnectionLineColor: string;
+    seqConnectionLineColor: string;
     activeConnectionLineColor: string;
-    connectionLineInTheMakingColor: string;
-    activeTabBackgroundColor: string;
 }
 
 interface IFlow {
@@ -190,7 +165,6 @@ interface IFlow {
 interface IEezStudio {
     React: typeof React;
     mobx: typeof mobx;
-    styled: ThemedStyledInterface<ThemeInterface>;
     registerClass: (classToRegister: any) => void;
     makeDerivedClassInfo: (
         baseClassInfo: ClassInfo,

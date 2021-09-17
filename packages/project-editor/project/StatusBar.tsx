@@ -1,16 +1,10 @@
 import React from "react";
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import styled from "eez-studio-ui/styled-components";
 import { Section } from "project-editor/core/output";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
-const StatusBarItemSpan = styled.span`
-    display: inline-block;
-    padding: 4px 8px;
-    cursor: pointer;
-`;
 
 @observer
 class StatusBarItem extends React.Component<
@@ -22,17 +16,16 @@ class StatusBarItem extends React.Component<
 > {
     render() {
         return (
-            <StatusBarItemSpan onClick={this.props.onClick}>
+            <span
+                className="EezStudio_StatusBarItem"
+                onClick={this.props.onClick}
+            >
                 {this.props.body}
-            </StatusBarItemSpan>
+            </span>
         );
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
-const StatusBarDiv = styled.div`
-    background-color: ${props => props.theme.panelHeaderColor};
-    border-top: 1px solid ${props => props.theme.borderColor};
-`;
 
 @observer
 export class StatusBar extends React.Component<{}, {}> {
@@ -41,14 +34,14 @@ export class StatusBar extends React.Component<{}, {}> {
 
     @action.bound
     onChecksClicked() {
-        this.context.UIStateStore.viewOptions.outputVisible = !this.context
-            .UIStateStore.viewOptions.outputVisible;
+        this.context.UIStateStore.viewOptions.outputVisible =
+            !this.context.UIStateStore.viewOptions.outputVisible;
         this.context.OutputSectionsStore.setActiveSection(Section.CHECKS);
     }
 
     render() {
         return (
-            <StatusBarDiv>
+            <div className="EezStudio_StatusBar">
                 <StatusBarItem
                     key="checks"
                     body={
@@ -58,7 +51,7 @@ export class StatusBar extends React.Component<{}, {}> {
                     }
                     onClick={this.onChecksClicked}
                 />
-            </StatusBarDiv>
+            </div>
         );
     }
 }

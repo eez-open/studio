@@ -8,8 +8,6 @@ import {
     rectExpand
 } from "eez-studio-shared/geometry";
 
-import styled from "eez-studio-ui/styled-components";
-
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { IMouseHandler } from "project-editor/flow/flow-editor/mouse-handler";
 import {
@@ -20,13 +18,6 @@ import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-
 import { ConnectionLine } from "project-editor/flow/flow";
 import { ActionComponent } from "project-editor/flow/component";
 import { Action } from "project-editor/features/action/action";
-
-////////////////////////////////////////////////////////////////////////////////
-
-const SelectionDiv = styled.div`
-    position: absolute;
-    cursor: move;
-`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -271,10 +262,7 @@ export class Selection extends React.Component<
         }
 
         return (
-            <SelectionDiv
-                className="EezStudio_FlowEditorSelection"
-                style={style}
-            >
+            <div className="EezStudio_FlowEditorSelection" style={style}>
                 {isSelectionVisible && (
                     <React.Fragment>
                         {selectedObjectsParentElement}
@@ -285,7 +273,7 @@ export class Selection extends React.Component<
                         </div>
                     </React.Fragment>
                 )}
-            </SelectionDiv>
+            </div>
         );
     }
 }

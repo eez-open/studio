@@ -1,12 +1,17 @@
 import React from "react";
-import { observable, computed, action, runInAction, IObservableValue } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    IObservableValue
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
 import { _countBy } from "eez-studio-shared/algorithm";
 
-import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { showDialog } from "eez-studio-ui/dialog";
@@ -51,7 +56,9 @@ export class GroupsToolbarButtons extends React.Component<
                     runInAction(() => selectedGroupId.set(groupId));
 
                     setTimeout(() => {
-                        let element = document.querySelector(`.group-${groupId}`);
+                        let element = document.querySelector(
+                            `.group-${groupId}`
+                        );
                         if (element) {
                             element.scrollIntoView();
                         }
@@ -121,7 +128,10 @@ class GroupRow implements IRow {
                         this.props.groupsStore.isGroupEnabled(this.props.group)
                     }
                     onChange={event =>
-                        this.props.groupsStore.enableGroup!(this.props.group, event.target.checked)
+                        this.props.groupsStore.enableGroup!(
+                            this.props.group,
+                            event.target.checked
+                        )
                     }
                 />
             )
@@ -140,7 +150,11 @@ class GroupRow implements IRow {
     get actions() {
         return (
             <Toolbar>
-                <IconAction icon="material:edit" title="Edit group" onClick={this.editGroup} />
+                <IconAction
+                    icon="material:edit"
+                    title="Edit group"
+                    onClick={this.editGroup}
+                />
                 <IconAction
                     icon="material:delete"
                     title="Delete group"
@@ -201,12 +215,6 @@ class GroupRow implements IRow {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const GroupsTable = styled(Table)`
-    .colActions {
-        white-space: nowrap;
-    }
-`;
-
 @observer
 export class Groups extends React.Component<{
     groupsStore: IGroupsStore;
@@ -265,7 +273,8 @@ export class Groups extends React.Component<{
 
     render() {
         return (
-            <GroupsTable
+            <Table
+                className="EezStudio_GroupsTable"
                 persistId="shortcuts/groups"
                 columns={this.columns}
                 rows={this.rows}

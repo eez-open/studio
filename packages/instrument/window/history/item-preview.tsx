@@ -4,52 +4,15 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
 
-import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import {
     VerticalHeaderWithBody,
-    PanelHeader,
-    Body
+    Body,
+    Header
 } from "eez-studio-ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ZoomedPreviewBody = styled(VerticalHeaderWithBody)`
-    .EezStudio_Toolbar {
-        margin-top: 0;
-    }
-
-    .EezStudio_Header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    &.EezStudio_ImagePreview {
-        img {
-            object-fit: contain;
-            flex-grow: 1;
-            background-color: black;
-            cursor: zoom-out;
-        }
-    }
-
-    &.EezStudio_PdfPreview {
-        .EezStudio_Body {
-            background-color: #525659;
-            overflow: hidden;
-
-            & > div {
-                flex-grow: 1;
-                display: flex;
-                & > WebView {
-                    flex-grow: 1;
-                }
-            }
-        }
-    }
-`;
 
 @observer
 class ZoomedPreview extends React.Component<{
@@ -92,11 +55,11 @@ class ZoomedPreview extends React.Component<{
 
     render() {
         return ReactDOM.createPortal(
-            <ZoomedPreviewBody
+            <VerticalHeaderWithBody
                 className={this.props.className}
                 onContextMenu={this.onContextMenu}
             >
-                <PanelHeader>
+                <Header className="EezStudio_PanelHeader">
                     {this.props.toolbar || <Toolbar />}
                     <Toolbar>
                         <IconAction
@@ -106,9 +69,9 @@ class ZoomedPreview extends React.Component<{
                             onClick={this.props.toggleZoom}
                         />
                     </Toolbar>
-                </PanelHeader>
+                </Header>
                 <Body>{this.props.children}</Body>
-            </ZoomedPreviewBody>,
+            </VerticalHeaderWithBody>,
             this.el
         );
     }

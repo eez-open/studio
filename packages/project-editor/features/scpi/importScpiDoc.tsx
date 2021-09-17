@@ -11,8 +11,6 @@ import {
     stringCompare
 } from "eez-studio-shared/string";
 
-import { theme } from "eez-studio-ui/theme";
-import { styled, ThemeProvider } from "eez-studio-ui/styled-components";
 import { Loader } from "eez-studio-ui/loader";
 
 import { getProperty } from "project-editor/core/object";
@@ -949,70 +947,6 @@ function findCommandInScpiSubsystems(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ImportScpiDocDialogDiv = styled.div`
-    * {
-        user-select: auto;
-    }
-
-    table {
-        margin-bottom: 0;
-        width: 100%;
-        border: 1px solid #ddd;
-    }
-
-    thead {
-        display: block;
-        width: 100%;
-    }
-
-    th {
-        background-color: #eee;
-        height: 32px;
-        padding-top: 4px;
-        border-bottom: 1px solid #ddd;
-    }
-
-    thead,
-    tbody,
-    tr,
-    td,
-    th {
-        display: block;
-    }
-
-    tbody {
-        display: block;
-        width: 100%;
-        max-height: 400px;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    tr {
-        clear: both;
-    }
-
-    tbody {
-        td {
-            float: left;
-
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    }
-
-    thead {
-        th {
-            float: left;
-        }
-    }
-`;
-
-const TablesDiv = styled.div`
-    padding-top: 15px;
-`;
-
 type Section = "added" | "deleted" | "moved" | "updated" | "newEnums";
 
 const SECTIONS: Section[] = [
@@ -1605,7 +1539,7 @@ export class ImportScpiDocDialog extends React.Component<{
                         onSubmit={this.onOk.bind(this)}
                     >
                         <ul className="nav nav-pills">{tabs}</ul>
-                        <TablesDiv>{tables}</TablesDiv>
+                        <div className="EezStudio_TablesDiv">{tables}</div>
                     </form>
                 );
 
@@ -1652,9 +1586,9 @@ export class ImportScpiDocDialog extends React.Component<{
         }
 
         return (
-            <ImportScpiDocDialogDiv
+            <div
                 ref={(ref: any) => (this.dialog = ref!)}
-                className={"modal fade"}
+                className={"modal fade EezStudio_ImportScpiDocDialogDiv"}
                 tabIndex={-1}
                 role="dialog"
             >
@@ -1675,7 +1609,7 @@ export class ImportScpiDocDialog extends React.Component<{
                         {footer}
                     </div>
                 </div>
-            </ImportScpiDocDialogDiv>
+            </div>
         );
     }
 }
@@ -1686,16 +1620,14 @@ export function showImportScpiDocDialog(DocumentStore: DocumentStoreClass) {
     let el = document.createElement("div");
     document.body.appendChild(el);
     ReactDOM.render(
-        <ThemeProvider theme={theme()}>
-            <ProjectContext.Provider value={DocumentStore}>
-                <ImportScpiDocDialog
-                    onHidden={() => {
-                        ReactDOM.unmountComponentAtNode(el);
-                        el.remove();
-                    }}
-                />
-            </ProjectContext.Provider>
-        </ThemeProvider>,
+        <ProjectContext.Provider value={DocumentStore}>
+            <ImportScpiDocDialog
+                onHidden={() => {
+                    ReactDOM.unmountComponentAtNode(el);
+                    el.remove();
+                }}
+            />
+        </ProjectContext.Provider>,
         el
     );
 }

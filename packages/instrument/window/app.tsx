@@ -3,13 +3,11 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import styled from "eez-studio-ui/styled-components";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { AppRootComponent } from "eez-studio-ui/app";
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Loader } from "eez-studio-ui/loader";
 import { Toolbar } from "eez-studio-ui/toolbar";
-import { PanelHeader } from "eez-studio-ui/header-with-body";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
 
@@ -17,6 +15,7 @@ import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
 import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
 import { InstrumentObject } from "instrument/instrument-object";
+import { Header } from "eez-studio-ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,70 +45,6 @@ function EditInstrumentLabelDialog({
         </Dialog>
     );
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-const ConnectionBar = styled(PanelHeader)`
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    &:hover {
-        > div:nth-child(2) {
-            > div:nth-child(1) {
-                button {
-                    visibility: visible;
-                }
-            }
-        }
-    }
-
-    > div:nth-child(1) {
-        /* Instrument image */
-        > img {
-            object-fit: contain;
-            height: 46px;
-            margin-right: 10px;
-        }
-    }
-
-    > div:nth-child(2) {
-        display: flex;
-        flex-direction: column;
-
-        /* Instrument name */
-        > div:nth-child(1) {
-            display: flex;
-            align-items: center;
-            font-weight: bold;
-            button {
-                visibility: hidden;
-                margin-left: 10px;
-            }
-        }
-
-        > div:nth-child(2) {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-
-            /* connection info */
-            > div:nth-child(1) {
-                font-size: 90%;
-                margin-right: 10px;
-            }
-
-            button {
-                padding: 1px 4px;
-            }
-        }
-    }
-
-    > div:nth-child(3) {
-        margin-left: 50px;
-        flex-grow: 1;
-    }
-`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -225,7 +160,7 @@ export class AppBar extends React.Component<
             this.props.selectedItem.renderToolbarButtons();
 
         return (
-            <ConnectionBar>
+            <Header className="EezStudio_ConnectionBar">
                 <div>
                     <img src={this.instrument.image} draggable={false} />{" "}
                 </div>
@@ -247,7 +182,7 @@ export class AppBar extends React.Component<
                 <div>{sendFile}</div>
 
                 <Toolbar>{toolbarButtons}</Toolbar>
-            </ConnectionBar>
+            </Header>
         );
     }
 }

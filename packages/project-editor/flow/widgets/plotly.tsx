@@ -15,7 +15,6 @@ import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
 import * as PlotlyModule from "plotly.js";
-import styled from "eez-studio-ui/styled-components";
 import classNames from "classnames";
 import { InputPropertyValue, RunningFlow } from "project-editor/flow/runtime";
 
@@ -26,13 +25,6 @@ function Plotly() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const PlotlyDiv = styled.div`
-    position: relative;
-    :not(.interactive) * {
-        pointer-events: none !important;
-    }
-`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,14 +63,8 @@ export function newPlotOrReact(
 }
 
 async function doNewPlotOrReact() {
-    const {
-        root,
-        data,
-        layout,
-        config,
-        resolve,
-        createNewPlot
-    } = newPlotQueue.shift()!;
+    const { root, data, layout, config, resolve, createNewPlot } =
+        newPlotQueue.shift()!;
 
     if (createNewPlot) {
         resolve(await Plotly().newPlot(root, data, layout, config));
@@ -203,9 +189,10 @@ const LineChartElement = observer(
         widget: LineChartWidget;
         flowContext: IFlowContext;
     }) => {
-        const runningState = flowContext.runningFlow?.getComponentRunningState<RunningState>(
-            widget
-        );
+        const runningState =
+            flowContext.runningFlow?.getComponentRunningState<RunningState>(
+                widget
+            );
 
         const ref = React.useRef<HTMLDivElement>(null);
         const [plotly, setPlotly] = React.useState<
@@ -336,18 +323,18 @@ const LineChartElement = observer(
         ]);
 
         return (
-            <PlotlyDiv
+            <div
                 ref={ref}
                 style={{
                     width: widget.width,
                     height: widget.height
                 }}
-                className={classNames({
+                className={classNames("EezStudio_Plotly", {
                     interactive:
                         flowContext.document.DocumentStore.RuntimeStore
                             .isRuntimeMode
                 })}
-            ></PlotlyDiv>
+            ></div>
         );
     }
 );
@@ -587,18 +574,18 @@ const GaugeElement = observer(
         ]);
 
         return (
-            <PlotlyDiv
+            <div
                 ref={ref}
                 style={{
                     width: widget.width,
                     height: widget.height
                 }}
-                className={classNames({
+                className={classNames("EezStudio_Plotly", {
                     interactive:
                         flowContext.document.DocumentStore.RuntimeStore
                             .isRuntimeMode
                 })}
-            ></PlotlyDiv>
+            ></div>
         );
     }
 );

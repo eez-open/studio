@@ -1,6 +1,6 @@
 import fs from "fs";
 import { app, screen, ipcMain } from "electron";
-import { observable, action } from "mobx";
+import { observable, action, runInAction } from "mobx";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { SETTINGS_FILE_NAME, DEFAULT_DB_NAME } from "eez-studio-shared/conf";
@@ -34,7 +34,7 @@ class Settings {
     dateFormat: string;
     timeFormat: string;
 
-    isDarkTheme: boolean;
+    @observable isDarkTheme: boolean;
 }
 
 export const settings = new Settings();
@@ -299,7 +299,9 @@ function getIsDarkTheme() {
 }
 
 function setIsDarkTheme(value: boolean) {
-    settings.isDarkTheme = value;
+    runInAction(() => {
+        settings.isDarkTheme = value;
+    });
     saveSettings();
 }
 

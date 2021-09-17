@@ -18,11 +18,11 @@ import { Point } from "eez-studio-shared/geometry";
 import { validators } from "eez-studio-shared/validation";
 
 import { theme } from "eez-studio-ui/theme";
-import styled from "eez-studio-ui/styled-components";
 import {
     VerticalHeaderWithBody,
     Body,
-    ToolbarHeader
+    ToolbarHeader,
+    Header
 } from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
@@ -65,7 +65,6 @@ import {
     ChartsDisplayOption,
     CommonTools
 } from "instrument/window/lists/common-tools";
-import { ListChartViewHeader } from "instrument/window/lists/lists";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -438,7 +437,7 @@ class TableChartsHeader extends React.Component<
 
     render() {
         return (
-            <ListChartViewHeader>
+            <Header className="EezStudio_ListChartViewHeader">
                 <Toolbar>
                     <ButtonAction
                         text="Edit Properties"
@@ -450,7 +449,7 @@ class TableChartsHeader extends React.Component<
                         chartsController={this.props.chartsController}
                     />
                 </Toolbar>
-            </ListChartViewHeader>
+            </Header>
         );
     }
 }
@@ -785,61 +784,6 @@ export class Table extends React.Component<
     }
 }
 
-const TableListEditorToolbarHeader = styled(ToolbarHeader)`
-    justify-content: flex-start;
-    background-color: white;
-`;
-
-const TableListEditorBody = styled(Body)`
-    overflow-x: hidden !important;
-`;
-
-const TableListEditorTable = styled(Table)`
-    border-bottom: 1px solid ${props => props.theme.tableBorderColor};
-    border-collapse: collapse;
-
-    width: 100%;
-
-    th,
-    td:first-child {
-        background-color: ${props => props.theme.panelHeaderColor};
-    }
-
-    th:not(:first-child),
-    td:not(:first-child) {
-        width: 33%;
-    }
-
-    td,
-    th {
-        text-align: center;
-        border: 1px solid ${props => props.theme.tableBorderColor};
-        padding: 2px 2px;
-    }
-
-    td:first-child {
-        padding: 2px 10px;
-    }
-
-    th {
-        border-top: none;
-    }
-
-    th:first-child,
-    td:first-child {
-        border-left: none;
-    }
-
-    th:last-child,
-    td:last-child {
-        border-right: none;
-    }
-
-    tr:last-child td {
-        border-bottom: none;
-    }
-`;
-
 interface TableDetailsViewProps {
     list: TableList;
 }
@@ -1038,7 +982,7 @@ export class TableDetailsView extends React.Component<
                 </VerticalHeaderWithBody>
 
                 <VerticalHeaderWithBody>
-                    <TableListEditorToolbarHeader>
+                    <ToolbarHeader className="EezStudio_TableListEditorToolbarHeader">
                         <DropdownButtonAction
                             text="Insert"
                             title="Insert rows"
@@ -1086,14 +1030,15 @@ export class TableDetailsView extends React.Component<
                             </div>
                         )}
                         {<div className="text-danger">{this.error}</div>}
-                    </TableListEditorToolbarHeader>
-                    <TableListEditorBody>
-                        <TableListEditorTable
+                    </ToolbarHeader>
+                    <Body className="EezStudio_TableListEditorBody">
+                        <Table
+                            className="EezStudio_TableListEditorTable"
                             list={list}
                             onCellFocus={this.onCellFocus}
                             setError={this.setError}
                         />
-                    </TableListEditorBody>
+                    </Body>
                 </VerticalHeaderWithBody>
             </Splitter>
         );

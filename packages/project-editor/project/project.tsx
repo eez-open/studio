@@ -15,7 +15,6 @@ import {
 } from "eez-studio-ui/generic-dialog";
 import { Tree } from "eez-studio-ui/tree";
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
-import { styled } from "eez-studio-ui/styled-components";
 
 import { getProjectFeatures } from "project-editor/core/extensions";
 import {
@@ -425,15 +424,9 @@ function openProject(importDirective: ImportDirective) {
     );
 }
 
-const ImportDirectiveCustomUIContainer = styled.div`
-    & > button {
-        margin-right: 10px;
-    }
-`;
-
 const ImportDirectiveCustomUI = observer((props: PropertyProps) => {
     return (
-        <ImportDirectiveCustomUIContainer>
+        <div className="EezStudio_ImportDirectiveCustomUIContainer">
             <BootstrapButton
                 color="primary"
                 size="small"
@@ -449,7 +442,7 @@ const ImportDirectiveCustomUI = observer((props: PropertyProps) => {
             >
                 Open
             </BootstrapButton>
-        </ImportDirectiveCustomUIContainer>
+        </div>
     );
 });
 

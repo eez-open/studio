@@ -5,8 +5,6 @@ import ReactDOM from "react-dom";
 import { configure } from "mobx";
 import { observer } from "mobx-react";
 
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
 import * as notification from "eez-studio-ui/notification";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
@@ -14,6 +12,7 @@ import { loadTabs, ProjectEditorTab, tabs } from "home/tabs-store";
 
 import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
 import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+import { settingsController } from "./settings";
 
 configure({ enforceActions: "observed" });
 
@@ -54,6 +53,10 @@ EEZStudio.electron.ipcRenderer.on("reload", async () => {
     if (await beforeAppClose()) {
         EEZStudio.electron.ipcRenderer.send("reload");
     }
+});
+
+EEZStudio.electron.ipcRenderer.on("switch-theme", async () => {
+    settingsController.switchTheme(!settingsController.isDarkTheme);
 });
 
 EEZStudio.electron.ipcRenderer.on(
@@ -111,11 +114,11 @@ EEZStudio.electron.ipcRenderer.on("command-palette", () => {
 class Main extends React.Component {
     render() {
         return (
-            <ThemeProvider theme={theme()}>
+            <>
                 {this.props.children}
                 {notification.container}
                 <LineMarkers />
-            </ThemeProvider>
+            </>
         );
     }
 }

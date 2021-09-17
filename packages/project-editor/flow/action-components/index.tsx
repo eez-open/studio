@@ -21,7 +21,6 @@ import {
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
-import { styled } from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
 
 import {
@@ -475,15 +474,6 @@ registerClass(EvalActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const SetVariableBody = styled.div`
-    display: flex;
-    align-items: baseline;
-    pre.single {
-        flex-grow: 1;
-        text-align: center;
-    }
-`;
-
 export class SetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1007,
@@ -525,13 +515,13 @@ export class SetVariableActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.isInputProperty("value")) {
             return (
-                <SetVariableBody className="body">
+                <div className="body EezStudio_SetVariableBody">
                     <pre className="single">{this.variable}</pre>
-                </SetVariableBody>
+                </div>
             );
         }
         return (
-            <SetVariableBody className="body">
+            <div className="body EezStudio_SetVariableBody">
                 <div>
                     <pre>{this.variable}</pre>
                 </div>
@@ -539,7 +529,7 @@ export class SetVariableActionComponent extends ActionComponent {
                 <div style={{ textAlign: "left" }}>
                     <pre>{this.value}</pre>
                 </div>
-            </SetVariableBody>
+            </div>
         );
     }
 
@@ -557,13 +547,6 @@ export class SetVariableActionComponent extends ActionComponent {
 registerClass(SetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const SwitchActionComponentDiv = styled.div`
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    white-space: nowrap;
-`;
 
 class SwitchTest extends EezObject {
     @observable condition: string;
@@ -637,13 +620,13 @@ export class SwitchActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <SwitchActionComponentDiv className="body">
+            <div className="body EezStudio_SwitchActionComponent">
                 {this.tests.map(test => (
                     <div key={test.outputName}>
                         {test.condition} <RightArrow /> {test.outputName}
                     </div>
                 ))}
-            </SwitchActionComponentDiv>
+            </div>
         );
     }
 
@@ -667,12 +650,6 @@ export class SwitchActionComponent extends ActionComponent {
 registerClass(SwitchActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const CompareActionComponentDiv = styled.div`
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-`;
 
 export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -766,28 +743,28 @@ export class CompareActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.operator == "NOT") {
             return (
-                <CompareActionComponentDiv className="body">
+                <div className="body EezStudio_CompareActionComponent">
                     {" NOT "}
                     {this.isInputProperty("A") ? "A" : this.A}
-                </CompareActionComponentDiv>
+                </div>
             );
         }
 
         if (this.operator == "BETWEEN") {
             return (
-                <CompareActionComponentDiv className="body">
+                <div className="body EezStudio_CompareActionComponent">
                     {this.isInputProperty("B") ? "B" : this.B} {" <= "}
                     {this.isInputProperty("A") ? "A" : this.A} {" <= "}
                     {this.isInputProperty("C") ? "C" : this.C}
-                </CompareActionComponentDiv>
+                </div>
             );
         }
 
         return (
-            <CompareActionComponentDiv className="body">
+            <div className="body EezStudio_CompareActionComponent">
                 {this.isInputProperty("A") ? "A" : this.A} {this.operator}{" "}
                 {this.isInputProperty("B") ? "B" : this.B}
-            </CompareActionComponentDiv>
+            </div>
         );
     }
 
@@ -1330,31 +1307,6 @@ registerClass(CallActionActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const TrixEditorDiv = styled.div`
-    position: relative;
-    background-color: #ffff88;
-    padding: 5px;
-    .trix-button-group {
-        border: none !important;
-        margin-bottom: 5px;
-    }
-    .trix-button {
-        border: none !important;
-        font-size: 80%;
-    }
-    trix-editor {
-        border: 1px solid ${props => props.theme.borderColor};
-    }
-    trix-toolbar .trix-button-group:not(:first-child) {
-        margin-left: 5px;
-    }
-    &:focus {
-        trix-toolbar {
-            visibility: hidden;
-        }
-    }
-`;
-
 const TrixEditor = observer(
     ({
         value,
@@ -1397,13 +1349,13 @@ const TrixEditor = observer(
         };
 
         return (
-            <TrixEditorDiv
-                className="eez-flow-editor-capture-pointers"
+            <div
+                className="eez-flow-editor-capture-pointers EezStudio_TrixEditor"
                 tabIndex={0}
             >
                 {React.createElement("trix-editor", attributes)}
                 <input id={inputId} value={value ?? ""} type="hidden"></input>
-            </TrixEditorDiv>
+            </div>
         );
     }
 );
@@ -1650,15 +1602,6 @@ registerClass(CounterActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LoopBody = styled.div`
-    display: flex;
-    align-items: baseline;
-    pre.single {
-        flex-grow: 1;
-        text-align: center;
-    }
-`;
-
 export class LoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1021,
@@ -1730,7 +1673,7 @@ export class LoopActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <LoopBody className="body">
+            <div className="body EezStudio_LoopBody">
                 <div>
                     <pre>{this.variable}</pre>
                 </div>
@@ -1742,7 +1685,7 @@ export class LoopActionComponent extends ActionComponent {
                         {this.step !== "1" ? ` step ${this.step}` : ""}
                     </pre>
                 </div>
-            </LoopBody>
+            </div>
         );
     }
 

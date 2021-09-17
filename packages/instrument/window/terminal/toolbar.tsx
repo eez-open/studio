@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 
 import { capitalize } from "eez-studio-shared/string";
 
-import styled from "eez-studio-ui/styled-components";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
@@ -40,25 +39,15 @@ export class ShortcutButton extends React.Component<
                 title={this.keybinding}
                 onClick={this.props.executeShortcut}
                 className="btn-sm "
-                style={{ color: "white", backgroundColor: this.props.shortcut.toolbarButtonColor }}
+                style={{
+                    color: "white",
+                    backgroundColor: this.props.shortcut.toolbarButtonColor
+                }}
                 enabled={this.props.appStore.instrument?.connection.isConnected}
             />
         );
     }
 }
-
-const ShortcutsToolbarContainer = styled(Toolbar)`
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-    padding: 5px 5px;
-    border-top: 1px solid ${props => props.theme.borderColor};
-    background-color: ${props => props.theme.panelHeaderColor};
-
-    & > button {
-        margin: 5px 5px;
-    }
-`;
 
 @observer
 export class ShortcutsToolbar extends React.Component<{
@@ -68,7 +57,11 @@ export class ShortcutsToolbar extends React.Component<{
 }> {
     @computed
     get shortcuts() {
-        return Array.from(this.props.appStore.shortcutsStore.instrumentShortcuts.get().values())
+        return Array.from(
+            this.props.appStore.shortcutsStore.instrumentShortcuts
+                .get()
+                .values()
+        )
             .filter(s => s.showInToolbar)
             .sort((s1, s2) => {
                 if (s1.toolbarButtonPosition < s2.toolbarButtonPosition) {
@@ -92,16 +85,21 @@ export class ShortcutsToolbar extends React.Component<{
         }
 
         return (
-            <ShortcutsToolbarContainer style={this.props.style}>
+            <Toolbar
+                className="EezStudio_ShortcutsToolbarContainer"
+                style={this.props.style}
+            >
                 {this.shortcuts.map(shortcut => (
                     <ShortcutButton
                         key={shortcut.id}
                         appStore={this.props.appStore}
                         shortcut={shortcut}
-                        executeShortcut={() => this.props.executeShortcut(shortcut)}
+                        executeShortcut={() =>
+                            this.props.executeShortcut(shortcut)
+                        }
                     />
                 ))}
-            </ShortcutsToolbarContainer>
+            </Toolbar>
         );
     }
 }

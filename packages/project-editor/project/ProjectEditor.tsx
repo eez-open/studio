@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 
 import { isWebStudio } from "eez-studio-shared/util-electron";
 
-import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { Output } from "project-editor/components/Output";
@@ -98,38 +97,6 @@ class Content extends React.Component {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ProjectEditorWrapper = styled.div`
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-top: 1px solid ${props => props.theme.borderColor};
-    display: flex;
-
-    .error {
-        color: red;
-    }
-
-    .warning {
-        color: orange;
-    }
-
-    .btn-toolbar > button,
-    .btn-toolbar > .btn-group {
-        margin-right: 5px;
-    }
-
-    .btn-group > button {
-        margin-right: 2px !important;
-    }
-`;
-
-const MainContentWrapper = styled.div`
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-`;
-
 @observer
 export class ProjectEditor extends React.Component<{}, {}> {
     static contextType = ProjectContext;
@@ -192,13 +159,15 @@ export class ProjectEditor extends React.Component<{}, {}> {
         }
 
         return (
-            <ProjectEditorWrapper>
-                <MainContentWrapper>{mainContent}</MainContentWrapper>
+            <div className="EezStudio_ProjectEditorWrapper">
+                <div className="EezStudio_ProjectEditorMainContentWrapper">
+                    {mainContent}
+                </div>
                 {this.context.UIStateStore.showCommandPalette &&
                     !this.context.RuntimeStore.isRuntimeMode && (
                         <CommandPalette />
                     )}
-            </ProjectEditorWrapper>
+            </div>
         );
     }
 }

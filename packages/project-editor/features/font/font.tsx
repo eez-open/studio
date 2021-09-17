@@ -12,7 +12,6 @@ import { validators } from "eez-studio-shared/validation";
 import * as notification from "eez-studio-ui/notification";
 import { IconAction, TextAction } from "eez-studio-ui/action";
 import { IFieldComponentProps } from "eez-studio-ui/generic-dialog";
-import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
 import { Loader } from "eez-studio-ui/loader";
 import { SearchInput } from "eez-studio-ui/search-input";

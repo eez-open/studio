@@ -8,7 +8,6 @@ import { validators } from "eez-studio-shared/validation";
 import { readTextFile } from "eez-studio-shared/util-electron";
 import { _map } from "eez-studio-shared/algorithm";
 
-import styled from "eez-studio-ui/styled-components";
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Splitter } from "eez-studio-ui/splitter";
 import { List } from "eez-studio-ui/list";
@@ -392,11 +391,6 @@ class MasterView extends React.Component<{
     }
 }
 
-const HeaderContainer = styled(Header)`
-    padding: 10px;
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-`;
-
 @observer
 export class ScriptHeader extends React.Component<{
     appStore: InstrumentAppStore;
@@ -429,7 +423,7 @@ export class ScriptHeader extends React.Component<{
 
     render() {
         return (
-            <HeaderContainer>
+            <Header className="EezStudio_HeaderContainer">
                 <Toolbar
                     style={{ display: "flex", justifyContent: "space-between" }}
                 >
@@ -448,7 +442,7 @@ export class ScriptHeader extends React.Component<{
                         onClick={this.searchAndReplace}
                     />
                 </Toolbar>
-            </HeaderContainer>
+            </Header>
         );
     }
 }

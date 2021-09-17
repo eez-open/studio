@@ -14,8 +14,6 @@ import { IUnit } from "eez-studio-shared/units";
 import { _uniqWith } from "eez-studio-shared/algorithm";
 //import { roundNumberWithMaxNumberOfDecimalDigits } from "eez-studio-shared/roundNumber";
 
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
 import { Draggable } from "eez-studio-ui/draggable";
 import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
 import { Splitter } from "eez-studio-ui/splitter";
@@ -3228,12 +3226,7 @@ class Cursor implements ICursor {
     showPopover() {
         if (this.cursorElement) {
             let content = document.createElement("div");
-            ReactDOM.render(
-                <ThemeProvider theme={theme()}>
-                    <CursorPopover cursor={this} />
-                </ThemeProvider>,
-                content
-            );
+            ReactDOM.render(<CursorPopover cursor={this} />, content);
             this.cursorPopover = new bootstrap.Popover(this.cursorElement, {
                 content,
                 html: true,
@@ -3955,12 +3948,10 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "RulersDockView",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <RulersDockView
-                            chartsController={chartsController}
-                            {...props}
-                        />
-                    </ThemeProvider>,
+                    <RulersDockView
+                        chartsController={chartsController}
+                        {...props}
+                    />,
                     container.getElement()[0]
                 );
             }
@@ -3970,14 +3961,12 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "MeasurementsDockView",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <MeasurementsDockView
-                            measurementsController={
-                                chartsController.measurementsController
-                            }
-                            {...props}
-                        />
-                    </ThemeProvider>,
+                    <MeasurementsDockView
+                        measurementsController={
+                            chartsController.measurementsController
+                        }
+                        {...props}
+                    />,
                     container.getElement()[0]
                 );
             }
@@ -3987,12 +3976,10 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "ChartViewOptions",
             function (container: any, props: ChartViewOptionsProps) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <ChartViewOptions
-                            chartsController={chartsController}
-                            {...props}
-                        />
-                    </ThemeProvider>,
+                    <ChartViewOptions
+                        chartsController={chartsController}
+                        {...props}
+                    />,
                     container.getElement()[0]
                 );
             }
@@ -4002,9 +3989,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "BookmarksView",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <BookmarksView chartsController={chartsController} />
-                    </ThemeProvider>,
+                    <BookmarksView chartsController={chartsController} />,
                     container.getElement()[0]
                 );
             }
@@ -4014,9 +3999,7 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
             "HelpView",
             function (container: any, props: ChartViewOptionsProps) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <HelpView {...props} />
-                    </ThemeProvider>,
+                    <HelpView {...props} />,
                     container.getElement()[0]
                 );
             }

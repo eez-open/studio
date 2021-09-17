@@ -1,17 +1,10 @@
 import bootstrap from "bootstrap";
-import React from "react";
 import ReactDOM from "react-dom";
-
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
 
 export function showPopup(targetElement: Element, popupElement: JSX.Element) {
     let content = document.createElement("div");
     content.tabIndex = 0;
-    ReactDOM.render(
-        <ThemeProvider theme={theme()}>{popupElement}</ThemeProvider>,
-        content
-    );
+    ReactDOM.render(popupElement, content);
 
     const popup = new bootstrap.Popover(targetElement, {
         content,

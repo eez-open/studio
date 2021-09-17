@@ -20,7 +20,6 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import { ActionComponent, Component } from "project-editor/flow/component";
 
-import styled from "eez-studio-ui/styled-components";
 import { ProjectContext } from "project-editor/project/context";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { Panel } from "project-editor/components/Panel";
@@ -213,87 +212,6 @@ class PaletteGroup extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ComponentsPaletteDiv = styled.div`
-    flex-grow: 1;
-    overflow: auto;
-
-    .card {
-        border-left: none;
-        border-right: none;
-        border-top: none;
-        border-bottom: 1px solid ${props => props.theme.borderColor};
-        border-radius: 0;
-    }
-
-    .card:last-child {
-        border-bottom: none;
-    }
-
-    .card-header {
-        padding: 5px;
-        button {
-            text-decoration: none;
-            color: inherit;
-        }
-    }
-
-    .card-body {
-        display: flex;
-        flex-wrap: wrap;
-        align-content: flex-start;
-        align-items: flex-start;
-        padding: 5px;
-    }
-
-    .eez-component-palette-item {
-        margin: 4px;
-        padding: 4px;
-        cursor: grab;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        & > img,
-        & > svg {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
-            margin-right: 4px;
-        }
-        white-space: nowrap;
-        min-width: 120px;
-        background-color: #3fadb5;
-        color: #333;
-        border-radius: 5px;
-
-        &.selected {
-            background-color: ${props =>
-                props.theme.nonFocusedSelectionBackgroundColor};
-            color: ${props => props.theme.nonFocusedSelectionColor};
-        }
-    }
-
-    &:focus {
-        .eez-component-palette-item {
-            &:hover {
-                background-color: ${props => props.theme.hoverBackgroundColor};
-                color: ${props => props.theme.hoverColor};
-            }
-
-            &.selected {
-                background-color: ${props =>
-                    props.theme.selectionBackgroundColor};
-                color: ${props => props.theme.selectionColor};
-            }
-
-            &.dragging {
-                background-color: ${props =>
-                    props.theme.dragSourceBackgroundColor};
-                color: ${props => props.theme.dragSourceColor};
-            }
-        }
-    }
-`;
-
 @observer
 export class ComponentsPalette extends React.Component<{
     showOnlyActions?: boolean;
@@ -391,7 +309,7 @@ export class ComponentsPalette extends React.Component<{
                     />
                 ]}
                 body={
-                    <ComponentsPaletteDiv tabIndex={0}>
+                    <div className="EezStudio_ComponentsPalette" tabIndex={0}>
                         {[...this.groups.entries()].sort().map(entry => (
                             <PaletteGroup
                                 key={entry[0]}
@@ -403,7 +321,7 @@ export class ComponentsPalette extends React.Component<{
                                 onSelect={this.onSelect}
                             ></PaletteGroup>
                         ))}
-                    </ComponentsPaletteDiv>
+                    </div>
                 }
             />
         );

@@ -23,7 +23,6 @@ import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import styled from "eez-studio-ui/styled-components";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
@@ -69,34 +68,6 @@ function getNavigationStore(DocumentStore: DocumentStoreClass) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ColorItemDiv = styled.div`
-    width: calc(100% - 20px);
-
-    display: flex !important;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-
-    & > span {
-        flex-grow: 1;
-        flex-shrink: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    & > input {
-        cursor: pointer;
-        flex-grow: 0;
-        flex-shrink: 0;
-        width: 24px;
-        height: 15px;
-        margin: 3px 5px 3px 3px;
-        border: none;
-        padding: 0;
-    }
-`;
 
 @observer
 class ColorItem extends React.Component<{
@@ -162,7 +133,7 @@ class ColorItem extends React.Component<{
 
     render() {
         return (
-            <ColorItemDiv className="tree-row-label">
+            <div className="tree-row-label EezStudio_ColorItem">
                 <input
                     type="color"
                     value={
@@ -176,7 +147,7 @@ class ColorItem extends React.Component<{
                 <span title={this.colorObject.name}>
                     {this.colorObject.name}
                 </span>
-            </ColorItemDiv>
+            </div>
         );
     }
 }

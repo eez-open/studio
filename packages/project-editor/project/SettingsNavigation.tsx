@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import React from "react";
 
 import { Splitter } from "eez-studio-ui/splitter";
-import styled from "eez-studio-ui/styled-components";
 
 import {
     NavigationComponent,
@@ -157,19 +156,6 @@ class ProjectFeature extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const SettingsEditorDiv = styled.div`
-    padding: 10px;
-    overflow: auto;
-
-    .EezStudio_ProjectEditor_PropertyGrid {
-        position: static;
-    }
-
-    .EezStudio_ProjectEditor_PropertyGrid {
-        overflow: visible;
-    }
-`;
-
 @observer
 export class SettingsEditor extends React.Component<
     { object: IEezObject | undefined },
@@ -187,11 +173,11 @@ export class SettingsEditor extends React.Component<
             ));
 
             return (
-                <SettingsEditorDiv>
+                <div className="EezStudio_SettingsEditor">
                     <PropertyGrid objects={[object]} />
                     <h3>Project features</h3>
                     <div className="d-flex flex-wrap">{projectFeatures}</div>
-                </SettingsEditorDiv>
+                </div>
             );
         } else {
             const properties = (

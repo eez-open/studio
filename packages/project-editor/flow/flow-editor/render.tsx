@@ -3,7 +3,6 @@ import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import { styled } from "eez-studio-ui/styled-components";
 import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { getId } from "project-editor/core/object";
@@ -130,198 +129,6 @@ function calcComponentGeometry(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ComponentEnclosureDiv = styled.div`
-    display: block;
-    position: absolute;
-
-    &.eez-action-component {
-        display: flex;
-        flex-direction: column;
-
-        background-color: #fffcf7;
-        border: 1px solid #fffcf7;
-        border-radius: 4px;
-
-        box-shadow: 1px 1px 4px rgba(22, 33, 74, 0.2);
-
-        overflow: hidden;
-
-        .title-enclosure {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-
-            .title {
-                flex-grow: 1;
-                padding: 4px 0;
-                background-color: #3fadb5;
-                color: #333;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                white-space: nowrap;
-
-                span {
-                    padding-left: 6px;
-                }
-
-                span:last-child {
-                    padding-right: 6px;
-                }
-
-                .title-image {
-                    display: flex;
-
-                    svg {
-                        vertical-align: baseline;
-                        height: 16px;
-                    }
-
-                    img {
-                        width: 48px;
-                        object-fit: contain;
-                    }
-                }
-
-                .title-text {
-                    flex-grow: 1;
-                    white-space: nowrap;
-                }
-
-                [data-connection-output-id] {
-                    width: 21px;
-                    height: 21px;
-                }
-            }
-        }
-
-        .content {
-            display: flex;
-            flex-direction: row;
-
-            .inputs,
-            .outputs {
-                padding: 2px;
-                font-size: 90%;
-                flex-grow: 1;
-            }
-
-            .inputs {
-                text-align: left;
-            }
-
-            .outputs {
-                text-align: right;
-            }
-
-            [data-connection-input-id],
-            [data-connection-output-id] {
-                border: 1px solid #fffcf7;
-                padding: 2px 5px;
-                margin-bottom: 2px;
-
-                white-space: nowrap;
-            }
-
-            [data-connection-output-id] {
-                text-align: right;
-            }
-
-            .body {
-                margin: 4px;
-                border: 1px solid ${props => props.theme.borderColor};
-                padding: 4px;
-                background-color: white;
-            }
-
-            pre {
-                margin-bottom: 0;
-            }
-        }
-
-        [data-connection-output-id].error {
-            color: red;
-        }
-    }
-
-    &.eez-widget-component {
-        --size: 6px;
-
-        .inputs,
-        .outputs {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            top: 0;
-            width: var(--width);
-            height: 100%;
-        }
-
-        .inputs {
-            left: 0;
-        }
-
-        .outputs {
-            right: 0;
-        }
-
-        [data-connection-input-id],
-        [data-connection-output-id] {
-            background-color: #999;
-
-            margin-bottom: var(--size);
-
-            width: var(--size);
-            height: calc(var(--size) * 2);
-        }
-
-        [data-connection-input-id] {
-            margin-left: calc(var(--size) / -1);
-        }
-
-        [data-connection-output-id] {
-            margin-right: calc(var(--size) / -1);
-        }
-
-        [data-connection-input-id] {
-            border-bottom-left-radius: calc(var(--size) * 2 - 2px);
-            border-top-left-radius: calc(var(--size) * 2 - 2px);
-            border-bottom-right-radius: 2px;
-            border-top-right-radius: 2px;
-        }
-
-        [data-connection-output-id] {
-            border-bottom-left-radius: 2px;
-            border-top-left-radius: 2px;
-            border-bottom-right-radius: calc(var(--size) * 2 - 2px);
-            border-top-right-radius: calc(var(--size) * 2 - 2px);
-        }
-
-        [data-connection-input-id]:last-child,
-        [data-connection-output-id]:last-child {
-            margin-bottom: 0;
-        }
-
-        [data-connection-input-id].seq,
-        [data-connection-output-id].seq {
-            background-color: ${props => props.theme.seqConnectionLineColor};
-        }
-    }
-
-    &.Button button,
-    &.ButtonWidget button {
-        width: 100%;
-        height: 100%;
-    }
-
-    &.Text button,
-    &.TextWidget {
-        display: flex;
-        align-items: center;
-    }
-`;
-
 export const ComponentCanvas = observer(
     ({
         component,
@@ -416,18 +223,22 @@ export const ComponentEnclosure = observer(
         const className = component.getClassName();
 
         return (
-            <ComponentEnclosureDiv
+            <div
                 data-eez-flow-object-id={dataFlowObjectId}
                 ref={elRef}
-                className={classNames(className, {
-                    "eez-flow-editor-capture-pointers":
-                        flowContext.document.DocumentStore.RuntimeStore
-                            .isRuntimeMode
-                })}
+                className={classNames(
+                    "EezStudio_ComponentEnclosure",
+                    className,
+                    {
+                        "eez-flow-editor-capture-pointers":
+                            flowContext.document.DocumentStore.RuntimeStore
+                                .isRuntimeMode
+                    }
+                )}
                 style={style}
             >
                 {component.render(flowContext)}
-            </ComponentEnclosureDiv>
+            </div>
         );
     }
 );

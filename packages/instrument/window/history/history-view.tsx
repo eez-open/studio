@@ -8,8 +8,6 @@ import { readBinaryFile } from "eez-studio-shared/util-electron";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
 
-import { theme } from "eez-studio-ui/theme";
-import { ThemeProvider } from "eez-studio-ui/styled-components";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
@@ -403,18 +401,16 @@ export class HistoryView extends React.Component<{
             "SearchResults",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <div
-                            style={{
-                                position: "absolute",
-                                width: "100%",
-                                height: "100%",
-                                display: "flex"
-                            }}
-                        >
-                            <SearchResults history={appStore.history} />
-                        </div>
-                    </ThemeProvider>,
+                    <div
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex"
+                        }}
+                    >
+                        <SearchResults history={appStore.history} />
+                    </div>,
                     container.getElement()[0]
                 );
             }
@@ -424,9 +420,7 @@ export class HistoryView extends React.Component<{
             "Filters",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <FiltersComponent appStore={appStore} />
-                    </ThemeProvider>,
+                    <FiltersComponent appStore={appStore} />,
                     container.getElement()[0]
                 );
             }
@@ -436,16 +430,14 @@ export class HistoryView extends React.Component<{
             "Calendar",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <div
-                            style={{
-                                height: "100%",
-                                overflow: "auto"
-                            }}
-                        >
-                            <Calendar history={appStore.history} />
-                        </div>
-                    </ThemeProvider>,
+                    <div
+                        style={{
+                            height: "100%",
+                            overflow: "auto"
+                        }}
+                    >
+                        <Calendar history={appStore.history} />
+                    </div>,
                     container.getElement()[0]
                 );
             }
@@ -455,21 +447,19 @@ export class HistoryView extends React.Component<{
             "Sessions",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <div
-                            style={{
-                                position: "absolute",
-                                width: "100%",
-                                height: "100%",
-                                display: "flex"
-                            }}
-                        >
-                            <SessionList
-                                appStore={appStore}
-                                history={appStore.history}
-                            />
-                        </div>
-                    </ThemeProvider>,
+                    <div
+                        style={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            display: "flex"
+                        }}
+                    >
+                        <SessionList
+                            appStore={appStore}
+                            history={appStore.history}
+                        />
+                    </div>,
                     container.getElement()[0]
                 );
             }
@@ -479,12 +469,10 @@ export class HistoryView extends React.Component<{
             "Scrapbook",
             function (container: any, props: any) {
                 ReactDOM.render(
-                    <ThemeProvider theme={theme()}>
-                        <Scrapbook
-                            appStore={appStore}
-                            history={appStore.history}
-                        />
-                    </ThemeProvider>,
+                    <Scrapbook
+                        appStore={appStore}
+                        history={appStore.history}
+                    />,
                     container.getElement()[0]
                 );
             }

@@ -42,48 +42,12 @@ import {
     ToolbarHeader,
     VerticalHeaderWithBody
 } from "eez-studio-ui/header-with-body";
-import { styled } from "eez-studio-ui/styled-components";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { FlowTabState } from "project-editor/flow/flow";
 import { IViewStatePersistantState } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const FLIP_CARD_ANIMATION_DURATION = 400;
-
-const FlipCardDiv = styled.div`
-    perspective: 1000px;
-    flex-grow: 1;
-    overflow: hidden;
-    background-color: ${props => props.theme.panelHeaderColor};
-
-    .flip-card-inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        transition: transform ${FLIP_CARD_ANIMATION_DURATION}ms;
-        transform-style: preserve-3d;
-    }
-
-    .flip-card-inner.show-back-face {
-        transform: rotateY(-180deg);
-    }
-
-    .flip-card-front,
-    .flip-card-back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        display: flex;
-    }
-
-    .flip-card-back {
-        transform: rotateY(180deg);
-    }
-`;
 
 @observer
 export class PageEditor extends EditorComponent implements IPanel {
@@ -216,7 +180,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                             />
                         ))}
                     {this.transitionIsActive && (
-                        <FlipCardDiv>
+                        <div className="EezStudio_FlipCardDiv">
                             <div
                                 className={classNames("flip-card-inner", {
                                     "show-back-face":
@@ -304,7 +268,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                     )}
                                 </div>
                             </div>
-                        </FlipCardDiv>
+                        </div>
                     )}
                 </Body>
             </VerticalHeaderWithBody>

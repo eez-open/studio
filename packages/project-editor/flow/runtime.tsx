@@ -2,7 +2,6 @@ import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
 import { guid } from "eez-studio-shared/guid";
 
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
@@ -1392,44 +1391,6 @@ class ExecutionErrorHistoryItem extends HistoryItem {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RuntimePanelDiv = styled.div`
-    flex-grow: 1;
-
-    display: flex;
-    flex-direction: column;
-
-    .EezStudio_SimpleTree {
-        overflow: auto;
-    }
-
-    .running-flow {
-        display: inline-flex;
-        align-items: center;
-
-        .error {
-            color: red;
-        }
-    }
-
-    .history-label {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .history-item {
-        display: inline-flex;
-        align-items: center;
-
-        small {
-            margin-right: 5px;
-        }
-
-        .error {
-            color: red;
-        }
-    }
-`;
-
 @observer
 class RuntimePanel extends React.Component {
     static contextType = ProjectContext;
@@ -1445,7 +1406,7 @@ class RuntimePanel extends React.Component {
                 id="runtime"
                 title={"Runtime Info"}
                 body={
-                    <RuntimePanelDiv>
+                    <div className="EezStudio_RuntimePanel">
                         <Splitter
                             type="vertical"
                             persistId={`project-editor/runtime-info`}
@@ -1455,7 +1416,7 @@ class RuntimePanel extends React.Component {
                             <RunningFlowsPanel />
                             <HistoryPanel />
                         </Splitter>
-                    </RuntimePanelDiv>
+                    </div>
                 }
             />
         );

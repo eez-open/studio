@@ -16,13 +16,11 @@ import { formatDateTimeLong } from "eez-studio-shared/util";
 
 import { validators } from "eez-studio-shared/validation";
 
-import styled from "eez-studio-ui/styled-components";
 import { Icon } from "eez-studio-ui/icon";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
     VerticalHeaderWithBody,
     ToolbarHeader,
-    PanelHeader,
     Body
 } from "eez-studio-ui/header-with-body";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
@@ -42,57 +40,18 @@ import { getList, sendList } from "instrument/connection/list-operations";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 
-import { BaseList, ITableListData } from "instrument/window/lists/store-renderer";
-import { createEmptyListData, createTableListFromData } from "instrument/window/lists/factory";
+import {
+    BaseList,
+    ITableListData
+} from "instrument/window/lists/store-renderer";
+import {
+    createEmptyListData,
+    createTableListFromData
+} from "instrument/window/lists/factory";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_DEFAULT_ENVELOPE_LIST_DURATION = 1; // 1 second
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const ListChartViewHeader = styled(Header)`
-    padding: 10px;
-    border-bottom: 1px solid ${props => props.theme.borderColor};
-
-    & > div {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-    }
-
-    td {
-        padding-top: 2px;
-        padding-bottom: 2px;
-        padding-left: 4px;
-        padding-right: 4px;
-    }
-
-    td:first-child {
-        padding-left: 0;
-    }
-
-    td:last-child {
-        padding-right: 0;
-    }
-
-    .form-check-label input {
-        margin-right: 4px;
-    }
-
-    .form-check-label {
-        padding-left: 0;
-    }
-
-    label {
-        white-space: nowrap;
-        margin-bottom: 0;
-    }
-
-    input[type="text"] {
-        width: 100px;
-    }
-`;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +73,8 @@ class MasterView extends React.Component<
                 id: list.id,
                 data: list,
                 selected:
-                    this.props.selectedList !== undefined && list.id === this.props.selectedList.id
+                    this.props.selectedList !== undefined &&
+                    list.id === this.props.selectedList.id
             }));
     }
 
@@ -133,7 +93,10 @@ class MasterView extends React.Component<
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique({}, this.props.appStore.instrumentLists)
+                            validators.unique(
+                                {},
+                                this.props.appStore.instrumentLists
+                            )
                         ]
                     },
                     {
@@ -153,7 +116,8 @@ class MasterView extends React.Component<
                         validators: [
                             validators.rangeInclusive(
                                 1,
-                                this.props.appStore.instrument!.listsMaxPointsProperty
+                                this.props.appStore.instrument!
+                                    .listsMaxPointsProperty
                             )
                         ],
                         visible: (values: any) => values.type === "envelope"
@@ -166,30 +130,36 @@ class MasterView extends React.Component<
                 name: "",
                 description: "",
                 duration: CONF_DEFAULT_ENVELOPE_LIST_DURATION,
-                numSamples: this.props.appStore.instrument!.listsMaxPointsProperty
+                numSamples:
+                    this.props.appStore.instrument!.listsMaxPointsProperty
             }
         })
             .then(async result => {
                 beginTransaction("Add instrument list");
-                let listId = this.props.appStore.instrumentListStore.createObject({
-                    type: result.values.type,
-                    name: result.values.name,
-                    description: result.values.description,
-                    data: createEmptyListData(
-                        result.values.type,
-                        {
-                            duration: result.values.duration,
-                            numSamples: result.values.numSamples
-                        },
-                        this.props.appStore.instrument!
-                    )
-                });
+                let listId =
+                    this.props.appStore.instrumentListStore.createObject({
+                        type: result.values.type,
+                        name: result.values.name,
+                        description: result.values.description,
+                        data: createEmptyListData(
+                            result.values.type,
+                            {
+                                duration: result.values.duration,
+                                numSamples: result.values.numSamples
+                            },
+                            this.props.appStore.instrument!
+                        )
+                    });
                 commitTransaction();
 
-                await this.props.appStore.navigationStore.changeSelectedListId(listId);
+                await this.props.appStore.navigationStore.changeSelectedListId(
+                    listId
+                );
 
                 setTimeout(() => {
-                    let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
+                    let element = document.querySelector(
+                        `.EezStudio_InstrumentList_${listId}`
+                    );
                     if (element) {
                         element.scrollIntoView();
                     }
@@ -202,7 +172,9 @@ class MasterView extends React.Component<
     removeList() {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Remove instrument list");
-            this.props.appStore.instrumentListStore.deleteObject(this.props.selectedList!.toJS());
+            this.props.appStore.instrumentListStore.deleteObject(
+                this.props.selectedList!.toJS()
+            );
             commitTransaction();
         });
     }
@@ -229,7 +201,11 @@ class MasterView extends React.Component<
                     <ListComponent
                         nodes={this.sortedLists}
                         renderNode={node => (
-                            <div className={"EezStudio_InstrumentList_" + node.id}>
+                            <div
+                                className={
+                                    "EezStudio_InstrumentList_" + node.id
+                                }
+                            >
                                 {node.data.name}
                             </div>
                         )}
@@ -242,25 +218,32 @@ class MasterView extends React.Component<
 }
 
 @observer
-export class DetailsView extends React.Component<{ list: BaseList | undefined }, {}> {
+export class DetailsView extends React.Component<
+    { list: BaseList | undefined },
+    {}
+> {
     render() {
         const { list } = this.props;
 
         const description = list && list.description;
         const modifiedAtStr =
-            list && list.modifiedAt ? formatDateTimeLong(list.modifiedAt) : undefined;
+            list && list.modifiedAt
+                ? formatDateTimeLong(list.modifiedAt)
+                : undefined;
 
         return (
             <VerticalHeaderWithBody>
                 {(description || modifiedAtStr) && (
-                    <PanelHeader>
-                        <Icon icon="material:comment" /> <span className="">{description}</span>{" "}
+                    <Header className="EezStudio_PanelHeader">
+                        <Icon icon="material:comment" />{" "}
+                        <span className="">{description}</span>{" "}
                         {modifiedAtStr && (
                             <span className="font-weight-light">
-                                {description ? " - " : ""}Modified at {modifiedAtStr}
+                                {description ? " - " : ""}Modified at{" "}
+                                {modifiedAtStr}
                             </span>
                         )}
-                    </PanelHeader>
+                    </Header>
                 )}
                 <Body>{list && list.renderDetailsView()}</Body>
             </VerticalHeaderWithBody>
@@ -269,23 +252,32 @@ export class DetailsView extends React.Component<{ list: BaseList | undefined },
 }
 
 @observer
-export class ListsEditor extends React.Component<{ appStore: InstrumentAppStore }, {}> {
+export class ListsEditor extends React.Component<
+    { appStore: InstrumentAppStore },
+    {}
+> {
     @computed
     get selectedList() {
         return this.props.appStore.instrumentLists.find(
-            list => list.id == this.props.appStore.navigationStore.selectedListId
+            list =>
+                list.id == this.props.appStore.navigationStore.selectedListId
         );
     }
 
     render() {
         return (
-            <Splitter type="horizontal" sizes="240px|100%" persistId="instrument/lists/splitter">
+            <Splitter
+                type="horizontal"
+                sizes="240px|100%"
+                persistId="instrument/lists/splitter"
+            >
                 <MasterView
                     appStore={this.props.appStore}
                     selectedList={this.selectedList}
-                    selectList={action(
-                        (list: BaseList) =>
-                            this.props.appStore.navigationStore.changeSelectedListId(list.id)
+                    selectList={action((list: BaseList) =>
+                        this.props.appStore.navigationStore.changeSelectedListId(
+                            list.id
+                        )
                     )}
                 />
                 <DetailsView list={this.selectedList} />
@@ -360,7 +352,11 @@ export class SelectChannelDialog extends React.Component<
 async function selectChannel(label: string, numChannels: number) {
     return new Promise<number>(resolve => {
         showDialog(
-            <SelectChannelDialog label={label} callback={resolve} numChannels={numChannels} />
+            <SelectChannelDialog
+                label={label}
+                callback={resolve}
+                numChannels={numChannels}
+            />
         );
     });
 }
@@ -392,7 +388,9 @@ export async function saveTableListData(
     const result = await EEZStudio.remote.dialog.showSaveDialog(
         EEZStudio.remote.getCurrentWindow(),
         {
-            defaultPath: listName ? getValidFileNameFromFileName(listName) + ".list" : undefined,
+            defaultPath: listName
+                ? getValidFileNameFromFileName(listName) + ".list"
+                : undefined,
             filters: [{ name: "EEZ List Files", extensions: ["list"] }]
         }
     );
@@ -403,7 +401,11 @@ export async function saveTableListData(
         }
 
         try {
-            await writeCsvFile(filePath, tableListData, getCsvDataColumnDefinitions(instrument));
+            await writeCsvFile(
+                filePath,
+                tableListData,
+                getCsvDataColumnDefinitions(instrument)
+            );
             notification.success(`List exported to "${filePath}".`);
         } catch (err) {
             error("Failed to write list file.", err.toString());
@@ -414,11 +416,15 @@ export async function saveTableListData(
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore }, {}> {
+export class ListsButtons extends React.Component<
+    { appStore: InstrumentAppStore },
+    {}
+> {
     @computed
     get selectedList() {
         return this.props.appStore.instrumentLists.find(
-            list => list.id == this.props.appStore.navigationStore.selectedListId
+            list =>
+                list.id == this.props.appStore.navigationStore.selectedListId
         );
     }
 
@@ -455,7 +461,10 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.unique({}, this.props.appStore.instrumentLists)
+                                validators.unique(
+                                    {},
+                                    this.props.appStore.instrumentLists
+                                )
                             ]
                         },
                         {
@@ -480,13 +489,20 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                     list.description = result.values.description;
 
                     beginTransaction("Import instrument list");
-                    let listId = this.props.appStore.instrumentListStore.createObject(list.toJS());
+                    let listId =
+                        this.props.appStore.instrumentListStore.createObject(
+                            list.toJS()
+                        );
                     commitTransaction();
 
-                    await this.props.appStore.navigationStore.changeSelectedListId(listId);
+                    await this.props.appStore.navigationStore.changeSelectedListId(
+                        listId
+                    );
 
                     setTimeout(() => {
-                        let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
+                        let element = document.querySelector(
+                            `.EezStudio_InstrumentList_${listId}`
+                        );
                         if (element) {
                             element.scrollIntoView();
                         }
@@ -517,11 +533,17 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
 
     @bind
     async getList() {
-        let channelIndex = await selectChannel("Get list from channel:", this.numChannels);
+        let channelIndex = await selectChannel(
+            "Get list from channel:",
+            this.numChannels
+        );
 
         let listData, logId: string;
         try {
-            ({ listData, logId } = await getList(this.props.appStore.history.oid, channelIndex));
+            ({ listData, logId } = await getList(
+                this.props.appStore.history.oid,
+                channelIndex
+            ));
         } catch (err) {
             notification.error(`Failed to get list: ${err.toString()}`);
             return;
@@ -542,7 +564,10 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                         type: "string",
                         validators: [
                             validators.required,
-                            validators.unique({}, this.props.appStore.instrumentLists)
+                            validators.unique(
+                                {},
+                                this.props.appStore.instrumentLists
+                            )
                         ]
                     },
                     {
@@ -562,28 +587,42 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                 tableList.description = result.values.description;
 
                 beginTransaction("Get instrument list");
-                let listId = this.props.appStore.instrumentListStore.createObject(tableList.toJS());
+                let listId =
+                    this.props.appStore.instrumentListStore.createObject(
+                        tableList.toJS()
+                    );
                 commitTransaction();
 
-                await this.props.appStore.navigationStore.changeSelectedListId(listId);
+                await this.props.appStore.navigationStore.changeSelectedListId(
+                    listId
+                );
 
                 setTimeout(() => {
-                    let element = document.querySelector(`.EezStudio_InstrumentList_${listId}`);
+                    let element = document.querySelector(
+                        `.EezStudio_InstrumentList_${listId}`
+                    );
                     if (element) {
                         element.scrollIntoView();
                     }
                 }, 10);
 
                 // set list name in activity log
-                let activityLog = logGet(this.props.appStore.history.options.store, logId);
+                let activityLog = logGet(
+                    this.props.appStore.history.options.store,
+                    logId
+                );
 
                 let message = JSON.parse(activityLog.message);
                 message.listName = tableList.name;
                 activityLog.message = JSON.stringify(message);
 
-                logUpdate(this.props.appStore.history.options.store, activityLog, {
-                    undoable: false
-                });
+                logUpdate(
+                    this.props.appStore.history.options.store,
+                    activityLog,
+                    {
+                        undoable: false
+                    }
+                );
             })
             .catch(() => {});
     }
@@ -591,7 +630,10 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
     @bind
     async sendList() {
         if (this.selectedList) {
-            let channelIndex = await selectChannel("Send list to channel:", this.numChannels);
+            let channelIndex = await selectChannel(
+                "Send list to channel:",
+                this.numChannels
+            );
             const channel = this.selectedList.tableListData;
             try {
                 await sendList(
@@ -667,7 +709,9 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                     text="Get"
                     title="Get list from instrument channel"
                     className="btn-secondary"
-                    enabled={this.props.appStore.instrument!.connection.isConnected}
+                    enabled={
+                        this.props.appStore.instrument!.connection.isConnected
+                    }
                     onClick={this.getList}
                 />
                 <ButtonAction
@@ -676,8 +720,8 @@ export class ListsButtons extends React.Component<{ appStore: InstrumentAppStore
                     title="Send list to instrument channel"
                     className="btn-secondary"
                     enabled={
-                        this.props.appStore.instrument!.connection.isConnected &&
-                        this.selectedList !== undefined
+                        this.props.appStore.instrument!.connection
+                            .isConnected && this.selectedList !== undefined
                     }
                     onClick={this.sendList}
                 />

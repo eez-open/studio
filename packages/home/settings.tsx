@@ -32,9 +32,9 @@ import {
 } from "eez-studio-ui/properties";
 import { FileInputProperty } from "eez-studio-ui/properties-electron";
 import * as notification from "eez-studio-ui/notification";
-import { PanelHeader } from "eez-studio-ui/header-with-body";
 
 import dbVacuum from "db-services/vacuum";
+import { Header } from "eez-studio-ui/header-with-body";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,7 +83,7 @@ class SettingsController {
 
         setInterval(this.updateTimeOfLastDatabaseCompact, 60 * 1000);
 
-        this.switchTheme();
+        this.onThemeSwitched();
     }
 
     @action.bound
@@ -153,13 +153,13 @@ class SettingsController {
     }
 
     @action.bound
-    onIsDarkThemeChanged(value: boolean) {
+    switchTheme(value: boolean) {
         this.isDarkTheme = value;
         setIsDarkTheme(value);
-        this.switchTheme();
+        this.onThemeSwitched();
     }
 
-    switchTheme() {
+    onThemeSwitched() {
         const content = document.getElementById(
             "EezStudio_Content"
         ) as HTMLDivElement;
@@ -188,7 +188,7 @@ class SettingsController {
 
         setTimeout(() => {
             content.style.opacity = "";
-        }, 500);
+        }, 200);
     }
 
     @bind
@@ -462,13 +462,13 @@ export class Settings extends React.Component {
                         <BooleanProperty
                             name={`Dark theme`}
                             value={settingsController.isDarkTheme}
-                            onChange={settingsController.onIsDarkThemeChanged}
+                            onChange={settingsController.switchTheme}
                         />
                     </PropertyList>
                 </div>
 
                 {settingsController.restartRequired && (
-                    <PanelHeader className="EezStudio_HomeSettingsBar">
+                    <Header className="EezStudio_HomeSettingsBar EezStudio_PanelHeader">
                         <div className="btn-group me-2">
                             <button
                                 className="btn btn-primary EezStudio_PulseTransition"
@@ -477,7 +477,7 @@ export class Settings extends React.Component {
                                 Restart
                             </button>
                         </div>
-                    </PanelHeader>
+                    </Header>
                 )}
             </div>
         );

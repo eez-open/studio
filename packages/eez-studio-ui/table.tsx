@@ -190,7 +190,7 @@ export class Table extends React.Component<ITableProps> {
         );
 
         return (
-            <div className={className} tabIndex={-1}>
+            <table className={className} tabIndex={-1}>
                 <thead>
                     <tr>
                         {this.props.columns.map(column => (
@@ -222,7 +222,7 @@ export class Table extends React.Component<ITableProps> {
                         </tr>
                     ))}
                 </tbody>
-            </div>
+            </table>
         );
     }
 }

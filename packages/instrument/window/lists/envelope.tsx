@@ -15,7 +15,11 @@ import { IUnit, TIME_UNIT } from "eez-studio-shared/units";
 
 import { validators } from "eez-studio-shared/validation";
 
-import { VerticalHeaderWithBody, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    Body,
+    Header
+} from "eez-studio-ui/header-with-body";
 import {
     AxisController,
     ChartMode,
@@ -59,7 +63,6 @@ import {
     ChartsDisplayOption,
     CommonTools
 } from "instrument/window/lists/common-tools";
-import { ListChartViewHeader } from "instrument/window/lists/lists";
 import { TableLineController } from "instrument/window/lists/table";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1655,7 +1658,7 @@ class EnvelopeChartsHeader extends React.Component<
 
     render() {
         return (
-            <ListChartViewHeader>
+            <Header className="EezStudio_ListChartViewHeader">
                 <Toolbar>
                     <Toolbar>
                         <ButtonAction
@@ -1690,7 +1693,7 @@ class EnvelopeChartsHeader extends React.Component<
                         chartsController={this.props.chartsController}
                     />
                 </Toolbar>
-            </ListChartViewHeader>
+            </Header>
         );
     }
 }

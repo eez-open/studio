@@ -1,8 +1,6 @@
 import React from "react";
 import classNames from "classnames";
 
-import styled from "eez-studio-ui/styled-components";
-
 export class Header extends React.Component<{
     className?: string;
 }> {
@@ -11,13 +9,6 @@ export class Header extends React.Component<{
         return <div className={className}>{this.props.children}</div>;
     }
 }
-
-export const PanelHeader = styled(Header)`
-    padding: 6px 10px;
-    border: 0 solid ${props => props.theme.borderColor};
-    border-bottom-width: 1px;
-    background-color: ${props => props.theme.panelHeaderColor};
-`;
 
 export class ToolbarHeader extends React.Component<{
     className?: string;
@@ -66,7 +57,10 @@ class HeaderWithBody extends React.Component<{
     style?: React.CSSProperties;
 }> {
     render() {
-        let className = classNames("EezStudio_HeaderWithBody", this.props.className);
+        let className = classNames(
+            "EezStudio_HeaderWithBody",
+            this.props.className
+        );
         return (
             <div
                 className={className}
@@ -85,7 +79,10 @@ export class VerticalHeaderWithBody extends React.Component<{
     style?: React.CSSProperties;
 }> {
     render() {
-        let className = classNames("EezStudio_HeaderWithBody_Vertical", this.props.className);
+        let className = classNames(
+            "EezStudio_HeaderWithBody_Vertical",
+            this.props.className
+        );
         return (
             <HeaderWithBody
                 className={className}
@@ -102,7 +99,14 @@ export class HorizontalHeaderWithBody extends React.Component<{
     className?: string;
 }> {
     render() {
-        let className = classNames("EezStudio_HeaderWithBody_Horizontal", this.props.className);
-        return <HeaderWithBody className={className}>{this.props.children}</HeaderWithBody>;
+        let className = classNames(
+            "EezStudio_HeaderWithBody_Horizontal",
+            this.props.className
+        );
+        return (
+            <HeaderWithBody className={className}>
+                {this.props.children}
+            </HeaderWithBody>
+        );
     }
 }

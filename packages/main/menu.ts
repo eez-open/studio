@@ -571,6 +571,23 @@ function buildViewMenu() {
             }
         },
         {
+            label: settings.isDarkTheme
+                ? "Switch to Light Theme"
+                : "Switch to Dark Theme",
+            accelerator: (function () {
+                if (isMacOs()) {
+                    return "Alt+Command+T";
+                } else {
+                    return "Ctrl+Shift+T";
+                }
+            })(),
+            click: function (item, focusedWindow: any) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("switch-theme");
+                }
+            }
+        },
+        {
             type: "separator"
         },
         {
