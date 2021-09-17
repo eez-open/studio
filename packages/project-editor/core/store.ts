@@ -118,6 +118,7 @@ import {
 import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
 import { RuntimeStoreClass } from "project-editor/flow/runtime";
+import { theme } from "eez-studio-ui/theme";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -2352,6 +2353,7 @@ async function initExtensions() {
                         extension.eezFlowExtensionInit({
                             React,
                             mobx,
+                            theme: theme(),
                             registerClass(aClass: EezClass) {
                                 registerClassByName(
                                     `${extension.name}/${aClass.name}`,

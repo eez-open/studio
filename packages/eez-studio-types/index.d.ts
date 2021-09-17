@@ -165,6 +165,7 @@ interface IFlow {
 interface IEezStudio {
     React: typeof React;
     mobx: typeof mobx;
+    theme: ThemeInterface;
     registerClass: (classToRegister: any) => void;
     makeDerivedClassInfo: (
         baseClassInfo: ClassInfo,
