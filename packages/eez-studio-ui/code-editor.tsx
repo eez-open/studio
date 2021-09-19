@@ -9,6 +9,7 @@ import { PropertyEnclosure } from "eez-studio-ui/properties";
 
 import { addScript } from "eez-studio-shared/dom";
 import classNames from "classnames";
+import { settingsController } from "home/settings";
 
 function createEditor(
     element: HTMLElement,
@@ -40,6 +41,12 @@ function createEditor(
                 });
             }
 
+            if (settingsController.isDarkTheme) {
+                editor.setTheme("ace/theme/dracula");
+            } else {
+                editor.setTheme("ace/theme/github");
+            }
+
             editor.setReadOnly(readOnly);
             if (readOnly) {
                 editor.renderer.$cursorLayer.element.style.opacity = 0;
@@ -67,6 +74,7 @@ function createEditor(
                     addScript("../../libs/brace-0.11.1/mode/python.js"),
                     addScript("../../libs/brace-0.11.1/mode/scpi.js"),
                     addScript("../../libs/brace-0.11.1/theme/github.js"),
+                    addScript("../../libs/brace-0.11.1/theme/dracula.js"),
                     addScript("../../libs/brace-0.11.1/ext/searchbox.js")
                 ]).then(aceReady);
             });

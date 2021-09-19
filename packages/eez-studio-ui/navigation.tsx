@@ -33,14 +33,12 @@ export class NavigationItem extends React.Component<
     }
 
     render() {
-        let className = classNames("NavigationItem", {
+        let className = classNames("EezStudio_NavigationItem", {
             selected: this.props.selected
         });
 
         return (
-            <div
-                className={classNames("EezStudio_NavigationItemLi", className)}
-            >
+            <div className={className}>
                 <a
                     href="#"
                     title={this.props.item.title}

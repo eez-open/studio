@@ -308,7 +308,7 @@ export class Scrapbook extends React.Component<{
                 }}
             >
                 <ToolbarHeader>
-                    <div className="EezStudio_HeaderContainer">
+                    <div className="EezStudio_ScrapbookHeaderContainer">
                         <div className="form-check">
                             <label className="form-check-label">
                                 <input

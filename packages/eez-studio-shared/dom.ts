@@ -93,7 +93,7 @@ export function attachCssToElement(el: HTMLDivElement, cssStr: string) {
                 const rule = stylesheetRule as css.Rule;
                 if (rule.selectors) {
                     rule.selectors = rule.selectors.map(
-                        selector => `.${className}${selector}`
+                        selector => `.${className} ${selector}`
                     );
                 }
             }

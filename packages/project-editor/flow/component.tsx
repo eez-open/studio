@@ -1256,7 +1256,7 @@ export class Widget extends Component {
         getResizeHandlers(object: Widget) {
             return object.getResizeHandlers();
         },
-        componentHeaderColor: "#FFFFFF"
+        componentHeaderColor: "#ddd"
     });
 
     putInSelect() {

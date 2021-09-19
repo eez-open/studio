@@ -362,7 +362,8 @@ input[type="color"] {
 }
 
 .EezStudio_ToolbarHeader {
-    &:extend(.EezStudio_PanelHeader);
+    &:extend(.EezStudio_PanelHeader all);
+
     justify-content: flex-end;
 }
 
@@ -406,7 +407,7 @@ input[type="color"] {
     height: 100%;
     overflow: auto;
 
-    background: white;
+    background: @WorkingAreaBackgroundColor;
 
     &.selectable {
         tr {
@@ -697,7 +698,7 @@ button.EezStudio_Action {
     box-shadow: 0px 0px 6px 2px rgba(255, 0, 0, 0.3);
 }
 
-.EezStudio_NavigationItemLi {
+.EezStudio_NavigationItem {
     margin-bottom: 4px;
 
     & > a {
@@ -719,11 +720,11 @@ button.EezStudio_Action {
 
     &:not(.selected) {
         a {
-            color: #999;
+            color: var(--bs-body-color);
         }
 
         a:hover {
-            color: #333;
+            color: @selectionBackgroundColor;
         }
     }
 }
@@ -834,7 +835,7 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_MeasurementsDockViewContainer:extend(.EezStudio_SideDockViewContainer) {
+.EezStudio_MeasurementsDockViewContainer {
     table {
         margin-left: 0;
     }
@@ -900,7 +901,9 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_ChartViewOptionsContainer:extend(.EezStudio_SideDockViewContainer) {
+.EezStudio_ChartViewOptionsContainer {
+    &:extend(.EezStudio_SideDockViewContainer all);
+
     .EezStudio_ChartViewOptions_DynamicAxisLines_Properties {
         margin-bottom: 10px;
         input {
@@ -1667,7 +1670,7 @@ button.EezStudio_Action {
         margin-bottom: 11px;
         padding: 5px;
         border: 1px solid @borderColor;
-        background: white;
+        background: @WorkingAreaBackgroundColor;
 
         &.selected {
             margin: 0px;
@@ -1701,7 +1704,7 @@ button.EezStudio_Action {
     & > div > div:nth-child(2) > div {
         display: inline-block;
         padding: 2px;
-        border: 2px solid white;
+        border: 2px solid @WorkingAreaBackgroundColor;
         text-align: center;
         font-size: 12px;
 
@@ -1720,25 +1723,28 @@ button.EezStudio_Action {
         }
 
         &.activity-level-0 > div {
-            background-color: #ebedf0;
+            background-color: @CalendarMonthBackgroundDayLevel0BackgroundColor;
+            color: @CalendarMonthBackgroundDayLevel0Color;
         }
 
         &.activity-level-1 > div {
-            background-color: #c6e48b;
+            background-color: @CalendarMonthBackgroundDayLevel1BackgroundColor;
+            color: @CalendarMonthBackgroundDayLevel1Color;
         }
 
         &.activity-level-2 > div {
-            background-color: #7bc96f;
+            background-color: @CalendarMonthBackgroundDayLevel2BackgroundColor;
+            color: @CalendarMonthBackgroundDayLevel2Color;
         }
 
         &.activity-level-3 > div {
-            background-color: #239a3b;
-            color: white;
+            background-color: @CalendarMonthBackgroundDayLevel3BackgroundColor;
+            color: @CalendarMonthBackgroundDayLevel3Color;
         }
 
         &.activity-level-4 > div {
-            background-color: #196127;
-            color: white;
+            background-color: @CalendarMonthBackgroundDayLevel4BackgroundColor;
+            color: @CalendarMonthBackgroundDayLevel4Color;
         }
     }
 }
@@ -1757,11 +1763,13 @@ button.EezStudio_Action {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background-color: white;
+    background-color: @WorkingAreaBackgroundColor;
 }
 
-.EezStudio_DeletedHistoryContainer:extend(.EezStudio_HistoryContainer) {
-    background-color: white;
+.EezStudio_DeletedHistoryContainer {
+    &:extend(.EezStudio_HistoryContainer all);
+
+    background-color: @WorkingAreaBackgroundColor;
 }
 
 .EezStudio_HistoryHeader {
@@ -1794,7 +1802,7 @@ button.EezStudio_Action {
     grid-auto-columns: max-content;
     grid-auto-rows: max-content;
 
-    background-color: white;
+    background-color: @WorkingAreaBackgroundColor;
 }
 
 .EezStudio_UnzoomedPreviewBody {
@@ -1853,7 +1861,7 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_HistoryItemDiv {
+.EezStudio_HistoryItem {
     border-radius: 8px;
     padding: 0px 10px;
     overflow: visible;
@@ -1861,6 +1869,7 @@ button.EezStudio_Action {
     p,
     pre {
         margin-bottom: 0;
+        color: #333;
     }
 
     pre {
@@ -1873,7 +1882,9 @@ EezStudio_HistoryItemDate {
     user-select: auto;
 }
 
-.EezStudio_SessionHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_SessionHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     &.EezStudio_HistoryItem_SessionStart {
         margin-top: 10px;
         padding-top: 10px;
@@ -1904,7 +1915,9 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_AnswerHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_AnswerHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     background-color: lightblue;
     margin-left: 40px;
     max-width: calc(100% - 40px);
@@ -1913,11 +1926,15 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_ConnectFailedHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_ConnectFailedHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     background-color: lightblue;
 }
 
-.EezStudio_ConnectedHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_ConnectedHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     padding: 0;
 
     p {
@@ -1931,7 +1948,9 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_CreatedHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_CreatedHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     padding: 0;
 
     p {
@@ -1941,7 +1960,9 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_DisconnectedHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_DisconnectedHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     padding: 0;
 
     p {
@@ -1960,7 +1981,9 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_FileHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_FileHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     display: flex;
     flex-direction: row;
     background-color: lightsteelblue;
@@ -2001,14 +2024,18 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_ListHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_ListHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     background-color: #f5f5f5;
     padding: 10px;
     display: flex;
     flex-direction: row;
 }
 
-.EezStudio_NoteHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_NoteHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     position: relative;
     margin: auto;
     overflow: visible;
@@ -2028,7 +2055,9 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_RequestHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_RequestHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     background-color: beige;
     max-width: 100%;
     pre {
@@ -2036,14 +2065,18 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_ScriptHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_ScriptHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     background-color: #f5f5f5;
     padding: 10px;
     display: flex;
     flex-direction: row;
 }
 
-.EezStudio_ChartHistoryItem:extend(.EezStudio_HistoryItemDiv) {
+.EezStudio_ChartHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
     background-color: #f5f5f5;
     padding: 10px;
     display: flex;
@@ -2191,7 +2224,7 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_HeaderContainer {
+.EezStudio_ScrapbookHeaderContainer {
     flex-grow: 1;
     display: flex;
     justify-content: space-between;
@@ -3072,7 +3105,7 @@ EezStudio_HistoryItemDate {
             margin: 5px;
             border: 2px solid #eee;
             padding: 5px;
-            background-color: white;
+            background-color: var(--bs-body-bg);
             cursor: pointer;
 
             &.selected {
@@ -3436,7 +3469,7 @@ EezStudio_HistoryItemDate {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: white;
+    background-color: @WorkingAreaBackgroundColor;
 
     cursor: default;
 
@@ -3517,8 +3550,8 @@ EezStudio_HistoryItemDate {
         display: flex;
         flex-direction: column;
 
-        background-color: #fffcf7;
-        border: 1px solid #fffcf7;
+        background-color: @ComponentBackgroundColor;
+        border: 1px solid @ComponentBackgroundColor;
         border-radius: 4px;
 
         box-shadow: 1px 1px 4px rgba(22, 33, 74, 0.2);
@@ -3595,7 +3628,7 @@ EezStudio_HistoryItemDate {
 
             [data-connection-input-id],
             [data-connection-output-id] {
-                border: 1px solid #fffcf7;
+                border: 1px solid @ComponentBorder;
                 padding: 2px 5px;
                 margin-bottom: 2px;
 
@@ -3610,7 +3643,7 @@ EezStudio_HistoryItemDate {
                 margin: 4px;
                 border: 1px solid @borderColor;
                 padding: 4px;
-                background-color: white;
+                background-color: @ComponentBody;
             }
 
             pre {
@@ -3715,7 +3748,7 @@ EezStudio_HistoryItemDate {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: white;
+    background-color: @WorkingAreaBackgroundColor;
 
     * {
         user-select: text;
@@ -3925,7 +3958,9 @@ EezStudio_HistoryItemDate {
     background-color: @panelHeaderColor;
 }
 
-.EezStudio_ConnectionBar:extend(.EezStudio_PanelHeader) {
+.EezStudio_ConnectionBar {
+    &:extend(.EezStudio_PanelHeader all);
+
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -3987,7 +4022,7 @@ EezStudio_HistoryItemDate {
     }
 }
 
-.EezStudio_HeaderContainer {
+.EezStudio_ScriptsHeaderContainer {
     padding: 10px;
     border-bottom: 1px solid @borderColor;
 }
@@ -4076,7 +4111,7 @@ EezStudio_HistoryItemDate {
 
 .EezStudio_TableListEditorToolbarHeader {
     justify-content: flex-start;
-    background-color: white;
+    background-color: var(--bs-body-bg);
 }
 
 .EezStudio_TableListEditorBody {

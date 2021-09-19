@@ -423,7 +423,7 @@ export class ScriptHeader extends React.Component<{
 
     render() {
         return (
-            <Header className="EezStudio_HeaderContainer">
+            <Header className="EezStudio_ScriptsHeaderContainer">
                 <Toolbar
                     style={{ display: "flex", justifyContent: "space-between" }}
                 >
