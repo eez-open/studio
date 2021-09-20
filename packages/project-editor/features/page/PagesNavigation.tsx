@@ -56,11 +56,11 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     @observable transitionIsActive = false;
 
-    @action.bound switchFaces() {
+    @action.bound setFrontFace(enabled: boolean) {
         // this.transitionIsActive = true;
 
         // setTimeout(() => {
-        //     this.pageTabState.frontFace = !this.pageTabState.frontFace;
+        //     this.pageTabState.frontFace = enabled;
         //     setTimeout(
         //         action(() => {
         //             this.transitionIsActive = false;
@@ -69,7 +69,7 @@ export class PageEditor extends EditorComponent implements IPanel {
         //     );
         // });
 
-        this.pageTabState.frontFace = !this.pageTabState.frontFace;
+        this.pageTabState.frontFace = enabled;
     }
 
     get pageTabState() {
@@ -133,14 +133,14 @@ export class PageEditor extends EditorComponent implements IPanel {
                         title="Show front face"
                         icon="material:flip_to_front"
                         iconSize={16}
-                        onClick={this.switchFaces}
+                        onClick={() => this.setFrontFace(true)}
                         selected={this.pageTabState.frontFace}
                     />
                     <IconAction
                         title="Show back face"
                         icon="material:flip_to_back"
                         iconSize={16}
-                        onClick={this.switchFaces}
+                        onClick={() => this.setFrontFace(false)}
                         selected={!this.pageTabState.frontFace}
                     />
                     <div style={{ flexGrow: 1 }}></div>
@@ -161,7 +161,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                                         viewState)
                                 }
                                 frontFace={this.pageTabState.frontFace}
-                                runningFlow={this.pageTabState.runningFlow}
+                                flowState={this.pageTabState.flowState}
                             />
                         ) : (
                             <FlowEditor
@@ -204,8 +204,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                             }
                                             transitionIsActive={true}
                                             frontFace={true}
-                                            runningFlow={
-                                                this.pageTabState.runningFlow
+                                            flowState={
+                                                this.pageTabState.flowState
                                             }
                                         />
                                     ) : (
@@ -244,8 +244,8 @@ export class PageEditor extends EditorComponent implements IPanel {
                                             }
                                             transitionIsActive={true}
                                             frontFace={false}
-                                            runningFlow={
-                                                this.pageTabState.runningFlow
+                                            flowState={
+                                                this.pageTabState.flowState
                                             }
                                         />
                                     ) : (

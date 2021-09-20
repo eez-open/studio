@@ -33,6 +33,10 @@ input[type="color"] {
     flex-wrap: nowrap;
 }
 
+.btn-group {
+    align-items: center;
+}
+
 #EezStudio_Content {
     position: absolute;
     left: 0;
@@ -290,15 +294,18 @@ input[type="color"] {
 .EezStudio_IconAction:hover,
 .EezStudio_TextAction:hover {
     color: @actionHoverColor;
+    fill: @actionHoverColor;
 }
 
 .EezStudio_IconAction:disabled,
 .EezStudio_TextAction:disabled {
     color: @actionDisabledColor;
+    fill: @actionDisabledColor;
 }
 
 .EezStudio_IconAction {
     color: @actionTextColor;
+    fill: @actionTextColor;
     background: transparent;
     border: 1px solid transparent;
 
@@ -612,6 +619,12 @@ input[type="color"] {
 
 button.EezStudio_Action {
     border: none;
+
+    &.selected {
+        background-color: @selectionBackgroundColor;
+        color: @selectionColor;
+        fill: @selectionColor;
+    }
 }
 
 *:focus {
@@ -877,6 +890,8 @@ button.EezStudio_Action {
 
 .EezStudio_Table {
     cursor: default;
+
+    background-color: @backgroundColor;
 
     tbody > tr.selected {
         background-color: @nonFocusedSelectionBackgroundColor;
@@ -2492,7 +2507,8 @@ button.EezStudio_Action {
     }
 
     &.selected {
-        color: @selectionBackgroundColor;
+        background-color: @selectionBackgroundColor;
+        color: @selectionColor;
     }
 }
 

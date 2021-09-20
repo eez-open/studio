@@ -309,7 +309,7 @@ class InstrumentComponent extends React.Component<
         return (
             <div
                 className={classNames(
-                    "EezStudio_InstrumentComponentEnclosure shadow p-3 m-3 rounded",
+                    "EezStudio_InstrumentComponentEnclosure shadow-sm p-3 m-3 rounded bg-light",
                     {
                         selected: this.props.isSelected
                     }

@@ -23,7 +23,7 @@ import type {
     IEditorOptions,
     IResizeHandler,
     IDataContext,
-    IRunningFlow
+    IFlowState
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
@@ -310,7 +310,7 @@ export class EditorFlowContext implements IFlowContext {
     frontFace: boolean;
     dataContext: IDataContext;
     flow: Flow;
-    runningFlow: IRunningFlow | undefined;
+    flowState: IFlowState | undefined;
 
     containerId = guid();
 
@@ -322,7 +322,7 @@ export class EditorFlowContext implements IFlowContext {
         });
     }
 
-    overrideRunningFlow(component: Component): IFlowContext {
+    overrideFlowState(component: Component): IFlowContext {
         return this;
     }
 
@@ -334,7 +334,7 @@ export class EditorFlowContext implements IFlowContext {
         ) => void,
         frontFace: boolean,
         flow: Flow,
-        runningFlow: IRunningFlow | undefined,
+        flowState: IFlowState | undefined,
         options?: IEditorOptions,
         filterSnapLines?: (node: ITreeObjectAdapter) => boolean
     ) {
@@ -344,7 +344,7 @@ export class EditorFlowContext implements IFlowContext {
 
         this.frontFace = frontFace;
         this.flow = flow;
-        this.runningFlow = runningFlow;
+        this.flowState = flowState;
 
         this.editorOptions = options || {
             center: {

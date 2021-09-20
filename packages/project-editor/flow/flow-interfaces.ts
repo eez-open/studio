@@ -12,14 +12,14 @@ import { Component } from "project-editor/flow/component";
 
 export interface IFlowContext {
     dataContext: IDataContext;
-    runningFlow?: IRunningFlow;
+    flowState?: IFlowState;
     document: IDocument;
     viewState: IViewState;
     editorOptions: IEditorOptions;
     frontFace: boolean;
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext;
-    overrideRunningFlow(component: Component): IFlowContext;
+    overrideFlowState(component: Component): IFlowContext;
 }
 
 export interface IVariable {
@@ -45,8 +45,8 @@ export interface IDataContext {
     getMax(variableName: string): number;
 }
 
-export interface IRunningFlow {
-    getRunningFlowByComponent(component: Component): IRunningFlow | undefined;
+export interface IFlowState {
+    getFlowStateByComponent(component: Component): IFlowState | undefined;
 
     getInputValue(component: Component, input: string): any;
     getPropertyValue(component: Component, propertyName: string): any;

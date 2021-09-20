@@ -15,6 +15,11 @@ import { Toolbar } from "project-editor/project/Toolbar";
 import { StatusBar } from "project-editor/project/StatusBar";
 import { Editors } from "./Editors";
 import { getClassInfo } from "project-editor/core/object";
+import { DebuggerPanel } from "project-editor/flow/debugger";
+import {
+    PageEditor,
+    PageTabState
+} from "project-editor/features/page/PagesNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,9 +43,18 @@ class Content extends React.Component {
 
         if (
             this.context.RuntimeStore.isRuntimeMode &&
-            !this.context.UIStateStore.showDebugInfo
+            !this.context.RuntimeStore.isDebuggerActive
         ) {
-            return this.context.RuntimeStore.selectedPageElement;
+            return (
+                <PageEditor
+                    editor={{
+                        object: this.context.RuntimeStore.selectedPage,
+                        state: new PageTabState(
+                            this.context.RuntimeStore.selectedPage
+                        )
+                    }}
+                ></PageEditor>
+            );
         }
 
         const menuNavigation = (
@@ -73,7 +87,7 @@ class Content extends React.Component {
                     >
                         {menuNavigation}
                         {editors}
-                        {this.context.RuntimeStore.renderRuntimePanel()}
+                        {<DebuggerPanel />}
                     </Splitter>
                 );
             } else {
@@ -108,13 +122,11 @@ export class ProjectEditor extends React.Component<{}, {}> {
         }
 
         let statusBar: JSX.Element | undefined;
-        if (!this.context.UIStateStore.viewOptions.outputVisible) {
-            statusBar = <StatusBar />;
-        }
-
         let outputPanel: JSX.Element | undefined;
         if (this.context.UIStateStore.viewOptions.outputVisible) {
             outputPanel = <Output />;
+        } else {
+            statusBar = <StatusBar />;
         }
 
         let mainContent;
@@ -128,7 +140,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
             );
         } else if (
             this.context.RuntimeStore.isRuntimeMode &&
-            this.context.isDashboardProject
+            (this.context.isDashboardProject || this.context.isAppletProject)
         ) {
             mainContent = (
                 <>

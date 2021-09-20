@@ -15,7 +15,7 @@ import type {
     IFlowContext,
     IEditorOptions,
     IResizeHandler,
-    IRunningFlow,
+    IFlowState,
     IDataContext
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
@@ -152,7 +152,7 @@ export class RuntimeFlowContext implements IFlowContext {
     editorOptions: IEditorOptions = {};
     frontFace: boolean;
     dataContext: IDataContext;
-    runningFlow: IRunningFlow | undefined;
+    flowState: IFlowState | undefined;
 
     containerId = guid();
 
@@ -164,9 +164,9 @@ export class RuntimeFlowContext implements IFlowContext {
         });
     }
 
-    overrideRunningFlow(component: Component): IFlowContext {
+    overrideFlowState(component: Component): IFlowContext {
         return Object.assign(new RuntimeFlowContext(), this, {
-            runningFlow: this.runningFlow?.getRunningFlowByComponent(component)
+            flowState: this.flowState?.getFlowStateByComponent(component)
         });
     }
 
@@ -177,13 +177,13 @@ export class RuntimeFlowContext implements IFlowContext {
             viewStatePersistantState: IViewStatePersistantState
         ) => void,
         frontFace: boolean,
-        runningFlow: IRunningFlow | undefined
+        flowState: IFlowState | undefined
     ) {
         this.document = document;
         this.viewState.set(viewStatePersistantState, onSavePersistantState);
         this.editorOptions = {};
         this.frontFace = frontFace ?? false;
-        this.runningFlow = runningFlow;
+        this.flowState = flowState;
         this.dataContext = this.document.DocumentStore.dataContext;
     }
 

@@ -26,7 +26,7 @@ export const ModulesSection = observer(
         } else if (bb3Instrument.modules) {
             body = (
                 <>
-                    <table className="table mb-0 border">
+                    <table className="table mb-0 border EezStudio_Table">
                         <thead>
                             <tr>
                                 <th>Slot #</th>

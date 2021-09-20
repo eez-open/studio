@@ -812,7 +812,6 @@ class UIStateStoreClass {
     @observable pageEditorFrontFace: boolean = false;
     @observable pageRuntimeFrontFace: boolean = true;
     @observable showCommandPalette: boolean = false;
-    @observable showDebugInfo = false;
 
     dispose1: mobx.IReactionDisposer;
     dispose2: mobx.IReactionDisposer;
@@ -872,7 +871,6 @@ class UIStateStoreClass {
         this.loadObjects(uiState.objects);
         this.pageEditorFrontFace = uiState.pageEditorFrontFace;
         this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
-        this.showDebugInfo = uiState.showDebugInfo;
     }
 
     @computed
@@ -909,8 +907,7 @@ class UIStateStoreClass {
             objects: this.objectsJS,
             activeOutputSection: this.activeOutputSection,
             pageEditorFrontFace: this.pageEditorFrontFace,
-            pageRuntimeFrontFace: this.pageRuntimeFrontFace,
-            showDebugInfo: this.showDebugInfo
+            pageRuntimeFrontFace: this.pageRuntimeFrontFace
         };
     }
 

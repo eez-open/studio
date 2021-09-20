@@ -29,7 +29,7 @@ import {
     makeToggablePropertyToInput
 } from "project-editor/flow/component";
 
-import { RunningFlow } from "project-editor/flow/runtime";
+import { FlowState } from "project-editor/flow/runtime";
 import { findAction } from "project-editor/features/action/action";
 import { getFlow, getProject } from "project-editor/project/project";
 import { onSelectItem } from "project-editor/components/SelectItem";
@@ -118,10 +118,10 @@ export class EndActionComponent extends ActionComponent {
         componentHeaderColor: "#74c8ce"
     });
 
-    async execute(runningFlow: RunningFlow) {
-        if (runningFlow.parentRunningFlow && runningFlow.component) {
-            runningFlow.parentRunningFlow.propagateValue(
-                runningFlow.component,
+    async execute(flowState: FlowState) {
+        if (flowState.parentFlowState && flowState.component) {
+            flowState.parentFlowState.propagateValue(
+                flowState.component,
                 "@seqout",
                 null
             );
@@ -220,17 +220,17 @@ export class OutputActionComponent extends ActionComponent {
 
     @observable name: string;
 
-    async execute(runningFlow: RunningFlow) {
-        const componentState = runningFlow.getComponentState(this);
+    async execute(flowState: FlowState) {
+        const componentState = flowState.getComponentState(this);
         const value = componentState.getInputValue("@seqin");
         if (
             value &&
-            runningFlow.parentRunningFlow &&
-            runningFlow.component &&
+            flowState.parentFlowState &&
+            flowState.component &&
             this.name
         ) {
-            runningFlow.parentRunningFlow.propagateValue(
-                runningFlow.component,
+            flowState.parentFlowState.propagateValue(
+                flowState.component,
                 this.wireID,
                 value.value,
                 this.name
@@ -294,7 +294,7 @@ export class GetVariableActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow, dispose: (() => void) | undefined) {
+    async execute(flowState: FlowState, dispose: (() => void) | undefined) {
         if (dispose) {
             return dispose;
         }
@@ -303,11 +303,11 @@ export class GetVariableActionComponent extends ActionComponent {
         let lastValue: any = undefined;
 
         return autorun(() => {
-            const value = runningFlow.getVariable(this, this.variable);
+            const value = flowState.getVariable(this, this.variable);
             if (first || value !== lastValue) {
                 first = false;
                 lastValue = value;
-                runningFlow.propagateValue(this, "variable", value);
+                flowState.propagateValue(this, "variable", value);
             }
         });
     }
@@ -438,12 +438,12 @@ export class EvalActionComponent extends ActionComponent {
         );
     }
 
-    expandExpression(runningFlow: RunningFlow) {
+    expandExpression(flowState: FlowState) {
         let expression = this.expression;
         let values: any = {};
 
         EvalActionComponent.parse(expression).inputs.forEach(input => {
-            const inputPropertyValue = runningFlow.getInputPropertyValue(
+            const inputPropertyValue = flowState.getInputPropertyValue(
                 this,
                 input
             );
@@ -457,14 +457,14 @@ export class EvalActionComponent extends ActionComponent {
         return { expression, values };
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         // try {
-        const { expression, values } = this.expandExpression(runningFlow);
+        const { expression, values } = this.expandExpression(flowState);
         values;
         let result = eval(expression);
-        runningFlow.propagateValue(this, "result", result);
+        flowState.propagateValue(this, "result", result);
         // } catch (err) {
-        //     runningFlow.propagateValue(this, "result", err);
+        //     flowState.propagateValue(this, "result", err);
         // }
         return undefined;
     }
@@ -533,9 +533,9 @@ export class SetVariableActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
-        let value = runningFlow.getPropertyValue(this, "value");
-        runningFlow.setVariable(this, this.variable, value);
+    async execute(flowState: FlowState) {
+        let value = flowState.getPropertyValue(this, "value");
+        flowState.setVariable(this, this.variable, value);
         return undefined;
     }
 
@@ -630,7 +630,7 @@ export class SwitchActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         // TODO
         return undefined;
     }
@@ -768,14 +768,14 @@ export class CompareActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         let result;
-        let A = runningFlow.getPropertyValue(this, "A");
+        let A = flowState.getPropertyValue(this, "A");
 
         if (this.operator == "NOT") {
             result = !A;
         } else {
-            let B = runningFlow.getPropertyValue(this, "B");
+            let B = flowState.getPropertyValue(this, "B");
             if (this.operator === "=") {
                 result = A === B;
             } else if (this.operator === "<") {
@@ -795,15 +795,15 @@ export class CompareActionComponent extends ActionComponent {
             } else if (this.operator === "XOR") {
                 result = A ? !B : B;
             } else if (this.operator === "BETWEEN") {
-                let C = runningFlow.getPropertyValue(this, "C");
+                let C = flowState.getPropertyValue(this, "C");
                 result = A >= B && A <= C;
             }
         }
 
         if (result) {
-            runningFlow.propagateValue(this, "True", true);
+            flowState.propagateValue(this, "True", true);
         } else {
-            runningFlow.propagateValue(this, "False", false);
+            flowState.propagateValue(this, "False", false);
         }
         return undefined;
     }
@@ -864,13 +864,13 @@ export class IsTrueActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow) {
-        let value = runningFlow.getPropertyValue(this, "value");
+    async execute(flowState: FlowState) {
+        let value = flowState.getPropertyValue(this, "value");
 
         if (value) {
-            runningFlow.propagateValue(this, "True", true);
+            flowState.propagateValue(this, "True", true);
         } else {
-            runningFlow.propagateValue(this, "False", false);
+            flowState.propagateValue(this, "False", false);
         }
         return undefined;
     }
@@ -925,8 +925,8 @@ export class ConstantActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow) {
-        runningFlow.propagateValue(this, "value", JSON.parse(this.value));
+    async execute(flowState: FlowState) {
+        flowState.propagateValue(this, "value", JSON.parse(this.value));
         return undefined;
     }
 
@@ -965,8 +965,8 @@ export class DateNowActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow) {
-        runningFlow.propagateValue(this, "value", Date.now());
+    async execute(flowState: FlowState) {
+        flowState.propagateValue(this, "value", Date.now());
         return undefined;
     }
 }
@@ -1008,8 +1008,8 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         let key;
-        if (flowContext.runningFlow) {
-            key = flowContext.runningFlow.getPropertyValue(this, "key");
+        if (flowContext.flowState) {
+            key = flowContext.flowState.getPropertyValue(this, "key");
         } else {
             key = this.key;
         }
@@ -1021,12 +1021,12 @@ export class ReadSettingActionComponent extends ActionComponent {
         ) : null;
     }
 
-    async execute(runningFlow: RunningFlow) {
-        let key = runningFlow.getPropertyValue(this, "key");
-        runningFlow.propagateValue(
+    async execute(flowState: FlowState) {
+        let key = flowState.getPropertyValue(this, "key");
+        flowState.propagateValue(
             this,
             "value",
-            runningFlow.RuntimeStore.readSettings(key)
+            flowState.RuntimeStore.readSettings(key)
         );
         return undefined;
     }
@@ -1069,8 +1069,8 @@ export class WriteSettingsActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         let key;
-        if (flowContext.runningFlow) {
-            key = flowContext.runningFlow.getPropertyValue(this, "key");
+        if (flowContext.flowState) {
+            key = flowContext.flowState.getPropertyValue(this, "key");
         } else {
             key = this.key;
         }
@@ -1082,13 +1082,13 @@ export class WriteSettingsActionComponent extends ActionComponent {
         ) : null;
     }
 
-    async execute(runningFlow: RunningFlow) {
-        let key = runningFlow.getPropertyValue(this, "key");
-        const inputPropertyValue = runningFlow.getInputPropertyValue(
+    async execute(flowState: FlowState) {
+        let key = flowState.getPropertyValue(this, "key");
+        const inputPropertyValue = flowState.getInputPropertyValue(
             this,
             "value"
         );
-        runningFlow.RuntimeStore.writeSettings(key, inputPropertyValue?.value);
+        flowState.RuntimeStore.writeSettings(key, inputPropertyValue?.value);
         return undefined;
     }
 }
@@ -1132,8 +1132,8 @@ export class LogActionComponent extends ActionComponent {
 
     @observable value: string;
 
-    async execute(runningFlow: RunningFlow) {
-        const value = runningFlow.getPropertyValue(this, "value");
+    async execute(flowState: FlowState) {
+        const value = flowState.getPropertyValue(this, "value");
         console.log(value);
         return undefined;
     }
@@ -1236,21 +1236,21 @@ export class CallActionActionComponent extends ActionComponent {
         return [...super.getOutputs(), ...outputs];
     }
 
-    async execute(runningFlow: RunningFlow) {
-        const actionName = runningFlow.getPropertyValue(this, "action");
+    async execute(flowState: FlowState) {
+        const actionName = flowState.getPropertyValue(this, "action");
         const action = findAction(getProject(this), actionName);
         if (!action) {
             return;
         }
 
-        const actionRunningFlow = runningFlow.executeAction(this, action);
+        const actionFlowState = flowState.executeAction(this, action);
 
-        const componentState = runningFlow.getComponentState(this);
+        const componentState = flowState.getComponentState(this);
         for (let [input, inputData] of componentState.inputsData) {
             for (let component of action.components) {
                 if (component instanceof InputActionComponent) {
                     if (component.wireID === input) {
-                        actionRunningFlow.propagateValue(
+                        actionFlowState.propagateValue(
                             component,
                             "@seqout",
                             inputData.value
@@ -1426,8 +1426,8 @@ export class DelayActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
-        const milliseconds = runningFlow.getPropertyValue(this, "milliseconds");
+    async execute(flowState: FlowState) {
+        const milliseconds = flowState.getPropertyValue(this, "milliseconds");
         await new Promise<void>(resolve =>
             setTimeout(resolve, milliseconds ?? 0)
         );
@@ -1471,8 +1471,8 @@ export class ErrorActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
-        const message = runningFlow.getPropertyValue(this, "message");
+    async execute(flowState: FlowState) {
+        const message = flowState.getPropertyValue(this, "message");
         throw message;
         return undefined;
     }
@@ -1505,9 +1505,9 @@ export class CatchErrorActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow) {
-        const messageInputValue = runningFlow.getInputValue(this, "message");
-        runningFlow.propagateValue(
+    async execute(flowState: FlowState) {
+        const messageInputValue = flowState.getInputValue(this, "message");
+        flowState.propagateValue(
             this,
             "Message",
             messageInputValue?.value ?? "unknow error"
@@ -1579,17 +1579,17 @@ export class CounterActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         let counterRunningState =
-            runningFlow.getComponentRunningState<CounterRunningState>(this);
+            flowState.getComponentRunningState<CounterRunningState>(this);
 
         if (!counterRunningState) {
             counterRunningState = new CounterRunningState(this.countValue);
-            runningFlow.setComponentRunningState(this, counterRunningState);
+            flowState.setComponentRunningState(this, counterRunningState);
         }
 
         if (counterRunningState.value == 0) {
-            runningFlow.propagateValue(this, "done", null);
+            flowState.propagateValue(this, "done", null);
         } else {
             counterRunningState.value--;
         }
@@ -1689,7 +1689,7 @@ export class LoopActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         // TODO
         return undefined;
     }
@@ -1731,12 +1731,12 @@ export class ShowPageActionComponent extends ActionComponent {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         if (!this.page) {
             throw "page not specified";
         }
         const page = findPage(
-            runningFlow.RuntimeStore.DocumentStore.project,
+            flowState.RuntimeStore.DocumentStore.project,
             this.page
         );
         if (!page) {
@@ -1744,7 +1744,7 @@ export class ShowPageActionComponent extends ActionComponent {
         }
 
         runInAction(() => {
-            runningFlow.RuntimeStore.selectedPage = page;
+            flowState.RuntimeStore.selectedPage = page;
         });
 
         return undefined;

@@ -22,10 +22,10 @@ import {
     makeToggablePropertyToInput
 } from "project-editor/flow/component";
 import { getConnection } from "instrument/window/connection";
-import { RunningFlow } from "project-editor/flow//runtime";
+import { FlowState } from "project-editor/flow//runtime";
 import type {
     IFlowContext,
-    IRunningFlow
+    IFlowState
 } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { getDocumentStore } from "project-editor/core/store";
@@ -965,13 +965,13 @@ export class ScpiActionComponent extends ActionComponent {
 
     getInstrumentObject(
         flowContext?: IFlowContext,
-        runningFlow?: IRunningFlow
+        flowState?: IFlowState
     ): InstrumentObject | undefined {
-        runningFlow = runningFlow || flowContext?.runningFlow;
+        flowState = flowState || flowContext?.flowState;
 
         if (this.isInputProperty("instrument")) {
-            if (runningFlow) {
-                const inputPropertyValue = runningFlow.getInputPropertyValue(
+            if (flowState) {
+                const inputPropertyValue = flowState.getInputPropertyValue(
                     this,
                     "instrument"
                 );
@@ -979,7 +979,7 @@ export class ScpiActionComponent extends ActionComponent {
             }
         } else {
             const dataContext =
-                runningFlow?.dataContext || flowContext?.dataContext;
+                flowState?.dataContext || flowContext?.dataContext;
             if (dataContext) {
                 return dataContext.get(this.instrument);
             }
@@ -988,8 +988,8 @@ export class ScpiActionComponent extends ActionComponent {
         return undefined;
     }
 
-    async execute(runningFlow: RunningFlow) {
-        const instrument = this.getInstrumentObject(undefined, runningFlow);
+    async execute(flowState: FlowState) {
+        const instrument = this.getInstrumentObject(undefined, flowState);
         if (!instrument) {
             throw "instrument not found";
         }
@@ -1028,8 +1028,10 @@ export class ScpiActionComponent extends ActionComponent {
                 } else if (tag == SCPI_PART_EXPR) {
                     const inputName = str.substring(1, str.length - 1);
 
-                    const inputPropertyValue =
-                        runningFlow.getInputPropertyValue(this, inputName);
+                    const inputPropertyValue = flowState.getInputPropertyValue(
+                        this,
+                        inputName
+                    );
                     if (
                         inputPropertyValue &&
                         inputPropertyValue.value != undefined
@@ -1067,7 +1069,7 @@ export class ScpiActionComponent extends ActionComponent {
                                 ? str.substring(1, str.length - 1)
                                 : str;
 
-                        runningFlow.propagateValue(this, outputName, result);
+                        flowState.propagateValue(this, outputName, result);
                     }
                 } else if (tag == SCPI_PART_COMMAND) {
                     console.log(`SCPI COMMAND [${instrument.name}]:`, command);
@@ -1205,6 +1207,18 @@ export class SelectInstrumentDialog extends React.Component<
     }
 }
 
+export function showSelectInstrumentDialog() {
+    return new Promise<InstrumentObject | undefined>(resolve =>
+        showDialog(
+            <SelectInstrumentDialog
+                callback={instrument => {
+                    resolve(instrument);
+                }}
+            />
+        )
+    );
+}
+
 export class SelectInstrumentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [],
@@ -1234,13 +1248,13 @@ export class SelectInstrumentActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         await new Promise<void>(resolve => {
             showDialog(
                 <SelectInstrumentDialog
                     callback={instrument => {
                         if (instrument) {
-                            runningFlow.propagateValue(
+                            flowState.propagateValue(
                                 this,
                                 "instrument",
                                 instrument
@@ -1291,20 +1305,17 @@ export class GetInstrumentActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         let instrument;
 
-        const inputPropertyValue = runningFlow.getInputPropertyValue(
-            this,
-            "id"
-        );
+        const inputPropertyValue = flowState.getInputPropertyValue(this, "id");
 
         if (inputPropertyValue) {
             const id = inputPropertyValue.value;
             instrument = instruments.get(id);
         }
 
-        runningFlow.propagateValue(this, "instrument", instrument);
+        flowState.propagateValue(this, "instrument", instrument);
 
         return undefined;
     }
@@ -1346,13 +1357,13 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
 
     getInstrumentObject(
         flowContext?: IFlowContext,
-        runningFlow?: IRunningFlow
+        flowState?: IFlowState
     ): InstrumentObject | undefined {
-        runningFlow = runningFlow || flowContext?.runningFlow;
+        flowState = flowState || flowContext?.flowState;
 
         if (this.isInputProperty("instrument")) {
-            if (runningFlow) {
-                const inputPropertyValue = runningFlow.getInputPropertyValue(
+            if (flowState) {
+                const inputPropertyValue = flowState.getInputPropertyValue(
                     this,
                     "instrument"
                 );
@@ -1360,7 +1371,7 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
             }
         } else {
             const dataContext =
-                runningFlow?.dataContext || flowContext?.dataContext;
+                flowState?.dataContext || flowContext?.dataContext;
             if (dataContext) {
                 return dataContext.get(this.instrument);
             }
@@ -1369,8 +1380,8 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
         return undefined;
     }
 
-    async execute(runningFlow: RunningFlow) {
-        const instrument = this.getInstrumentObject(undefined, runningFlow);
+    async execute(flowState: FlowState) {
+        const instrument = this.getInstrumentObject(undefined, flowState);
         if (!instrument) {
             throw "instrument not found";
         }

@@ -60,7 +60,7 @@ declare class Component {
     getOutputs(): PropertyInfo[];
 
     execute(
-        runningFlow: IRunningFlow,
+        flowState: IFlowState,
         dispose: (() => void) | undefined
     ): Promise<(() => void) | undefined>;
 }
@@ -71,14 +71,14 @@ declare class ActionComponent extends Component {
 
 interface IFlowContext {
     dataContext: IDataContext;
-    runningFlow?: IRunningFlow;
+    flowState?: IFlowState;
     document: any;
     viewState: any;
     editorOptions: any;
     frontFace: boolean;
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext;
-    overrideRunningFlow(component: Component): IFlowContext;
+    overrideFlowState(component: Component): IFlowContext;
 }
 
 interface InputData {
@@ -88,8 +88,8 @@ interface InputData {
 
 type InputPropertyValue = InputData;
 
-interface IRunningFlow {
-    getRunningFlowByComponent(component: Component): IRunningFlow | undefined;
+interface IFlowState {
+    getFlowStateByComponent(component: Component): IFlowState | undefined;
 
     getInputValue(component: Component, input: string): any;
     getPropertyValue(component: Component, propertyName: string): any;

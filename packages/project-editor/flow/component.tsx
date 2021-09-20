@@ -52,7 +52,7 @@ import { checkObjectReference, getFlow } from "project-editor/project/project";
 import type {
     IResizeHandler,
     IFlowContext,
-    IRunningFlow
+    IFlowState
 } from "project-editor/flow/flow-interfaces";
 import { ComponentGeometry } from "project-editor/flow/flow-editor/render";
 import {
@@ -1073,7 +1073,7 @@ export class Component extends EezObject {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
 
     async execute(
-        runningFlow: IRunningFlow,
+        flowState: IFlowState,
         dispose: (() => void) | undefined
     ): Promise<(() => void) | undefined> {
         return undefined;

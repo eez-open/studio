@@ -82,7 +82,7 @@ import {
     StartActionComponent
 } from "project-editor/flow/action-components";
 
-import { RunningFlow } from "project-editor/flow/runtime";
+import { FlowState } from "project-editor/flow/runtime";
 
 import "project-editor/flow/widgets/plotly";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
@@ -209,11 +209,8 @@ export class ContainerWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         let visible = true;
 
-        if (flowContext.runningFlow && this.isInputProperty("visible")) {
-            let value = flowContext.runningFlow.getPropertyValue(
-                this,
-                "visible"
-            );
+        if (flowContext.flowState && this.isInputProperty("visible")) {
+            let value = flowContext.flowState.getPropertyValue(this, "visible");
             if (typeof value === "boolean") {
                 visible = value;
             } else if (typeof value === "number") {
@@ -814,8 +811,8 @@ export class SelectWidget extends EmbeddedWidget {
 
     getSelectedIndex(flowContext: IFlowContext) {
         if (this.isInputProperty("data")) {
-            if (flowContext.runningFlow) {
-                let value = flowContext.runningFlow.getPropertyValue(
+            if (flowContext.flowState) {
+                let value = flowContext.flowState.getPropertyValue(
                     this,
                     "data"
                 );
@@ -830,7 +827,7 @@ export class SelectWidget extends EmbeddedWidget {
             }
         }
 
-        if (!flowContext.runningFlow) {
+        if (!flowContext.flowState) {
             const selectedObjects = flowContext.viewState.selectedObjects;
 
             for (let i = 0; i < this.widgets.length; ++i) {
@@ -876,7 +873,7 @@ export class SelectWidget extends EmbeddedWidget {
             }
         }
 
-        if (!flowContext.runningFlow) {
+        if (!flowContext.flowState) {
             if (this.widgets.length > 0) {
                 this._lastSelectedIndexInSelectWidget = 0;
                 return 0;
@@ -1166,11 +1163,8 @@ export class LayoutViewWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext): React.ReactNode {
         let visible = true;
 
-        if (flowContext.runningFlow && this.isInputProperty("visible")) {
-            let value = flowContext.runningFlow.getPropertyValue(
-                this,
-                "visible"
-            );
+        if (flowContext.flowState && this.isInputProperty("visible")) {
+            let value = flowContext.flowState.getPropertyValue(this, "visible");
             if (typeof value === "boolean") {
                 visible = value;
             } else if (typeof value === "number") {
@@ -1202,8 +1196,8 @@ export class LayoutViewWidget extends EmbeddedWidget {
                         <ComponentEnclosure
                             component={layoutPage}
                             flowContext={
-                                flowContext.runningFlow
-                                    ? flowContext.overrideRunningFlow(this)
+                                flowContext.flowState
+                                    ? flowContext.overrideFlowState(this)
                                     : flowContext
                             }
                         />
@@ -1222,35 +1216,35 @@ export class LayoutViewWidget extends EmbeddedWidget {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         const page = this.getLayoutPage(
-            runningFlow.RuntimeStore.DocumentStore.dataContext
+            flowState.RuntimeStore.DocumentStore.dataContext
         );
 
         if (page) {
-            let layoutRunningFlow = runningFlow.getRunningFlowByComponent(this);
+            let layoutFlowState = flowState.getFlowStateByComponent(this);
 
-            if (!layoutRunningFlow) {
+            if (!layoutFlowState) {
                 runInAction(() => {
-                    layoutRunningFlow = new RunningFlow(
-                        runningFlow.RuntimeStore,
+                    layoutFlowState = new FlowState(
+                        flowState.RuntimeStore,
                         page,
-                        runningFlow,
+                        flowState,
                         this
                     );
 
-                    runningFlow.runningFlows.push(layoutRunningFlow);
+                    flowState.flowStates.push(layoutFlowState);
 
-                    layoutRunningFlow.start();
+                    layoutFlowState.start();
                 });
             }
 
-            const componentState = runningFlow.getComponentState(this);
+            const componentState = flowState.getComponentState(this);
             for (let [input, inputData] of componentState.inputsData) {
                 if (input === "@seqin") {
                     for (let component of page.components) {
                         if (component instanceof StartActionComponent) {
-                            layoutRunningFlow?.propagateValue(
+                            layoutFlowState?.propagateValue(
                                 component,
                                 "@seqout",
                                 inputData.value
@@ -1261,7 +1255,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                     for (let component of page.components) {
                         if (component instanceof InputActionComponent) {
                             if (component.wireID === input) {
-                                layoutRunningFlow?.propagateValue(
+                                layoutFlowState?.propagateValue(
                                     component,
                                     "@seqout",
                                     inputData.value
@@ -1650,13 +1644,13 @@ export class TextWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         let text = "";
 
-        if (flowContext.runningFlow) {
+        if (flowContext.flowState) {
             if (this.text) {
                 text = this.text;
             } else {
-                if (this.isInputProperty("data") && flowContext.runningFlow) {
+                if (this.isInputProperty("data") && flowContext.flowState) {
                     const inputPropertyValue =
-                        flowContext.runningFlow.getInputPropertyValue(
+                        flowContext.flowState.getInputPropertyValue(
                             this,
                             "data"
                         );
@@ -2565,8 +2559,8 @@ export class ButtonWidget extends EmbeddedWidget {
         }
 
         let buttonEnabled = false;
-        if (flowContext.runningFlow) {
-            const value = flowContext.runningFlow.getInputPropertyValue(
+        if (flowContext.flowState) {
+            const value = flowContext.flowState.getInputPropertyValue(
                 this,
                 "enabled"
             );
@@ -4872,7 +4866,7 @@ export class TextInputWidget extends Widget {
 
     render(flowContext: IFlowContext): React.ReactNode {
         const runningState =
-            flowContext.runningFlow?.getComponentRunningState<TextInputRunningState>(
+            flowContext.flowState?.getComponentRunningState<TextInputRunningState>(
                 this
             );
 
@@ -4889,9 +4883,7 @@ export class TextInputWidget extends Widget {
                             runInAction(() => (runningState.value = value));
 
                             (
-                                flowContext.runningFlow as
-                                    | RunningFlow
-                                    | undefined
+                                flowContext.flowState as FlowState | undefined
                             )?.propagateValue(this, "value", value);
                         }
                     }}
@@ -4901,12 +4893,12 @@ export class TextInputWidget extends Widget {
         );
     }
 
-    async execute(runningFlow: RunningFlow) {
+    async execute(flowState: FlowState) {
         let runningState =
-            runningFlow.getComponentRunningState<TextInputRunningState>(this);
+            flowState.getComponentRunningState<TextInputRunningState>(this);
 
         let value: string;
-        const inputValue = runningFlow.getInputValue(this, "value");
+        const inputValue = flowState.getInputValue(this, "value");
         if (inputValue) {
             value = inputValue.value ?? "";
         } else {
@@ -4915,7 +4907,7 @@ export class TextInputWidget extends Widget {
 
         if (!runningState) {
             runningState = new TextInputRunningState(value);
-            runningFlow.setComponentRunningState(this, runningState);
+            flowState.setComponentRunningState(this, runningState);
         } else {
             if (value != runningState.value) {
                 runInAction(() => (runningState.value = value));

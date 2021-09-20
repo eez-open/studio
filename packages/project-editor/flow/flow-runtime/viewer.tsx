@@ -15,7 +15,7 @@ import type {
     IDocument,
     IViewStatePersistantState,
     IFlowContext,
-    IRunningFlow
+    IFlowState
 } from "project-editor/flow/flow-interfaces";
 import { ITransform } from "project-editor/flow/flow-editor/transform";
 import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
@@ -313,7 +313,7 @@ export class FlowViewer
         onSavePersistantState: (viewState: IViewStatePersistantState) => void;
         transitionIsActive?: boolean;
         frontFace: boolean;
-        runningFlow: IRunningFlow | undefined;
+        flowState: IFlowState | undefined;
     }>
     implements IPanel
 {
@@ -324,10 +324,10 @@ export class FlowViewer
 
     _flowContext: RuntimeFlowContext | undefined = undefined;
 
-    get runningFlow() {
+    get flowState() {
         return (
-            this.props.runningFlow ||
-            this.context.RuntimeStore.getRunningFlow(
+            this.props.flowState ||
+            this.context.RuntimeStore.getFlowState(
                 this.props.widgetContainer.object as Flow
             )
         );
@@ -358,7 +358,7 @@ export class FlowViewer
             this.props.viewStatePersistantState,
             this.props.onSavePersistantState,
             this.props.frontFace,
-            this.runningFlow
+            this.flowState
         );
 
         this._flowContext = flowContext;
@@ -494,7 +494,7 @@ export class FlowViewer
     render() {
         const flow = this.props.widgetContainer.object as Flow;
 
-        this.runningFlow;
+        this.flowState;
 
         return (
             <div

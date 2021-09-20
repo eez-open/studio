@@ -199,7 +199,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
                                 (tabState.viewState = viewState)
                             }
                             frontFace={false}
-                            runningFlow={tabState.runningFlow}
+                            flowState={tabState.flowState}
                         />
                     </div>
                 );

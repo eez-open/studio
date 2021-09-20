@@ -20,10 +20,7 @@ import {
 import { visitObjects } from "project-editor/core/search";
 import { getDocumentStore } from "project-editor/core/store";
 import { Component, Widget } from "project-editor/flow/component";
-import {
-    IFlowContext,
-    IRunningFlow
-} from "project-editor/flow/flow-interfaces";
+import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/core/commands";
 import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
@@ -515,7 +512,7 @@ registerClass(FlowFragment);
 ////////////////////////////////////////////////////////////////////////////////
 
 export abstract class FlowTabState implements IEditorState {
-    @observable runningFlow: IRunningFlow | undefined;
+    @observable flowState: IFlowState | undefined;
 
     abstract loadState(state: any): void;
     abstract saveState(): any;

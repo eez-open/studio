@@ -16,7 +16,7 @@ import { observer } from "mobx-react";
 
 import * as PlotlyModule from "plotly.js";
 import classNames from "classnames";
-import { InputPropertyValue, RunningFlow } from "project-editor/flow/runtime";
+import { InputPropertyValue, FlowState } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -190,7 +190,7 @@ const LineChartElement = observer(
         flowContext: IFlowContext;
     }) => {
         const runningState =
-            flowContext.runningFlow?.getComponentRunningState<RunningState>(
+            flowContext.flowState?.getComponentRunningState<RunningState>(
                 widget
             );
 
@@ -261,9 +261,9 @@ const LineChartElement = observer(
                             () => {
                                 if (
                                     widget.isInputProperty("data") &&
-                                    flowContext.runningFlow
+                                    flowContext.flowState
                                 ) {
-                                    return flowContext.runningFlow.getInputPropertyValue(
+                                    return flowContext.flowState.getInputPropertyValue(
                                         widget,
                                         "data"
                                     );
@@ -412,18 +412,18 @@ export class LineChartWidget extends Widget {
         );
     }
 
-    async execute(runningFlow: RunningFlow, dispose: (() => void) | undefined) {
+    async execute(flowState: FlowState, dispose: (() => void) | undefined) {
         if (dispose) {
             return dispose;
         }
 
         const runningState = new RunningState();
 
-        runningFlow.setComponentRunningState(this, runningState);
+        flowState.setComponentRunningState(this, runningState);
 
         return autorun(() => {
             if (this.isInputProperty("data")) {
-                const inputPropertyValue = runningFlow.getInputPropertyValue(
+                const inputPropertyValue = flowState.getInputPropertyValue(
                     this,
                     "data"
                 );
@@ -518,9 +518,9 @@ const GaugeElement = observer(
                             () => {
                                 if (
                                     widget.isInputProperty("data") &&
-                                    flowContext.runningFlow
+                                    flowContext.flowState
                                 ) {
-                                    return flowContext.runningFlow.getInputPropertyValue(
+                                    return flowContext.flowState.getInputPropertyValue(
                                         widget,
                                         "data"
                                     );

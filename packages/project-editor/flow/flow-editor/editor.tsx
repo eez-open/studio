@@ -934,7 +934,7 @@ export class FlowEditor
             this.props.onSavePersistantState,
             this.props.frontFace,
             flow,
-            this.context.RuntimeStore.getRunningFlow(flow),
+            this.context.RuntimeStore.getFlowState(flow),
             this.options,
             this.filterSnapLines
         );
