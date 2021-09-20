@@ -117,7 +117,7 @@ export class HistoryItem implements IHistoryItem {
             if (source) {
                 return (
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">{`Source: ${source.instrumentName}`}</small>
+                        <small className="EezStudio_HistoryItemDate">{`Source: ${source.instrumentName}`}</small>
                     </p>
                 );
             }

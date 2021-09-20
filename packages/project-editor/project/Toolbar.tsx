@@ -153,7 +153,7 @@ export class Toolbar extends React.Component {
                 <div>
                     {(this.context.isDashboardProject ||
                         this.context.isAppletProject) && (
-                        <div className="btn-group" role="group">
+                        <div className="d-flex">
                             <ButtonAction
                                 text="Run"
                                 title="Enter run mode"

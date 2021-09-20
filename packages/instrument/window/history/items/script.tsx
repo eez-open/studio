@@ -25,7 +25,7 @@ export class ScriptHistoryItemComponent extends React.Component<
                 <Icon className="me-3" icon={"material:slideshow"} size={48} />
                 <div>
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">
+                        <small className="EezStudio_HistoryItemDate">
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>

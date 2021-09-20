@@ -60,7 +60,7 @@ export class AnswerHistoryItemComponent extends React.Component<
         return (
             <div className="EezStudio_AnswerHistoryItem">
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <small className="EezStudio_HistoryItemDate">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                 </p>

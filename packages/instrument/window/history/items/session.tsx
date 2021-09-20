@@ -29,7 +29,7 @@ export class SessionHistoryItemComponent extends React.Component<
         return (
             <div className={className}>
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <small className="EezStudio_HistoryItemDate">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                     <span className="EezStudio_HistoryItem_SessionName">

@@ -933,7 +933,7 @@ export class MeasurementValue extends React.Component<{
             require("eez-studio-ui/chart/generic-chart") as typeof GenericChartModule;
 
         return (
-            <div className="EezStudio_ChartContainerDiv">
+            <div className="EezStudio_MeasurementChartContainer">
                 <GenericChart chart={measurementResult.result} />
             </div>
         );

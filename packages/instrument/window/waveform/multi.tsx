@@ -101,7 +101,7 @@ export class ChartHistoryItemComponent extends React.Component<
                 />
                 <div>
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">
+                        <small className="EezStudio_HistoryItemDate">
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>

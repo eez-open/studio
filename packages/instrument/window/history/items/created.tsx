@@ -31,7 +31,7 @@ export class CreatedHistoryItemComponent extends React.Component<
         return (
             <div className="EezStudio_CreatedHistoryItem">
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <small className="EezStudio_HistoryItemDate">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                     <span>Instrument {this.type}!</span>

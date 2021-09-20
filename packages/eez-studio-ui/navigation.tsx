@@ -8,7 +8,7 @@ export interface INavigationItem {
     id: string;
     icon: string;
     title: string;
-    position?: string;
+    position?: "hidden";
     attention?: boolean;
 }
 
@@ -27,29 +27,27 @@ export class NavigationItem extends React.Component<
         this.handleClick = this.handleClick.bind(this);
     }
 
-    handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    handleClick(event: React.MouseEvent<HTMLDivElement>) {
         event.preventDefault();
         this.props.selectItem(this.props.item);
     }
 
     render() {
-        let className = classNames("EezStudio_NavigationItem", {
+        let className = classNames("EezStudio_NavigationMenuItemContainer", {
             selected: this.props.selected
         });
 
         return (
-            <div className={className}>
-                <a
-                    href="#"
-                    title={this.props.item.title}
-                    onClick={this.handleClick}
-                >
-                    <Icon
-                        icon={this.props.item.icon!}
-                        attention={this.props.item.attention}
-                    />
-                    <span>{this.props.item.title}</span>
-                </a>
+            <div
+                className={className}
+                title={this.props.item.title}
+                onClick={this.handleClick}
+            >
+                <Icon
+                    icon={this.props.item.icon!}
+                    attention={this.props.item.attention}
+                />
+                <span>{this.props.item.title}</span>
             </div>
         );
     }
@@ -66,12 +64,10 @@ export class Navigation extends React.Component<
 > {
     render() {
         return (
-            <div className="EezStudio_NavigationDiv">
-                <ul className="list-unstyled">
+            <div className="EezStudio_MenuNavigationContainer">
+                <div className="EezStudio_MenuContainer">
                     {this.props.items
-                        .filter(
-                            item => !item.position || item.position === "top"
-                        )
+                        .filter(item => item.position != "hidden")
                         .map(item => (
                             <NavigationItem
                                 key={item.id}
@@ -80,19 +76,7 @@ export class Navigation extends React.Component<
                                 selectItem={this.props.selectItem}
                             />
                         ))}
-                </ul>
-                <ul className="list-unstyled">
-                    {this.props.items
-                        .filter(item => item.position === "bottom")
-                        .map(item => (
-                            <NavigationItem
-                                key={item.id}
-                                item={item}
-                                selected={item === this.props.selectedItem}
-                                selectItem={this.props.selectItem}
-                            />
-                        ))}
-                </ul>
+                </div>
             </div>
         );
     }

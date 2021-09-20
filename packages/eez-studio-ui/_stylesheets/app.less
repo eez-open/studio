@@ -316,11 +316,6 @@ input[type="color"] {
     align-items: center;
 }
 
-.EezStudio_SelectedAction {
-    background-color: #ccc;
-    border: 1px solid #bbb;
-}
-
 .EezStudio_Ballon {
     background-color: #ffffa5;
     padding: 0 10px 5px 10px;
@@ -359,6 +354,7 @@ input[type="color"] {
     border: 0 solid @borderColor;
     border-bottom-width: 1px;
     background-color: @panelHeaderColor;
+    justify-content: space-between;
 }
 
 .EezStudio_ToolbarHeader {
@@ -407,7 +403,7 @@ input[type="color"] {
     height: 100%;
     overflow: auto;
 
-    background: @WorkingAreaBackgroundColor;
+    background: @backgroundColor;
 
     &.selectable {
         tr {
@@ -698,66 +694,6 @@ button.EezStudio_Action {
     box-shadow: 0px 0px 6px 2px rgba(255, 0, 0, 0.3);
 }
 
-.EezStudio_NavigationItem {
-    margin-bottom: 4px;
-
-    & > a {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-    }
-
-    & > a > span {
-        font-size: 90%;
-    }
-
-    &.selected {
-        a {
-            color: @selectionBackgroundColor;
-        }
-    }
-
-    &:not(.selected) {
-        a {
-            color: var(--bs-body-color);
-        }
-
-        a:hover {
-            color: @selectionBackgroundColor;
-        }
-    }
-}
-
-.EezStudio_NavigationDiv {
-    height: 100%;
-    margin: 0;
-    background-color: @panelHeaderColor;
-    border-right: 1px solid @borderColor;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-
-    & > ul {
-        padding: 7px;
-        margin-bottom: 0;
-    }
-
-    & > ul:nth-child(1) {
-        .NavigationItem {
-            margin-bottom: 7px;
-            position: relative;
-        }
-    }
-
-    & > ul:nth-child(2) {
-        .NavigationItem {
-            margin-top: 7px;
-            position: relative;
-        }
-    }
-}
-
 .EezStudio_SearchInput {
     padding: 2px 5px;
     width: 100%;
@@ -836,6 +772,8 @@ button.EezStudio_Action {
 }
 
 .EezStudio_MeasurementsDockViewContainer {
+    padding: 10px;
+
     table {
         margin-left: 0;
     }
@@ -855,7 +793,7 @@ button.EezStudio_Action {
 
             & > tbody > tr > td {
                 text-align: center;
-                background-color: #e5e5e5;
+                background-color: @sectionBackgroundColor;
                 padding: 5px;
                 vertical-align: top;
                 line-height: 22px;
@@ -1105,7 +1043,7 @@ button.EezStudio_Action {
                 opacity: 0;
 
                 padding: 10px;
-                background-color: @popupBackground;
+                background-color: @backgroundColor;
                 border-radius: 4px;
                 box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.25);
             }
@@ -1230,17 +1168,16 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_ChartContainerDiv {
+.EezStudio_MeasurementChartContainer {
     flex-grow: 1;
     flex-direction: column;
 
-    background-color: #f0f0f0;
     display: flex;
     padding-top: 10px;
 
     > div {
         flex-grow: 1;
-        border-top: 1px solid #ddd;
+        border-top: 1px solid @borderColor;
     }
 
     height: 100%;
@@ -1365,7 +1302,7 @@ button.EezStudio_Action {
     display: flex;
     flex-direction: row;
     flex-grow: 1;
-    background-color: var(--bs-body-bg);
+    background-color: @backgroundColor;
     overflow: auto;
 }
 
@@ -1438,7 +1375,7 @@ button.EezStudio_Action {
     display: flex;
     flex-direction: column;
     margin: 5px;
-    background-color: var(--bs-body-bg);
+    background-color: @backgroundColor;
     border: 1px solid @borderColor;
 }
 
@@ -1670,7 +1607,7 @@ button.EezStudio_Action {
         margin-bottom: 11px;
         padding: 5px;
         border: 1px solid @borderColor;
-        background: @WorkingAreaBackgroundColor;
+        background: @backgroundColor;
 
         &.selected {
             margin: 0px;
@@ -1704,7 +1641,7 @@ button.EezStudio_Action {
     & > div > div:nth-child(2) > div {
         display: inline-block;
         padding: 2px;
-        border: 2px solid @WorkingAreaBackgroundColor;
+        border: 2px solid @backgroundColor;
         text-align: center;
         font-size: 12px;
 
@@ -1723,28 +1660,28 @@ button.EezStudio_Action {
         }
 
         &.activity-level-0 > div {
-            background-color: @CalendarMonthBackgroundDayLevel0BackgroundColor;
-            color: @CalendarMonthBackgroundDayLevel0Color;
+            background-color: @calendarMonthBackgroundDayLevel0BackgroundColor;
+            color: @calendarMonthBackgroundDayLevel0Color;
         }
 
         &.activity-level-1 > div {
-            background-color: @CalendarMonthBackgroundDayLevel1BackgroundColor;
-            color: @CalendarMonthBackgroundDayLevel1Color;
+            background-color: @calendarMonthBackgroundDayLevel1BackgroundColor;
+            color: @calendarMonthBackgroundDayLevel1Color;
         }
 
         &.activity-level-2 > div {
-            background-color: @CalendarMonthBackgroundDayLevel2BackgroundColor;
-            color: @CalendarMonthBackgroundDayLevel2Color;
+            background-color: @calendarMonthBackgroundDayLevel2BackgroundColor;
+            color: @calendarMonthBackgroundDayLevel2Color;
         }
 
         &.activity-level-3 > div {
-            background-color: @CalendarMonthBackgroundDayLevel3BackgroundColor;
-            color: @CalendarMonthBackgroundDayLevel3Color;
+            background-color: @calendarMonthBackgroundDayLevel3BackgroundColor;
+            color: @calendarMonthBackgroundDayLevel3Color;
         }
 
         &.activity-level-4 > div {
-            background-color: @CalendarMonthBackgroundDayLevel4BackgroundColor;
-            color: @CalendarMonthBackgroundDayLevel4Color;
+            background-color: @calendarMonthBackgroundDayLevel4BackgroundColor;
+            color: @calendarMonthBackgroundDayLevel4Color;
         }
     }
 }
@@ -1763,13 +1700,13 @@ button.EezStudio_Action {
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    background-color: @WorkingAreaBackgroundColor;
+    background-color: @backgroundColor;
 }
 
 .EezStudio_DeletedHistoryContainer {
     &:extend(.EezStudio_HistoryContainer all);
 
-    background-color: @WorkingAreaBackgroundColor;
+    background-color: @backgroundColor;
 }
 
 .EezStudio_HistoryHeader {
@@ -1778,6 +1715,7 @@ button.EezStudio_Action {
     padding: 10px;
     border-bottom: 1px solid @borderColor;
     background-color: #d7f8da;
+    color: #333;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -1802,7 +1740,7 @@ button.EezStudio_Action {
     grid-auto-columns: max-content;
     grid-auto-rows: max-content;
 
-    background-color: @WorkingAreaBackgroundColor;
+    background-color: @backgroundColor;
 }
 
 .EezStudio_UnzoomedPreviewBody {
@@ -1866,6 +1804,8 @@ button.EezStudio_Action {
     padding: 0px 10px;
     overflow: visible;
 
+    color: #212529;
+
     p,
     pre {
         margin-bottom: 0;
@@ -1877,9 +1817,10 @@ button.EezStudio_Action {
     }
 }
 
-EezStudio_HistoryItemDate {
+.EezStudio_HistoryItemDate {
     padding-right: 10px;
     user-select: auto;
+    color: @historyItemDateColor!important;
 }
 
 .EezStudio_SessionHistoryItem {
@@ -1891,7 +1832,7 @@ EezStudio_HistoryItemDate {
         padding-bottom: 40px;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
-        background: linear-gradient(rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0));
+        background: @sessionHistoryItemSessionStartBackground;
     }
 
     &.EezStudio_HistoryItem_SessionClose {
@@ -1900,7 +1841,7 @@ EezStudio_HistoryItemDate {
         padding-bottom: 10px;
         border-top-left-radius: 0;
         border-top-right-radius: 0;
-        background: linear-gradient(rgba(255, 0, 0, 0), rgba(255, 0, 0, 0.1));
+        background: @sessionHistoryItemSessionStopBackground;
     }
 
     .EezStudio_HistoryItemDate {
@@ -1918,7 +1859,8 @@ EezStudio_HistoryItemDate {
 .EezStudio_AnswerHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
-    background-color: lightblue;
+    background-color: @answerHistoryItemBackgroundColor;
+
     margin-left: 40px;
     max-width: calc(100% - 40px);
     pre {
@@ -1929,7 +1871,9 @@ EezStudio_HistoryItemDate {
 .EezStudio_ConnectFailedHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
-    background-color: lightblue;
+    & > p > span {
+        color: @connectFailedHistoryItemColor;
+    }
 }
 
 .EezStudio_ConnectedHistoryItem {
@@ -1944,7 +1888,7 @@ EezStudio_HistoryItemDate {
     }
 
     & > p > span {
-        color: darkgreen;
+        color: @connectedHistoryItemColor;
     }
 }
 
@@ -1977,7 +1921,7 @@ EezStudio_HistoryItemDate {
     }
 
     & > p > span {
-        color: orange;
+        color: @disconnectedHistoryItemColor;
     }
 }
 
@@ -1986,7 +1930,7 @@ EezStudio_HistoryItemDate {
 
     display: flex;
     flex-direction: row;
-    background-color: lightsteelblue;
+    background-color: @fileHistoryItemBackgroundColor;
     padding: 10px;
     overflow: auto;
 
@@ -2027,7 +1971,7 @@ EezStudio_HistoryItemDate {
 .EezStudio_ListHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
-    background-color: #f5f5f5;
+    background-color: @listHistoryItemBackgroundColor;
     padding: 10px;
     display: flex;
     flex-direction: row;
@@ -2058,7 +2002,7 @@ EezStudio_HistoryItemDate {
 .EezStudio_RequestHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
-    background-color: beige;
+    background-color: @requestHistoryItemBackgroundColor;
     max-width: 100%;
     pre {
         user-select: text;
@@ -2068,7 +2012,7 @@ EezStudio_HistoryItemDate {
 .EezStudio_ScriptHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
-    background-color: #f5f5f5;
+    background-color: @scriptHistoryItemBackgroundColor;
     padding: 10px;
     display: flex;
     flex-direction: row;
@@ -2077,7 +2021,7 @@ EezStudio_HistoryItemDate {
 .EezStudio_ChartHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
-    background-color: #f5f5f5;
+    background-color: @chartHistoryItemBackgroundColor;
     padding: 10px;
     display: flex;
     flex-direction: row;
@@ -2512,6 +2456,19 @@ EezStudio_HistoryItemDate {
     }
 }
 
+.EezStudio_MenuNavigationContainer {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+    height: 100%;
+}
+
+.EezStudio_MenuContainer {
+    background-color: @panelHeaderColor;
+    border-right: 1px solid @borderColor;
+}
+
 .EezStudio_NavigationMenuItemContainer {
     display: block;
     cursor: pointer;
@@ -2537,18 +2494,6 @@ EezStudio_HistoryItemDate {
     &.selected {
         color: @selectionBackgroundColor;
     }
-}
-
-.EezStudio_MenuContainer {
-    background-color: @panelHeaderColor;
-    border-right: 1px solid @borderColor;
-}
-
-.EezStudio_MenuNavigationContainer {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: row;
-    min-height: 0;
 }
 
 .EezStudio_ObjectPathSpan {
@@ -3105,7 +3050,7 @@ EezStudio_HistoryItemDate {
             margin: 5px;
             border: 2px solid #eee;
             padding: 5px;
-            background-color: var(--bs-body-bg);
+            background-color: @backgroundColor;
             cursor: pointer;
 
             &.selected {
@@ -3469,7 +3414,7 @@ EezStudio_HistoryItemDate {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: @WorkingAreaBackgroundColor;
+    background-color: @backgroundColor;
 
     cursor: default;
 
@@ -3550,8 +3495,8 @@ EezStudio_HistoryItemDate {
         display: flex;
         flex-direction: column;
 
-        background-color: @ComponentBackgroundColor;
-        border: 1px solid @ComponentBackgroundColor;
+        background-color: @componentBackgroundColor;
+        border: 1px solid @componentBackgroundColor;
         border-radius: 4px;
 
         box-shadow: 1px 1px 4px rgba(22, 33, 74, 0.2);
@@ -3628,7 +3573,7 @@ EezStudio_HistoryItemDate {
 
             [data-connection-input-id],
             [data-connection-output-id] {
-                border: 1px solid @ComponentBorder;
+                border: 1px solid @componentBorder;
                 padding: 2px 5px;
                 margin-bottom: 2px;
 
@@ -3643,7 +3588,7 @@ EezStudio_HistoryItemDate {
                 margin: 4px;
                 border: 1px solid @borderColor;
                 padding: 4px;
-                background-color: @ComponentBody;
+                background-color: @componentBody;
             }
 
             pre {
@@ -3748,7 +3693,7 @@ EezStudio_HistoryItemDate {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: @WorkingAreaBackgroundColor;
+    background-color: @backgroundColor;
 
     * {
         user-select: text;
@@ -4111,7 +4056,7 @@ EezStudio_HistoryItemDate {
 
 .EezStudio_TableListEditorToolbarHeader {
     justify-content: flex-start;
-    background-color: var(--bs-body-bg);
+    background-color: @backgroundColor;
 }
 
 .EezStudio_TableListEditorBody {

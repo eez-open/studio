@@ -173,17 +173,27 @@ class SettingsController {
             "main-css"
         ) as HTMLLinkElement;
 
+        const goldenlayoutLinkElement = document.getElementById(
+            "goldenlayout-css"
+        ) as HTMLLinkElement;
+
         if (this.isDarkTheme) {
             bootstrapLinkElement.href =
                 "../../node_modules/bootstrap-dark-5/dist/css/bootstrap-night.min.css";
 
             mainLinkElement.href =
                 "../eez-studio-ui/_stylesheets/main-dark.css";
+
+            goldenlayoutLinkElement.href =
+                "../../node_modules/golden-layout/src/css/goldenlayout-dark-theme.css";
         } else {
             bootstrapLinkElement.href =
                 "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 
             mainLinkElement.href = "../eez-studio-ui/_stylesheets/main.css";
+
+            goldenlayoutLinkElement.href =
+                "../../node_modules/golden-layout/src/css/goldenlayout-light-theme.css";
         }
 
         setTimeout(() => {

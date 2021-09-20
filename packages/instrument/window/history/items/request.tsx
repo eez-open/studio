@@ -22,7 +22,7 @@ export class RequestHistoryItemComponent extends React.Component<
         return (
             <div className="EezStudio_RequestHistoryItem">
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <small className="EezStudio_HistoryItemDate">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                 </p>

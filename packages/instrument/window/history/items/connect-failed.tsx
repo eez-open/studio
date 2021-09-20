@@ -39,7 +39,7 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
         return (
             <div className="EezStudio_ConnectFailedHistoryItem">
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <small className="EezStudio_HistoryItemDate">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                     <span className="text-danger">

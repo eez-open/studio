@@ -41,7 +41,7 @@ export class ConnectedHistoryItemComponent extends React.Component<
         return (
             <div className="EezStudio_ConnectedHistoryItem">
                 <p>
-                    <small className="EezStudio_HistoryItemDate text-muted">
+                    <small className="EezStudio_HistoryItemDate">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                     <span>

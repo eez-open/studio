@@ -29,7 +29,7 @@ class Action extends React.Component<
 
     render() {
         let className = classNames("EezStudio_Action", this.props.className, {
-            EezStudio_SelectedAction: this.props.selected === true
+            "btn-secondary": this.props.selected === true
         });
 
         const { title } = this.props;

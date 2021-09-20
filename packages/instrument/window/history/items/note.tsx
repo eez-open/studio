@@ -54,7 +54,7 @@ export class NoteHistoryItemComponent extends React.Component<
             >
                 <Balloon>
                     <p>
-                        <small className="EezStudio_HistoryItemDate text-muted">
+                        <small className="EezStudio_HistoryItemDate">
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
