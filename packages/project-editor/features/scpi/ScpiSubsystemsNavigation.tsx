@@ -33,9 +33,9 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     @computed
     get object(): ScpiSubsystem | ScpiCommand | undefined {
         // return selectedObject from selectedPanel if it is descendant of ScpiCommand or ScpiSubsystem
-        let object = this.context.NavigationStore.selectedPanel
-            ? this.context.NavigationStore.selectedPanel.selectedObject
-            : this.context.NavigationStore.selectedObject;
+        let object = this.context.navigationStore.selectedPanel
+            ? this.context.navigationStore.selectedPanel.selectedObject
+            : this.context.navigationStore.selectedObject;
         if (object) {
             const command = getAncestorOfType(object, ScpiCommand.classInfo);
             if (command) {
@@ -55,13 +55,13 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         let subsystems = this.context.project.scpi.subsystems;
 
         let subsystem = getObjectFromNavigationItem(
-            this.context.NavigationStore.getNavigationSelectedItem(subsystems)
+            this.context.navigationStore.getNavigationSelectedItem(subsystems)
         ) as ScpiSubsystem;
 
         let commands =
             subsystem &&
             (getObjectFromNavigationItem(
-                this.context.NavigationStore.getNavigationSelectedItem(
+                this.context.navigationStore.getNavigationSelectedItem(
                     subsystem
                 )
             ) as ScpiCommand[]);
@@ -69,7 +69,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         let command =
             commands &&
             (getObjectFromNavigationItem(
-                this.context.NavigationStore.getNavigationSelectedItem(commands)
+                this.context.navigationStore.getNavigationSelectedItem(commands)
             ) as ScpiCommand);
 
         return command || commands || subsystem;
@@ -79,7 +79,7 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         let subsystems = this.context.project.scpi.subsystems;
 
         let selectedScpiSubsystem = getObjectFromNavigationItem(
-            this.context.NavigationStore.getNavigationSelectedItem(subsystems)
+            this.context.navigationStore.getNavigationSelectedItem(subsystems)
         ) as ScpiSubsystem;
 
         let additionalButtons;

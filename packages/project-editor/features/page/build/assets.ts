@@ -259,7 +259,7 @@ export class Assets {
                 object,
                 propertyName
             );
-            this.DocumentStore.OutputSectionsStore.write(
+            this.DocumentStore.outputSectionsStore.write(
                 output.Section.OUTPUT,
                 message.type,
                 message.text,
@@ -525,7 +525,7 @@ export class Assets {
                         return false;
                     })
                 ) {
-                    this.DocumentStore.OutputSectionsStore.write(
+                    this.DocumentStore.outputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused style: " + style.name,
@@ -536,7 +536,7 @@ export class Assets {
 
             project.fonts.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
-                    this.DocumentStore.OutputSectionsStore.write(
+                    this.DocumentStore.outputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused font: " + font.name,
@@ -547,7 +547,7 @@ export class Assets {
 
             project.bitmaps.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
-                    this.DocumentStore.OutputSectionsStore.write(
+                    this.DocumentStore.outputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused bitmap: " + bitmap.name,
@@ -1168,13 +1168,13 @@ export async function buildGuiAssetsData(assets: Assets) {
     headerBuffer.buffer.copy(allData, 0, 0, headerBuffer.size);
     compressedBuffer.copy(allData, headerBuffer.size, 0, compressedSize);
 
-    assets.DocumentStore.OutputSectionsStore.write(
+    assets.DocumentStore.outputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Uncompressed size: " + uncompressedSize
     );
 
-    assets.DocumentStore.OutputSectionsStore.write(
+    assets.DocumentStore.outputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Compressed size: " + compressedSize

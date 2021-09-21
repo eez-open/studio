@@ -28,7 +28,7 @@ export class PropertiesPanel extends React.Component<{
         let objects: IEezObject[];
 
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
 
         if (
             navigationStore.selectedPanel &&

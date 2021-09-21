@@ -400,10 +400,10 @@ function showUsage(importDirective: ImportDirective) {
             action(result => {
                 const assetsUsage: IAssetsUsage = result.values.assetsUsage;
                 if (assetsUsage.selectedAsset) {
-                    DocumentStore.UIStateStore.searchPattern =
+                    DocumentStore.uiStateStore.searchPattern =
                         assetsUsage.selectedAsset;
-                    DocumentStore.UIStateStore.searchMatchCase = true;
-                    DocumentStore.UIStateStore.searchMatchWholeWord = true;
+                    DocumentStore.uiStateStore.searchMatchCase = true;
+                    DocumentStore.uiStateStore.searchMatchWholeWord = true;
                     startSearch(
                         DocumentStore,
                         assetsUsage.selectedAsset,
@@ -1308,7 +1308,7 @@ export class Command {
 
 export const commands = [
     new Command("Padding", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
             !(selectedPanel instanceof PagesNavigation)
@@ -1371,7 +1371,7 @@ export const commands = [
                             typeof right === "number" &&
                             typeof bottom === "number"
                         ) {
-                            DocumentStore.UndoManager.setCombineCommands(true);
+                            DocumentStore.undoManager.setCombineCommands(true);
 
                             widgets.forEach(widget => {
                                 DocumentStore.updateObject(widget, {
@@ -1385,7 +1385,7 @@ export const commands = [
                                 height: bottom - top + 2 * padding
                             });
 
-                            DocumentStore.UndoManager.setCombineCommands(false);
+                            DocumentStore.undoManager.setCombineCommands(false);
                         }
                     }
                 })
@@ -1394,7 +1394,7 @@ export const commands = [
     }),
 
     new Command("Fit Size", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
             !(selectedPanel instanceof PagesNavigation)
@@ -1447,7 +1447,7 @@ export const commands = [
     }),
 
     new Command("Horizontal Align", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
             !(selectedPanel instanceof PagesNavigation)
@@ -1493,7 +1493,7 @@ export const commands = [
                     const top = _min(widgets.map(widget => widget.top));
 
                     if (typeof left === "number" && typeof top === "number") {
-                        DocumentStore.UndoManager.setCombineCommands(true);
+                        DocumentStore.undoManager.setCombineCommands(true);
 
                         widgets
                             .slice()
@@ -1506,7 +1506,7 @@ export const commands = [
                                 left += widget.width + gap;
                             });
 
-                        DocumentStore.UndoManager.setCombineCommands(false);
+                        DocumentStore.undoManager.setCombineCommands(false);
                     }
                 })
                 .catch(() => {});
@@ -1514,7 +1514,7 @@ export const commands = [
     }),
 
     new Command("Vertical Align", (DocumentStore: DocumentStoreClass) => {
-        const selectedPanel = DocumentStore.NavigationStore.selectedPanel;
+        const selectedPanel = DocumentStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
             !(selectedPanel instanceof PagesNavigation)
@@ -1560,7 +1560,7 @@ export const commands = [
                     let top = _min(widgets.map(widget => widget.top));
 
                     if (typeof left === "number" && typeof top === "number") {
-                        DocumentStore.UndoManager.setCombineCommands(true);
+                        DocumentStore.undoManager.setCombineCommands(true);
 
                         widgets
                             .slice()
@@ -1573,7 +1573,7 @@ export const commands = [
                                 top += widget.height + gap;
                             });
 
-                        DocumentStore.UndoManager.setCombineCommands(false);
+                        DocumentStore.undoManager.setCombineCommands(false);
                     }
                 })
                 .catch(() => {});

@@ -112,7 +112,7 @@ function fixDataForMegaBootloader(
     }
 
     if (threeExclamationsDetected) {
-        //OutputSectionsStore.write(Section.OUTPUT, Type.WARNING, `"!!!" detected and replaced with "!! " (Arduino Mega bootloader bug)`, object);
+        //outputSectionsStore.write(Section.OUTPUT, Type.WARNING, `"!!!" detected and replaced with "!! " (Arduino Mega bootloader bug)`, object);
     }
 
     return result;
@@ -495,7 +495,7 @@ function getItem(
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    getDocumentStore(object).OutputSectionsStore.write(
+    getDocumentStore(object).outputSectionsStore.write(
         output.Section.OUTPUT,
         message.type,
         message.text,
@@ -550,7 +550,7 @@ function getStyleIndex(object: any, propertyName: string) {
     }
 
     const message = output.propertyNotFoundMessage(object, propertyName);
-    getDocumentStore(object).OutputSectionsStore.write(
+    getDocumentStore(object).outputSectionsStore.write(
         output.Section.OUTPUT,
         message.type,
         message.text,
@@ -1126,7 +1126,7 @@ function buildGuiStylesDef(project: Project) {
         }
     }
     if (threeExclamationsDetected) {
-        // OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
+        // outputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
     }
 
     return `// STYLES DEFINITION\nconst uint8_t styles[${
@@ -1311,7 +1311,7 @@ function buildWidget(object: Widget | Page) {
         if (widget.itemWidget) {
             itemWidget = buildWidget(widget.itemWidget);
         } else {
-            getDocumentStore(object).OutputSectionsStore.write(
+            getDocumentStore(object).outputSectionsStore.write(
                 output.Section.OUTPUT,
                 output.Type.ERROR,
                 "List item widget is missing",
@@ -1776,7 +1776,7 @@ function buildGuiDocumentDef(
         }
     }
     if (threeExclamationsDetected) {
-        //OutputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
+        //outputSectionsStore.write(output.Section.OUTPUT, output.Type.ERROR, `"!!!" detected in data, not possible to fix (Arduino Mega bootloader bug).`, project);
     }
 
     return `// DOCUMENT DEFINITION\nconst uint8_t document[${

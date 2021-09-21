@@ -310,7 +310,7 @@ export abstract class Flow extends EezObject {
     pasteFlowFragment(flowFragment: FlowFragment, object: IEezObject) {
         const DocumentStore = getDocumentStore(this);
 
-        DocumentStore.UndoManager.setCombineCommands(true);
+        DocumentStore.undoManager.setCombineCommands(true);
 
         flowFragment.rewire();
 
@@ -346,7 +346,7 @@ export abstract class Flow extends EezObject {
             }
         }
 
-        DocumentStore.UndoManager.setCombineCommands(false);
+        DocumentStore.undoManager.setCombineCommands(false);
 
         return components;
     }

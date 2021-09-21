@@ -97,7 +97,7 @@ export function dumpData(data: number[] | Buffer) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function showCheckResult(DocumentStore: DocumentStoreClass) {
-    const OutputSections = DocumentStore.OutputSectionsStore;
+    const OutputSections = DocumentStore.outputSectionsStore;
 
     let outputSection = OutputSections.getSection(Section.OUTPUT);
 
@@ -217,7 +217,7 @@ async function generateFile(
                 parts["GUI_ASSETS_DATA_MAP"]
             );
 
-            DocumentStore.OutputSectionsStore.write(
+            DocumentStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 Type.INFO,
                 `File "${filePath}.map" builded`
@@ -225,7 +225,7 @@ async function generateFile(
         }
     }
 
-    DocumentStore.OutputSectionsStore.write(
+    DocumentStore.outputSectionsStore.write(
         Section.OUTPUT,
         Type.INFO,
         `File "${filePath}" builded`
@@ -318,7 +318,7 @@ export async function build(
 ) {
     const timeStart = new Date().getTime();
 
-    const OutputSections = DocumentStore.OutputSectionsStore;
+    const OutputSections = DocumentStore.outputSectionsStore;
 
     OutputSections.setActiveSection(Section.OUTPUT);
     OutputSections.clear(Section.OUTPUT);
@@ -447,7 +447,7 @@ export async function build(
 export async function buildExtensions(DocumentStore: DocumentStoreClass) {
     const timeStart = new Date().getTime();
 
-    const OutputSections = DocumentStore.OutputSectionsStore;
+    const OutputSections = DocumentStore.outputSectionsStore;
 
     OutputSections.setActiveSection(Section.OUTPUT);
     OutputSections.clear(Section.OUTPUT);
@@ -562,7 +562,7 @@ export function backgroundCheck(DocumentStore: DocumentStoreClass) {
     }
 
     setMessagesTimeoutId = setTimeout(() => {
-        DocumentStore.OutputSectionsStore.setMessages(Section.CHECKS, messages);
+        DocumentStore.outputSectionsStore.setMessages(Section.CHECKS, messages);
     }, 100);
 
     //console.timeEnd("backgroundCheck");

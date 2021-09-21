@@ -112,7 +112,7 @@ import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
-import { RuntimeStoreClass } from "project-editor/flow/runtime";
+import { RuntimeStoreClass as RuntimeStore } from "project-editor/flow/runtime";
 import { theme } from "eez-studio-ui/theme";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
@@ -235,7 +235,7 @@ export class SimpleNavigationStoreClass implements INavigationStore {
     setSelectedPanel(selectedPanel: IPanel | undefined) {}
 }
 
-class NavigationStoreClass implements INavigationStore {
+class NavigationStore implements INavigationStore {
     @observable navigationMap = new Map<string, NavigationItem>();
     @observable selectedPanel: IPanel | undefined;
 
@@ -484,7 +484,7 @@ class NavigationStoreClass implements INavigationStore {
         ) {
             if (getEditorComponent(object)) {
                 const editor =
-                    this.DocumentStore.EditorsStore.openEditor(object);
+                    this.DocumentStore.editorsStore.openEditor(object);
                 setTimeout(() => {
                     if (editor && editor.state) {
                         editor.state.selectObject(
@@ -529,7 +529,7 @@ export class Editor implements IEditor {
 
     @action
     makeActive() {
-        this.DocumentStore.EditorsStore.activateEditor(this);
+        this.DocumentStore.editorsStore.activateEditor(this);
     }
 
     @action
@@ -538,11 +538,11 @@ export class Editor implements IEditor {
     }
 
     close() {
-        this.DocumentStore.EditorsStore.closeEditor(this);
+        this.DocumentStore.editorsStore.closeEditor(this);
     }
 }
 
-class EditorsStoreClass {
+class EditorsStore {
     @observable editors: Editor[] = [];
 
     dispose1: mobx.IReactionDisposer;
@@ -551,10 +551,10 @@ class EditorsStoreClass {
     constructor(public DocumentStore: DocumentStoreClass) {
         // open editor when navigation selection has changed
         this.dispose1 = autorun(() => {
-            let object = DocumentStore.NavigationStore.selectedObject;
+            let object = DocumentStore.navigationStore.selectedObject;
             while (object) {
                 let navigationItem =
-                    DocumentStore.NavigationStore.getNavigationSelectedItem(
+                    DocumentStore.navigationStore.getNavigationSelectedItem(
                         object
                     );
                 while (navigationItem) {
@@ -566,7 +566,7 @@ class EditorsStoreClass {
                             this.openEditor(navigationItem.object);
                         }
                         navigationItem =
-                            DocumentStore.NavigationStore.getNavigationSelectedItem(
+                            DocumentStore.navigationStore.getNavigationSelectedItem(
                                 navigationItem.object
                             );
                     } else {
@@ -681,7 +681,7 @@ class EditorsStoreClass {
 
         editor.active = true;
 
-        this.DocumentStore.NavigationStore.setSelection([editor.object]);
+        this.DocumentStore.navigationStore.setSelection([editor.object]);
 
         setTimeout(() => {
             const el = document.querySelector(
@@ -790,7 +790,7 @@ export class ViewOptions {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class UIStateStoreClass {
+class UIStateStore {
     @observable viewOptions: ViewOptions = new ViewOptions();
     @observable selectedBuildConfiguration: string;
     @observable features: any;
@@ -816,9 +816,9 @@ class UIStateStoreClass {
         this.dispose2 = reaction(
             () => ({
                 message:
-                    this.DocumentStore.OutputSectionsStore?.activeSection
+                    this.DocumentStore.outputSectionsStore?.activeSection
                         .selectedMessage,
-                panel: this.DocumentStore.NavigationStore.selectedPanel
+                panel: this.DocumentStore.navigationStore.selectedPanel
             }),
             arg => {
                 if (
@@ -826,7 +826,7 @@ class UIStateStoreClass {
                     arg.message &&
                     arg.message.object
                 ) {
-                    this.DocumentStore.NavigationStore.showObject(
+                    this.DocumentStore.navigationStore.showObject(
                         arg.message.object
                     );
                 }
@@ -852,8 +852,8 @@ class UIStateStoreClass {
     @action
     load(uiState: any) {
         this.viewOptions.load(uiState.viewOptions);
-        this.DocumentStore.NavigationStore.load(uiState.navigationMap);
-        this.DocumentStore.EditorsStore.load(uiState.editors);
+        this.DocumentStore.navigationStore.load(uiState.navigationMap);
+        this.DocumentStore.editorsStore.load(uiState.editors);
         this.selectedBuildConfiguration =
             uiState.selectedBuildConfiguration || "Default";
         this.features = observable(uiState.features || {});
@@ -891,8 +891,8 @@ class UIStateStoreClass {
     get toJS() {
         return {
             viewOptions: this.viewOptions.toJS,
-            navigationMap: this.DocumentStore.NavigationStore.toJS,
-            editors: this.DocumentStore.EditorsStore.toJS,
+            navigationMap: this.DocumentStore.navigationStore.toJS,
+            editors: this.DocumentStore.editorsStore.toJS,
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
             objects: this.objectsJS,
@@ -966,7 +966,7 @@ interface IUndoItem {
     selectionAfter: any;
 }
 
-export class UndoManagerClass {
+export class UndoManager {
     @observable undoStack: IUndoItem[] = [];
     @observable redoStack: IUndoItem[] = [];
     @observable commands: ICommand[] = [];
@@ -986,7 +986,7 @@ export class UndoManagerClass {
     pushToUndoStack() {
         if (this.commands.length > 0) {
             let selectionAfter =
-                this.DocumentStore.NavigationStore.getSelection();
+                this.DocumentStore.navigationStore.getSelection();
             this.undoStack.push({
                 commands: this.commands,
                 selectionBefore: this.selectionBeforeFirstCommand,
@@ -995,7 +995,7 @@ export class UndoManagerClass {
 
             this.commands = [];
             this.selectionBeforeFirstCommand =
-                this.DocumentStore.NavigationStore.getSelection();
+                this.DocumentStore.navigationStore.getSelection();
         }
     }
 
@@ -1009,7 +1009,7 @@ export class UndoManagerClass {
     executeCommand(command: ICommand) {
         if (this.commands.length == 0) {
             this.selectionBeforeFirstCommand =
-                this.DocumentStore.NavigationStore.getSelection();
+                this.DocumentStore.navigationStore.getSelection();
         } else {
             if (!this.combineCommands) {
                 this.pushToUndoStack();
@@ -1042,7 +1042,7 @@ export class UndoManagerClass {
             commands = this.undoStack[this.undoStack.length - 1].commands;
         }
         if (commands) {
-            return UndoManagerClass.getCommandsDescription(commands);
+            return UndoManager.getCommandsDescription(commands);
         }
         return undefined;
     }
@@ -1057,7 +1057,7 @@ export class UndoManagerClass {
                 undoItem.commands[i].undo();
             }
 
-            this.DocumentStore.NavigationStore.setSelection(
+            this.DocumentStore.navigationStore.setSelection(
                 undoItem.selectionBefore
             );
 
@@ -1079,7 +1079,7 @@ export class UndoManagerClass {
             commands = this.redoStack[this.redoStack.length - 1].commands;
         }
         if (commands) {
-            return UndoManagerClass.getCommandsDescription(commands);
+            return UndoManager.getCommandsDescription(commands);
         }
         return undefined;
     }
@@ -1092,7 +1092,7 @@ export class UndoManagerClass {
                 redoItem.commands[i].execute();
             }
 
-            this.DocumentStore.NavigationStore.setSelection(
+            this.DocumentStore.navigationStore.setSelection(
                 redoItem.selectionAfter
             );
 
@@ -1176,12 +1176,12 @@ export function save(DocumentStore: DocumentStoreClass, filePath: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DocumentStoreClass {
-    UndoManager = new UndoManagerClass(this);
-    NavigationStore = new NavigationStoreClass(this);
-    EditorsStore = new EditorsStoreClass(this);
-    UIStateStore = new UIStateStoreClass(this);
-    OutputSectionsStore = new OutputSections(this);
-    RuntimeStore = new RuntimeStoreClass(this);
+    undoManager = new UndoManager(this);
+    navigationStore = new NavigationStore(this);
+    editorsStore = new EditorsStore(this);
+    uiStateStore = new UIStateStore(this);
+    outputSectionsStore = new OutputSections(this);
+    runtimeStore = new RuntimeStore(this);
 
     @observable private _project: Project | undefined;
     @observable modified: boolean = false;
@@ -1343,14 +1343,14 @@ export class DocumentStoreClass {
             modified: this.modified,
             projectFilePath: this.filePath,
             undo:
-                (this.UndoManager &&
-                    this.UndoManager.canUndo &&
-                    this.UndoManager.undoDescription) ||
+                (this.undoManager &&
+                    this.undoManager.canUndo &&
+                    this.undoManager.undoDescription) ||
                 null,
             redo:
-                (this.UndoManager &&
-                    this.UndoManager.canRedo &&
-                    this.UndoManager.redoDescription) ||
+                (this.undoManager &&
+                    this.undoManager.canRedo &&
+                    this.undoManager.redoDescription) ||
                 null
         });
     }
@@ -1406,7 +1406,7 @@ export class DocumentStoreClass {
             this.project.settings.build.configurations.find(
                 configuration =>
                     configuration.name ==
-                    this.UIStateStore.selectedBuildConfiguration
+                    this.uiStateStore.selectedBuildConfiguration
             );
         if (!configuration) {
             if (this.project.settings.build.configurations.length > 0) {
@@ -1514,11 +1514,11 @@ export class DocumentStoreClass {
 
     saveUIState() {
         return new Promise<void>(resolve => {
-            if (this.filePath && this.UIStateStore.isModified) {
+            if (this.filePath && this.uiStateStore.isModified) {
                 const fs = EEZStudio.remote.require("fs");
                 fs.writeFile(
                     getUIStateFilePath(this.filePath),
-                    this.UIStateStore.save(),
+                    this.uiStateStore.save(),
                     "utf8",
                     (err: any) => {
                         if (err) {
@@ -1578,7 +1578,7 @@ export class DocumentStoreClass {
     }
 
     async closeWindow() {
-        await this.RuntimeStore.stop();
+        await this.runtimeStore.stop();
 
         if (this.project) {
             return await this.saveModified();
@@ -1704,12 +1704,12 @@ export class DocumentStoreClass {
             this.objects.clear();
             this.lastChildId = 0;
         }
-        this.UIStateStore.load(uiState || {});
-        this.UndoManager.clear();
+        this.uiStateStore.load(uiState || {});
+        this.undoManager.clear();
 
         if (!project) {
-            this.EditorsStore.unmount();
-            this.UIStateStore.unmount();
+            this.editorsStore.unmount();
+            this.uiStateStore.unmount();
             this.unmount();
         }
     }
@@ -1810,8 +1810,8 @@ export class DocumentStoreClass {
                 flow == getAncestorOfType(options.dropPlace, Flow.classInfo);
 
             if (!keepConnectionLines) {
-                if (!this.UndoManager.combineCommands) {
-                    this.UndoManager.setCombineCommands(true);
+                if (!this.undoManager.combineCommands) {
+                    this.undoManager.setCombineCommands(true);
                     closeCombineCommands = true;
                 }
 
@@ -1820,8 +1820,8 @@ export class DocumentStoreClass {
         }
 
         if (object instanceof CustomInput) {
-            if (!this.UndoManager.combineCommands) {
-                this.UndoManager.setCombineCommands(true);
+            if (!this.undoManager.combineCommands) {
+                this.undoManager.setCombineCommands(true);
                 closeCombineCommands = true;
             }
 
@@ -1837,8 +1837,8 @@ export class DocumentStoreClass {
         }
 
         if (object instanceof CustomOutput) {
-            if (!this.UndoManager.combineCommands) {
-                this.UndoManager.setCombineCommands(true);
+            if (!this.undoManager.combineCommands) {
+                this.undoManager.setCombineCommands(true);
                 closeCombineCommands = true;
             }
 
@@ -1856,7 +1856,7 @@ export class DocumentStoreClass {
         deleteObject(object);
 
         if (closeCombineCommands) {
-            this.UndoManager.setCombineCommands(false);
+            this.undoManager.setCombineCommands(false);
         }
     }
 
@@ -1868,8 +1868,8 @@ export class DocumentStoreClass {
 
             objects.forEach(object => {
                 if (object instanceof Component) {
-                    if (!this.UndoManager.combineCommands) {
-                        this.UndoManager.setCombineCommands(true);
+                    if (!this.undoManager.combineCommands) {
+                        this.undoManager.setCombineCommands(true);
                         closeCombineCommands = true;
                     }
                     const flow = getAncestorOfType(
@@ -1894,7 +1894,7 @@ export class DocumentStoreClass {
             deleteObjects(objects);
 
             if (closeCombineCommands) {
-                this.UndoManager.setCombineCommands(false);
+                this.undoManager.setCombineCommands(false);
             }
         }
     }

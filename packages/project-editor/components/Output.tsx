@@ -89,13 +89,13 @@ class Messages extends React.Component {
     @observable rows: React.ReactNode[];
 
     onSelectMessage(message: OutputMessage) {
-        this.context.OutputSectionsStore.activeSection.selectMessage(message);
+        this.context.outputSectionsStore.activeSection.selectMessage(message);
     }
 
     scrollToBottom() {
         if (
             this.divRef.current &&
-            this.context.OutputSectionsStore.activeSection.scrollToBottom
+            this.context.outputSectionsStore.activeSection.scrollToBottom
         ) {
             const div: HTMLDivElement = this.divRef.current;
             div.scrollTop = div.scrollHeight;
@@ -109,7 +109,7 @@ class Messages extends React.Component {
         this.dispose = autorun(
             () => {
                 let rows =
-                    this.context.OutputSectionsStore.activeSection.messages.map(
+                    this.context.outputSectionsStore.activeSection.messages.map(
                         message => (
                             <Message
                                 key={message.id}
@@ -157,14 +157,14 @@ export class Output extends React.Component<{}, {}> {
 
     @disposeOnUnmount
     activeSectionChanged = autorun(() => {
-        this.context.NavigationStore.setSelectedPanel(
-            this.context.OutputSectionsStore.activeSection
+        this.context.navigationStore.setSelectedPanel(
+            this.context.outputSectionsStore.activeSection
         );
     });
 
     onFocus = () => {
-        this.context.NavigationStore.setSelectedPanel(
-            this.context.OutputSectionsStore.activeSection
+        this.context.navigationStore.setSelectedPanel(
+            this.context.outputSectionsStore.activeSection
         );
     };
 
@@ -172,14 +172,14 @@ export class Output extends React.Component<{}, {}> {
     onKeyDown(event: any) {
         if (event.keyCode == 27) {
             // ESC KEY
-            this.context.UIStateStore.viewOptions.outputVisible =
-                !this.context.UIStateStore.viewOptions.outputVisible;
+            this.context.uiStateStore.viewOptions.outputVisible =
+                !this.context.uiStateStore.viewOptions.outputVisible;
         }
     }
 
     @action.bound onClose() {
-        this.context.UIStateStore.viewOptions.outputVisible =
-            !this.context.UIStateStore.viewOptions.outputVisible;
+        this.context.uiStateStore.viewOptions.outputVisible =
+            !this.context.uiStateStore.viewOptions.outputVisible;
     }
 
     render() {
@@ -192,7 +192,7 @@ export class Output extends React.Component<{}, {}> {
             >
                 <div className="EezStudio_TabsViewContainer">
                     <TabsView
-                        tabs={this.context.OutputSectionsStore.sections}
+                        tabs={this.context.outputSectionsStore.sections}
                     />
                     <IconAction
                         icon="material:close"

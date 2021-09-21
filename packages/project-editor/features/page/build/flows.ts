@@ -88,7 +88,7 @@ function buildComponent(
     if (flowComponentId != undefined) {
         dataBuffer.writeUint16(flowComponentId);
     } else {
-        assets.DocumentStore.OutputSectionsStore.write(
+        assets.DocumentStore.outputSectionsStore.write(
             output.Section.OUTPUT,
             output.Type.ERROR,
             "Component is not supported for the build target",
@@ -146,7 +146,7 @@ function buildComponent(
                 );
             }
         } catch (err) {
-            assets.DocumentStore.OutputSectionsStore.write(
+            assets.DocumentStore.outputSectionsStore.write(
                 output.Section.OUTPUT,
                 output.Type.ERROR,
                 err,
@@ -236,7 +236,7 @@ function buildComponent(
     try {
         component.buildFlowComponentSpecific(assets, dataBuffer);
     } catch (err) {
-        assets.DocumentStore.OutputSectionsStore.write(
+        assets.DocumentStore.outputSectionsStore.write(
             output.Section.OUTPUT,
             output.Type.ERROR,
             err,
@@ -310,7 +310,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
                     if (componentOutputOffset != undefined) {
                         dataBuffer.writeUint32(componentOutputOffset);
                     } else {
-                        assets.DocumentStore.OutputSectionsStore.write(
+                        assets.DocumentStore.outputSectionsStore.write(
                             output.Section.OUTPUT,
                             output.Type.ERROR,
                             "Widget action output not found",

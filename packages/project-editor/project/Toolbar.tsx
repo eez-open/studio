@@ -48,7 +48,7 @@ class EditControls extends React.Component {
     }
 
     onSelectedBuildConfigurationChange(event: any) {
-        this.context.UIStateStore.setSelectedBuildConfiguration(
+        this.context.uiStateStore.setSelectedBuildConfiguration(
             event.target.value
         );
     }
@@ -68,7 +68,7 @@ class EditControls extends React.Component {
         return (
             <div
                 style={{
-                    visibility: this.context.RuntimeStore.isRuntimeMode
+                    visibility: this.context.runtimeStore.isRuntimeMode
                         ? "hidden"
                         : "visible"
                 }}
@@ -85,23 +85,23 @@ class EditControls extends React.Component {
                 <div className="btn-group" role="group">
                     <IconAction
                         title={
-                            this.context.UndoManager.canUndo
-                                ? `Undo "${this.context.UndoManager.undoDescription}"`
+                            this.context.undoManager.canUndo
+                                ? `Undo "${this.context.undoManager.undoDescription}"`
                                 : ""
                         }
                         icon="material:undo"
-                        onClick={() => this.context.UndoManager.undo()}
-                        enabled={this.context.UndoManager.canUndo}
+                        onClick={() => this.context.undoManager.undo()}
+                        enabled={this.context.undoManager.canUndo}
                     />
                     <IconAction
                         title={
-                            this.context.UndoManager.canRedo
-                                ? `Redo "${this.context.UndoManager.redoDescription}"`
+                            this.context.undoManager.canRedo
+                                ? `Redo "${this.context.undoManager.redoDescription}"`
                                 : ""
                         }
                         icon="material:redo"
-                        onClick={() => this.context.UndoManager.redo()}
-                        enabled={this.context.UndoManager.canRedo}
+                        onClick={() => this.context.undoManager.redo()}
+                        enabled={this.context.undoManager.canRedo}
                     />
                 </div>
 
@@ -112,7 +112,7 @@ class EditControls extends React.Component {
                             id="btn-toolbar-configuration"
                             className="form-select"
                             value={
-                                this.context.UIStateStore
+                                this.context.uiStateStore
                                     .selectedBuildConfiguration
                             }
                             onChange={this.onSelectedBuildConfigurationChange.bind(
@@ -151,25 +151,25 @@ class RunEditSwitchControls extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     toggleRuntimeMode = () => {
-        if (this.context.RuntimeStore.isRuntimeMode) {
-            if (this.context.RuntimeStore.isDebuggerActive) {
-                this.context.RuntimeStore.toggleDebugger();
+        if (this.context.runtimeStore.isRuntimeMode) {
+            if (this.context.runtimeStore.isDebuggerActive) {
+                this.context.runtimeStore.toggleDebugger();
             }
         } else {
-            this.context.RuntimeStore.setRuntimeMode(false);
+            this.context.runtimeStore.setRuntimeMode(false);
         }
     };
 
     toggleDebugger = async () => {
-        if (!this.context.RuntimeStore.isRuntimeMode) {
-            await this.context.RuntimeStore.setRuntimeMode(true);
+        if (!this.context.runtimeStore.isRuntimeMode) {
+            await this.context.runtimeStore.setRuntimeMode(true);
         } else {
-            if (!this.context.RuntimeStore.isDebuggerActive) {
-                this.context.NavigationStore.setSelection([
-                    this.context.RuntimeStore.selectedPage
+            if (!this.context.runtimeStore.isDebuggerActive) {
+                this.context.navigationStore.setSelection([
+                    this.context.runtimeStore.selectedPage
                 ]);
 
-                this.context.RuntimeStore.toggleDebugger();
+                this.context.runtimeStore.toggleDebugger();
             }
         }
     };
@@ -183,8 +183,8 @@ class RunEditSwitchControls extends React.Component {
                     title="Enter edit mode"
                     icon="material:mode_edit"
                     iconSize={iconSize}
-                    onClick={this.context.RuntimeStore.setEditorMode}
-                    selected={!this.context.RuntimeStore.isRuntimeMode}
+                    onClick={this.context.runtimeStore.setEditorMode}
+                    selected={!this.context.runtimeStore.isRuntimeMode}
                 />
 
                 <ButtonAction
@@ -216,8 +216,8 @@ class RunEditSwitchControls extends React.Component {
                     iconSize={iconSize}
                     onClick={this.toggleRuntimeMode}
                     selected={
-                        this.context.RuntimeStore.isRuntimeMode &&
-                        !this.context.RuntimeStore.isDebuggerActive
+                        this.context.runtimeStore.isRuntimeMode &&
+                        !this.context.runtimeStore.isDebuggerActive
                     }
                 />
 
@@ -247,10 +247,10 @@ class RunEditSwitchControls extends React.Component {
                     iconSize={iconSize}
                     onClick={this.toggleDebugger}
                     selected={
-                        this.context.RuntimeStore.isRuntimeMode &&
-                        this.context.RuntimeStore.isDebuggerActive
+                        this.context.runtimeStore.isRuntimeMode &&
+                        this.context.runtimeStore.isDebuggerActive
                     }
-                    attention={this.context.RuntimeStore.hasError}
+                    attention={this.context.runtimeStore.hasError}
                 />
             </div>
         );
@@ -265,29 +265,29 @@ class SearchControls extends React.Component {
     startSearch() {
         startSearch(
             this.context,
-            this.context.UIStateStore.searchPattern,
-            this.context.UIStateStore.searchMatchCase,
-            this.context.UIStateStore.searchMatchWholeWord
+            this.context.uiStateStore.searchPattern,
+            this.context.uiStateStore.searchMatchCase,
+            this.context.uiStateStore.searchMatchWholeWord
         );
     }
 
     @action.bound
     onSearchPatternChange(event: any) {
-        this.context.UIStateStore.searchPattern = event.target.value;
+        this.context.uiStateStore.searchPattern = event.target.value;
         this.startSearch();
     }
 
     @action.bound
     toggleMatchCase() {
-        this.context.UIStateStore.searchMatchCase =
-            !this.context.UIStateStore.searchMatchCase;
+        this.context.uiStateStore.searchMatchCase =
+            !this.context.uiStateStore.searchMatchCase;
         this.startSearch();
     }
 
     @action.bound
     toggleMatchWholeWord() {
-        this.context.UIStateStore.searchMatchWholeWord =
-            !this.context.UIStateStore.searchMatchWholeWord;
+        this.context.uiStateStore.searchMatchWholeWord =
+            !this.context.uiStateStore.searchMatchWholeWord;
         this.startSearch();
     }
 
@@ -296,7 +296,7 @@ class SearchControls extends React.Component {
             <div
                 className="btn-group"
                 style={{
-                    visibility: this.context.RuntimeStore.isRuntimeMode
+                    visibility: this.context.runtimeStore.isRuntimeMode
                         ? "hidden"
                         : "visible"
                 }}
@@ -305,12 +305,12 @@ class SearchControls extends React.Component {
                     className={classNames(
                         "form-control EezStudio_ToolbarSearchInput",
                         {
-                            empty: !this.context.UIStateStore.searchPattern
+                            empty: !this.context.uiStateStore.searchPattern
                         }
                     )}
                     type="text"
                     placeholder="&#xe8b6;"
-                    value={this.context.UIStateStore.searchPattern ?? ""}
+                    value={this.context.uiStateStore.searchPattern ?? ""}
                     onChange={this.onSearchPatternChange}
                 />
                 <div className="btn-group" role="group">
@@ -333,7 +333,7 @@ class SearchControls extends React.Component {
                         title="Match case"
                         iconSize={20}
                         enabled={true}
-                        selected={this.context.UIStateStore.searchMatchCase}
+                        selected={this.context.uiStateStore.searchMatchCase}
                         onClick={this.toggleMatchCase}
                     />
                     <IconAction
@@ -356,7 +356,7 @@ class SearchControls extends React.Component {
                         iconSize={20}
                         enabled={true}
                         selected={
-                            this.context.UIStateStore.searchMatchWholeWord
+                            this.context.uiStateStore.searchMatchWholeWord
                         }
                         onClick={this.toggleMatchWholeWord}
                     />

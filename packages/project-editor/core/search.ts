@@ -381,7 +381,7 @@ export class CurrentSearch {
         matchWholeWord: boolean,
         searchCallback?: SearchCallback
     ) {
-        this.DocumentStore.OutputSectionsStore.clear(Section.SEARCH);
+        this.DocumentStore.outputSectionsStore.clear(Section.SEARCH);
 
         this.finishSearch();
 
@@ -428,7 +428,7 @@ export class CurrentSearch {
                                 return;
                             }
                         } else {
-                            this.DocumentStore.OutputSectionsStore.write(
+                            this.DocumentStore.outputSectionsStore.write(
                                 Section.SEARCH,
                                 Type.INFO,
                                 objectToString(valueObject),
@@ -469,13 +469,13 @@ export function startSearch(
     matchCase: boolean,
     matchWholeWord: boolean
 ) {
-    DocumentStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
+    DocumentStore.outputSectionsStore.setActiveSection(Section.SEARCH);
     startNewSearch(DocumentStore, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: IEezObject) {
     const DocumentStore = getDocumentStore(object);
-    DocumentStore.OutputSectionsStore.setActiveSection(Section.SEARCH);
+    DocumentStore.outputSectionsStore.setActiveSection(Section.SEARCH);
     startNewSearch(DocumentStore, object, true, true);
 }
 

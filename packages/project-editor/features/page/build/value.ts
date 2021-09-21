@@ -79,7 +79,7 @@ export function getVariableFlowValue(assets: Assets, variable: Variable) {
     if (variable.type) {
         type = getValueType(variable.type);
     } else {
-        assets.DocumentStore.OutputSectionsStore.write(
+        assets.DocumentStore.outputSectionsStore.write(
             output.Section.OUTPUT,
             output.Type.ERROR,
             "Variable type not set",

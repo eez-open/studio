@@ -107,7 +107,7 @@ export class StylesNavigation extends NavigationComponent {
     @computed
     get style() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
 
         if (navigationStore.selectedPanel) {
             if (navigationStore.selectedPanel.selectedObject instanceof Style) {
@@ -289,7 +289,7 @@ const inheritFromProperty: PropertyInfo = {
                                 },
                                 values: {}
                             }).then(result => {
-                                DocumentStore.UndoManager.setCombineCommands(
+                                DocumentStore.undoManager.setCombineCommands(
                                     true
                                 );
 
@@ -318,7 +318,7 @@ const inheritFromProperty: PropertyInfo = {
                                     objectPropertyValues
                                 );
 
-                                DocumentStore.UndoManager.setCombineCommands(
+                                DocumentStore.undoManager.setCombineCommands(
                                     false
                                 );
                             });
@@ -335,7 +335,7 @@ const inheritFromProperty: PropertyInfo = {
                         new MenuItem({
                             label: "Update Style",
                             click: () => {
-                                DocumentStore.UndoManager.setCombineCommands(
+                                DocumentStore.undoManager.setCombineCommands(
                                     true
                                 );
 
@@ -370,7 +370,7 @@ const inheritFromProperty: PropertyInfo = {
                                     objectPropertyValues
                                 );
 
-                                DocumentStore.UndoManager.setCombineCommands(
+                                DocumentStore.undoManager.setCombineCommands(
                                     false
                                 );
                             }

@@ -1086,7 +1086,7 @@ export class ImportScpiDocDialog extends React.Component<{
 
         this.modal.hide();
 
-        this.context.UndoManager.setCombineCommands(true);
+        this.context.undoManager.setCombineCommands(true);
 
         const scpi = this.context.project.scpi;
 
@@ -1193,10 +1193,10 @@ export class ImportScpiDocDialog extends React.Component<{
             }
         });
 
-        this.context.UndoManager.setCombineCommands(false);
+        this.context.undoManager.setCombineCommands(false);
 
         // always stay in scpi subsystems list view
-        this.context.NavigationStore.setNavigationSelectedItem(
+        this.context.navigationStore.setNavigationSelectedItem(
             scpi,
             createObjectNavigationItem(scpi.subsystems)!
         );

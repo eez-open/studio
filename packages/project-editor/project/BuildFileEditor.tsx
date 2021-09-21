@@ -12,7 +12,7 @@ export class BuildFileEditor extends React.Component<{
     buildFile: BuildFile;
 }> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     codeEditor: CodeEditor;
 
@@ -25,12 +25,12 @@ export class BuildFileEditor extends React.Component<{
 
     @bind
     onFocus() {
-        this.context.UndoManager.setCombineCommands(true);
+        this.context.undoManager.setCombineCommands(true);
     }
 
     @bind
     onBlur() {
-        this.context.UndoManager.setCombineCommands(false);
+        this.context.undoManager.setCombineCommands(false);
     }
 
     componentDidMount() {

@@ -231,7 +231,7 @@ export const ComponentEnclosure = observer(
                     className,
                     {
                         "eez-flow-editor-capture-pointers":
-                            flowContext.document.DocumentStore.RuntimeStore
+                            flowContext.document.DocumentStore.runtimeStore
                                 .isRuntimeMode
                     }
                 )}

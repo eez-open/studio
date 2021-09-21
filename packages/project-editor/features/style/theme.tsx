@@ -64,7 +64,7 @@ function getNavigationStore(DocumentStore: DocumentStoreClass) {
     }
     return getProjectWithThemes(DocumentStore) != DocumentStore.project
         ? simpleNavigationStore
-        : DocumentStore.NavigationStore;
+        : DocumentStore.navigationStore;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,12 +186,12 @@ export class ThemesSideView extends React.Component<{
             .then(result => {
                 let newValue = result.values.name.trim();
                 if (newValue != theme.name) {
-                    this.context.UndoManager.setCombineCommands(true);
+                    this.context.undoManager.setCombineCommands(true);
                     replaceObjectReference(theme, newValue);
                     this.context.updateObject(theme, {
                         name: newValue
                     });
-                    this.context.UndoManager.setCombineCommands(false);
+                    this.context.undoManager.setCombineCommands(false);
                 }
             })
             .catch(error => {
@@ -222,12 +222,12 @@ export class ThemesSideView extends React.Component<{
             .then(result => {
                 let newValue = result.values.name.trim();
                 if (newValue != color.name) {
-                    this.context.UndoManager.setCombineCommands(true);
+                    this.context.undoManager.setCombineCommands(true);
                     replaceObjectReference(color, newValue);
                     this.context.updateObject(color, {
                         name: newValue
                     });
-                    this.context.UndoManager.setCombineCommands(false);
+                    this.context.undoManager.setCombineCommands(false);
                 }
             })
             .catch(error => {
@@ -238,7 +238,7 @@ export class ThemesSideView extends React.Component<{
     };
 
     onClose = action(() => {
-        this.context.UIStateStore.viewOptions.themesVisible = false;
+        this.context.uiStateStore.viewOptions.themesVisible = false;
     });
 
     render() {
@@ -359,7 +359,7 @@ export class Color extends EezObject implements IColor {
                     click: () => {
                         const DocumentStore = getDocumentStore(thisObject);
 
-                        DocumentStore.UndoManager.setCombineCommands(true);
+                        DocumentStore.undoManager.setCombineCommands(true);
 
                         const project = getProjectWithThemes(
                             getDocumentStore(thisObject)
@@ -387,7 +387,7 @@ export class Color extends EezObject implements IColor {
                             }
                         });
 
-                        DocumentStore.UndoManager.setCombineCommands(false);
+                        DocumentStore.undoManager.setCombineCommands(false);
                     }
                 })
             );

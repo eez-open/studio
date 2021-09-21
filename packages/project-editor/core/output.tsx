@@ -52,7 +52,7 @@ export class OutputSection implements IPanel {
     ) {}
 
     @computed get active() {
-        return this.DocumentStore.UIStateStore.activeOutputSection === this.id;
+        return this.DocumentStore.uiStateStore.activeOutputSection === this.id;
     }
 
     @computed
@@ -90,7 +90,7 @@ export class OutputSection implements IPanel {
 
         if (
             this.id == Section.SEARCH &&
-            (this.DocumentStore.UIStateStore.searchPattern ||
+            (this.DocumentStore.uiStateStore.searchPattern ||
                 this.messages.length > 0)
         ) {
             return `${this.name} (${this.messages.length})`;
@@ -163,7 +163,7 @@ export class OutputSection implements IPanel {
     }
 
     makeActive(): void {
-        this.DocumentStore.OutputSectionsStore.setActiveSection(this.id);
+        this.DocumentStore.outputSectionsStore.setActiveSection(this.id);
     }
 }
 
@@ -202,7 +202,7 @@ export class OutputSections {
     @computed get activeSection() {
         return (
             this.sections[
-                this.DocumentStore.UIStateStore.activeOutputSection
+                this.DocumentStore.uiStateStore.activeOutputSection
             ] ?? this.sections[Section.CHECKS]
         );
     }
@@ -213,8 +213,8 @@ export class OutputSections {
 
     @action
     setActiveSection(sectionType: Section) {
-        this.DocumentStore.UIStateStore.activeOutputSection = sectionType;
-        this.DocumentStore.UIStateStore.viewOptions.outputVisible = true;
+        this.DocumentStore.uiStateStore.activeOutputSection = sectionType;
+        this.DocumentStore.uiStateStore.viewOptions.outputVisible = true;
     }
 
     @action

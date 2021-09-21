@@ -54,7 +54,8 @@ function getExtensionsToBuild(DocumentStore: DocumentStoreClass) {
             .filter(extensionDefinition => !extensionDefinition.doNotBuild)
             .filter(extensionDefinition => {
                 const idfFromProject = toJS(extensionDefinition);
-                const instrumentIdf: InstrumentIdfProperties = idfFromProject as any;
+                const instrumentIdf: InstrumentIdfProperties =
+                    idfFromProject as any;
                 return instrumentIdf.extensionName && instrumentIdf.idfGuid;
             })
     );
@@ -84,10 +85,11 @@ export async function extensionDefinitionBuild(
         let properties: any = {};
 
         // from configuration
-        const configuration = DocumentStore.project.settings.build.configurations.find(
-            configuration =>
-                configuration.name == extensionDefinition.buildConfiguration
-        );
+        const configuration =
+            DocumentStore.project.settings.build.configurations.find(
+                configuration =>
+                    configuration.name == extensionDefinition.buildConfiguration
+            );
         if (configuration && configuration.properties) {
             properties = Object.assign(
                 properties,
@@ -159,7 +161,7 @@ export async function extensionDefinitionBuild(
                 properties
             );
 
-            DocumentStore.OutputSectionsStore.write(
+            DocumentStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 Type.INFO,
                 `Instrument definition file "${idfFileName}" builded.`

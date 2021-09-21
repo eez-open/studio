@@ -238,7 +238,7 @@ export function makeToggablePropertyToInput(
                                 props.objects[0]
                             );
 
-                            DocumentStore.UndoManager.setCombineCommands(true);
+                            DocumentStore.undoManager.setCombineCommands(true);
 
                             if (i === -1) {
                                 asInputProperties.push(props.propertyInfo.name);
@@ -258,7 +258,7 @@ export function makeToggablePropertyToInput(
                                 [props.propertyInfo.name]: undefined
                             });
 
-                            DocumentStore.UndoManager.setCombineCommands(false);
+                            DocumentStore.undoManager.setCombineCommands(false);
                         }
                     })
                 );
@@ -308,7 +308,7 @@ export function makeToggablePropertyToOutput(
                                 props.objects[0]
                             );
 
-                            DocumentStore.UndoManager.setCombineCommands(true);
+                            DocumentStore.undoManager.setCombineCommands(true);
 
                             if (i === -1) {
                                 asOutputProperties.push(
@@ -332,7 +332,7 @@ export function makeToggablePropertyToOutput(
                                 [props.propertyInfo.name]: undefined
                             });
 
-                            DocumentStore.UndoManager.setCombineCommands(false);
+                            DocumentStore.undoManager.setCombineCommands(false);
                         }
                     })
                 );

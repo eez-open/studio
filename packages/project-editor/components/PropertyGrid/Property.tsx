@@ -81,11 +81,11 @@ export class Property extends React.Component<PropertyProps> {
         let el = this.input || this.textarea || this.select;
         if (el) {
             $(el).on("focus", () => {
-                this.context.UndoManager.setCombineCommands(true);
+                this.context.undoManager.setCombineCommands(true);
             });
 
             $(el).on("blur", () => {
-                this.context.UndoManager.setCombineCommands(false);
+                this.context.undoManager.setCombineCommands(false);
             });
         }
 
@@ -214,14 +214,14 @@ export class Property extends React.Component<PropertyProps> {
                     newValue = undefined;
                 }
                 if (newValue != oldValue) {
-                    this.context.UndoManager.setCombineCommands(true);
+                    this.context.undoManager.setCombineCommands(true);
 
                     runInAction(() => {
                         replaceObjectReference(this.props.objects[0], newValue);
                         this.changeValue(newValue);
                     });
 
-                    this.context.UndoManager.setCombineCommands(false);
+                    this.context.undoManager.setCombineCommands(false);
                 }
             })
             .catch(error => {

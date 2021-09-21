@@ -4,7 +4,11 @@ import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 
-import { IEezObject, objectToString, getClassInfo } from "project-editor/core/object";
+import {
+    IEezObject,
+    objectToString,
+    getClassInfo
+} from "project-editor/core/object";
 import {
     addItem,
     canAdd,
@@ -31,7 +35,9 @@ class AddButton extends React.Component<
 > {
     async onAdd() {
         if (this.props.objectAdapter.selectedObject) {
-            const aNewItem = await addItem(this.props.objectAdapter.selectedObject);
+            const aNewItem = await addItem(
+                this.props.objectAdapter.selectedObject
+            );
             if (aNewItem) {
                 this.props.objectAdapter.selectObject(aNewItem);
             }
@@ -87,9 +93,12 @@ interface TreeNavigationPanelProps {
 }
 
 @observer
-export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProps, {}> {
+export class TreeNavigationPanel extends React.Component<
+    TreeNavigationPanelProps,
+    {}
+> {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     static navigationTreeFilter(object: IEezObject) {
         const classInfo = getClassInfo(object);
@@ -102,34 +111,44 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
 
     @bind
     onTreeDoubleClick(object: IEezObject) {
-        if (this.context.EditorsStore.activeEditor && this.context.EditorsStore.activeEditor.object == object) {
-            this.context.EditorsStore.activeEditor.makePermanent();
+        if (
+            this.context.editorsStore.activeEditor &&
+            this.context.editorsStore.activeEditor.object == object
+        ) {
+            this.context.editorsStore.activeEditor.makePermanent();
         }
     }
 
     onFocus() {
-        this.context.NavigationStore.setSelectedPanel(undefined);
+        this.context.navigationStore.setSelectedPanel(undefined);
     }
 
     render() {
-        let navigationObjectAdapter = this.context.NavigationStore.getNavigationSelectedItemAsObjectAdapter(
-            this.props.navigationObject
-        );
+        let navigationObjectAdapter =
+            this.context.navigationStore.getNavigationSelectedItemAsObjectAdapter(
+                this.props.navigationObject
+            );
 
         if (!navigationObjectAdapter) {
-            const newNavigationObjectAdapter = new TreeObjectAdapter(this.props.navigationObject);
+            const newNavigationObjectAdapter = new TreeObjectAdapter(
+                this.props.navigationObject
+            );
 
             setTimeout(() => {
-                this.context.NavigationStore.setNavigationSelectedItem(
+                this.context.navigationStore.setNavigationSelectedItem(
                     this.props.navigationObject,
-                    createObjectAdapterNavigationItem(newNavigationObjectAdapter)!
+                    createObjectAdapterNavigationItem(
+                        newNavigationObjectAdapter
+                    )!
                 );
             }, 0);
 
             navigationObjectAdapter = newNavigationObjectAdapter;
         }
 
-        let objectAdapter = navigationObjectAdapter.getObjectAdapter(this.props.navigationObject);
+        let objectAdapter = navigationObjectAdapter.getObjectAdapter(
+            this.props.navigationObject
+        );
         if (!objectAdapter) {
             return null;
         }
@@ -139,8 +158,14 @@ export class TreeNavigationPanel extends React.Component<TreeNavigationPanelProp
                 id="navigation"
                 title={objectToString(this.props.navigationObject)}
                 buttons={[
-                    <AddButton key="add" objectAdapter={navigationObjectAdapter} />,
-                    <DeleteButton key="delete" objectAdapter={navigationObjectAdapter} />
+                    <AddButton
+                        key="add"
+                        objectAdapter={navigationObjectAdapter}
+                    />,
+                    <DeleteButton
+                        key="delete"
+                        objectAdapter={navigationObjectAdapter}
+                    />
                 ]}
                 body={
                     <Tree

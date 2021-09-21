@@ -232,7 +232,7 @@ class FlowDocument implements IDocument {
     }
 
     duplicateSelection = () => {
-        this.DocumentStore.UndoManager.setCombineCommands(true);
+        this.DocumentStore.undoManager.setCombineCommands(true);
 
         this.flow.duplicateSelection();
 
@@ -248,11 +248,11 @@ class FlowDocument implements IDocument {
             }
         });
 
-        this.DocumentStore.UndoManager.setCombineCommands(false);
+        this.DocumentStore.undoManager.setCombineCommands(false);
     };
 
     pasteSelection = () => {
-        this.DocumentStore.UndoManager.setCombineCommands(true);
+        this.DocumentStore.undoManager.setCombineCommands(true);
 
         this.flow.pasteSelection();
 
@@ -280,7 +280,7 @@ class FlowDocument implements IDocument {
             }
         });
 
-        this.DocumentStore.UndoManager.setCombineCommands(false);
+        this.DocumentStore.undoManager.setCombineCommands(false);
     };
 
     @computed get DocumentStore() {
@@ -288,11 +288,11 @@ class FlowDocument implements IDocument {
     }
 
     onDragStart(): void {
-        this.DocumentStore.UndoManager.setCombineCommands(true);
+        this.DocumentStore.undoManager.setCombineCommands(true);
     }
 
     onDragEnd(): void {
-        this.DocumentStore.UndoManager.setCombineCommands(false);
+        this.DocumentStore.undoManager.setCombineCommands(false);
     }
 
     connectionExists(
@@ -934,7 +934,7 @@ export class FlowEditor
             this.props.onSavePersistantState,
             this.props.frontFace,
             flow,
-            this.context.RuntimeStore.getFlowState(flow),
+            this.context.runtimeStore.getFlowState(flow),
             this.options,
             this.filterSnapLines
         );
@@ -1085,7 +1085,7 @@ export class FlowEditor
 
     @bind
     focusHander() {
-        this.context.NavigationStore.setSelectedPanel(this);
+        this.context.navigationStore.setSelectedPanel(this);
     }
 
     getDragComponent(event: React.DragEvent) {

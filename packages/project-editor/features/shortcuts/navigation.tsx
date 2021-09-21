@@ -4,10 +4,17 @@ import { observer } from "mobx-react";
 
 import { guid } from "eez-studio-shared/guid";
 
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
 
 import { IShortcut } from "shortcuts/interfaces";
-import { Shortcuts as ShortcutsComponent, ShortcutsToolbarButtons } from "shortcuts/shortcuts";
+import {
+    Shortcuts as ShortcutsComponent,
+    ShortcutsToolbarButtons
+} from "shortcuts/shortcuts";
 
 import { NavigationComponent } from "project-editor/core/object";
 
@@ -21,14 +28,14 @@ import { ProjectContext } from "project-editor/project/context";
 @observer
 export class ShortcutsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @computed
     get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
+        if (this.context.navigationStore.selectedPanel) {
+            return this.context.navigationStore.selectedPanel.selectedObject;
         }
-        return this.context.NavigationStore.selectedObject;
+        return this.context.navigationStore.selectedObject;
     }
 
     @computed
@@ -86,7 +93,9 @@ export class ShortcutsNavigation extends NavigationComponent {
         return (
             <VerticalHeaderWithBody>
                 <ToolbarHeader>
-                    <ShortcutsToolbarButtons shortcutsStore={this.shortcutsStore} />
+                    <ShortcutsToolbarButtons
+                        shortcutsStore={this.shortcutsStore}
+                    />
                 </ToolbarHeader>
                 <Body tabIndex={0}>
                     <ShortcutsComponent shortcutsStore={this.shortcutsStore} />

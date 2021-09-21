@@ -25,17 +25,17 @@ export class ScpiEnumsNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
+        if (this.context.navigationStore.selectedPanel) {
+            return this.context.navigationStore.selectedPanel.selectedObject;
         }
-        return this.context.NavigationStore.selectedObject;
+        return this.context.navigationStore.selectedObject;
     }
 
     render() {
         let enums = this.context.project.scpi.enums;
 
         let selectedScpiEnum = getObjectFromNavigationItem(
-            this.context.NavigationStore.getNavigationSelectedItem(enums)
+            this.context.navigationStore.getNavigationSelectedItem(enums)
         ) as ScpiEnum;
 
         return (

@@ -132,7 +132,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
 
     @bind
     focusHandler() {
-        this.context.NavigationStore.setSelectedPanel(this);
+        this.context.navigationStore.setSelectedPanel(this);
     }
 
     @computed
@@ -182,7 +182,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
         if (tabState instanceof ActionTabState) {
             return <PropertyGrid objects={[tabState.selectedObject!]} />;
         } else {
-            if (this.context.RuntimeStore.isRuntimeMode) {
+            if (this.context.runtimeStore.isRuntimeMode) {
                 return (
                     <div
                         style={{
@@ -228,7 +228,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
                     >
                         <PropertiesPanel
                             object={this.selectedObject}
-                            readOnly={this.context.RuntimeStore.isRuntimeMode}
+                            readOnly={this.context.runtimeStore.isRuntimeMode}
                         />
                         <ComponentsPalette showOnlyActions={true} />
                     </Splitter>
@@ -245,16 +245,16 @@ export class ActionsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    get NavigationStore() {
-        return this.props.navigationStore || this.context.NavigationStore;
+    get navigationStore() {
+        return this.props.navigationStore || this.context.navigationStore;
     }
 
     @computed
     get object() {
-        if (this.NavigationStore.selectedPanel) {
-            return this.NavigationStore.selectedPanel.selectedObject;
+        if (this.navigationStore.selectedPanel) {
+            return this.navigationStore.selectedPanel.selectedObject;
         }
-        return this.NavigationStore.selectedObject;
+        return this.navigationStore.selectedObject;
     }
 
     @computed
@@ -262,10 +262,10 @@ export class ActionsNavigation extends NavigationComponent {
         if (this.props.navigationStore) {
             return undefined;
         }
-        if (!this.context.EditorsStore.activeEditor) {
+        if (!this.context.editorsStore.activeEditor) {
             return undefined;
         }
-        let flowTabState = this.context.EditorsStore.activeEditor
+        let flowTabState = this.context.editorsStore.activeEditor
             .state as ActionFlowTabState;
         if (!flowTabState) {
             return undefined;
@@ -314,8 +314,8 @@ export class ActionsNavigation extends NavigationComponent {
             return selectedObjects;
         }
 
-        if (this.context.EditorsStore.activeEditor) {
-            let flowTabState = this.context.EditorsStore.activeEditor
+        if (this.context.editorsStore.activeEditor) {
+            let flowTabState = this.context.editorsStore.activeEditor
                 .state as ActionFlowTabState;
             return [flowTabState.flow];
         }
@@ -325,7 +325,7 @@ export class ActionsNavigation extends NavigationComponent {
 
     @bind
     onFocus() {
-        this.NavigationStore.setSelectedPanel(this);
+        this.navigationStore.setSelectedPanel(this);
     }
 
     render() {
@@ -333,7 +333,7 @@ export class ActionsNavigation extends NavigationComponent {
             <ListNavigation
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
-                editable={!this.context.RuntimeStore.isRuntimeMode}
+                editable={!this.context.runtimeStore.isRuntimeMode}
                 navigationStore={this.props.navigationStore}
                 dragAndDropManager={this.props.dragAndDropManager}
                 onDoubleClickItem={this.props.onDoubleClickItem}
@@ -368,7 +368,7 @@ export class ActionsNavigation extends NavigationComponent {
         //     return listNavigation;
         // }
 
-        // const navigation = this.context.RuntimeStore.isRuntimeMode ? (
+        // const navigation = this.context.runtimeStore.isRuntimeMode ? (
         //     listNavigation
         // ) : (
         //     <Splitter

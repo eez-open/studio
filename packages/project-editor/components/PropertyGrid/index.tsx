@@ -68,9 +68,9 @@ export class PropertyGrid extends React.Component<{
 
     @bind
     updateObject(propertyValues: Object) {
-        const wasCombineCommands = this.context.UndoManager.combineCommands;
+        const wasCombineCommands = this.context.undoManager.combineCommands;
         if (!wasCombineCommands) {
-            this.context.UndoManager.setCombineCommands(true);
+            this.context.undoManager.setCombineCommands(true);
         }
 
         this.objects.forEach(object => {
@@ -81,7 +81,7 @@ export class PropertyGrid extends React.Component<{
         });
 
         if (!wasCombineCommands) {
-            this.context.UndoManager.setCombineCommands(false);
+            this.context.undoManager.setCombineCommands(false);
         }
     }
 

@@ -764,7 +764,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
         let objects = context.viewState.selectedObjects;
 
-        context.document.DocumentStore.UndoManager.setCombineCommands(true);
+        context.document.DocumentStore.undoManager.setCombineCommands(true);
 
         for (let i = 0; i < this.rects.length; i++) {
             let savedBoundingRect = this.savedBoundingRects[i];
@@ -792,7 +792,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
             }
         }
 
-        context.document.DocumentStore.UndoManager.setCombineCommands(false);
+        context.document.DocumentStore.undoManager.setCombineCommands(false);
     }
 
     up(context: IFlowContext) {

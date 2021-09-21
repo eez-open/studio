@@ -121,7 +121,7 @@ class DeleteButton extends React.Component<{
 
     onDelete() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
         let selectedItem =
             this.props.navigationObject &&
             navigationStore.getNavigationSelectedItemAsObject(
@@ -134,7 +134,7 @@ class DeleteButton extends React.Component<{
 
     render() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
         let selectedItem =
             this.props.navigationObject &&
             navigationStore.getNavigationSelectedItemAsObject(
@@ -207,7 +207,7 @@ export class ListNavigation
     @computed
     get editable() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
         return this.props.editable != false && navigationStore.editable;
     }
 
@@ -216,17 +216,17 @@ export class ListNavigation
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
         } else if (
-            this.context.EditorsStore.activeEditor &&
-            this.context.EditorsStore.activeEditor.object == object
+            this.context.editorsStore.activeEditor &&
+            this.context.editorsStore.activeEditor.object == object
         ) {
-            this.context.EditorsStore.activeEditor.makePermanent();
+            this.context.editorsStore.activeEditor.makePermanent();
         }
     }
 
     @computed
     get selectedObject() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
         const navigationSelectedItem =
             navigationStore.getNavigationSelectedItem(
                 this.props.navigationObject
@@ -278,7 +278,7 @@ export class ListNavigation
 
     onFocus() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
         if (isPartOfNavigation(this.props.navigationObject)) {
             navigationStore.setSelectedPanel(this);
         }
@@ -428,7 +428,7 @@ export class ListNavigationWithProperties extends NavigationComponent {
     @computed
     get object() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
         return (
             (navigationStore.selectedPanel &&
                 navigationStore.selectedPanel.selectedObject) ||

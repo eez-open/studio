@@ -106,7 +106,7 @@ export class RuntimeStoreClass {
                 this.singleStep = false;
                 this.selectedPage = this.DocumentStore.project.pages[0];
 
-                this.DocumentStore.UIStateStore.pageRuntimeFrontFace =
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
                     this.DocumentStore.isDashboardProject;
 
                 if (this.DocumentStore.isDashboardProject) {
@@ -147,7 +147,7 @@ export class RuntimeStoreClass {
                     this.hasError = false;
                 });
 
-                this.DocumentStore.EditorsStore.editors.forEach(editor => {
+                this.DocumentStore.editorsStore.editors.forEach(editor => {
                     if (editor.state instanceof FlowTabState) {
                         const flowTabState = editor.state;
                         runInAction(() => {
@@ -598,13 +598,13 @@ export class FlowState {
     @observable hasError = false;
 
     constructor(
-        public RuntimeStore: RuntimeStoreClass,
+        public runtimeStore: RuntimeStoreClass,
         public flow: Flow,
         public parentFlowState?: FlowState,
         public component?: Component
     ) {
         this.dataContext =
-            this.RuntimeStore.DocumentStore.dataContext.createWithLocalVariables(
+            this.runtimeStore.DocumentStore.dataContext.createWithLocalVariables(
                 flow.localVariables
             );
     }
@@ -733,8 +733,8 @@ export class FlowState {
 
                 if (componentState.isReadyToRun()) {
                     runInAction(() =>
-                        this.RuntimeStore.queue.push({
-                            id: ++this.RuntimeStore.queueTaskId,
+                        this.runtimeStore.queue.push({
+                            id: ++this.runtimeStore.queueTaskId,
                             flowState: this,
                             component: visitResult.value
                         })
@@ -749,7 +749,7 @@ export class FlowState {
 
         this.componentStates.forEach(componentState => componentState.finish());
 
-        this.RuntimeStore.historyState.addHistoryItem(
+        this.runtimeStore.historyState.addHistoryItem(
             new ActionEndHistoryItem(this, this.flow!)
         );
     }
@@ -759,7 +759,7 @@ export class FlowState {
     }
 
     startAction() {
-        this.RuntimeStore.historyState.addHistoryItem(
+        this.runtimeStore.historyState.addHistoryItem(
             new ActionStartHistoryItem(this, this.flow!)
         );
 
@@ -769,8 +769,8 @@ export class FlowState {
 
         if (inputActionComponent) {
             runInAction(() =>
-                this.RuntimeStore.queue.push({
-                    id: ++this.RuntimeStore.queueTaskId,
+                this.runtimeStore.queue.push({
+                    id: ++this.runtimeStore.queueTaskId,
                     flowState: this,
                     component: inputActionComponent,
                     input: "input",
@@ -788,7 +788,7 @@ export class FlowState {
     @action
     executeAction(component: Component, action: Action) {
         const flowState = new FlowState(
-            this.RuntimeStore,
+            this.runtimeStore,
             action,
             this,
             component
@@ -816,8 +816,8 @@ export class FlowState {
                     ) as ActionComponent;
 
                     runInAction(() =>
-                        this.RuntimeStore.queue.push({
-                            id: ++this.RuntimeStore.queueTaskId,
+                        this.runtimeStore.queue.push({
+                            id: ++this.runtimeStore.queueTaskId,
                             flowState: this,
                             component: actionNode,
                             input: connectionLine.input,
@@ -829,7 +829,7 @@ export class FlowState {
                         })
                     );
                 } else {
-                    this.RuntimeStore.historyState.addHistoryItem(
+                    this.runtimeStore.historyState.addHistoryItem(
                         new NoConnectionHistoryItem(this, component, output)
                     );
                 }
@@ -857,7 +857,7 @@ export class FlowState {
 
                 connectionLine.setActive();
 
-                this.RuntimeStore.historyState.addHistoryItem(
+                this.runtimeStore.historyState.addHistoryItem(
                     new OutputValueHistoryItem(
                         this,
                         this.getComponentState(sourceComponent),
@@ -868,8 +868,8 @@ export class FlowState {
                 );
 
                 runInAction(() =>
-                    this.RuntimeStore.queue.push({
-                        id: ++this.RuntimeStore.queueTaskId,
+                    this.runtimeStore.queue.push({
+                        id: ++this.runtimeStore.queueTaskId,
                         flowState: this,
                         component: targetComponent,
                         input: connectionLine.input,
@@ -990,7 +990,7 @@ export class ComponentState {
             this._inputPropertyValues.set(key, value);
         }
 
-        this.flowState.RuntimeStore.historyState.addHistoryItem(
+        this.flowState.runtimeStore.historyState.addHistoryItem(
             new ExecuteComponentHistoryItem(
                 this.flowState,
                 this.component,
@@ -1007,10 +1007,10 @@ export class ComponentState {
             );
         } catch (err) {
             runInAction(() => {
-                this.flowState.RuntimeStore.hasError = true;
+                this.flowState.runtimeStore.hasError = true;
                 this.flowState.hasError = true;
             });
-            this.flowState.RuntimeStore.historyState.addHistoryItem(
+            this.flowState.runtimeStore.historyState.addHistoryItem(
                 new ExecutionErrorHistoryItem(
                     this.flowState,
                     this.component,
@@ -1021,7 +1021,7 @@ export class ComponentState {
             const catchErrorOutput = this.findCatchErrorOutput();
             if (catchErrorOutput) {
                 catchErrorOutput.connectionLines.forEach(connectionLine => {
-                    this.flowState.RuntimeStore.historyState.addHistoryItem(
+                    this.flowState.runtimeStore.historyState.addHistoryItem(
                         new OutputValueHistoryItem(
                             catchErrorOutput.componentState.flowState,
                             catchErrorOutput.componentState,
@@ -1032,8 +1032,8 @@ export class ComponentState {
                     );
 
                     runInAction(() =>
-                        this.flowState.RuntimeStore.queue.push({
-                            id: ++this.flowState.RuntimeStore.queueTaskId,
+                        this.flowState.runtimeStore.queue.push({
+                            id: ++this.flowState.runtimeStore.queueTaskId,
                             flowState:
                                 catchErrorOutput.componentState.flowState,
                             component: connectionLine.targetComponent!,
@@ -1058,8 +1058,8 @@ export class ComponentState {
                     flowState && flowState.findCatchErrorActionComponent();
                 if (catchErrorActionComponentState) {
                     runInAction(() =>
-                        this.flowState.RuntimeStore.queue.push({
-                            id: ++this.flowState.RuntimeStore.queueTaskId,
+                        this.flowState.runtimeStore.queue.push({
+                            id: ++this.flowState.runtimeStore.queueTaskId,
                             flowState: catchErrorActionComponentState.flowState,
                             component: catchErrorActionComponentState.component,
                             input: "message",
@@ -1070,7 +1070,7 @@ export class ComponentState {
                         })
                     );
                 } else {
-                    this.flowState.RuntimeStore.stop();
+                    this.flowState.runtimeStore.stop();
                 }
             }
         } finally {
@@ -1091,8 +1091,8 @@ export class ComponentState {
                 )
                 .forEach(connectionLine => {
                     runInAction(() =>
-                        this.flowState.RuntimeStore.queue.push({
-                            id: ++this.flowState.RuntimeStore.queueTaskId,
+                        this.flowState.runtimeStore.queue.push({
+                            id: ++this.flowState.runtimeStore.queueTaskId,
                             flowState: this.flowState,
                             component: connectionLine.targetComponent!,
                             input: connectionLine.input,

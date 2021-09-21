@@ -78,7 +78,7 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     @bind
     focusHandler() {
-        this.context.NavigationStore.setSelectedPanel(this);
+        this.context.navigationStore.setSelectedPanel(this);
     }
 
     @computed
@@ -282,7 +282,7 @@ export class PageEditor extends EditorComponent implements IPanel {
 
         const hasThemes = !this.context.isDashboardProject;
 
-        if (hasThemes && !this.context.UIStateStore.viewOptions.themesVisible) {
+        if (hasThemes && !this.context.uiStateStore.viewOptions.themesVisible) {
             buttons.push(
                 <IconAction
                     key="show-themes"
@@ -290,7 +290,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                     iconSize={16}
                     onClick={action(
                         () =>
-                            (this.context.UIStateStore.viewOptions.themesVisible =
+                            (this.context.uiStateStore.viewOptions.themesVisible =
                                 true)
                     )}
                     title="Show themes panel"
@@ -321,19 +321,19 @@ export class PageEditor extends EditorComponent implements IPanel {
                 type="horizontal"
                 persistId={`project-editor/page-editor${
                     hasThemes &&
-                    this.context.UIStateStore.viewOptions.themesVisible
+                    this.context.uiStateStore.viewOptions.themesVisible
                         ? ""
                         : "-without-themes"
                 }`}
                 sizes={`100%|400px${
                     hasThemes &&
-                    this.context.UIStateStore.viewOptions.themesVisible
+                    this.context.uiStateStore.viewOptions.themesVisible
                         ? "|240px"
                         : ""
                 }`}
                 childrenOverflow={`hidden|hidden${
                     hasThemes &&
-                    this.context.UIStateStore.viewOptions.themesVisible
+                    this.context.uiStateStore.viewOptions.themesVisible
                         ? "|hidden"
                         : ""
                 }`}
@@ -341,7 +341,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                 {editor}
                 {properties}
                 {hasThemes &&
-                    this.context.UIStateStore.viewOptions.themesVisible && (
+                    this.context.uiStateStore.viewOptions.themesVisible && (
                         <ThemesSideView hasCloseButton={true} />
                     )}
             </Splitter>
@@ -413,22 +413,22 @@ export class PageTabState extends FlowTabState {
     }
 
     @computed get isRuntime() {
-        return this.DocumentStore.RuntimeStore.isRuntimeMode;
+        return this.DocumentStore.runtimeStore.isRuntimeMode;
     }
 
     @computed get frontFace() {
         return this.isRuntime
-            ? this.DocumentStore.UIStateStore.pageRuntimeFrontFace
-            : this.DocumentStore.UIStateStore.pageEditorFrontFace;
+            ? this.DocumentStore.uiStateStore.pageRuntimeFrontFace
+            : this.DocumentStore.uiStateStore.pageEditorFrontFace;
     }
 
     set frontFace(frontFace: boolean) {
         runInAction(() => {
             if (this.isRuntime) {
-                this.DocumentStore.UIStateStore.pageRuntimeFrontFace =
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
                     frontFace;
             } else {
-                this.DocumentStore.UIStateStore.pageEditorFrontFace = frontFace;
+                this.DocumentStore.uiStateStore.pageEditorFrontFace = frontFace;
             }
         });
     }
@@ -606,18 +606,18 @@ export class PagesNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
+        if (this.context.navigationStore.selectedPanel) {
+            return this.context.navigationStore.selectedPanel.selectedObject;
         }
-        return this.context.NavigationStore.selectedObject;
+        return this.context.navigationStore.selectedObject;
     }
 
     @computed
     get componentContainerDisplayItem() {
-        if (!this.context.EditorsStore.activeEditor) {
+        if (!this.context.editorsStore.activeEditor) {
             return undefined;
         }
-        let pageTabState = this.context.EditorsStore.activeEditor
+        let pageTabState = this.context.editorsStore.activeEditor
             .state as PageTabState;
         if (!pageTabState) {
             return undefined;
@@ -668,8 +668,8 @@ export class PagesNavigation extends NavigationComponent {
             return selectedObjects;
         }
 
-        if (this.context.EditorsStore.activeEditor) {
-            let pageTabState = this.context.EditorsStore.activeEditor
+        if (this.context.editorsStore.activeEditor) {
+            let pageTabState = this.context.editorsStore.activeEditor
                 .state as PageTabState;
             return [pageTabState.page];
         }
@@ -679,7 +679,7 @@ export class PagesNavigation extends NavigationComponent {
 
     @bind
     onFocus() {
-        this.context.NavigationStore.setSelectedPanel(this);
+        this.context.navigationStore.setSelectedPanel(this);
     }
 
     render() {
@@ -687,9 +687,9 @@ export class PagesNavigation extends NavigationComponent {
             <ListNavigation
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
-                editable={!this.context.RuntimeStore.isRuntimeMode}
+                editable={!this.context.runtimeStore.isRuntimeMode}
                 filter={(page: Page) =>
-                    !this.context.RuntimeStore.isRuntimeMode ||
+                    !this.context.runtimeStore.isRuntimeMode ||
                     !page.isUsedAsCustomWidget
                 }
             />
@@ -700,7 +700,7 @@ export class PagesNavigation extends NavigationComponent {
             Page.classInfo
         );
 
-        const navigation = this.context.RuntimeStore.isRuntimeMode ? (
+        const navigation = this.context.runtimeStore.isRuntimeMode ? (
             listNavigation
         ) : (
             <Splitter

@@ -1337,7 +1337,7 @@ export class ListAdapter implements ITreeAdapter {
 
         const DocumentStore = getDocumentStore(this.object);
 
-        this.navigationStore = navigationStore || DocumentStore.NavigationStore;
+        this.navigationStore = navigationStore || DocumentStore.navigationStore;
         this.dragAndDropManager = dragAndDropManager || DragAndDropManager;
 
         this.dispose = autorun(() => {

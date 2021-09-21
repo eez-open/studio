@@ -410,30 +410,30 @@ export class ProjectEditorTab implements IHomeTab {
             this.DocumentStore.buildExtensions();
         };
         const undo = () => {
-            this.DocumentStore.UndoManager.undo();
+            this.DocumentStore.undoManager.undo();
         };
         const redo = () => {
-            this.DocumentStore.UndoManager.redo();
+            this.DocumentStore.undoManager.redo();
         };
         const cut = () => {
-            if (this.DocumentStore.NavigationStore.selectedPanel)
-                this.DocumentStore.NavigationStore.selectedPanel.cutSelection();
+            if (this.DocumentStore.navigationStore.selectedPanel)
+                this.DocumentStore.navigationStore.selectedPanel.cutSelection();
         };
         const copy = () => {
-            if (this.DocumentStore.NavigationStore.selectedPanel)
-                this.DocumentStore.NavigationStore.selectedPanel.copySelection();
+            if (this.DocumentStore.navigationStore.selectedPanel)
+                this.DocumentStore.navigationStore.selectedPanel.copySelection();
         };
         const paste = () => {
-            if (this.DocumentStore.NavigationStore.selectedPanel)
-                this.DocumentStore.NavigationStore.selectedPanel.pasteSelection();
+            if (this.DocumentStore.navigationStore.selectedPanel)
+                this.DocumentStore.navigationStore.selectedPanel.pasteSelection();
         };
         const deleteSelection = () => {
-            if (this.DocumentStore.NavigationStore.selectedPanel)
-                this.DocumentStore.NavigationStore.selectedPanel.deleteSelection();
+            if (this.DocumentStore.navigationStore.selectedPanel)
+                this.DocumentStore.navigationStore.selectedPanel.deleteSelection();
         };
         const toggleOutput = action(() => {
-            this.DocumentStore.UIStateStore.viewOptions.outputVisible =
-                !this.DocumentStore.UIStateStore.viewOptions.outputVisible;
+            this.DocumentStore.uiStateStore.viewOptions.outputVisible =
+                !this.DocumentStore.uiStateStore.viewOptions.outputVisible;
         });
         const showMetrics = () => this.DocumentStore.showMetrics();
 
@@ -521,7 +521,7 @@ export class ProjectEditorTab implements IHomeTab {
 
     @action
     showCommandPalette() {
-        this.DocumentStore.UIStateStore.showCommandPalette = true;
+        this.DocumentStore.uiStateStore.showCommandPalette = true;
     }
 }
 

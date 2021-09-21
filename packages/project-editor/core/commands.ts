@@ -95,7 +95,7 @@ export let addObject = action(
         );
         ensureUniqueProperties(parentObject, [object]);
 
-        getDocumentStore(parentObject).UndoManager.executeCommand({
+        getDocumentStore(parentObject).undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).push(object);
             }),
@@ -125,7 +125,7 @@ export let addObjects = action(
         );
         ensureUniqueProperties(parentObject, objects);
 
-        getDocumentStore(parentObject).UndoManager.executeCommand({
+        getDocumentStore(parentObject).undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).push(...objects);
             }),
@@ -160,7 +160,7 @@ export let insertObject = action(
         );
         ensureUniqueProperties(parentObject, [object]);
 
-        getDocumentStore(parentObject).UndoManager.executeCommand({
+        getDocumentStore(parentObject).undoManager.executeCommand({
             execute: action(() => {
                 (parentObject as IEezObject[]).splice(index, 0, object);
             }),
@@ -227,14 +227,14 @@ class UpdateCommand implements ICommand {
 }
 
 export let updateObject = action((object: IEezObject, values: any) => {
-    const UndoManager = getDocumentStore(object).UndoManager;
+    const undoManager = getDocumentStore(object).undoManager;
 
     let closeCombineCommands = false;
 
     const updateObjectValueHook = getClassInfo(object).updateObjectValueHook;
     if (updateObjectValueHook) {
-        if (!UndoManager.combineCommands) {
-            UndoManager.setCombineCommands(true);
+        if (!undoManager.combineCommands) {
+            undoManager.setCombineCommands(true);
             closeCombineCommands = true;
         }
 
@@ -245,20 +245,20 @@ export let updateObject = action((object: IEezObject, values: any) => {
 
     // TODO this should be moved to undoManager implementation
     // merge with previous command
-    if (UndoManager.combineCommands && UndoManager.commands.length > 0) {
-        let command = UndoManager.commands[UndoManager.commands.length - 1];
+    if (undoManager.combineCommands && undoManager.commands.length > 0) {
+        let command = undoManager.commands[undoManager.commands.length - 1];
         if (command instanceof UpdateCommand && command.object == object) {
-            UndoManager.commands.pop();
+            undoManager.commands.pop();
             previousCommand = command;
         }
     }
 
-    UndoManager.executeCommand(
+    undoManager.executeCommand(
         new UpdateCommand(object, values, previousCommand)
     );
 
     if (closeCombineCommands) {
-        UndoManager.setCombineCommands(false);
+        undoManager.setCombineCommands(false);
     }
 });
 
@@ -269,7 +269,7 @@ export let deleteObject = action((object: any) => {
         const array = parent as IEezObject[];
         const index = array.indexOf(object);
 
-        getDocumentStore(object).UndoManager.executeCommand({
+        getDocumentStore(object).undoManager.executeCommand({
             execute: action(() => {
                 array.splice(index, 1);
             }),
@@ -292,7 +292,7 @@ export let deleteObject = action((object: any) => {
 export let deleteObjects = action((objects: IEezObject[]) => {
     let undoIndexes: number[];
 
-    getDocumentStore(objects[0]).UndoManager.executeCommand({
+    getDocumentStore(objects[0]).undoManager.executeCommand({
         execute: action(() => {
             undoIndexes = [];
             for (let i = 0; i < objects.length; i++) {
@@ -339,13 +339,13 @@ export let deleteObjects = action((objects: IEezObject[]) => {
 export let replaceObject = action(
     (object: IEezObject, replaceWithObject: IEezObject) => {
         let parent = getParent(object);
-        const UndoManager = getDocumentStore(parent).UndoManager;
+        const undoManager = getDocumentStore(parent).undoManager;
         if (isArrayElement(object)) {
             const array = parent as IEezObject[];
 
             let index = array.indexOf(object);
 
-            UndoManager.executeCommand({
+            undoManager.executeCommand({
                 execute: action(() => {
                     array[index] = replaceWithObject;
                 }),
@@ -380,7 +380,7 @@ export let replaceObjects = action(
 
         let undoIndexes: number[];
 
-        getDocumentStore(parent).UndoManager.executeCommand({
+        getDocumentStore(parent).undoManager.executeCommand({
             execute: action(() => {
                 array[index] = replaceWithObject;
 

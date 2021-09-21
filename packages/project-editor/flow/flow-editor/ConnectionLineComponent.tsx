@@ -77,7 +77,7 @@ const VisiblePath = observer(
                     seq,
                     active:
                         connectionLine.active &&
-                        context.document.DocumentStore.RuntimeStore
+                        context.document.DocumentStore.runtimeStore
                             .isRuntimeMode
                 })}
             ></path>

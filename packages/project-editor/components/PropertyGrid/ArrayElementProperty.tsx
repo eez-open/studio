@@ -138,7 +138,7 @@ export class ArrayProperty extends React.Component<PropertyProps> {
     onAdd = (event: any) => {
         event.preventDefault();
 
-        this.context.UndoManager.setCombineCommands(true);
+        this.context.undoManager.setCombineCommands(true);
 
         let value = this.value;
         if (value === undefined) {
@@ -162,7 +162,7 @@ export class ArrayProperty extends React.Component<PropertyProps> {
                 );
             } else {
                 this.context.addObject(value, typeClass.classInfo.defaultValue);
-                this.context.UndoManager.setCombineCommands(false);
+                this.context.undoManager.setCombineCommands(false);
             }
         }
     };
@@ -181,7 +181,7 @@ export class ArrayProperty extends React.Component<PropertyProps> {
         if (this.value && this.selectedObject) {
             const selectedObjectIndex = this.value.indexOf(this.selectedObject);
             if (selectedObjectIndex > 0) {
-                this.context.UndoManager.setCombineCommands(true);
+                this.context.undoManager.setCombineCommands(true);
 
                 const objectBefore = this.value[selectedObjectIndex - 1];
 
@@ -191,7 +191,7 @@ export class ArrayProperty extends React.Component<PropertyProps> {
                     this.selectedObject
                 );
 
-                this.context.UndoManager.setCombineCommands(false);
+                this.context.undoManager.setCombineCommands(false);
             }
         }
     });
@@ -202,7 +202,7 @@ export class ArrayProperty extends React.Component<PropertyProps> {
         if (this.value && this.selectedObject) {
             const selectedObjectIndex = this.value.indexOf(this.selectedObject);
             if (selectedObjectIndex < this.value.length - 1) {
-                this.context.UndoManager.setCombineCommands(true);
+                this.context.undoManager.setCombineCommands(true);
 
                 const objectAfter = this.value[selectedObjectIndex + 1];
 
@@ -212,7 +212,7 @@ export class ArrayProperty extends React.Component<PropertyProps> {
                     this.selectedObject
                 );
 
-                this.context.UndoManager.setCombineCommands(false);
+                this.context.undoManager.setCombineCommands(false);
             }
         }
     });

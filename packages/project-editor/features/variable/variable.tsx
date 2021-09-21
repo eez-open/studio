@@ -133,11 +133,11 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
         let el = this.ref.current;
         if (el) {
             $(el).on("focus", () => {
-                this.context.UndoManager.setCombineCommands(true);
+                this.context.undoManager.setCombineCommands(true);
             });
 
             $(el).on("blur", () => {
-                this.context.UndoManager.setCombineCommands(false);
+                this.context.undoManager.setCombineCommands(false);
             });
         }
     }
@@ -803,17 +803,17 @@ export class StructureNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
+        if (this.context.navigationStore.selectedPanel) {
+            return this.context.navigationStore.selectedPanel.selectedObject;
         }
-        return this.context.NavigationStore.selectedObject;
+        return this.context.navigationStore.selectedObject;
     }
 
     render() {
         let structures = this.context.project.variables.structures;
 
         let selectedStructure = getObjectFromNavigationItem(
-            this.context.NavigationStore.getNavigationSelectedItem(structures)
+            this.context.navigationStore.getNavigationSelectedItem(structures)
         ) as Structure;
 
         return (
@@ -963,17 +963,17 @@ export class EnumNavigation extends NavigationComponent {
 
     @computed
     get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
+        if (this.context.navigationStore.selectedPanel) {
+            return this.context.navigationStore.selectedPanel.selectedObject;
         }
-        return this.context.NavigationStore.selectedObject;
+        return this.context.navigationStore.selectedObject;
     }
 
     render() {
         let enums = this.context.project.variables.enums;
 
         let selectedEnum = getObjectFromNavigationItem(
-            this.context.NavigationStore.getNavigationSelectedItem(enums)
+            this.context.navigationStore.getNavigationSelectedItem(enums)
         ) as Enum;
 
         return (

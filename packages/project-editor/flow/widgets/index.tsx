@@ -1218,7 +1218,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
     async execute(flowState: FlowState) {
         const page = this.getLayoutPage(
-            flowState.RuntimeStore.DocumentStore.dataContext
+            flowState.runtimeStore.DocumentStore.dataContext
         );
 
         if (page) {
@@ -1227,7 +1227,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
             if (!layoutFlowState) {
                 runInAction(() => {
                     layoutFlowState = new FlowState(
-                        flowState.RuntimeStore,
+                        flowState.runtimeStore,
                         page,
                         flowState,
                         this
@@ -1274,7 +1274,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
     open() {
         if (this.layoutPage) {
-            getDocumentStore(this).NavigationStore.showObject(this.layoutPage);
+            getDocumentStore(this).navigationStore.showObject(this.layoutPage);
         }
     }
 
@@ -2606,7 +2606,7 @@ export class ButtonWidget extends EmbeddedWidget {
 
                             getDocumentStore(
                                 this
-                            ).RuntimeStore.executeWidgetAction(
+                            ).runtimeStore.executeWidgetAction(
                                 flowContext,
                                 this
                             );

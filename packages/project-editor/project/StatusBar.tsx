@@ -34,9 +34,9 @@ export class StatusBar extends React.Component<{}, {}> {
 
     @action.bound
     onChecksClicked() {
-        this.context.UIStateStore.viewOptions.outputVisible =
-            !this.context.UIStateStore.viewOptions.outputVisible;
-        this.context.OutputSectionsStore.setActiveSection(Section.CHECKS);
+        this.context.uiStateStore.viewOptions.outputVisible =
+            !this.context.uiStateStore.viewOptions.outputVisible;
+        this.context.outputSectionsStore.setActiveSection(Section.CHECKS);
     }
 
     render() {
@@ -45,7 +45,7 @@ export class StatusBar extends React.Component<{}, {}> {
                 <StatusBarItem
                     key="checks"
                     body={
-                        this.context.OutputSectionsStore.getSection(
+                        this.context.outputSectionsStore.getSection(
                             Section.CHECKS
                         ).title
                     }

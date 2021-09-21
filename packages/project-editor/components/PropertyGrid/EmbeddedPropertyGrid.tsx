@@ -30,12 +30,12 @@ export class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
 
     @bind
     updateObject(propertyValues: Object) {
-        this.context.UndoManager.setCombineCommands(true);
+        this.context.undoManager.setCombineCommands(true);
         this.props.objects.forEach(object => {
             object = (object as any)[this.props.propertyInfo.name];
             this.context.updateObject(object, propertyValues);
         });
-        this.context.UndoManager.setCombineCommands(false);
+        this.context.undoManager.setCombineCommands(false);
     }
 
     render() {

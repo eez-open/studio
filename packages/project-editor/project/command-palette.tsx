@@ -41,7 +41,7 @@ export class CommandPalette extends React.Component {
         ) {
             event.preventDefault();
             event.stopPropagation();
-            this.context.UIStateStore.showCommandPalette = false;
+            this.context.uiStateStore.showCommandPalette = false;
         }
     }
 
@@ -86,13 +86,13 @@ export class CommandPalette extends React.Component {
     @action.bound
     onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
         if (event.keyCode == 27) {
-            this.context.UIStateStore.showCommandPalette = false;
+            this.context.uiStateStore.showCommandPalette = false;
         } else if (event.keyCode == 13) {
             if (
                 this.selectedCommandIndex >= 0 &&
                 this.selectedCommandIndex < commands.length
             ) {
-                this.context.UIStateStore.showCommandPalette = false;
+                this.context.uiStateStore.showCommandPalette = false;
                 const command = commands[this.selectedCommandIndex];
                 if (command) {
                     command.callback(this.context);

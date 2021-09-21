@@ -17,7 +17,7 @@ class Editor extends React.Component<{}, {}> {
     render() {
         let editor: JSX.Element | undefined;
 
-        let activeEditor = this.context.EditorsStore.activeEditor;
+        let activeEditor = this.context.editorsStore.activeEditor;
         if (activeEditor) {
             let EditorComponent = getEditorComponent(activeEditor.object);
             if (EditorComponent) {
@@ -40,16 +40,16 @@ export class Editors extends React.Component<{}, {}> {
             <div className="EezStudio_ProjectEditors">
                 <div>
                     <TabsView
-                        tabs={this.context.EditorsStore.editors}
+                        tabs={this.context.editorsStore.editors}
                         moveTab={action(
                             (dragIndex: number, hoverIndex: number) => {
                                 const tab =
-                                    this.context.EditorsStore.editors[
+                                    this.context.editorsStore.editors[
                                         dragIndex
                                     ];
 
-                                this.context.EditorsStore.editors = update(
-                                    this.context.EditorsStore.editors,
+                                this.context.editorsStore.editors = update(
+                                    this.context.editorsStore.editors,
                                     {
                                         $splice: [
                                             [dragIndex, 1],

@@ -1962,7 +1962,7 @@ export class FontEditor
 
     @bind
     onFocus() {
-        this.context.NavigationStore.setSelectedPanel(this);
+        this.context.navigationStore.setSelectedPanel(this);
     }
 
     @bind
@@ -2052,7 +2052,7 @@ export class FontsNavigation extends NavigationComponent {
     @computed
     get object() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
 
         if (navigationStore.selectedPanel) {
             const font = FontsNavigation.getFont(
@@ -2074,7 +2074,7 @@ export class FontsNavigation extends NavigationComponent {
     @computed
     get font() {
         const navigationStore =
-            this.props.navigationStore || this.context.NavigationStore;
+            this.props.navigationStore || this.context.navigationStore;
 
         if (navigationStore.selectedPanel) {
             const font = FontsNavigation.getFont(

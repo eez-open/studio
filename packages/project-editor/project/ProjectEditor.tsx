@@ -30,10 +30,10 @@ class Content extends React.Component {
 
     @computed
     get object() {
-        if (this.context.NavigationStore.selectedPanel) {
-            return this.context.NavigationStore.selectedPanel.selectedObject;
+        if (this.context.navigationStore.selectedPanel) {
+            return this.context.navigationStore.selectedPanel.selectedObject;
         }
-        return this.context.NavigationStore.selectedObject;
+        return this.context.navigationStore.selectedObject;
     }
 
     render() {
@@ -42,15 +42,15 @@ class Content extends React.Component {
         }
 
         if (
-            this.context.RuntimeStore.isRuntimeMode &&
-            !this.context.RuntimeStore.isDebuggerActive
+            this.context.runtimeStore.isRuntimeMode &&
+            !this.context.runtimeStore.isDebuggerActive
         ) {
             return (
                 <PageEditor
                     editor={{
-                        object: this.context.RuntimeStore.selectedPage,
+                        object: this.context.runtimeStore.selectedPage,
                         state: new PageTabState(
-                            this.context.RuntimeStore.selectedPage
+                            this.context.runtimeStore.selectedPage
                         )
                     }}
                 ></PageEditor>
@@ -62,7 +62,7 @@ class Content extends React.Component {
                 id="project"
                 navigationObject={this.context.project}
                 filter={object => {
-                    if (this.context.RuntimeStore.isRuntimeMode) {
+                    if (this.context.runtimeStore.isRuntimeMode) {
                         // if runtime onde only show pages and actions
                         return (
                             object == this.context.project.pages ||
@@ -77,7 +77,7 @@ class Content extends React.Component {
         let editors;
 
         let selectedItem =
-            this.context.NavigationStore.getNavigationSelectedItemAsObject(
+            this.context.navigationStore.getNavigationSelectedItemAsObject(
                 this.context.project
             );
         if (selectedItem) {
@@ -87,7 +87,7 @@ class Content extends React.Component {
         }
 
         if (editors) {
-            if (this.context.RuntimeStore.isRuntimeMode) {
+            if (this.context.runtimeStore.isRuntimeMode) {
                 return (
                     <Splitter
                         type="horizontal"
@@ -133,7 +133,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
 
         let statusBar: JSX.Element | undefined;
         let outputPanel: JSX.Element | undefined;
-        if (this.context.UIStateStore.viewOptions.outputVisible) {
+        if (this.context.uiStateStore.viewOptions.outputVisible) {
             outputPanel = <Output />;
         } else {
             statusBar = <StatusBar />;
@@ -149,7 +149,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
                 </>
             );
         } else if (
-            this.context.RuntimeStore.isRuntimeMode &&
+            this.context.runtimeStore.isRuntimeMode &&
             (this.context.isDashboardProject || this.context.isAppletProject)
         ) {
             mainContent = (
@@ -185,8 +185,8 @@ export class ProjectEditor extends React.Component<{}, {}> {
                 <div className="EezStudio_ProjectEditorMainContentWrapper">
                     {mainContent}
                 </div>
-                {this.context.UIStateStore.showCommandPalette &&
-                    !this.context.RuntimeStore.isRuntimeMode && (
+                {this.context.uiStateStore.showCommandPalette &&
+                    !this.context.runtimeStore.isRuntimeMode && (
                         <CommandPalette />
                     )}
             </div>

@@ -34,7 +34,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     }
 
     onClick() {
-        this.context.NavigationStore.setNavigationSelectedItem(
+        this.context.navigationStore.setNavigationSelectedItem(
             this.props.navigationObject,
             createObjectNavigationItem(this.props.item)!
         );
@@ -43,7 +43,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     render() {
         let className = classNames("EezStudio_NavigationMenuItemContainer", {
             selected: compareNavigationItem(
-                this.context.NavigationStore.getNavigationSelectedItem(
+                this.context.navigationStore.getNavigationSelectedItem(
                     this.props.navigationObject
                 ),
                 this.props.item
@@ -76,7 +76,7 @@ class Menu extends React.Component<{
     declare context: React.ContextType<typeof ProjectContext>;
 
     onFocus() {
-        this.context.NavigationStore.setSelectedPanel(undefined);
+        this.context.navigationStore.setSelectedPanel(undefined);
     }
 
     render() {
@@ -124,7 +124,7 @@ export class MenuNavigation extends React.Component<
     render() {
         let subNavigation: JSX.Element | undefined;
         let selectedItem =
-            this.context.NavigationStore.getNavigationSelectedItemAsObject(
+            this.context.navigationStore.getNavigationSelectedItemAsObject(
                 this.props.navigationObject
             );
         if (selectedItem) {

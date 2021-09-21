@@ -445,7 +445,7 @@ export class Page extends Flow {
 
         if (
             !flowContext.document.findObjectById(getId(this)) &&
-            !flowContext.document.DocumentStore.RuntimeStore.isRuntimeMode
+            !flowContext.document.DocumentStore.runtimeStore.isRuntimeMode
         ) {
             // this is layout widget page,
             // forbid interaction with the content

@@ -327,7 +327,7 @@ export class FlowViewer
     get flowState() {
         return (
             this.props.flowState ||
-            this.context.RuntimeStore.getFlowState(
+            this.context.runtimeStore.getFlowState(
                 this.props.widgetContainer.object as Flow
             )
         );
@@ -475,7 +475,7 @@ export class FlowViewer
 
     @bind
     focusHander() {
-        this.context.NavigationStore.setSelectedPanel(this);
+        this.context.navigationStore.setSelectedPanel(this);
     }
 
     getDragComponent(event: React.DragEvent) {

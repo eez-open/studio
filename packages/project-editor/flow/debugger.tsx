@@ -39,8 +39,8 @@ export class DebuggerPanel extends React.Component {
                         }
                         iconSize={16}
                         title="Resume"
-                        onClick={() => this.context.RuntimeStore.resume()}
-                        enabled={this.context.RuntimeStore.isPaused}
+                        onClick={() => this.context.runtimeStore.resume()}
+                        enabled={this.context.runtimeStore.isPaused}
                     />,
                     <IconAction
                         key="pause"
@@ -54,8 +54,8 @@ export class DebuggerPanel extends React.Component {
                         }
                         iconSize={16}
                         title="Pause"
-                        onClick={() => this.context.RuntimeStore.pause()}
-                        enabled={!this.context.RuntimeStore.isPaused}
+                        onClick={() => this.context.runtimeStore.pause()}
+                        enabled={!this.context.runtimeStore.isPaused}
                     />,
                     <IconAction
                         key="single-step"
@@ -71,9 +71,9 @@ export class DebuggerPanel extends React.Component {
                         style={{ marginTop: 4 }}
                         title="Single step"
                         onClick={() =>
-                            this.context.RuntimeStore.runSingleStep()
+                            this.context.runtimeStore.runSingleStep()
                         }
-                        enabled={this.context.RuntimeStore.isPaused}
+                        enabled={this.context.runtimeStore.isPaused}
                     />
                 ]}
                 body={
@@ -207,7 +207,7 @@ class QueueTree extends React.Component {
         return {
             id: "root",
             label: "",
-            children: getChildren(this.context.RuntimeStore.queue),
+            children: getChildren(this.context.runtimeStore.queue),
             selected: false,
             expanded: true
         };
@@ -251,7 +251,7 @@ class FlowsTree extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     @computed get rootNode(): ITreeNode<FlowState> {
-        const selectedFlowState = this.context.RuntimeStore.selectedFlowState;
+        const selectedFlowState = this.context.runtimeStore.selectedFlowState;
 
         function getChildren(flowStates: FlowState[]): ITreeNode<FlowState>[] {
             return flowStates.map(flowState => ({
@@ -275,7 +275,7 @@ class FlowsTree extends React.Component {
         return {
             id: "all",
             label: "All",
-            children: getChildren(this.context.RuntimeStore.flowStates),
+            children: getChildren(this.context.runtimeStore.flowStates),
             selected: !selectedFlowState,
             expanded: true
         };
@@ -283,16 +283,16 @@ class FlowsTree extends React.Component {
 
     @action.bound
     selectNode(node?: ITreeNode<FlowState>) {
-        this.context.RuntimeStore.historyState.selectedHistoryItem = undefined;
+        this.context.runtimeStore.historyState.selectedHistoryItem = undefined;
 
         const flowState = node?.data;
 
-        this.context.RuntimeStore.selectedFlowState = flowState;
+        this.context.runtimeStore.selectedFlowState = flowState;
 
         if (flowState) {
-            this.context.NavigationStore.showObject(flowState.flow);
+            this.context.navigationStore.showObject(flowState.flow);
 
-            const editorState = this.context.EditorsStore.activeEditor?.state;
+            const editorState = this.context.editorsStore.activeEditor?.state;
             if (editorState instanceof FlowTabState) {
                 setTimeout(() => {
                     runInAction(() => (editorState.flowState = flowState));

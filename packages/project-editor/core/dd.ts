@@ -1,10 +1,7 @@
 import { observable, action } from "mobx";
 
 import { IEezObject } from "project-editor/core/object";
-import {
-    DocumentStoreClass,
-    UndoManagerClass
-} from "project-editor/core/store";
+import { DocumentStoreClass, UndoManager } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -21,7 +18,7 @@ export class DragAndDropManagerClass {
     blankDragImage: HTMLImageElement;
     unsetDropObjectAndPositionTimeout: any;
 
-    UndoManager?: UndoManagerClass;
+    undoManager?: UndoManager;
 
     constructor() {
         this.blankDragImage = new Image();
@@ -38,8 +35,8 @@ export class DragAndDropManagerClass {
         this.dragObject = dragObject;
         this.dragItemDeleted = false;
 
-        this.UndoManager = DocumentStore.UndoManager;
-        this.UndoManager.setCombineCommands(true);
+        this.undoManager = DocumentStore.undoManager;
+        this.undoManager.setCombineCommands(true);
     }
 
     @action
@@ -65,7 +62,7 @@ export class DragAndDropManagerClass {
     deleteDragItem(options?: { dropPlace?: IEezObject }) {
         if (this.dropObject && this.dropEffect == "move") {
             if (this.dragObject) {
-                this.UndoManager?.DocumentStore.deleteObject(
+                this.undoManager?.DocumentStore.deleteObject(
                     this.dragObject,
                     options
                 );
@@ -84,9 +81,9 @@ export class DragAndDropManagerClass {
         this.dragObject = undefined;
         this.unsetDropObject();
 
-        if (this.UndoManager) {
-            this.UndoManager.setCombineCommands(false);
-            this.UndoManager = undefined;
+        if (this.undoManager) {
+            this.undoManager.setCombineCommands(false);
+            this.undoManager = undefined;
         }
     }
 }

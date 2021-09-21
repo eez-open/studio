@@ -69,18 +69,18 @@ export class BitmapsNavigation extends NavigationComponent {
 
     @computed
     get bitmap() {
-        if (this.context.NavigationStore.selectedPanel) {
+        if (this.context.navigationStore.selectedPanel) {
             if (
-                this.context.NavigationStore.selectedPanel
+                this.context.navigationStore.selectedPanel
                     .selectedObject instanceof Bitmap
             ) {
-                return this.context.NavigationStore.selectedPanel
+                return this.context.navigationStore.selectedPanel
                     .selectedObject;
             }
         }
 
-        if (this.context.NavigationStore.selectedObject instanceof Bitmap) {
-            return this.context.NavigationStore.selectedObject;
+        if (this.context.navigationStore.selectedObject instanceof Bitmap) {
+            return this.context.navigationStore.selectedObject;
         }
 
         return undefined;

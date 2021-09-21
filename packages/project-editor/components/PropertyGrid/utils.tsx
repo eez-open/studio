@@ -96,7 +96,7 @@ export function isPropertyInError(
     propertyInfo: PropertyInfo
 ) {
     return !!getDocumentStore(object)
-        .OutputSectionsStore.getSection(Section.CHECKS)
+        .outputSectionsStore.getSection(Section.CHECKS)
         .messages.find(
             message =>
                 message.object &&
@@ -130,8 +130,8 @@ export function isHighlightedProperty(
 ) {
     const DocumentStore = getDocumentStore(object);
     const selectedObject =
-        DocumentStore.NavigationStore.selectedPanel &&
-        DocumentStore.NavigationStore.selectedPanel.selectedObject;
+        DocumentStore.navigationStore.selectedPanel &&
+        DocumentStore.navigationStore.selectedPanel.selectedObject;
     return !!(
         selectedObject &&
         ((getParent(selectedObject) === object &&

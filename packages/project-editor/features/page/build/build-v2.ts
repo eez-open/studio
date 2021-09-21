@@ -1500,13 +1500,13 @@ async function buildGuiAssetsData(assets: Assets) {
     compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
     outputBuffer.copy(compressedData, 4, 0, compressedSize);
 
-    assets.DocumentStore.OutputSectionsStore.write(
+    assets.DocumentStore.outputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Uncompressed size: " + inputBuffer.length
     );
 
-    assets.DocumentStore.OutputSectionsStore.write(
+    assets.DocumentStore.outputSectionsStore.write(
         output.Section.OUTPUT,
         output.Type.INFO,
         "Compressed size: " + compressedSize
@@ -1649,7 +1649,7 @@ class Assets {
         }
 
         const message = output.propertyNotFoundMessage(object, propertyName);
-        this.DocumentStore.OutputSectionsStore.write(
+        this.DocumentStore.outputSectionsStore.write(
             output.Section.OUTPUT,
             message.type,
             message.text,
@@ -1858,7 +1858,7 @@ class Assets {
                         return false;
                     })
                 ) {
-                    this.DocumentStore.OutputSectionsStore.write(
+                    this.DocumentStore.outputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused style: " + style.name,
@@ -1869,7 +1869,7 @@ class Assets {
 
             project.fonts.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
-                    this.DocumentStore.OutputSectionsStore.write(
+                    this.DocumentStore.outputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused font: " + font.name,
@@ -1880,7 +1880,7 @@ class Assets {
 
             project.bitmaps.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
-                    this.DocumentStore.OutputSectionsStore.write(
+                    this.DocumentStore.outputSectionsStore.write(
                         output.Section.OUTPUT,
                         output.Type.INFO,
                         "Unused bitmap: " + bitmap.name,

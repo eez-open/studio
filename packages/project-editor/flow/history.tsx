@@ -288,7 +288,7 @@ export class HistoryPanel extends React.Component {
                         icon="material:clear"
                         title="Clear history"
                         onClick={
-                            this.context.RuntimeStore.historyState.clearHistory
+                            this.context.runtimeStore.historyState.clearHistory
                         }
                     ></IconAction>
                 ]}
@@ -307,7 +307,7 @@ class HistoryTree extends React.Component {
 
     @computed get rootNode(): ITreeNode<HistoryItem> {
         const selectedHistoryItem =
-            this.context.RuntimeStore.historyState.selectedHistoryItem;
+            this.context.runtimeStore.historyState.selectedHistoryItem;
 
         function getChildren(
             historyItems: HistoryItem[]
@@ -331,7 +331,7 @@ class HistoryTree extends React.Component {
             }));
         }
 
-        const historyItems = this.context.RuntimeStore.historyState.history
+        const historyItems = this.context.runtimeStore.historyState.history
             .slice()
             .reverse();
 
@@ -341,9 +341,9 @@ class HistoryTree extends React.Component {
             children: getChildren(
                 historyItems.filter(
                     historyItem =>
-                        !this.context.RuntimeStore.selectedFlowState ||
+                        !this.context.runtimeStore.selectedFlowState ||
                         historyItem.flowState ===
-                            this.context.RuntimeStore.selectedFlowState
+                            this.context.runtimeStore.selectedFlowState
                 )
             ),
             selected: false,
@@ -354,14 +354,14 @@ class HistoryTree extends React.Component {
     @action.bound
     selectNode(node?: ITreeNode<HistoryItem>) {
         const historyItem = node?.data;
-        this.context.RuntimeStore.historyState.selectedHistoryItem =
+        this.context.runtimeStore.historyState.selectedHistoryItem =
             historyItem;
         if (!historyItem) {
             return;
         }
 
         if (historyItem.flow) {
-            this.context.NavigationStore.showObject(historyItem.flow);
+            this.context.navigationStore.showObject(historyItem.flow);
         } else {
             const objects: IEezObject[] = [];
 
@@ -380,10 +380,10 @@ class HistoryTree extends React.Component {
             if (objects.length > 0) {
                 // navigate to the first object,
                 // just to make sure that proper editor is opened
-                this.context.NavigationStore.showObject(objects[0]);
+                this.context.navigationStore.showObject(objects[0]);
 
                 const editorState =
-                    this.context.EditorsStore.activeEditor?.state;
+                    this.context.editorsStore.activeEditor?.state;
                 if (editorState instanceof FlowTabState) {
                     // select other object in the same editor
                     editorState.selectObjects(objects);

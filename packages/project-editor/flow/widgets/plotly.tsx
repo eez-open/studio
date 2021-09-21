@@ -331,7 +331,7 @@ const LineChartElement = observer(
                 }}
                 className={classNames("EezStudio_Plotly", {
                     interactive:
-                        flowContext.document.DocumentStore.RuntimeStore
+                        flowContext.document.DocumentStore.runtimeStore
                             .isRuntimeMode
                 })}
             ></div>
@@ -582,7 +582,7 @@ const GaugeElement = observer(
                 }}
                 className={classNames("EezStudio_Plotly", {
                     interactive:
-                        flowContext.document.DocumentStore.RuntimeStore
+                        flowContext.document.DocumentStore.runtimeStore
                             .isRuntimeMode
                 })}
             ></div>

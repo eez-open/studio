@@ -110,7 +110,7 @@ class ViewState implements IViewState {
     getResizeHandlers(): IResizeHandler[] | undefined {
         const isEditor =
             this.document &&
-            !this.document.DocumentStore.RuntimeStore.isRuntimeMode;
+            !this.document.DocumentStore.runtimeStore.isRuntimeMode;
 
         if (
             !isEditor ||
@@ -244,7 +244,7 @@ class ViewState implements IViewState {
 
         const DocumentStore = getDocumentStore(widgets[0]);
 
-        DocumentStore.UndoManager.setCombineCommands(true);
+        DocumentStore.undoManager.setCombineCommands(true);
 
         widgets.forEach(widget => {
             if (where === "left") {
@@ -292,7 +292,7 @@ class ViewState implements IViewState {
             }
         });
 
-        DocumentStore.UndoManager.setCombineCommands(false);
+        DocumentStore.undoManager.setCombineCommands(false);
     }
 
     destroy() {
