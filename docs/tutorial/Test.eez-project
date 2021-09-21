@@ -1,4 +1,5 @@
 {
+  "fullyLoaded": true,
   "settings": {
     "general": {
       "projectVersion": "v2",
@@ -14,24 +15,67 @@
       "files": []
     }
   },
-  "data": [
+  "variables": {
+    "globalVariables": [
+      {
+        "name": "clickme_button_enabled",
+        "type": "boolean",
+        "defaultValue": "1"
+      },
+      {
+        "name": "voltage",
+        "type": "float",
+        "defaultValue": "0"
+      },
+      {
+        "name": "current",
+        "type": "float",
+        "defaultValue": "0"
+      }
+    ],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [
     {
-      "name": "clickme_button_enabled",
-      "type": "boolean",
-      "defaultValue": "1"
+      "components": [
+        {
+          "type": "CommentActionComponent",
+          "left": 40,
+          "top": 32,
+          "width": 435,
+          "height": 134,
+          "wireID": "e357e4c9-214f-49d7-bcdc-ceb24cfd99f5",
+          "customInputs": [],
+          "customOutputs": [],
+          "text": "<div><!--block-->1</div>"
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "name": "eew",
+      "implementationType": "flow"
     },
     {
-      "name": "voltage",
-      "type": "float",
-      "defaultValue": "0"
-    },
-    {
-      "name": "current",
-      "type": "float",
-      "defaultValue": "0"
+      "components": [
+        {
+          "type": "CommentActionComponent",
+          "left": 67,
+          "top": 55,
+          "width": 435,
+          "height": 134,
+          "wireID": "77d19045-0ba3-428d-b98a-f7e899967945",
+          "customInputs": [],
+          "customOutputs": [],
+          "text": "<div><!--block-->2</div>"
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "name": "eeew",
+      "implementationType": "flow"
     }
   ],
-  "actions": [],
   "pages": [
     {
       "components": [
@@ -42,6 +86,8 @@
           "width": 103,
           "height": 32,
           "wireID": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
+          "customInputs": [],
+          "customOutputs": [],
           "asOutputProperties": [
             "action"
           ],
@@ -59,9 +105,25 @@
           "type": "ScpiActionComponent",
           "left": -100,
           "top": 681,
-          "width": 0,
-          "height": 0,
+          "width": 288,
+          "height": 99,
           "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "customInputs": [
+            {
+              "name": "delay",
+              "type": 0
+            }
+          ],
+          "customOutputs": [
+            {
+              "name": "voltage",
+              "type": 0
+            },
+            {
+              "name": "current",
+              "type": 0
+            }
+          ],
           "asInputProperties": [
             "instrument"
           ],
@@ -75,6 +137,8 @@
           "width": 479,
           "height": 190,
           "wireID": "85873f52-29f9-4c3c-e1f9-fdd8a2ba4e94",
+          "customInputs": [],
+          "customOutputs": [],
           "asInputProperties": [
             "data"
           ],
@@ -92,9 +156,11 @@
           "type": "ConstantActionComponent",
           "left": -288,
           "top": 609,
-          "width": 0,
-          "height": 0,
+          "width": 114,
+          "height": 61,
           "wireID": "dacb4d9d-04e2-47d6-876d-44be32382828",
+          "customInputs": [],
+          "customOutputs": [],
           "value": "50"
         },
         {
@@ -104,6 +170,8 @@
           "width": 233,
           "height": 190,
           "wireID": "e09a754c-f52c-41c3-e5cb-091fc475b670",
+          "customInputs": [],
+          "customOutputs": [],
           "asInputProperties": [
             "data"
           ],
@@ -125,6 +193,8 @@
           "width": 233,
           "height": 190,
           "wireID": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
+          "customInputs": [],
+          "customOutputs": [],
           "asInputProperties": [
             "data"
           ],
@@ -146,6 +216,8 @@
           "width": 479,
           "height": 190,
           "wireID": "72b6face-cd0f-40cf-cbd0-51e4c30b5123",
+          "customInputs": [],
+          "customOutputs": [],
           "asInputProperties": [
             "data"
           ],
@@ -166,6 +238,8 @@
           "width": 103,
           "height": 32,
           "wireID": "17a56676-cba2-425f-cb12-87e07fe927ac",
+          "customInputs": [],
+          "customOutputs": [],
           "asOutputProperties": [
             "action"
           ],
@@ -182,9 +256,11 @@
           "type": "IsTrueActionComponent",
           "left": 0,
           "top": 840,
-          "width": 0,
-          "height": 0,
+          "width": 97,
+          "height": 87,
           "wireID": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
+          "customInputs": [],
+          "customOutputs": [],
           "asInputProperties": [
             "value"
           ]
@@ -193,18 +269,22 @@
           "type": "GetVariableActionComponent",
           "left": -196,
           "top": 840,
-          "width": 0,
-          "height": 0,
+          "width": 133,
+          "height": 61,
           "wireID": "3e958be7-9ce1-4645-844c-d3b0380dbcfb",
+          "customInputs": [],
+          "customOutputs": [],
           "variable": "continue"
         },
         {
-          "type": "DeclareVariableActionComponent",
+          "type": "SetVariableActionComponent",
           "left": -196,
           "top": 0,
-          "width": 0,
-          "height": 0,
+          "width": 137,
+          "height": 70,
           "wireID": "1aaa0922-a090-407e-c752-e59a8703a9a6",
+          "customInputs": [],
+          "customOutputs": [],
           "variable": "continue",
           "value": "true"
         },
@@ -212,9 +292,11 @@
           "type": "SetVariableActionComponent",
           "left": -213,
           "top": 339,
-          "width": 0,
-          "height": 0,
+          "width": 144,
+          "height": 70,
           "wireID": "6c7b5504-dba4-41a7-f576-9365c69c92ed",
+          "customInputs": [],
+          "customOutputs": [],
           "variable": "continue",
           "value": "false"
         },
@@ -222,9 +304,11 @@
           "type": "SetVariableActionComponent",
           "left": -100,
           "top": 539,
-          "width": 0,
-          "height": 0,
+          "width": 137,
+          "height": 70,
           "wireID": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
+          "customInputs": [],
+          "customOutputs": [],
           "variable": "continue",
           "value": "true"
         },
@@ -235,6 +319,8 @@
           "width": 136,
           "height": 32,
           "wireID": "e1bd0765-fac0-4947-9919-ce447cf7043d",
+          "customInputs": [],
+          "customOutputs": [],
           "asOutputProperties": [
             "action"
           ],
@@ -250,9 +336,11 @@
           "type": "SelectInstrumentActionComponent",
           "left": -250,
           "top": 163,
-          "width": 0,
-          "height": 0,
-          "wireID": "07cf82ca-3509-4834-98ef-b230d492f285"
+          "width": 158,
+          "height": 61,
+          "wireID": "07cf82ca-3509-4834-98ef-b230d492f285",
+          "customInputs": [],
+          "customOutputs": []
         }
       ],
       "connectionLines": [
@@ -335,11 +423,39 @@
           "input": "@seqin"
         }
       ],
+      "localVariables": [
+        {
+          "name": "continue",
+          "type": "boolean"
+        }
+      ],
       "name": "plotly",
       "left": 0,
       "top": 0,
       "width": 969,
       "height": 496
+    },
+    {
+      "components": [
+        {
+          "type": "CommentActionComponent",
+          "left": 45,
+          "top": 40,
+          "width": 435,
+          "height": 134,
+          "wireID": "722d39c4-1626-4d3b-fd68-9b554797a2af",
+          "customInputs": [],
+          "customOutputs": [],
+          "text": "<div><!--block-->3</div>"
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "name": "Page",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272
     }
   ],
   "styles": [

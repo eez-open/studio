@@ -16,11 +16,7 @@ export class Toolbar extends React.Component {
     render() {
         return (
             <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                {this.context.RuntimeStore.isRuntimeMode ? (
-                    <div />
-                ) : (
-                    <EditControls />
-                )}
+                <EditControls />
 
                 {this.context.isDashboardProject ||
                 this.context.isAppletProject ? (
@@ -29,11 +25,7 @@ export class Toolbar extends React.Component {
                     <div />
                 )}
 
-                {this.context.RuntimeStore.isRuntimeMode ? (
-                    <RuntimeToolbarControls />
-                ) : (
-                    <SearchControls />
-                )}
+                <SearchControls />
             </nav>
         );
     }
@@ -74,7 +66,13 @@ class EditControls extends React.Component {
             );
 
         return (
-            <div>
+            <div
+                style={{
+                    visibility: this.context.RuntimeStore.isRuntimeMode
+                        ? "hidden"
+                        : "visible"
+                }}
+            >
                 <div className="btn-group" role="group">
                     <IconAction
                         title="Save"
@@ -152,9 +150,43 @@ class RunEditSwitchControls extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
+    toggleRuntimeMode = () => {
+        if (this.context.RuntimeStore.isRuntimeMode) {
+            if (this.context.RuntimeStore.isDebuggerActive) {
+                this.context.RuntimeStore.toggleDebugger();
+            }
+        } else {
+            this.context.RuntimeStore.setRuntimeMode(false);
+        }
+    };
+
+    toggleDebugger = async () => {
+        if (!this.context.RuntimeStore.isRuntimeMode) {
+            await this.context.RuntimeStore.setRuntimeMode(true);
+        } else {
+            if (!this.context.RuntimeStore.isDebuggerActive) {
+                this.context.NavigationStore.setSelection([
+                    this.context.RuntimeStore.selectedPage
+                ]);
+
+                this.context.RuntimeStore.toggleDebugger();
+            }
+        }
+    };
+
     render() {
+        const iconSize = 30;
         return (
             <div className="d-flex">
+                <ButtonAction
+                    text="Edit"
+                    title="Enter edit mode"
+                    icon="material:mode_edit"
+                    iconSize={iconSize}
+                    onClick={this.context.RuntimeStore.setEditorMode}
+                    selected={!this.context.RuntimeStore.isRuntimeMode}
+                />
+
                 <ButtonAction
                     text="Run"
                     title="Enter run mode"
@@ -181,15 +213,44 @@ class RunEditSwitchControls extends React.Component {
                             <path d="M7 12l0 -3l5 -1l3 3l3 1"></path>
                         </svg>
                     }
-                    onClick={this.context.RuntimeStore.setRuntimeMode}
-                    selected={this.context.RuntimeStore.isRuntimeMode}
+                    iconSize={iconSize}
+                    onClick={this.toggleRuntimeMode}
+                    selected={
+                        this.context.RuntimeStore.isRuntimeMode &&
+                        !this.context.RuntimeStore.isDebuggerActive
+                    }
                 />
+
                 <ButtonAction
-                    text="Edit"
-                    title="Enter edit mode"
-                    icon="material:mode_edit"
-                    onClick={this.context.RuntimeStore.setEditorMode}
-                    selected={!this.context.RuntimeStore.isRuntimeMode}
+                    text="Debug"
+                    title="Enter debug mode"
+                    icon={
+                        <svg viewBox="0 0 64 64">
+                            <g transform="translate(-1,-1)">
+                                <path
+                                    id="path2"
+                                    d="m64 32h-3c-0.5-13.4-10.8-24.9-24.1-26.7-1-0.2-1.9-0.2-2.9-0.3v-3c0-0.6-0.4-1-1-1s-1 0.4-1 1v3c-6.5 0.2-12.7 2.7-17.6 7.1-5.7 5.1-9.1 12.3-9.4 19.9h-3c-0.6 0-1 0.4-1 1s0.4 1 1 1h3c0.5 13.4 10.8 24.9 24.1 26.7 1 0.1 1.9 0.2 2.9 0.2v3c0 0.6 0.4 1 1 1s1-0.4 1-1v-3c6.5-0.2 12.7-2.7 17.6-7.1 5.7-5.1 9.1-12.3 9.4-19.9h3c0.6 0 1-0.4 1-1s-0.4-0.9-1-0.9zm-13.7 20.4c-4.5 4-10.3 6.3-16.3 6.6v-3c0-0.6-0.4-1-1-1s-1 0.4-1 1v3c-0.9 0-1.7-0.1-2.6-0.2-12.4-1.7-21.9-12.3-22.4-24.8h3c0.6 0 1-0.4 1-1s-0.4-1-1-1h-3c0.3-7.1 3.4-13.7 8.7-18.4 4.6-4.1 10.3-6.3 16.3-6.5v2.9c0 0.6 0.4 1 1 1s1-0.4 1-1v-3c0.9 0 1.8 0.1 2.6 0.2 12.4 1.8 21.9 12.4 22.4 24.8h-3c-0.6 0-1 0.4-1 1s0.4 1 1 1h3c-0.3 7.1-3.4 13.7-8.7 18.4z"
+                                />
+                                <g>
+                                    <g transform="matrix(1.237 0 0 1.2197 -7.8175 -7.1947)">
+                                        <g>
+                                            <g transform="matrix(.92683 0 0 .92683 2.4138 2.3964)">
+                                                <path d="m27.4 18.3c1.2 0 2.4 0.5 3.2 1.4-2 0.9-3.2 3-3.3 5.1-0.1 2.6 1.7 4.9 5.7 4.9 4.1 0 5.7-2 5.7-4.6 0-2.4-1.3-4.6-3.3-5.5 0.9-0.9 2-1.4 3.2-1.4 0.5 0 0.9-0.4 0.9-0.9s-0.4-0.9-0.9-0.9c-2.1 0-3.9 1-5.2 2.7h-0.8c-1.2-1.7-3.1-2.7-5.2-2.7-0.5 0-0.9 0.4-0.9 0.9 0 0.6 0.4 1 0.9 1z" />
+                                                <path d="m47.9 45.4c0.3 0.4 0.1 1-0.3 1.3s-1 0.1-1.3-0.3l-1.8-3h-2.9c-1.3 2.7-3.3 4.8-5.8 5.7l-2.8-13.2-2.9 13.1c-2.5-0.9-4.6-3-5.8-5.7h-2.9l-1.8 3c-0.3 0.4-0.8 0.6-1.3 0.3-0.4-0.3-0.6-0.8-0.3-1.3l2.1-3.4c0.2-0.3 0.5-0.5 0.8-0.5h2.7c-0.4-1.2-0.6-2.6-0.6-4 0-0.4 0-0.9 0.1-1.3h-1.7l-1.8 3c-0.3 0.4-0.8 0.6-1.3 0.3s-0.6-0.8-0.3-1.3l2.1-3.5c0.2-0.3 0.5-0.4 0.8-0.4h2.5c0.5-2.3 1.6-4.3 3.1-5.9 1.5 2.4 3.7 3.1 6.5 3.1 2.7 0 5.2-0.7 6.6-3 1.4 1.5 2.5 3.5 3 5.8h2.5c0.3 0 0.6 0.2 0.8 0.4l2.1 3.5c0.3 0.4 0.1 1-0.3 1.3s-1 0.1-1.3-0.3l-1.8-3h-1.7c0 0.4 0.1 0.9 0.1 1.3 0 1.4-0.2 2.7-0.6 4h2.7c0.3 0 0.6 0.2 0.8 0.5z" />
+                                            </g>
+                                        </g>
+                                    </g>
+                                </g>
+                            </g>
+                        </svg>
+                    }
+                    iconSize={iconSize}
+                    onClick={this.toggleDebugger}
+                    selected={
+                        this.context.RuntimeStore.isRuntimeMode &&
+                        this.context.RuntimeStore.isDebuggerActive
+                    }
+                    attention={this.context.RuntimeStore.hasError}
                 />
             </div>
         );
@@ -232,7 +293,14 @@ class SearchControls extends React.Component {
 
     render() {
         return (
-            <div className="btn-group">
+            <div
+                className="btn-group"
+                style={{
+                    visibility: this.context.RuntimeStore.isRuntimeMode
+                        ? "hidden"
+                        : "visible"
+                }}
+            >
                 <input
                     className={classNames(
                         "form-control EezStudio_ToolbarSearchInput",
@@ -299,48 +367,6 @@ class SearchControls extends React.Component {
                         onClick={() => this.startSearch()}
                     />
                 </div>
-            </div>
-        );
-    }
-}
-
-@observer
-export class RuntimeToolbarControls extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    toggleDebugger = () => {
-        this.context.NavigationStore.setSelection([
-            this.context.RuntimeStore.selectedPage
-        ]);
-
-        this.context.RuntimeStore.toggleDebugger();
-    };
-
-    render() {
-        return (
-            <div className="btn-group">
-                {!this.context.RuntimeStore.isStopped && (
-                    <ButtonAction
-                        text="Stop"
-                        title="Stop execution"
-                        icon="material:stop"
-                        enabled={!this.context.RuntimeStore.isStopped}
-                        onClick={() => this.context.RuntimeStore.stop()}
-                    />
-                )}
-
-                <IconAction
-                    title="Debug"
-                    icon={
-                        <svg viewBox="0 0 36.000003814697266 39.181541442871094">
-                            <path d="M26.5.238a2.5 2.5 0 0 1 0 5l-.636-.082-2.307 2.954c1.592 1.146 2.974 2.768 4.045 4.73-2.732.882-6.039 1.398-9.602 1.398-3.563 0-6.87-.516-9.602-1.398 1.035-1.896 2.361-3.476 3.886-4.614L9.922 5.203a2.5 2.5 0 1 1 1.675-1.104l2.405 3.077A9.098 9.098 0 0 1 18 6.238c1.334 0 2.617.3 3.816.852l2.479-3.173A2.5 2.5 0 0 1 26.5.237zm8 21a1.5 1.5 0 0 1 0 3h-4.549a22.026 22.026 0 0 1-.435 3.153l5.29 2.467a1.5 1.5 0 0 1-1.268 2.719l-4.871-2.272c-1.85 4.92-5.45 8.398-9.667 8.877V16.224c3.541-.096 6.791-.703 9.424-1.666l.195.487 5.111-1.962a1.5 1.5 0 1 1 1.075 2.8l-5.323 2.045c.235 1.062.394 2.169.47 3.31H34.5zm-33 0h4.549c.075-1.141.234-2.248.469-3.31l-5.323-2.044a1.5 1.5 0 0 1 1.075-2.8l5.111 1.96.195-.486c2.633.963 5.883 1.57 9.424 1.666v22.958c-4.217-.48-7.816-3.956-9.666-8.877l-4.872 2.272a1.5 1.5 0 0 1-1.268-2.72l5.29-2.466a22.01 22.01 0 0 1-.435-3.153H1.5a1.5 1.5 0 1 1 0-3z" />
-                        </svg>
-                    }
-                    onClick={this.toggleDebugger}
-                    selected={this.context.RuntimeStore.isDebuggerActive}
-                    attention={this.context.RuntimeStore.hasError}
-                />
             </div>
         );
     }

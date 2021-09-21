@@ -108,12 +108,7 @@ import {
     CustomOutput
 } from "project-editor/flow/component";
 import { Page } from "project-editor/features/page/page";
-import {
-    ConnectionLine,
-    Flow,
-    FlowFragment,
-    FlowTabState
-} from "project-editor/flow/flow";
+import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
@@ -497,10 +492,6 @@ class NavigationStoreClass implements INavigationStore {
                                 ? getParent(objectToShow)
                                 : objectToShow
                         );
-
-                        if (editor.state instanceof FlowTabState) {
-                            editor.state.ensureSelectionVisible();
-                        }
                     }
                 }, 0);
                 break;

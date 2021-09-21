@@ -222,6 +222,10 @@ export class SettingsNavigation extends NavigationComponent {
     }
 
     render() {
+        if (this.context.isDashboardProject || this.context.isAppletProject) {
+            return <SettingsEditor object={this.object} />;
+        }
+
         return (
             <Splitter
                 type="horizontal"

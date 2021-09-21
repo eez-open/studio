@@ -11,9 +11,8 @@ import { FlowTabState } from "project-editor/flow/flow";
 import { getLabel } from "project-editor/core/object";
 import { Splitter } from "eez-studio-ui/splitter";
 import { HistoryPanel } from "./history";
-import { FlowState } from "./runtime";
-import { Toolbar } from "eez-studio-ui/toolbar";
-import { ButtonAction } from "eez-studio-ui/action";
+import { FlowState, QueueTask } from "./runtime";
+import { IconAction } from "eez-studio-ui/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,30 +24,204 @@ export class DebuggerPanel extends React.Component {
     render() {
         return (
             <Panel
-                id="runtime"
-                title={"Runtime Info"}
+                id="debugger"
+                title={"Debugger"}
+                buttons={[
+                    <IconAction
+                        key="resume"
+                        icon={
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 500 607.333984375"
+                            >
+                                <path d="M486 278.667c9.333 6.667 14 15.333 14 26 0 9.333-4.667 17.333-14 24l-428 266c-16 10.667-29.667 12.667-41 6-11.333-6.667-17-20-17-40v-514c0-20 5.667-33.333 17-40C28.333 0 42 2 58 12.667l428 266" />
+                            </svg>
+                        }
+                        iconSize={16}
+                        title="Resume"
+                        onClick={() => this.context.RuntimeStore.resume()}
+                        enabled={this.context.RuntimeStore.isPaused}
+                    />,
+                    <IconAction
+                        key="pause"
+                        icon={
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 530 700"
+                            >
+                                <path d="M440 0c60 0 90 21.333 90 64v570c0 44-30 66-90 66s-90-22-90-66V64c0-42.667 30-64 90-64M90 0c60 0 90 21.333 90 64v570c0 44-30 66-90 66S0 678 0 634V64C0 21.333 30 0 90 0" />
+                            </svg>
+                        }
+                        iconSize={16}
+                        title="Pause"
+                        onClick={() => this.context.RuntimeStore.pause()}
+                        enabled={!this.context.RuntimeStore.isPaused}
+                    />,
+                    <IconAction
+                        key="single-step"
+                        icon={
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 43 38"
+                            >
+                                <path d="M10 0h1v5h-1a5 5 0 0 0-5 5v14a5 5 0 0 0 5 5h1v-4l6.75 6.5L11 38v-4h-1C4.477 34 0 29.523 0 24V10C0 4.477 4.477 0 10 0zm7 5h26v5H17V5zm3 8h23v5H20v-5zm-3 8h26v5H17v-5z" />
+                            </svg>
+                        }
+                        iconSize={18}
+                        style={{ marginTop: 4 }}
+                        title="Single step"
+                        onClick={() =>
+                            this.context.RuntimeStore.runSingleStep()
+                        }
+                        enabled={this.context.RuntimeStore.isPaused}
+                    />
+                ]}
                 body={
                     <div className="EezStudio_RuntimePanel">
-                        <Toolbar>
-                            <ButtonAction
-                                text="Single step"
-                                title="Single step"
-                                onClick={() =>
-                                    this.context.RuntimeStore.runSingleStep()
-                                }
-                            />
-                        </Toolbar>
                         <Splitter
                             type="vertical"
-                            persistId={`project-editor/runtime-info`}
-                            sizes={`50%|50%`}
+                            persistId={`project-editor/debugger`}
+                            sizes={`100%|240px|240px`}
                             childrenOverflow="hidden"
                         >
+                            <QueuePanel />
                             <FlowStatesPanel />
                             <HistoryPanel />
                         </Splitter>
                     </div>
                 }
+            />
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+class QueuePanel extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        return (
+            <Panel
+                id="project-editor/debugger/queue"
+                title="Queue"
+                body={<QueueTree />}
+            />
+        );
+    }
+}
+
+@observer
+class QueueTree extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    @computed get rootNode(): ITreeNode<QueueTask> {
+        function getQueueTaskChildren(
+            queueTask: QueueTask
+        ): ITreeNode<QueueTask>[] {
+            const children = [
+                {
+                    id: "flowState",
+                    label: (
+                        <div>
+                            Flow state: {getLabel(queueTask.flowState.flow)}
+                        </div>
+                    ),
+                    children: [],
+                    selected: false,
+                    expanded: false,
+                    data: queueTask
+                },
+                {
+                    id: "component",
+                    label: (
+                        <div>Component: {getLabel(queueTask.component)}</div>
+                    ),
+                    children: [],
+                    selected: false,
+                    expanded: false,
+                    data: queueTask
+                }
+            ];
+
+            if (queueTask.input) {
+                children.push({
+                    id: "input",
+                    label: <div>Input: {queueTask.input}</div>,
+                    children: [],
+                    selected: false,
+                    expanded: false,
+                    data: queueTask
+                });
+            }
+
+            if (queueTask.inputData) {
+                children.push({
+                    id: "inputData",
+                    label: (
+                        <div>
+                            Input data:{" "}
+                            {`${queueTask.inputData.value} at ${queueTask.inputData.time}`}
+                        </div>
+                    ),
+                    children: [],
+                    selected: false,
+                    expanded: false,
+                    data: queueTask
+                });
+            }
+
+            if (queueTask.connectionLine) {
+                children.push({
+                    id: "connectionLine",
+                    label: (
+                        <div>
+                            Connection line:{" "}
+                            {getLabel(queueTask.connectionLine)}
+                        </div>
+                    ),
+                    children: [],
+                    selected: false,
+                    expanded: false,
+                    data: queueTask
+                });
+            }
+
+            return children;
+        }
+
+        function getChildren(queueTasks: QueueTask[]): ITreeNode<QueueTask>[] {
+            return queueTasks.map(queueTask => ({
+                id: queueTask.id.toString(),
+                label: queueTask.id.toString(),
+                children: getQueueTaskChildren(queueTask),
+                selected: false,
+                expanded: true,
+                data: queueTask
+            }));
+        }
+
+        return {
+            id: "root",
+            label: "",
+            children: getChildren(this.context.RuntimeStore.queue),
+            selected: false,
+            expanded: true
+        };
+    }
+
+    @action.bound
+    selectNode(node?: ITreeNode<QueueTask>) {}
+
+    render() {
+        return (
+            <Tree
+                showOnlyChildren={true}
+                rootNode={this.rootNode}
+                selectNode={this.selectNode}
             />
         );
     }
@@ -64,8 +237,8 @@ class FlowStatesPanel extends React.Component {
     render() {
         return (
             <Panel
-                id="project-editor/runtime-info/flows"
-                title="History"
+                id="project-editor/debugger/flows"
+                title="Active flows"
                 body={<FlowsTree />}
             />
         );
@@ -111,9 +284,11 @@ class FlowsTree extends React.Component {
     @action.bound
     selectNode(node?: ITreeNode<FlowState>) {
         this.context.RuntimeStore.historyState.selectedHistoryItem = undefined;
-        this.context.RuntimeStore.selectedFlowState = node?.data;
 
-        const flowState = this.context.RuntimeStore.selectedFlowState;
+        const flowState = node?.data;
+
+        this.context.RuntimeStore.selectedFlowState = flowState;
+
         if (flowState) {
             this.context.NavigationStore.showObject(flowState.flow);
 

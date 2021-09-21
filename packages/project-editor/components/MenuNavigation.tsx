@@ -70,6 +70,7 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
 @observer
 class Menu extends React.Component<{
     navigationObject: IEezObject;
+    filter?: (object: IEezObject) => boolean;
 }> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
@@ -80,7 +81,13 @@ class Menu extends React.Component<{
 
     render() {
         let items = getChildren(this.props.navigationObject);
+
         items = items.filter(item => getClassInfo(item).icon);
+
+        if (this.props.filter) {
+            items = items.filter(this.props.filter);
+        }
+
         const navigationItems = items.map(item => (
             <NavigationMenuItem
                 key={getId(item)}
@@ -107,6 +114,7 @@ export class MenuNavigation extends React.Component<
     {
         id: string;
         navigationObject: IEezObject;
+        filter?: (object: IEezObject) => boolean;
     },
     {}
 > {
@@ -137,7 +145,10 @@ export class MenuNavigation extends React.Component<
 
         return (
             <div className="EezStudio_MenuNavigationContainer">
-                <Menu navigationObject={this.props.navigationObject} />
+                <Menu
+                    navigationObject={this.props.navigationObject}
+                    filter={this.props.filter}
+                />
                 {subNavigation}
             </div>
         );

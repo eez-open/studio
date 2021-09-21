@@ -61,6 +61,16 @@ class Content extends React.Component {
             <MenuNavigation
                 id="project"
                 navigationObject={this.context.project}
+                filter={object => {
+                    if (this.context.RuntimeStore.isRuntimeMode) {
+                        // if runtime onde only show pages and actions
+                        return (
+                            object == this.context.project.pages ||
+                            object == this.context.project.actions
+                        );
+                    }
+                    return true;
+                }}
             />
         );
 

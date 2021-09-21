@@ -895,14 +895,14 @@ export class InstrumentObject {
                 this.defaultFileUploadInstructions;
 
             if (fileUploadInstructions) {
-                if (this.defaultFileUploadInstructions) {
-                    fileUploadInstructions.favoriteDestinationPaths =
-                        this.defaultFileUploadInstructions.favoriteDestinationPaths;
-                }
-
                 const instrument = this;
 
                 return async () => {
+                    if (this.defaultFileUploadInstructions) {
+                        fileUploadInstructions.favoriteDestinationPaths =
+                            this.defaultFileUploadInstructions.favoriteDestinationPaths;
+                    }
+
                     const { showFileUploadDialog } = await import(
                         "instrument/window/terminal/file-upload-dialog"
                     );

@@ -61,17 +61,13 @@ interface InputData {
     value: any;
 }
 
-interface QueueTask {
+export interface QueueTask {
+    id: number;
     flowState: FlowState;
     component: Component;
-    input: string;
-    inputData: InputData;
+    input?: string;
+    inputData?: InputData;
     connectionLine?: ConnectionLine;
-}
-
-interface StartQueueTask {
-    flowState: FlowState;
-    component: Component;
 }
 
 export class RuntimeStoreClass {
@@ -89,7 +85,7 @@ export class RuntimeStoreClass {
     @observable isPaused = false;
     @observable singleStep = false;
 
-    setRuntimeMode = async () => {
+    setRuntimeMode = async (isDebuggerActive: boolean) => {
         if (!this.isRuntimeMode) {
             if (this.DocumentStore.isAppletProject) {
                 if (!(await this.startApplet())) {
@@ -97,14 +93,16 @@ export class RuntimeStoreClass {
                 }
             }
 
+            this.queueTaskId = 0;
+
             runInAction(() => {
                 this.isRuntimeMode = true;
                 this.selectedFlowState = undefined;
                 this.historyState.selectedHistoryItem = undefined;
                 this.isStopped = false;
                 this.hasError = false;
-                this.isDebuggerActive = false;
-                this.isPaused = false;
+                this.isDebuggerActive = isDebuggerActive;
+                this.isPaused = isDebuggerActive;
                 this.singleStep = false;
                 this.selectedPage = this.DocumentStore.project.pages[0];
 
@@ -114,8 +112,6 @@ export class RuntimeStoreClass {
                 if (this.DocumentStore.isDashboardProject) {
                     this.DocumentStore.dataContext.clearRuntimeValues();
                 }
-
-                this.queueIsEmpty = true;
 
                 if (this.DocumentStore.isDashboardProject) {
                     this.flowStates = this.DocumentStore.project.pages
@@ -141,7 +137,8 @@ export class RuntimeStoreClass {
         if (this.isRuntimeMode) {
             await this.stop();
 
-            this.queue = [];
+            runInAction(() => (this.queue = []));
+            this.queueTaskId = 0;
 
             if (this.DocumentStore.isDashboardProject) {
                 runInAction(() => {
@@ -202,6 +199,18 @@ export class RuntimeStoreClass {
     toggleDebugger() {
         this.isDebuggerActive = !this.isDebuggerActive;
         this.isPaused = this.isDebuggerActive;
+    }
+
+    @action
+    resume() {
+        this.isPaused = false;
+        this.singleStep = false;
+    }
+
+    @action
+    pause() {
+        this.isPaused = true;
+        this.singleStep = false;
     }
 
     @action
@@ -351,10 +360,9 @@ export class RuntimeStoreClass {
 
     ////////////////////////////////////////
 
-    queue: QueueTask[] = [];
-    startQueue: StartQueueTask[] = [];
+    queueTaskId: 0;
+    @observable queue: QueueTask[] = [];
     pumpTimeoutId: any;
-    @observable queueIsEmpty: boolean;
 
     @observable flowStates: FlowState[] = [];
 
@@ -381,26 +389,12 @@ export class RuntimeStoreClass {
         this.pumpTimeoutId = undefined;
 
         if (!(this.isDebuggerActive && this.isPaused)) {
-            if (this.startQueue.length > 0) {
-                while (true) {
-                    const startTask = this.startQueue.shift();
-                    if (!startTask) {
-                        break;
-                    }
-
-                    const { flowState, component } = startTask;
-
-                    const componentState =
-                        flowState.getComponentState(component);
-                    componentState.run();
-                }
-            }
-
             if (this.queue.length > 0) {
-                const runningComponents = [];
+                const runningComponents: QueueTask[] = [];
 
                 while (true) {
-                    const task = this.queue.shift();
+                    let task: QueueTask | undefined;
+                    runInAction(() => (task = this.queue.shift()));
                     if (!task) {
                         break;
                     }
@@ -419,9 +413,13 @@ export class RuntimeStoreClass {
                     if (componentState.isRunning) {
                         runningComponents.push(task);
                     } else {
-                        componentState.setInputData(input, inputData);
+                        if (input && inputData) {
+                            componentState.setInputData(input, inputData);
 
-                        if (componentState.isReadyToRun()) {
+                            if (componentState.isReadyToRun()) {
+                                componentState.run();
+                            }
+                        } else {
                             componentState.run();
                         }
 
@@ -439,19 +437,15 @@ export class RuntimeStoreClass {
                     }
                 }
 
-                this.queue.unshift(...runningComponents);
+                runInAction(() => this.queue.unshift(...runningComponents));
             }
         }
 
         this.pumpTimeoutId = setTimeout(this.pumpQueue);
-
-        runInAction(() => (this.queueIsEmpty = this.queue.length === 0));
     };
 
     @action
     executeWidgetAction(flowContext: IFlowContext, widget: Widget) {
-        this.queueIsEmpty = false;
-
         if (this.isStopped) {
             return;
         }
@@ -738,10 +732,13 @@ export class FlowState {
                 }
 
                 if (componentState.isReadyToRun()) {
-                    this.RuntimeStore.startQueue.push({
-                        flowState: this,
-                        component: visitResult.value
-                    });
+                    runInAction(() =>
+                        this.RuntimeStore.queue.push({
+                            id: ++this.RuntimeStore.queueTaskId,
+                            flowState: this,
+                            component: visitResult.value
+                        })
+                    );
                 }
             }
         }
@@ -758,7 +755,6 @@ export class FlowState {
     }
 
     startFromWidgetAction(widget: Component) {
-        this.RuntimeStore.queueIsEmpty = false;
         this.executeWire(widget, "action");
     }
 
@@ -772,15 +768,18 @@ export class FlowState {
         ) as ActionComponent;
 
         if (inputActionComponent) {
-            this.RuntimeStore.queue.push({
-                flowState: this,
-                component: inputActionComponent,
-                input: "input",
-                inputData: {
-                    time: Date.now(),
-                    value: null
-                }
-            });
+            runInAction(() =>
+                this.RuntimeStore.queue.push({
+                    id: ++this.RuntimeStore.queueTaskId,
+                    flowState: this,
+                    component: inputActionComponent,
+                    input: "input",
+                    inputData: {
+                        time: Date.now(),
+                        value: null
+                    }
+                })
+            );
         } else {
             // TODO report
         }
@@ -788,7 +787,6 @@ export class FlowState {
 
     @action
     executeAction(component: Component, action: Action) {
-        this.RuntimeStore.queueIsEmpty = false;
         const flowState = new FlowState(
             this.RuntimeStore,
             action,
@@ -817,16 +815,19 @@ export class FlowState {
                         connectionLine.target
                     ) as ActionComponent;
 
-                    this.RuntimeStore.queue.push({
-                        flowState: this,
-                        component: actionNode,
-                        input: connectionLine.input,
-                        inputData: {
-                            time: Date.now(),
-                            value: null
-                        },
-                        connectionLine
-                    });
+                    runInAction(() =>
+                        this.RuntimeStore.queue.push({
+                            id: ++this.RuntimeStore.queueTaskId,
+                            flowState: this,
+                            component: actionNode,
+                            input: connectionLine.input,
+                            inputData: {
+                                time: Date.now(),
+                                value: null
+                            },
+                            connectionLine
+                        })
+                    );
                 } else {
                     this.RuntimeStore.historyState.addHistoryItem(
                         new NoConnectionHistoryItem(this, component, output)
@@ -866,16 +867,19 @@ export class FlowState {
                     )
                 );
 
-                this.RuntimeStore.queue.push({
-                    flowState: this,
-                    component: targetComponent,
-                    input: connectionLine.input,
-                    inputData: {
-                        time: Date.now(),
-                        value
-                    },
-                    connectionLine
-                });
+                runInAction(() =>
+                    this.RuntimeStore.queue.push({
+                        id: ++this.RuntimeStore.queueTaskId,
+                        flowState: this,
+                        component: targetComponent,
+                        input: connectionLine.input,
+                        inputData: {
+                            time: Date.now(),
+                            value
+                        },
+                        connectionLine
+                    })
+                );
             }
         });
     }
@@ -1027,16 +1031,20 @@ export class ComponentState {
                         )
                     );
 
-                    this.flowState.RuntimeStore.queue.push({
-                        flowState: catchErrorOutput.componentState.flowState,
-                        component: connectionLine.targetComponent!,
-                        input: connectionLine.input,
-                        inputData: {
-                            time: Date.now(),
-                            value: err
-                        },
-                        connectionLine
-                    });
+                    runInAction(() =>
+                        this.flowState.RuntimeStore.queue.push({
+                            id: ++this.flowState.RuntimeStore.queueTaskId,
+                            flowState:
+                                catchErrorOutput.componentState.flowState,
+                            component: connectionLine.targetComponent!,
+                            input: connectionLine.input,
+                            inputData: {
+                                time: Date.now(),
+                                value: err
+                            },
+                            connectionLine
+                        })
+                    );
                 });
             } else {
                 let flowState: FlowState | undefined;
@@ -1049,22 +1057,24 @@ export class ComponentState {
                 const catchErrorActionComponentState =
                     flowState && flowState.findCatchErrorActionComponent();
                 if (catchErrorActionComponentState) {
-                    this.flowState.RuntimeStore.queue.push({
-                        flowState: catchErrorActionComponentState.flowState,
-                        component: catchErrorActionComponentState.component,
-                        input: "message",
-                        inputData: {
-                            time: Date.now(),
-                            value: err
-                        }
-                    });
+                    runInAction(() =>
+                        this.flowState.RuntimeStore.queue.push({
+                            id: ++this.flowState.RuntimeStore.queueTaskId,
+                            flowState: catchErrorActionComponentState.flowState,
+                            component: catchErrorActionComponentState.component,
+                            input: "message",
+                            inputData: {
+                                time: Date.now(),
+                                value: err
+                            }
+                        })
+                    );
                 } else {
                     this.flowState.RuntimeStore.stop();
                 }
             }
         } finally {
             runInAction(() => {
-                this.flowState.RuntimeStore.queueIsEmpty = false;
                 this.isRunning = false;
             });
         }
@@ -1080,16 +1090,19 @@ export class ComponentState {
                         connectionLine.output === "@seqout"
                 )
                 .forEach(connectionLine => {
-                    this.flowState.RuntimeStore.queue.push({
-                        flowState: this.flowState,
-                        component: connectionLine.targetComponent!,
-                        input: connectionLine.input,
-                        inputData: {
-                            time: Date.now(),
-                            value: null
-                        },
-                        connectionLine
-                    });
+                    runInAction(() =>
+                        this.flowState.RuntimeStore.queue.push({
+                            id: ++this.flowState.RuntimeStore.queueTaskId,
+                            flowState: this.flowState,
+                            component: connectionLine.targetComponent!,
+                            input: connectionLine.input,
+                            inputData: {
+                                time: Date.now(),
+                                value: null
+                            },
+                            connectionLine
+                        })
+                    );
                 });
         }
 

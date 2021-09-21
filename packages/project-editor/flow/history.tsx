@@ -331,18 +331,20 @@ class HistoryTree extends React.Component {
             }));
         }
 
+        const historyItems = this.context.RuntimeStore.historyState.history
+            .slice()
+            .reverse();
+
         return {
             id: "root",
             label: "",
             children: getChildren(
-                this.context.RuntimeStore.historyState.history
-                    .reverse()
-                    .filter(
-                        historyItem =>
-                            !this.context.RuntimeStore.selectedFlowState ||
-                            historyItem.flowState ===
-                                this.context.RuntimeStore.selectedFlowState
-                    )
+                historyItems.filter(
+                    historyItem =>
+                        !this.context.RuntimeStore.selectedFlowState ||
+                        historyItem.flowState ===
+                            this.context.RuntimeStore.selectedFlowState
+                )
             ),
             selected: false,
             expanded: true
@@ -351,57 +353,44 @@ class HistoryTree extends React.Component {
 
     @action.bound
     selectNode(node?: ITreeNode<HistoryItem>) {
-        this.context.RuntimeStore.historyState.selectedHistoryItem = node?.data;
+        const historyItem = node?.data;
+        this.context.RuntimeStore.historyState.selectedHistoryItem =
+            historyItem;
+        if (!historyItem) {
+            return;
+        }
 
-        if (this.context.RuntimeStore.historyState.selectedHistoryItem?.flow) {
-            this.context.NavigationStore.showObject(
-                this.context.RuntimeStore.historyState.selectedHistoryItem?.flow
-            );
+        if (historyItem.flow) {
+            this.context.NavigationStore.showObject(historyItem.flow);
         } else {
             const objects: IEezObject[] = [];
 
-            if (
-                this.context.RuntimeStore.historyState.selectedHistoryItem
-                    ?.sourceComponent
-            ) {
-                objects.push(
-                    this.context.RuntimeStore.historyState.selectedHistoryItem
-                        ?.sourceComponent
-                );
+            if (historyItem.sourceComponent) {
+                objects.push(historyItem.sourceComponent);
             }
 
-            if (
-                this.context.RuntimeStore.historyState.selectedHistoryItem
-                    ?.connectionLine
-            ) {
-                objects.push(
-                    this.context.RuntimeStore.historyState.selectedHistoryItem
-                        ?.connectionLine
-                );
+            if (historyItem.connectionLine) {
+                objects.push(historyItem.connectionLine);
             }
 
-            if (
-                this.context.RuntimeStore.historyState.selectedHistoryItem
-                    ?.targetComponent
-            ) {
-                objects.push(
-                    this.context.RuntimeStore.historyState.selectedHistoryItem
-                        ?.targetComponent
-                );
+            if (historyItem.targetComponent) {
+                objects.push(historyItem.targetComponent);
             }
 
             if (objects.length > 0) {
+                // navigate to the first object,
+                // just to make sure that proper editor is opened
                 this.context.NavigationStore.showObject(objects[0]);
 
-                setTimeout(() => {
-                    const editorState =
-                        this.context.EditorsStore.activeEditor?.state;
-                    if (editorState instanceof FlowTabState) {
-                        this.context.EditorsStore.activeEditor?.state?.selectObjects(
-                            objects
-                        );
-                    }
-                }, 0);
+                const editorState =
+                    this.context.EditorsStore.activeEditor?.state;
+                if (editorState instanceof FlowTabState) {
+                    // select other object in the same editor
+                    editorState.selectObjects(objects);
+
+                    // ensure objects are visible on the screen
+                    editorState.ensureSelectionVisible();
+                }
             }
         }
     }

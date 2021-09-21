@@ -122,6 +122,7 @@ export class ButtonAction extends React.Component<{
     enabled?: boolean;
     className?: string;
     style?: React.CSSProperties;
+    attention?: boolean;
 }> {
     render() {
         const { style, icon, iconSize, text } = this.props;
@@ -137,6 +138,7 @@ export class ButtonAction extends React.Component<{
                         icon={icon}
                         size={iconSize}
                         style={{ marginRight: 5 }}
+                        attention={this.props.attention}
                     />
                 )}
                 {text}
