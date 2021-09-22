@@ -15,8 +15,8 @@ export interface ITransform {
 }
 
 export class Transform implements ITransform {
-    @observable _translate: Point;
-    @observable _scale: number;
+    @observable _translate: Point = { x: 0, y: 0 };
+    @observable _scale: number = 1;
 
     @observable clientRect = { left: 0, top: 0, width: 1, height: 1 };
 
@@ -61,14 +61,6 @@ export class Transform implements ITransform {
         this.translate = {
             x: this.translate.x + translate.x,
             y: this.translate.y + translate.y
-        };
-    }
-
-    get centerPoint() {
-        let rect = this.clientToPageRect(this.clientRect);
-        return {
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2
         };
     }
 

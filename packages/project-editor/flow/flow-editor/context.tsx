@@ -1,10 +1,4 @@
-import {
-    observable,
-    computed,
-    action,
-    reaction,
-    IReactionDisposer
-} from "mobx";
+import { observable, computed, action } from "mobx";
 
 import { BoundingRectBuilder } from "eez-studio-shared/geometry";
 
@@ -18,31 +12,30 @@ import {
 import type {
     IDocument,
     IViewState,
-    IViewStatePersistantState,
     IFlowContext,
     IEditorOptions,
     IResizeHandler,
-    IDataContext,
-    IFlowState
+    IDataContext
 } from "project-editor/flow/flow-interfaces";
-import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
-import { guid } from "eez-studio-shared/guid";
-import { Flow } from "../flow";
+import { FlowTabState } from "../flow";
+import { FlowDocument } from "./flow-document";
+import { Transform } from "project-editor/flow/flow-editor/transform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class ViewState implements IViewState {
-    @observable transform = new Transform({
-        scale: 1,
-        translate: { x: 0, y: 0 }
-    });
+    get transform() {
+        return this.flowContext.tabState.transform;
+    }
+
+    set transform(transform: Transform) {
+        this.flowContext.tabState.transform = transform;
+    }
 
     @observable dxMouseDrag: number | undefined;
     @observable dyMouseDrag: number | undefined;
-
-    persistentStateReactionDisposer: IReactionDisposer;
 
     constructor(public flowContext: EditorFlowContext) {}
 
@@ -55,56 +48,8 @@ class ViewState implements IViewState {
     }
 
     @action
-    set(
-        viewStatePersistantState: IViewStatePersistantState | undefined,
-        onSavePersistantState: (
-            viewStatePersistantState: IViewStatePersistantState
-        ) => void
-    ) {
-        if (this.persistentStateReactionDisposer) {
-            this.persistentStateReactionDisposer();
-        }
-
-        if (viewStatePersistantState?.transform) {
-            this.transform.scale = viewStatePersistantState.transform.scale;
-            this.transform.translate =
-                viewStatePersistantState.transform.translate;
-        } else {
-            this.resetTransform();
-        }
-
-        if (viewStatePersistantState?.clientRect) {
-            this.transform.clientRect = viewStatePersistantState.clientRect;
-        }
-
-        this.persistentStateReactionDisposer = reaction(
-            () => this.persistentState,
-            viewState => onSavePersistantState(viewState)
-        );
-    }
-
-    @computed
-    get persistentState(): IViewStatePersistantState {
-        return {
-            transform: {
-                translate: this.transform.translate,
-                scale: this.transform.scale
-            },
-            clientRect: this.transform.clientRect
-        };
-    }
-
-    @action
     resetTransform() {
-        if (this.document && this.document.resetTransform) {
-            this.document.resetTransform(this.transform);
-        } else {
-            this.transform.scale = 1;
-            this.transform.translate = {
-                x: 0,
-                y: 0
-            };
-        }
+        this.flowContext.tabState.resetTransform();
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined {
@@ -294,25 +239,34 @@ class ViewState implements IViewState {
 
         DocumentStore.undoManager.setCombineCommands(false);
     }
-
-    destroy() {
-        this.persistentStateReactionDisposer();
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EditorFlowContext implements IFlowContext {
+    tabState: FlowTabState;
     document: IDocument;
+
     viewState: ViewState = new ViewState(this);
     editorOptions: IEditorOptions = {};
     @observable dragComponent: Component | undefined;
-    frontFace: boolean;
     dataContext: IDataContext;
-    flow: Flow;
-    flowState: IFlowState | undefined;
 
-    containerId = guid();
+    get containerId() {
+        return this.tabState.containerId;
+    }
+
+    get flow() {
+        return this.tabState.flow;
+    }
+
+    get flowState() {
+        return this.tabState.flowState;
+    }
+
+    get frontFace() {
+        return this.tabState.frontFace;
+    }
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext {
         return Object.assign(new EditorFlowContext(), this, {
@@ -327,24 +281,13 @@ export class EditorFlowContext implements IFlowContext {
     }
 
     set(
-        document: IDocument,
-        viewStatePersistantState: IViewStatePersistantState | undefined,
-        onSavePersistantState: (
-            viewStatePersistantState: IViewStatePersistantState
-        ) => void,
-        frontFace: boolean,
-        flow: Flow,
-        flowState: IFlowState | undefined,
+        tabState: FlowTabState,
         options?: IEditorOptions,
         filterSnapLines?: (node: ITreeObjectAdapter) => boolean
     ) {
-        this.document = document;
+        this.tabState = tabState;
 
-        this.viewState.set(viewStatePersistantState, onSavePersistantState);
-
-        this.frontFace = frontFace;
-        this.flow = flow;
-        this.flowState = flowState;
+        this.document = new FlowDocument(tabState.widgetContainer, this);
 
         this.editorOptions = options || {
             center: {
@@ -357,11 +300,7 @@ export class EditorFlowContext implements IFlowContext {
 
         this.dataContext =
             this.document.DocumentStore.dataContext.createWithLocalVariables(
-                flow.localVariables
+                this.flow.localVariables
             );
-    }
-
-    destroy() {
-        this.viewState.destroy();
     }
 }

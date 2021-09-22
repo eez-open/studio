@@ -1,5 +1,5 @@
 import React from "react";
-import { action, computed, observable } from "mobx";
+import { computed, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
@@ -11,7 +11,6 @@ import {
     NavigationComponent,
     EditorComponent,
     IEditorState,
-    getParent,
     getAncestorOfType
 } from "project-editor/core/object";
 import { Message, Type } from "project-editor/core/output";
@@ -38,88 +37,87 @@ import {
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
-import {
-    IFlowContext,
-    IViewStatePersistantState
-} from "project-editor/flow/flow-interfaces";
+import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/render";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
+import { Transform } from "project-editor/flow/flow-editor/transform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class ActionFlowTabState extends FlowTabState {
-    flow: Flow;
     frontFace = false;
 
     componentContainerDisplayItem: ITreeObjectAdapter;
 
-    viewState: IViewStatePersistantState | undefined;
+    @observable _transform: Transform = new Transform({
+        translate: { x: 0, y: 0 },
+        scale: 1
+    });
 
     constructor(object: IEezObject) {
-        super();
+        super(object as Flow);
 
-        this.flow = object as Flow;
         this.componentContainerDisplayItem = new TreeObjectAdapter(this.flow);
+        this.resetTransform();
+        this.loadState();
     }
 
-    @computed
-    get selectedObject(): IEezObject | undefined {
-        return this.componentContainerDisplayItem.selectedObject || this.flow;
+    get widgetContainer() {
+        return this.componentContainerDisplayItem;
     }
 
-    @computed
-    get selectedObjects() {
-        return this.componentContainerDisplayItem.selectedObjects;
+    get transform() {
+        return this._transform;
     }
 
-    loadState(state: any) {
+    set transform(transform: Transform) {
+        runInAction(() => (this._transform = transform));
+    }
+
+    loadState() {
+        const state = this.DocumentStore.uiStateStore.getObjectUIState(
+            this.flow,
+            "flow-state"
+        );
+
+        if (!state) {
+            return;
+        }
+
         this.componentContainerDisplayItem.loadState(state.selection);
-        if (state.transform) {
-            this.viewState = { transform: state.transform };
+
+        if (state.transform && state.transform.translate) {
+            this._transform = new Transform({
+                translate: {
+                    x: state.transform.translate.x ?? 0,
+                    y: state.transform.translate.y ?? 0
+                },
+                scale: state.transform.scale ?? 1
+            });
         }
     }
 
     saveState() {
-        return {
+        const state = {
             selection: this.componentContainerDisplayItem.saveState(),
-            transform: this.viewState?.transform
+            transform: this._transform
+                ? {
+                      translate: {
+                          x: this._transform.translate.x,
+                          y: this._transform.translate.y
+                      },
+                      scale: this._transform.scale
+                  }
+                : undefined
         };
-    }
 
-    @action
-    selectObject(object: IEezObject) {
-        let ancestor: IEezObject | undefined;
-        for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-            let item =
-                this.componentContainerDisplayItem.getObjectAdapter(ancestor);
-            if (item) {
-                this.componentContainerDisplayItem.selectItems([item]);
-                return;
-            }
-        }
-    }
+        this.DocumentStore.uiStateStore.updateObjectUIState(
+            this.flow,
+            "flow-state",
+            state
+        );
 
-    @action
-    selectObjects(objects: IEezObject[]) {
-        const items: ITreeObjectAdapter[] = [];
-
-        for (let i = 0; i < objects.length; i++) {
-            const object = objects[i];
-
-            let ancestor: IEezObject | undefined;
-            for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-                let item =
-                    this.componentContainerDisplayItem.getObjectAdapter(
-                        ancestor
-                    );
-                if (item) {
-                    items.push(item);
-                    break;
-                }
-            }
-        }
-
-        this.componentContainerDisplayItem.selectItems(items);
+        return undefined;
     }
 }
 
@@ -190,17 +188,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
                             position: "relative"
                         }}
                     >
-                        <FlowViewer
-                            widgetContainer={
-                                tabState.componentContainerDisplayItem
-                            }
-                            viewStatePersistantState={tabState.viewState}
-                            onSavePersistantState={viewState =>
-                                (tabState.viewState = viewState)
-                            }
-                            frontFace={false}
-                            flowState={tabState.flowState}
-                        />
+                        <FlowViewer tabState={tabState} />
                     </div>
                 );
             }
@@ -212,14 +200,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
                     sizes="100%|400px"
                     childrenOverflow="hidden|hidden"
                 >
-                    <FlowEditor
-                        widgetContainer={tabState.componentContainerDisplayItem}
-                        viewStatePersistantState={tabState.viewState}
-                        onSavePersistantState={viewState =>
-                            (tabState.viewState = viewState)
-                        }
-                        frontFace={false}
-                    />
+                    <FlowEditor tabState={tabState} />
                     <Splitter
                         type="vertical"
                         persistId="page-editor/properties-widgets-palette"

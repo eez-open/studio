@@ -3,10 +3,7 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import { DocumentStoreClass } from "project-editor/core/store";
 
-import type {
-    ITransform,
-    Transform
-} from "project-editor/flow/flow-editor/transform";
+import type { Transform } from "project-editor/flow/flow-editor/transform";
 import type { InputPropertyValue } from "project-editor/flow/runtime";
 import { Component } from "project-editor/flow/component";
 
@@ -86,7 +83,6 @@ export interface IDocument {
           }
         | undefined;
     getObjectsInsideRect(rect: Rect): ITreeObjectAdapter[];
-    resetTransform?(transform: ITransform): void;
 
     // misc.
     createContextMenu(objects: ITreeObjectAdapter[]): Electron.Menu | undefined;
@@ -141,8 +137,6 @@ export interface IViewState {
             | "end-y"
     ): void;
 
-    persistentState: IViewStatePersistantState;
-
     dxMouseDrag: number | undefined;
     dyMouseDrag: number | undefined;
 }
@@ -150,11 +144,6 @@ export interface IViewState {
 export interface IEditorOptions {
     center?: Point;
     filterSnapLines?: (node: ITreeObjectAdapter) => boolean;
-}
-
-export interface IViewStatePersistantState {
-    transform?: ITransform;
-    clientRect?: Rect;
 }
 
 export type HandleType =

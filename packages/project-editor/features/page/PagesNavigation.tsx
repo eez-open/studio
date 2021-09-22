@@ -1,8 +1,7 @@
 import React from "react";
-import { computed, action, observable, runInAction } from "mobx";
+import { computed, action, runInAction, observable } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import classNames from "classnames";
 
 import { _find } from "eez-studio-shared/algorithm";
 
@@ -12,7 +11,6 @@ import { IconAction } from "eez-studio-ui/action";
 import {
     EditorComponent,
     getAncestorOfType,
-    getParent,
     IEezObject,
     NavigationComponent
 } from "project-editor/core/object";
@@ -22,7 +20,7 @@ import {
     TreeObjectAdapter,
     TreeObjectAdapterChildren
 } from "project-editor/core/objectAdapter";
-import { getDocumentStore, IPanel } from "project-editor/core/store";
+import { IPanel } from "project-editor/core/store";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";
@@ -44,8 +42,8 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
-import { FlowTabState } from "project-editor/flow/flow";
-import { IViewStatePersistantState } from "project-editor/flow/flow-interfaces";
+import { Flow, FlowTabState } from "project-editor/flow/flow";
+import { Transform } from "project-editor/flow/flow-editor/transform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,21 +52,7 @@ export class PageEditor extends EditorComponent implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @observable transitionIsActive = false;
-
     @action.bound setFrontFace(enabled: boolean) {
-        // this.transitionIsActive = true;
-
-        // setTimeout(() => {
-        //     this.pageTabState.frontFace = enabled;
-        //     setTimeout(
-        //         action(() => {
-        //             this.transitionIsActive = false;
-        //         }),
-        //         FLIP_CARD_ANIMATION_DURATION
-        //     );
-        // });
-
         this.pageTabState.frontFace = enabled;
     }
 
@@ -84,7 +68,7 @@ export class PageEditor extends EditorComponent implements IPanel {
     @computed
     get treeAdapter() {
         return new TreeAdapter(
-            this.pageTabState.componentContainerDisplayItem,
+            this.pageTabState.widgetContainer,
             undefined,
             undefined,
             true
@@ -146,129 +130,10 @@ export class PageEditor extends EditorComponent implements IPanel {
                     <div style={{ flexGrow: 1 }}></div>
                 </ToolbarHeader>
                 <Body>
-                    {!this.transitionIsActive &&
-                        (this.pageTabState.isRuntime ? (
-                            <FlowViewer
-                                widgetContainer={
-                                    this.pageTabState
-                                        .componentContainerDisplayItemRuntime
-                                }
-                                viewStatePersistantState={
-                                    this.pageTabState.runtimeViewState
-                                }
-                                onSavePersistantState={viewState =>
-                                    (this.pageTabState.runtimeViewState =
-                                        viewState)
-                                }
-                                frontFace={this.pageTabState.frontFace}
-                                flowState={this.pageTabState.flowState}
-                            />
-                        ) : (
-                            <FlowEditor
-                                widgetContainer={
-                                    this.pageTabState
-                                        .componentContainerDisplayItemEditor
-                                }
-                                viewStatePersistantState={
-                                    this.pageTabState.editorViewState
-                                }
-                                onSavePersistantState={viewState =>
-                                    (this.pageTabState.editorViewState =
-                                        viewState)
-                                }
-                                frontFace={this.pageTabState.frontFace}
-                            />
-                        ))}
-                    {this.transitionIsActive && (
-                        <div className="EezStudio_FlipCardDiv">
-                            <div
-                                className={classNames("flip-card-inner", {
-                                    "show-back-face":
-                                        !this.pageTabState.frontFace
-                                })}
-                            >
-                                <div className="flip-card-front">
-                                    {this.pageTabState.isRuntime ? (
-                                        <FlowViewer
-                                            widgetContainer={
-                                                this.pageTabState
-                                                    .componentContainerDisplayItemRuntimeFrontFace
-                                            }
-                                            viewStatePersistantState={
-                                                this.pageTabState
-                                                    .runtimeFrontViewState
-                                            }
-                                            onSavePersistantState={viewState =>
-                                                (this.pageTabState.runtimeFrontViewState =
-                                                    viewState)
-                                            }
-                                            transitionIsActive={true}
-                                            frontFace={true}
-                                            flowState={
-                                                this.pageTabState.flowState
-                                            }
-                                        />
-                                    ) : (
-                                        <FlowEditor
-                                            widgetContainer={
-                                                this.pageTabState
-                                                    .componentContainerDisplayItemEditorFrontFace
-                                            }
-                                            viewStatePersistantState={
-                                                this.pageTabState
-                                                    .editorFrontViewState
-                                            }
-                                            onSavePersistantState={viewState =>
-                                                (this.pageTabState.editorFrontViewState =
-                                                    viewState)
-                                            }
-                                            transitionIsActive={true}
-                                            frontFace={true}
-                                        />
-                                    )}
-                                </div>
-                                <div className="flip-card-back">
-                                    {this.pageTabState.isRuntime ? (
-                                        <FlowViewer
-                                            widgetContainer={
-                                                this.pageTabState
-                                                    .componentContainerDisplayItemRuntimeBackFace
-                                            }
-                                            viewStatePersistantState={
-                                                this.pageTabState
-                                                    .runtimeBackViewState
-                                            }
-                                            onSavePersistantState={viewState =>
-                                                (this.pageTabState.runtimeBackViewState =
-                                                    viewState)
-                                            }
-                                            transitionIsActive={true}
-                                            frontFace={false}
-                                            flowState={
-                                                this.pageTabState.flowState
-                                            }
-                                        />
-                                    ) : (
-                                        <FlowEditor
-                                            widgetContainer={
-                                                this.pageTabState
-                                                    .componentContainerDisplayItemEditorBackFace
-                                            }
-                                            viewStatePersistantState={
-                                                this.pageTabState
-                                                    .editorBackViewState
-                                            }
-                                            onSavePersistantState={viewState =>
-                                                (this.pageTabState.editorBackViewState =
-                                                    viewState)
-                                            }
-                                            transitionIsActive={true}
-                                            frontFace={false}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                    {this.pageTabState.isRuntime ? (
+                        <FlowViewer tabState={this.pageTabState} />
+                    ) : (
+                        <FlowEditor tabState={this.pageTabState} />
                     )}
                 </Body>
             </VerticalHeaderWithBody>
@@ -373,23 +238,33 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
     }
 }
 
-export class PageTabState extends FlowTabState {
-    page: Page;
+////////////////////////////////////////////////////////////////////////////////
 
+export class PageTabState extends FlowTabState {
     componentContainerDisplayItemEditorFrontFace: ITreeObjectAdapter;
     componentContainerDisplayItemEditorBackFace: ITreeObjectAdapter;
     componentContainerDisplayItemRuntimeFrontFace: ITreeObjectAdapter;
     componentContainerDisplayItemRuntimeBackFace: ITreeObjectAdapter;
 
-    editorFrontViewState: IViewStatePersistantState | undefined;
-    editorBackViewState: IViewStatePersistantState | undefined;
-    runtimeFrontViewState: IViewStatePersistantState | undefined;
-    runtimeBackViewState: IViewStatePersistantState | undefined;
+    @observable _editorFrontTransform: Transform = new Transform({
+        translate: { x: 0, y: 0 },
+        scale: 1
+    });
+    @observable _editorBackTransform: Transform = new Transform({
+        translate: { x: 0, y: 0 },
+        scale: 1
+    });
+    @observable _runtimeFrontTransform: Transform = new Transform({
+        translate: { x: 0, y: 0 },
+        scale: 1
+    });
+    @observable _runtimeBackTransform: Transform = new Transform({
+        translate: { x: 0, y: 0 },
+        scale: 1
+    });
 
     constructor(object: IEezObject) {
-        super();
-
-        this.page = object as Page;
+        super(object as Flow);
 
         this.componentContainerDisplayItemEditorFrontFace =
             new PageTreeObjectAdapter(this.page, true);
@@ -402,18 +277,17 @@ export class PageTabState extends FlowTabState {
 
         this.componentContainerDisplayItemRuntimeBackFace =
             new PageTreeObjectAdapter(this.page, false);
+
+        this.resetTransform(this._editorFrontTransform);
+        this.resetTransform(this._editorBackTransform);
+        this.resetTransform(this._runtimeFrontTransform);
+        this.resetTransform(this._runtimeBackTransform);
+
+        this.loadState();
     }
 
-    get flow() {
-        return this.page;
-    }
-
-    @computed get DocumentStore() {
-        return getDocumentStore(this.page);
-    }
-
-    @computed get isRuntime() {
-        return this.DocumentStore.runtimeStore.isRuntimeMode;
+    get page() {
+        return this.flow as Page;
     }
 
     @computed get frontFace() {
@@ -433,73 +307,82 @@ export class PageTabState extends FlowTabState {
         });
     }
 
-    @computed get componentContainerDisplayItemRuntime() {
-        return this.frontFace
-            ? this.componentContainerDisplayItemRuntimeFrontFace
-            : this.componentContainerDisplayItemRuntimeBackFace;
-    }
-
-    @computed get componentContainerDisplayItemEditor() {
-        return this.frontFace
-            ? this.componentContainerDisplayItemEditorFrontFace
-            : this.componentContainerDisplayItemEditorBackFace;
-    }
-
-    @computed get componentContainerDisplayItem() {
+    get widgetContainer() {
         if (this.isRuntime) {
-            return this.componentContainerDisplayItemRuntime;
-        }
-
-        return this.componentContainerDisplayItemEditor;
-    }
-
-    get editorViewState() {
-        return this.frontFace
-            ? this.editorFrontViewState
-            : this.editorBackViewState;
-    }
-
-    set editorViewState(viewState: IViewStatePersistantState | undefined) {
-        if (this.frontFace) {
-            this.editorFrontViewState = viewState;
+            if (this.frontFace) {
+                return this.componentContainerDisplayItemRuntimeFrontFace;
+            } else {
+                return this.componentContainerDisplayItemRuntimeBackFace;
+            }
         } else {
-            this.editorBackViewState = viewState;
+            if (this.frontFace) {
+                return this.componentContainerDisplayItemEditorFrontFace;
+            } else {
+                return this.componentContainerDisplayItemEditorBackFace;
+            }
         }
     }
 
-    get runtimeViewState() {
-        return this.frontFace
-            ? this.runtimeFrontViewState
-            : this.runtimeBackViewState;
-    }
-
-    set runtimeViewState(viewState: IViewStatePersistantState | undefined) {
-        if (this.frontFace) {
-            this.runtimeFrontViewState = viewState;
+    get transform() {
+        if (this.isRuntime) {
+            if (this.frontFace) {
+                return this._runtimeFrontTransform;
+            } else {
+                return this._runtimeBackTransform;
+            }
         } else {
-            this.runtimeBackViewState = viewState;
+            if (this.frontFace) {
+                return this._editorFrontTransform;
+            } else {
+                return this._editorBackTransform;
+            }
         }
     }
 
-    @computed
-    get selectedObject(): IEezObject | undefined {
-        return this.componentContainerDisplayItem.selectedObject || this.page;
+    set transform(transform: Transform) {
+        runInAction(() => {
+            if (this.isRuntime) {
+                if (this.frontFace) {
+                    this._runtimeFrontTransform = transform;
+                } else {
+                    this._runtimeBackTransform = transform;
+                }
+            } else {
+                if (this.frontFace) {
+                    this._editorFrontTransform = transform;
+                } else {
+                    this._editorBackTransform = transform;
+                }
+            }
+        });
     }
 
-    @computed
-    get selectedObjects() {
-        return this.componentContainerDisplayItem.selectedObjects;
-    }
+    loadState() {
+        const state = this.DocumentStore.uiStateStore.getObjectUIState(
+            this.flow,
+            "flow-state"
+        );
 
-    loadState(state: any) {
+        if (!state) {
+            return;
+        }
+
         if (state.editorFront) {
             this.componentContainerDisplayItemEditorFrontFace.loadState(
                 state.editorFront.selection
             );
-            if (state.editorFront.transform) {
-                this.editorFrontViewState = {
-                    transform: state.editorFront.transform
-                };
+
+            if (
+                state.editorFront.transform &&
+                state.editorFront.transform.translate
+            ) {
+                this._editorFrontTransform = new Transform({
+                    translate: {
+                        x: state.editorFront.transform.translate.x ?? 0,
+                        y: state.editorFront.transform.translate.y ?? 0
+                    },
+                    scale: state.editorFront.transform.scale ?? 1
+                });
             }
         }
 
@@ -507,10 +390,18 @@ export class PageTabState extends FlowTabState {
             this.componentContainerDisplayItemEditorBackFace.loadState(
                 state.editorBack.selection
             );
-            if (state.editorBack.transform) {
-                this.editorBackViewState = {
-                    transform: state.editorBack.transform
-                };
+
+            if (
+                state.editorBack.transform &&
+                state.editorBack.transform.translate
+            ) {
+                this._editorBackTransform = new Transform({
+                    translate: {
+                        x: state.editorBack.transform.translate.x ?? 0,
+                        y: state.editorBack.transform.translate.y ?? 0
+                    },
+                    scale: state.editorBack.transform.scale ?? 1
+                });
             }
         }
 
@@ -518,10 +409,18 @@ export class PageTabState extends FlowTabState {
             this.componentContainerDisplayItemRuntimeFrontFace.loadState(
                 state.runtimeFront.selection
             );
-            if (state.runtimeFront.transform) {
-                this.runtimeFrontViewState = {
-                    transform: state.runtimeFront.transform
-                };
+
+            if (
+                state.runtimeFront.transform &&
+                state.runtimeFront.transform.translate
+            ) {
+                this._runtimeFrontTransform = new Transform({
+                    translate: {
+                        x: state.runtimeFront.transform.translate.x ?? 0,
+                        y: state.runtimeFront.transform.translate.y ?? 0
+                    },
+                    scale: state.runtimeFront.transform.scale ?? 1
+                });
             }
         }
 
@@ -529,73 +428,77 @@ export class PageTabState extends FlowTabState {
             this.componentContainerDisplayItemRuntimeBackFace.loadState(
                 state.runtimeBack.selection
             );
-            if (state.runtimeBack.transform) {
-                this.runtimeBackViewState = {
-                    transform: state.runtimeBack.transform
-                };
+
+            if (
+                state.runtimeBack.transform &&
+                state.runtimeBack.transform.translate
+            ) {
+                this._runtimeBackTransform = new Transform({
+                    translate: {
+                        x: state.runtimeBack.transform.translate.x ?? 0,
+                        y: state.runtimeBack.transform.translate.y ?? 0
+                    },
+                    scale: state.runtimeBack.transform.scale ?? 1
+                });
             }
         }
     }
 
     saveState() {
-        return {
+        const state = {
             editorFront: {
                 selection:
                     this.componentContainerDisplayItemEditorFrontFace.saveState(),
-                transform: this.editorFrontViewState?.transform
+                transform: {
+                    translate: {
+                        x: this._editorFrontTransform.translate.x,
+                        y: this._editorFrontTransform.translate.y
+                    },
+                    scale: this._editorFrontTransform.scale
+                }
             },
             editorBack: {
                 selection:
                     this.componentContainerDisplayItemEditorBackFace.saveState(),
-                transform: this.editorBackViewState?.transform
+                transform: {
+                    translate: {
+                        x: this._editorBackTransform.translate.x,
+                        y: this._editorBackTransform.translate.y
+                    },
+                    scale: this._editorBackTransform.scale
+                }
             },
             runtimeFront: {
                 selection:
                     this.componentContainerDisplayItemRuntimeFrontFace.saveState(),
-                transform: this.runtimeFrontViewState?.transform
+                transform: {
+                    translate: {
+                        x: this._runtimeFrontTransform.translate.x,
+                        y: this._runtimeFrontTransform.translate.y
+                    },
+                    scale: this._runtimeFrontTransform.scale
+                }
             },
             runtimeBack: {
                 selection:
                     this.componentContainerDisplayItemRuntimeBackFace.saveState(),
-                transform: this.runtimeBackViewState?.transform
-            }
-        };
-    }
-
-    @action
-    selectObject(object: IEezObject) {
-        let ancestor: IEezObject | undefined;
-        for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-            let item =
-                this.componentContainerDisplayItem.getObjectAdapter(ancestor);
-            if (item) {
-                this.componentContainerDisplayItem.selectItems([item]);
-                return;
-            }
-        }
-    }
-
-    @action
-    selectObjects(objects: IEezObject[]) {
-        const items: ITreeObjectAdapter[] = [];
-
-        for (let i = 0; i < objects.length; i++) {
-            const object = objects[i];
-
-            let ancestor: IEezObject | undefined;
-            for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
-                let item =
-                    this.componentContainerDisplayItem.getObjectAdapter(
-                        ancestor
-                    );
-                if (item) {
-                    items.push(item);
-                    break;
+                transform: {
+                    translate: {
+                        x: this._runtimeBackTransform.translate.x,
+                        y: this._runtimeBackTransform.translate.y
+                    },
+                    scale: this._runtimeBackTransform.scale
                 }
             }
-        }
+        };
 
-        this.componentContainerDisplayItem.selectItems(items);
+        this.DocumentStore.uiStateStore.updateObjectUIState(
+            this.flow,
+            "flow-state",
+            state
+        );
+
+        return undefined;
     }
 }
 
@@ -617,12 +520,14 @@ export class PagesNavigation extends NavigationComponent {
         if (!this.context.editorsStore.activeEditor) {
             return undefined;
         }
+
         let pageTabState = this.context.editorsStore.activeEditor
             .state as PageTabState;
         if (!pageTabState) {
             return undefined;
         }
-        return pageTabState.componentContainerDisplayItem;
+
+        return pageTabState.widgetContainer;
     }
 
     @computed

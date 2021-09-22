@@ -189,19 +189,16 @@ export const ComponentEnclosure = observer(
         React.useEffect(() => {
             const el = elRef.current;
             if (el) {
-                const flipCard = el.closest(".flip-card-inner") as HTMLElement;
-                if (!flipCard) {
-                    const geometry = calcComponentGeometry(
-                        component,
-                        el,
-                        flowContext
-                    );
-                    geometry.width = Math.round(geometry.width);
-                    geometry.height = Math.round(geometry.height);
-                    runInAction(() => {
-                        component.geometry = geometry;
-                    });
-                }
+                const geometry = calcComponentGeometry(
+                    component,
+                    el,
+                    flowContext
+                );
+                geometry.width = Math.round(geometry.width);
+                geometry.height = Math.round(geometry.height);
+                runInAction(() => {
+                    component.geometry = geometry;
+                });
             }
         });
 

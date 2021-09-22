@@ -11,19 +11,12 @@ import {
     rectContains
 } from "eez-studio-shared/geometry";
 
-import type {
-    IDocument,
-    IViewStatePersistantState,
-    IFlowContext,
-    IFlowState
-} from "project-editor/flow/flow-interfaces";
-import { ITransform } from "project-editor/flow/flow-editor/transform";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
 
-import { IPanel, getDocumentStore } from "project-editor/core/store";
-import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { IPanel } from "project-editor/core/store";
 
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { Svg } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
@@ -31,93 +24,6 @@ import { Selection } from "project-editor/flow/flow-runtime/selection";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
 import { Component } from "project-editor/flow/component";
 import { attachCssToElement } from "eez-studio-shared/dom";
-
-////////////////////////////////////////////////////////////////////////////////
-
-class FlowDocument implements IDocument {
-    constructor(
-        public flow: ITreeObjectAdapter,
-        private flowContext: RuntimeFlowContext
-    ) {}
-
-    @computed get connectionLines(): ITreeObjectAdapter[] {
-        return (this.flow.children as ITreeObjectAdapter[]).filter(
-            editorObject => editorObject.object instanceof ConnectionLine
-        );
-    }
-
-    @computed get selectedConnectionLines() {
-        return this.connectionLines.filter(connectionLine =>
-            this.flowContext.viewState.isObjectIdSelected(connectionLine.id)
-        );
-    }
-
-    @computed get nonSelectedConnectionLines() {
-        return this.connectionLines.filter(
-            connectionLine =>
-                !this.flowContext.viewState.isObjectIdSelected(
-                    connectionLine.id
-                )
-        );
-    }
-
-    findObjectById(id: string) {
-        return this.flow.getObjectAdapter(id);
-    }
-
-    findObjectParent(object: ITreeObjectAdapter) {
-        return this.flow.getParent(object);
-    }
-
-    objectFromPoint(point: Point) {
-        return undefined;
-    }
-
-    resetTransform(transform: ITransform) {
-        const flow = this.flow.object as Flow;
-        transform.translate = {
-            x: -flow.pageRect.width / 2,
-            y: -flow.pageRect.height / 2
-        };
-        transform.scale = 1;
-    }
-
-    getObjectsInsideRect(rect: Rect) {
-        return [];
-    }
-
-    createContextMenu(objects: ITreeObjectAdapter[]) {
-        return undefined;
-    }
-
-    duplicateSelection() {}
-
-    pasteSelection() {}
-
-    @computed get DocumentStore() {
-        return getDocumentStore(this.flow.object);
-    }
-
-    onDragStart(): void {}
-
-    onDragEnd(): void {}
-
-    connectionExists(
-        sourceObjectId: string,
-        connectionOutput: string,
-        targetObjectId: string,
-        connectionInput: string
-    ): boolean {
-        return false;
-    }
-
-    connect(
-        sourceObjectId: string,
-        connectionOutput: string,
-        targetObjectId: string,
-        connectionInput: string
-    ) {}
-}
 
 const AllConnectionLines = observer(
     ({ flowContext }: { flowContext: IFlowContext }) => {
@@ -148,7 +54,6 @@ const AllConnectionLines = observer(
 export class Canvas extends React.Component<{
     flowContext: IFlowContext;
     pageRect?: Rect;
-    transitionIsActive?: boolean;
 }> {
     div: HTMLDivElement;
     resizeObserver: ResizeObserver;
@@ -165,7 +70,7 @@ export class Canvas extends React.Component<{
     }
 
     resizeObserverCallback = () => {
-        if ($(this.div).is(":visible") && !this.props.transitionIsActive) {
+        if ($(this.div).is(":visible")) {
             const transform = this.props.flowContext.viewState.transform;
 
             let clientRect = this.div.getBoundingClientRect();
@@ -308,12 +213,7 @@ export class Canvas extends React.Component<{
 @observer
 export class FlowViewer
     extends React.Component<{
-        widgetContainer: ITreeObjectAdapter;
-        viewStatePersistantState: IViewStatePersistantState | undefined;
-        onSavePersistantState: (viewState: IViewStatePersistantState) => void;
-        transitionIsActive?: boolean;
-        frontFace: boolean;
-        flowState: IFlowState | undefined;
+        tabState: FlowTabState;
     }>
     implements IPanel
 {
@@ -322,46 +222,11 @@ export class FlowViewer
 
     divRef = React.createRef<HTMLDivElement>();
 
-    _flowContext: RuntimeFlowContext | undefined = undefined;
-
-    get flowState() {
-        return (
-            this.props.flowState ||
-            this.context.runtimeStore.getFlowState(
-                this.props.widgetContainer.object as Flow
-            )
-        );
-    }
-
     @computed
     get flowContext() {
-        let clientRect: Rect | undefined = undefined;
-
-        if (this._flowContext) {
-            clientRect = this._flowContext.viewState.transform.clientRect;
-            this._flowContext.destroy();
-        }
-
-        let viewStatePersistantState = this.props.viewStatePersistantState;
-        if (clientRect) {
-            if (!viewStatePersistantState) {
-                viewStatePersistantState = { clientRect };
-            } else if (!viewStatePersistantState.clientRect) {
-                viewStatePersistantState.clientRect = clientRect;
-            }
-        }
-
         const flowContext = new RuntimeFlowContext();
 
-        flowContext.set(
-            new FlowDocument(this.props.widgetContainer, flowContext),
-            this.props.viewStatePersistantState,
-            this.props.onSavePersistantState,
-            this.props.frontFace,
-            this.flowState
-        );
-
-        this._flowContext = flowContext;
+        flowContext.set(this.props.tabState);
 
         return flowContext;
     }
@@ -391,10 +256,6 @@ export class FlowViewer
     }
 
     componentWillUnmount() {
-        if (this._flowContext) {
-            this._flowContext.destroy();
-        }
-
         this.divRef.current?.removeEventListener(
             "ensure-selection-visible",
             this.ensureSelectionVisible
@@ -457,12 +318,12 @@ export class FlowViewer
 
     @computed
     get selectedObject() {
-        return this.props.widgetContainer.selectedObjects[0];
+        return this.props.tabState.widgetContainer.selectedObjects[0];
     }
 
     @computed
     get selectedObjects() {
-        return this.props.widgetContainer.selectedObjects;
+        return this.props.tabState.widgetContainer.selectedObjects;
     }
 
     cutSelection() {}
@@ -492,9 +353,7 @@ export class FlowViewer
     }
 
     render() {
-        const flow = this.props.widgetContainer.object as Flow;
-
-        this.flowState;
+        const flow = this.props.tabState.widgetContainer.object as Flow;
 
         return (
             <div
@@ -505,10 +364,7 @@ export class FlowViewer
                 onFocus={this.focusHander}
                 onDoubleClick={this.onDoubleClick}
             >
-                <Canvas
-                    flowContext={this.flowContext}
-                    transitionIsActive={this.props.transitionIsActive}
-                >
+                <Canvas flowContext={this.flowContext}>
                     {this.flowContext.document?.flow.object === flow && (
                         <>
                             <div
@@ -518,7 +374,7 @@ export class FlowViewer
                             >
                                 {flow.renderComponents(this.flowContext)}
                             </div>
-                            {!this.props.frontFace && (
+                            {!this.props.tabState.frontFace && (
                                 <AllConnectionLines
                                     flowContext={this.flowContext}
                                 />

@@ -3105,39 +3105,6 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_FlipCardDiv {
-    perspective: 1000px;
-    flex-grow: 1;
-    overflow: hidden;
-    background-color: @panelHeaderColor;
-
-    .flip-card-inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        transition: transform @FLIP_CARD_ANIMATION_DURATION;
-        transform-style: preserve-3d;
-    }
-
-    .flip-card-inner.show-back-face {
-        transform: rotateY(-180deg);
-    }
-
-    .flip-card-front,
-    .flip-card-back {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        display: flex;
-    }
-
-    .flip-card-back {
-        transform: rotateY(180deg);
-    }
-}
-
 .EezStudio_ImportScpiDocDialogDiv {
     * {
         user-select: auto;

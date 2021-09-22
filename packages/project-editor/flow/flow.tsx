@@ -7,7 +7,6 @@ import {
     ClassInfo,
     cloneObject,
     EezObject,
-    getId,
     getLabel,
     getParent,
     IEditorState,
@@ -32,6 +31,8 @@ import {
     InputActionComponent,
     OutputActionComponent
 } from "./action-components";
+import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { Transform } from "./flow-editor/transform";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -512,29 +513,103 @@ registerClass(FlowFragment);
 ////////////////////////////////////////////////////////////////////////////////
 
 export abstract class FlowTabState implements IEditorState {
-    @observable flowState: IFlowState | undefined;
+    containerId = guid();
+
+    constructor(public flow: Flow) {}
+
+    @observable _flowState: IFlowState | undefined;
+
+    @computed get flowState() {
+        if (this._flowState) {
+            return this._flowState;
+        }
+
+        return this.DocumentStore.runtimeStore.getFlowState(this.flow);
+    }
+
+    set flowState(flowState: IFlowState | undefined) {
+        runInAction(() => (this._flowState = flowState));
+    }
+
+    @computed get DocumentStore() {
+        return getDocumentStore(this.flow);
+    }
+
+    @computed get isRuntime() {
+        return this.DocumentStore.runtimeStore.isRuntimeMode;
+    }
 
     abstract loadState(state: any): void;
     abstract saveState(): any;
-    abstract selectObject(object: IEezObject): void;
-    abstract selectObjects(objects: IEezObject[]): void;
 
-    abstract get flow(): Flow;
+    abstract get widgetContainer(): ITreeObjectAdapter;
+
+    abstract get transform(): Transform;
+    abstract set transform(transform: Transform);
+
+    @action
+    resetTransform(transform?: Transform) {
+        if (!transform) {
+            transform = this.transform;
+        }
+        transform.scale = 1;
+        transform.translate = {
+            x: -this.flow.pageRect.width / 2,
+            y: -this.flow.pageRect.height / 2
+        };
+    }
+
     abstract get frontFace(): boolean;
     abstract set frontFace(value: boolean);
+
+    @computed
+    get selectedObject(): IEezObject | undefined {
+        return this.widgetContainer.selectedObject || this.flow;
+    }
+
+    @computed
+    get selectedObjects() {
+        return this.widgetContainer.selectedObjects;
+    }
+
+    @action
+    selectObject(object: IEezObject) {
+        let ancestor: IEezObject | undefined;
+        for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
+            let item = this.widgetContainer.getObjectAdapter(ancestor);
+            if (item) {
+                this.widgetContainer.selectItems([item]);
+                return;
+            }
+        }
+    }
+
+    @action
+    selectObjects(objects: IEezObject[]) {
+        const items: ITreeObjectAdapter[] = [];
+
+        for (let i = 0; i < objects.length; i++) {
+            const object = objects[i];
+
+            let ancestor: IEezObject | undefined;
+            for (ancestor = object; ancestor; ancestor = getParent(ancestor)) {
+                let item = this.widgetContainer.getObjectAdapter(ancestor);
+                if (item) {
+                    items.push(item);
+                    break;
+                }
+            }
+        }
+
+        this.widgetContainer.selectItems(items);
+    }
 
     ensureSelectionVisible = () => {
         if (this.frontFace) {
             this.frontFace = false;
         }
 
-        const id = getId(this.flow);
-
-        let el = document.getElementById(`eez-flow-viewer-${id}-back`);
-        if (!el) {
-            el = document.getElementById(`eez-flow-editor-${id}-back`);
-        }
-
+        const el = document.getElementById(this.containerId);
         if (el) {
             const event = new Event("ensure-selection-visible");
             el.dispatchEvent(event);

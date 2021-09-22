@@ -19,34 +19,28 @@ import {
 } from "eez-studio-shared/dom";
 
 import type {
-    IDocument,
-    IViewStatePersistantState,
     IEditorOptions,
     IFlowContext
 } from "project-editor/flow/flow-interfaces";
-import { ITransform } from "project-editor/flow/flow-editor/transform";
 import { EditorFlowContext } from "project-editor/flow/flow-editor/context";
 
 import {
     getObjectBoundingRect,
-    getObjectIdFromPoint,
-    getObjectIdsInsideRect,
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/flow-editor/bounding-rects";
 
 import {
-    IEezObject,
     isObjectInstanceOf,
     isAncestor,
     getParent,
     setParent,
     getId
 } from "project-editor/core/object";
-import { IPanel, getDocumentStore } from "project-editor/core/store";
+import { IPanel } from "project-editor/core/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 import {
     Svg,
@@ -133,216 +127,6 @@ const DragComponent = observer(
     }
 );
 
-////////////////////////////////////////////////////////////////////////////////
-
-class FlowDocument implements IDocument {
-    constructor(
-        public flow: ITreeObjectAdapter,
-        private flowContext: EditorFlowContext
-    ) {}
-
-    @computed get connectionLines(): ITreeObjectAdapter[] {
-        return (this.flow.children as ITreeObjectAdapter[]).filter(
-            editorObject => editorObject.object instanceof ConnectionLine
-        );
-    }
-
-    @computed get selectedConnectionLines() {
-        return this.connectionLines.filter(connectionLine =>
-            this.flowContext.viewState.isObjectIdSelected(connectionLine.id)
-        );
-    }
-
-    @computed get nonSelectedConnectionLines() {
-        return this.connectionLines.filter(
-            connectionLine =>
-                !this.flowContext.viewState.isObjectIdSelected(
-                    connectionLine.id
-                )
-        );
-    }
-
-    findObjectById(id: string) {
-        return this.flow.getObjectAdapter(id);
-    }
-
-    findObjectParent(object: ITreeObjectAdapter) {
-        return this.flow.getParent(object);
-    }
-
-    objectFromPoint(point: Point):
-        | {
-              id: string;
-              connectionInput?: string;
-              connectionOutput?: string;
-          }
-        | undefined {
-        return getObjectIdFromPoint(this, this.flowContext.viewState, point);
-    }
-
-    resetTransform(transform: ITransform) {
-        const flow = this.flow.object as Flow;
-        transform.translate = {
-            x: -flow.pageRect.width / 2,
-            y: -flow.pageRect.height / 2
-        };
-        transform.scale = 1;
-    }
-
-    getObjectsInsideRect(rect: Rect) {
-        const ids = getObjectIdsInsideRect(this.flowContext.viewState, rect);
-
-        const editorObjectsGroupedByParent = new Map<
-            IEezObject,
-            ITreeObjectAdapter[]
-        >();
-        let maxLengthGroup: ITreeObjectAdapter[] | undefined;
-
-        ids.forEach(id => {
-            const editorObject = this.findObjectById(id);
-            if (
-                editorObject &&
-                !(editorObject.object instanceof ConnectionLine)
-            ) {
-                const parent = getParent(editorObject.object);
-
-                let group = editorObjectsGroupedByParent.get(parent);
-
-                if (!group) {
-                    group = [editorObject];
-                    editorObjectsGroupedByParent.set(parent, group);
-                } else {
-                    group.push(editorObject);
-                }
-
-                if (!maxLengthGroup || group.length > maxLengthGroup.length) {
-                    maxLengthGroup = group;
-                }
-            }
-        });
-
-        return maxLengthGroup ? maxLengthGroup : [];
-    }
-
-    createContextMenu(objects: ITreeObjectAdapter[]) {
-        return this.flow.createSelectionContextMenu({
-            duplicateSelection: this.duplicateSelection,
-            pasteSelection: this.pasteSelection
-        });
-    }
-
-    duplicateSelection = () => {
-        this.DocumentStore.undoManager.setCombineCommands(true);
-
-        this.flow.duplicateSelection();
-
-        this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
-            if (objectAdapter.object instanceof Component) {
-                this.flowContext.document.DocumentStore.updateObject(
-                    objectAdapter.object,
-                    {
-                        left: objectAdapter.object.left + 20,
-                        top: objectAdapter.object.top + 20
-                    }
-                );
-            }
-        });
-
-        this.DocumentStore.undoManager.setCombineCommands(false);
-    };
-
-    pasteSelection = () => {
-        this.DocumentStore.undoManager.setCombineCommands(true);
-
-        this.flow.pasteSelection();
-
-        const rectBounding = getSelectedObjectsBoundingRect(
-            this.flowContext.viewState
-        );
-        const rectPage = this.flowContext.viewState.transform.clientToPageRect(
-            this.flowContext.viewState.transform.clientRect
-        );
-
-        const left = rectPage.left + (rectPage.width - rectBounding.width) / 2;
-        const top = rectPage.top + (rectPage.height - rectBounding.height) / 2;
-
-        this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
-            if (objectAdapter.object instanceof Component) {
-                this.flowContext.document.DocumentStore.updateObject(
-                    objectAdapter.object,
-                    {
-                        left:
-                            left +
-                            (objectAdapter.object.left - rectBounding.left),
-                        top: top + (objectAdapter.object.top - rectBounding.top)
-                    }
-                );
-            }
-        });
-
-        this.DocumentStore.undoManager.setCombineCommands(false);
-    };
-
-    @computed get DocumentStore() {
-        return getDocumentStore(this.flow.object);
-    }
-
-    onDragStart(): void {
-        this.DocumentStore.undoManager.setCombineCommands(true);
-    }
-
-    onDragEnd(): void {
-        this.DocumentStore.undoManager.setCombineCommands(false);
-    }
-
-    connectionExists(
-        sourceObjectId: string,
-        connectionOutput: string,
-        targetObjectId: string,
-        connectionInput: string
-    ): boolean {
-        const flow = this.flow.object as Flow;
-
-        const sourceObject = this.DocumentStore.getObjectFromObjectId(
-            sourceObjectId
-        ) as Component;
-        const targetObject = this.DocumentStore.getObjectFromObjectId(
-            targetObjectId
-        ) as Component;
-
-        return !!flow.connectionLines.find(
-            connectionLine =>
-                connectionLine.source == sourceObject.wireID &&
-                connectionLine.output == connectionOutput &&
-                connectionLine.target == targetObject.wireID &&
-                connectionLine.input == connectionInput
-        );
-    }
-
-    connect(
-        sourceObjectId: string,
-        connectionOutput: string,
-        targetObjectId: string,
-        connectionInput: string
-    ) {
-        const flow = this.flow.object as Flow;
-
-        const sourceObject = this.DocumentStore.getObjectFromObjectId(
-            sourceObjectId
-        ) as Component;
-        const targetObject = this.DocumentStore.getObjectFromObjectId(
-            targetObjectId
-        ) as Component;
-
-        this.DocumentStore.addObject(flow.connectionLines, {
-            source: sourceObject.wireID,
-            output: connectionOutput,
-            target: targetObject.wireID,
-            input: connectionInput
-        });
-    }
-}
-
 const AllConnectionLines = observer(
     ({ flowContext }: { flowContext: IFlowContext }) => {
         return (
@@ -410,7 +194,6 @@ export class Canvas extends React.Component<{
     flowContext: IFlowContext;
     pageRect?: Rect;
     dragAndDropActive: boolean;
-    transitionIsActive?: boolean;
 }> {
     div: HTMLDivElement;
     resizeObserver: ResizeObserver;
@@ -887,11 +670,7 @@ export class Canvas extends React.Component<{
 @observer
 export class FlowEditor
     extends React.Component<{
-        widgetContainer: ITreeObjectAdapter;
-        viewStatePersistantState: IViewStatePersistantState | undefined;
-        onSavePersistantState: (viewState: IViewStatePersistantState) => void;
-        transitionIsActive?: boolean;
-        frontFace: boolean;
+        tabState: FlowTabState;
     }>
     implements IPanel
 {
@@ -904,42 +683,15 @@ export class FlowEditor
 
     @observable options: IEditorOptions;
 
-    _flowContext: EditorFlowContext | undefined = undefined;
-
     @computed
     get flowContext() {
-        let clientRect: Rect | undefined = undefined;
-
-        if (this._flowContext) {
-            clientRect = this._flowContext.viewState.transform.clientRect;
-            this._flowContext.destroy();
-        }
-
-        let viewStatePersistantState = this.props.viewStatePersistantState;
-        if (clientRect) {
-            if (!viewStatePersistantState) {
-                viewStatePersistantState = { clientRect };
-            } else if (!viewStatePersistantState.clientRect) {
-                viewStatePersistantState.clientRect = clientRect;
-            }
-        }
-
         const flowContext = new EditorFlowContext();
 
-        const flow = this.props.widgetContainer.object as Flow;
-
         flowContext.set(
-            new FlowDocument(this.props.widgetContainer, flowContext),
-            viewStatePersistantState,
-            this.props.onSavePersistantState,
-            this.props.frontFace,
-            flow,
-            this.context.runtimeStore.getFlowState(flow),
+            this.props.tabState,
             this.options,
             this.filterSnapLines
         );
-
-        this._flowContext = flowContext;
 
         return flowContext;
     }
@@ -989,10 +741,6 @@ export class FlowEditor
     }
 
     componentWillUnmount() {
-        if (this._flowContext) {
-            this._flowContext.destroy();
-        }
-
         this.divRef.current?.removeEventListener(
             "ensure-selection-visible",
             this.ensureSelectionVisible
@@ -1059,20 +807,20 @@ export class FlowEditor
 
     @computed
     get selectedObject() {
-        return this.props.widgetContainer.selectedObjects[0];
+        return this.props.tabState.widgetContainer.selectedObjects[0];
     }
 
     @computed
     get selectedObjects() {
-        return this.props.widgetContainer.selectedObjects;
+        return this.props.tabState.widgetContainer.selectedObjects;
     }
 
     cutSelection() {
-        this.props.widgetContainer.cutSelection();
+        this.props.tabState.widgetContainer.cutSelection();
     }
 
     copySelection() {
-        this.props.widgetContainer.copySelection();
+        this.props.tabState.widgetContainer.copySelection();
     }
 
     pasteSelection() {
@@ -1080,7 +828,7 @@ export class FlowEditor
     }
 
     deleteSelection() {
-        this.props.widgetContainer.deleteSelection();
+        this.props.tabState.widgetContainer.deleteSelection();
     }
 
     @bind
@@ -1110,7 +858,7 @@ export class FlowEditor
             event.stopPropagation();
             event.dataTransfer.dropEffect = "copy";
 
-            const flow = this.props.widgetContainer.object as Flow;
+            const flow = this.props.tabState.widgetContainer.object as Flow;
 
             const component = DragAndDropManager.dragObject as Component;
 
@@ -1154,7 +902,7 @@ export class FlowEditor
         event.preventDefault();
 
         if (this.flowContext.dragComponent) {
-            const flow = this.props.widgetContainer.object as Flow;
+            const flow = this.props.tabState.widgetContainer.object as Flow;
 
             const object = this.context.addObject(
                 flow.components,
@@ -1218,7 +966,7 @@ export class FlowEditor
             }
         } else if (event.keyCode == 46) {
             // delete
-            this.props.widgetContainer.deleteSelection();
+            this.props.tabState.widgetContainer.deleteSelection();
         } else if (event.keyCode == 27) {
             // esc
             this.flowContext.viewState.deselectAllObjects();
@@ -1248,7 +996,7 @@ export class FlowEditor
     }
 
     render() {
-        const flow = this.props.widgetContainer.object as Flow;
+        const flow = this.props.tabState.widgetContainer.object as Flow;
 
         return (
             <div
@@ -1265,7 +1013,6 @@ export class FlowEditor
                 <Canvas
                     flowContext={this.flowContext}
                     dragAndDropActive={!!DragAndDropManager.dragObject}
-                    transitionIsActive={this.props.transitionIsActive}
                 >
                     {this.flowContext.document && (
                         <>
@@ -1276,7 +1023,7 @@ export class FlowEditor
                             >
                                 {flow.renderComponents(this.flowContext)}
                             </div>
-                            {!this.props.frontFace && (
+                            {!this.props.tabState.frontFace && (
                                 <AllConnectionLines
                                     flowContext={this.flowContext}
                                 />

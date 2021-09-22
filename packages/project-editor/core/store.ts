@@ -356,15 +356,13 @@ class NavigationStore implements INavigationStore {
             if (getEditorComponent(object)) {
                 const editor =
                     this.DocumentStore.editorsStore.openEditor(object);
-                setTimeout(() => {
-                    if (editor && editor.state) {
-                        editor.state.selectObject(
-                            isValue(objectToShow)
-                                ? getParent(objectToShow)
-                                : objectToShow
-                        );
-                    }
-                }, 0);
+                if (editor && editor.state) {
+                    editor.state.selectObject(
+                        isValue(objectToShow)
+                            ? getParent(objectToShow)
+                            : objectToShow
+                    );
+                }
                 break;
             }
         }
@@ -423,6 +421,9 @@ export class Editor implements IEditor {
 
     close() {
         this.DocumentStore.editorsStore.closeEditor(this);
+        if (this.state) {
+            this.state.saveState();
+        }
     }
 }
 
@@ -589,6 +590,11 @@ class EditorsStore {
         nonPermanentEditor.permanent = openAsPermanentEditor;
         nonPermanentEditor.object = object;
         nonPermanentEditor.active = true;
+
+        if (nonPermanentEditor.state) {
+            nonPermanentEditor.state.saveState();
+        }
+
         const createEditorState = getClassInfo(object).createEditorState;
         if (createEditorState) {
             nonPermanentEditor.state = createEditorState(object);
@@ -659,7 +665,6 @@ class UIStateStore {
     @observable viewOptions: ViewOptions = new ViewOptions();
     @observable selectedBuildConfiguration: string;
     @observable features: any;
-    @observable objectUIStates = new Map<string, any>();
     @observable savedState: any;
     @observable searchPattern: string;
     @observable searchMatchCase: boolean;
@@ -669,16 +674,13 @@ class UIStateStore {
     @observable pageRuntimeFrontFace: boolean = true;
     @observable showCommandPalette: boolean = false;
 
+    objectUIStates = new Map<string, any>();
+
     dispose1: mobx.IReactionDisposer;
-    dispose2: mobx.IReactionDisposer;
 
     constructor(public DocumentStore: DocumentStoreClass) {
-        this.dispose1 = autorun(() => {
-            this.savedState = this.toJS;
-        });
-
         // react when selected panel or selected message in output window has changed
-        this.dispose2 = reaction(
+        this.dispose1 = reaction(
             () => ({
                 message:
                     this.DocumentStore.outputSectionsStore?.activeSection
@@ -704,7 +706,6 @@ class UIStateStore {
 
     unmount() {
         this.dispose1();
-        this.dispose2();
     }
 
     loadObjects(objects: any) {
@@ -717,29 +718,31 @@ class UIStateStore {
     @action
     load(uiState: any) {
         this.viewOptions.load(uiState.viewOptions);
+
         this.DocumentStore.navigationStore.loadNavigationMap(
             uiState.navigationMap
         );
         this.DocumentStore.navigationStore.loadSettingsNavigationState(
             uiState.settingsNavigationState
         );
+
+        this.loadObjects(uiState.objects);
+
         this.DocumentStore.editorsStore.load(uiState.editors);
+
         this.selectedBuildConfiguration =
             uiState.selectedBuildConfiguration || "Default";
         this.features = observable(uiState.features || {});
         this.activeOutputSection =
             uiState.activeOutputSection ?? Section.CHECKS;
-        this.loadObjects(uiState.objects);
         this.pageEditorFrontFace = uiState.pageEditorFrontFace;
         this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
     }
 
-    @computed
     get featuresJS() {
         return toJS(this.features);
     }
 
-    @computed
     get objectsJS() {
         let map: any = {};
         for (let [key, value] of this.objectUIStates) {
@@ -757,9 +760,8 @@ class UIStateStore {
         return map;
     }
 
-    @computed
     get toJS() {
-        return {
+        const state = {
             viewOptions: this.viewOptions.toJS,
             navigationMap: this.DocumentStore.navigationStore.navigationMapToJS,
             settingsNavigationState:
@@ -772,18 +774,10 @@ class UIStateStore {
             pageEditorFrontFace: this.pageEditorFrontFace,
             pageRuntimeFrontFace: this.pageRuntimeFrontFace
         };
-    }
 
-    @computed
-    get isModified() {
-        return !!this.savedState;
-    }
+        state.objects = this.objectsJS;
 
-    @action
-    save(): string {
-        let result = JSON.stringify(this.savedState, null, 2);
-        this.savedState = undefined;
-        return result;
+        return state;
     }
 
     @action
@@ -1386,11 +1380,11 @@ export class DocumentStoreClass {
 
     saveUIState() {
         return new Promise<void>(resolve => {
-            if (this.filePath && this.uiStateStore.isModified) {
+            if (this.filePath) {
                 const fs = EEZStudio.remote.require("fs");
                 fs.writeFile(
                     getUIStateFilePath(this.filePath),
-                    this.uiStateStore.save(),
+                    JSON.stringify(this.uiStateStore.toJS, undefined, 2),
                     "utf8",
                     (err: any) => {
                         if (err) {
