@@ -76,12 +76,12 @@ class Content extends React.Component {
 
         let editors;
 
-        let selectedItem =
-            this.context.navigationStore.getNavigationSelectedItemAsObject(
+        let selectedObject =
+            this.context.navigationStore.getNavigationSelectedObject(
                 this.context.project
             );
-        if (selectedItem) {
-            if (getClassInfo(selectedItem).editorComponent) {
+        if (selectedObject) {
+            if (getClassInfo(selectedObject).editorComponent) {
                 editors = <Editors />;
             }
         }

@@ -9,11 +9,7 @@ import {
     objectToString,
     getClassInfo
 } from "project-editor/core/object";
-import {
-    addItem,
-    canAdd,
-    createObjectAdapterNavigationItem
-} from "project-editor/core/store";
+import { addItem, canAdd } from "project-editor/core/store";
 import {
     TreeObjectAdapter,
     ITreeObjectAdapter,
@@ -88,13 +84,11 @@ class DeleteButton extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface TreeNavigationPanelProps {
-    navigationObject: IEezObject;
-}
-
 @observer
 export class TreeNavigationPanel extends React.Component<
-    TreeNavigationPanelProps,
+    {
+        navigationObjectAdapter: TreeObjectAdapter;
+    },
     {}
 > {
     static contextType = ProjectContext;
@@ -124,39 +118,14 @@ export class TreeNavigationPanel extends React.Component<
     }
 
     render() {
-        let navigationObjectAdapter =
-            this.context.navigationStore.getNavigationSelectedItemAsObjectAdapter(
-                this.props.navigationObject
-            );
-
-        if (!navigationObjectAdapter) {
-            const newNavigationObjectAdapter = new TreeObjectAdapter(
-                this.props.navigationObject
-            );
-
-            setTimeout(() => {
-                this.context.navigationStore.setNavigationSelectedItem(
-                    this.props.navigationObject,
-                    createObjectAdapterNavigationItem(
-                        newNavigationObjectAdapter
-                    )!
-                );
-            }, 0);
-
-            navigationObjectAdapter = newNavigationObjectAdapter;
-        }
-
-        let objectAdapter = navigationObjectAdapter.getObjectAdapter(
-            this.props.navigationObject
-        );
-        if (!objectAdapter) {
-            return null;
-        }
+        const navigationObjectAdapter = this.props.navigationObjectAdapter;
 
         return (
             <Panel
                 id="navigation"
-                title={objectToString(this.props.navigationObject)}
+                title={objectToString(
+                    this.props.navigationObjectAdapter.object
+                )}
                 buttons={[
                     <AddButton
                         key="add"
@@ -172,7 +141,7 @@ export class TreeNavigationPanel extends React.Component<
                         treeAdapter={
                             new TreeAdapter(
                                 navigationObjectAdapter,
-                                objectAdapter,
+                                navigationObjectAdapter,
                                 TreeNavigationPanel.navigationTreeFilter,
                                 true,
                                 "none",

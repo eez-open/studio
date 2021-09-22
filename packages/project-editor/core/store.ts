@@ -82,10 +82,7 @@ import {
     objectToJS,
     objectToJson
 } from "project-editor/core/serialization";
-import {
-    TreeObjectAdapter,
-    ITreeObjectAdapter
-} from "project-editor/core/objectAdapter";
+import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { OutputSections, OutputSection } from "project-editor/core/output";
 
 import { getProjectFeatures } from "project-editor/core/extensions";
@@ -128,153 +125,83 @@ export interface IPanel {
     deleteSelection(): void;
 }
 
-interface ObjectNavigationItem {
-    type: "object";
-    object: IEezObject;
-}
-
-interface ObjectAdapterNavigationItem {
-    type: "objectAdapter";
-    objectAdapter: ITreeObjectAdapter;
-}
-
-type NavigationItem = ObjectNavigationItem | ObjectAdapterNavigationItem;
-
-export function isObjectNavigationItem(
-    navigationItem: NavigationItem
-): navigationItem is ObjectNavigationItem {
-    return navigationItem && navigationItem.type == "object";
-}
-
-export function createObjectNavigationItem(
-    object: IEezObject | undefined
-): ObjectNavigationItem | undefined {
-    return object
-        ? {
-              type: "object",
-              object
-          }
-        : undefined;
-}
-
-export function createObjectAdapterNavigationItem(
-    objectAdapter: ITreeObjectAdapter | undefined
-): ObjectAdapterNavigationItem | undefined {
-    return objectAdapter
-        ? {
-              type: "objectAdapter",
-              objectAdapter
-          }
-        : undefined;
-}
-
-export function getObjectFromNavigationItem(
-    navigationItem: NavigationItem | undefined
-) {
-    return navigationItem
-        ? isObjectNavigationItem(navigationItem)
-            ? navigationItem.object
-            : navigationItem.objectAdapter.object
-        : undefined;
-}
-
-export function compareNavigationItem(
-    navigationItem: NavigationItem | undefined,
-    object: IEezObject
-) {
-    return getObjectFromNavigationItem(navigationItem) == object;
-}
-
 export interface INavigationStore {
     selectedPanel?: IPanel;
     selectedObject?: IEezObject;
-    getNavigationSelectedItem(
-        navigationObject: IEezObject
-    ): NavigationItem | undefined;
-    getNavigationSelectedItemAsObject(
+    getNavigationSelectedObject(
         navigationObject: IEezObject
     ): IEezObject | undefined;
-    setNavigationSelectedItem(
+    setNavigationSelectedObject(
         navigationObject: IEezObject,
-        navigationSelectedItem: NavigationItem
+        navigationSelectedObject: IEezObject
     ): void;
     setSelectedPanel(selectedPanel: IPanel | undefined): void;
     editable: boolean;
 }
 
 export class SimpleNavigationStoreClass implements INavigationStore {
-    @observable selectedItem: NavigationItem | undefined;
+    @observable selectedObject: IEezObject | undefined;
 
     constructor(
         selectedObject: IEezObject | undefined,
         public editable = true
     ) {
-        this.selectedItem = createObjectNavigationItem(selectedObject);
+        this.selectedObject = selectedObject;
     }
 
-    get selectedObject(): IEezObject | undefined {
-        return getObjectFromNavigationItem(this.selectedItem);
-    }
-
-    getNavigationSelectedItem(navigationObject: IEezObject) {
-        return this.selectedItem;
-    }
-
-    getNavigationSelectedItemAsObject(navigationObject: IEezObject) {
+    getNavigationSelectedObject(navigationObject: IEezObject) {
         return this.selectedObject;
     }
 
     @action
-    setNavigationSelectedItem(
+    setNavigationSelectedObject(
         navigationObject: IEezObject,
-        navigationSelectedItem: NavigationItem
+        navigationSelectedObject: IEezObject
     ) {
-        this.selectedItem = navigationSelectedItem;
+        this.selectedObject = navigationSelectedObject;
     }
 
     setSelectedPanel(selectedPanel: IPanel | undefined) {}
 }
 
 class NavigationStore implements INavigationStore {
-    @observable navigationMap = new Map<string, NavigationItem>();
+    @observable navigationMap = new Map<string, IEezObject>();
     @observable selectedPanel: IPanel | undefined;
 
     editable = true;
 
     constructor(public DocumentStore: DocumentStoreClass) {}
 
-    load(map: { [stringPath: string]: string }) {
-        let navigationMap = new Map<string, NavigationItem>();
+    loadNavigationMap(map: { [stringPath: string]: string }) {
+        let navigationMap = new Map<string, IEezObject>();
 
         for (let stringPath in map) {
+            if (typeof stringPath != "string") {
+                continue;
+            }
+
             let navigationObject =
                 this.DocumentStore.getObjectFromStringPath(stringPath);
             if (navigationObject) {
-                let navigationItemStr = map[stringPath];
-                if (navigationItemStr === stringPath) {
+                let navigationSubobjectStr = map[stringPath];
+
+                if (typeof navigationSubobjectStr != "string") {
                     continue;
                 }
-                let navigationItem: NavigationItem | undefined;
-                if (typeof navigationItemStr == "string") {
-                    navigationItem = createObjectNavigationItem(
-                        this.DocumentStore.getObjectFromStringPath(
-                            navigationItemStr
-                        )
-                    );
-                } else {
-                    let navigationObjectAdapter = new TreeObjectAdapter(
-                        navigationObject
-                    );
-                    setTimeout(() => {
-                        navigationObjectAdapter.loadState(navigationItemStr);
-                    }, 0);
-                    navigationItem = createObjectAdapterNavigationItem(
-                        navigationObjectAdapter
-                    );
-                }
 
-                if (navigationItem) {
-                    navigationMap.set(getId(navigationObject), navigationItem);
+                if (navigationSubobjectStr === stringPath) {
+                    continue;
+                }
+                const navigationSubobject =
+                    this.DocumentStore.getObjectFromStringPath(
+                        navigationSubobjectStr
+                    );
+
+                if (navigationSubobject) {
+                    navigationMap.set(
+                        getId(navigationObject),
+                        navigationSubobject
+                    );
                 }
             }
         }
@@ -282,25 +209,37 @@ class NavigationStore implements INavigationStore {
         this.navigationMap = navigationMap;
     }
 
+    loadSettingsNavigationState(settingsNavigationState: any) {
+        if (settingsNavigationState) {
+            if (this.settingsNavigationObjectAdapter) {
+                this.settingsNavigationObjectAdapter.loadState(
+                    settingsNavigationState
+                );
+            }
+        }
+    }
+
     @computed
-    get toJS() {
+    get navigationMapToJS() {
         let map: any = {};
-        for (var [id, navigationItem] of this.navigationMap) {
+        for (var [id, navigationSubobject] of this.navigationMap) {
             let navigationObject = this.DocumentStore.getObjectFromObjectId(id);
             if (navigationObject) {
                 let navigationObjectPath =
                     getObjectPathAsString(navigationObject);
-                if (isObjectNavigationItem(navigationItem)) {
-                    map[navigationObjectPath] = getObjectPathAsString(
-                        navigationItem.object
-                    );
-                } else {
-                    map[navigationObjectPath] =
-                        navigationItem.objectAdapter.saveState();
-                }
+                map[navigationObjectPath] =
+                    getObjectPathAsString(navigationSubobject);
             }
         }
         return map;
+    }
+
+    @computed
+    get settingsNavigationStateToJS() {
+        if (this.settingsNavigationObjectAdapter) {
+            return this.settingsNavigationObjectAdapter.saveState();
+        }
+        return {};
     }
 
     @action
@@ -316,14 +255,11 @@ class NavigationStore implements INavigationStore {
         }
 
         while (true) {
-            let child = this.getNavigationSelectedItem(object);
+            let child = this.getNavigationSelectedObject(object);
             if (!child) {
                 return object;
             }
-            if (!isObjectNavigationItem(child)) {
-                return child.objectAdapter.selectedObject;
-            }
-            object = child.object;
+            object = child;
         }
     }
 
@@ -334,21 +270,10 @@ class NavigationStore implements INavigationStore {
             if (getClassInfo(parent).navigationComponent) {
                 let grandparent = getParent(parent);
                 if (!isArray(grandparent)) {
-                    let navigationItem = this.getNavigationSelectedItem(parent);
-                    if (
-                        navigationItem &&
-                        !isObjectNavigationItem(navigationItem)
-                    ) {
-                        if (
-                            navigationItem.objectAdapter.selectedObject !=
-                            object
-                        ) {
-                            return false;
-                        }
-                    } else {
-                        if (navigationItem?.object != iterObject) {
-                            return false;
-                        }
+                    let selectedObject =
+                        this.getNavigationSelectedObject(parent);
+                    if (selectedObject != iterObject) {
+                        return false;
                     }
                 }
             }
@@ -359,61 +284,30 @@ class NavigationStore implements INavigationStore {
         return true;
     }
 
-    getNavigationSelectedItem(
+    getNavigationSelectedObject(
         navigationObject: IEezObject
-    ): NavigationItem | undefined {
+    ): IEezObject | undefined {
         let item = this.navigationMap.get(getId(navigationObject));
-
-        if (item && isObjectNavigationItem(item)) {
-            // is this maybe deleted object?
-            item = createObjectNavigationItem(
-                this.DocumentStore.getObjectFromObjectId(getId(item.object))
-            );
-        }
 
         if (!item) {
             let defaultNavigationKey =
                 getClassInfo(navigationObject).defaultNavigationKey;
             if (defaultNavigationKey) {
-                item = createObjectNavigationItem(
-                    getProperty(navigationObject, defaultNavigationKey)
-                );
+                item = getProperty(navigationObject, defaultNavigationKey);
             }
         }
         return item;
     }
 
-    getNavigationSelectedItemAsObject(
-        navigationObject: IEezObject
-    ): IEezObject | undefined {
-        let navigationItem = this.getNavigationSelectedItem(navigationObject);
-        if (!navigationItem) {
-            return undefined;
-        }
-        if (!isObjectNavigationItem(navigationItem)) {
-            console.error("TreeObjectAdapter is not expected");
-            return undefined;
-        }
-        return navigationItem.object;
-    }
-
-    getNavigationSelectedItemAsObjectAdapter(
-        navigationObject: IEezObject
-    ): ITreeObjectAdapter | undefined {
-        let navigationItem = this.getNavigationSelectedItem(navigationObject);
-        if (navigationItem && isObjectNavigationItem(navigationItem)) {
-            console.error("TreeObjectAdapter is expected");
-            return undefined;
-        }
-        return navigationItem?.objectAdapter;
-    }
-
     @action
-    setNavigationSelectedItem(
+    setNavigationSelectedObject(
         navigationObject: IEezObject,
-        navigationSelectedItem: NavigationItem
+        navigationSelectedObject: IEezObject
     ) {
-        this.navigationMap.set(getId(navigationObject), navigationSelectedItem);
+        this.navigationMap.set(
+            getId(navigationObject),
+            navigationSelectedObject
+        );
 
         if (!isPartOfNavigation(navigationObject)) {
             return;
@@ -421,10 +315,7 @@ class NavigationStore implements INavigationStore {
 
         let parent = getParent(navigationObject);
         if (parent) {
-            this.setNavigationSelectedItem(
-                parent,
-                createObjectNavigationItem(navigationObject)!
-            );
+            this.setNavigationSelectedObject(parent, navigationObject);
         }
     }
 
@@ -441,32 +332,12 @@ class NavigationStore implements INavigationStore {
 
         let object = selection[0];
 
-        for (
-            let ancestor = getParent(object);
-            ancestor;
-            ancestor = getParent(ancestor)
-        ) {
-            let navigationItem = this.getNavigationSelectedItem(ancestor);
-            if (navigationItem && !isObjectNavigationItem(navigationItem)) {
-                navigationItem.objectAdapter.selectObjects(selection);
-                return;
-            }
-        }
-
         let iterObject = object;
         let parent = getParent(iterObject);
         while (iterObject && parent) {
             let grandparent = getParent(parent);
             if (!isArray(grandparent)) {
-                let navigationItem = this.getNavigationSelectedItem(parent);
-                if (navigationItem && !isObjectNavigationItem(navigationItem)) {
-                    navigationItem.objectAdapter.selectObjects(selection);
-                } else {
-                    this.setNavigationSelectedItem(
-                        parent,
-                        createObjectNavigationItem(iterObject)!
-                    );
-                }
+                this.setNavigationSelectedObject(parent, iterObject);
             }
 
             iterObject = parent;
@@ -497,6 +368,19 @@ class NavigationStore implements INavigationStore {
                 break;
             }
         }
+    }
+
+    _settingsNavigationObjectAdapter: TreeObjectAdapter;
+
+    get settingsNavigationObjectAdapter() {
+        if (!this._settingsNavigationObjectAdapter) {
+            if (this.DocumentStore.project) {
+                this._settingsNavigationObjectAdapter = new TreeObjectAdapter(
+                    this.DocumentStore.project.settings
+                );
+            }
+        }
+        return this._settingsNavigationObjectAdapter;
     }
 }
 
@@ -553,42 +437,23 @@ class EditorsStore {
         this.dispose1 = autorun(() => {
             let object = DocumentStore.navigationStore.selectedObject;
             while (object) {
-                let navigationItem =
-                    DocumentStore.navigationStore.getNavigationSelectedItem(
+                let selectedObject =
+                    DocumentStore.navigationStore.getNavigationSelectedObject(
                         object
                     );
-                while (navigationItem) {
-                    if (isObjectNavigationItem(navigationItem)) {
-                        if (
-                            !isArray(navigationItem.object) &&
-                            getEditorComponent(navigationItem.object)
-                        ) {
-                            this.openEditor(navigationItem.object);
-                        }
-                        navigationItem =
-                            DocumentStore.navigationStore.getNavigationSelectedItem(
-                                navigationItem.object
-                            );
-                    } else {
-                        let object =
-                            navigationItem.objectAdapter.selectedObject;
-                        if (
-                            object &&
-                            !isArray(object) &&
-                            getEditorComponent(object)
-                        ) {
-                            this.openEditor(object);
-                        } else if (
-                            getEditorComponent(
-                                navigationItem.objectAdapter.object
-                            )
-                        ) {
-                            this.openEditor(
-                                navigationItem.objectAdapter.object
-                            );
-                        }
-                        return;
+
+                while (selectedObject) {
+                    if (
+                        !isArray(selectedObject) &&
+                        getEditorComponent(selectedObject)
+                    ) {
+                        this.openEditor(selectedObject);
                     }
+
+                    selectedObject =
+                        DocumentStore.navigationStore.getNavigationSelectedObject(
+                            selectedObject
+                        );
                 }
 
                 object = getParent(object);
@@ -852,7 +717,12 @@ class UIStateStore {
     @action
     load(uiState: any) {
         this.viewOptions.load(uiState.viewOptions);
-        this.DocumentStore.navigationStore.load(uiState.navigationMap);
+        this.DocumentStore.navigationStore.loadNavigationMap(
+            uiState.navigationMap
+        );
+        this.DocumentStore.navigationStore.loadSettingsNavigationState(
+            uiState.settingsNavigationState
+        );
         this.DocumentStore.editorsStore.load(uiState.editors);
         this.selectedBuildConfiguration =
             uiState.selectedBuildConfiguration || "Default";
@@ -891,7 +761,9 @@ class UIStateStore {
     get toJS() {
         return {
             viewOptions: this.viewOptions.toJS,
-            navigationMap: this.DocumentStore.navigationStore.toJS,
+            navigationMap: this.DocumentStore.navigationStore.navigationMapToJS,
+            settingsNavigationState:
+                this.DocumentStore.navigationStore.settingsNavigationStateToJS,
             editors: this.DocumentStore.editorsStore.toJS,
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,

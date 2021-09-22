@@ -1,4 +1,3 @@
-import { computed } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 
@@ -213,17 +212,14 @@ export class SettingsNavigation extends NavigationComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed
-    get object() {
-        if (this.context.navigationStore.selectedPanel) {
-            return this.context.navigationStore.selectedPanel.selectedObject;
-        }
-        return this.context.navigationStore.selectedObject;
-    }
-
     render() {
+        const navigationObjectAdapter =
+            this.context.navigationStore.settingsNavigationObjectAdapter;
+
+        const selectedObject = navigationObjectAdapter.selectedObject;
+
         if (this.context.isDashboardProject || this.context.isAppletProject) {
-            return <SettingsEditor object={this.object} />;
+            return <SettingsEditor object={selectedObject} />;
         }
 
         return (
@@ -234,9 +230,9 @@ export class SettingsNavigation extends NavigationComponent {
                 childrenOverflow="hidden"
             >
                 <TreeNavigationPanel
-                    navigationObject={this.props.navigationObject}
+                    navigationObjectAdapter={navigationObjectAdapter}
                 />
-                <SettingsEditor object={this.object} />
+                <SettingsEditor object={selectedObject} />
             </Splitter>
         );
     }

@@ -9,7 +9,6 @@ import {
     NavigationComponent,
     getAncestorOfType
 } from "project-editor/core/object";
-import { getObjectFromNavigationItem } from "project-editor/core/store";
 
 import {
     ListNavigation,
@@ -54,22 +53,21 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
         // return lastly selected ScpiCommand or ScpiSubsystem
         let subsystems = this.context.project.scpi.subsystems;
 
-        let subsystem = getObjectFromNavigationItem(
-            this.context.navigationStore.getNavigationSelectedItem(subsystems)
-        ) as ScpiSubsystem;
+        let subsystem =
+            this.context.navigationStore.getNavigationSelectedObject(
+                subsystems
+            ) as ScpiSubsystem;
 
         let commands =
             subsystem &&
-            (getObjectFromNavigationItem(
-                this.context.navigationStore.getNavigationSelectedItem(
-                    subsystem
-                )
+            (this.context.navigationStore.getNavigationSelectedObject(
+                subsystem
             ) as ScpiCommand[]);
 
         let command =
             commands &&
-            (getObjectFromNavigationItem(
-                this.context.navigationStore.getNavigationSelectedItem(commands)
+            (this.context.navigationStore.getNavigationSelectedObject(
+                commands
             ) as ScpiCommand);
 
         return command || commands || subsystem;
@@ -78,9 +76,10 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
     render() {
         let subsystems = this.context.project.scpi.subsystems;
 
-        let selectedScpiSubsystem = getObjectFromNavigationItem(
-            this.context.navigationStore.getNavigationSelectedItem(subsystems)
-        ) as ScpiSubsystem;
+        let selectedScpiSubsystem =
+            this.context.navigationStore.getNavigationSelectedObject(
+                subsystems
+            ) as ScpiSubsystem;
 
         let additionalButtons;
         if (this.context.project.settings.general.scpiDocFolder) {

@@ -11,7 +11,7 @@ export interface ThemeInterface {
 }
 
 export const lightTheme: ThemeInterface = {
-    borderColor: "#d5d5d5",
+    borderColor: "#e0e0e0",
     panelHeaderColor: "#f0f0f0",
     selectionBackgroundColor: "#337bb7",
     connectionLineColor: "#999",
@@ -21,7 +21,7 @@ export const lightTheme: ThemeInterface = {
 };
 
 export const darkTheme: ThemeInterface = {
-    borderColor: "#555555",
+    borderColor: "#444444",
     panelHeaderColor: "#333333",
     selectionBackgroundColor: "#337bb7",
     connectionLineColor: "#999",

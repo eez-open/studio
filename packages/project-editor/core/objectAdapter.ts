@@ -52,8 +52,6 @@ import {
     showContextMenu,
     canContainChildren,
     INavigationStore,
-    createObjectNavigationItem,
-    isObjectNavigationItem,
     getDocumentStore
 } from "project-editor/core/store";
 import {
@@ -1435,12 +1433,12 @@ export class ListAdapter implements ITreeAdapter {
 
     @computed
     get selectedItem(): ListItem | undefined {
-        const item = this.navigationStore.getNavigationSelectedItem(
+        const selectedObject = this.navigationStore.getNavigationSelectedObject(
             this.object
         );
 
-        if (item && isObjectNavigationItem(item)) {
-            return this.getItemFromId(getId(item.object));
+        if (selectedObject) {
+            return this.getItemFromId(getId(selectedObject));
         }
 
         return undefined;
@@ -1452,9 +1450,9 @@ export class ListAdapter implements ITreeAdapter {
             getParent(item.object) &&
             !isPartOfNavigation(getParent(item.object))
         ) {
-            this.navigationStore.setNavigationSelectedItem(
+            this.navigationStore.setNavigationSelectedObject(
                 this.object,
-                createObjectNavigationItem(item.object)!
+                item.object
             );
             return;
         }
@@ -1464,9 +1462,9 @@ export class ListAdapter implements ITreeAdapter {
             selectedItem.selected = false;
         }
 
-        this.navigationStore.setNavigationSelectedItem(
+        this.navigationStore.setNavigationSelectedObject(
             this.object,
-            createObjectNavigationItem(item.object)!
+            item.object
         );
 
         selectedItem = this.selectedItem;

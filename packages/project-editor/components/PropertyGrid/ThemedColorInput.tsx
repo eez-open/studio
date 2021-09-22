@@ -6,7 +6,6 @@ import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import { getProperty } from "project-editor/core/object";
 import { getThemedColor } from "project-editor/features/style/theme";
 import { ProjectContext } from "project-editor/project/context";
-import { theme } from "eez-studio-ui/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,26 +59,16 @@ export class ThemedColorInput extends React.Component<{
 
         return (
             <label
-                className="form-label"
+                className="EezStudio_ColorInputLabel form-label"
                 style={{
                     color: isDark(color) ? "#fff" : undefined,
-                    backgroundColor: color,
-                    textAlign: "center",
-                    cursor: "pointer",
-                    overflow: "hidden",
-                    width: "100%",
-                    height: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: `1px solid ${theme().borderColor}`
+                    backgroundColor: color
                 }}
                 onDrop={this.onDrop}
                 onDragOver={this.onDragOver}
             >
                 <input
                     type="color"
-                    hidden
                     value={value}
                     onChange={this.onChange}
                     readOnly={readOnly}

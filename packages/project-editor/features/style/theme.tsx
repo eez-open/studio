@@ -16,7 +16,6 @@ import {
     INavigationStore,
     SimpleNavigationStoreClass,
     IContextMenuContext,
-    getObjectFromNavigationItem,
     getDocumentStore
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
@@ -92,11 +91,10 @@ class ColorItem extends React.Component<{
     get selectedTheme() {
         const project = getProjectWithThemes(this.context);
 
-        let selectedTheme = getObjectFromNavigationItem(
-            getNavigationStore(this.context).getNavigationSelectedItem(
-                project.themes
-            )
-        ) as Theme;
+        let selectedTheme = getNavigationStore(
+            this.context
+        ).getNavigationSelectedObject(project.themes) as Theme;
+
         if (!selectedTheme) {
             selectedTheme = project.themes[0];
         }
@@ -365,11 +363,9 @@ export class Color extends EezObject implements IColor {
                             getDocumentStore(thisObject)
                         );
 
-                        const selectedTheme = getObjectFromNavigationItem(
-                            getNavigationStore(
-                                DocumentStore
-                            ).getNavigationSelectedItem(project.themes)
-                        ) as Theme;
+                        const selectedTheme = getNavigationStore(
+                            DocumentStore
+                        ).getNavigationSelectedObject(project.themes) as Theme;
 
                         const colorIndex = project.colors.indexOf(thisObject);
                         const color = project.getThemeColor(
@@ -479,11 +475,9 @@ function getThemedColorInProject(
     project: Project,
     colorValue: string
 ): string | undefined {
-    let selectedTheme = getObjectFromNavigationItem(
-        getNavigationStore(project._DocumentStore).getNavigationSelectedItem(
-            project.themes
-        )
-    ) as Theme;
+    let selectedTheme = getNavigationStore(
+        project._DocumentStore
+    ).getNavigationSelectedObject(project.themes) as Theme;
     if (!selectedTheme) {
         selectedTheme = project.themes[0];
     }

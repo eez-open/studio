@@ -317,8 +317,7 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         for (let i = 0; i < children.length - 1; i++) {
             let style: React.CSSProperties = {
                 position: "absolute",
-                boxSizing: "border-box",
-                backgroundClip: "content-box"
+                boxSizing: "border-box"
             };
 
             if (this.props.type === "horizontal") {

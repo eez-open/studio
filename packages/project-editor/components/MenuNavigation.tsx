@@ -9,10 +9,6 @@ import {
     getId,
     getClassInfo
 } from "project-editor/core/object";
-import {
-    createObjectNavigationItem,
-    compareNavigationItem
-} from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,20 +30,18 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
     }
 
     onClick() {
-        this.context.navigationStore.setNavigationSelectedItem(
+        this.context.navigationStore.setNavigationSelectedObject(
             this.props.navigationObject,
-            createObjectNavigationItem(this.props.item)!
+            this.props.item
         );
     }
 
     render() {
         let className = classNames("EezStudio_NavigationMenuItemContainer", {
-            selected: compareNavigationItem(
-                this.context.navigationStore.getNavigationSelectedItem(
+            selected:
+                this.context.navigationStore.getNavigationSelectedObject(
                     this.props.navigationObject
-                ),
-                this.props.item
-            )
+                ) == this.props.item
         });
 
         let icon = getClassInfo(this.props.item).icon || "extension";
@@ -123,21 +117,23 @@ export class MenuNavigation extends React.Component<
 
     render() {
         let subNavigation: JSX.Element | undefined;
-        let selectedItem =
-            this.context.navigationStore.getNavigationSelectedItemAsObject(
+
+        let selectedObject =
+            this.context.navigationStore.getNavigationSelectedObject(
                 this.props.navigationObject
             );
-        if (selectedItem) {
+
+        if (selectedObject) {
             let NavigationComponent =
-                getClassInfo(selectedItem).navigationComponent;
+                getClassInfo(selectedObject).navigationComponent;
             if (NavigationComponent) {
                 subNavigation = (
                     <NavigationComponent
                         id={
-                            getClassInfo(selectedItem).navigationComponentId ||
-                            this.props.id
+                            getClassInfo(selectedObject)
+                                .navigationComponentId || this.props.id
                         }
-                        navigationObject={selectedItem}
+                        navigationObject={selectedObject}
                     />
                 );
             }

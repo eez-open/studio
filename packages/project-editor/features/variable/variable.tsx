@@ -33,10 +33,7 @@ import type {
     IDataContext,
     IVariable
 } from "project-editor/flow/flow-interfaces";
-import {
-    getDocumentStore,
-    getObjectFromNavigationItem
-} from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { Splitter } from "eez-studio-ui/splitter";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
@@ -812,9 +809,10 @@ export class StructureNavigation extends NavigationComponent {
     render() {
         let structures = this.context.project.variables.structures;
 
-        let selectedStructure = getObjectFromNavigationItem(
-            this.context.navigationStore.getNavigationSelectedItem(structures)
-        ) as Structure;
+        let selectedStructure =
+            this.context.navigationStore.getNavigationSelectedObject(
+                structures
+            ) as Structure;
 
         return (
             <Splitter
@@ -972,9 +970,10 @@ export class EnumNavigation extends NavigationComponent {
     render() {
         let enums = this.context.project.variables.enums;
 
-        let selectedEnum = getObjectFromNavigationItem(
-            this.context.navigationStore.getNavigationSelectedItem(enums)
-        ) as Enum;
+        let selectedEnum =
+            this.context.navigationStore.getNavigationSelectedObject(
+                enums
+            ) as Enum;
 
         return (
             <Splitter

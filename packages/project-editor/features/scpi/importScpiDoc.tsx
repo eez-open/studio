@@ -15,10 +15,7 @@ import { Loader } from "eez-studio-ui/loader";
 
 import { getProperty } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/serialization";
-import {
-    DocumentStoreClass,
-    createObjectNavigationItem
-} from "project-editor/core/store";
+import { DocumentStoreClass } from "project-editor/core/store";
 
 import { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
@@ -1196,9 +1193,9 @@ export class ImportScpiDocDialog extends React.Component<{
         this.context.undoManager.setCombineCommands(false);
 
         // always stay in scpi subsystems list view
-        this.context.navigationStore.setNavigationSelectedItem(
+        this.context.navigationStore.setNavigationSelectedObject(
             scpi,
-            createObjectNavigationItem(scpi.subsystems)!
+            scpi.subsystems
         );
 
         this.context.backgroundCheckEnabled = true;

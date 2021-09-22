@@ -30,8 +30,7 @@ import {
     deleteItem,
     canAdd,
     canDelete,
-    IPanel,
-    getObjectFromNavigationItem
+    IPanel
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { List } from "project-editor/components/List";
@@ -124,7 +123,7 @@ class DeleteButton extends React.Component<{
             this.props.navigationStore || this.context.navigationStore;
         let selectedItem =
             this.props.navigationObject &&
-            navigationStore.getNavigationSelectedItemAsObject(
+            navigationStore.getNavigationSelectedObject(
                 this.props.navigationObject
             );
         if (selectedItem) {
@@ -137,7 +136,7 @@ class DeleteButton extends React.Component<{
             this.props.navigationStore || this.context.navigationStore;
         let selectedItem =
             this.props.navigationObject &&
-            navigationStore.getNavigationSelectedItemAsObject(
+            navigationStore.getNavigationSelectedObject(
                 this.props.navigationObject
             );
 
@@ -227,14 +226,13 @@ export class ListNavigation
     get selectedObject() {
         const navigationStore =
             this.props.navigationStore || this.context.navigationStore;
-        const navigationSelectedItem =
-            navigationStore.getNavigationSelectedItem(
+
+        const navigationSelectedObject =
+            navigationStore.getNavigationSelectedObject(
                 this.props.navigationObject
             );
-        return (
-            getObjectFromNavigationItem(navigationSelectedItem) ||
-            navigationStore.selectedObject
-        );
+
+        return navigationSelectedObject || navigationStore.selectedObject;
     }
 
     cutSelection() {
