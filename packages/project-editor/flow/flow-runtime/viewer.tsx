@@ -199,10 +199,13 @@ export class Canvas extends React.Component<{
                 >
                     {this.props.children}
                 </div>
-                <Selection
-                    context={this.props.flowContext}
-                    mouseHandler={undefined}
-                />
+                {this.props.flowContext.document.DocumentStore.runtimeStore
+                    .isDebuggerActive && (
+                    <Selection
+                        context={this.props.flowContext}
+                        mouseHandler={undefined}
+                    />
+                )}
             </div>
         );
     }

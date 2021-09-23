@@ -8,12 +8,14 @@ import { ConnectionLine } from "project-editor/flow/flow";
 import { getConnectionLineShape } from "project-editor/flow/flow-editor/connection-line-shape";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { OutputActionComponent } from "../action-components";
+import { SvgLabel } from "eez-studio-ui/svg-label";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const lineColor = () => theme().connectionLineColor;
 const seqLineColor = () => theme().seqConnectionLineColor;
 const selectedLineColor = () => theme().selectedConnectionLineColor;
+const selectedLineColorInViewer = () => theme().selectionBackgroundColor;
 const activeLineColor = () => theme().activeConnectionLineColor;
 
 const strokeWidth = 1.2;
@@ -80,6 +82,7 @@ const VisiblePath = observer(
                         context.document.DocumentStore.runtimeStore
                             .isRuntimeMode
                 })}
+                vectorEffect={selected ? "non-scaling-stroke" : "none"}
             ></path>
         );
     }
@@ -135,7 +138,71 @@ const ConnectionLineShape = observer(
                     connectionLine={connectionLine}
                     context={context}
                 />
+                <DebugValue
+                    context={context}
+                    connectionLine={connectionLine}
+                    selected={selected}
+                />
             </g>
+        );
+    }
+);
+
+const DebugValue = observer(
+    ({
+        connectionLine,
+        context,
+        selected
+    }: {
+        connectionLine: ConnectionLine;
+        context: IFlowContext;
+        selected: boolean;
+    }) => {
+        let valueStr;
+        if (
+            context.flowState &&
+            context.document.DocumentStore.runtimeStore.isDebuggerActive &&
+            connectionLine.targetComponent &&
+            connectionLine.input !== "@seqin"
+        ) {
+            const inputValue = context.flowState.getInputValue(
+                connectionLine.targetComponent,
+                connectionLine.input
+            );
+            if (inputValue) {
+                if (inputValue.value == null) {
+                    valueStr = "null";
+                } else {
+                    try {
+                        valueStr = inputValue.value.toString();
+                    } catch (err) {
+                        valueStr = "err!";
+                    }
+                }
+            }
+        }
+
+        if (!valueStr) return null;
+
+        return (
+            valueStr && (
+                <>
+                    <SvgLabel
+                        text={valueStr}
+                        x={connectionLine.targetPosition!.x - 15}
+                        y={connectionLine.targetPosition!.y}
+                        horizontalAlignement="right"
+                        verticalAlignment="center"
+                        border={{ size: 1, color: "#fff740", radius: 4 }}
+                        padding={{ left: 4, top: 2, right: 4, bottom: 0 }}
+                        backgroundColor="#feff9c"
+                        textColor={
+                            selected ? theme().selectionBackgroundColor : "#333"
+                        }
+                        textWeight={selected ? "bold" : "normal"}
+                    />
+                </>
+            )
         );
     }
 );
@@ -151,7 +218,15 @@ export const LineMarkers = () => (
                 id="selectedLineStart"
                 color={selectedLineColor()}
             />
+            <LineStartMarker
+                id="selectedLineStartInViewer"
+                color={selectedLineColorInViewer()}
+            />
             <LineEndMarker id="selectedLineEnd" color={selectedLineColor()} />
+            <LineEndMarker
+                id="selectedLineEndInViewer"
+                color={selectedLineColorInViewer()}
+            />
             <LineStartMarker id="activeLineStart" color={activeLineColor()} />
             <LineEndMarker id="activeLineEnd" color={activeLineColor()} />
         </defs>
@@ -167,6 +242,7 @@ function LineStartMarker({ id, color }: { id: string; color: string }) {
             refX="4"
             refY="5"
             orient="auto"
+            markerUnits="userSpaceOnUse"
         >
             <circle
                 cx="5"
@@ -187,6 +263,7 @@ function LineEndMarker({ id, color }: { id: string; color: string }) {
             refX="7"
             refY="4"
             orient="auto"
+            markerUnits="userSpaceOnUse"
         >
             <path
                 d="M2,2 L2,6 L7,4 L2,2 L2,6"

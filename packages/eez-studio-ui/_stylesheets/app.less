@@ -3223,7 +3223,7 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_RuntimePanel {
+.EezStudio_DebuggerPanel {
     flex-grow: 1;
 
     display: flex;
@@ -3258,6 +3258,20 @@ button.EezStudio_Action {
         .error {
             color: @errorColor;
         }
+    }
+
+    .debug-new {
+        animation-name: debug-new;
+        animation-duration: 5s;
+    }
+}
+
+@keyframes debug-new {
+    from {
+        color: orangered;
+    }
+    to {
+        color: auto;
     }
 }
 
@@ -3679,7 +3693,9 @@ button.EezStudio_Action {
 
 .EezStudio_FlowRuntimeSelection {
     position: absolute;
-    cursor: move;
+    * {
+        user-select: none !important;
+    }
 }
 
 .EezStudio_FlowViewerCanvasContainer {
@@ -3727,9 +3743,12 @@ button.EezStudio_Action {
         }
 
         &.selected {
-            stroke: @selectedConnectionLineColor;
-            marker-start: url(#selectedLineStart);
-            marker-end: url(#selectedLineEnd);
+            stroke: @selectionBackgroundColor;
+            marker-start: url(#selectedLineStartInViewer);
+            marker-end: url(#selectedLineEndInViewer);
+            stroke-width: 3px !important;
+            stroke-dasharray: 4px 6px;
+            stroke-linecap: square !important;
         }
 
         &.active {

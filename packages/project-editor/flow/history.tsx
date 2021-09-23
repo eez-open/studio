@@ -316,7 +316,7 @@ class HistoryTree extends React.Component {
                 id: historyItem.id,
                 label: (
                     <div
-                        className={classNames("history-item", {
+                        className={classNames("history-item", "debug-new", {
                             error: historyItem.isError
                         })}
                     >

@@ -7,6 +7,7 @@ import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import {
     CallActionActionComponent,
     CatchErrorActionComponent,
+    CommentActionComponent,
     ErrorActionComponent,
     InputActionComponent,
     StartActionComponent
@@ -19,6 +20,7 @@ import {
 import {
     findPropertyByNameInObject,
     getLabel,
+    IEezObject,
     PropertyType
 } from "project-editor/core/object";
 import type {
@@ -105,6 +107,7 @@ export class RuntimeStoreClass {
                 this.isPaused = isDebuggerActive;
                 this.singleStep = false;
                 this.selectedPage = this.DocumentStore.project.pages[0];
+                this.selectedQueueTask = undefined;
 
                 this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
                     this.DocumentStore.isDashboardProject;
@@ -213,8 +216,22 @@ export class RuntimeStoreClass {
         this.singleStep = false;
     }
 
+    removeDebugNewMarker() {
+        // remove "debug-new" class for all elements in debugger panel
+        const nodes = document.querySelectorAll(
+            ".EezStudio_DebuggerPanel .debug-new"
+        );
+        for (const node of nodes) {
+            if (node instanceof Element) {
+                node.classList.remove("debug-new");
+            }
+        }
+    }
+
     @action
     runSingleStep() {
+        //this.removeDebugNewMarker();
+
         if (this.isPaused) {
             this.isPaused = false;
             this.singleStep = true;
@@ -385,6 +402,47 @@ export class RuntimeStoreClass {
         return undefined;
     }
 
+    pushTask({
+        component,
+        flowState,
+        input,
+        inputDataValue,
+        connectionLine
+    }: {
+        flowState: FlowState;
+        component: Component;
+        input?: string;
+        inputDataValue?: any;
+        connectionLine?: ConnectionLine;
+    }) {
+        this.queue.push({
+            id: ++this.queueTaskId,
+            flowState,
+            component,
+            input,
+            inputData:
+                inputDataValue !== undefined
+                    ? {
+                          time: Date.now(),
+                          value: inputDataValue
+                      }
+                    : undefined,
+            connectionLine
+        });
+
+        if (this.isDebuggerActive && this.isPaused && !this.selectedQueueTask) {
+            const nextQueueTask = this.queue[0];
+
+            runInAction(() => {
+                this.selectedQueueTask = nextQueueTask;
+            });
+
+            if (nextQueueTask) {
+                this.showQueueTask(nextQueueTask);
+            }
+        }
+    }
+
     pumpQueue = async () => {
         this.pumpTimeoutId = undefined;
 
@@ -429,15 +487,26 @@ export class RuntimeStoreClass {
                     }
 
                     if (this.singleStep) {
-                        runInAction(() => {
-                            this.isPaused = true;
-                            this.singleStep = false;
-                        });
                         break;
                     }
                 }
 
                 runInAction(() => this.queue.unshift(...runningComponents));
+
+                if (this.singleStep) {
+                    const nextQueueTask =
+                        this.queue.length > 0 ? this.queue[0] : undefined;
+
+                    runInAction(() => {
+                        this.isPaused = true;
+                        this.singleStep = false;
+                        this.selectedQueueTask = nextQueueTask;
+                    });
+
+                    if (nextQueueTask) {
+                        this.showQueueTask(nextQueueTask);
+                    }
+                }
             }
         }
 
@@ -583,6 +652,40 @@ export class RuntimeStoreClass {
 
     @computed get error() {
         return "Unknown error";
+    }
+
+    ////////////////////////////////////////
+    // DEBUGGER
+
+    @observable selectedQueueTask: QueueTask | undefined;
+
+    showQueueTask(queueTask: QueueTask) {
+        const objects: IEezObject[] = [];
+
+        if (
+            queueTask.connectionLine &&
+            queueTask.connectionLine.sourceComponent &&
+            queueTask.connectionLine.targetComponent
+        ) {
+            objects.push(queueTask.connectionLine.sourceComponent);
+            objects.push(queueTask.connectionLine);
+            objects.push(queueTask.connectionLine.targetComponent);
+        } else {
+            objects.push(queueTask.component);
+        }
+
+        // navigate to the first object,
+        // just to make sure that proper editor is opened
+        this.DocumentStore.navigationStore.showObject(objects[0]);
+
+        const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
+        if (editorState instanceof FlowTabState) {
+            // select other object in the same editor
+            editorState.selectObjects(objects);
+
+            // ensure objects are visible on the screen
+            editorState.ensureSelectionVisible();
+        }
     }
 }
 
@@ -733,8 +836,7 @@ export class FlowState {
 
                 if (componentState.isReadyToRun()) {
                     runInAction(() =>
-                        this.runtimeStore.queue.push({
-                            id: ++this.runtimeStore.queueTaskId,
+                        this.runtimeStore.pushTask({
                             flowState: this,
                             component: visitResult.value
                         })
@@ -769,15 +871,11 @@ export class FlowState {
 
         if (inputActionComponent) {
             runInAction(() =>
-                this.runtimeStore.queue.push({
-                    id: ++this.runtimeStore.queueTaskId,
+                this.runtimeStore.pushTask({
                     flowState: this,
                     component: inputActionComponent,
                     input: "input",
-                    inputData: {
-                        time: Date.now(),
-                        value: null
-                    }
+                    inputDataValue: null
                 })
             );
         } else {
@@ -816,15 +914,11 @@ export class FlowState {
                     ) as ActionComponent;
 
                     runInAction(() =>
-                        this.runtimeStore.queue.push({
-                            id: ++this.runtimeStore.queueTaskId,
+                        this.runtimeStore.pushTask({
                             flowState: this,
                             component: actionNode,
                             input: connectionLine.input,
-                            inputData: {
-                                time: Date.now(),
-                                value: null
-                            },
+                            inputDataValue: null,
                             connectionLine
                         })
                     );
@@ -868,15 +962,11 @@ export class FlowState {
                 );
 
                 runInAction(() =>
-                    this.runtimeStore.queue.push({
-                        id: ++this.runtimeStore.queueTaskId,
+                    this.runtimeStore.pushTask({
                         flowState: this,
                         component: targetComponent,
                         input: connectionLine.input,
-                        inputData: {
-                            time: Date.now(),
-                            value
-                        },
+                        inputDataValue: value,
                         connectionLine
                     })
                 );
@@ -905,7 +995,7 @@ export class FlowState {
 export type InputPropertyValue = InputData;
 
 export class ComponentState {
-    inputsData = new Map<string, InputData>();
+    @observable inputsData = new Map<string, InputData>();
     @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
     @observable isRunning: boolean = false;
     @observable runningState: any;
@@ -921,11 +1011,16 @@ export class ComponentState {
         return this._inputPropertyValues.get(input);
     }
 
+    @action
     setInputData(input: string, inputData: InputData) {
         this.inputsData.set(input, inputData);
     }
 
     isReadyToRun() {
+        if (this.component instanceof CommentActionComponent) {
+            return false;
+        }
+
         if (this.component instanceof Widget) {
             return true;
         }
@@ -1032,16 +1127,11 @@ export class ComponentState {
                     );
 
                     runInAction(() =>
-                        this.flowState.runtimeStore.queue.push({
-                            id: ++this.flowState.runtimeStore.queueTaskId,
-                            flowState:
-                                catchErrorOutput.componentState.flowState,
+                        this.flowState.runtimeStore.pushTask({
+                            flowState: this.flowState,
                             component: connectionLine.targetComponent!,
                             input: connectionLine.input,
-                            inputData: {
-                                time: Date.now(),
-                                value: err
-                            },
+                            inputDataValue: err,
                             connectionLine
                         })
                     );
@@ -1058,15 +1148,11 @@ export class ComponentState {
                     flowState && flowState.findCatchErrorActionComponent();
                 if (catchErrorActionComponentState) {
                     runInAction(() =>
-                        this.flowState.runtimeStore.queue.push({
-                            id: ++this.flowState.runtimeStore.queueTaskId,
-                            flowState: catchErrorActionComponentState.flowState,
+                        this.flowState.runtimeStore.pushTask({
+                            flowState: this.flowState,
                             component: catchErrorActionComponentState.component,
                             input: "message",
-                            inputData: {
-                                time: Date.now(),
-                                value: err
-                            }
+                            inputDataValue: err
                         })
                     );
                 } else {
@@ -1091,15 +1177,11 @@ export class ComponentState {
                 )
                 .forEach(connectionLine => {
                     runInAction(() =>
-                        this.flowState.runtimeStore.queue.push({
-                            id: ++this.flowState.runtimeStore.queueTaskId,
+                        this.flowState.runtimeStore.pushTask({
                             flowState: this.flowState,
                             component: connectionLine.targetComponent!,
                             input: connectionLine.input,
-                            inputData: {
-                                time: Date.now(),
-                                value: null
-                            },
+                            inputDataValue: null,
                             connectionLine
                         })
                     );

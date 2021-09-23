@@ -41,7 +41,7 @@ import {
     evalConstantExpression
 } from "project-editor/flow/expression/expression";
 
-const LeftArrow = () => (
+export const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +62,7 @@ const LeftArrow = () => (
     </div>
 );
 
-const RightArrow = () => (
+export const RightArrow = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         width="24"

@@ -186,21 +186,23 @@ export const ComponentEnclosure = observer(
     }) => {
         const elRef = React.useRef<HTMLDivElement>(null);
 
-        React.useEffect(() => {
-            const el = elRef.current;
-            if (el) {
-                const geometry = calcComponentGeometry(
-                    component,
-                    el,
-                    flowContext
-                );
-                geometry.width = Math.round(geometry.width);
-                geometry.height = Math.round(geometry.height);
-                runInAction(() => {
-                    component.geometry = geometry;
-                });
-            }
-        });
+        if (!flowContext.document.DocumentStore.runtimeStore.isRuntimeMode) {
+            React.useEffect(() => {
+                const el = elRef.current;
+                if (el) {
+                    const geometry = calcComponentGeometry(
+                        component,
+                        el,
+                        flowContext
+                    );
+                    geometry.width = Math.round(geometry.width);
+                    geometry.height = Math.round(geometry.height);
+                    runInAction(() => {
+                        component.geometry = geometry;
+                    });
+                }
+            });
+        }
 
         const style: React.CSSProperties = {
             left: left ?? component.left,

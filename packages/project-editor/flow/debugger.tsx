@@ -13,6 +13,7 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { HistoryPanel } from "./history";
 import { FlowState, QueueTask } from "./runtime";
 import { IconAction } from "eez-studio-ui/action";
+import { RightArrow } from "./action-components";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +78,7 @@ export class DebuggerPanel extends React.Component {
                     />
                 ]}
                 body={
-                    <div className="EezStudio_RuntimePanel">
+                    <div className="EezStudio_DebuggerPanel">
                         <Splitter
                             type="vertical"
                             persistId={`project-editor/debugger`}
@@ -119,90 +120,44 @@ class QueueTree extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     @computed get rootNode(): ITreeNode<QueueTask> {
-        function getQueueTaskChildren(
-            queueTask: QueueTask
-        ): ITreeNode<QueueTask>[] {
-            const children = [
-                {
-                    id: "flowState",
-                    label: (
-                        <div>
-                            Flow state: {getLabel(queueTask.flowState.flow)}
-                        </div>
-                    ),
-                    children: [],
-                    selected: false,
-                    expanded: false,
-                    data: queueTask
-                },
-                {
-                    id: "component",
-                    label: (
-                        <div>Component: {getLabel(queueTask.component)}</div>
-                    ),
-                    children: [],
-                    selected: false,
-                    expanded: false,
-                    data: queueTask
-                }
-            ];
-
-            if (queueTask.input) {
-                children.push({
-                    id: "input",
-                    label: <div>Input: {queueTask.input}</div>,
-                    children: [],
-                    selected: false,
-                    expanded: false,
-                    data: queueTask
-                });
+        function getQueueTaskLabel(queueTask: QueueTask) {
+            if (
+                queueTask.connectionLine &&
+                queueTask.connectionLine.sourceComponent &&
+                queueTask.connectionLine.targetComponent
+            ) {
+                return (
+                    <div className="debug-new">
+                        {`${getLabel(
+                            queueTask.connectionLine.sourceComponent
+                        )}:${queueTask.connectionLine.output}`}
+                        <RightArrow />{" "}
+                        {`${getLabel(
+                            queueTask.connectionLine.targetComponent
+                        )}:${queueTask.connectionLine.input}`}
+                    </div>
+                );
+            } else {
+                return (
+                    <div className="debug-new">
+                        {getLabel(queueTask.component)}
+                    </div>
+                );
             }
-
-            if (queueTask.inputData) {
-                children.push({
-                    id: "inputData",
-                    label: (
-                        <div>
-                            Input data:{" "}
-                            {`${queueTask.inputData.value} at ${queueTask.inputData.time}`}
-                        </div>
-                    ),
-                    children: [],
-                    selected: false,
-                    expanded: false,
-                    data: queueTask
-                });
-            }
-
-            if (queueTask.connectionLine) {
-                children.push({
-                    id: "connectionLine",
-                    label: (
-                        <div>
-                            Connection line:{" "}
-                            {getLabel(queueTask.connectionLine)}
-                        </div>
-                    ),
-                    children: [],
-                    selected: false,
-                    expanded: false,
-                    data: queueTask
-                });
-            }
-
-            return children;
         }
 
         function getChildren(queueTasks: QueueTask[]): ITreeNode<QueueTask>[] {
             return queueTasks.map(queueTask => ({
                 id: queueTask.id.toString(),
-                label: queueTask.id.toString(),
-                children: getQueueTaskChildren(queueTask),
-                selected: false,
-                expanded: true,
+                label: getQueueTaskLabel(queueTask),
+                children: [],
+                selected: queueTask == selectedQueueTask,
+                expanded: false,
                 data: queueTask
             }));
         }
+
+        const selectedQueueTask = this.context.runtimeStore.selectedQueueTask;
 
         return {
             id: "root",
@@ -214,7 +169,15 @@ class QueueTree extends React.Component {
     }
 
     @action.bound
-    selectNode(node?: ITreeNode<QueueTask>) {}
+    selectNode(node?: ITreeNode<QueueTask>) {
+        const queueTask = node && node.data;
+
+        this.context.runtimeStore.selectedQueueTask = queueTask;
+
+        if (queueTask) {
+            this.context.runtimeStore.showQueueTask(queueTask);
+        }
+    }
 
     render() {
         return (
@@ -258,7 +221,7 @@ class FlowsTree extends React.Component {
                 id: flowState.id,
                 label: (
                     <div
-                        className={classNames("running-flow", {
+                        className={classNames("running-flow", "debug-new", {
                             error: flowState.hasError
                         })}
                     >

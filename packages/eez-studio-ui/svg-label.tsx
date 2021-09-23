@@ -29,6 +29,9 @@ export class SvgLabel extends React.Component<
         };
         backgroundColor?: string;
         textColor?: string;
+        textWeight?: string;
+        rectStyle?: React.CSSProperties;
+        textClassName?: string;
     },
     {}
 > {
@@ -77,6 +80,10 @@ export class SvgLabel extends React.Component<
         return this.props.textColor || "white";
     }
 
+    get textWeight() {
+        return this.props.textWeight || "normal";
+    }
+
     componentDidMount() {
         if (this.myRef.current) {
             const bbox = this.myRef.current.getBBox();
@@ -90,16 +97,19 @@ export class SvgLabel extends React.Component<
     }
 
     render() {
-        let { text, x, y, horizontalAlignement, verticalAlignment } = this.props;
+        let { text, x, y, horizontalAlignement, verticalAlignment } =
+            this.props;
 
-        let totalWidth = this.margin.left + this.contentWidth + this.margin.right;
+        let totalWidth =
+            this.margin.left + this.contentWidth + this.margin.right;
         if (horizontalAlignement === "center") {
             x -= totalWidth / 2;
         } else if (horizontalAlignement === "right") {
             x -= totalWidth;
         }
 
-        let totalHeight = this.margin.top + this.contentHeight + this.margin.bottom;
+        let totalHeight =
+            this.margin.top + this.contentHeight + this.margin.bottom;
         if (verticalAlignment === "center") {
             y -= totalHeight / 2;
         } else if (verticalAlignment === "bottom") {
@@ -121,14 +131,17 @@ export class SvgLabel extends React.Component<
                     fill={this.backgroundColor}
                     stroke={this.border.color}
                     strokeWidth={this.border.size}
+                    style={this.props.rectStyle}
                 />
                 <text
                     ref={this.myRef}
                     x={x + this.contentWidth / 2}
                     y={y + this.contentHeight / 2}
                     fill={this.textColor}
+                    fontWeight={this.textWeight}
                     textAnchor="middle"
                     alignmentBaseline="middle"
+                    className={this.props.textClassName}
                 >
                     {text}
                 </text>
