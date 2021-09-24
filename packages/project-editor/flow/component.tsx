@@ -595,6 +595,75 @@ export class CustomOutput extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function addBreakpointMenuItems(
+    component: Component,
+    menuItems: Electron.MenuItem[]
+) {
+    var additionalMenuItems: Electron.MenuItem[] = [];
+
+    const DocumentStore = getDocumentStore(component);
+
+    if (DocumentStore.isAppletProject || DocumentStore.isDashboardProject) {
+        if (
+            DocumentStore.runtimeStore.isBreakpointAddedForComponent(component)
+        ) {
+            additionalMenuItems.push(
+                new MenuItem({
+                    label: "Remove Breakpoint",
+                    click: () =>
+                        DocumentStore.runtimeStore.removeBreakpoint(component)
+                })
+            );
+
+            if (
+                DocumentStore.runtimeStore.isBreakpointEnabledForComponent(
+                    component
+                )
+            ) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Disable Breakpoint",
+                        click: () =>
+                            DocumentStore.runtimeStore.disableBreakpoint(
+                                component
+                            )
+                    })
+                );
+            } else {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Enable Breakpoint",
+                        click: () =>
+                            DocumentStore.runtimeStore.enableBreakpoint(
+                                component
+                            )
+                    })
+                );
+            }
+        } else {
+            additionalMenuItems.push(
+                new MenuItem({
+                    label: "Add Breakpoint",
+                    click: () =>
+                        DocumentStore.runtimeStore.addBreakpoint(component)
+                })
+            );
+        }
+    }
+
+    if (additionalMenuItems.length > 0) {
+        additionalMenuItems.push(
+            new MenuItem({
+                type: "separator"
+            })
+        );
+
+        menuItems.unshift(...additionalMenuItems);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Component extends EezObject {
     @observable type: string;
 
@@ -766,6 +835,15 @@ export class Component extends EezObject {
             if (typeof jsObject.height === "string") {
                 jsObject.height = parseInt(jsObject.height);
             }
+        },
+
+        extendContextMenu: (
+            thisObject: Component,
+            context: IContextMenuContext,
+            objects: IEezObject[],
+            menuItems: Electron.MenuItem[]
+        ): void => {
+            addBreakpointMenuItems(thisObject, menuItems);
         },
 
         isPropertyMenuSupported: true,
@@ -1117,6 +1195,8 @@ export class Widget extends Component {
             objects: IEezObject[],
             menuItems: Electron.MenuItem[]
         ): void => {
+            addBreakpointMenuItems(thisObject, menuItems);
+
             var additionalMenuItems: Electron.MenuItem[] = [];
 
             if (objects.length === 1) {
@@ -1597,7 +1677,7 @@ export class EmbeddedWidget extends Widget {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        if (!flowContext.document.DocumentStore.isDashboardProject) {
+        if (!flowContext.DocumentStore.isDashboardProject) {
             const backgroundColor = this.style.backgroundColorProperty;
             style.backgroundColor = to16bitsColor(backgroundColor);
         }

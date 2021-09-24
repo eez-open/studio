@@ -186,23 +186,21 @@ export const ComponentEnclosure = observer(
     }) => {
         const elRef = React.useRef<HTMLDivElement>(null);
 
-        if (!flowContext.document.DocumentStore.runtimeStore.isRuntimeMode) {
-            React.useEffect(() => {
-                const el = elRef.current;
-                if (el) {
-                    const geometry = calcComponentGeometry(
-                        component,
-                        el,
-                        flowContext
-                    );
-                    geometry.width = Math.round(geometry.width);
-                    geometry.height = Math.round(geometry.height);
-                    runInAction(() => {
-                        component.geometry = geometry;
-                    });
-                }
-            });
-        }
+        React.useEffect(() => {
+            const el = elRef.current;
+            if (el) {
+                const geometry = calcComponentGeometry(
+                    component,
+                    el,
+                    flowContext
+                );
+                geometry.width = Math.round(geometry.width);
+                geometry.height = Math.round(geometry.height);
+                runInAction(() => {
+                    component.geometry = geometry;
+                });
+            }
+        });
 
         const style: React.CSSProperties = {
             left: left ?? component.left,
@@ -221,17 +219,35 @@ export const ComponentEnclosure = observer(
 
         const className = component.getClassName();
 
+        let breakpointClass;
+
+        const runtimeStore = flowContext.DocumentStore.runtimeStore;
+
+        if (component instanceof Component) {
+            if (runtimeStore.isBreakpointAddedForComponent(component)) {
+                if (runtimeStore.isBreakpointEnabledForComponent(component)) {
+                    breakpointClass = "enabled-breakpoint";
+                } else {
+                    breakpointClass = "disabled-breakpoint";
+                }
+            }
+        }
+
         return (
             <div
                 data-eez-flow-object-id={dataFlowObjectId}
                 ref={elRef}
                 className={classNames(
                     "EezStudio_ComponentEnclosure",
+                    breakpointClass,
                     className,
                     {
                         "eez-flow-editor-capture-pointers":
-                            flowContext.document.DocumentStore.runtimeStore
-                                .isRuntimeMode
+                            runtimeStore.isRuntimeMode &&
+                            !(
+                                runtimeStore.isDebuggerActive &&
+                                runtimeStore.isPaused
+                            )
                     }
                 )}
                 style={style}

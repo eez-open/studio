@@ -31,7 +31,8 @@ import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { getDocumentStore } from "project-editor/core/store";
 import {
     buildExpression,
-    buildAssignableExpression
+    buildAssignableExpression,
+    evalExpression
 } from "project-editor/flow/expression/expression";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
@@ -920,10 +921,19 @@ export class ScpiActionComponent extends ActionComponent {
                         if (tag == SCPI_PART_EXPR) {
                             const inputName = str.substring(1, str.length - 1);
 
-                            jsObject.customInputs.push({
-                                name: inputName,
-                                type: PropertyType.String
-                            });
+                            if (
+                                !jsObject.customInputs.find(
+                                    (customInput: {
+                                        name: string;
+                                        type: PropertyType;
+                                    }) => customInput.name == inputName
+                                )
+                            ) {
+                                jsObject.customInputs.push({
+                                    name: inputName,
+                                    type: PropertyType.String
+                                });
+                            }
                         } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
                             const outputName =
                                 str[0] == "{"
@@ -939,6 +949,7 @@ export class ScpiActionComponent extends ActionComponent {
                 }
             }
         },
+
         label: (component: ScpiActionComponent) => {
             const label = ActionComponent.classInfo.label!(component);
 
@@ -1026,22 +1037,11 @@ export class ScpiActionComponent extends ActionComponent {
                 if (tag == SCPI_PART_STRING) {
                     command += str;
                 } else if (tag == SCPI_PART_EXPR) {
-                    const inputName = str.substring(1, str.length - 1);
+                    const expr = str.substring(1, str.length - 1);
 
-                    const inputPropertyValue = flowState.getInputPropertyValue(
-                        this,
-                        inputName
-                    );
-                    if (
-                        inputPropertyValue &&
-                        inputPropertyValue.value != undefined
-                    ) {
-                        const value = inputPropertyValue.value.toString();
+                    const value = evalExpression(flowState, this, expr);
 
-                        command += value;
-                    } else {
-                        throw `missing scpi parameter ${inputName}`;
-                    }
+                    command += value.toString();
                 } else if (
                     tag == SCPI_PART_QUERY_WITH_ASSIGNMENT ||
                     tag == SCPI_PART_QUERY

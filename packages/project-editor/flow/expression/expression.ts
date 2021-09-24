@@ -1,7 +1,6 @@
 import { Component } from "project-editor/flow/component";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { getFlow, getProject, Project } from "project-editor/project/project";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     binaryOperators,
     builtInConstants,
@@ -29,6 +28,8 @@ import {
     isEnumType,
     VariableType
 } from "project-editor/features/variable/variable";
+import type { IDataContext, IFlowState } from "../flow-interfaces";
+import { DocumentStoreClass } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -166,8 +167,14 @@ export function evalConstantExpression(project: Project, expression: string) {
     return value;
 }
 
+export interface IExpressionContext {
+    dataContext: IDataContext;
+    flowState?: IFlowState;
+    DocumentStore: DocumentStoreClass;
+}
+
 export function evalExpression(
-    flowContext: IFlowContext,
+    expressionContext: IExpressionContext,
     component: Component,
     expression: string
 ) {
@@ -188,7 +195,11 @@ export function evalExpression(
         try {
             findValueTypeInExpressionNode(component, rootNode, false);
 
-            value = evalExpressionInFlowContext(flowContext, rootNode);
+            value = evalExpressionWithContext(
+                expressionContext,
+                component,
+                rootNode
+            );
         } catch (err) {
             console.error(err);
             value = null;
@@ -995,8 +1006,9 @@ function evalConstantExpressionNode(
     return evalNode(rootNode);
 }
 
-function evalExpressionInFlowContext(
-    flowContext: IFlowContext,
+function evalExpressionWithContext(
+    expressionContext: IExpressionContext,
+    component: Component,
     rootNode: ExpressionNode
 ) {
     function evalNode(node: ExpressionNode): any {
@@ -1005,7 +1017,26 @@ function evalExpressionInFlowContext(
         }
 
         if (node.type == "Identifier") {
-            return flowContext.dataContext.get(node.name);
+            const input = component.inputs.find(
+                input => input.name == node.name
+            );
+            if (input != undefined) {
+                const flowState = expressionContext.flowState;
+                if (!flowState) {
+                    throw `cannot get input "${input.name}" value without flow state`;
+                }
+
+                const inputPropertyValue = flowState.getInputPropertyValue(
+                    component,
+                    input.name
+                );
+
+                return inputPropertyValue
+                    ? inputPropertyValue.value
+                    : undefined;
+            }
+
+            return expressionContext.dataContext.get(node.name);
         }
 
         if (node.type == "BinaryExpression") {
@@ -1018,7 +1049,7 @@ function evalExpressionInFlowContext(
             }
 
             return operator.eval(
-                flowContext,
+                expressionContext,
                 evalNode(node.left),
                 evalNode(node.right)
             );
@@ -1031,7 +1062,7 @@ function evalExpressionInFlowContext(
             }
 
             return operator.eval(
-                flowContext,
+                expressionContext,
                 evalNode(node.left),
                 evalNode(node.right)
             );
@@ -1043,7 +1074,7 @@ function evalExpressionInFlowContext(
                 throw `Unknown unary operator: ${node.operator}`;
             }
 
-            return operator.eval(flowContext, evalNode(node.argument));
+            return operator.eval(expressionContext, evalNode(node.argument));
         }
 
         if (node.type == "ConditionalExpression") {
@@ -1075,7 +1106,7 @@ function evalExpressionInFlowContext(
             }
 
             return builtInFunction.eval(
-                flowContext,
+                expressionContext,
                 ...node.arguments.map(evalNode)
             );
         }
@@ -1086,7 +1117,7 @@ function evalExpressionInFlowContext(
                 node.property.type == "Identifier"
             ) {
                 const enumDef =
-                    flowContext.document.DocumentStore.project.variables.enumsMap.get(
+                    expressionContext.DocumentStore.project.variables.enumsMap.get(
                         node.object.name
                     );
                 if (enumDef) {

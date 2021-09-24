@@ -70,7 +70,7 @@ class EditControls extends React.Component {
                 style={{
                     visibility: this.context.runtimeStore.isRuntimeMode
                         ? "hidden"
-                        : "visible"
+                        : "inherit"
                 }}
             >
                 <div className="btn-group" role="group">
@@ -298,7 +298,7 @@ class SearchControls extends React.Component {
                 style={{
                     visibility: this.context.runtimeStore.isRuntimeMode
                         ? "hidden"
-                        : "visible"
+                        : "inherit"
                 }}
             >
                 <input

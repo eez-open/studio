@@ -11,6 +11,7 @@ export interface IFlowContext {
     dataContext: IDataContext;
     flowState?: IFlowState;
     document: IDocument;
+    DocumentStore: DocumentStoreClass;
     viewState: IViewState;
     editorOptions: IEditorOptions;
     frontFace: boolean;

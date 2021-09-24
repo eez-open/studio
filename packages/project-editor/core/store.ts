@@ -737,6 +737,20 @@ class UIStateStore {
             uiState.activeOutputSection ?? Section.CHECKS;
         this.pageEditorFrontFace = uiState.pageEditorFrontFace;
         this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
+
+        if (uiState.breakpoints) {
+            for (const key in uiState.breakpoints) {
+                const component = this.DocumentStore.getObjectFromStringPath(
+                    key
+                ) as Component;
+                if (component) {
+                    this.DocumentStore.runtimeStore.breakpoints.set(
+                        component,
+                        uiState.breakpoints[key]
+                    );
+                }
+            }
+        }
     }
 
     get featuresJS() {
@@ -772,7 +786,16 @@ class UIStateStore {
             objects: this.objectsJS,
             activeOutputSection: this.activeOutputSection,
             pageEditorFrontFace: this.pageEditorFrontFace,
-            pageRuntimeFrontFace: this.pageRuntimeFrontFace
+            pageRuntimeFrontFace: this.pageRuntimeFrontFace,
+            breakpoints: Array.from(
+                this.DocumentStore.runtimeStore.breakpoints
+            ).reduce(
+                (obj, [key, value]) =>
+                    Object.assign(obj, {
+                        [getObjectPathAsString(key)]: value
+                    }),
+                {}
+            )
         };
 
         state.objects = this.objectsJS;

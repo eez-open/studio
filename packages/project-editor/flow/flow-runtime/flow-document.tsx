@@ -1,11 +1,11 @@
 import { computed } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
 import { IDocument } from "project-editor/flow/flow-interfaces";
-import { ITransform } from "project-editor/flow/flow-editor/transform";
 import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
 import { getDocumentStore } from "project-editor/core/store";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { ConnectionLine } from "project-editor/flow/flow";
+import { getObjectIdFromPoint } from "../flow-editor/bounding-rects";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -42,17 +42,14 @@ export class FlowDocument implements IDocument {
         return this.flow.getParent(object);
     }
 
-    objectFromPoint(point: Point) {
-        return undefined;
-    }
-
-    resetTransform(transform: ITransform) {
-        const flow = this.flow.object as Flow;
-        transform.translate = {
-            x: -flow.pageRect.width / 2,
-            y: -flow.pageRect.height / 2
-        };
-        transform.scale = 1;
+    objectFromPoint(point: Point):
+        | {
+              id: string;
+              connectionInput?: string;
+              connectionOutput?: string;
+          }
+        | undefined {
+        return getObjectIdFromPoint(this, this.flowContext.viewState, point);
     }
 
     getObjectsInsideRect(rect: Rect) {
@@ -60,7 +57,7 @@ export class FlowDocument implements IDocument {
     }
 
     createContextMenu(objects: ITreeObjectAdapter[]) {
-        return undefined;
+        return this.flow.createSelectionContextMenu();
     }
 
     duplicateSelection() {}

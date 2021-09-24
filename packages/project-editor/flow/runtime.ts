@@ -86,6 +86,7 @@ export class RuntimeStoreClass {
     @observable isDebuggerActive = false;
     @observable isPaused = false;
     @observable singleStep = false;
+    resumed = false;
 
     setRuntimeMode = async (isDebuggerActive: boolean) => {
         if (!this.isRuntimeMode) {
@@ -208,6 +209,7 @@ export class RuntimeStoreClass {
     resume() {
         this.isPaused = false;
         this.singleStep = false;
+        this.resumed = true;
     }
 
     @action
@@ -216,22 +218,8 @@ export class RuntimeStoreClass {
         this.singleStep = false;
     }
 
-    removeDebugNewMarker() {
-        // remove "debug-new" class for all elements in debugger panel
-        const nodes = document.querySelectorAll(
-            ".EezStudio_DebuggerPanel .debug-new"
-        );
-        for (const node of nodes) {
-            if (node instanceof Element) {
-                node.classList.remove("debug-new");
-            }
-        }
-    }
-
     @action
     runSingleStep() {
-        //this.removeDebugNewMarker();
-
         if (this.isPaused) {
             this.isPaused = false;
             this.singleStep = true;
@@ -434,7 +422,7 @@ export class RuntimeStoreClass {
             const nextQueueTask = this.queue[0];
 
             runInAction(() => {
-                this.selectedQueueTask = nextQueueTask;
+                this.selectQueueTask(nextQueueTask);
             });
 
             if (nextQueueTask) {
@@ -449,6 +437,8 @@ export class RuntimeStoreClass {
         if (!(this.isDebuggerActive && this.isPaused)) {
             if (this.queue.length > 0) {
                 const runningComponents: QueueTask[] = [];
+
+                let singleStep = this.singleStep;
 
                 while (true) {
                     let task: QueueTask | undefined;
@@ -473,11 +463,20 @@ export class RuntimeStoreClass {
                     } else {
                         if (input && inputData) {
                             componentState.setInputData(input, inputData);
+                        }
 
-                            if (componentState.isReadyToRun()) {
-                                componentState.run();
+                        if (componentState.isReadyToRun()) {
+                            if (
+                                this.isDebuggerActive &&
+                                !singleStep &&
+                                !this.resumed &&
+                                this.breakpoints.has(component)
+                            ) {
+                                runningComponents.push(task);
+                                singleStep = true;
+                                break;
                             }
-                        } else {
+
                             componentState.run();
                         }
 
@@ -486,21 +485,25 @@ export class RuntimeStoreClass {
                         }
                     }
 
-                    if (this.singleStep) {
+                    this.resumed = false;
+
+                    if (singleStep) {
                         break;
                     }
                 }
 
+                this.resumed = false;
+
                 runInAction(() => this.queue.unshift(...runningComponents));
 
-                if (this.singleStep) {
+                if (singleStep) {
                     const nextQueueTask =
                         this.queue.length > 0 ? this.queue[0] : undefined;
 
                     runInAction(() => {
                         this.isPaused = true;
                         this.singleStep = false;
-                        this.selectedQueueTask = nextQueueTask;
+                        this.selectQueueTask(nextQueueTask);
                     });
 
                     if (nextQueueTask) {
@@ -659,6 +662,22 @@ export class RuntimeStoreClass {
 
     @observable selectedQueueTask: QueueTask | undefined;
 
+    selectQueueTask(queueTask: QueueTask | undefined) {
+        this.selectedQueueTask = queueTask;
+        if (queueTask) {
+            this.selectedFlowState = queueTask.flowState;
+        }
+    }
+
+    showComponent(component: Component) {
+        this.DocumentStore.navigationStore.showObject(component);
+
+        const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
+        if (editorState instanceof FlowTabState) {
+            editorState.ensureSelectionVisible();
+        }
+    }
+
     showQueueTask(queueTask: QueueTask) {
         const objects: IEezObject[] = [];
 
@@ -687,6 +706,39 @@ export class RuntimeStoreClass {
             editorState.ensureSelectionVisible();
         }
     }
+
+    ////////////////////////////////////////
+    // BREAKPOINTS
+
+    @observable breakpoints = new Map<Component, boolean>();
+
+    isBreakpointAddedForComponent(component: Component) {
+        return this.breakpoints.has(component);
+    }
+
+    isBreakpointEnabledForComponent(component: Component) {
+        return this.breakpoints.get(component) == true;
+    }
+
+    @action
+    addBreakpoint(component: Component) {
+        this.breakpoints.set(component, true);
+    }
+
+    @action
+    removeBreakpoint(component: Component) {
+        this.breakpoints.delete(component);
+    }
+
+    @action
+    enableBreakpoint(component: Component) {
+        this.breakpoints.set(component, true);
+    }
+
+    @action
+    disableBreakpoint(component: Component) {
+        this.breakpoints.set(component, false);
+    }
 }
 
 export class FlowState {
@@ -710,6 +762,14 @@ export class FlowState {
             this.runtimeStore.DocumentStore.dataContext.createWithLocalVariables(
                 flow.localVariables
             );
+    }
+
+    get DocumentStore() {
+        return this.runtimeStore.DocumentStore;
+    }
+
+    get flowState() {
+        return this;
     }
 
     get label() {
@@ -815,6 +875,7 @@ export class FlowState {
         );
     }
 
+    @action
     start() {
         let componentState: ComponentState | undefined = undefined;
 
@@ -835,12 +896,14 @@ export class FlowState {
                 }
 
                 if (componentState.isReadyToRun()) {
-                    runInAction(() =>
+                    if (componentState.component instanceof Widget) {
+                        componentState.run();
+                    } else {
                         this.runtimeStore.pushTask({
                             flowState: this,
                             component: visitResult.value
-                        })
-                    );
+                        });
+                    }
                 }
             }
         }

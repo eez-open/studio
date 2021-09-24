@@ -73,6 +73,7 @@ interface IFlowContext {
     dataContext: IDataContext;
     flowState?: IFlowState;
     document: any;
+    DocumentStore: any;
     viewState: any;
     editorOptions: any;
     frontFace: boolean;

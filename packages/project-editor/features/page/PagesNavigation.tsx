@@ -367,11 +367,11 @@ export class PageTabState extends FlowTabState {
             return;
         }
 
-        if (state.editorFront) {
-            this.componentContainerDisplayItemEditorFrontFace.loadState(
-                state.editorFront.selection
-            );
+        if (state.selection) {
+            this.widgetContainer.loadState(state.editorFront.selection);
+        }
 
+        if (state.editorFront) {
             if (
                 state.editorFront.transform &&
                 state.editorFront.transform.translate
@@ -387,10 +387,6 @@ export class PageTabState extends FlowTabState {
         }
 
         if (state.editorBack) {
-            this.componentContainerDisplayItemEditorBackFace.loadState(
-                state.editorBack.selection
-            );
-
             if (
                 state.editorBack.transform &&
                 state.editorBack.transform.translate
@@ -406,10 +402,6 @@ export class PageTabState extends FlowTabState {
         }
 
         if (state.runtimeFront) {
-            this.componentContainerDisplayItemRuntimeFrontFace.loadState(
-                state.runtimeFront.selection
-            );
-
             if (
                 state.runtimeFront.transform &&
                 state.runtimeFront.transform.translate
@@ -425,10 +417,6 @@ export class PageTabState extends FlowTabState {
         }
 
         if (state.runtimeBack) {
-            this.componentContainerDisplayItemRuntimeBackFace.loadState(
-                state.runtimeBack.selection
-            );
-
             if (
                 state.runtimeBack.transform &&
                 state.runtimeBack.transform.translate
@@ -446,9 +434,8 @@ export class PageTabState extends FlowTabState {
 
     saveState() {
         const state = {
+            selection: this.widgetContainer.saveState(),
             editorFront: {
-                selection:
-                    this.componentContainerDisplayItemEditorFrontFace.saveState(),
                 transform: {
                     translate: {
                         x: this._editorFrontTransform.translate.x,
@@ -458,8 +445,6 @@ export class PageTabState extends FlowTabState {
                 }
             },
             editorBack: {
-                selection:
-                    this.componentContainerDisplayItemEditorBackFace.saveState(),
                 transform: {
                     translate: {
                         x: this._editorBackTransform.translate.x,
@@ -469,8 +454,6 @@ export class PageTabState extends FlowTabState {
                 }
             },
             runtimeFront: {
-                selection:
-                    this.componentContainerDisplayItemRuntimeFrontFace.saveState(),
                 transform: {
                     translate: {
                         x: this._runtimeFrontTransform.translate.x,
@@ -480,8 +463,6 @@ export class PageTabState extends FlowTabState {
                 }
             },
             runtimeBack: {
-                selection:
-                    this.componentContainerDisplayItemRuntimeBackFace.saveState(),
                 transform: {
                     translate: {
                         x: this._runtimeBackTransform.translate.x,

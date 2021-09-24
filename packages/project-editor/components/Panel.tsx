@@ -1,17 +1,25 @@
 import React from "react";
 import { observer } from "mobx-react";
+import classNames from "classnames";
+import { observable, action } from "mobx";
+import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface PanelProps {
+@observer
+export class Panel extends React.Component<{
     id: string;
     title: JSX.Element | string;
+    collapsable?: boolean;
     buttons?: JSX.Element[];
     body: JSX.Element | undefined;
-}
+}> {
+    @observable collapsed: boolean = false;
 
-@observer
-export class Panel extends React.Component<PanelProps> {
+    toggleCollapsed = action(() => {
+        this.collapsed = !this.collapsed;
+    });
+
     render() {
         let title: JSX.Element;
         if (typeof this.props.title == "string") {
@@ -25,17 +33,38 @@ export class Panel extends React.Component<PanelProps> {
         }
 
         return (
-            <div className="EezStudio_PanelContainer">
-                <div className="EezStudio_PanelHeader">
+            <div
+                className={classNames("EezStudio_PanelContainer", {
+                    collapsable: this.props.collapsable
+                })}
+            >
+                <div
+                    className="EezStudio_PanelHeader"
+                    onClick={this.toggleCollapsed}
+                >
+                    {this.props.collapsable && (
+                        <Icon
+                            icon={
+                                this.collapsed
+                                    ? "material:keyboard_arrow_right"
+                                    : "material:keyboard_arrow_down"
+                            }
+                            size={18}
+                            className="triangle"
+                        />
+                    )}
                     {title}
-                    <div
-                        className="btn-toolbar EezStudio_Toolbar"
-                        role="toolbar"
-                    >
-                        {this.props.buttons}
-                    </div>
+                    {(!this.props.collapsable || !this.collapsed) && (
+                        <div
+                            className="btn-toolbar EezStudio_Toolbar"
+                            role="toolbar"
+                        >
+                            {this.props.buttons}
+                        </div>
+                    )}
                 </div>
-                {this.props.body}
+                {(!this.props.collapsable || !this.collapsed) &&
+                    this.props.body}
             </div>
         );
     }

@@ -222,8 +222,7 @@ export class ContainerWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -425,7 +424,7 @@ export class ListWidget extends EmbeddedWidget {
         }
 
         if (!Array.isArray(dataValue)) {
-            if (flowContext.document.DocumentStore.isAppletProject) {
+            if (flowContext.DocumentStore.isAppletProject) {
                 try {
                     dataValue = evalExpression(flowContext, this, dataValue);
                 } catch (err) {}
@@ -449,7 +448,7 @@ export class ListWidget extends EmbeddedWidget {
             }
 
             let flowContext1;
-            if (flowContext.document.DocumentStore.isAppletProject) {
+            if (flowContext.DocumentStore.isAppletProject) {
                 flowContext1 = flowContext.overrideDataContext({
                     $it: i
                 });
@@ -851,7 +850,7 @@ export class SelectWidget extends EmbeddedWidget {
 
         if (this.data) {
             let index: number;
-            if (flowContext.document.DocumentStore.isAppletProject) {
+            if (flowContext.DocumentStore.isAppletProject) {
                 let indexValue;
                 try {
                     indexValue = evalExpression(flowContext, this, this.data);
@@ -1462,8 +1461,7 @@ export class DisplayDataWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -1673,7 +1671,7 @@ export class TextWidget extends EmbeddedWidget {
                 text = this.text;
             } else {
                 if (this.data) {
-                    if (flowContext.document.DocumentStore.isAppletProject) {
+                    if (flowContext.DocumentStore.isAppletProject) {
                         try {
                             text = evalExpression(flowContext, this, this.data);
                         } catch (err) {}
@@ -1689,7 +1687,7 @@ export class TextWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.document.DocumentStore.isDashboardProject ? (
+                {flowContext.DocumentStore.isDashboardProject ? (
                     <span>{text}</span>
                 ) : (
                     <ComponentCanvas
@@ -2051,8 +2049,7 @@ export class MultilineTextWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2164,8 +2161,7 @@ export class RectangleWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2396,8 +2392,7 @@ export class BitmapWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2569,7 +2564,7 @@ export class ButtonWidget extends EmbeddedWidget {
             }
         } else {
             if (this.enabled) {
-                if (flowContext.document.DocumentStore.isAppletProject) {
+                if (flowContext.DocumentStore.isAppletProject) {
                     try {
                         const value = evalExpression(
                             flowContext,
@@ -2596,7 +2591,7 @@ export class ButtonWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.document.DocumentStore.isDashboardProject ? (
+                {flowContext.DocumentStore.isDashboardProject ? (
                     <button
                         className="btn btn-secondary"
                         disabled={!buttonEnabled}
@@ -2709,8 +2704,7 @@ export class ToggleButtonWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2784,8 +2778,7 @@ export class ButtonGroupWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3010,8 +3003,7 @@ export class BarGraphWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3372,8 +3364,7 @@ export class YTGraphWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3494,8 +3485,7 @@ export class UpDownWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3674,8 +3664,7 @@ export class ListGraphWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3865,8 +3854,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4027,8 +4015,7 @@ export class ProgressWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4117,8 +4104,7 @@ export class CanvasWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4562,8 +4548,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4732,8 +4717,7 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.document.DocumentStore
-                    .isDashboardProject ? null : (
+                {flowContext.DocumentStore.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}

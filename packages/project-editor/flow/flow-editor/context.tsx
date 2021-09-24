@@ -252,6 +252,10 @@ export class EditorFlowContext implements IFlowContext {
     @observable dragComponent: Component | undefined;
     dataContext: IDataContext;
 
+    get DocumentStore() {
+        return this.document.DocumentStore;
+    }
+
     get containerId() {
         return this.tabState.containerId;
     }

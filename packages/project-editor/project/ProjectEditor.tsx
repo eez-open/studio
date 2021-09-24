@@ -37,10 +37,6 @@ class Content extends React.Component {
     }
 
     render() {
-        if (!this.context.project) {
-            return <div />;
-        }
-
         if (
             this.context.runtimeStore.isRuntimeMode &&
             !this.context.runtimeStore.isDebuggerActive
@@ -127,8 +123,8 @@ export class ProjectEditor extends React.Component<{}, {}> {
     declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
-        if (!this.context.project) {
-            return null;
+        if (!this.context.project || !this.context.project.fullyLoaded) {
+            return <div className="EezStudio_ProjectEditorWrapper" />;
         }
 
         let statusBar: JSX.Element | undefined;

@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, runInAction } from "mobx";
+import { action, computed, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
@@ -7,6 +7,8 @@ import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
     BoundingRectBuilder,
     Point,
+    pointDistance,
+    pointInRect,
     Rect,
     rectContains
 } from "eez-studio-shared/geometry";
@@ -21,9 +23,17 @@ import { Svg } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 import { Selection } from "project-editor/flow/flow-runtime/selection";
-import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
+import {
+    getObjectBoundingRect,
+    getSelectedObjectsBoundingRect
+} from "project-editor/flow/flow-editor/bounding-rects";
 import { Component } from "project-editor/flow/component";
 import { attachCssToElement } from "eez-studio-shared/dom";
+import { Draggable } from "eez-studio-ui/draggable";
+import { IMouseHandler, PanMouseHandler } from "../flow-editor/mouse-handler";
+
+const CONF_DOUBLE_CLICK_TIME = 350; // ms
+const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 
 const AllConnectionLines = observer(
     ({ flowContext }: { flowContext: IFlowContext }) => {
@@ -63,10 +73,22 @@ export class Canvas extends React.Component<{
     lastMouseUpPosition: Point;
     lastMouseUpTime: number | undefined;
 
+    draggable = new Draggable(this);
+
     constructor(props: any) {
         super(props);
 
         this.resizeObserver = new ResizeObserver(this.resizeObserverCallback);
+    }
+
+    @observable _mouseHandler: IMouseHandler | undefined;
+    get mouseHandler() {
+        return this._mouseHandler;
+    }
+    set mouseHandler(value: IMouseHandler | undefined) {
+        runInAction(() => {
+            this._mouseHandler = value;
+        });
     }
 
     resizeObserverCallback = () => {
@@ -90,6 +112,12 @@ export class Canvas extends React.Component<{
     };
 
     componentDidMount() {
+        if (
+            this.props.flowContext.DocumentStore.runtimeStore.isDebuggerActive
+        ) {
+            this.draggable.attach(this.div);
+        }
+
         this.div.addEventListener("wheel", this.onWheel, {
             passive: false
         });
@@ -104,6 +132,8 @@ export class Canvas extends React.Component<{
     }
 
     componentWillUnmount() {
+        this.draggable.attach(null);
+
         this.div.removeEventListener("wheel", this.onWheel);
 
         if (this.div) {
@@ -169,6 +199,192 @@ export class Canvas extends React.Component<{
         event.stopPropagation();
     }
 
+    @bind
+    onContextMenu(event: React.MouseEvent) {
+        event.preventDefault();
+    }
+
+    createMouseHandler(event: MouseEvent) {
+        const flowContext = this.props.flowContext;
+
+        if (!event.altKey) {
+            let point =
+                flowContext.viewState.transform.pointerEventToPagePoint(event);
+            const result = flowContext.document.objectFromPoint(point);
+            if (result) {
+                const object = flowContext.document.findObjectById(result.id);
+                if (object) {
+                    flowContext.viewState.deselectAllObjects();
+                    flowContext.viewState.selectObject(object);
+                    event.preventDefault();
+                }
+            } else {
+                flowContext.viewState.deselectAllObjects();
+            }
+        }
+
+        return undefined;
+    }
+
+    @action.bound
+    onDragStart(event: PointerEvent) {
+        this.buttonsAtDown = event.buttons;
+
+        if (this.mouseHandler) {
+            this.mouseHandler.up(this.props.flowContext);
+            this.mouseHandler = undefined;
+        }
+
+        if (event.buttons && event.buttons !== 1) {
+            this.mouseHandler = new PanMouseHandler();
+        } else {
+            this.mouseHandler = this.createMouseHandler(event);
+        }
+
+        if (this.mouseHandler) {
+            this.mouseHandler.lastPointerEvent = {
+                clientX: event.clientX,
+                clientY: event.clientY,
+                movementX: event.movementX ?? 0,
+                movementY: event.movementY ?? 0,
+                ctrlKey: event.ctrlKey,
+                shiftKey: event.shiftKey
+            };
+
+            this.mouseHandler.down(this.props.flowContext, event);
+        }
+    }
+
+    @bind
+    onDragMove(event: PointerEvent) {
+        if (this.mouseHandler) {
+            this.mouseHandler.lastPointerEvent = {
+                clientX: event.clientX,
+                clientY: event.clientY,
+                movementX: event.movementX
+                    ? event.movementX
+                    : this.mouseHandler.lastPointerEvent
+                    ? this.mouseHandler.lastPointerEvent.movementX
+                    : 0,
+                movementY: event.movementY
+                    ? event.movementY
+                    : this.mouseHandler.lastPointerEvent
+                    ? this.mouseHandler.lastPointerEvent.movementY
+                    : 0,
+                ctrlKey: event.ctrlKey,
+                shiftKey: event.shiftKey
+            };
+
+            this.mouseHandler.move(this.props.flowContext, event);
+        }
+    }
+
+    @action.bound
+    onDragEnd(event: PointerEvent) {
+        let preventContextMenu = false;
+
+        if (this.mouseHandler) {
+            this.mouseHandler.up(this.props.flowContext);
+
+            if (this.mouseHandler instanceof PanMouseHandler) {
+                if (pointDistance(this.mouseHandler.totalMovement) > 10) {
+                    preventContextMenu = true;
+                }
+            }
+
+            this.mouseHandler = undefined;
+        }
+
+        let time = new Date().getTime();
+
+        if (this.buttonsAtDown === 1) {
+            let distance = pointDistance(
+                { x: event.clientX, y: event.clientY },
+                { x: this.draggable.xDragStart, y: this.draggable.yDragStart }
+            );
+
+            if (distance <= CONF_DOUBLE_CLICK_DISTANCE) {
+                if (this.lastMouseUpTime !== undefined) {
+                    let distance = pointDistance(
+                        { x: event.clientX, y: event.clientY },
+                        this.lastMouseUpPosition
+                    );
+
+                    if (
+                        time - this.lastMouseUpTime <= CONF_DOUBLE_CLICK_TIME &&
+                        distance <= CONF_DOUBLE_CLICK_DISTANCE
+                    ) {
+                        // double click
+                        if (
+                            this.props.flowContext.viewState.selectedObjects
+                                .length === 1
+                        ) {
+                            const object =
+                                this.props.flowContext.viewState
+                                    .selectedObjects[0];
+                            object.open();
+                        } else if (
+                            this.props.flowContext.viewState.selectedObjects
+                                .length === 0
+                        ) {
+                            this.props.flowContext.viewState.resetTransform();
+                        }
+                    }
+                }
+
+                this.lastMouseUpTime = time;
+                this.lastMouseUpPosition = {
+                    x: event.clientX,
+                    y: event.clientY
+                };
+            } else {
+                this.lastMouseUpTime = undefined;
+            }
+        } else {
+            this.lastMouseUpTime = undefined;
+
+            if (!preventContextMenu && this.buttonsAtDown === 2) {
+                // show context menu
+                const context = this.props.flowContext;
+                const point =
+                    context.viewState.transform.pointerEventToPagePoint(event);
+                if (
+                    context.viewState.selectedObjects.length === 0 ||
+                    !pointInRect(
+                        point,
+                        getSelectedObjectsBoundingRect(context.viewState)
+                    )
+                ) {
+                    context.viewState.deselectAllObjects();
+
+                    let result = context.document.objectFromPoint(point);
+                    if (result) {
+                        const object = context.document.findObjectById(
+                            result.id
+                        );
+                        if (object) {
+                            context.viewState.selectObject(object);
+                        }
+                    }
+                }
+
+                setTimeout(() => {
+                    const menu = context.document.createContextMenu(
+                        context.viewState.selectedObjects
+                    );
+                    if (menu) {
+                        if (this.mouseHandler) {
+                            this.mouseHandler.up(this.props.flowContext);
+                            this.mouseHandler = undefined;
+                        }
+
+                        menu.popup({});
+                    }
+                }, 0);
+            }
+        }
+    }
+
     render() {
         let style: React.CSSProperties = {};
 
@@ -188,8 +404,14 @@ export class Canvas extends React.Component<{
             style.visibility = "hidden";
         }
 
+        const runtimeStore = this.props.flowContext.DocumentStore.runtimeStore;
+
         return (
-            <div ref={(ref: any) => (this.div = ref!)} style={style}>
+            <div
+                ref={(ref: any) => (this.div = ref!)}
+                style={style}
+                onContextMenu={this.onContextMenu}
+            >
                 <div
                     className="eez-canvas"
                     style={{
@@ -199,8 +421,7 @@ export class Canvas extends React.Component<{
                 >
                     {this.props.children}
                 </div>
-                {this.props.flowContext.document.DocumentStore.runtimeStore
-                    .isDebuggerActive && (
+                {runtimeStore.isDebuggerActive && runtimeStore.isPaused && (
                     <Selection
                         context={this.props.flowContext}
                         mouseHandler={undefined}

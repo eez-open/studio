@@ -352,6 +352,7 @@ export class ProjectEditorTab implements IHomeTab {
         );
 
         const DocumentStore = await DocumentStoreClass.create();
+
         if (filePath) {
             await DocumentStore.openFile(filePath);
         } else {
@@ -551,9 +552,7 @@ class Tabs {
 
         loadPreinstalledExtension("instrument").then(async () => {
             if (!this.firstTime) {
-                console.log(location.search);
                 if (location.search) {
-                    debugger;
                     const instrumentId = location.search.substring(1);
                     if (instruments.get(instrumentId)) {
                         this.openTabById(instrumentId, true);

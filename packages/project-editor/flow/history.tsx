@@ -17,7 +17,7 @@ import { Component, Widget } from "./component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const MAX_HISTORY_ITEMS = 100;
+export const MAX_HISTORY_ITEMS = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -282,6 +282,7 @@ export class HistoryPanel extends React.Component {
             <Panel
                 id="project-editor/runtime-info/history"
                 title="History"
+                collapsable={true}
                 buttons={[
                     <IconAction
                         key="clear"
@@ -316,7 +317,7 @@ class HistoryTree extends React.Component {
                 id: historyItem.id,
                 label: (
                     <div
-                        className={classNames("history-item", "debug-new", {
+                        className={classNames("history-item", {
                             error: historyItem.isError
                         })}
                     >

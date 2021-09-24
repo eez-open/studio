@@ -949,6 +949,11 @@ button.EezStudio_Action {
         text-overflow: ellipsis;
     }
 
+    thead,
+    th {
+        border-color: @tableBorderColor!important;
+    }
+
     th.sort-enabled {
         background-repeat: no-repeat;
         background-position: center left;
@@ -2596,14 +2601,23 @@ button.EezStudio_Action {
 }
 
 .EezStudio_PanelContainer {
-    flex-grow: 1;
+    &:not(.collapsable) {
+        flex-grow: 1;
+        height: 100%;
+    }
+
     display: flex;
     flex-direction: column;
-    height: 100%;
     .btn-toolbar input {
         border: 1px solid @borderColor;
         margin: 2px 0;
         width: 150px;
+    }
+
+    &.collapsable {
+        .EezStudio_PanelHeader {
+            cursor: pointer;
+        }
     }
 }
 
@@ -2616,6 +2630,11 @@ button.EezStudio_Action {
     flex-direction: row;
     border-bottom: 1px solid @borderColor;
     min-height: 38px;
+    width: 100%;
+
+    .triangle {
+        margin-top: 8px;
+    }
 
     .btn-toolbar {
         flex-wrap: nowrap;
@@ -3224,10 +3243,13 @@ button.EezStudio_Action {
 }
 
 .EezStudio_DebuggerPanel {
-    flex-grow: 1;
+    overflow: auto;
 
-    display: flex;
-    flex-direction: column;
+    padding: 5px;
+
+    .EezStudio_PanelContainer:not(:last-child) {
+        margin-bottom: 5px;
+    }
 
     .EezStudio_SimpleTree {
         overflow: auto;
@@ -3238,7 +3260,7 @@ button.EezStudio_Action {
         align-items: center;
 
         .error {
-            color: @errorColor;
+            color: @errorColor!important;
         }
     }
 
@@ -3256,22 +3278,8 @@ button.EezStudio_Action {
         }
 
         .error {
-            color: @errorColor;
+            color: @errorColor!important;
         }
-    }
-
-    .debug-new {
-        animation-name: debug-new;
-        animation-duration: 5s;
-    }
-}
-
-@keyframes debug-new {
-    from {
-        color: orangered;
-    }
-    to {
-        color: auto;
     }
 }
 
@@ -3684,6 +3692,26 @@ button.EezStudio_Action {
         display: flex;
         align-items: center;
     }
+
+    &.enabled-breakpoint::before,
+    &.disabled-breakpoint::before {
+        content: "BREAKPOINT";
+        font-size: 80%;
+        position: absolute;
+        top: -24px;
+        padding: 0 8px;
+        border-radius: 2px;
+    }
+
+    &.enabled-breakpoint::before {
+        border: 2px solid blue;
+        background-color: blue;
+        color: white;
+    }
+
+    &.disabled-breakpoint::before {
+        border: 2px solid blue;
+    }
 }
 
 .EezStudio_FlowEditorSelection {
@@ -3703,10 +3731,6 @@ button.EezStudio_Action {
     width: 100%;
     height: 100%;
     background-color: @backgroundColor;
-
-    * {
-        user-select: text;
-    }
 
     & > * {
         user-select: none;

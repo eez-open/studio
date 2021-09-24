@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, action, runInAction } from "mobx";
 
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
@@ -8,7 +8,8 @@ import type {
     IFlowContext,
     IEditorOptions,
     IResizeHandler,
-    IDataContext
+    IDataContext,
+    IFlowState
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
@@ -65,13 +66,24 @@ class ViewState implements IViewState {
         );
     }
 
-    selectObject(object: ITreeObjectAdapter) {}
+    selectObject(object: ITreeObjectAdapter) {
+        if (object.isSelectable) {
+            this.document && this.document.flow.selectItem(object);
+        }
+    }
 
     @action
-    selectObjects(objects: ITreeObjectAdapter[]) {}
+    selectObjects(objects: ITreeObjectAdapter[]) {
+        this.document &&
+            this.document.flow.selectItems(
+                objects.filter(object => object.isSelectable)
+            );
+    }
 
     @action
-    deselectAllObjects(): void {}
+    deselectAllObjects(): void {
+        this.document && this.document.flow.selectItems([]);
+    }
 
     moveSelection(
         where:
@@ -96,6 +108,12 @@ export class RuntimeFlowContext implements IFlowContext {
     editorOptions: IEditorOptions = {};
     dataContext: IDataContext;
 
+    @observable _flowState: IFlowState | undefined;
+
+    get DocumentStore() {
+        return this.document.DocumentStore;
+    }
+
     get containerId() {
         return this.tabState.containerId;
     }
@@ -105,7 +123,11 @@ export class RuntimeFlowContext implements IFlowContext {
     }
 
     get flowState() {
-        return this.tabState.flowState;
+        return this._flowState || this.tabState.flowState;
+    }
+
+    set flowState(flowState: IFlowState | undefined) {
+        runInAction(() => (this._flowState = flowState));
     }
 
     get frontFace() {

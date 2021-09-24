@@ -107,7 +107,7 @@ export class FlowDocument implements IDocument {
 
         this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
             if (objectAdapter.object instanceof Component) {
-                this.flowContext.document.DocumentStore.updateObject(
+                this.flowContext.DocumentStore.updateObject(
                     objectAdapter.object,
                     {
                         left: objectAdapter.object.left + 20,
@@ -137,7 +137,7 @@ export class FlowDocument implements IDocument {
 
         this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
             if (objectAdapter.object instanceof Component) {
-                this.flowContext.document.DocumentStore.updateObject(
+                this.flowContext.DocumentStore.updateObject(
                     objectAdapter.object,
                     {
                         left:
