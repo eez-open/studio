@@ -12,11 +12,7 @@ import {
     InputActionComponent,
     StartActionComponent
 } from "project-editor/flow/action-components";
-import {
-    ActionComponent,
-    Component,
-    Widget
-} from "project-editor/flow/component";
+import { Component, Widget } from "project-editor/flow/component";
 import {
     findPropertyByNameInObject,
     getLabel,
@@ -41,7 +37,7 @@ import {
     ExecuteWidgetActionHistoryItem,
     ExecutionErrorHistoryItem,
     HistoryState,
-    NoConnectionHistoryItem,
+    NoStartActionComponentHistoryItem,
     OutputValueHistoryItem,
     WidgetActionNotDefinedHistoryItem,
     WidgetActionNotFoundHistoryItem
@@ -67,8 +63,6 @@ export interface QueueTask {
     id: number;
     flowState: FlowState;
     component: Component;
-    input?: string;
-    inputData?: InputData;
     connectionLine?: ConnectionLine;
 }
 
@@ -390,31 +384,20 @@ export class RuntimeStoreClass {
         return undefined;
     }
 
+    @action
     pushTask({
-        component,
         flowState,
-        input,
-        inputDataValue,
+        component,
         connectionLine
     }: {
         flowState: FlowState;
         component: Component;
-        input?: string;
-        inputDataValue?: any;
         connectionLine?: ConnectionLine;
     }) {
         this.queue.push({
             id: ++this.queueTaskId,
             flowState,
             component,
-            input,
-            inputData:
-                inputDataValue !== undefined
-                    ? {
-                          time: Date.now(),
-                          value: inputDataValue
-                      }
-                    : undefined,
             connectionLine
         });
 
@@ -447,13 +430,7 @@ export class RuntimeStoreClass {
                         break;
                     }
 
-                    const {
-                        flowState,
-                        component,
-                        input,
-                        inputData,
-                        connectionLine
-                    } = task;
+                    const { flowState, component, connectionLine } = task;
 
                     const componentState =
                         flowState.getComponentState(component);
@@ -461,24 +438,18 @@ export class RuntimeStoreClass {
                     if (componentState.isRunning) {
                         runningComponents.push(task);
                     } else {
-                        if (input && inputData) {
-                            componentState.setInputData(input, inputData);
+                        if (
+                            this.isDebuggerActive &&
+                            !singleStep &&
+                            !this.resumed &&
+                            this.breakpoints.has(component)
+                        ) {
+                            runningComponents.push(task);
+                            singleStep = true;
+                            break;
                         }
 
-                        if (componentState.isReadyToRun()) {
-                            if (
-                                this.isDebuggerActive &&
-                                !singleStep &&
-                                !this.resumed &&
-                                this.breakpoints.has(component)
-                            ) {
-                                runningComponents.push(task);
-                                singleStep = true;
-                                break;
-                            }
-
-                            componentState.run();
-                        }
+                        await componentState.run();
 
                         if (connectionLine) {
                             connectionLine.setActive();
@@ -522,22 +493,31 @@ export class RuntimeStoreClass {
             return;
         }
 
+        const parentFlowState = flowContext.flowState! as FlowState;
+
         if (widget.isOutputProperty("action")) {
-            (flowContext.flowState as FlowState).startFromWidgetAction(widget);
+            parentFlowState.propagateValue(widget, "action", null);
         } else if (widget.action) {
+            // execute action given by name
             const action = findAction(
                 this.DocumentStore.project,
                 widget.action
             );
 
             if (action) {
-                const parentFlowState = flowContext.flowState! as FlowState;
-                const flowState = new FlowState(this, action, parentFlowState);
-                this.historyState.addHistoryItem(
-                    new ExecuteWidgetActionHistoryItem(flowState, widget)
+                const newFlowState = new FlowState(
+                    this,
+                    action,
+                    parentFlowState
                 );
-                parentFlowState.flowStates.push(flowState);
-                flowState.startAction();
+
+                this.historyState.addHistoryItem(
+                    new ExecuteWidgetActionHistoryItem(newFlowState, widget)
+                );
+
+                parentFlowState.flowStates.push(newFlowState);
+
+                newFlowState.executeStartAction();
             } else {
                 this.historyState.addHistoryItem(
                     new WidgetActionNotFoundHistoryItem(undefined, widget)
@@ -876,7 +856,7 @@ export class FlowState {
     }
 
     @action
-    start() {
+    async start() {
         let componentState: ComponentState | undefined = undefined;
 
         const v = visitObjects(this.flow);
@@ -897,7 +877,7 @@ export class FlowState {
 
                 if (componentState.isReadyToRun()) {
                     if (componentState.component instanceof Widget) {
-                        componentState.run();
+                        await componentState.run();
                     } else {
                         this.runtimeStore.pushTask({
                             flowState: this,
@@ -919,30 +899,28 @@ export class FlowState {
         );
     }
 
-    startFromWidgetAction(widget: Component) {
-        this.executeWire(widget, "action");
-    }
-
-    startAction() {
+    executeStartAction() {
         this.runtimeStore.historyState.addHistoryItem(
             new ActionStartHistoryItem(this, this.flow!)
         );
 
-        const inputActionComponent = this.flow.components.find(
-            component => component instanceof InputActionComponent
-        ) as ActionComponent;
+        const startActionComponent = this.flow.components.find(
+            component => component instanceof StartActionComponent
+        ) as StartActionComponent;
 
-        if (inputActionComponent) {
+        if (startActionComponent) {
             runInAction(() =>
                 this.runtimeStore.pushTask({
                     flowState: this,
-                    component: inputActionComponent,
-                    input: "input",
-                    inputDataValue: null
+                    component: startActionComponent
                 })
             );
         } else {
-            // TODO report
+            this.runtimeStore.historyState.addHistoryItem(
+                new NoStartActionComponentHistoryItem(this)
+            );
+
+            this.flowState.runtimeStore.stop();
         }
     }
 
@@ -959,40 +937,6 @@ export class FlowState {
         return flowState;
     }
 
-    executeWire(component: Component, output: string) {
-        const flow = this.flow!;
-
-        flow.connectionLines
-            .filter(
-                connectionLine =>
-                    connectionLine.source === component.wireID &&
-                    connectionLine.output === output
-            )
-            .forEach(connectionLine => {
-                if (connectionLine) {
-                    connectionLine.setActive();
-
-                    const actionNode = flow.wiredComponents.get(
-                        connectionLine.target
-                    ) as ActionComponent;
-
-                    runInAction(() =>
-                        this.runtimeStore.pushTask({
-                            flowState: this,
-                            component: actionNode,
-                            input: connectionLine.input,
-                            inputDataValue: null,
-                            connectionLine
-                        })
-                    );
-                } else {
-                    this.runtimeStore.historyState.addHistoryItem(
-                        new NoConnectionHistoryItem(this, component, output)
-                    );
-                }
-            });
-    }
-
     propagateValue(
         sourceComponent: Component,
         output: string,
@@ -1001,17 +945,10 @@ export class FlowState {
     ) {
         this.flow.connectionLines.forEach(connectionLine => {
             if (
-                connectionLine.source === sourceComponent.wireID &&
-                connectionLine.output === output
+                connectionLine.sourceComponent === sourceComponent &&
+                connectionLine.output === output &&
+                connectionLine.targetComponent
             ) {
-                const targetComponent = this.flow.wiredComponents.get(
-                    connectionLine.target
-                );
-
-                if (!targetComponent) {
-                    return;
-                }
-
                 connectionLine.setActive();
 
                 this.runtimeStore.historyState.addHistoryItem(
@@ -1024,17 +961,36 @@ export class FlowState {
                     )
                 );
 
-                runInAction(() =>
-                    this.runtimeStore.pushTask({
-                        flowState: this,
-                        component: targetComponent,
-                        input: connectionLine.input,
-                        inputDataValue: value,
-                        connectionLine
-                    })
+                this.setInputValue(
+                    connectionLine.targetComponent,
+                    connectionLine.input,
+                    value,
+                    connectionLine
                 );
             }
         });
+    }
+
+    setInputValue(
+        component: Component,
+        input: string,
+        value: any,
+        connectionLine?: ConnectionLine
+    ) {
+        const componentState = this.getComponentState(component);
+
+        componentState.setInputData(input, {
+            time: Date.now(),
+            value
+        });
+
+        if (componentState.isReadyToRun()) {
+            this.runtimeStore.pushTask({
+                flowState: this,
+                component,
+                connectionLine
+            });
+        }
     }
 
     findCatchErrorActionComponent(): ComponentState | undefined {
@@ -1156,7 +1112,9 @@ export class ComponentState {
             )
         );
 
-        this.isRunning = true;
+        runInAction(() => {
+            this.isRunning = true;
+        });
 
         try {
             this.dispose = await this.component.execute(
@@ -1189,14 +1147,10 @@ export class ComponentState {
                         )
                     );
 
-                    runInAction(() =>
-                        this.flowState.runtimeStore.pushTask({
-                            flowState: this.flowState,
-                            component: connectionLine.targetComponent!,
-                            input: connectionLine.input,
-                            inputDataValue: err,
-                            connectionLine
-                        })
+                    this.flowState.propagateValue(
+                        this.component,
+                        "@error",
+                        err
                     );
                 });
             } else {
@@ -1210,13 +1164,10 @@ export class ComponentState {
                 const catchErrorActionComponentState =
                     flowState && flowState.findCatchErrorActionComponent();
                 if (catchErrorActionComponentState) {
-                    runInAction(() =>
-                        this.flowState.runtimeStore.pushTask({
-                            flowState: this.flowState,
-                            component: catchErrorActionComponentState.component,
-                            input: "message",
-                            inputDataValue: err
-                        })
+                    catchErrorActionComponentState.flowState.setInputValue(
+                        catchErrorActionComponentState.component,
+                        "message",
+                        err
                     );
                 } else {
                     this.flowState.runtimeStore.stop();
@@ -1232,23 +1183,7 @@ export class ComponentState {
             !(this.component instanceof LayoutViewWidget) &&
             !(this.component instanceof CallActionActionComponent)
         ) {
-            this.flowState.flow.connectionLines
-                .filter(
-                    connectionLine =>
-                        connectionLine.sourceComponent == this.component &&
-                        connectionLine.output === "@seqout"
-                )
-                .forEach(connectionLine => {
-                    runInAction(() =>
-                        this.flowState.runtimeStore.pushTask({
-                            flowState: this.flowState,
-                            component: connectionLine.targetComponent!,
-                            input: connectionLine.input,
-                            inputDataValue: null,
-                            connectionLine
-                        })
-                    );
-                });
+            this.flowState.propagateValue(this.component, "@seqout", null);
         }
 
         this.inputsData.delete("@seqin");

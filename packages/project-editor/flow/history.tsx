@@ -234,6 +234,20 @@ export class ExecutionErrorHistoryItem extends HistoryItem {
     }
 }
 
+export class NoStartActionComponentHistoryItem extends HistoryItem {
+    constructor(public flowState: FlowState | undefined) {
+        super(flowState);
+    }
+
+    get label() {
+        return `There is no StartActionComponent`;
+    }
+
+    get isError() {
+        return true;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class HistoryState {

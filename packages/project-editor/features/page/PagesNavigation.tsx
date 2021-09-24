@@ -241,24 +241,10 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class PageTabState extends FlowTabState {
-    componentContainerDisplayItemEditorFrontFace: ITreeObjectAdapter;
-    componentContainerDisplayItemEditorBackFace: ITreeObjectAdapter;
-    componentContainerDisplayItemRuntimeFrontFace: ITreeObjectAdapter;
-    componentContainerDisplayItemRuntimeBackFace: ITreeObjectAdapter;
+    widgetContainerFrontFace: ITreeObjectAdapter;
+    widgetContainerBackFace: ITreeObjectAdapter;
 
-    @observable _editorFrontTransform: Transform = new Transform({
-        translate: { x: 0, y: 0 },
-        scale: 1
-    });
-    @observable _editorBackTransform: Transform = new Transform({
-        translate: { x: 0, y: 0 },
-        scale: 1
-    });
-    @observable _runtimeFrontTransform: Transform = new Transform({
-        translate: { x: 0, y: 0 },
-        scale: 1
-    });
-    @observable _runtimeBackTransform: Transform = new Transform({
+    @observable _transform: Transform = new Transform({
         translate: { x: 0, y: 0 },
         scale: 1
     });
@@ -266,22 +252,17 @@ export class PageTabState extends FlowTabState {
     constructor(object: IEezObject) {
         super(object as Flow);
 
-        this.componentContainerDisplayItemEditorFrontFace =
-            new PageTreeObjectAdapter(this.page, true);
+        this.widgetContainerFrontFace = new PageTreeObjectAdapter(
+            this.page,
+            true
+        );
 
-        this.componentContainerDisplayItemEditorBackFace =
-            new PageTreeObjectAdapter(this.page, false);
+        this.widgetContainerBackFace = new PageTreeObjectAdapter(
+            this.page,
+            false
+        );
 
-        this.componentContainerDisplayItemRuntimeFrontFace =
-            new PageTreeObjectAdapter(this.page, true);
-
-        this.componentContainerDisplayItemRuntimeBackFace =
-            new PageTreeObjectAdapter(this.page, false);
-
-        this.resetTransform(this._editorFrontTransform);
-        this.resetTransform(this._editorBackTransform);
-        this.resetTransform(this._runtimeFrontTransform);
-        this.resetTransform(this._runtimeBackTransform);
+        this.resetTransform(this.transform);
 
         this.loadState();
     }
@@ -308,52 +289,20 @@ export class PageTabState extends FlowTabState {
     }
 
     get widgetContainer() {
-        if (this.isRuntime) {
-            if (this.frontFace) {
-                return this.componentContainerDisplayItemRuntimeFrontFace;
-            } else {
-                return this.componentContainerDisplayItemRuntimeBackFace;
-            }
+        if (this.frontFace) {
+            return this.widgetContainerFrontFace;
         } else {
-            if (this.frontFace) {
-                return this.componentContainerDisplayItemEditorFrontFace;
-            } else {
-                return this.componentContainerDisplayItemEditorBackFace;
-            }
+            return this.widgetContainerBackFace;
         }
     }
 
     get transform() {
-        if (this.isRuntime) {
-            if (this.frontFace) {
-                return this._runtimeFrontTransform;
-            } else {
-                return this._runtimeBackTransform;
-            }
-        } else {
-            if (this.frontFace) {
-                return this._editorFrontTransform;
-            } else {
-                return this._editorBackTransform;
-            }
-        }
+        return this._transform;
     }
 
     set transform(transform: Transform) {
         runInAction(() => {
-            if (this.isRuntime) {
-                if (this.frontFace) {
-                    this._runtimeFrontTransform = transform;
-                } else {
-                    this._runtimeBackTransform = transform;
-                }
-            } else {
-                if (this.frontFace) {
-                    this._editorFrontTransform = transform;
-                } else {
-                    this._editorBackTransform = transform;
-                }
-            }
+            this._transform = transform;
         });
     }
 
@@ -368,108 +317,29 @@ export class PageTabState extends FlowTabState {
         }
 
         if (state.selection) {
-            this.widgetContainer.loadState(state.editorFront.selection);
+            this.widgetContainer.loadState(state.selection);
         }
 
-        if (state.editorFront) {
-            if (
-                state.editorFront.transform &&
-                state.editorFront.transform.translate
-            ) {
-                this._editorFrontTransform = new Transform({
-                    translate: {
-                        x: state.editorFront.transform.translate.x ?? 0,
-                        y: state.editorFront.transform.translate.y ?? 0
-                    },
-                    scale: state.editorFront.transform.scale ?? 1
-                });
-            }
-        }
-
-        if (state.editorBack) {
-            if (
-                state.editorBack.transform &&
-                state.editorBack.transform.translate
-            ) {
-                this._editorBackTransform = new Transform({
-                    translate: {
-                        x: state.editorBack.transform.translate.x ?? 0,
-                        y: state.editorBack.transform.translate.y ?? 0
-                    },
-                    scale: state.editorBack.transform.scale ?? 1
-                });
-            }
-        }
-
-        if (state.runtimeFront) {
-            if (
-                state.runtimeFront.transform &&
-                state.runtimeFront.transform.translate
-            ) {
-                this._runtimeFrontTransform = new Transform({
-                    translate: {
-                        x: state.runtimeFront.transform.translate.x ?? 0,
-                        y: state.runtimeFront.transform.translate.y ?? 0
-                    },
-                    scale: state.runtimeFront.transform.scale ?? 1
-                });
-            }
-        }
-
-        if (state.runtimeBack) {
-            if (
-                state.runtimeBack.transform &&
-                state.runtimeBack.transform.translate
-            ) {
-                this._runtimeBackTransform = new Transform({
-                    translate: {
-                        x: state.runtimeBack.transform.translate.x ?? 0,
-                        y: state.runtimeBack.transform.translate.y ?? 0
-                    },
-                    scale: state.runtimeBack.transform.scale ?? 1
-                });
-            }
+        if (state.transform && state.transform.translate) {
+            this._transform = new Transform({
+                translate: {
+                    x: state.transform.translate.x ?? 0,
+                    y: state.transform.translate.y ?? 0
+                },
+                scale: state.transform.scale ?? 1
+            });
         }
     }
 
     saveState() {
         const state = {
             selection: this.widgetContainer.saveState(),
-            editorFront: {
-                transform: {
-                    translate: {
-                        x: this._editorFrontTransform.translate.x,
-                        y: this._editorFrontTransform.translate.y
-                    },
-                    scale: this._editorFrontTransform.scale
-                }
-            },
-            editorBack: {
-                transform: {
-                    translate: {
-                        x: this._editorBackTransform.translate.x,
-                        y: this._editorBackTransform.translate.y
-                    },
-                    scale: this._editorBackTransform.scale
-                }
-            },
-            runtimeFront: {
-                transform: {
-                    translate: {
-                        x: this._runtimeFrontTransform.translate.x,
-                        y: this._runtimeFrontTransform.translate.y
-                    },
-                    scale: this._runtimeFrontTransform.scale
-                }
-            },
-            runtimeBack: {
-                transform: {
-                    translate: {
-                        x: this._runtimeBackTransform.translate.x,
-                        y: this._runtimeBackTransform.translate.y
-                    },
-                    scale: this._runtimeBackTransform.scale
-                }
+            transform: {
+                translate: {
+                    x: this._transform.translate.x,
+                    y: this._transform.translate.y
+                },
+                scale: this._transform.scale
             }
         };
 

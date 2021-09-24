@@ -469,10 +469,6 @@ export class FlowViewer
             "ensure-selection-visible",
             this.ensureSelectionVisible
         );
-
-        if (this.disposeCSS) {
-            this.disposeCSS();
-        }
     }
 
     componentDidCatch(error: any, info: any) {
@@ -484,6 +480,10 @@ export class FlowViewer
             "ensure-selection-visible",
             this.ensureSelectionVisible
         );
+
+        if (this.disposeCSS) {
+            this.disposeCSS();
+        }
     }
 
     ensureSelectionVisible = () => {

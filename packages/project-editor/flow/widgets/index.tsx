@@ -1265,7 +1265,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                 }
             }
 
-            componentState.inputsData.clear();
+            //componentState.inputsData.clear();
         }
 
         return undefined;

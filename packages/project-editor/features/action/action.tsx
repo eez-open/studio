@@ -47,7 +47,7 @@ import { Transform } from "project-editor/flow/flow-editor/transform";
 class ActionFlowTabState extends FlowTabState {
     frontFace = false;
 
-    componentContainerDisplayItem: ITreeObjectAdapter;
+    widgetContainer: ITreeObjectAdapter;
 
     @observable _transform: Transform = new Transform({
         translate: { x: 0, y: 0 },
@@ -57,13 +57,9 @@ class ActionFlowTabState extends FlowTabState {
     constructor(object: IEezObject) {
         super(object as Flow);
 
-        this.componentContainerDisplayItem = new TreeObjectAdapter(this.flow);
+        this.widgetContainer = new TreeObjectAdapter(this.flow);
         this.resetTransform();
         this.loadState();
-    }
-
-    get widgetContainer() {
-        return this.componentContainerDisplayItem;
     }
 
     get transform() {
@@ -84,7 +80,9 @@ class ActionFlowTabState extends FlowTabState {
             return;
         }
 
-        this.componentContainerDisplayItem.loadState(state.selection);
+        if (state.selection) {
+            this.widgetContainer.loadState(state.selection);
+        }
 
         if (state.transform && state.transform.translate) {
             this._transform = new Transform({
@@ -99,7 +97,7 @@ class ActionFlowTabState extends FlowTabState {
 
     saveState() {
         const state = {
-            selection: this.componentContainerDisplayItem.saveState(),
+            selection: this.widgetContainer.saveState(),
             transform: this._transform
                 ? {
                       translate: {
@@ -137,7 +135,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
     get treeAdapter() {
         let flowTabState = this.props.editor.state as ActionFlowTabState;
         return new TreeAdapter(
-            flowTabState.componentContainerDisplayItem,
+            flowTabState.widgetContainer,
             undefined,
             undefined,
             true
@@ -251,7 +249,7 @@ export class ActionsNavigation extends NavigationComponent {
         if (!flowTabState) {
             return undefined;
         }
-        return flowTabState.componentContainerDisplayItem;
+        return flowTabState.widgetContainer;
     }
 
     @computed

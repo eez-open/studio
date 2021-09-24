@@ -142,6 +142,7 @@ const ConnectionLineShape = observer(
                     context={context}
                     connectionLine={connectionLine}
                     selected={selected}
+                    id={connectionLineAdapter.id}
                 />
             </g>
         );
@@ -152,11 +153,13 @@ const DebugValue = observer(
     ({
         connectionLine,
         context,
-        selected
+        selected,
+        id
     }: {
         connectionLine: ConnectionLine;
         context: IFlowContext;
         selected: boolean;
+        id: string;
     }) => {
         let valueStr;
         if (
