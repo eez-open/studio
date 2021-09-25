@@ -967,7 +967,6 @@ export class TableDetailsView extends React.Component<
                 type="vertical"
                 sizes="66%|34%"
                 persistId="instrument/lists/table"
-                className="EezStudio_TableListEditor_Details"
             >
                 <VerticalHeaderWithBody>
                     <TableChartsHeader

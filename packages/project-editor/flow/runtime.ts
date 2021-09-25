@@ -41,7 +41,7 @@ import {
     OutputValueHistoryItem,
     WidgetActionNotDefinedHistoryItem,
     WidgetActionNotFoundHistoryItem
-} from "./history";
+} from "project-editor/flow/debugger/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -459,6 +459,10 @@ export class RuntimeStoreClass {
                     this.resumed = false;
 
                     if (singleStep) {
+                        break;
+                    }
+
+                    if (!(this.isDebuggerActive && this.isPaused)) {
                         break;
                     }
                 }

@@ -15,7 +15,7 @@ import { Toolbar } from "project-editor/project/Toolbar";
 import { StatusBar } from "project-editor/project/StatusBar";
 import { Editors } from "./Editors";
 import { getClassInfo } from "project-editor/core/object";
-import { DebuggerPanel } from "project-editor/flow/debugger";
+import { DebuggerPanel } from "project-editor/flow/debugger/DebuggerPanel";
 import {
     PageEditor,
     PageTabState

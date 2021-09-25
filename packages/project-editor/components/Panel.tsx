@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { observable, action } from "mobx";
+import { action, IObservableValue } from "mobx";
 import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10,23 +10,23 @@ import { Icon } from "eez-studio-ui/icon";
 export class Panel extends React.Component<{
     id: string;
     title: JSX.Element | string;
-    collapsable?: boolean;
+    collapsed?: IObservableValue<boolean>;
     buttons?: JSX.Element[];
     body: JSX.Element | undefined;
 }> {
-    @observable collapsed: boolean = false;
-
     toggleCollapsed = action(() => {
-        this.collapsed = !this.collapsed;
+        if (this.props.collapsed) {
+            this.props.collapsed.set(!this.props.collapsed.get());
+        }
     });
 
     render() {
         let title: JSX.Element;
         if (typeof this.props.title == "string") {
             title = (
-                <div className="EezStudio_ProjectEditorPanelTitle">
+                <span className="EezStudio_ProjectEditorPanelTitleText">
                     {this.props.title}
-                </div>
+                </span>
             );
         } else {
             title = this.props.title;
@@ -35,26 +35,28 @@ export class Panel extends React.Component<{
         return (
             <div
                 className={classNames("EezStudio_PanelContainer", {
-                    collapsable: this.props.collapsable
+                    collapsable: !!this.props.collapsed
                 })}
             >
-                <div
-                    className="EezStudio_PanelHeader"
-                    onClick={this.toggleCollapsed}
-                >
-                    {this.props.collapsable && (
-                        <Icon
-                            icon={
-                                this.collapsed
-                                    ? "material:keyboard_arrow_right"
-                                    : "material:keyboard_arrow_down"
-                            }
-                            size={18}
-                            className="triangle"
-                        />
-                    )}
-                    {title}
-                    {(!this.props.collapsable || !this.collapsed) && (
+                <div className="EezStudio_PanelHeader">
+                    <span
+                        onClick={this.toggleCollapsed}
+                        className="EezStudio_ProjectEditorPanelTitle"
+                    >
+                        {this.props.collapsed && (
+                            <Icon
+                                icon={
+                                    this.props.collapsed.get()
+                                        ? "material:keyboard_arrow_right"
+                                        : "material:keyboard_arrow_down"
+                                }
+                                size={18}
+                                className="triangle"
+                            />
+                        )}
+                        {title}
+                    </span>
+                    {(!this.props.collapsed || !this.props.collapsed.get()) && (
                         <div
                             className="btn-toolbar EezStudio_Toolbar"
                             role="toolbar"
@@ -63,7 +65,7 @@ export class Panel extends React.Component<{
                         </div>
                     )}
                 </div>
-                {(!this.props.collapsable || !this.collapsed) &&
+                {(!this.props.collapsed || !this.props.collapsed.get()) &&
                     this.props.body}
             </div>
         );

@@ -1,19 +1,11 @@
-import React from "react";
 import { observable } from "mobx";
-import { observer } from "mobx-react";
-import classNames from "classnames";
 
-import { ITreeNode, Tree } from "eez-studio-ui/tree";
-
-import { ProjectContext } from "project-editor/project/context";
-import { Panel } from "project-editor/components/Panel";
-import { action, computed } from "mobx";
-import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
-import { getLabel, IEezObject } from "project-editor/core/object";
-import { IconAction } from "eez-studio-ui/action";
+import { action } from "mobx";
+import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { getLabel } from "project-editor/core/object";
 import { guid } from "eez-studio-shared/guid";
-import { ComponentState, FlowState } from "./runtime";
-import { Component, Widget } from "./component";
+import { ComponentState, FlowState } from "project-editor/flow/runtime";
+import { Component, Widget } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -281,142 +273,5 @@ export class HistoryState {
     @action.bound
     clearHistory() {
         this.history = [];
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class HistoryPanel extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    render() {
-        return (
-            <Panel
-                id="project-editor/runtime-info/history"
-                title="History"
-                collapsable={true}
-                buttons={[
-                    <IconAction
-                        key="clear"
-                        icon="material:clear"
-                        title="Clear history"
-                        onClick={
-                            this.context.runtimeStore.historyState.clearHistory
-                        }
-                    ></IconAction>
-                ]}
-                body={<HistoryTree />}
-            />
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class HistoryTree extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed get rootNode(): ITreeNode<HistoryItem> {
-        const selectedHistoryItem =
-            this.context.runtimeStore.historyState.selectedHistoryItem;
-
-        function getChildren(
-            historyItems: HistoryItem[]
-        ): ITreeNode<HistoryItem>[] {
-            return historyItems.map(historyItem => ({
-                id: historyItem.id,
-                label: (
-                    <div
-                        className={classNames("history-item", {
-                            error: historyItem.isError
-                        })}
-                    >
-                        <small>{historyItem.date.toLocaleTimeString()}</small>
-                        <span>{historyItem.label}</span>
-                    </div>
-                ),
-                children: getChildren(historyItem.history),
-                selected: historyItem === selectedHistoryItem,
-                expanded: true,
-                data: historyItem
-            }));
-        }
-
-        const historyItems = this.context.runtimeStore.historyState.history
-            .slice()
-            .reverse();
-
-        return {
-            id: "root",
-            label: "",
-            children: getChildren(
-                historyItems.filter(
-                    historyItem =>
-                        !this.context.runtimeStore.selectedFlowState ||
-                        historyItem.flowState ===
-                            this.context.runtimeStore.selectedFlowState
-                )
-            ),
-            selected: false,
-            expanded: true
-        };
-    }
-
-    @action.bound
-    selectNode(node?: ITreeNode<HistoryItem>) {
-        const historyItem = node?.data;
-        this.context.runtimeStore.historyState.selectedHistoryItem =
-            historyItem;
-        if (!historyItem) {
-            return;
-        }
-
-        if (historyItem.flow) {
-            this.context.navigationStore.showObject(historyItem.flow);
-        } else {
-            const objects: IEezObject[] = [];
-
-            if (historyItem.sourceComponent) {
-                objects.push(historyItem.sourceComponent);
-            }
-
-            if (historyItem.connectionLine) {
-                objects.push(historyItem.connectionLine);
-            }
-
-            if (historyItem.targetComponent) {
-                objects.push(historyItem.targetComponent);
-            }
-
-            if (objects.length > 0) {
-                // navigate to the first object,
-                // just to make sure that proper editor is opened
-                this.context.navigationStore.showObject(objects[0]);
-
-                const editorState =
-                    this.context.editorsStore.activeEditor?.state;
-                if (editorState instanceof FlowTabState) {
-                    // select other object in the same editor
-                    editorState.selectObjects(objects);
-
-                    // ensure objects are visible on the screen
-                    editorState.ensureSelectionVisible();
-                }
-            }
-        }
-    }
-
-    render() {
-        return (
-            <Tree
-                showOnlyChildren={true}
-                rootNode={this.rootNode}
-                selectNode={this.selectNode}
-            />
-        );
     }
 }

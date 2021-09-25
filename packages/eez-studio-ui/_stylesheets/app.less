@@ -2448,8 +2448,6 @@ button.EezStudio_Action {
 
 .EezStudio_SortableTitle {
     flex-grow: 1;
-    margin-top: 5px;
-    margin-left: 5px;
     font-weight: 600;
     color: @darkTextColor;
     white-space: nowrap;
@@ -2601,10 +2599,8 @@ button.EezStudio_Action {
 }
 
 .EezStudio_PanelContainer {
-    &:not(.collapsable) {
-        flex-grow: 1;
-        height: 100%;
-    }
+    flex-grow: 1;
+    height: 100%;
 
     display: flex;
     flex-direction: column;
@@ -2615,7 +2611,7 @@ button.EezStudio_Action {
     }
 
     &.collapsable {
-        .EezStudio_PanelHeader {
+        .EezStudio_ProjectEditorPanelTitle {
             cursor: pointer;
         }
     }
@@ -2632,19 +2628,16 @@ button.EezStudio_Action {
     min-height: 38px;
     width: 100%;
 
-    .triangle {
-        margin-top: 8px;
-    }
-
     .btn-toolbar {
         flex-wrap: nowrap;
     }
 }
 
 .EezStudio_ProjectEditorPanelTitle {
-    flex-grow: 1;
-    margin-top: 5px;
-    margin-left: 5px;
+    margin-top: 4px;
+}
+
+.EezStudio_ProjectEditorPanelTitleText {
     font-weight: 600;
     color: @darkTextColor;
     white-space: nowrap;
@@ -3243,15 +3236,12 @@ button.EezStudio_Action {
 }
 
 .EezStudio_DebuggerPanel {
-    overflow: auto;
-
-    padding: 5px;
-
     .EezStudio_PanelContainer:not(:last-child) {
         margin-bottom: 5px;
     }
 
     .EezStudio_SimpleTree {
+        height: 100%;
         overflow: auto;
     }
 
@@ -3280,6 +3270,11 @@ button.EezStudio_Action {
         .error {
             color: @errorColor!important;
         }
+    }
+
+    .EezStudio_DebuggerVariablesTable {
+        height: 100%;
+        overflow: auto;
     }
 }
 
@@ -3865,7 +3860,12 @@ button.EezStudio_Action {
 
     .btn-toolbar > button,
     .btn-toolbar > .btn-group {
-        margin-right: 5px;
+        margin-right: 10px;
+    }
+
+    .btn-toolbar > button:last-child,
+    .btn-toolbar > .btn-group:last-child {
+        margin-right: 0;
     }
 
     .btn-group > button {
@@ -3930,7 +3930,7 @@ button.EezStudio_Action {
 }
 
 .EezStudio_PanelHeader {
-    padding: 6px 10px;
+    padding: 5px 5px;
     border: 0 solid @borderColor;
     border-bottom-width: 1px;
     background-color: @panelHeaderColor;
