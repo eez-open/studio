@@ -576,7 +576,14 @@ export class General extends EezObject {
             },
             {
                 name: "namespace",
-                type: PropertyType.String
+                type: PropertyType.String,
+                hideInPropertyGrid: (general: General) => {
+                    const documentStore = getDocumentStore(general);
+                    return (
+                        documentStore.isDashboardProject ||
+                        documentStore.isAppletProject
+                    );
+                }
             },
             {
                 name: "masterProject",
@@ -586,7 +593,12 @@ export class General extends EezObject {
                     { name: "All Files", extensions: ["*"] }
                 ],
                 hideInPropertyGrid: (general: General) => {
-                    return general.imports.length > 0;
+                    const documentStore = getDocumentStore(general);
+                    return (
+                        general.imports.length > 0 ||
+                        documentStore.isDashboardProject ||
+                        documentStore.isAppletProject
+                    );
                 }
             },
             {
@@ -594,8 +606,14 @@ export class General extends EezObject {
                 type: PropertyType.Array,
                 typeClass: ImportDirective,
                 defaultValue: [],
-                hideInPropertyGrid: (object: IEezObject) =>
-                    !!getProject(object).masterProject
+                hideInPropertyGrid: (general: General) => {
+                    const documentStore = getDocumentStore(general);
+                    return (
+                        !!getProject(general).masterProject ||
+                        documentStore.isDashboardProject ||
+                        documentStore.isAppletProject
+                    );
+                }
             },
             {
                 name: "css",

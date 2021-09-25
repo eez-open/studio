@@ -324,6 +324,10 @@ export class ActionsNavigation extends NavigationComponent {
             Action.classInfo
         );
 
+        if (this.context.runtimeStore.isRuntimeMode || !action) {
+            return listNavigation;
+        }
+
         return (
             <Splitter
                 type="vertical"
@@ -332,14 +336,11 @@ export class ActionsNavigation extends NavigationComponent {
                 childrenOverflow="hidden|hidden"
             >
                 {listNavigation}
-                {action ? (
-                    <ListNavigation
-                        id={"action-editor/local-variables"}
-                        navigationObject={action.localVariables}
-                    />
-                ) : (
-                    <div />
-                )}
+
+                <ListNavigation
+                    id={"action-editor/local-variables"}
+                    navigationObject={action.localVariables}
+                />
             </Splitter>
         );
 

@@ -444,10 +444,6 @@ export class PagesNavigation extends NavigationComponent {
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
                 editable={!this.context.runtimeStore.isRuntimeMode}
-                filter={(page: Page) =>
-                    !this.context.runtimeStore.isRuntimeMode ||
-                    !page.isUsedAsCustomWidget
-                }
             />
         );
 
