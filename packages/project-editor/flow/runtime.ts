@@ -462,7 +462,7 @@ export class RuntimeStoreClass {
                         break;
                     }
 
-                    if (!(this.isDebuggerActive && this.isPaused)) {
+                    if (this.isDebuggerActive && this.isPaused) {
                         break;
                     }
                 }
