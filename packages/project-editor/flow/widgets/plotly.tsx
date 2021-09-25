@@ -14,14 +14,14 @@ import { Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
-import * as PlotlyModule from "plotly.js";
+import * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { InputPropertyValue, FlowState } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 function Plotly() {
-    return require("plotly.js/dist/plotly.min.js") as typeof PlotlyModule;
+    return require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
