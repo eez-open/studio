@@ -32,7 +32,7 @@ export class HistoryPanel extends React.Component<{
                         ? [
                               <IconAction
                                   key="clear"
-                                  icon="material:clear"
+                                  icon="material:delete"
                                   title="Clear history"
                                   onClick={
                                       this.context.runtimeStore.historyState
