@@ -307,6 +307,10 @@ export class PageTabState extends FlowTabState {
     }
 
     loadState() {
+        if (this.isRuntime) {
+            return;
+        }
+
         const state = this.DocumentStore.uiStateStore.getObjectUIState(
             this.flow,
             "flow-state"
@@ -332,6 +336,10 @@ export class PageTabState extends FlowTabState {
     }
 
     saveState() {
+        if (this.isRuntime) {
+            return;
+        }
+
         const state = {
             selection: this.widgetContainer.saveState(),
             transform: {

@@ -71,6 +71,10 @@ class ActionFlowTabState extends FlowTabState {
     }
 
     loadState() {
+        if (this.isRuntime) {
+            return;
+        }
+
         const state = this.DocumentStore.uiStateStore.getObjectUIState(
             this.flow,
             "flow-state"
@@ -96,6 +100,10 @@ class ActionFlowTabState extends FlowTabState {
     }
 
     saveState() {
+        if (this.isRuntime) {
+            return;
+        }
+
         const state = {
             selection: this.widgetContainer.saveState(),
             transform: this._transform

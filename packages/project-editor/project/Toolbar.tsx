@@ -150,7 +150,7 @@ class RunEditSwitchControls extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    toggleRuntimeMode = () => {
+    setRuntimeMode = () => {
         if (this.context.runtimeStore.isRuntimeMode) {
             if (this.context.runtimeStore.isDebuggerActive) {
                 this.context.runtimeStore.toggleDebugger();
@@ -160,7 +160,7 @@ class RunEditSwitchControls extends React.Component {
         }
     };
 
-    toggleDebugger = async () => {
+    setDebuggerMode = async () => {
         if (!this.context.runtimeStore.isRuntimeMode) {
             await this.context.runtimeStore.setRuntimeMode(true);
         } else {
@@ -214,7 +214,7 @@ class RunEditSwitchControls extends React.Component {
                         </svg>
                     }
                     iconSize={iconSize}
-                    onClick={this.toggleRuntimeMode}
+                    onClick={this.setRuntimeMode}
                     selected={
                         this.context.runtimeStore.isRuntimeMode &&
                         !this.context.runtimeStore.isDebuggerActive
@@ -245,7 +245,7 @@ class RunEditSwitchControls extends React.Component {
                         </svg>
                     }
                     iconSize={iconSize}
-                    onClick={this.toggleDebugger}
+                    onClick={this.setDebuggerMode}
                     selected={
                         this.context.runtimeStore.isRuntimeMode &&
                         this.context.runtimeStore.isDebuggerActive

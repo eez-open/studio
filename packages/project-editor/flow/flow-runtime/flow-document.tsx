@@ -20,12 +20,26 @@ export class FlowDocument implements IDocument {
     }
 
     @computed get selectedConnectionLines() {
+        if (
+            !this.DocumentStore.runtimeStore.isDebuggerActive ||
+            !this.DocumentStore.runtimeStore.isPaused
+        ) {
+            return [];
+        }
+
         return this.connectionLines.filter(connectionLine =>
             this.flowContext.viewState.isObjectIdSelected(connectionLine.id)
         );
     }
 
     @computed get nonSelectedConnectionLines() {
+        if (
+            !this.DocumentStore.runtimeStore.isDebuggerActive ||
+            !this.DocumentStore.runtimeStore.isPaused
+        ) {
+            return this.connectionLines;
+        }
+
         return this.connectionLines.filter(
             connectionLine =>
                 !this.flowContext.viewState.isObjectIdSelected(

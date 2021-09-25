@@ -36,46 +36,7 @@
     "structures": [],
     "enums": []
   },
-  "actions": [
-    {
-      "components": [
-        {
-          "type": "CommentActionComponent",
-          "left": 40,
-          "top": 32,
-          "width": 435,
-          "height": 134,
-          "wireID": "e357e4c9-214f-49d7-bcdc-ceb24cfd99f5",
-          "customInputs": [],
-          "customOutputs": [],
-          "text": "<div><!--block-->1</div>"
-        }
-      ],
-      "connectionLines": [],
-      "localVariables": [],
-      "name": "eew",
-      "implementationType": "flow"
-    },
-    {
-      "components": [
-        {
-          "type": "CommentActionComponent",
-          "left": 67,
-          "top": 55,
-          "width": 435,
-          "height": 134,
-          "wireID": "77d19045-0ba3-428d-b98a-f7e899967945",
-          "customInputs": [],
-          "customOutputs": [],
-          "text": "<div><!--block-->2</div>"
-        }
-      ],
-      "connectionLines": [],
-      "localVariables": [],
-      "name": "eeew",
-      "implementationType": "flow"
-    }
-  ],
+  "actions": [],
   "pages": [
     {
       "components": [
@@ -434,28 +395,6 @@
       "top": 0,
       "width": 969,
       "height": 496
-    },
-    {
-      "components": [
-        {
-          "type": "CommentActionComponent",
-          "left": 45,
-          "top": 40,
-          "width": 435,
-          "height": 134,
-          "wireID": "722d39c4-1626-4d3b-fd68-9b554797a2af",
-          "customInputs": [],
-          "customOutputs": [],
-          "text": "<div><!--block-->3</div>"
-        }
-      ],
-      "connectionLines": [],
-      "localVariables": [],
-      "name": "Page",
-      "left": 0,
-      "top": 0,
-      "width": 480,
-      "height": 272
     }
   ],
   "styles": [

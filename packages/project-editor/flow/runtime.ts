@@ -94,6 +94,8 @@ export class RuntimeStoreClass {
 
             runInAction(() => {
                 this.isRuntimeMode = true;
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
+                    !isDebuggerActive;
                 this.selectedFlowState = undefined;
                 this.historyState.selectedHistoryItem = undefined;
                 this.isStopped = false;
@@ -103,9 +105,6 @@ export class RuntimeStoreClass {
                 this.singleStep = false;
                 this.selectedPage = this.DocumentStore.project.pages[0];
                 this.selectedQueueTask = undefined;
-
-                this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
-                    this.DocumentStore.isDashboardProject;
 
                 if (this.DocumentStore.isDashboardProject) {
                     this.DocumentStore.dataContext.clearRuntimeValues();
@@ -197,6 +196,8 @@ export class RuntimeStoreClass {
     toggleDebugger() {
         this.isDebuggerActive = !this.isDebuggerActive;
         this.isPaused = this.isDebuggerActive;
+        this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
+            !this.isDebuggerActive;
     }
 
     @action
@@ -423,7 +424,9 @@ export class RuntimeStoreClass {
 
                 let singleStep = this.singleStep;
 
-                while (true) {
+                const queueLength = this.queue.length;
+
+                for (let i = 0; i < queueLength; i++) {
                     let task: QueueTask | undefined;
                     runInAction(() => (task = this.queue.shift()));
                     if (!task) {
