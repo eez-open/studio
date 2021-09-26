@@ -2,7 +2,7 @@ import { _each } from "eez-studio-shared/algorithm";
 import { formatBytes } from "eez-studio-shared/formatBytes";
 
 const TP_MODULE_PREFIX = "\\node_modules\\";
-const LOCAL_MODULE_PREFIX = "\\src\\";
+const LOCAL_MODULE_PREFIX = "\\build\\";
 
 interface ModuleInfo {
     fileName: string;
@@ -10,7 +10,10 @@ interface ModuleInfo {
     bytes: number;
 }
 
-function collectModules(thirdPartyModules: ModuleInfo[], ourModules: ModuleInfo[]) {
+function collectModules(
+    thirdPartyModules: ModuleInfo[],
+    ourModules: ModuleInfo[]
+) {
     const fs = require("fs");
 
     _each(require.cache, (nodeModule: NodeModule) => {
@@ -37,7 +40,11 @@ function collectModules(thirdPartyModules: ModuleInfo[], ourModules: ModuleInfo[
     });
 }
 
-function dumpModules(moduleType: string, modulePrefix: string, modules: ModuleInfo[]) {
+function dumpModules(
+    moduleType: string,
+    modulePrefix: string,
+    modules: ModuleInfo[]
+) {
     let totalBytes = 0;
 
     modules.sort((a: ModuleInfo, b: ModuleInfo) => {
@@ -46,7 +53,11 @@ function dumpModules(moduleType: string, modulePrefix: string, modules: ModuleIn
 
     _each(modules, moduleInfo => {
         totalBytes += moduleInfo.bytes;
-        console.log(moduleType, formatBytes(moduleInfo.bytes), moduleInfo.relativeName);
+        console.log(
+            moduleType,
+            formatBytes(moduleInfo.bytes),
+            moduleInfo.relativeName
+        );
     });
 
     return totalBytes;
@@ -58,7 +69,16 @@ setTimeout(() => {
     collectModules(thirdPartyModules, ourModules);
 
     const totalBytesTP = dumpModules("TP", TP_MODULE_PREFIX, thirdPartyModules);
-    const totalBytesLocal = dumpModules("LOCAL", LOCAL_MODULE_PREFIX, ourModules);
+    const totalBytesLocal = dumpModules(
+        "LOCAL",
+        LOCAL_MODULE_PREFIX,
+        ourModules
+    );
+
+    console.log("Total TP files:", thirdPartyModules.length);
+    console.log("Total LOCAL files:", ourModules.length);
+    console.log("Total files:", thirdPartyModules.length + ourModules.length);
+
     console.log("Total TP size:", formatBytes(totalBytesTP));
     console.log("Total LOCAL size:", formatBytes(totalBytesLocal));
     console.log("Total size:", formatBytes(totalBytesTP + totalBytesLocal));
