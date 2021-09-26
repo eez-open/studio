@@ -1021,7 +1021,10 @@ export class Project extends EezObject {
         return [
             {
                 path: "variables/globalVariables",
-                map: this.variables.globalVariables && this.globalVariablesMap
+                map:
+                    this.variables &&
+                    this.variables.globalVariables &&
+                    this.globalVariablesMap
             },
             { path: "actions", map: this.actions && this.actionsMap },
             { path: "pages", map: this.pagesMap },
