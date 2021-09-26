@@ -1134,7 +1134,7 @@ export class LogActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         const value = flowState.getPropertyValue(this, "value");
-        console.log(value);
+        flowState.logInfo(value, this);
         return undefined;
     }
 }

@@ -8,6 +8,23 @@ import { IDataContext } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function valueToString(value: any) {
+    if (value === undefined) {
+        return "undefined";
+    }
+    try {
+        return JSON.stringify(value);
+    } catch (err) {
+        try {
+            return value.toString();
+        } catch (err) {
+            return "err!";
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 @observer
 export class VariablesPanel extends React.Component<{
     collapsed: IObservableValue<boolean>;
@@ -58,21 +75,6 @@ class VariablesTable extends React.Component {
 
     @computed
     get rows() {
-        function variableValueToString(variable: any) {
-            if (variable === undefined) {
-                return "undefined";
-            }
-            try {
-                return JSON.stringify(variable);
-            } catch (err) {
-                try {
-                    return variable.toString();
-                } catch (err) {
-                    return "err!";
-                }
-            }
-        }
-
         const flowState = this.context.runtimeStore.selectedFlowState;
 
         let dataContext: IDataContext;
@@ -88,7 +90,7 @@ class VariablesTable extends React.Component {
                 selected: false,
                 name: variable.name,
                 scope: "Global",
-                value: variableValueToString(dataContext.get(variable.name))
+                value: valueToString(dataContext.get(variable.name))
             }));
 
         if (!flowState) {
@@ -100,7 +102,7 @@ class VariablesTable extends React.Component {
             selected: false,
             name: variable.name,
             scope: "Local",
-            value: variableValueToString(dataContext.get(variable.name))
+            value: valueToString(dataContext.get(variable.name))
         }));
 
         return [...globalVariables, ...localVariables];

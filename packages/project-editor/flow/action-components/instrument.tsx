@@ -1046,12 +1046,15 @@ export class ScpiActionComponent extends ActionComponent {
                     tag == SCPI_PART_QUERY_WITH_ASSIGNMENT ||
                     tag == SCPI_PART_QUERY
                 ) {
-                    console.log(`SCPI QUERY [${instrument.name}]:`, command);
+                    flowState.logScpi(
+                        `SCPI QUERY [${instrument.name}]:${command}`,
+                        this
+                    );
                     let result = await connection.query(command);
                     command = "";
-                    console.log(
-                        `SCPI QUERY RESULT [${instrument.name}]:`,
-                        result
+                    flowState.logScpi(
+                        `SCPI QUERY RESULT [${instrument.name}]: ${result}`,
+                        this
                     );
 
                     if (typeof result === "object" && result.error) {
@@ -1072,7 +1075,10 @@ export class ScpiActionComponent extends ActionComponent {
                         flowState.propagateValue(this, outputName, result);
                     }
                 } else if (tag == SCPI_PART_COMMAND) {
-                    console.log(`SCPI COMMAND [${instrument.name}]:`, command);
+                    flowState.logScpi(
+                        `SCPI COMMAND [${instrument.name}]: ${command}`,
+                        this
+                    );
                     connection.command(command);
                     command = "";
                 }

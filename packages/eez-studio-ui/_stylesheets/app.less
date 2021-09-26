@@ -3254,12 +3254,7 @@ button.EezStudio_Action {
         }
     }
 
-    .history-label {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    .history-item {
+    .log-item {
         display: inline-flex;
         align-items: center;
 
@@ -3267,8 +3262,21 @@ button.EezStudio_Action {
             margin-right: 5px;
         }
 
-        .error {
+        &.fatal,
+        &.error {
             color: @errorColor!important;
+        }
+
+        &.warning {
+            color: orange;
+        }
+
+        &.scpi {
+            color: blue;
+        }
+
+        &.debug {
+            color: 0xaaa;
         }
     }
 

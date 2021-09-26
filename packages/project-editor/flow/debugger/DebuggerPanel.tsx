@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
-import { HistoryPanel } from "project-editor/flow/debugger/HistoryPanel";
+import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
 import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
 import { VariablesPanel } from "project-editor/flow/debugger/VariablesPanel";
@@ -16,7 +16,7 @@ interface CollapsedState {
     variablesPanel: boolean;
     breakpointsPanel: boolean;
     activeFlowsPanel: boolean;
-    historyPanel: boolean;
+    logsPanel: boolean;
 }
 
 @observer
@@ -28,7 +28,7 @@ export class DebuggerPanel extends React.Component {
     variablesPanelCollapsed = observable.box(false);
     breakpointsPanelCollapsed = observable.box(false);
     activeFlowsPanelCollapsed = observable.box(false);
-    historyPanelCollapsed = observable.box(false);
+    logsPanelCollapsed = observable.box(false);
 
     constructor(props: any) {
         super(props);
@@ -46,7 +46,7 @@ export class DebuggerPanel extends React.Component {
             this.variablesPanelCollapsed.set(collapsedState.variablesPanel);
             this.breakpointsPanelCollapsed.set(collapsedState.breakpointsPanel);
             this.activeFlowsPanelCollapsed.set(collapsedState.activeFlowsPanel);
-            this.historyPanelCollapsed.set(collapsedState.historyPanel);
+            this.logsPanelCollapsed.set(collapsedState.logsPanel);
         }
     }
 
@@ -56,7 +56,7 @@ export class DebuggerPanel extends React.Component {
             variablesPanel: this.variablesPanelCollapsed.get(),
             breakpointsPanel: this.breakpointsPanelCollapsed.get(),
             activeFlowsPanel: this.activeFlowsPanelCollapsed.get(),
-            historyPanel: this.historyPanelCollapsed.get()
+            logsPanel: this.logsPanelCollapsed.get()
         };
 
         localStorage.setItem(
@@ -110,7 +110,7 @@ export class DebuggerPanel extends React.Component {
         sizes += "|";
 
         if (this.activeFlowsPanelCollapsed.get()) {
-            if (!expanded || this.historyPanelCollapsed.get()) {
+            if (!expanded || this.logsPanelCollapsed.get()) {
                 sizes += "38px!";
             } else {
                 sizes += "37px!";
@@ -121,7 +121,7 @@ export class DebuggerPanel extends React.Component {
 
         sizes += "|";
 
-        if (this.historyPanelCollapsed.get()) {
+        if (this.logsPanelCollapsed.get()) {
             sizes += "38px!";
         } else {
             sizes += "100px";
@@ -143,7 +143,7 @@ export class DebuggerPanel extends React.Component {
                 <VariablesPanel collapsed={this.variablesPanelCollapsed} />
                 <BreakpointsPanel collapsed={this.breakpointsPanelCollapsed} />
                 <ActiveFlowsPanel collapsed={this.activeFlowsPanelCollapsed} />
-                <HistoryPanel collapsed={this.historyPanelCollapsed} />
+                <LogsPanel collapsed={this.logsPanelCollapsed} />
             </Splitter>
         );
     }

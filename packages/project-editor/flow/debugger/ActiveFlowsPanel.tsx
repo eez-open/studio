@@ -68,7 +68,7 @@ class FlowsTree extends React.Component {
 
     @action.bound
     selectNode(node?: ITreeNode<FlowState>) {
-        this.context.runtimeStore.historyState.selectedHistoryItem = undefined;
+        this.context.runtimeStore.logsState.selectedLogItem = undefined;
 
         const flowState = node?.data;
 

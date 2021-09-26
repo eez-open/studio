@@ -31,17 +31,19 @@ import { showSelectInstrumentDialog } from "./action-components/instrument";
 import * as notification from "eez-studio-ui/notification";
 import { Connection, getConnection } from "instrument/window/connection";
 import {
-    ActionEndHistoryItem,
-    ActionStartHistoryItem,
-    ExecuteComponentHistoryItem,
-    ExecuteWidgetActionHistoryItem,
-    ExecutionErrorHistoryItem,
-    HistoryState,
-    NoStartActionComponentHistoryItem,
-    OutputValueHistoryItem,
-    WidgetActionNotDefinedHistoryItem,
-    WidgetActionNotFoundHistoryItem
-} from "project-editor/flow/debugger/history";
+    ActionEndLogItem,
+    ActionStartLogItem,
+    ExecuteComponentLogItem,
+    ExecuteWidgetActionLogItem,
+    ExecutionErrorLogItem,
+    LogItem,
+    LogsState,
+    NoStartActionComponentLogItem,
+    OutputValueLogItem,
+    WidgetActionNotDefinedLogItem,
+    WidgetActionNotFoundLogItem
+} from "project-editor/flow/debugger/logs";
+import { valueToString } from "./debugger/VariablesPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,7 +99,7 @@ export class RuntimeStoreClass {
                 this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
                     !isDebuggerActive;
                 this.selectedFlowState = undefined;
-                this.historyState.selectedHistoryItem = undefined;
+                this.logsState.selectedLogItem = undefined;
                 this.isStopped = false;
                 this.hasError = false;
                 this.isDebuggerActive = isDebuggerActive;
@@ -140,7 +142,7 @@ export class RuntimeStoreClass {
             if (this.DocumentStore.isDashboardProject) {
                 runInAction(() => {
                     this.flowStates = [];
-                    this.historyState.clearHistory();
+                    this.logsState.clear();
                     this.hasError = false;
                 });
 
@@ -518,21 +520,21 @@ export class RuntimeStoreClass {
                     parentFlowState
                 );
 
-                this.historyState.addHistoryItem(
-                    new ExecuteWidgetActionHistoryItem(newFlowState, widget)
+                this.logsState.addLogItem(
+                    new ExecuteWidgetActionLogItem(newFlowState, widget)
                 );
 
                 parentFlowState.flowStates.push(newFlowState);
 
                 newFlowState.executeStartAction();
             } else {
-                this.historyState.addHistoryItem(
-                    new WidgetActionNotFoundHistoryItem(undefined, widget)
+                this.logsState.addLogItem(
+                    new WidgetActionNotFoundLogItem(undefined, widget)
                 );
             }
         } else {
-            this.historyState.addHistoryItem(
-                new WidgetActionNotDefinedHistoryItem(undefined, widget)
+            this.logsState.addLogItem(
+                new WidgetActionNotDefinedLogItem(undefined, widget)
             );
         }
     }
@@ -551,7 +553,7 @@ export class RuntimeStoreClass {
     ////////////////////////////////////////
     // HISTORY
 
-    historyState = new HistoryState();
+    logsState = new LogsState();
 
     ////////////////////////////////////////
     // RUNTIME SETTINGS
@@ -901,15 +903,11 @@ export class FlowState {
 
         this.componentStates.forEach(componentState => componentState.finish());
 
-        this.runtimeStore.historyState.addHistoryItem(
-            new ActionEndHistoryItem(this, this.flow!)
-        );
+        this.runtimeStore.logsState.addLogItem(new ActionEndLogItem(this));
     }
 
     executeStartAction() {
-        this.runtimeStore.historyState.addHistoryItem(
-            new ActionStartHistoryItem(this, this.flow!)
-        );
+        this.runtimeStore.logsState.addLogItem(new ActionStartLogItem(this));
 
         const startActionComponent = this.flow.components.find(
             component => component instanceof StartActionComponent
@@ -923,8 +921,8 @@ export class FlowState {
                 })
             );
         } else {
-            this.runtimeStore.historyState.addHistoryItem(
-                new NoStartActionComponentHistoryItem(this)
+            this.runtimeStore.logsState.addLogItem(
+                new NoStartActionComponentLogItem(this)
             );
 
             this.flowState.runtimeStore.stop();
@@ -958,10 +956,9 @@ export class FlowState {
             ) {
                 connectionLine.setActive();
 
-                this.runtimeStore.historyState.addHistoryItem(
-                    new OutputValueHistoryItem(
+                this.runtimeStore.logsState.addLogItem(
+                    new OutputValueLogItem(
                         this,
-                        this.getComponentState(sourceComponent),
                         connectionLine,
                         outputName ?? output,
                         value
@@ -1013,6 +1010,18 @@ export class FlowState {
         }
 
         return undefined;
+    }
+
+    logScpi(message: string, component: Component) {
+        this.runtimeStore.logsState.addLogItem(
+            new LogItem("scpi", message, this, component)
+        );
+    }
+
+    logInfo(value: any, component: Component) {
+        this.runtimeStore.logsState.addLogItem(
+            new LogItem("scpi", valueToString(value), this, component)
+        );
     }
 }
 
@@ -1111,12 +1120,8 @@ export class ComponentState {
             this._inputPropertyValues.set(key, value);
         }
 
-        this.flowState.runtimeStore.historyState.addHistoryItem(
-            new ExecuteComponentHistoryItem(
-                this.flowState,
-                this.component,
-                this
-            )
+        this.flowState.runtimeStore.logsState.addLogItem(
+            new ExecuteComponentLogItem(this.flowState, this.component)
         );
 
         runInAction(() => {
@@ -1133,21 +1138,16 @@ export class ComponentState {
                 this.flowState.runtimeStore.hasError = true;
                 this.flowState.hasError = true;
             });
-            this.flowState.runtimeStore.historyState.addHistoryItem(
-                new ExecutionErrorHistoryItem(
-                    this.flowState,
-                    this.component,
-                    err
-                )
+            this.flowState.runtimeStore.logsState.addLogItem(
+                new ExecutionErrorLogItem(this.flowState, this.component, err)
             );
 
             const catchErrorOutput = this.findCatchErrorOutput();
             if (catchErrorOutput) {
                 catchErrorOutput.connectionLines.forEach(connectionLine => {
-                    this.flowState.runtimeStore.historyState.addHistoryItem(
-                        new OutputValueHistoryItem(
+                    this.flowState.runtimeStore.logsState.addLogItem(
+                        new OutputValueLogItem(
                             catchErrorOutput.componentState.flowState,
-                            catchErrorOutput.componentState,
                             connectionLine,
                             "@error",
                             err
