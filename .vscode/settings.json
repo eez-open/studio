@@ -19,5 +19,6 @@
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "typescript.inlayHints.functionLikeReturnTypes.enabled": true
 }
