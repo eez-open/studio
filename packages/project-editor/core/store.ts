@@ -1459,7 +1459,7 @@ export class DocumentStoreClass {
     }
 
     async build() {
-        await buildProject(this, { onlyCheck: false });
+        return await buildProject(this, { onlyCheck: false });
     }
 
     buildExtensions() {

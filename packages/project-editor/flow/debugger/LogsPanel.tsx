@@ -1,10 +1,11 @@
 import React from "react";
-import { action, computed, IObservableValue } from "mobx";
+import { action, IObservableValue } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import { FixedSizeList as List } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
 
 import { IconAction } from "eez-studio-ui/action";
-import { ITreeNode, Tree } from "eez-studio-ui/tree";
 
 import { IEezObject } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
@@ -54,49 +55,38 @@ class LogList extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed get rootNode(): ITreeNode<LogItem> {
-        const selectedLogItem =
-            this.context.runtimeStore.logsState.selectedLogItem;
-
-        function getChildren(logItems: LogItem[]): ITreeNode<LogItem>[] {
-            return logItems.map(logItem => ({
-                id: logItem.id,
-                label: (
-                    <div className={classNames("log-item", logItem.type)}>
-                        <small>{logItem.date.toLocaleTimeString()}</small>
-                        <span>{logItem.label}</span>
-                    </div>
-                ),
-                children: [],
-                selected: logItem === selectedLogItem,
-                expanded: false,
-                data: logItem
-            }));
-        }
-
-        const logItems = this.context.runtimeStore.logsState.logs
-            .slice()
-            .reverse();
-
-        return {
-            id: "root",
-            label: "",
-            children: getChildren(
-                logItems.filter(
-                    logItem =>
-                        !this.context.runtimeStore.selectedFlowState ||
-                        logItem.flowState ===
-                            this.context.runtimeStore.selectedFlowState
-                )
-            ),
-            selected: false,
-            expanded: true
-        };
+    render() {
+        const itemCount = this.context.runtimeStore.logsState.logs.length;
+        return (
+            <div style={{ height: "100%" }}>
+                <AutoSizer>
+                    {({ width, height }) => (
+                        <List
+                            itemCount={itemCount}
+                            itemSize={24}
+                            width={width}
+                            height={height}
+                        >
+                            {LogItemRow}
+                        </List>
+                    )}
+                </AutoSizer>
+            </div>
+        );
     }
+}
+
+@observer
+class LogItemRow extends React.Component<{
+    index: number;
+    style: React.CSSProperties;
+    data: LogItem;
+}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
 
     @action.bound
-    selectNode(node?: ITreeNode<LogItem>) {
-        const logItem = node?.data;
+    selectNode(logItem: LogItem) {
         this.context.runtimeStore.logsState.selectedLogItem = logItem;
         if (!logItem) {
             return;
@@ -139,12 +129,26 @@ class LogList extends React.Component {
     }
 
     render() {
+        const logItem =
+            this.context.runtimeStore.logsState.logs[
+                this.context.runtimeStore.logsState.logs.length -
+                    this.props.index -
+                    1
+            ];
+
         return (
-            <Tree
-                showOnlyChildren={true}
-                rootNode={this.rootNode}
-                selectNode={this.selectNode}
-            />
+            <div
+                className={classNames("log-item", logItem.type, {
+                    selected:
+                        logItem ==
+                        this.context.runtimeStore.logsState.selectedLogItem
+                })}
+                style={this.props.style}
+                onClick={() => this.selectNode(logItem)}
+            >
+                <small>{logItem.date.toLocaleTimeString()}</small>
+                <span>{logItem.label}</span>
+            </div>
         );
     }
 }

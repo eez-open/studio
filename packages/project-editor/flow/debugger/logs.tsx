@@ -37,7 +37,13 @@ function getOutputName(component: Component | undefined, outputName: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type LogItemType = "fatal" | "error" | "warning" | "scpi" | "info" | "debug";
+export type LogItemType =
+    | "fatal"
+    | "error"
+    | "warning"
+    | "scpi"
+    | "info"
+    | "debug";
 
 export class LogItem {
     date: Date = new Date();

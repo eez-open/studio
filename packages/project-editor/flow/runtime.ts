@@ -23,13 +23,10 @@ import type {
     IDataContext,
     IFlowContext
 } from "project-editor/flow//flow-interfaces";
-import { LayoutViewWidget } from "./widgets";
+import { LayoutViewWidget } from "project-editor/flow/widgets";
 import { visitObjects } from "project-editor/core/search";
 import { isWebStudio } from "eez-studio-shared/util-electron";
 import { Page } from "project-editor/features/page/page";
-import { showSelectInstrumentDialog } from "./action-components/instrument";
-import * as notification from "eez-studio-ui/notification";
-import { Connection, getConnection } from "instrument/window/connection";
 import {
     ActionEndLogItem,
     ActionStartLogItem,
@@ -37,13 +34,15 @@ import {
     ExecuteWidgetActionLogItem,
     ExecutionErrorLogItem,
     LogItem,
+    LogItemType,
     LogsState,
     NoStartActionComponentLogItem,
     OutputValueLogItem,
     WidgetActionNotDefinedLogItem,
     WidgetActionNotFoundLogItem
 } from "project-editor/flow/debugger/logs";
-import { valueToString } from "./debugger/VariablesPanel";
+import { valueToString } from "project-editor/flow//debugger/VariablesPanel";
+import { RemoteRuntime } from "project-editor/flow/remote-debugger";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,9 +68,7 @@ export interface QueueTask {
 }
 
 export class RuntimeStoreClass {
-    constructor(public DocumentStore: DocumentStoreClass) {
-        (window as any).runtime = this;
-    }
+    constructor(public DocumentStore: DocumentStoreClass) {}
 
     @observable isRuntimeMode = false;
     @observable isStopped = false;
@@ -84,10 +81,12 @@ export class RuntimeStoreClass {
     @observable singleStep = false;
     resumed = false;
 
+    remoteRuntime = new RemoteRuntime(this);
+
     setRuntimeMode = async (isDebuggerActive: boolean) => {
         if (!this.isRuntimeMode) {
             if (this.DocumentStore.isAppletProject) {
-                if (!(await this.startApplet())) {
+                if (!(await this.remoteRuntime.startApplet(isDebuggerActive))) {
                     return;
                 }
             }
@@ -108,14 +107,14 @@ export class RuntimeStoreClass {
                 this.selectedPage = this.DocumentStore.project.pages[0];
                 this.selectedQueueTask = undefined;
 
-                if (this.DocumentStore.isDashboardProject) {
-                    this.DocumentStore.dataContext.clearRuntimeValues();
-                }
+                this.DocumentStore.dataContext.clearRuntimeValues();
 
                 if (this.DocumentStore.isDashboardProject) {
                     this.flowStates = this.DocumentStore.project.pages
                         .filter(page => !page.isUsedAsCustomWidget)
                         .map(page => new FlowState(this, page));
+                } else {
+                    this.flowStates = [];
                 }
             });
 
@@ -136,27 +135,24 @@ export class RuntimeStoreClass {
         if (this.isRuntimeMode) {
             await this.stop();
 
-            runInAction(() => (this.queue = []));
+            runInAction(() => {
+                this.queue = [];
+                this.flowStates = [];
+                this.logsState.clear();
+                this.hasError = false;
+                this.isRuntimeMode = false;
+            });
+
             this.queueTaskId = 0;
 
-            if (this.DocumentStore.isDashboardProject) {
-                runInAction(() => {
-                    this.flowStates = [];
-                    this.logsState.clear();
-                    this.hasError = false;
-                });
-
-                this.DocumentStore.editorsStore.editors.forEach(editor => {
-                    if (editor.state instanceof FlowTabState) {
-                        const flowTabState = editor.state;
-                        runInAction(() => {
-                            flowTabState.flowState = undefined;
-                        });
-                    }
-                });
-            }
-
-            runInAction(() => (this.isRuntimeMode = false));
+            this.DocumentStore.editorsStore.editors.forEach(editor => {
+                if (editor.state instanceof FlowTabState) {
+                    const flowTabState = editor.state;
+                    runInAction(() => {
+                        flowTabState.flowState = undefined;
+                    });
+                }
+            });
         }
     };
 
@@ -184,7 +180,7 @@ export class RuntimeStoreClass {
 
             await this.saveSettings();
         } else {
-            await this.stopApplet();
+            await this.remoteRuntime.stopApplet();
         }
     }
 
@@ -220,143 +216,6 @@ export class RuntimeStoreClass {
         if (this.isPaused) {
             this.isPaused = false;
             this.singleStep = true;
-        }
-    }
-
-    ////////////////////////////////////////
-
-    connection: Connection | undefined;
-
-    async startApplet() {
-        await this.DocumentStore.build();
-
-        const instrument = await showSelectInstrumentDialog();
-
-        if (!instrument) {
-            return false;
-        }
-
-        const toastId = notification.info("Uploading app...", {
-            autoClose: false
-        });
-
-        instrument.connection.connect();
-
-        const editor = instrument.getEditor();
-        editor.onCreate();
-
-        await new Promise<void>(resolve => setTimeout(resolve, 1000));
-
-        const connection = getConnection(editor);
-        if (!connection || !instrument.isConnected) {
-            notification.update(toastId, {
-                type: notification.ERROR,
-                render: `Instrument not connected`,
-                autoClose: 1000
-            });
-            return;
-        }
-
-        this.connection = connection;
-
-        try {
-            await connection.acquire(false);
-        } catch (err) {
-            notification.update(toastId, {
-                type: notification.ERROR,
-                render: `Error: ${err.toString()}`,
-                autoClose: 1000
-            });
-            return false;
-        }
-
-        try {
-            const path = EEZStudio.remote.require("path");
-
-            const destinationFolderPath =
-                this.DocumentStore.getAbsoluteFilePath(
-                    this.DocumentStore.project.settings.build
-                        .destinationFolder || "."
-                );
-
-            const destinationFileName = `${path.basename(
-                this.DocumentStore.filePath,
-                ".eez-project"
-            )}.app`;
-
-            const sourceFilePath = `${destinationFolderPath}/${destinationFileName}`;
-
-            await new Promise<void>((resolve, reject) => {
-                const uploadInstructions = Object.assign(
-                    {},
-                    connection.instrument.defaultFileUploadInstructions,
-                    {
-                        sourceFilePath,
-                        destinationFileName,
-                        destinationFolderPath: "/Scripts"
-                    }
-                );
-
-                connection.upload(uploadInstructions, resolve, reject);
-            });
-
-            connection.command(`SYST:DEL 100`);
-
-            const runningScript = await connection.query(`SCR:RUN?`);
-            if (runningScript != "" && runningScript != `""`) {
-                connection.command(`SCR:STOP`);
-                connection.command(`SYST:DEL 100`);
-            }
-
-            connection.command(`SCR:RUN "/Scripts/${destinationFileName}"`);
-
-            notification.update(toastId, {
-                type: notification.SUCCESS,
-                render: `App started`,
-                autoClose: 1000
-            });
-            return true;
-        } catch (err) {
-            notification.update(toastId, {
-                type: notification.ERROR,
-                render: `Error: ${err.toString()}`,
-                autoClose: 1000
-            });
-            return false;
-        } finally {
-            connection.release();
-        }
-    }
-
-    async stopApplet() {
-        const connection = this.connection;
-        this.connection = undefined;
-
-        if (!connection) {
-            return;
-        }
-
-        if (!connection.isConnected) {
-            return;
-        }
-
-        try {
-            await connection.acquire(false);
-        } catch (err) {
-            notification.error(`Error: ${err.toString()}`);
-            return;
-        }
-
-        try {
-            const runningScript = await connection.query(`SCR:RUN?`);
-            if (runningScript != "" && runningScript != `""`) {
-                connection.command(`SCR:STOP`);
-                notification.success("App stopped");
-            }
-        } catch (err) {
-            notification.error(`Error: ${err.toString()}`);
-        } finally {
-            connection.release();
         }
     }
 
@@ -732,14 +591,14 @@ export class RuntimeStoreClass {
 
 export class FlowState {
     id = guid();
-
     componentStates = new Map<Component, ComponentState>();
-
     @observable flowStates: FlowState[] = [];
-
     dataContext: IDataContext;
-
     @observable hasError = false;
+
+    // used by the remote debugger
+    flowStateIndex = 0;
+    flowIndex = 0;
 
     constructor(
         public runtimeStore: RuntimeStoreClass,
@@ -1010,6 +869,12 @@ export class FlowState {
         }
 
         return undefined;
+    }
+
+    log(type: LogItemType, message: string, component: Component | undefined) {
+        this.runtimeStore.logsState.addLogItem(
+            new LogItem(type, message, this, component)
+        );
     }
 
     logScpi(message: string, component: Component) {

@@ -130,11 +130,14 @@ export async function build(
 
         if (buildAssetsDataMap) {
             assets.finalizeMap();
+
             result.GUI_ASSETS_DATA_MAP = JSON.stringify(
                 assets.map,
                 undefined,
                 2
             );
+
+            result.GUI_ASSETS_DATA_MAP_JS = assets.map;
         }
     }
 

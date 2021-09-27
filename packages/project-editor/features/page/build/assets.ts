@@ -87,44 +87,7 @@ export class Assets {
         number
     >();
 
-    map: {
-        flows: {
-            flowIndex: number;
-            path: string;
-            pathReadable: string;
-            components: {
-                componentIndex: number;
-                path: string;
-                pathReadable: string;
-                inputs: number[];
-                outputs: {
-                    targetComponentIndex: number;
-                    targetInputIndex: number;
-                }[][];
-            }[];
-            localVariables: {
-                index: number;
-                name: string;
-            }[];
-            widgetDataItems: {
-                widgetDataItemIndex: number;
-                flowIndex: number;
-                componentIndex: number;
-                inputIndex: number;
-            }[];
-            widgetActions: {
-                widgetActionIndex: number;
-                flowIndex: number;
-                componentIndex: number;
-                outputIndex: number;
-            }[];
-        }[];
-        constants: any[];
-        globalVariables: {
-            index: number;
-            name: string;
-        }[];
-    } = {
+    map: AssetsMap = {
         flows: [],
         constants: [],
         globalVariables: []
@@ -175,6 +138,13 @@ export class Assets {
                 !asset.usedIn ||
                 asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
+            this.flows = this.getAssets<Page | Action>(
+                project => [...project.pages, ...project.actions],
+                assetIncludePredicate
+            );
+
+            this.flows.forEach(flow => this.getFlowState(flow));
+
             this.globalVariables = this.getAssets<Variable>(
                 project => project.variables.globalVariables,
                 assetIncludePredicate
@@ -187,11 +157,6 @@ export class Assets {
 
             this.pages = this.getAssets<Page>(
                 project => project.pages,
-                assetIncludePredicate
-            );
-
-            this.flows = this.getAssets<Page | Action>(
-                project => [...project.pages, ...project.actions],
                 assetIncludePredicate
             );
         }
@@ -1191,4 +1156,43 @@ export function buildGuiAssetsDef(data: Buffer) {
     return `// ASSETS DEFINITION\nconst uint8_t assets[${
         data.length
     }] = {${projectBuild.dumpData(data)}};`;
+}
+
+export interface AssetsMap {
+    flows: {
+        flowIndex: number;
+        path: string;
+        pathReadable: string;
+        components: {
+            componentIndex: number;
+            path: string;
+            pathReadable: string;
+            inputs: number[];
+            outputs: {
+                targetComponentIndex: number;
+                targetInputIndex: number;
+            }[][];
+        }[];
+        localVariables: {
+            index: number;
+            name: string;
+        }[];
+        widgetDataItems: {
+            widgetDataItemIndex: number;
+            flowIndex: number;
+            componentIndex: number;
+            inputIndex: number;
+        }[];
+        widgetActions: {
+            widgetActionIndex: number;
+            flowIndex: number;
+            componentIndex: number;
+            outputIndex: number;
+        }[];
+    }[];
+    constants: any[];
+    globalVariables: {
+        index: number;
+        name: string;
+    }[];
 }

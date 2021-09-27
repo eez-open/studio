@@ -1047,7 +1047,7 @@ export class ScpiActionComponent extends ActionComponent {
                     tag == SCPI_PART_QUERY
                 ) {
                     flowState.logScpi(
-                        `SCPI QUERY [${instrument.name}]:${command}`,
+                        `SCPI QUERY [${instrument.name}]: ${command}`,
                         this
                     );
                     let result = await connection.query(command);

@@ -1,5 +1,5 @@
-const os = require("os");
-const net = require("net");
+import os from "os";
+import net from "net";
 
 import {
     CommunicationInterface,
@@ -10,7 +10,7 @@ import {
 export class EthernetInterface implements CommunicationInterface {
     socket: any;
 
-    constructor(private host: CommunicationInterfaceHost) { }
+    constructor(private host: CommunicationInterfaceHost) {}
 
     connect() {
         this.socket = new net.Socket();

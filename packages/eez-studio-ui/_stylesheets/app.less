@@ -1128,7 +1128,7 @@ button.EezStudio_Action {
 
             &.selected {
                 background-color: @selectionBackgroundColor;
-                color: white;
+                color: @selectionColor;
             }
 
             td:nth-child(1),
@@ -2245,7 +2245,7 @@ button.EezStudio_Action {
 
         &.selected {
             background-color: @selectionBackgroundColor;
-            color: white;
+            color: @selectionColor;
             .text-muted {
                 color: #ccc !important;
             }
@@ -2319,6 +2319,7 @@ button.EezStudio_Action {
 .EezStudio_CellTd {
     &.selected {
         background-color: @selectionBackgroundColor;
+        color: @selectionColor;
     }
 }
 
@@ -2838,6 +2839,7 @@ button.EezStudio_Action {
             & > tr {
                 &.selected {
                     background-color: @selectionBackgroundColor;
+                    color: @selectionColor;
                 }
 
                 & > td {
@@ -3258,6 +3260,11 @@ button.EezStudio_Action {
         display: inline-flex;
         align-items: center;
 
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
         small {
             margin-right: 5px;
         }
@@ -3277,6 +3284,11 @@ button.EezStudio_Action {
 
         &.debug {
             color: 0xaaa;
+        }
+
+        &.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor!important;
         }
     }
 

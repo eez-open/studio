@@ -230,6 +230,8 @@ async function generateFile(
         Type.INFO,
         `File "${filePath}" builded`
     );
+
+    return parts;
 }
 
 async function generateFiles(
@@ -241,8 +243,10 @@ async function generateFiles(
 ) {
     const path = EEZStudio.remote.require("path");
 
+    let parts: any = undefined;
+
     if (DocumentStore.masterProject) {
-        generateFile(
+        parts = generateFile(
             DocumentStore,
             configurationBuildResults[
                 DocumentStore.selectedBuildConfiguration
@@ -262,7 +266,7 @@ async function generateFiles(
             if (buildFile.fileName.indexOf("<configuration>") !== -1) {
                 for (const configuration of build.configurations) {
                     try {
-                        await generateFile(
+                        parts = await generateFile(
                             DocumentStore,
                             configurationBuildResults[configuration.name],
                             buildFile.template,
@@ -276,7 +280,7 @@ async function generateFiles(
                     } catch (err) {
                         await new Promise(resolve => setTimeout(resolve, 10));
 
-                        await generateFile(
+                        parts = await generateFile(
                             DocumentStore,
                             configurationBuildResults[configuration.name],
                             buildFile.template,
@@ -290,7 +294,7 @@ async function generateFiles(
                     }
                 }
             } else {
-                generateFile(
+                parts = generateFile(
                     DocumentStore,
                     configurationBuildResults[
                         DocumentStore.selectedBuildConfiguration
@@ -303,6 +307,8 @@ async function generateFiles(
             }
         }
     }
+
+    return parts;
 }
 
 function anythingToBuild(DocumentStore: DocumentStoreClass) {
@@ -325,13 +331,15 @@ export async function build(
 
     if (!anythingToBuild(DocumentStore)) {
         OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
-        return;
+        return undefined;
     }
 
     OutputSections.setLoading(Section.OUTPUT, true);
 
     // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
+
+    let parts: any = undefined;
 
     try {
         let sectionNames: string[] | undefined = undefined;
@@ -400,10 +408,10 @@ export async function build(
         showCheckResult(DocumentStore);
 
         if (onlyCheck) {
-            return;
+            return undefined;
         }
 
-        await generateFiles(
+        parts = await generateFiles(
             DocumentStore,
             destinationFolderPath,
             configurationBuildResuts
@@ -442,6 +450,8 @@ export async function build(
     } finally {
         OutputSections.setLoading(Section.OUTPUT, false);
     }
+
+    return parts;
 }
 
 export async function buildExtensions(DocumentStore: DocumentStoreClass) {
