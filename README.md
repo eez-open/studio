@@ -33,8 +33,8 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 * [M1](https://github.com/eez-open/studio/issues/102) - Visual editor
 * [M2](https://github.com/eez-open/studio/issues/103) - Interpreter for PC
 * [M3](https://github.com/eez-open/studio/issues/104) - Interpreter for BB3
-* M4 - Debugger for PC
-* M5 - Debugger for BB3
+* [M4](https://github.com/eez-open/studio/issues/134) - Debugger for PC
+* [M5](https://github.com/eez-open/studio/issues/135) - Debugger for BB3
 
 Interpreting the flowchart on a PC will allow the creation of a dashboard for remote control of various T&M instruments (including EEZ BB3). The debugger will simplify and speed up the development of flowcharts as it will allow step-by-step execution, setting breakpoints, etc.
 Adding a flow chart interpretation on EEZ BB3 will open up entirely new possibilities for quickly creating different test scenarios, automating measurement data collection, and more.
