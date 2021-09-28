@@ -937,18 +937,22 @@ export class Component extends EezObject {
                     if (
                         isToggableProperty(DocumentStore, propertyInfo, "input")
                     ) {
-                        try {
-                            checkExpression(
-                                component,
-                                getProperty(component, propertyInfo.name),
-                                false
-                            );
-                        } catch (err) {
-                            new output.Message(
-                                output.Type.ERROR,
-                                "Invalid expression",
-                                getChildOfObject(component, propertyInfo.name)
-                            );
+                        const value = getProperty(component, propertyInfo.name);
+                        if (value != undefined && value !== "") {
+                            try {
+                                checkExpression(component, value, false);
+                            } catch (err) {
+                                messages.push(
+                                    new output.Message(
+                                        output.Type.ERROR,
+                                        `Invalid expression: ${err}`,
+                                        getChildOfObject(
+                                            component,
+                                            propertyInfo.name
+                                        )
+                                    )
+                                );
+                            }
                         }
                     }
                 }
@@ -1150,10 +1154,11 @@ export class Component extends EezObject {
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
 
+    // return false if you don't want to propagete through "@seqout" output
     async execute(
         flowState: IFlowState,
         dispose: (() => void) | undefined
-    ): Promise<(() => void) | undefined> {
+    ): Promise<(() => void) | undefined | boolean> {
         return undefined;
     }
 

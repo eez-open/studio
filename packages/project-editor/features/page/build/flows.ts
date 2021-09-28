@@ -79,7 +79,6 @@ function buildComponent(
         componentIndex,
         path: getObjectPathAsString(component),
         pathReadable: getHumanReadableObjectPath(component),
-        inputs: [],
         outputs: []
     };
 
@@ -106,9 +105,11 @@ function buildComponent(
 
         dataBuffer.writeUint16(inputIndex);
 
-        assets.map.flows[flowIndex].components[componentIndex].inputs.push(
-            inputIndex
-        );
+        assets.map.flows[flowIndex].componentInputs.push({
+            inputIndex,
+            componentIndex,
+            inputName: input.name
+        });
     });
 
     // property values
@@ -198,7 +199,7 @@ function buildComponent(
             });
 
             dataBuffer.writeUint16(targetComponentIndex);
-            dataBuffer.writeUint8(targetInputIndex);
+            dataBuffer.writeUint16(targetInputIndex);
             dataBuffer.writeUint8(
                 connectionLine.input == "@seqin" &&
                     !(
@@ -208,6 +209,7 @@ function buildComponent(
                     ? 1
                     : 0
             );
+            dataBuffer.writeUint8(0);
         });
 
         assets.map.flows[flowIndex].components[componentIndex].outputs.push(
@@ -253,6 +255,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
         path: getObjectPathAsString(flow),
         pathReadable: getHumanReadableObjectPath(flow),
         components: [],
+        componentInputs: [],
         localVariables: [],
         widgetDataItems: [],
         widgetActions: []

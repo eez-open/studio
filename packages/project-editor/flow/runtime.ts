@@ -5,7 +5,6 @@ import { DocumentStoreClass } from "project-editor/core/store";
 import { Action, findAction } from "project-editor/features/action/action";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import {
-    CallActionActionComponent,
     CatchErrorActionComponent,
     CommentActionComponent,
     ErrorActionComponent,
@@ -23,7 +22,6 @@ import type {
     IDataContext,
     IFlowContext
 } from "project-editor/flow//flow-interfaces";
-import { LayoutViewWidget } from "project-editor/flow/widgets";
 import { visitObjects } from "project-editor/core/search";
 import { isWebStudio } from "eez-studio-shared/util-electron";
 import { Page } from "project-editor/features/page/page";
@@ -200,22 +198,34 @@ export class RuntimeStoreClass {
 
     @action
     resume() {
-        this.isPaused = false;
-        this.singleStep = false;
-        this.resumed = true;
+        if (this.DocumentStore.isAppletProject) {
+            this.remoteRuntime.resume();
+        } else {
+            this.isPaused = false;
+            this.singleStep = false;
+            this.resumed = true;
+        }
     }
 
     @action
     pause() {
-        this.isPaused = true;
-        this.singleStep = false;
+        if (this.DocumentStore.isAppletProject) {
+            this.remoteRuntime.pause();
+        } else {
+            this.isPaused = true;
+            this.singleStep = false;
+        }
     }
 
     @action
     runSingleStep() {
-        if (this.isPaused) {
-            this.isPaused = false;
-            this.singleStep = true;
+        if (this.DocumentStore.isAppletProject) {
+            this.remoteRuntime.singleStep();
+        } else {
+            if (this.isPaused) {
+                this.isPaused = false;
+                this.singleStep = true;
+            }
         }
     }
 
@@ -264,15 +274,19 @@ export class RuntimeStoreClass {
         });
 
         if (this.isDebuggerActive && this.isPaused && !this.selectedQueueTask) {
-            const nextQueueTask = this.queue[0];
+            this.showNextQueueTask();
+        }
+    }
 
-            runInAction(() => {
-                this.selectQueueTask(nextQueueTask);
-            });
+    showNextQueueTask() {
+        const nextQueueTask = this.queue[0];
 
-            if (nextQueueTask) {
-                this.showQueueTask(nextQueueTask);
-            }
+        runInAction(() => {
+            this.selectQueueTask(nextQueueTask);
+        });
+
+        if (nextQueueTask) {
+            this.showQueueTask(nextQueueTask);
         }
     }
 
@@ -993,11 +1007,23 @@ export class ComponentState {
             this.isRunning = true;
         });
 
+        let propagateThroughSeqout = false;
+
         try {
-            this.dispose = await this.component.execute(
+            const result = await this.component.execute(
                 this.flowState,
                 this.dispose
             );
+            if (result == undefined) {
+                propagateThroughSeqout = true;
+            } else {
+                if (typeof result == "boolean") {
+                    propagateThroughSeqout = false;
+                } else {
+                    this.dispose = result;
+                    propagateThroughSeqout = true;
+                }
+            }
         } catch (err) {
             runInAction(() => {
                 this.flowState.runtimeStore.hasError = true;
@@ -1051,10 +1077,7 @@ export class ComponentState {
             });
         }
 
-        if (
-            !(this.component instanceof LayoutViewWidget) &&
-            !(this.component instanceof CallActionActionComponent)
-        ) {
+        if (propagateThroughSeqout) {
             this.flowState.propagateValue(this.component, "@seqout", null);
         }
 

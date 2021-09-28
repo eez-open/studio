@@ -1167,11 +1167,15 @@ export interface AssetsMap {
             componentIndex: number;
             path: string;
             pathReadable: string;
-            inputs: number[];
             outputs: {
                 targetComponentIndex: number;
                 targetInputIndex: number;
             }[][];
+        }[];
+        componentInputs: {
+            inputIndex: number;
+            componentIndex: number;
+            inputName: string;
         }[];
         localVariables: {
             index: number;

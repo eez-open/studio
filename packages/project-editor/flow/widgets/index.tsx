@@ -1268,7 +1268,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
             //componentState.inputsData.clear();
         }
 
-        return undefined;
+        return false;
     }
 
     open() {
@@ -1646,24 +1646,26 @@ export class TextWidget extends EmbeddedWidget {
             if (this.text) {
                 text = this.text;
             } else {
-                if (this.isInputProperty("data") && flowContext.flowState) {
-                    const inputPropertyValue =
-                        flowContext.flowState.getInputPropertyValue(
-                            this,
-                            "data"
-                        );
-                    if (
-                        inputPropertyValue !== undefined &&
-                        inputPropertyValue.value != undefined
-                    ) {
-                        text = inputPropertyValue.value.toString();
+                let data;
+                if (this.isInputProperty("data")) {
+                    data = "data";
+                } else {
+                    data = this.data;
+                }
+
+                if (data) {
+                    try {
+                        const value = evalExpression(flowContext, this, data);
+                        if (value != null && value != undefined) {
+                            text = value.toString();
+                        } else {
+                            text = "";
+                        }
+                    } catch (err) {
+                        text = "err!";
                     }
                 } else {
-                    if (this.data) {
-                        text = flowContext.dataContext.get(this.data) as string;
-                    } else {
-                        text = this.name;
-                    }
+                    text = "";
                 }
             }
         } else {
@@ -1671,10 +1673,15 @@ export class TextWidget extends EmbeddedWidget {
                 text = this.text;
             } else {
                 if (this.data) {
-                    if (flowContext.DocumentStore.isAppletProject) {
+                    if (
+                        flowContext.DocumentStore.isAppletProject ||
+                        flowContext.DocumentStore.isDashboardProject
+                    ) {
                         try {
                             text = evalExpression(flowContext, this, this.data);
-                        } catch (err) {}
+                        } catch (err) {
+                            text = this.data;
+                        }
                     } else {
                         text = flowContext.dataContext.get(this.data) as string;
                     }

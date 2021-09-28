@@ -62,7 +62,7 @@ declare class Component {
     execute(
         flowState: IFlowState,
         dispose: (() => void) | undefined
-    ): Promise<(() => void) | undefined>;
+    ): Promise<(() => void) | undefined | boolean>;
 }
 
 declare class ActionComponent extends Component {

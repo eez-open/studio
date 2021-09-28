@@ -15,7 +15,9 @@ import {
     PropertyInfo,
     NavigationComponent,
     PropertyProps,
-    getClassInfo
+    getClassInfo,
+    getChildOfObject,
+    MessageType
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import {
@@ -40,6 +42,8 @@ import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { MenuNavigation } from "project-editor/components/MenuNavigation";
 import { humanize } from "eez-studio-shared/string";
 import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
+import { evalConstantExpression } from "project-editor/flow/expression/expression";
+import { _difference } from "eez-studio-shared/algorithm";
 
 const VariableIcon = (
     <svg
@@ -353,6 +357,41 @@ export class Variable extends EezObject {
                 messages.push(
                     output.propertyNotSetMessage(variable, "defaultValue")
                 );
+            } else {
+                const project = getProject(variable);
+                if (
+                    project._DocumentStore.isAppletProject ||
+                    project._DocumentStore.isDashboardProject
+                ) {
+                    try {
+                        const value = evalConstantExpression(
+                            getProject(variable),
+                            variable.defaultValue
+                        );
+
+                        const error = isValueTypeOf(
+                            project,
+                            value,
+                            variable.type
+                        );
+                        if (error) {
+                            messages.push(
+                                new output.Message(
+                                    MessageType.ERROR,
+                                    error,
+                                    getChildOfObject(variable, "defaultValue")
+                                )
+                            );
+                        }
+                    } catch (err) {
+                        messages.push(
+                            output.propertyInvalidValueMessage(
+                                variable,
+                                "defaultValue"
+                            )
+                        );
+                    }
+                }
             }
 
             return messages;
@@ -595,6 +634,21 @@ export class DataContext implements IDataContext {
                 let defaultValue = this.findVariableDefaultValue(variableName);
                 if (defaultValue == undefined) {
                     defaultValue = variable.defaultValue;
+
+                    if (
+                        this.project._DocumentStore.isAppletProject ||
+                        this.project._DocumentStore.isDashboardProject
+                    ) {
+                        try {
+                            defaultValue = evalConstantExpression(
+                                this.project,
+                                defaultValue
+                            );
+                        } catch (err) {
+                            console.error(err);
+                            defaultValue = "ERR!";
+                        }
+                    }
                 }
 
                 if (defaultValue !== undefined) {
@@ -1168,3 +1222,101 @@ export default {
         }
     }
 };
+
+function isValueTypeOf(
+    project: Project,
+    value: any,
+    type: string
+): string | null {
+    if (type == "integer") {
+        if (Number.isInteger(value)) return null;
+    } else if (type == "float" || type == "double") {
+        if (typeof value == "number") return null;
+    } else if (type == "boolean") {
+        if (typeof value == "boolean" || Number.isInteger(value)) return null;
+    } else if (type == "string") {
+        if (!(typeof value == "string")) return null;
+    } else if (type == "date") {
+        return null;
+    } else if (isArrayType(type)) {
+        if (Array.isArray(value)) {
+            const arrayElementType = getArrayElementTypeFromType(type);
+
+            for (let i = 0; i < value.length; i++) {
+                const result = isValueTypeOf(
+                    project,
+                    value[i],
+                    arrayElementType!
+                );
+                if (result) {
+                    return `${result} => array element ${
+                        i + 1
+                    } is not an ${type}`;
+                }
+            }
+
+            return null;
+        }
+    } else if (isStructType(type)) {
+        if (typeof value == "object") {
+            const structTypeName = getStructTypeNameFromType(type);
+            if (!structTypeName) {
+                return "struct name expected";
+            }
+
+            const structure = project.variables.structsMap.get(structTypeName);
+            if (!structure) {
+                return `struct '${structTypeName}' not found`;
+            }
+
+            const keys = [];
+
+            for (const key in value) {
+                const field = structure.fields.find(field => field.name == key);
+                if (!field) {
+                    return `unknown field '${key}'`;
+                }
+
+                const result = isValueTypeOf(project, value[key], field.type);
+                if (result) {
+                    return `${result} => field '${key}' should be of type '${field.type}'`;
+                }
+
+                keys.push(key);
+            }
+
+            const result = _difference(
+                structure.fields.map(field => field.name),
+                keys
+            );
+
+            if (result.length > 0) {
+                return `missing field(s): ${result.join(",")}`;
+            }
+
+            return null;
+        }
+    } else if (isEnumType(type)) {
+        if (!Number.isInteger(value)) {
+            return `not an integer`;
+        }
+
+        const enumTypeName = getEnumTypeNameFromType(type);
+        if (!enumTypeName) {
+            return "enum name expected";
+        }
+
+        const enumType = project.variables.enumsMap.get(enumTypeName);
+        if (!enumType) {
+            return `enum '${enumTypeName}' not found`;
+        }
+
+        if (!enumType.members.find(member => member.value == value)) {
+            return `value not in enum '${enumTypeName}'`;
+        }
+
+        return null;
+    }
+
+    return `not an ${type}`;
+}

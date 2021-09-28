@@ -38,7 +38,8 @@ import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
     buildAssignableExpression,
     buildExpression,
-    evalConstantExpression
+    evalConstantExpression,
+    evalExpression
 } from "project-editor/flow/expression/expression";
 
 export const LeftArrow = () => (
@@ -1133,7 +1134,7 @@ export class LogActionComponent extends ActionComponent {
     @observable value: string;
 
     async execute(flowState: FlowState) {
-        const value = flowState.getPropertyValue(this, "value");
+        const value = evalExpression(flowState, this, this.value);
         flowState.logInfo(value, this);
         return undefined;
     }
@@ -1259,7 +1260,8 @@ export class CallActionActionComponent extends ActionComponent {
                 }
             }
         }
-        return undefined;
+
+        return false;
     }
 
     open() {
@@ -1590,6 +1592,7 @@ export class CounterActionComponent extends ActionComponent {
 
         if (counterRunningState.value == 0) {
             flowState.propagateValue(this, "done", null);
+            flowState.setComponentRunningState(this, undefined);
         } else {
             counterRunningState.value--;
         }
@@ -1601,6 +1604,10 @@ export class CounterActionComponent extends ActionComponent {
 registerClass(CounterActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+class LoopRunningState {
+    constructor(public value: number, public to: number, public step: number) {}
+}
 
 export class LoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -1690,7 +1697,29 @@ export class LoopActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        // TODO
+        let runningState =
+            flowState.getComponentRunningState<LoopRunningState>(this);
+
+        if (!runningState) {
+            runningState = new LoopRunningState(
+                evalExpression(flowState, this, this.from),
+                evalExpression(flowState, this, this.to),
+                evalExpression(flowState, this, this.step)
+            );
+            flowState.setComponentRunningState(this, runningState);
+            flowState.dataContext.set(this.variable, runningState.value);
+        } else {
+            runningState.value += runningState.step;
+
+            if (runningState.value >= runningState.to) {
+                flowState.propagateValue(this, "done", null);
+                flowState.setComponentRunningState(this, undefined);
+                return false;
+            } else {
+                flowState.dataContext.set(this.variable, runningState.value);
+            }
+        }
+
         return undefined;
     }
 

@@ -106,7 +106,7 @@ export class RuntimeFlowContext implements IFlowContext {
 
     viewState: ViewState = new ViewState(this);
     editorOptions: IEditorOptions = {};
-    dataContext: IDataContext;
+    _dataContext: IDataContext;
 
     @observable _flowState: IFlowState | undefined;
 
@@ -126,6 +126,14 @@ export class RuntimeFlowContext implements IFlowContext {
         return this._flowState || this.tabState.flowState;
     }
 
+    get dataContext() {
+        return (
+            this._dataContext ||
+            this.flowState?.dataContext ||
+            this.document.DocumentStore.dataContext
+        );
+    }
+
     set flowState(flowState: IFlowState | undefined) {
         runInAction(() => (this._flowState = flowState));
     }
@@ -136,7 +144,7 @@ export class RuntimeFlowContext implements IFlowContext {
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext {
         return Object.assign(new RuntimeFlowContext(), this, {
-            dataContext: this.dataContext.createWithDefaultValueOverrides(
+            _dataContext: this.dataContext.createWithDefaultValueOverrides(
                 dataContextOverridesObject
             )
         });
@@ -152,6 +160,5 @@ export class RuntimeFlowContext implements IFlowContext {
         this.tabState = tabState;
         this.document = new FlowDocument(tabState.widgetContainer, this);
         this.editorOptions = {};
-        this.dataContext = this.document.DocumentStore.dataContext;
     }
 }

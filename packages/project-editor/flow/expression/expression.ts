@@ -604,10 +604,6 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 if (buildInConstantValue != undefined) {
                     return;
                 }
-
-                console.log("Unknown constant 1", node);
-
-                throw `Unknown constant '${builtInConstantName}'`;
             }
 
             console.log("TODO check MemberExpression", node);
