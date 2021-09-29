@@ -4729,7 +4729,21 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
                         flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let text = `{${this.data}}`;
+                            let text;
+
+                            if (flowContext.flowState) {
+                                if (this.data) {
+                                    text = evalExpression(
+                                        flowContext,
+                                        this,
+                                        this.data
+                                    );
+                                } else {
+                                    text = "";
+                                }
+                            } else {
+                                text = `{${this.data}}`;
+                            }
 
                             drawText(
                                 ctx,

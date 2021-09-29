@@ -53,6 +53,7 @@ import { build } from "project-editor/features/page/build";
 import { Assets, DataBuffer } from "./build/assets";
 import { buildWidget } from "./build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/widgets/widget_types";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -429,7 +430,12 @@ export class Page extends Flow {
     }
 
     getClassName() {
-        return getDocumentStore(this).isDashboardProject ? this.css : "";
+        return classNames(
+            { EezStudio_PageFlowContainer: !this.isUsedAsCustomWidget },
+            {
+                [this.css]: getDocumentStore(this).isDashboardProject
+            }
+        );
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {

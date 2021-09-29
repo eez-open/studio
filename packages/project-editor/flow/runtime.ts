@@ -585,21 +585,25 @@ export class RuntimeStoreClass {
     @action
     addBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
+        this.remoteRuntime.onBreakpointAdded(component);
     }
 
     @action
     removeBreakpoint(component: Component) {
         this.breakpoints.delete(component);
+        this.remoteRuntime.onBreakpointRemoved(component);
     }
 
     @action
     enableBreakpoint(component: Component) {
         this.breakpoints.set(component, true);
+        this.remoteRuntime.onBreakpointEnabled(component);
     }
 
     @action
     disableBreakpoint(component: Component) {
         this.breakpoints.set(component, false);
+        this.remoteRuntime.onBreakpointDisabled(component);
     }
 }
 

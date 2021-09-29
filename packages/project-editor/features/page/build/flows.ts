@@ -97,7 +97,9 @@ function buildComponent(
     }
 
     // reserved
-    dataBuffer.writeUint16(0);
+    dataBuffer.writeUint16(
+        assets.DocumentStore.runtimeStore.breakpoints.has(component) ? 1 : 0
+    );
 
     // inputs
     dataBuffer.writeNumberArray(component.buildInputs, input => {

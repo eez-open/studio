@@ -61,6 +61,7 @@ import {
 } from "project-editor/flow/flow-editor/mouse-handler";
 import { Selection } from "project-editor/flow/flow-editor/selection";
 import { setupDragScroll } from "project-editor/flow/flow-editor/drag-scroll";
+import { settingsController } from "home/settings";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -155,7 +156,7 @@ const AllConnectionLines = observer(
 function CenterLines({ flowContext }: { flowContext: IFlowContext }) {
     const transform = flowContext.viewState.transform;
 
-    const CENTER_LINES_COLOR = "#eee";
+    const CENTER_LINES_COLOR = settingsController.isDarkTheme ? "#444" : "#eee";
     const CENTER_LINES_WIDTH = 1 / transform.scale;
     const centerLineStyle = {
         fill: "transparent",

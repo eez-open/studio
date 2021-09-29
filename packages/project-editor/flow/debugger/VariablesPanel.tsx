@@ -13,7 +13,7 @@ export function valueToString(value: any) {
         return "undefined";
     }
     try {
-        return JSON.stringify(value);
+        return JSON.stringify(value, undefined, 2);
     } catch (err) {
         try {
             return value.toString();
@@ -67,7 +67,7 @@ class VariablesTable extends React.Component {
         result.push({
             name: "value",
             title: "Value",
-            sortEnabled: true
+            sortEnabled: false
         });
 
         return result;
