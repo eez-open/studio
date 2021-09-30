@@ -87,13 +87,27 @@ export class SvgLabel extends React.Component<
     componentDidMount() {
         if (this.myRef.current) {
             const bbox = this.myRef.current.getBBox();
-            runInAction(() => {
-                this.contentWidth =
-                    this.padding.left + bbox.width + this.padding.right;
-                this.contentHeight =
-                    this.padding.top + bbox.height + this.padding.bottom;
-            });
+
+            const contentWidth =
+                this.padding.left + bbox.width + this.padding.right;
+
+            const contentHeight =
+                this.padding.top + bbox.height + this.padding.bottom;
+
+            if (
+                contentWidth != this.contentWidth ||
+                contentHeight != this.contentHeight
+            ) {
+                runInAction(() => {
+                    this.contentWidth = contentWidth;
+                    this.contentHeight = contentHeight;
+                });
+            }
         }
+    }
+
+    componentDidUpdate() {
+        setTimeout(() => this.componentDidMount(), 10);
     }
 
     render() {

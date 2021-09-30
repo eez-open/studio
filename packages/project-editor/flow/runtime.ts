@@ -6,7 +6,6 @@ import { Action, findAction } from "project-editor/features/action/action";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import {
     CatchErrorActionComponent,
-    CommentActionComponent,
     ErrorActionComponent,
     InputActionComponent,
     StartActionComponent
@@ -14,6 +13,7 @@ import {
 import { Component, Widget } from "project-editor/flow/component";
 import {
     findPropertyByNameInObject,
+    getClassInfo,
     getLabel,
     IEezObject,
     PropertyType
@@ -413,8 +413,22 @@ export class RuntimeStoreClass {
     }
 
     removeFlowState(flowState: FlowState) {
+        let flowStates: FlowState[];
+        if (flowState.parentFlowState) {
+            flowStates = flowState.parentFlowState.flowStates;
+        } else {
+            flowStates = this.flowStates;
+        }
+
+        const i = flowStates.indexOf(flowState);
+
+        if (i == -1) {
+            console.error("UNEXPECTED!");
+            return;
+        }
+
         runInAction(() => {
-            this.flowStates.splice(this.flowStates.indexOf(flowState), 1);
+            flowStates.splice(i, 1);
         });
     }
 
@@ -613,10 +627,6 @@ export class FlowState {
     @observable flowStates: FlowState[] = [];
     dataContext: IDataContext;
     @observable hasError = false;
-
-    // used by the remote debugger
-    flowStateIndex = 0;
-    flowIndex = 0;
 
     constructor(
         public runtimeStore: RuntimeStoreClass,
@@ -935,7 +945,7 @@ export class ComponentState {
     }
 
     isReadyToRun() {
-        if (this.component instanceof CommentActionComponent) {
+        if (getClassInfo(this.component).isFlowExecutableComponent === false) {
             return false;
         }
 

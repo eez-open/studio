@@ -1,4 +1,4 @@
-import { observable, action, runInAction } from "mobx";
+import { observable, action } from "mobx";
 
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
@@ -134,10 +134,6 @@ export class RuntimeFlowContext implements IFlowContext {
         );
     }
 
-    set flowState(flowState: IFlowState | undefined) {
-        runInAction(() => (this._flowState = flowState));
-    }
-
     get frontFace() {
         return this.tabState.frontFace;
     }
@@ -152,7 +148,7 @@ export class RuntimeFlowContext implements IFlowContext {
 
     overrideFlowState(component: Component): IFlowContext {
         return Object.assign(new RuntimeFlowContext(), this, {
-            flowState: this.flowState?.getFlowStateByComponent(component)
+            _flowState: this.flowState?.getFlowStateByComponent(component)
         });
     }
 

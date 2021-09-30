@@ -8,6 +8,7 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { IMouseHandler } from "project-editor/flow/flow-editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,6 +74,56 @@ export class Selection extends React.Component<
             .map(rect => viewState.transform.pageToOffsetRect(rect));
     }
 
+    @computed get connectionLine() {
+        const connectionLines =
+            this.props.context.viewState.selectedObjects.filter(
+                selectedObject =>
+                    selectedObject.object instanceof ConnectionLine
+            );
+
+        if (connectionLines.length == 1) {
+            return connectionLines[0].object as ConnectionLine;
+        }
+
+        return undefined;
+    }
+
+    @computed get sourceComponent() {
+        if (this.selectedObjects.length != 2) {
+            return undefined;
+        }
+        const connectionLine = this.connectionLine;
+        if (!connectionLine) {
+            return undefined;
+        }
+        if (connectionLine.sourceComponent === this.selectedObjects[0].object) {
+            return this.selectedObjects[0].object;
+        }
+
+        if (connectionLine.sourceComponent === this.selectedObjects[1].object) {
+            return this.selectedObjects[1].object;
+        }
+        return undefined;
+    }
+
+    @computed get targetComponent() {
+        if (this.selectedObjects.length != 2) {
+            return undefined;
+        }
+        const connectionLine = this.connectionLine;
+        if (!connectionLine) {
+            return undefined;
+        }
+        if (connectionLine.targetComponent === this.selectedObjects[0].object) {
+            return this.selectedObjects[0].object;
+        }
+
+        if (connectionLine.targetComponent === this.selectedObjects[1].object) {
+            return this.selectedObjects[1].object;
+        }
+        return undefined;
+    }
+
     render() {
         let selectedObjects = this.selectedObjects;
 
@@ -81,17 +132,31 @@ export class Selection extends React.Component<
         let selectedObjectRectsElement;
 
         if (isSelectionVisible) {
-            selectedObjectRectsElement = selectedObjects.map((object, i) => (
-                <SelectedObject
-                    key={object.id}
-                    className="EezStudio_FlowRuntimeSelection_SelectedObject"
-                    rect={
-                        i < this.selectedObjectRects.length
-                            ? this.selectedObjectRects[i]
-                            : undefined
-                    }
-                />
-            ));
+            selectedObjectRectsElement = selectedObjects.map(
+                (selectedObject, i) => (
+                    <SelectedObject
+                        key={selectedObject.id}
+                        className={classNames(
+                            "EezStudio_FlowRuntimeSelection_SelectedObject",
+                            {
+                                source:
+                                    this.sourceComponent ==
+                                        selectedObject.object &&
+                                    this.targetComponent,
+                                target:
+                                    this.targetComponent ==
+                                        selectedObject.object &&
+                                    this.sourceComponent
+                            }
+                        )}
+                        rect={
+                            i < this.selectedObjectRects.length
+                                ? this.selectedObjectRects[i]
+                                : undefined
+                        }
+                    />
+                )
+            );
         }
 
         return (

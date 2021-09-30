@@ -162,23 +162,22 @@ function buildComponent(
 
     // outputs
     const outputs = component.buildOutputs;
-    outputs.forEach(output =>
-        assets.registerComponentOutput(component, output.name, 0)
-    );
-    dataBuffer.writeArray(outputs, output => {
+    outputs.forEach((output, componentOutputIndex) =>
         assets.registerComponentOutput(
             component,
             output.name,
-            dataBuffer.currentOffset
-        );
-
+            componentIndex,
+            componentOutputIndex
+        )
+    );
+    dataBuffer.writeArray(outputs, output => {
         const connectionLines = flow.connectionLines.filter(
             connectionLine =>
                 connectionLine.sourceComponent === component &&
                 connectionLine.output == output.name
         );
 
-        const mapOutputs: {
+        const connectionLinesMap: {
             targetComponentIndex: number;
             targetInputIndex: number;
         }[] = [];
@@ -195,7 +194,7 @@ function buildComponent(
                   )
                 : -1;
 
-            mapOutputs.push({
+            connectionLinesMap.push({
                 targetComponentIndex,
                 targetInputIndex
             });
@@ -214,9 +213,10 @@ function buildComponent(
             dataBuffer.writeUint8(0);
         });
 
-        assets.map.flows[flowIndex].components[componentIndex].outputs.push(
-            mapOutputs
-        );
+        assets.map.flows[flowIndex].components[componentIndex].outputs.push({
+            outputName: output.name,
+            connectionLines: connectionLinesMap
+        });
     });
 
     const errorCatchOutputIndex = component.buildOutputs.findIndex(
@@ -291,42 +291,44 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 
     // widgetDataItems
     const flowState = assets.getFlowState(flow);
-    dataBuffer.writeArray(
-        [...flowState.flowWidgetDataIndexes.keys()],
-        (_, i) => {
-            const componentPropertyValue =
-                flowState.flowWidgetDataIndexToComponentPropertyValue.get(i);
-            dataBuffer.writeUint16(componentPropertyValue!.componentIndex);
-            dataBuffer.writeUint16(componentPropertyValue!.propertyValueIndex);
+    const widgetDataItems = [...flowState.flowWidgetDataIndexes.keys()];
+    dataBuffer.writeArray(widgetDataItems, (_, i) => {
+        const componentPropertyValue =
+            flowState.flowWidgetDataIndexToComponentPropertyValue.get(i);
+        if (componentPropertyValue) {
+            dataBuffer.writeInt16(componentPropertyValue.componentIndex);
+            dataBuffer.writeInt16(componentPropertyValue.propertyValueIndex);
+        } else {
+            assets.DocumentStore.outputSectionsStore.write(
+                output.Section.OUTPUT,
+                output.Type.ERROR,
+                "Widget data item not found",
+                flowState.flowWidgetFromDataIndex.get(i)
+            );
+            dataBuffer.writeInt16(-1);
+            dataBuffer.writeInt16(-1);
         }
-    );
+    });
 
     // widgetActions
-    dataBuffer.writeNumberArray(
-        [...flowState.flowWidgetActionIndexes.keys()],
-        (_, i) => {
-            dataBuffer.writeFutureValue(
-                () => {
-                    dataBuffer.writeUint32(0);
-                },
-                () => {
-                    const componentOutputOffset =
-                        flowState.flowWidgetActionComponentOutput.get(i);
-                    if (componentOutputOffset != undefined) {
-                        dataBuffer.writeUint32(componentOutputOffset);
-                    } else {
-                        assets.DocumentStore.outputSectionsStore.write(
-                            output.Section.OUTPUT,
-                            output.Type.ERROR,
-                            "Widget action output not found",
-                            flowState.flowWidgetFromActionIndex.get(i)
-                        );
-                        dataBuffer.writeUint32(0);
-                    }
-                }
+    const widgetActions = [...flowState.flowWidgetActionIndexes.keys()];
+    dataBuffer.writeArray(widgetActions, (_, i) => {
+        const componentOutput =
+            flowState.flowWidgetActionIndexToComponentOutput.get(i);
+        if (componentOutput) {
+            dataBuffer.writeInt16(componentOutput.componentIndex);
+            dataBuffer.writeInt16(componentOutput.componentOutputIndex);
+        } else {
+            assets.DocumentStore.outputSectionsStore.write(
+                output.Section.OUTPUT,
+                output.Type.ERROR,
+                "Widget action output not found",
+                flowState.flowWidgetFromActionIndex.get(i)
             );
+            dataBuffer.writeInt16(-1);
+            dataBuffer.writeInt16(-1);
         }
-    );
+    });
 
     // nInputValues
     dataBuffer.writeFutureValue(

@@ -1,8 +1,4 @@
-import {
-    getObjectFromStringPath,
-    getObjectPathAsString,
-    getProperty
-} from "project-editor/core/object";
+import { getObjectPathAsString, getProperty } from "project-editor/core/object";
 
 import * as output from "project-editor/core/output";
 
@@ -76,7 +72,13 @@ export class Assets {
             flowWidgetFromDataIndex: Map<number, Widget>;
 
             flowWidgetActionIndexes: Map<string, number>;
-            flowWidgetActionComponentOutput: Map<number, number>;
+            flowWidgetActionIndexToComponentOutput: Map<
+                number,
+                {
+                    componentIndex: number;
+                    componentOutputIndex: number;
+                }
+            >;
             flowWidgetFromActionIndex: Map<number, Widget>;
         }
     >();
@@ -540,7 +542,13 @@ export class Assets {
                 >(),
                 flowWidgetFromDataIndex: new Map<number, Widget>(),
                 flowWidgetActionIndexes: new Map<string, number>(),
-                flowWidgetActionComponentOutput: new Map<number, number>(),
+                flowWidgetActionIndexToComponentOutput: new Map<
+                    number,
+                    {
+                        componentIndex: number;
+                        componentOutputIndex: number;
+                    }
+                >(),
                 flowWidgetFromActionIndex: new Map<number, Widget>()
             };
             this.flowStates.set(flow, flowState);
@@ -663,17 +671,18 @@ export class Assets {
     registerComponentOutput(
         component: Component,
         outputName: string,
-        componentOutputOffset: number
+        componentIndex: number,
+        componentOutputIndex: number
     ) {
         const flowState = this.getFlowState(getFlow(component));
         const path =
             getObjectPathAsString(component) + PATH_SEPARATOR + outputName;
         let index = flowState.flowWidgetActionIndexes.get(path);
         if (index != undefined) {
-            flowState.flowWidgetActionComponentOutput.set(
-                index,
-                componentOutputOffset
-            );
+            flowState.flowWidgetActionIndexToComponentOutput.set(index, {
+                componentIndex,
+                componentOutputIndex
+            });
         }
     }
 
@@ -684,55 +693,37 @@ export class Assets {
             const flowState = this.getFlowState(flow);
             const flowIndex = flowState.index;
 
-            flowState.flowWidgetDataIndexes.forEach((index, path) => {
-                const [componentObjectPath, inputName] =
-                    path.split(PATH_SEPARATOR);
-
-                const component = getObjectFromStringPath(
-                    this.rootProject,
-                    componentObjectPath
-                ) as Component;
-
-                const componentIndex = this.map.flows[
-                    flowIndex
-                ].components.find(
-                    component => component.path == componentObjectPath
-                )!.componentIndex;
+            flowState.flowWidgetDataIndexes.forEach(index => {
+                const componentPropertyValue =
+                    flowState.flowWidgetDataIndexToComponentPropertyValue.get(
+                        index
+                    );
 
                 this.map.flows[flowIndex].widgetDataItems[index] = {
                     widgetDataItemIndex: index,
                     flowIndex,
-                    componentIndex,
-                    inputIndex: component.inputs.findIndex(
-                        input => input.name == inputName
-                    )
+                    componentIndex: componentPropertyValue
+                        ? componentPropertyValue.componentIndex
+                        : -1,
+                    propertyValueIndex: componentPropertyValue
+                        ? componentPropertyValue.propertyValueIndex
+                        : -1
                 };
             });
 
-            flowState.flowWidgetActionIndexes.forEach((index, path) => {
-                const [componentObjectPath, outputName] =
-                    path.split(PATH_SEPARATOR);
-
-                const component = getObjectFromStringPath(
-                    this.rootProject,
-                    componentObjectPath
-                ) as Component;
-
-                const flowIndex = this.getFlowIndex(getFlow(component));
-
-                const componentIndex = this.map.flows[
-                    flowIndex
-                ].components.find(
-                    component => component.path == componentObjectPath
-                )!.componentIndex;
+            flowState.flowWidgetActionIndexes.forEach(index => {
+                const componentOutput =
+                    flowState.flowWidgetActionIndexToComponentOutput.get(index);
 
                 this.map.flows[flowIndex].widgetActions[index] = {
                     widgetActionIndex: index,
                     flowIndex,
-                    componentIndex,
-                    outputIndex: component.buildOutputs.findIndex(
-                        output => output.name == outputName
-                    )
+                    componentIndex: componentOutput
+                        ? componentOutput.componentIndex
+                        : -1,
+                    outputIndex: componentOutput
+                        ? componentOutput.componentIndex
+                        : -1
                 };
             });
         });
@@ -1168,9 +1159,12 @@ export interface AssetsMap {
             path: string;
             pathReadable: string;
             outputs: {
-                targetComponentIndex: number;
-                targetInputIndex: number;
-            }[][];
+                outputName: string;
+                connectionLines: {
+                    targetComponentIndex: number;
+                    targetInputIndex: number;
+                }[];
+            }[];
         }[];
         componentInputs: {
             inputIndex: number;
@@ -1185,7 +1179,7 @@ export interface AssetsMap {
             widgetDataItemIndex: number;
             flowIndex: number;
             componentIndex: number;
-            inputIndex: number;
+            propertyValueIndex: number;
         }[];
         widgetActions: {
             widgetActionIndex: number;

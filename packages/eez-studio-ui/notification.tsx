@@ -36,7 +36,7 @@ export function dismiss(toastId: ToastId) {
 export const container = (
     <ToastContainer
         position={"top-right"}
-        autoClose={5000}
+        autoClose={3000}
         hideProgressBar={true}
         newestOnTop={false}
         closeOnClick

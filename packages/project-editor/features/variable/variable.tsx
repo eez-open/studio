@@ -449,6 +449,14 @@ export function getStructTypeNameFromType(type: string) {
     return result[1];
 }
 
+export function getStructureFromType(project: Project, type: string) {
+    const structTypeName = getStructTypeNameFromType(type);
+    if (!structTypeName) {
+        return undefined;
+    }
+    return project.variables.structsMap.get(structTypeName);
+}
+
 export function getEnumTypeNameFromType(type: string) {
     const result = type.match(ENUM_TYPE_REGEXP);
     if (result == null) {
@@ -956,6 +964,13 @@ export class Structure extends EezObject {
             </svg>
         )
     };
+
+    @computed({ keepAlive: true })
+    get fieldsMap() {
+        const fieldsMap = new Map<string, StructureField>();
+        this.fields.forEach(field => fieldsMap.set(field.name, field));
+        return fieldsMap;
+    }
 }
 
 registerClass(Structure);
@@ -1259,20 +1274,15 @@ function isValueTypeOf(
         }
     } else if (isStructType(type)) {
         if (typeof value == "object") {
-            const structTypeName = getStructTypeNameFromType(type);
-            if (!structTypeName) {
-                return "struct name expected";
-            }
-
-            const structure = project.variables.structsMap.get(structTypeName);
+            const structure = getStructureFromType(project, type);
             if (!structure) {
-                return `struct '${structTypeName}' not found`;
+                return `'${type}' not found`;
             }
 
             const keys = [];
 
             for (const key in value) {
-                const field = structure.fields.find(field => field.name == key);
+                const field = structure.fieldsMap.get(key);
                 if (!field) {
                     return `unknown field '${key}'`;
                 }

@@ -458,9 +458,7 @@ function findValueTypeInExpressionNode(
 
                 const fieldName = node.property.name;
 
-                const field = structure.fields.find(
-                    field => field.name == fieldName
-                );
+                const field = structure.fieldsMap.get(fieldName);
 
                 if (!field) {
                     throw `Struc field not found: '${fieldName}'`;

@@ -16,15 +16,13 @@ export interface ITreeNode<T = any> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface TreeRowProps {
+@observer
+export class TreeRow extends React.Component<{
     showOnlyChildren: boolean;
     node: ITreeNode;
     level: number;
     selectNode: (node: ITreeNode) => void;
-}
-
-@observer
-export class TreeRow extends React.Component<TreeRowProps, {}> {
+}> {
     index: number;
 
     @action
@@ -125,14 +123,15 @@ export class TreeRow extends React.Component<TreeRowProps, {}> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface TreeProps {
-    showOnlyChildren: boolean;
-    rootNode: ITreeNode;
-    selectNode: (node: ITreeNode) => void;
-}
-
 @observer
-export class Tree extends React.Component<TreeProps, {}> {
+export class Tree extends React.Component<
+    {
+        showOnlyChildren: boolean;
+        rootNode: ITreeNode;
+        selectNode: (node: ITreeNode) => void;
+    },
+    {}
+> {
     render() {
         return (
             <div className="EezStudio_SimpleTree" tabIndex={0}>

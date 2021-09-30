@@ -273,6 +273,8 @@ export interface ClassInfo {
     open?: (object: IEezObject) => void;
 
     flowComponentId?: number;
+
+    isFlowExecutableComponent?: boolean;
 }
 
 export function makeDerivedClassInfo(

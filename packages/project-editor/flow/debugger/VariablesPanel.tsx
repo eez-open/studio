@@ -3,8 +3,13 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { computed, IObservableValue } from "mobx";
-import { IColumn, Table } from "eez-studio-ui/table";
+import { IColumn, ITreeNode, TreeTable } from "eez-studio-ui/tree-table";
 import { IDataContext } from "eez-studio-types";
+import {
+    getArrayElementTypeFromType,
+    getStructureFromType,
+    Variable
+} from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,7 +18,7 @@ export function valueToString(value: any) {
         return "undefined";
     }
     try {
-        return JSON.stringify(value, undefined, 2);
+        return JSON.stringify(value);
     } catch (err) {
         try {
             return value.toString();
@@ -55,67 +60,174 @@ class VariablesTable extends React.Component {
 
         result.push({
             name: "name",
-            title: "Name",
-            sortEnabled: true
+            title: "Name"
         });
 
         result.push({
-            name: "scope",
-            title: "Scope",
-            sortEnabled: true
-        });
-        result.push({
             name: "value",
-            title: "Value",
-            sortEnabled: false
+            title: "Value"
+        });
+
+        result.push({
+            name: "type",
+            title: "Type"
         });
 
         return result;
     }
 
-    @computed
-    get rows() {
+    getValueLabel(value: any) {
+        if (value === undefined) {
+            return "undefined";
+        }
+
+        if (value == "null") {
+            return "null";
+        }
+
+        if (Array.isArray(value)) {
+            return `${value.length} element(s)`;
+        }
+
+        if (typeof value == "object") {
+            return JSON.stringify(value);
+        }
+
+        if (typeof value == "string") {
+            return `"${value}"`;
+        }
+
+        return value.toString();
+    }
+
+    getValueChildren(value: any, type: string | null): ITreeNode[] {
+        if (Array.isArray(value)) {
+            const elementType = type ? getArrayElementTypeFromType(type) : null;
+
+            return value.map((element, i) => {
+                const elementValue = value[i];
+                const name = `[${i}]`;
+                return {
+                    id: name,
+                    name,
+                    value: this.getValueLabel(elementValue),
+                    type: elementType ?? "?",
+
+                    children: this.getValueChildren(elementValue, elementType),
+                    selected: false
+                };
+            }) as ITreeNode[];
+        }
+
+        if (typeof value == "object") {
+            let structure;
+            if (type) {
+                structure = getStructureFromType(this.context.project, type);
+            }
+
+            const children: ITreeNode[] = [];
+            for (const name in value) {
+                const propertyValue = value[name];
+
+                let fieldType: string | null = null;
+                if (structure) {
+                    const field = structure.fieldsMap.get(name);
+                    if (field) {
+                        fieldType = field.type;
+                    }
+                }
+
+                children.push({
+                    id: name,
+                    name,
+                    value: this.getValueLabel(propertyValue),
+                    type: fieldType ?? "?",
+
+                    children: this.getValueChildren(propertyValue, fieldType),
+                    selected: false
+                });
+            }
+            return children;
+        }
+
+        return [];
+    }
+
+    getVariableTreeNodes(variables: Variable[], scope: "Global" | "Local") {
+        return variables.map(variable => {
+            const flowState = this.context.runtimeStore.selectedFlowState;
+
+            let dataContext: IDataContext;
+            if (flowState) {
+                dataContext = flowState.dataContext;
+            } else {
+                dataContext = this.context.dataContext;
+            }
+
+            const value = dataContext.get(variable.name);
+
+            return {
+                id: variable.name,
+
+                name: variable.name,
+                value: this.getValueLabel(value),
+                type: variable.type,
+
+                children: this.getValueChildren(value, variable.type),
+                selected: false
+            };
+        });
+    }
+
+    @computed get rootNode(): ITreeNode {
         const flowState = this.context.runtimeStore.selectedFlowState;
 
-        let dataContext: IDataContext;
-        if (flowState) {
-            dataContext = flowState.dataContext;
-        } else {
-            dataContext = this.context.dataContext;
-        }
-
-        const globalVariables =
-            this.context.project.variables.globalVariables.map(variable => ({
-                id: `global/${variable.name}`,
-                selected: false,
-                name: variable.name,
-                scope: "Global",
-                value: valueToString(dataContext.get(variable.name))
-            }));
-
-        if (!flowState) {
-            return globalVariables;
-        }
-
-        const localVariables = flowState.flow.localVariables.map(variable => ({
-            id: `local/${variable.name}`,
+        const globalVariables = {
+            id: "global-variables",
+            name: "Global",
+            value: undefined,
+            type: "",
+            children: this.getVariableTreeNodes(
+                this.context.project.variables.globalVariables,
+                "Global"
+            ),
             selected: false,
-            name: variable.name,
-            scope: "Local",
-            value: valueToString(dataContext.get(variable.name))
-        }));
+            expanded: true
+        };
 
-        return [...globalVariables, ...localVariables];
+        const localVariables = {
+            id: "local-variables",
+            name: "Local",
+            value: undefined,
+            type: "",
+            children: flowState
+                ? this.getVariableTreeNodes(
+                      flowState.flow.localVariables,
+                      "Local"
+                  )
+                : [],
+            selected: false,
+            expanded: true
+        };
+
+        return {
+            id: "root",
+            label: "",
+            children: [globalVariables, localVariables],
+            selected: false
+        };
     }
+
+    selectNode = (node?: ITreeNode) => {};
 
     render() {
         return (
             <div className="EezStudio_DebuggerVariablesTable">
-                <Table
-                    persistId="project-editor/debugger/variables/table"
+                <TreeTable
                     columns={this.columns}
-                    rows={this.rows}
-                    defaultSortColumn="name"
+                    showOnlyChildren={true}
+                    rootNode={this.rootNode}
+                    selectNode={this.selectNode}
                 />
             </div>
         );

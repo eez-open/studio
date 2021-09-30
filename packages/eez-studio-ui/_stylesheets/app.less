@@ -3295,6 +3295,10 @@ button.EezStudio_Action {
     .EezStudio_DebuggerVariablesTable {
         height: 100%;
         overflow: auto;
+        table {
+            table-layout: fixed;
+            border-collapse: separate !important;
+        }
     }
 }
 
@@ -3770,6 +3774,11 @@ button.EezStudio_Action {
         border-radius: 6px;
     }
 
+    .EezStudio_FlowRuntimeSelection_SelectedObject.source {
+        border: 1px dashed @selectionBackgroundColor;
+        border-radius: 6px;
+    }
+
     .connection-line-path {
         stroke: @connectionLineColor;
         marker-start: url(#lineStart);
@@ -3785,7 +3794,7 @@ button.EezStudio_Action {
             stroke: @selectionBackgroundColor;
             marker-start: url(#selectedLineStartInViewer);
             marker-end: url(#selectedLineEndInViewer);
-            stroke-width: 3px !important;
+            stroke-width: 1px !important;
             stroke-dasharray: 4px 6px;
             stroke-linecap: square !important;
         }
@@ -4229,8 +4238,143 @@ button.EezStudio_Action {
     border: 1px dotted @borderColor;
 }
 
-.EezStudio_DebuggerVariablesTable td.colValue {
-    font-family: monospace;
-    white-space: pre;
-    font-size: 80%;
+.EezStudio_TreeTable {
+    cursor: default;
+
+    background-color: @backgroundColor;
+
+    tbody > tr.selected {
+        background-color: @nonFocusedSelectionBackgroundColor;
+        color: @nonFocusedSelectionColor;
+    }
+
+    > tbody > tr:hover {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+    }
+
+    > tbody > tr.selected {
+        .EezStudio_Toolbar {
+            visibility: visible;
+        }
+
+        .EezStudio_Action {
+            color: white;
+        }
+
+        .EezStudio_Action:hover {
+            color: #aaa;
+        }
+    }
+
+    &:focus {
+        > tbody > tr:hover {
+            background-color: @hoverBackgroundColor;
+            color: @hoverColor;
+        }
+
+        > tbody > tr.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor;
+        }
+    }
+
+    th,
+    td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    thead,
+    th {
+        border-color: @tableBorderColor!important;
+    }
+
+    th {
+        position: sticky;
+        top: 0; /* Don't forget this, required for the stickiness */
+        background-color: @backgroundColor;
+        border-bottom: 1px solid @borderColor;
+        z-index: 1;
+    }
+
+    td {
+        padding: 1px 2px;
+        box-shadow: none;
+    }
+
+    th.sort-enabled {
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-image: url("../_images/col_sort_enabled.png");
+        padding-left: 20px;
+        cursor: pointer;
+    }
+
+    th.sort-asc {
+        background-image: url("../_images/col_sort_asc.png");
+    }
+
+    th.sort-desc {
+        background-image: url("../_images/col_sort_desc.png");
+    }
+
+    .EezStudio_TreeRow {
+        &.EezStudio_Selected {
+            background-color: @nonFocusedSelectionBackgroundColor;
+            color: @nonFocusedSelectionColor;
+        }
+    }
+
+    &:focus {
+        .EezStudio_TreeRowEnclosure {
+            .EezStudio_TreeRow {
+                &:hover {
+                    background-color: @hoverBackgroundColor;
+                    color: @hoverColor;
+                }
+
+                &.EezStudio_Focused {
+                    background-color: @focusBackgroundColor;
+                    color: @focusColor;
+                }
+
+                &.EezStudio_Selected {
+                    background-color: @selectionBackgroundColor;
+                    color: @selectionColor;
+                }
+            }
+        }
+    }
+
+    .EezStudio_TreeRow {
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .EezStudio_TreeRowLabel {
+        display: inline-block;
+        margin-left: 18px;
+    }
+
+    .EezStudio_TreeRowTriangle {
+        display: inline-block;
+        height: 18px;
+        color: #333;
+
+        transition: transform 0.2s;
+        transform-origin: 50% 50%;
+
+        &.EezStudio_Expanded {
+            transform: translate(5px, 3px) rotate(90deg);
+        }
+    }
+
+    .EezStudio_TreeRowTriangle:hover {
+        color: #666;
+    }
 }

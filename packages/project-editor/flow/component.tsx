@@ -599,6 +599,10 @@ function addBreakpointMenuItems(
     component: Component,
     menuItems: Electron.MenuItem[]
 ) {
+    if (getClassInfo(component).isFlowExecutableComponent === false) {
+        return;
+    }
+
     var additionalMenuItems: Electron.MenuItem[] = [];
 
     const DocumentStore = getDocumentStore(component);
@@ -971,7 +975,9 @@ export class Component extends EezObject {
                     flow.deleteConnectionLinesFromOutput(object, "@error");
                 }
             }
-        }
+        },
+
+        isFlowExecutableComponent: true
     };
 
     set geometry(value: ComponentGeometry) {

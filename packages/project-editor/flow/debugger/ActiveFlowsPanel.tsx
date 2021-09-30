@@ -61,7 +61,7 @@ class FlowsTree extends React.Component {
             id: "all",
             label: "All",
             children: getChildren(this.context.runtimeStore.flowStates),
-            selected: !selectedFlowState,
+            selected: false,
             expanded: true
         };
     }
@@ -89,7 +89,7 @@ class FlowsTree extends React.Component {
     render() {
         return (
             <Tree
-                showOnlyChildren={false}
+                showOnlyChildren={true}
                 rootNode={this.rootNode}
                 selectNode={this.selectNode}
             />

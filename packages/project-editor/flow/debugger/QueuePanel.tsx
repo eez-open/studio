@@ -95,9 +95,7 @@ export class QueuePanel extends React.Component<{
                         enabled={this.context.runtimeStore.isPaused}
                     />
                 ]}
-                body={
-                    this.context.runtimeStore.isPaused ? <QueueList /> : <div />
-                }
+                body={<QueueList />}
             />
         );
     }

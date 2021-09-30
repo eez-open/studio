@@ -13,12 +13,12 @@ import { ConnectionParameters } from "instrument/connection/interface";
 import { AssetsMap } from "project-editor/features/page/build/assets";
 import { getObjectFromStringPath } from "project-editor/core/object";
 import { action, observable, runInAction } from "mobx";
-import { Flow } from "project-editor/flow/flow";
+import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 import { LogItemType } from "./debugger/logs";
 import {
     getArrayElementTypeFromType,
-    getStructTypeNameFromType,
+    getStructureFromType,
     isArrayType,
     isStructType
 } from "project-editor/features/variable/variable";
@@ -29,7 +29,7 @@ const DEBUGGER_TCP_PORT = 3333;
 enum MessagesToDebugger {
     MESSAGE_TO_DEBUGGER_STATE_CHANGED, // STATE
 
-    MESSAGE_TO_DEBUGGER_ADD_TO_QUEUE, // FLOW_STATE_INDEX, COMPONENT_INDEX
+    MESSAGE_TO_DEBUGGER_ADD_TO_QUEUE, // FLOW_STATE_INDEX, SOURCE_COMPONENT_INDEX, SOURCE_OUTPUT_INDEX, TARGET_COMPONENT_INDEX, TARGET_INPUT_INDEX
     MESSAGE_TO_DEBUGGER_REMOVE_FROM_QUEUE, // no params
 
     MESSAGE_TO_DEBUGGER_GLOBAL_VARIABLE_INIT, // GLOBAL_VARIABLE_INDEX, VALUE_ADDR, VALUE
@@ -73,11 +73,16 @@ export class RemoteRuntime {
     instrument: InstrumentObject | undefined;
     assetsMap: AssetsMap;
     debuggerValues = new Map<number, DebuggerValue>();
+    flowStateMap = new Map<
+        number,
+        { flowIndex: number; flowState: FlowState }
+    >();
 
     constructor(public runtimeStore: RuntimeStoreClass) {}
 
     async startApplet(isDebuggerActive: boolean) {
         this.debuggerValues.clear();
+        this.flowStateMap.clear();
 
         const partsPromise = this.runtimeStore.DocumentStore.build();
 
@@ -105,7 +110,7 @@ export class RemoteRuntime {
         const editor = instrument.getEditor();
         editor.onCreate();
 
-        await new Promise<void>(resolve => setTimeout(resolve, 1000));
+        //await new Promise<void>(resolve => setTimeout(resolve, 1000));
 
         const connection = getConnection(editor);
         if (!connection || !instrument.isConnected) {
@@ -119,12 +124,23 @@ export class RemoteRuntime {
 
         this.connection = connection;
 
-        try {
-            await connection.acquire(false);
-        } catch (err) {
+        let acquired = false;
+        let acquireError;
+        for (let i = 0; i < 10; i++) {
+            try {
+                await connection.acquire(false);
+                acquired = true;
+                break;
+            } catch (err) {
+                acquireError = err;
+                await new Promise<void>(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+        if (!acquired) {
             notification.update(toastId, {
                 type: notification.ERROR,
-                render: `Error: ${err.toString()}`,
+                render: `Error: ${acquireError.toString()}`,
                 autoClose: 1000
             });
             return false;
@@ -220,7 +236,9 @@ export class RemoteRuntime {
             const runningScript = await connection.query(`SCR:RUN?`);
             if (runningScript != "" && runningScript != `""`) {
                 connection.command(`SCR:STOP`);
-                notification.success("App stopped");
+                notification.success("App stopped", {
+                    autoClose: 1000
+                });
             }
         } catch (err) {
             notification.error(`Error: ${err.toString()}`);
@@ -489,16 +507,10 @@ class DebuggerConnection {
         let arrayElementType: string | null = null;
 
         if (isStructType(type)) {
-            const structName = getStructTypeNameFromType(type);
-            if (!structName) {
-                console.error("UNEXPECTED!");
-                return undefined;
-            }
-
-            const structure =
-                this.remoteRuntime.runtimeStore.DocumentStore.project.variables.structsMap.get(
-                    structName
-                );
+            const structure = getStructureFromType(
+                this.remoteRuntime.runtimeStore.DocumentStore.project,
+                type
+            );
             if (!structure) {
                 console.error("UNEXPECTED!");
                 return undefined;
@@ -589,6 +601,15 @@ class DebuggerConnection {
         return Number.parseFloat(str);
     }
 
+    getFlowState(flowStateIndex: number) {
+        return (
+            this.remoteRuntime.flowStateMap.get(flowStateIndex) ?? {
+                flowIndex: -1,
+                flowState: undefined
+            }
+        );
+    }
+
     onMessageToDebugger(data: string) {
         this.dataAccumulated += data;
 
@@ -647,46 +668,114 @@ class DebuggerConnection {
                 case MessagesToDebugger.MESSAGE_TO_DEBUGGER_ADD_TO_QUEUE:
                     {
                         const flowStateIndex = parseInt(messageParameters[1]);
-                        const componentIndex = parseInt(messageParameters[2]);
-
-                        const flowState = runtimeStore.flowStates.find(
-                            flowState =>
-                                flowState.flowStateIndex == flowStateIndex
+                        const sourceComponentIndex = parseInt(
+                            messageParameters[2]
                         );
+                        const sourceOutputIndex = parseInt(
+                            messageParameters[3]
+                        );
+                        const targetComponentIndex = parseInt(
+                            messageParameters[4]
+                        );
+                        const targetInputIndex = parseInt(messageParameters[5]);
 
+                        const { flowIndex, flowState } =
+                            this.getFlowState(flowStateIndex);
                         if (!flowState) {
                             console.error("UNEXPECTED!");
                             return;
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[
-                                flowState.flowIndex
-                            ];
+                            this.remoteRuntime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
                         }
 
-                        const componentInAssetsMap =
-                            flowInAssetsMap.components[componentIndex];
-                        if (!componentInAssetsMap) {
+                        const targetComponentInAssetsMap =
+                            flowInAssetsMap.components[targetComponentIndex];
+                        if (!targetComponentInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
                         }
-                        const component = getObjectFromStringPath(
+
+                        const targetComponent = getObjectFromStringPath(
                             runtimeStore.DocumentStore.project,
-                            componentInAssetsMap.path
+                            targetComponentInAssetsMap.path
                         ) as Component;
-                        if (!component) {
+                        if (!targetComponent) {
                             console.error("UNEXPECTED!");
                             return;
+                        }
+
+                        let connectionLine: ConnectionLine | undefined;
+
+                        if (sourceComponentIndex != -1) {
+                            const sourceComponentInAssetsMap =
+                                flowInAssetsMap.components[
+                                    sourceComponentIndex
+                                ];
+                            if (!sourceComponentInAssetsMap) {
+                                console.error("UNEXPECTED!");
+                                return;
+                            }
+
+                            const sourceComponent = getObjectFromStringPath(
+                                runtimeStore.DocumentStore.project,
+                                sourceComponentInAssetsMap.path
+                            ) as Component;
+                            if (!sourceComponent) {
+                                console.error("UNEXPECTED!");
+                                return;
+                            }
+
+                            const sourceOutputInAssetsMap =
+                                sourceComponentInAssetsMap.outputs[
+                                    sourceOutputIndex
+                                ];
+                            if (!sourceOutputInAssetsMap) {
+                                console.error("UNEXPECTED!");
+                                return;
+                            }
+
+                            const targetInputInAssetsMap =
+                                flowInAssetsMap.componentInputs.find(
+                                    componentInput =>
+                                        componentInput.inputIndex ==
+                                        targetInputIndex
+                                );
+                            if (!targetInputInAssetsMap) {
+                                console.error("UNEXPECTED!");
+                                return;
+                            }
+
+                            connectionLine =
+                                flowState.flow.connectionLines.find(
+                                    connectionLine =>
+                                        connectionLine.sourceComponent ==
+                                            sourceComponent &&
+                                        connectionLine.output ==
+                                            sourceOutputInAssetsMap.outputName &&
+                                        connectionLine.targetComponent ==
+                                            targetComponent &&
+                                        connectionLine.input ==
+                                            targetInputInAssetsMap.inputName
+                                );
+
+                            if (!connectionLine) {
+                                console.error("UNEXPECTED!");
+                                return;
+                            }
+
+                            connectionLine.setActive();
                         }
 
                         runInAction(() =>
                             this.remoteRuntime.runtimeStore.pushTask({
                                 flowState,
-                                component
+                                component: targetComponent,
+                                connectionLine
                             })
                         );
 
@@ -769,19 +858,15 @@ class DebuggerConnection {
                         const valueAddress = parseInt(messageParameters[3]);
                         const value = messageParameters[4];
 
-                        const flowState = runtimeStore.flowStates.find(
-                            flowState =>
-                                flowState.flowStateIndex == flowStateIndex
-                        );
+                        const { flowIndex, flowState } =
+                            this.getFlowState(flowStateIndex);
                         if (!flowState) {
                             console.error("UNEXPECTED!");
                             return;
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[
-                                flowState.flowIndex
-                            ];
+                            this.remoteRuntime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
@@ -839,10 +924,8 @@ class DebuggerConnection {
                         const valueAddress = parseInt(messageParameters[3]);
                         const value = messageParameters[4];
 
-                        const flowState = runtimeStore.flowStates.find(
-                            flowState =>
-                                flowState.flowStateIndex == flowStateIndex
-                        );
+                        const { flowIndex, flowState } =
+                            this.getFlowState(flowStateIndex);
 
                         if (!flowState) {
                             console.error("UNEXPECTED!");
@@ -850,9 +933,7 @@ class DebuggerConnection {
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[
-                                flowState.flowIndex
-                            ];
+                            this.remoteRuntime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
@@ -964,28 +1045,22 @@ class DebuggerConnection {
                             return;
                         }
 
-                        if (
-                            runtimeStore.flowStates.find(
-                                flowState =>
-                                    flowState.flowStateIndex == flowStateIndex
-                            )
-                        ) {
+                        if (this.getFlowState(flowStateIndex).flowState) {
                             console.error("UNEXPECTED!");
                             return;
                         }
 
-                        let parentFlowState;
+                        let parentFlowState: FlowState | undefined;
                         if (parentFlowStateIndex) {
-                            parentFlowState = runtimeStore.flowStates.find(
-                                flowState =>
-                                    flowState.flowStateIndex ==
-                                    parentFlowStateIndex
-                            );
+                            const { flowState } =
+                                this.getFlowState(parentFlowStateIndex);
 
-                            if (!parentFlowState) {
+                            if (!flowState) {
                                 console.error("UNEXPECTED!");
                                 return;
                             }
+
+                            parentFlowState = flowState;
                         }
 
                         let flowState = new FlowState(
@@ -994,13 +1069,16 @@ class DebuggerConnection {
                             parentFlowState
                         );
 
-                        flowState.flowStateIndex = flowStateIndex;
-                        flowState.flowIndex = flowIndex;
+                        this.remoteRuntime.flowStateMap.set(flowStateIndex, {
+                            flowIndex,
+                            flowState
+                        });
 
                         runInAction(() =>
-                            this.remoteRuntime.runtimeStore.flowStates.push(
-                                flowState
-                            )
+                            (
+                                parentFlowState ||
+                                this.remoteRuntime.runtimeStore
+                            ).flowStates.push(flowState)
                         );
                     }
                     break;
@@ -1015,11 +1093,7 @@ class DebuggerConnection {
                         //     flowStateIndex
                         // );
 
-                        const flowState = runtimeStore.flowStates.find(
-                            flowState =>
-                                flowState.flowStateIndex == flowStateIndex
-                        );
-
+                        const { flowState } = this.getFlowState(flowStateIndex);
                         if (!flowState) {
                             console.error("UNEXPECTED!");
                             return;
@@ -1036,20 +1110,15 @@ class DebuggerConnection {
                         const componentIndex = parseInt(messageParameters[3]);
                         const message = messageParameters[4];
 
-                        const flowState = runtimeStore.flowStates.find(
-                            flowState =>
-                                flowState.flowStateIndex == flowStateIndex
-                        );
-
+                        const { flowIndex, flowState } =
+                            this.getFlowState(flowStateIndex);
                         if (!flowState) {
                             console.error("UNEXPECTED!");
                             return;
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[
-                                flowState.flowIndex
-                            ];
+                            this.remoteRuntime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;

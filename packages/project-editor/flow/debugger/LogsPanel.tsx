@@ -28,23 +28,15 @@ export class LogsPanel extends React.Component<{
                 id="project-editor/runtime-info/logs"
                 title="Logs"
                 collapsed={this.props.collapsed}
-                buttons={
-                    this.context.runtimeStore.isPaused
-                        ? [
-                              <IconAction
-                                  key="clear"
-                                  icon="material:delete"
-                                  title="Clear logs"
-                                  onClick={
-                                      this.context.runtimeStore.logsState.clear
-                                  }
-                              ></IconAction>
-                          ]
-                        : []
-                }
-                body={
-                    this.context.runtimeStore.isPaused ? <LogList /> : <div />
-                }
+                buttons={[
+                    <IconAction
+                        key="clear"
+                        icon="material:delete"
+                        title="Clear logs"
+                        onClick={this.context.runtimeStore.logsState.clear}
+                    ></IconAction>
+                ]}
+                body={<LogList />}
             />
         );
     }
