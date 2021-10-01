@@ -139,6 +139,9 @@ export class RuntimeFlowContext implements IFlowContext {
     }
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext {
+        if (!dataContextOverridesObject) {
+            return this;
+        }
         return Object.assign(new RuntimeFlowContext(), this, {
             _dataContext: this.dataContext.createWithDefaultValueOverrides(
                 dataContextOverridesObject

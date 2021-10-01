@@ -273,6 +273,9 @@ export class EditorFlowContext implements IFlowContext {
     }
 
     overrideDataContext(dataContextOverridesObject: any): IFlowContext {
+        if (!dataContextOverridesObject) {
+            return this;
+        }
         return Object.assign(new EditorFlowContext(), this, {
             dataContext: this.dataContext.createWithDefaultValueOverrides(
                 dataContextOverridesObject

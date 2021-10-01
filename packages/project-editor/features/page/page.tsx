@@ -407,9 +407,13 @@ export class Page extends Flow {
                         components={this.components.filter(
                             component => !(component instanceof Widget)
                         )}
-                        flowContext={flowContext.overrideDataContext(
-                            this.dataContextOverridesObject
-                        )}
+                        flowContext={
+                            flowContext.flowState
+                                ? flowContext
+                                : flowContext.overrideDataContext(
+                                      this.dataContextOverridesObject
+                                  )
+                        }
                     />
                 )}
             </>
@@ -422,9 +426,13 @@ export class Page extends Flow {
                 components={this.components.filter(
                     component => component instanceof Widget
                 )}
-                flowContext={flowContext.overrideDataContext(
-                    this.dataContextOverridesObject
-                )}
+                flowContext={
+                    flowContext.flowState
+                        ? flowContext
+                        : flowContext.overrideDataContext(
+                              this.dataContextOverridesObject
+                          )
+                }
             />
         );
     }

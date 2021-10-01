@@ -38,7 +38,7 @@ enum MessagesToDebugger {
 
     MESSAGE_TO_DEBUGGER_VALUE_CHANGED, // VALUE_ADDR, VALUE
 
-    MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED, // FLOW_STATE_INDEX, FLOW_INDEX, PARENT_FLOW_STATE_INDEX (0 - NO PARENT)
+    MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED, // FLOW_STATE_INDEX, FLOW_INDEX, PARENT_FLOW_STATE_INDEX (-1 - NO PARENT), PARENT_COMPONENT_INDEX (-1 - NO PARENT COMPONENT)
     MESSAGE_TO_DEBUGGER_FLOW_STATE_DESTROYED, // FLOW_STATE_INDEX
 
     MESSAGE_TO_DEBUGGER_LOG // LOG_ITEM_TYPE, FLOW_STATE_INDEX, COMPONENT_INDEX, MESSAGE
@@ -1018,6 +1018,9 @@ class DebuggerConnection {
                         const parentFlowStateIndex = parseInt(
                             messageParameters[3]
                         );
+                        const parentComponentIndex = parseInt(
+                            messageParameters[4]
+                        );
 
                         // console.log(
                         //     MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED,
@@ -1051,8 +1054,9 @@ class DebuggerConnection {
                         }
 
                         let parentFlowState: FlowState | undefined;
-                        if (parentFlowStateIndex) {
-                            const { flowState } =
+                        let parentComponent: Component | undefined;
+                        if (parentFlowStateIndex != -1) {
+                            const { flowIndex, flowState } =
                                 this.getFlowState(parentFlowStateIndex);
 
                             if (!flowState) {
@@ -1061,12 +1065,42 @@ class DebuggerConnection {
                             }
 
                             parentFlowState = flowState;
+
+                            if (parentComponentIndex != -1) {
+                                const parentFlowInAssetsMap =
+                                    this.remoteRuntime.assetsMap.flows[
+                                        flowIndex
+                                    ];
+                                if (!parentFlowInAssetsMap) {
+                                    console.error("UNEXPECTED!");
+                                    return;
+                                }
+
+                                const componentInAssetsMap =
+                                    parentFlowInAssetsMap.components[
+                                        parentComponentIndex
+                                    ];
+                                if (!componentInAssetsMap) {
+                                    console.error("UNEXPECTED!");
+                                    return;
+                                }
+
+                                parentComponent = getObjectFromStringPath(
+                                    runtimeStore.DocumentStore.project,
+                                    componentInAssetsMap.path
+                                ) as Component;
+                                if (!parentComponent) {
+                                    console.error("UNEXPECTED!");
+                                    return;
+                                }
+                            }
                         }
 
                         let flowState = new FlowState(
                             runtimeStore,
                             flow,
-                            parentFlowState
+                            parentFlowState,
+                            parentComponent
                         );
 
                         this.remoteRuntime.flowStateMap.set(flowStateIndex, {
