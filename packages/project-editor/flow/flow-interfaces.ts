@@ -22,11 +22,13 @@ export interface IFlowContext {
 
 export interface IVariable {
     name: string;
+    description?: string;
     type: string;
     defaultValue: any;
     defaultMinValue: any;
     defaultMaxValue: any;
     defaultValueList: any;
+    persistent: boolean;
 }
 
 export interface IDataContext {

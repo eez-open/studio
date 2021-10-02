@@ -51,6 +51,17 @@ interface ClassInfo {
     componentHeaderColor?: string;
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
     enabledInComponentPalette?: (projectType: ProjectType) => boolean;
+
+    onVariableConstructor?: (
+        dataContext: IDataContext,
+        variable: IVariable
+    ) => Promise<void>;
+    onVariableLoad?: (value: any) => Promise<any>;
+    onVariableSave?: (value: any) => Promise<any>;
+    renderVariableStatus?: (
+        variable: IVariable,
+        dataContext: IDataContext
+    ) => React.ReactNode;
 }
 
 declare class Component {
@@ -67,6 +78,10 @@ declare class Component {
 
 declare class ActionComponent extends Component {
     getBody(flowContext: IFlowContext): React.ReactNode;
+}
+
+declare class VariableType {
+    static classInfo: ClassInfo;
 }
 
 interface IFlowContext {
@@ -117,11 +132,13 @@ interface IFlowState {
 
 interface IVariable {
     name: string;
+    description?: string;
     type: string;
     defaultValue: any;
     defaultMinValue: any;
     defaultMaxValue: any;
     defaultValueList: any;
+    persistent: boolean;
 }
 
 interface IDataContext {

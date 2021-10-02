@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -34,6 +34,12 @@ import {
     buildAssignableExpression,
     evalExpression
 } from "project-editor/flow/expression/expression";
+import { VariableType } from "project-editor/features/variable/variable";
+import type { IDataContext, IVariable } from "eez-studio-types";
+
+import * as notification from "eez-studio-ui/notification";
+import { Icon } from "eez-studio-ui/icon";
+import { humanize } from "eez-studio-shared/string";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
 // Returns undefined if passed value is not a valid string.
@@ -1134,11 +1140,21 @@ registerClass(ScpiActionComponent);
 @observer
 export class SelectInstrumentDialog extends React.Component<
     {
+        name?: string;
+        instrument?: InstrumentObject;
         callback: (instrument: InstrumentObject | undefined) => void;
     },
     {}
 > {
-    @observable selectedInstrument: any;
+    @observable _selectedInstrument: InstrumentObject | undefined;
+
+    get selectedInstrument() {
+        return this._selectedInstrument || this.props.instrument;
+    }
+
+    set selectedInstrument(value: InstrumentObject | undefined) {
+        runInAction(() => (this._selectedInstrument = value));
+    }
 
     renderNode(node: IListNode<InstrumentObject>) {
         let instrument = node.data;
@@ -1166,9 +1182,9 @@ export class SelectInstrumentDialog extends React.Component<
         return instrumentObjects.map(instrument => ({
             id: instrument.id,
             data: instrument,
-            selected:
-                this.selectedInstrument &&
-                instrument.id === this.selectedInstrument.id
+            selected: this.selectedInstrument
+                ? instrument.id === this.selectedInstrument.id
+                : false
         }));
     }
 
@@ -1202,7 +1218,7 @@ export class SelectInstrumentDialog extends React.Component<
             >
                 <PropertyList>
                     <SelectFromListProperty
-                        name="Select instrument:"
+                        name={this.props.name || "Select instrument:"}
                         nodes={this.instrumentNodes}
                         renderNode={this.renderNode}
                         onChange={this.selectInstrumentExtension}
@@ -1213,10 +1229,15 @@ export class SelectInstrumentDialog extends React.Component<
     }
 }
 
-export function showSelectInstrumentDialog() {
+export function showSelectInstrumentDialog(
+    name?: string,
+    instrument?: InstrumentObject
+) {
     return new Promise<InstrumentObject | undefined>(resolve =>
         showDialog(
             <SelectInstrumentDialog
+                name={name}
+                instrument={instrument}
                 callback={instrument => {
                     resolve(instrument);
                 }}
@@ -1399,3 +1420,99 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
 }
 
 registerClass(ConnectInstrumentActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+async function connectToInstrument(instrument: InstrumentObject) {
+    instrument.connection.connect();
+    const editor = instrument.getEditor();
+    editor.onCreate();
+    const connection = getConnection(editor);
+    if (connection) {
+        for (let i = 0; i < 10; i++) {
+            try {
+                await connection.acquire(false);
+                connection.release();
+                return;
+            } catch (err) {
+                await new Promise<void>(resolve => setTimeout(resolve, 100));
+            }
+        }
+    }
+    notification.error("Failed to connect to the instrument!");
+}
+
+export class InstrumentVariableType extends VariableType {
+    static classInfo = makeDerivedClassInfo(VariableType.classInfo, {
+        properties: [],
+        onVariableConstructor: async (
+            dataContext: IDataContext,
+            variable: IVariable
+        ) => {
+            if (!dataContext.get(variable.name)) {
+                const instrument = await showSelectInstrumentDialog(
+                    variable.description || humanize(variable.name)
+                );
+                if (instrument) {
+                    await connectToInstrument(instrument);
+                }
+                dataContext.set(variable.name, instrument);
+            }
+        },
+        onVariableLoad: async (value: any) => {
+            if (typeof value == "string") {
+                const instrument = instruments.get(value);
+                if (instrument) {
+                    await connectToInstrument(instrument);
+                }
+                return instrument;
+            }
+            return null;
+        },
+        onVariableSave: async (value: InstrumentObject | null) => {
+            return value != null ? value.id : null;
+        },
+        renderVariableStatus: (
+            variable: IVariable,
+            dataContext: IDataContext
+        ) => {
+            const instrumentObject = dataContext.get(variable.name);
+            return (
+                <div
+                    key={variable.name}
+                    className="EezStudio_InstrumentVariableTypeConnectionState"
+                    onClick={async () => {
+                        const instrument = await showSelectInstrumentDialog(
+                            variable.description || humanize(variable.name),
+                            instrumentObject
+                        );
+                        if (instrument) {
+                            dataContext.set(variable.name, instrument);
+                            await connectToInstrument(instrument);
+                        }
+                    }}
+                >
+                    <span>
+                        {variable.description || humanize(variable.name)}
+                    </span>
+                    <span
+                        style={{
+                            backgroundColor: instrumentObject
+                                ? instrumentObject.connectionState.color
+                                : "red"
+                        }}
+                    />
+                    {instrumentObject &&
+                        instrumentObject.connectionState.error && (
+                            <Icon
+                                className="text-danger"
+                                icon="material:error"
+                            />
+                        )}
+                </div>
+            );
+        }
+    });
+}
+
+registerClass(InstrumentVariableType);

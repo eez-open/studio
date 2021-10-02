@@ -1,5 +1,5 @@
 import React from "react";
-import { action, observable } from "mobx";
+import { action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -28,9 +28,9 @@ export interface ITreeNode<T = any> {
     // labels
     [column: string]: any;
 
-    children: ITreeNode[];
+    children: (() => ITreeNode[]) | undefined;
     selected: boolean;
-    expanded?: boolean;
+    expanded: boolean;
     data?: T;
 
     className?: string;
@@ -38,31 +38,22 @@ export interface ITreeNode<T = any> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ITreeTableRowProps {
+@observer
+class TreeTableRow extends React.Component<{
     columns: IColumn[];
     showOnlyChildren: boolean;
     node: ITreeNode;
     level: number;
     selectNode: (node: ITreeNode) => void;
-}
-
-@observer
-class TreeTableRow extends React.Component<ITreeTableRowProps> {
+}> {
     index: number;
-
-    @observable expanded = false;
-
-    constructor(props: ITreeTableRowProps) {
-        super(props);
-        this.expanded = this.props.node.expanded ?? false;
-    }
 
     onTriangleClick = action((event: any) => {
         event.preventDefault();
         event.stopPropagation();
 
         this.props.selectNode(this.props.node);
-        this.expanded = !this.expanded;
+        this.props.node.expanded = !this.props.node.expanded;
     });
 
     onClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -75,23 +66,25 @@ class TreeTableRow extends React.Component<ITreeTableRowProps> {
     render() {
         let childrenRows: JSX.Element[] = [];
 
-        if (this.props.showOnlyChildren || this.expanded) {
+        if (this.props.showOnlyChildren || this.props.node.expanded) {
             let childrenLevel = this.props.showOnlyChildren
                 ? this.props.level
                 : this.props.level + 1;
 
-            this.props.node.children.forEach(child => {
-                childrenRows.push(
-                    <TreeTableRow
-                        key={child.id}
-                        columns={this.props.columns}
-                        showOnlyChildren={false}
-                        node={child}
-                        level={childrenLevel}
-                        selectNode={this.props.selectNode}
-                    />
-                );
-            });
+            if (this.props.node.children) {
+                this.props.node.children().forEach(child => {
+                    childrenRows.push(
+                        <TreeTableRow
+                            key={child.id}
+                            columns={this.props.columns}
+                            showOnlyChildren={false}
+                            node={child}
+                            level={childrenLevel}
+                            selectNode={this.props.selectNode}
+                        />
+                    );
+                });
+            }
         }
 
         let row: JSX.Element | undefined;
@@ -108,11 +101,11 @@ class TreeTableRow extends React.Component<ITreeTableRowProps> {
             let label: JSX.Element | undefined;
             let triangle: JSX.Element | undefined;
 
-            if (this.props.node.children.length > 0) {
+            if (this.props.node.children) {
                 let triangleClassName = classNames(
                     "EezStudio_TreeRowTriangle",
                     {
-                        EezStudio_Expanded: this.expanded
+                        EezStudio_Expanded: this.props.node.expanded
                     }
                 );
 

@@ -15,7 +15,12 @@ import { Rect } from "eez-studio-shared/geometry";
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import { observable } from "mobx";
 
-import { ProjectType, PropertyType } from "eez-studio-types";
+import {
+    IDataContext,
+    IVariable,
+    ProjectType,
+    PropertyType
+} from "eez-studio-types";
 export { ProjectType, PropertyType } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,6 +280,17 @@ export interface ClassInfo {
     flowComponentId?: number;
 
     isFlowExecutableComponent?: boolean;
+
+    onVariableConstructor?: (
+        dataContext: IDataContext,
+        variable: IVariable
+    ) => Promise<void>;
+    onVariableLoad?: (value: any) => Promise<any>;
+    onVariableSave?: (value: any) => Promise<any>;
+    renderVariableStatus?: (
+        variable: IVariable,
+        dataContext: IDataContext
+    ) => React.ReactNode;
 }
 
 export function makeDerivedClassInfo(

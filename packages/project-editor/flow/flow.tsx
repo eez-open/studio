@@ -25,7 +25,7 @@ import { deleteObject, updateObject } from "project-editor/core/commands";
 import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
 import {
     Variable,
-    VariableType
+    VariableTypePrefix
 } from "project-editor/features/variable/variable";
 import {
     InputActionComponent,
@@ -242,7 +242,7 @@ export abstract class Flow extends EezObject {
                                 value = JSON.parse(component.value);
                             } catch (err) {}
 
-                            let type: VariableType | undefined;
+                            let type: VariableTypePrefix | undefined;
 
                             if (typeof value === "number") {
                                 type = "float";

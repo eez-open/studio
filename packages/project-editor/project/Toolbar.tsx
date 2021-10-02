@@ -7,6 +7,7 @@ import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
+import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
 
 @observer
 export class Toolbar extends React.Component {
@@ -16,7 +17,11 @@ export class Toolbar extends React.Component {
     render() {
         return (
             <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                <EditControls />
+                {this.context.runtimeStore.isRuntimeMode ? (
+                    <RuntimeControls />
+                ) : (
+                    <EditControls />
+                )}
 
                 {this.context.isDashboardProject ||
                 this.context.isAppletProject ? (
@@ -27,6 +32,34 @@ export class Toolbar extends React.Component {
 
                 <SearchControls />
             </nav>
+        );
+    }
+}
+
+@observer
+class RuntimeControls extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    render() {
+        let globalVariablesStatus: React.ReactNode[] = [];
+
+        for (const variable of this.context.project.variables.globalVariables) {
+            const aClass = getCustomTypeClassFromType(variable.type);
+            if (aClass && aClass.classInfo.renderVariableStatus) {
+                globalVariablesStatus.push(
+                    aClass.classInfo.renderVariableStatus(
+                        variable,
+                        this.context.dataContext
+                    )
+                );
+            }
+        }
+
+        return (
+            <div className="EezStudio_FlowRuntimeControls">
+                {globalVariablesStatus}
+            </div>
         );
     }
 }

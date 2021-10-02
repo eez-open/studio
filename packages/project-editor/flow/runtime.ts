@@ -41,6 +41,7 @@ import {
 } from "project-editor/flow/debugger/logs";
 import { valueToString } from "project-editor/flow//debugger/VariablesPanel";
 import { RemoteRuntime } from "project-editor/flow/remote-debugger";
+import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -105,6 +106,9 @@ export class RuntimeStoreClass {
                 this.selectedPage = this.DocumentStore.project.pages[0];
                 this.selectedQueueTask = undefined;
 
+                this.settings = {};
+                this._settingsModified = false;
+
                 this.DocumentStore.dataContext.clearRuntimeValues();
 
                 if (this.DocumentStore.isDashboardProject) {
@@ -118,6 +122,10 @@ export class RuntimeStoreClass {
 
             if (this.DocumentStore.isDashboardProject) {
                 await this.loadSettings();
+
+                await this.loadPersistentVariables();
+
+                await this.constructCustomGlobalVariables();
 
                 this.flowStates.forEach(flowState => flowState.start());
                 this.pumpQueue();
@@ -153,6 +161,62 @@ export class RuntimeStoreClass {
             });
         }
     };
+
+    async loadPersistentVariables() {
+        if (this.settings.__persistentVariables) {
+            for (const variable of this.DocumentStore.project.variables
+                .globalVariables) {
+                const saveValue =
+                    this.settings.__persistentVariables[variable.name];
+                if (saveValue) {
+                    const aClass = getCustomTypeClassFromType(variable.type);
+                    if (aClass && aClass.classInfo.onVariableLoad) {
+                        const value = await aClass.classInfo.onVariableLoad(
+                            saveValue
+                        );
+                        this.DocumentStore.dataContext.set(
+                            variable.name,
+                            value
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    async savePersistentVariables() {
+        for (const variable of this.DocumentStore.project.variables
+            .globalVariables) {
+            const aClass = getCustomTypeClassFromType(variable.type);
+            if (aClass && aClass.classInfo.onVariableSave) {
+                const saveValue = await aClass.classInfo.onVariableSave(
+                    this.DocumentStore.dataContext.get(variable.name)
+                );
+
+                runInAction(() => {
+                    if (!this.settings.__persistentVariables) {
+                        this.settings.__persistentVariables = {};
+                    }
+                    this.settings.__persistentVariables[variable.name] =
+                        saveValue;
+                });
+                this._settingsModified = true;
+            }
+        }
+    }
+
+    async constructCustomGlobalVariables() {
+        for (const variable of this.DocumentStore.project.variables
+            .globalVariables) {
+            const aClass = getCustomTypeClassFromType(variable.type);
+            if (aClass && aClass.classInfo.onVariableConstructor) {
+                await aClass.classInfo.onVariableConstructor(
+                    this.DocumentStore.dataContext,
+                    variable
+                );
+            }
+        }
+    }
 
     async stop() {
         if (!this.isRuntimeMode) {
@@ -484,7 +548,12 @@ export class RuntimeStoreClass {
                     console.error(err);
                 } else {
                     runInAction(() => {
-                        this.settings = JSON.parse(data);
+                        try {
+                            this.settings = JSON.parse(data);
+                        } catch (err) {
+                            console.error(err);
+                            this.settings = {};
+                        }
                     });
                     console.log("Runtime settings loaded");
                 }
@@ -502,6 +571,8 @@ export class RuntimeStoreClass {
         if (!filePath) {
             return;
         }
+
+        await this.savePersistentVariables();
 
         if (!this._settingsModified) {
             return;

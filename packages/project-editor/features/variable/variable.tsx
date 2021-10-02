@@ -17,7 +17,9 @@ import {
     PropertyProps,
     getClassInfo,
     getChildOfObject,
-    MessageType
+    MessageType,
+    getClassesDerivedFrom,
+    getClassByName
 } from "project-editor/core/object";
 import * as output from "project-editor/core/output";
 import {
@@ -66,7 +68,7 @@ const VariableIcon = (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type VariableType =
+export type VariableTypePrefix =
     | "integer"
     | "float"
     | "double"
@@ -76,6 +78,7 @@ export type VariableType =
     | "enum"
     | "struct"
     | "array"
+    | "custom"
     | "undefined"
     | "null"
     | "any";
@@ -88,6 +91,12 @@ const basicTypeNames = [
     "string",
     "date"
 ];
+
+export class VariableType extends EezObject {
+    static classInfo: ClassInfo = {
+        properties: []
+    };
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,6 +215,21 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
             </option>
         ));
 
+        const customTypes = getClassesDerivedFrom(VariableType).map(
+            variableTypeClass => {
+                let name = variableTypeClass.name;
+                if (name.endsWith("VariableType")) {
+                    name = name.substr(0, name.length - "VariableType".length);
+                }
+
+                return (
+                    <option key={name} value={`custom:${name}`}>
+                        {name}
+                    </option>
+                );
+            }
+        );
+
         return (
             <select
                 ref={this.ref}
@@ -214,6 +238,9 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                 onChange={this.onChange}
             >
                 {basicTypes}
+                {customTypes.length > 0 && (
+                    <optgroup label="Custom">{customTypes}</optgroup>
+                )}
                 {enums.length > 0 && (
                     <optgroup label="Enumerations">{enums}</optgroup>
                 )}
@@ -281,6 +308,8 @@ export class Variable extends EezObject {
 
     @observable usedIn?: string[];
 
+    @observable persistent: boolean;
+
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -316,6 +345,19 @@ export class Variable extends EezObject {
                 referencedObjectCollectionPath: "settings/build/configurations",
                 hideInPropertyGrid: (object: IEezObject) =>
                     getDocumentStore(object).isDashboardProject
+            },
+            {
+                name: "usedIn",
+                type: PropertyType.ConfigurationReference,
+                referencedObjectCollectionPath: "settings/build/configurations",
+                hideInPropertyGrid: (object: IEezObject) =>
+                    getDocumentStore(object).isDashboardProject
+            },
+            {
+                name: "persistent",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: (variable: Variable) =>
+                    !isCustomType(variable.type)
             }
         ],
         beforeLoadHook: (object: Variable, objectJS: any) => {
@@ -416,21 +458,26 @@ export function findVariable(project: Project, variableName: string) {
 const ENUM_TYPE_REGEXP = /^enum:(.*)/;
 const STRUCT_TYPE_REGEXP = /^struct:(.*)/;
 const ARRAY_TYPE_REGEXP = /^array:(.*)/;
+const CUSTOM_TYPE_REGEXP = /^custom:(.*)/;
 
 export function isIntegerType(type: string) {
     return type == "integer";
 }
 
 export function isEnumType(type: string) {
-    return type.match(ENUM_TYPE_REGEXP) != null;
+    return type && type.match(ENUM_TYPE_REGEXP) != null;
 }
 
 export function isStructType(type: string) {
-    return type.match(STRUCT_TYPE_REGEXP) != null;
+    return type && type.match(STRUCT_TYPE_REGEXP) != null;
 }
 
 export function isArrayType(type: string) {
-    return type.match(ARRAY_TYPE_REGEXP) != null;
+    return type && type.match(ARRAY_TYPE_REGEXP) != null;
+}
+
+export function isCustomType(type: string) {
+    return type && type.match(CUSTOM_TYPE_REGEXP) != null;
 }
 
 export function getArrayElementTypeFromType(type: string) {
@@ -463,6 +510,20 @@ export function getEnumTypeNameFromType(type: string) {
         return null;
     }
     return result[1];
+}
+
+export function getCustomTypeClassFromType(type: string) {
+    const result = type.match(CUSTOM_TYPE_REGEXP);
+    if (result == null) {
+        return null;
+    }
+
+    let aClass = getClassByName(result[1]);
+    if (!aClass) {
+        aClass = getClassByName(result[1] + "VariableType");
+    }
+
+    return aClass;
 }
 
 export function isIntegerVariable(variable: Variable) {
@@ -611,7 +672,8 @@ export class DataContext implements IDataContext {
                 defaultValue: 0,
                 defaultMinValue: undefined,
                 defaultMaxValue: undefined,
-                defaultValueList: undefined
+                defaultValueList: undefined,
+                persistent: false
             };
         }
 
@@ -1243,6 +1305,9 @@ function isValueTypeOf(
     value: any,
     type: string
 ): string | null {
+    if (value == null) {
+        return null;
+    }
     if (type == "integer") {
         if (Number.isInteger(value)) return null;
     } else if (type == "float" || type == "double") {

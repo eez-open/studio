@@ -304,7 +304,7 @@ export class GetVariableActionComponent extends ActionComponent {
         let lastValue: any = undefined;
 
         return autorun(() => {
-            const value = flowState.getVariable(this, this.variable);
+            const value = evalExpression(flowState, this, this.variable);
             if (first || value !== lastValue) {
                 first = false;
                 lastValue = value;

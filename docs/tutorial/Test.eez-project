@@ -18,11 +18,6 @@
   "variables": {
     "globalVariables": [
       {
-        "name": "clickme_button_enabled",
-        "type": "boolean",
-        "defaultValue": "1"
-      },
-      {
         "name": "voltage",
         "type": "float",
         "defaultValue": "0"
@@ -31,6 +26,12 @@
         "name": "current",
         "type": "float",
         "defaultValue": "0"
+      },
+      {
+        "name": "instrument",
+        "description": "BB3 Instrument",
+        "type": "custom:Instrument",
+        "defaultValue": "null"
       }
     ],
     "structures": [],
@@ -42,13 +43,16 @@
       "components": [
         {
           "type": "Button",
-          "left": 23,
-          "top": 207,
+          "left": 20,
+          "top": 178,
           "width": 103,
           "height": 32,
           "wireID": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
           "customInputs": [],
           "customOutputs": [],
+          "asInputProperties": [
+            "enabled"
+          ],
           "asOutputProperties": [
             "action"
           ],
@@ -57,7 +61,6 @@
             "inheritFrom": "button"
           },
           "text": "Start",
-          "enabled": "clickme_button_enabled",
           "disabledStyle": {
             "inheritFrom": "disabled_button"
           }
@@ -66,7 +69,7 @@
           "type": "ScpiActionComponent",
           "left": -100,
           "top": 681,
-          "width": 288,
+          "width": 257,
           "height": 99,
           "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "customInputs": [
@@ -85,16 +88,14 @@
               "type": 0
             }
           ],
-          "asInputProperties": [
-            "instrument"
-          ],
-          "instrument": "",
+          "asInputProperties": [],
+          "instrument": "instrument",
           "scpi": "syst:delay {delay}\nvoltage = meas:volt?\ncurrent = meas:curr?"
         },
         {
           "type": "LineChart",
-          "left": 471,
-          "top": 17,
+          "left": 468,
+          "top": 20,
           "width": 479,
           "height": 190,
           "wireID": "85873f52-29f9-4c3c-e1f9-fdd8a2ba4e94",
@@ -126,8 +127,8 @@
         },
         {
           "type": "Gauge",
-          "left": 220,
-          "top": 17,
+          "left": 217,
+          "top": 20,
           "width": 233,
           "height": 190,
           "wireID": "e09a754c-f52c-41c3-e5cb-091fc475b670",
@@ -149,8 +150,8 @@
         },
         {
           "type": "Gauge",
-          "left": 220,
-          "top": 254,
+          "left": 217,
+          "top": 257,
           "width": 233,
           "height": 190,
           "wireID": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
@@ -172,8 +173,8 @@
         },
         {
           "type": "LineChart",
-          "left": 471,
-          "top": 254,
+          "left": 468,
+          "top": 257,
           "width": 479,
           "height": 190,
           "wireID": "72b6face-cd0f-40cf-cbd0-51e4c30b5123",
@@ -194,13 +195,16 @@
         },
         {
           "type": "Button",
-          "left": 23,
-          "top": 254,
+          "left": 20,
+          "top": 257,
           "width": 103,
           "height": 32,
           "wireID": "17a56676-cba2-425f-cb12-87e07fe927ac",
           "customInputs": [],
           "customOutputs": [],
+          "asInputProperties": [
+            "enabled"
+          ],
           "asOutputProperties": [
             "action"
           ],
@@ -208,7 +212,6 @@
             "inheritFrom": "button"
           },
           "text": "Stop",
-          "enabled": "clickme_button_enabled",
           "disabledStyle": {
             "inheritFrom": "disabled_button"
           }
@@ -239,20 +242,8 @@
         },
         {
           "type": "SetVariableActionComponent",
-          "left": -196,
-          "top": 0,
-          "width": 137,
-          "height": 70,
-          "wireID": "1aaa0922-a090-407e-c752-e59a8703a9a6",
-          "customInputs": [],
-          "customOutputs": [],
-          "variable": "continue",
-          "value": "true"
-        },
-        {
-          "type": "SetVariableActionComponent",
-          "left": -328,
-          "top": 349,
+          "left": -262,
+          "top": 455,
           "width": 144,
           "height": 70,
           "wireID": "6c7b5504-dba4-41a7-f576-9365c69c92ed",
@@ -263,8 +254,8 @@
         },
         {
           "type": "SetVariableActionComponent",
-          "left": -321,
-          "top": 557,
+          "left": -262,
+          "top": 328,
           "width": 137,
           "height": 70,
           "wireID": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
@@ -274,34 +265,26 @@
           "value": "true"
         },
         {
-          "type": "ButtonWidget",
-          "left": 23,
-          "top": 38,
-          "width": 136,
-          "height": 32,
-          "wireID": "e1bd0765-fac0-4947-9919-ce447cf7043d",
+          "type": "GetVariableActionComponent",
+          "left": -258,
+          "top": 87,
+          "width": 229,
+          "height": 61,
+          "wireID": "894df5b9-459f-4aae-db8a-8ad0926a4157",
           "customInputs": [],
           "customOutputs": [],
-          "asOutputProperties": [
-            "action"
-          ],
-          "style": {
-            "inheritFrom": "default"
-          },
-          "text": "Select Instrument",
-          "disabledStyle": {
-            "inheritFrom": "default"
-          }
+          "variable": "instrument.isConnected && !continue"
         },
         {
-          "type": "SelectInstrumentActionComponent",
-          "left": -250,
-          "top": 163,
-          "width": 158,
+          "type": "GetVariableActionComponent",
+          "left": -258,
+          "top": 181,
+          "width": 133,
           "height": 61,
-          "wireID": "07cf82ca-3509-4834-98ef-b230d492f285",
+          "wireID": "8e014cae-346a-48b2-fbe1-dc1b33607f6f",
           "customInputs": [],
-          "customOutputs": []
+          "customOutputs": [],
+          "variable": "continue"
         }
       ],
       "connectionLines": [
@@ -360,18 +343,6 @@
           "input": "@seqin"
         },
         {
-          "source": "e1bd0765-fac0-4947-9919-ce447cf7043d",
-          "output": "action",
-          "target": "07cf82ca-3509-4834-98ef-b230d492f285",
-          "input": "@seqin"
-        },
-        {
-          "source": "07cf82ca-3509-4834-98ef-b230d492f285",
-          "output": "instrument",
-          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
-          "input": "instrument"
-        },
-        {
           "source": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
           "output": "action",
           "target": "b1c9fde7-e1cd-4a4e-bcf5-14762b1b7d00",
@@ -382,19 +353,33 @@
           "output": "action",
           "target": "6c7b5504-dba4-41a7-f576-9365c69c92ed",
           "input": "@seqin"
+        },
+        {
+          "source": "894df5b9-459f-4aae-db8a-8ad0926a4157",
+          "output": "variable",
+          "target": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
+          "input": "enabled"
+        },
+        {
+          "source": "8e014cae-346a-48b2-fbe1-dc1b33607f6f",
+          "output": "variable",
+          "target": "17a56676-cba2-425f-cb12-87e07fe927ac",
+          "input": "enabled"
         }
       ],
       "localVariables": [
         {
           "name": "continue",
-          "type": "boolean"
+          "type": "boolean",
+          "defaultValue": "false"
         }
       ],
       "name": "plotly",
       "left": 0,
       "top": 0,
-      "width": 969,
-      "height": 496
+      "width": 967,
+      "height": 467,
+      "dataContextOverrides": "false"
     }
   ],
   "styles": [

@@ -4378,3 +4378,28 @@ button.EezStudio_Action {
         color: #666;
     }
 }
+
+.EezStudio_FlowRuntimeControls {
+    display: flex;
+}
+
+.EezStudio_InstrumentVariableTypeConnectionState {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    margin-right: 5px;
+    background-color: #ddd;
+    padding: 5px 10px;
+
+    span:not(:last-child) {
+        margin-right: 5px;
+    }
+
+    span:nth-child(2) {
+        border-radius: 8px;
+        width: 16px;
+        height: 16px;
+    }
+}
