@@ -166,18 +166,22 @@ export class RuntimeStoreClass {
         if (this.settings.__persistentVariables) {
             for (const variable of this.DocumentStore.project.variables
                 .globalVariables) {
-                const saveValue =
-                    this.settings.__persistentVariables[variable.name];
-                if (saveValue) {
-                    const aClass = getCustomTypeClassFromType(variable.type);
-                    if (aClass && aClass.classInfo.onVariableLoad) {
-                        const value = await aClass.classInfo.onVariableLoad(
-                            saveValue
+                if (variable.persistent) {
+                    const saveValue =
+                        this.settings.__persistentVariables[variable.name];
+                    if (saveValue) {
+                        const aClass = getCustomTypeClassFromType(
+                            variable.type
                         );
-                        this.DocumentStore.dataContext.set(
-                            variable.name,
-                            value
-                        );
+                        if (aClass && aClass.classInfo.onVariableLoad) {
+                            const value = await aClass.classInfo.onVariableLoad(
+                                saveValue
+                            );
+                            this.DocumentStore.dataContext.set(
+                                variable.name,
+                                value
+                            );
+                        }
                     }
                 }
             }
@@ -187,20 +191,22 @@ export class RuntimeStoreClass {
     async savePersistentVariables() {
         for (const variable of this.DocumentStore.project.variables
             .globalVariables) {
-            const aClass = getCustomTypeClassFromType(variable.type);
-            if (aClass && aClass.classInfo.onVariableSave) {
-                const saveValue = await aClass.classInfo.onVariableSave(
-                    this.DocumentStore.dataContext.get(variable.name)
-                );
+            if (variable.persistent) {
+                const aClass = getCustomTypeClassFromType(variable.type);
+                if (aClass && aClass.classInfo.onVariableSave) {
+                    const saveValue = await aClass.classInfo.onVariableSave(
+                        this.DocumentStore.dataContext.get(variable.name)
+                    );
 
-                runInAction(() => {
-                    if (!this.settings.__persistentVariables) {
-                        this.settings.__persistentVariables = {};
-                    }
-                    this.settings.__persistentVariables[variable.name] =
-                        saveValue;
-                });
-                this._settingsModified = true;
+                    runInAction(() => {
+                        if (!this.settings.__persistentVariables) {
+                            this.settings.__persistentVariables = {};
+                        }
+                        this.settings.__persistentVariables[variable.name] =
+                            saveValue;
+                    });
+                    this._settingsModified = true;
+                }
             }
         }
     }
