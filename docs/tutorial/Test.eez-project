@@ -31,7 +31,8 @@
         "name": "instrument",
         "description": "BB3 Instrument",
         "type": "custom:Instrument",
-        "defaultValue": "null"
+        "defaultValue": "null",
+        "persistent": true
       }
     ],
     "structures": [],
