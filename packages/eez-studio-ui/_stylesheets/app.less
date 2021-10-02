@@ -4383,21 +4383,30 @@ button.EezStudio_Action {
     display: flex;
 }
 
-.EezStudio_InstrumentVariableTypeConnectionState {
+.EezStudio_CustomVariableStatus {
     white-space: nowrap;
     display: flex;
     align-items: center;
     cursor: pointer;
 
     margin-right: 5px;
-    background-color: #ddd;
     padding: 5px 10px;
 
-    span:not(:last-child) {
+    &:hover {
+        background-color: @hoverBackgroundColor;
+        color: @hoverColor;
+    }
+
+    > :not(:last-child) {
         margin-right: 5px;
     }
 
-    span:nth-child(2) {
+    img {
+        width: 24px;
+        height: 24px;
+    }
+
+    span.status {
         border-radius: 8px;
         width: 16px;
         height: 16px;

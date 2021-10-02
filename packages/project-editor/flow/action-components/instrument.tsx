@@ -1476,11 +1476,12 @@ export class InstrumentVariableType extends VariableType {
             variable: IVariable,
             dataContext: IDataContext
         ) => {
-            const instrumentObject = dataContext.get(variable.name);
+            const instrumentObject: InstrumentObject | undefined =
+                dataContext.get(variable.name);
             return (
                 <div
                     key={variable.name}
-                    className="EezStudio_InstrumentVariableTypeConnectionState"
+                    className="EezStudio_CustomVariableStatus"
                     onClick={async () => {
                         const instrument = await showSelectInstrumentDialog(
                             variable.description || humanize(variable.name),
@@ -1492,10 +1493,14 @@ export class InstrumentVariableType extends VariableType {
                         }
                     }}
                 >
-                    <span>
+                    {instrumentObject && instrumentObject.image && (
+                        <img src={instrumentObject.image} draggable={false} />
+                    )}
+                    <span className="label">
                         {variable.description || humanize(variable.name)}
                     </span>
                     <span
+                        className="status"
                         style={{
                             backgroundColor: instrumentObject
                                 ? instrumentObject.connectionState.color

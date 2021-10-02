@@ -35,11 +35,6 @@ import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ThemesSideView } from "project-editor/features/style/theme";
 import { ProjectContext } from "project-editor/project/context";
 
-import {
-    Body,
-    ToolbarHeader,
-    VerticalHeaderWithBody
-} from "eez-studio-ui/header-with-body";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
@@ -51,10 +46,6 @@ import { Transform } from "project-editor/flow/flow-editor/transform";
 export class PageEditor extends EditorComponent implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
-
-    @action.bound setFrontFace(enabled: boolean) {
-        this.pageTabState.frontFace = enabled;
-    }
 
     get pageTabState() {
         return this.props.editor.state as PageTabState;
@@ -111,32 +102,13 @@ export class PageEditor extends EditorComponent implements IPanel {
 
     render() {
         const editor = (
-            <VerticalHeaderWithBody>
-                <ToolbarHeader>
-                    <IconAction
-                        title="Show front face"
-                        icon="material:flip_to_front"
-                        iconSize={16}
-                        onClick={() => this.setFrontFace(true)}
-                        selected={this.pageTabState.frontFace}
-                    />
-                    <IconAction
-                        title="Show back face"
-                        icon="material:flip_to_back"
-                        iconSize={16}
-                        onClick={() => this.setFrontFace(false)}
-                        selected={!this.pageTabState.frontFace}
-                    />
-                    <div style={{ flexGrow: 1 }}></div>
-                </ToolbarHeader>
-                <Body>
-                    {this.pageTabState.isRuntime ? (
-                        <FlowViewer tabState={this.pageTabState} />
-                    ) : (
-                        <FlowEditor tabState={this.pageTabState} />
-                    )}
-                </Body>
-            </VerticalHeaderWithBody>
+            <div>
+                {this.pageTabState.isRuntime ? (
+                    <FlowViewer tabState={this.pageTabState} />
+                ) : (
+                    <FlowEditor tabState={this.pageTabState} />
+                )}
+            </div>
         );
 
         if (this.pageTabState.isRuntime) {

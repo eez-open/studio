@@ -1,0 +1,166 @@
+{
+  "fullyLoaded": true,
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [
+      {
+        "name": "tetramino",
+        "type": "struct:Tetramino",
+        "defaultValue": "{\n  shape: 0,\n  xCenter: 0,\n  yCenter: 0,\n  rotation: 0\n}"
+      },
+      {
+        "name": "playfield",
+        "type": "array:integer",
+        "defaultValue": "[\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0,\n  0,0,0,0,0,0,0,0,0,0\n]"
+      }
+    ],
+    "structures": [
+      {
+        "name": "Tetramino",
+        "fields": [
+          {
+            "name": "shape",
+            "type": "integer"
+          },
+          {
+            "name": "xCenter",
+            "type": "integer"
+          },
+          {
+            "name": "yCenter",
+            "type": "integer"
+          },
+          {
+            "name": "rotation",
+            "type": "integer"
+          }
+        ]
+      }
+    ],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "TextWidget",
+          "left": 26,
+          "top": 18,
+          "width": 151,
+          "height": 38,
+          "wireID": "b06a3a47-b355-423d-c0b2-42cb898e49f9",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Orientation: \" + i",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "text": ""
+        },
+        {
+          "type": "LoopActionComponent",
+          "left": -359,
+          "top": 56,
+          "width": 196,
+          "height": 70,
+          "wireID": "80cdc215-1206-4b31-c5ca-22b3a2a1e9dd",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "i",
+          "from": "0",
+          "to": "100",
+          "step": "1"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -464,
+          "top": -31,
+          "width": 78,
+          "height": 31,
+          "wireID": "89c37068-f671-4480-94c1-37852328f3b8",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "LogActionComponent",
+          "left": -139,
+          "top": 56,
+          "width": 74,
+          "height": 31,
+          "wireID": "4589acb7-12d8-465e-fc7e-c5def5e00dd5",
+          "customInputs": [],
+          "customOutputs": [],
+          "asInputProperties": [],
+          "value": "i"
+        },
+        {
+          "type": "LogActionComponent",
+          "left": -139,
+          "top": 166,
+          "width": 74,
+          "height": 31,
+          "wireID": "6d570b7d-e366-48e2-868a-1db0be412c4f",
+          "customInputs": [],
+          "customOutputs": [],
+          "asInputProperties": [],
+          "value": "\"Finished\""
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "89c37068-f671-4480-94c1-37852328f3b8",
+          "output": "@seqout",
+          "target": "80cdc215-1206-4b31-c5ca-22b3a2a1e9dd",
+          "input": "@seqin"
+        },
+        {
+          "source": "80cdc215-1206-4b31-c5ca-22b3a2a1e9dd",
+          "output": "@seqout",
+          "target": "4589acb7-12d8-465e-fc7e-c5def5e00dd5",
+          "input": "@seqin"
+        },
+        {
+          "source": "4589acb7-12d8-465e-fc7e-c5def5e00dd5",
+          "output": "@seqout",
+          "target": "80cdc215-1206-4b31-c5ca-22b3a2a1e9dd",
+          "input": "@seqin"
+        },
+        {
+          "source": "80cdc215-1206-4b31-c5ca-22b3a2a1e9dd",
+          "output": "done",
+          "target": "6d570b7d-e366-48e2-868a-1db0be412c4f",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [
+        {
+          "name": "i",
+          "type": "integer",
+          "defaultValue": "0"
+        }
+      ],
+      "name": "Page",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272
+    }
+  ],
+  "colors": [],
+  "themes": []
+}

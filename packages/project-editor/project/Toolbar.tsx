@@ -8,6 +8,7 @@ import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
+import { PageTabState } from "project-editor/features/page/PagesNavigation";
 
 @observer
 export class Toolbar extends React.Component {
@@ -17,11 +18,7 @@ export class Toolbar extends React.Component {
     render() {
         return (
             <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                {this.context.runtimeStore.isRuntimeMode ? (
-                    <RuntimeControls />
-                ) : (
-                    <EditControls />
-                )}
+                <Controls />
 
                 {this.context.isDashboardProject ||
                 this.context.isAppletProject ? (
@@ -30,14 +27,18 @@ export class Toolbar extends React.Component {
                     <div />
                 )}
 
-                <SearchControls />
+                {this.context.runtimeStore.isRuntimeMode ? (
+                    <GlobalVariableStatuses />
+                ) : (
+                    <Search />
+                )}
             </nav>
         );
     }
 }
 
 @observer
-class RuntimeControls extends React.Component {
+class GlobalVariableStatuses extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -65,9 +66,25 @@ class RuntimeControls extends React.Component {
 }
 
 @observer
-class EditControls extends React.Component {
+class Controls extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
+
+    setFrontFace = action((enabled: boolean) => {
+        if (this.pageTabState) {
+            this.pageTabState.frontFace = enabled;
+        }
+    });
+
+    get pageTabState() {
+        const editorState =
+            this.context.project._DocumentStore.editorsStore.activeEditor
+                ?.state;
+        if (editorState instanceof PageTabState) {
+            return editorState as PageTabState;
+        }
+        return undefined;
+    }
 
     get isBuildConfigurationSelectorVisible() {
         return (
@@ -99,80 +116,105 @@ class EditControls extends React.Component {
             );
 
         return (
-            <div
-                style={{
-                    visibility: this.context.runtimeStore.isRuntimeMode
-                        ? "hidden"
-                        : "inherit"
-                }}
-            >
-                <div className="btn-group" role="group">
-                    <IconAction
-                        title="Save"
-                        icon="material:save"
-                        onClick={() => this.context.save()}
-                        enabled={this.context.isModified}
-                    />
-                </div>
-
-                <div className="btn-group" role="group">
-                    <IconAction
-                        title={
-                            this.context.undoManager.canUndo
-                                ? `Undo "${this.context.undoManager.undoDescription}"`
-                                : ""
-                        }
-                        icon="material:undo"
-                        onClick={() => this.context.undoManager.undo()}
-                        enabled={this.context.undoManager.canUndo}
-                    />
-                    <IconAction
-                        title={
-                            this.context.undoManager.canRedo
-                                ? `Redo "${this.context.undoManager.redoDescription}"`
-                                : ""
-                        }
-                        icon="material:redo"
-                        onClick={() => this.context.undoManager.redo()}
-                        enabled={this.context.undoManager.canRedo}
-                    />
-                </div>
-
-                {this.isBuildConfigurationSelectorVisible && (
-                    <div className="btn-group">
-                        <select
-                            title="Configuration"
-                            id="btn-toolbar-configuration"
-                            className="form-select"
-                            value={
-                                this.context.uiStateStore
-                                    .selectedBuildConfiguration
-                            }
-                            onChange={this.onSelectedBuildConfigurationChange.bind(
-                                this
-                            )}
-                        >
-                            {configurations}
-                        </select>
-                    </div>
-                )}
-
-                {!this.context.isDashboardProject && (
+            <div>
+                {!this.context.project._DocumentStore.runtimeStore
+                    .isRuntimeMode && (
                     <div className="btn-group" role="group">
                         <IconAction
-                            title="Check"
-                            icon="material:check"
-                            onClick={() => this.context.check()}
-                            enabled={this.context.project.fullyLoaded}
-                        />
-                        <IconAction
-                            title="Build"
-                            icon="material:build"
-                            onClick={() => this.context.build()}
-                            enabled={this.context.project.fullyLoaded}
+                            title="Save"
+                            icon="material:save"
+                            onClick={() => this.context.save()}
+                            enabled={this.context.isModified}
                         />
                     </div>
                 )}
+
+                {!this.context.project._DocumentStore.runtimeStore
+                    .isRuntimeMode && (
+                    <div className="btn-group" role="group">
+                        <IconAction
+                            title={
+                                this.context.undoManager.canUndo
+                                    ? `Undo "${this.context.undoManager.undoDescription}"`
+                                    : ""
+                            }
+                            icon="material:undo"
+                            onClick={() => this.context.undoManager.undo()}
+                            enabled={this.context.undoManager.canUndo}
+                        />
+                        <IconAction
+                            title={
+                                this.context.undoManager.canRedo
+                                    ? `Redo "${this.context.undoManager.redoDescription}"`
+                                    : ""
+                            }
+                            icon="material:redo"
+                            onClick={() => this.context.undoManager.redo()}
+                            enabled={this.context.undoManager.canRedo}
+                        />
+                    </div>
+                )}
+
+                {!this.context.project._DocumentStore.runtimeStore
+                    .isRuntimeMode &&
+                    this.isBuildConfigurationSelectorVisible && (
+                        <div className="btn-group">
+                            <select
+                                title="Configuration"
+                                id="btn-toolbar-configuration"
+                                className="form-select"
+                                value={
+                                    this.context.uiStateStore
+                                        .selectedBuildConfiguration
+                                }
+                                onChange={this.onSelectedBuildConfigurationChange.bind(
+                                    this
+                                )}
+                            >
+                                {configurations}
+                            </select>
+                        </div>
+                    )}
+
+                {!this.context.project._DocumentStore.runtimeStore
+                    .isRuntimeMode &&
+                    !this.context.isDashboardProject && (
+                        <div className="btn-group" role="group">
+                            <IconAction
+                                title="Check"
+                                icon="material:check"
+                                onClick={() => this.context.check()}
+                                enabled={this.context.project.fullyLoaded}
+                            />
+                            <IconAction
+                                title="Build"
+                                icon="material:build"
+                                onClick={() => this.context.build()}
+                                enabled={this.context.project.fullyLoaded}
+                            />
+                        </div>
+                    )}
+
+                <div className="btn-group" role="group">
+                    {this.pageTabState && (
+                        <IconAction
+                            title="Show front face"
+                            icon="material:flip_to_front"
+                            iconSize={20}
+                            onClick={() => this.setFrontFace(true)}
+                            selected={this.pageTabState.frontFace}
+                        />
+                    )}
+                    {this.pageTabState && (
+                        <IconAction
+                            title="Show back face"
+                            icon="material:flip_to_back"
+                            iconSize={20}
+                            onClick={() => this.setFrontFace(false)}
+                            selected={!this.pageTabState.frontFace}
+                        />
+                    )}
+                </div>
             </div>
         );
     }
@@ -291,7 +333,7 @@ class RunEditSwitchControls extends React.Component {
 }
 
 @observer
-class SearchControls extends React.Component {
+class Search extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
