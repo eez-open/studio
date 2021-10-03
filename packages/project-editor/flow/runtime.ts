@@ -273,7 +273,11 @@ export class RuntimeStoreClass {
     @action
     toggleDebugger() {
         this.isDebuggerActive = !this.isDebuggerActive;
-        this.isPaused = this.isDebuggerActive;
+        if (this.isDebuggerActive) {
+            this.pause();
+        } else {
+            this.resume();
+        }
         this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
             !this.isDebuggerActive;
     }

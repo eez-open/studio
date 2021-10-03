@@ -147,9 +147,7 @@ export class RemoteRuntime {
         }
 
         try {
-            if (isDebuggerActive) {
-                this.startDebugger();
-            }
+            this.startDebugger();
 
             const path = EEZStudio.remote.require("path");
 
@@ -437,7 +435,11 @@ class DebuggerConnection {
             this.socket.connect(
                 DEBUGGER_TCP_PORT,
                 connectionParameters.ethernetParameters.address,
-                () => {}
+                () => {
+                    if (!this.remoteRuntime.runtimeStore.isDebuggerActive) {
+                        this.remoteRuntime.resume();
+                    }
+                }
             );
         } catch (err) {
             console.error(err);
@@ -660,7 +662,14 @@ class DebuggerConnection {
                         });
 
                         if (this.remoteRuntime.runtimeStore.isPaused) {
-                            this.remoteRuntime.runtimeStore.showNextQueueTask();
+                            if (
+                                !this.remoteRuntime.runtimeStore
+                                    .isDebuggerActive
+                            ) {
+                                this.remoteRuntime.resume();
+                            } else {
+                                this.remoteRuntime.runtimeStore.showNextQueueTask();
+                            }
                         }
                     }
                     break;
