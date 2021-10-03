@@ -64,7 +64,10 @@ class GlobalVariableStatuses extends React.Component {
         }
 
         return (
-            <div className="EezStudio_FlowRuntimeControls">
+            <div
+                className="EezStudio_FlowRuntimeControls"
+                style={{ width: 0, justifyContent: "flex-end" }}
+            >
                 {globalVariablesStatus}
             </div>
         );
@@ -122,7 +125,13 @@ class Controls extends React.Component {
             );
 
         return (
-            <div>
+            <div
+                style={{
+                    width: 0,
+                    justifyContent: "flex-start",
+                    display: "flex"
+                }}
+            >
                 {!this.context.project._DocumentStore.runtimeStore
                     .isRuntimeMode && (
                     <div className="btn-group" role="group">
@@ -266,6 +275,10 @@ class RunEditSwitchControls extends React.Component {
                     iconSize={iconSize}
                     onClick={this.context.runtimeStore.setEditorMode}
                     selected={!this.context.runtimeStore.isRuntimeMode}
+                    enabled={
+                        !this.context.runtimeStore.isStarting &&
+                        !this.context.runtimeStore.isStopping
+                    }
                 />
 
                 <ButtonAction
@@ -300,6 +313,10 @@ class RunEditSwitchControls extends React.Component {
                         this.context.runtimeStore.isRuntimeMode &&
                         !this.context.runtimeStore.isDebuggerActive
                     }
+                    enabled={
+                        !this.context.runtimeStore.isStarting &&
+                        !this.context.runtimeStore.isStopping
+                    }
                 />
 
                 <ButtonAction
@@ -332,6 +349,10 @@ class RunEditSwitchControls extends React.Component {
                         this.context.runtimeStore.isDebuggerActive
                     }
                     attention={!!this.context.runtimeStore.error}
+                    enabled={
+                        !this.context.runtimeStore.isStarting &&
+                        !this.context.runtimeStore.isStopping
+                    }
                 />
             </div>
         );
@@ -379,7 +400,9 @@ class Search extends React.Component {
                 style={{
                     visibility: this.context.runtimeStore.isRuntimeMode
                         ? "hidden"
-                        : "inherit"
+                        : "inherit",
+                    width: 0,
+                    justifyContent: "flex-end"
                 }}
             >
                 <input

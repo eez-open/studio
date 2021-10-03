@@ -72,7 +72,8 @@ export class RuntimeStoreClass {
 
     @observable isRuntimeMode = false;
     @observable isStopped = false;
-    isStopping = false;
+    @observable isStarting = false;
+    @observable isStopping = false;
     @observable selectedPage: Page;
 
     @observable error: string | undefined;
@@ -87,15 +88,17 @@ export class RuntimeStoreClass {
     remoteRuntime = new RemoteRuntime(this);
 
     setRuntimeMode = async (isDebuggerActive: boolean) => {
-        if (!this.isRuntimeMode) {
+        if (!this.isRuntimeMode && !this.isStarting) {
+            runInAction(() => (this.isStarting = true));
+
             if (this.DocumentStore.isAppletProject) {
                 if (!(await this.remoteRuntime.startApplet(isDebuggerActive))) {
+                    runInAction(() => (this.isStarting = false));
                     return;
                 }
             }
 
             this.queueTaskId = 0;
-            this.isStopping = false;
 
             runInAction(() => {
                 this.globalVariablesInitialized = false;
@@ -145,12 +148,16 @@ export class RuntimeStoreClass {
                     true
                 );
             }
+
+            runInAction(() => (this.isStarting = false));
         }
     };
 
     setEditorMode = async () => {
-        if (this.isRuntimeMode) {
+        if (this.isRuntimeMode && !this.isStarting) {
             await this.stop();
+
+            await this.saveSettings();
 
             runInAction(() => {
                 this.queue = [];
@@ -238,16 +245,17 @@ export class RuntimeStoreClass {
         }
     }
 
-    async stop() {
+    async stop(notifyUser = false) {
         if (!this.isRuntimeMode) {
             return;
         }
 
-        if (this.isStopped || this.isStopping) {
+        if (this.isStopped || this.isStopping || this.isStarting) {
+            await this.saveSettings();
             return;
         }
 
-        this.isStopping = true;
+        runInAction(() => (this.isStopping = true));
 
         if (this.DocumentStore.isDashboardProject) {
             if (this.pumpTimeoutId) {
@@ -266,18 +274,20 @@ export class RuntimeStoreClass {
                 this.isStopped = true;
             });
 
-            await this.saveSettings();
-
-            if (this.error) {
-                notification.error(
-                    `Flow execution finished due to error: ${this.error}!`
-                );
-            } else {
-                notification.info("Flow execution finished!");
+            if (notifyUser) {
+                if (this.error) {
+                    notification.error(
+                        `Flow execution finished due to error: ${this.error}!`
+                    );
+                } else {
+                    notification.info("Flow execution finished!");
+                }
             }
         } else {
             await this.remoteRuntime.stopApplet();
         }
+
+        runInAction(() => (this.isStopping = false));
     }
 
     @computed get isRunning() {
@@ -933,7 +943,9 @@ export class FlowState {
                 new NoStartActionComponentLogItem(this)
             );
 
-            this.flowState.runtimeStore.stop();
+            this.runtimeStore.error = this.error = "No Start action component";
+
+            this.flowState.runtimeStore.stop(true);
         }
     }
 
@@ -1164,6 +1176,7 @@ export class ComponentState {
                 this.flowState.runtimeStore.error = err.toString();
                 this.flowState.error = err.toString();
             });
+
             this.flowState.runtimeStore.logsState.addLogItem(
                 new ExecutionErrorLogItem(this.flowState, this.component, err)
             );
@@ -1203,7 +1216,7 @@ export class ComponentState {
                         err
                     );
                 } else {
-                    this.flowState.runtimeStore.stop();
+                    this.flowState.runtimeStore.stop(true);
                 }
             }
         } finally {
