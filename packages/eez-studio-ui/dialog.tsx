@@ -64,7 +64,7 @@ export class Dialog extends React.Component<
     }
 
     @bind
-    handleSumbit(event: any) {
+    handleSubmit(event: any) {
         event.preventDefault();
         event.stopPropagation();
 
@@ -117,7 +117,7 @@ export class Dialog extends React.Component<
                 id: "ok",
                 type: "primary",
                 position: "right",
-                onClick: this.handleSumbit,
+                onClick: this.handleSubmit,
                 disabled:
                     this.disableButtons ||
                     (this.props.okEnabled ? !this.props.okEnabled() : false),
@@ -135,7 +135,7 @@ export class Dialog extends React.Component<
                 }
                 size={this.props.size}
                 title={this.props.title}
-                onSubmit={this.handleSumbit}
+                onSubmit={this.handleSubmit}
                 onCancel={this.onCancel}
                 cancelDisabled={this.props.cancelDisabled}
                 disableButtons={this.disableButtons}

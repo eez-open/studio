@@ -661,7 +661,7 @@ export function showGenericDialog(conf: {
     okButtonText?: string;
     okEnabled?: (result: GenericDialogResult) => boolean;
     showOkButton?: boolean;
-    onOk?: (result: GenericDialogResult) => Promise<boolean> | boolean | void;
+    onOk?: (result: GenericDialogResult) => Promise<boolean>;
     opts?: IDialogOptions;
 }) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
@@ -674,14 +674,26 @@ export function showGenericDialog(conf: {
                 okButtonText={conf.okButtonText}
                 okEnabled={conf.okEnabled}
                 onOk={
-                    conf.onOk ||
+                    (conf.onOk &&
+                        (async result => {
+                            if (await conf.onOk!(result)) {
+                                if (modalDialog) {
+                                    ReactDOM.unmountComponentAtNode(element);
+                                    modalDialog.close();
+                                }
+                                resolve(result);
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        })) ||
                     (conf.showOkButton === undefined || conf.showOkButton
-                        ? values => {
+                        ? result => {
                               if (modalDialog) {
                                   ReactDOM.unmountComponentAtNode(element);
                                   modalDialog.close();
                               }
-                              resolve(values);
+                              resolve(result);
                           }
                         : undefined)
                 }

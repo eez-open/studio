@@ -35,7 +35,10 @@ export class QueuePanel extends React.Component<{
                         iconSize={16}
                         title="Resume"
                         onClick={() => this.context.runtimeStore.resume()}
-                        enabled={this.context.runtimeStore.isPaused}
+                        enabled={
+                            !this.context.runtimeStore.isStopped &&
+                            this.context.runtimeStore.isPaused
+                        }
                     />,
                     <IconAction
                         key="pause"
@@ -47,7 +50,10 @@ export class QueuePanel extends React.Component<{
                         iconSize={16}
                         title="Pause"
                         onClick={() => this.context.runtimeStore.pause()}
-                        enabled={!this.context.runtimeStore.isPaused}
+                        enabled={
+                            !this.context.runtimeStore.isStopped &&
+                            !this.context.runtimeStore.isPaused
+                        }
                     />,
                     <IconAction
                         key="single-step"
@@ -62,7 +68,10 @@ export class QueuePanel extends React.Component<{
                         onClick={() =>
                             this.context.runtimeStore.runSingleStep()
                         }
-                        enabled={this.context.runtimeStore.isPaused}
+                        enabled={
+                            !this.context.runtimeStore.isStopped &&
+                            this.context.runtimeStore.isPaused
+                        }
                     />,
                     <IconAction
                         key="restart"

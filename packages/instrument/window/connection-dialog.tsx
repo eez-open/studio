@@ -379,14 +379,14 @@ class ConnectionDialog extends React.Component<
     }
 
     @bind
-    handleSumbit() {
+    handleSubmit() {
         this.props.connect(this.connectionParameters);
         return true;
     }
 
     render() {
         return (
-            <Dialog okButtonText="Connect" onOk={this.handleSumbit}>
+            <Dialog okButtonText="Connect" onOk={this.handleSubmit}>
                 <ConnectionProperties
                     connectionParameters={this.props.connectionParameters}
                     onConnectionParametersChanged={

@@ -310,7 +310,7 @@ class WatchTable extends React.Component {
 
         return observable({
             id: "component-inputs",
-            name: "ComponentInput",
+            name: "Component inputs",
             value: undefined,
             type: "",
             children: () =>

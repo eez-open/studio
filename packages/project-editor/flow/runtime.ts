@@ -42,6 +42,7 @@ import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow/debugger/WatchPanel";
 import { RemoteRuntime } from "project-editor/flow/remote-debugger";
 import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
+import * as notification from "eez-studio-ui/notification";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,9 +72,10 @@ export class RuntimeStoreClass {
 
     @observable isRuntimeMode = false;
     @observable isStopped = false;
+    isStopping = false;
     @observable selectedPage: Page;
 
-    @observable hasError = false;
+    @observable error: string | undefined;
 
     @observable isDebuggerActive = false;
     @observable isPaused = false;
@@ -93,6 +95,7 @@ export class RuntimeStoreClass {
             }
 
             this.queueTaskId = 0;
+            this.isStopping = false;
 
             runInAction(() => {
                 this.globalVariablesInitialized = false;
@@ -103,7 +106,7 @@ export class RuntimeStoreClass {
                 this.selectedFlowState = undefined;
                 this.logsState.selectedLogItem = undefined;
                 this.isStopped = false;
-                this.hasError = false;
+                this.error = undefined;
                 this.isDebuggerActive = isDebuggerActive;
                 this.isPaused = isDebuggerActive;
                 this.singleStep = false;
@@ -153,7 +156,7 @@ export class RuntimeStoreClass {
                 this.queue = [];
                 this.flowStates = [];
                 this.logsState.clear();
-                this.hasError = false;
+                this.error = undefined;
                 this.isRuntimeMode = false;
             });
 
@@ -240,6 +243,12 @@ export class RuntimeStoreClass {
             return;
         }
 
+        if (this.isStopped || this.isStopping) {
+            return;
+        }
+
+        this.isStopping = true;
+
         if (this.DocumentStore.isDashboardProject) {
             if (this.pumpTimeoutId) {
                 clearTimeout(this.pumpTimeoutId);
@@ -255,10 +264,17 @@ export class RuntimeStoreClass {
 
             runInAction(() => {
                 this.isStopped = true;
-                this.globalVariablesInitialized = false;
             });
 
             await this.saveSettings();
+
+            if (this.error) {
+                notification.error(
+                    `Flow execution finished due to error: ${this.error}!`
+                );
+            } else {
+                notification.info("Flow execution finished!");
+            }
         } else {
             await this.remoteRuntime.stopApplet();
         }
@@ -622,10 +638,6 @@ export class RuntimeStoreClass {
         });
     }
 
-    @computed get error() {
-        return "Unknown error";
-    }
-
     ////////////////////////////////////////
     // DEBUGGER
 
@@ -735,7 +747,7 @@ export class FlowState {
     componentStates = new Map<Component, ComponentState>();
     @observable flowStates: FlowState[] = [];
     dataContext: IDataContext;
-    @observable hasError = false;
+    @observable error: string | undefined = undefined;
 
     constructor(
         public runtimeStore: RuntimeStoreClass,
@@ -1149,8 +1161,8 @@ export class ComponentState {
             }
         } catch (err) {
             runInAction(() => {
-                this.flowState.runtimeStore.hasError = true;
-                this.flowState.hasError = true;
+                this.flowState.runtimeStore.error = err.toString();
+                this.flowState.error = err.toString();
             });
             this.flowState.runtimeStore.logsState.addLogItem(
                 new ExecutionErrorLogItem(this.flowState, this.component, err)

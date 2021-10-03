@@ -43,7 +43,7 @@ class FlowsTree extends React.Component {
                 label: (
                     <div
                         className={classNames("running-flow", {
-                            error: flowState.hasError
+                            error: !!flowState.error
                         })}
                     >
                         {getLabel(flowState.flow)}

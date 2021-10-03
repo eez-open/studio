@@ -205,7 +205,7 @@ interface GenericDialogConfiguration {
     dialogDefinition: DialogDefinition;
     values: any;
     okButtonText?: string;
-    onOk?: (result: GenericDialogResult) => Promise<boolean> | boolean | void;
+    onOk?: (result: GenericDialogResult) => Promise<boolean>;
 }
 
 interface DialogDefinition {

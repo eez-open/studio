@@ -331,7 +331,7 @@ class RunEditSwitchControls extends React.Component {
                         this.context.runtimeStore.isRuntimeMode &&
                         this.context.runtimeStore.isDebuggerActive
                     }
-                    attention={this.context.runtimeStore.hasError}
+                    attention={!!this.context.runtimeStore.error}
                 />
             </div>
         );
