@@ -206,7 +206,7 @@ class AppComponent extends React.Component {
                                 zIndex: tab === tabs.activeTab ? 1 : 0
                             }}
                         >
-                            {tab.render()}
+                            {tab.active ? tab.render() : null}
                         </div>
                     ))}
                 </Body>

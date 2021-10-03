@@ -537,6 +537,8 @@ function buildViewMenu() {
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("reload");
+                    // focusedWindow.webContents.reload();
+                    // focusedWindow.webContents.clearHistory();
                 }
             }
         },

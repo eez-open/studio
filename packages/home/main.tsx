@@ -8,10 +8,9 @@ import { observer } from "mobx-react";
 import * as notification from "eez-studio-ui/notification";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
-import { loadTabs, ProjectEditorTab, tabs } from "home/tabs-store";
+import { loadTabs, tabs } from "home/tabs-store";
 
 import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
-import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 import { settingsController } from "./settings";
 
 configure({ enforceActions: "observed" });
@@ -79,7 +78,7 @@ EEZStudio.electron.ipcRenderer.on(
         try {
             let tab = tabs.findProjectEditorTab(filePath);
             if (!tab) {
-                tab = await ProjectEditorTab.addTab(filePath);
+                tab = tabs.addProjectTab(filePath);
             }
             if (tab) {
                 tab.makeActive();
@@ -94,7 +93,7 @@ EEZStudio.electron.ipcRenderer.on(
     "new-project",
     async (sender: any, filePath: any) => {
         try {
-            const tab = await ProjectEditorTab.addTab();
+            const tab = tabs.addProjectTab(undefined);
             if (tab) {
                 tab.makeActive();
             }
@@ -117,7 +116,6 @@ class Main extends React.Component {
             <>
                 {this.props.children}
                 {notification.container}
-                <LineMarkers />
             </>
         );
     }

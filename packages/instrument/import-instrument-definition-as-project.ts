@@ -16,7 +16,7 @@ import { Scpi } from "project-editor/features/scpi/scpi";
 import { loadCommandsFromExtensionFolder } from "instrument/import";
 import { splitCommandToMnemonics } from "instrument/commands-tree";
 import { DocumentStoreClass } from "project-editor/core/store";
-import { ProjectEditorTab } from "home/tabs-store";
+import { tabs } from "home/tabs-store";
 
 function generateExtensionGuid(extensionName: string) {
     var sha256 = require("sha256");
@@ -142,7 +142,7 @@ export async function importInstrumentDefinitionAsProject(
 
         await writeJsObjectToFile(projectFilePath, objectToJS(project));
 
-        const tab = await ProjectEditorTab.addTab(projectFilePath);
+        const tab = tabs.addProjectTab(projectFilePath);
         if (tab) {
             tab.makeActive();
         }

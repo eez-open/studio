@@ -31,15 +31,17 @@ import * as HistoryModule from "home/history";
 import * as ShortcutsModule from "home/shortcuts";
 import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
 import * as SettingsModule from "home/settings";
-import { DocumentStoreClass } from "project-editor/core/store";
-import { ProjectContext } from "project-editor/project/context";
-import { ProjectEditor } from "project-editor/project/ProjectEditor";
+
+import * as DocumentStoreClassModule from "project-editor/core/store";
+import * as ProjectEditorModule from "project-editor/project/ProjectEditor";
+
+import { Loader } from "eez-studio-ui/loader";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IHomeTab extends ITab {
     editor?: IEditor;
-    render(): JSX.Element;
+    render(): React.ReactNode;
     attention?: boolean;
     beforeAppClose?(): Promise<boolean>;
     showCommandPalette?(): void;
@@ -283,7 +285,7 @@ class InstrumentTab implements IHomeTab {
         this.editor.onCreate();
     }
 
-    editor: IEditor;
+    editor?: IEditor;
 
     permanent: boolean = true;
     @observable _active: boolean = false;
@@ -299,9 +301,15 @@ class InstrumentTab implements IHomeTab {
             runInAction(() => (this._active = value));
 
             if (this._active) {
+                if (!this.editor) {
+                    this.editor = this.object.getEditor();
+                    this.editor.onCreate();
+                }
                 this.editor.onActivate();
             } else {
-                this.editor.onDeactivate();
+                if (this.editor) {
+                    this.editor.onDeactivate();
+                }
             }
         }
     }
@@ -319,7 +327,7 @@ class InstrumentTab implements IHomeTab {
     }
 
     render() {
-        return this.editor.render();
+        return this.editor ? this.editor.render() : null;
     }
 
     @action
@@ -333,11 +341,16 @@ class InstrumentTab implements IHomeTab {
 
     close() {
         this.tabs.removeTab(this);
-        this.editor.onTerminate();
+        if (this.editor) {
+            this.editor.onTerminate();
+        }
     }
 
-    beforeAppClose() {
-        return this.editor.onBeforeAppClose();
+    async beforeAppClose() {
+        if (this.editor) {
+            return await this.editor.onBeforeAppClose();
+        }
+        return true;
     }
 }
 
@@ -346,15 +359,37 @@ class InstrumentTab implements IHomeTab {
 export class ProjectEditorTab implements IHomeTab {
     static ID_PREFIX = "PROJECT_TAB_";
 
-    static async addTab(filePath?: string) {
+    constructor(public tabs: Tabs, public filePath: string | undefined) {}
+
+    permanent: boolean = true;
+    @observable _active: boolean = false;
+    loading: boolean = false;
+
+    @observable
+    DocumentStore: DocumentStoreClassModule.DocumentStoreClass;
+
+    ProjectContext: React.Context<DocumentStoreClassModule.DocumentStoreClass>;
+    ProjectEditor: typeof ProjectEditorModule.ProjectEditor;
+
+    async loadProject() {
         const { DocumentStoreClass } = await import(
             "project-editor/core/store"
         );
 
+        const { ProjectContext } = await import(
+            "project-editor/project/context"
+        );
+        this.ProjectContext = ProjectContext;
+
+        const { ProjectEditor } = await import(
+            "project-editor/project/ProjectEditor"
+        );
+        this.ProjectEditor = ProjectEditor;
+
         const DocumentStore = await DocumentStoreClass.create();
 
-        if (filePath) {
-            await DocumentStore.openFile(filePath);
+        if (this.filePath) {
+            await DocumentStore.openFile(this.filePath);
         } else {
             DocumentStore.newProject();
         }
@@ -365,14 +400,10 @@ export class ProjectEditorTab implements IHomeTab {
         });
         DocumentStore.startBackgroundCheck();
 
-        return tabs.addProjectTab(DocumentStore);
+        runInAction(() => {
+            this.DocumentStore = DocumentStore;
+        });
     }
-
-    constructor(public tabs: Tabs, public DocumentStore: DocumentStoreClass) {}
-
-    permanent: boolean = true;
-    @observable _active: boolean = false;
-    loading: boolean = false;
 
     get active() {
         return this._active;
@@ -384,7 +415,7 @@ export class ProjectEditorTab implements IHomeTab {
         if (value !== this._active) {
             runInAction(() => (this._active = value));
             if (this._active) {
-                this.removeListeners = this.addListeners();
+                this.addListeners();
             } else {
                 if (this.removeListeners) {
                     this.removeListeners();
@@ -394,49 +425,58 @@ export class ProjectEditorTab implements IHomeTab {
         }
     }
 
-    addListeners() {
+    async addListeners() {
+        if (!this.DocumentStore) {
+            await this.loadProject();
+        }
+
+        const DocumentStore = this.DocumentStore;
+        if (!DocumentStore) {
+            return;
+        }
+
         const save = () => {
-            this.DocumentStore.save();
+            DocumentStore.save();
         };
         const saveAs = () => {
-            this.DocumentStore.saveAs();
+            DocumentStore.saveAs();
         };
         const check = () => {
-            this.DocumentStore.check();
+            DocumentStore.check();
         };
         const build = () => {
-            this.DocumentStore.build();
+            DocumentStore.build();
         };
         const buildExtensions = () => {
-            this.DocumentStore.buildExtensions();
+            DocumentStore.buildExtensions();
         };
         const undo = () => {
-            this.DocumentStore.undoManager.undo();
+            DocumentStore.undoManager.undo();
         };
         const redo = () => {
-            this.DocumentStore.undoManager.redo();
+            DocumentStore.undoManager.redo();
         };
         const cut = () => {
-            if (this.DocumentStore.navigationStore.selectedPanel)
-                this.DocumentStore.navigationStore.selectedPanel.cutSelection();
+            if (DocumentStore.navigationStore.selectedPanel)
+                DocumentStore.navigationStore.selectedPanel.cutSelection();
         };
         const copy = () => {
-            if (this.DocumentStore.navigationStore.selectedPanel)
-                this.DocumentStore.navigationStore.selectedPanel.copySelection();
+            if (DocumentStore.navigationStore.selectedPanel)
+                DocumentStore.navigationStore.selectedPanel.copySelection();
         };
         const paste = () => {
-            if (this.DocumentStore.navigationStore.selectedPanel)
-                this.DocumentStore.navigationStore.selectedPanel.pasteSelection();
+            if (DocumentStore.navigationStore.selectedPanel)
+                DocumentStore.navigationStore.selectedPanel.pasteSelection();
         };
         const deleteSelection = () => {
-            if (this.DocumentStore.navigationStore.selectedPanel)
-                this.DocumentStore.navigationStore.selectedPanel.deleteSelection();
+            if (DocumentStore.navigationStore.selectedPanel)
+                DocumentStore.navigationStore.selectedPanel.deleteSelection();
         };
         const toggleOutput = action(() => {
-            this.DocumentStore.uiStateStore.viewOptions.outputVisible =
-                !this.DocumentStore.uiStateStore.viewOptions.outputVisible;
+            DocumentStore.uiStateStore.viewOptions.outputVisible =
+                !DocumentStore.uiStateStore.viewOptions.outputVisible;
         });
-        const showMetrics = () => this.DocumentStore.showMetrics();
+        const showMetrics = () => DocumentStore.showMetrics();
 
         EEZStudio.electron.ipcRenderer.on("save", save);
         EEZStudio.electron.ipcRenderer.on("saveAs", saveAs);
@@ -452,7 +492,7 @@ export class ProjectEditorTab implements IHomeTab {
         EEZStudio.electron.ipcRenderer.on("toggleOutput", toggleOutput);
         EEZStudio.electron.ipcRenderer.on("showProjectMetrics", showMetrics);
 
-        return () => {
+        this.removeListeners = () => {
             EEZStudio.electron.ipcRenderer.removeListener("save", save);
             EEZStudio.electron.ipcRenderer.removeListener("saveAs", saveAs);
             EEZStudio.electron.ipcRenderer.removeListener("check", check);
@@ -482,14 +522,11 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get id() {
-        return ProjectEditorTab.ID_PREFIX + this.DocumentStore.filePath || "";
+        return ProjectEditorTab.ID_PREFIX + this.filePath || "";
     }
 
     get title() {
-        return (
-            path.parse(this.DocumentStore.filePath || "").name ||
-            "Untitled project"
-        );
+        return path.parse(this.filePath || "").name || "Untitled project";
     }
 
     get icon() {
@@ -497,10 +534,24 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     render() {
+        if (!this.DocumentStore) {
+            return (
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}
+                >
+                    <Loader size={60} />
+                </div>
+            );
+        }
+
         return (
-            <ProjectContext.Provider value={this.DocumentStore}>
-                <ProjectEditor />
-            </ProjectContext.Provider>
+            <this.ProjectContext.Provider value={this.DocumentStore}>
+                <this.ProjectEditor />
+            </this.ProjectContext.Provider>
         );
     }
 
@@ -510,19 +561,27 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async close() {
-        if (await this.DocumentStore.closeWindow()) {
-            this.tabs.removeTab(this);
-            this.DocumentStore.changeProject(undefined);
+        if (this.DocumentStore) {
+            if (await this.DocumentStore.closeWindow()) {
+                this.tabs.removeTab(this);
+                this.DocumentStore.changeProject(undefined);
+            }
         }
     }
 
-    beforeAppClose() {
-        return this.DocumentStore.closeWindow();
+    async beforeAppClose() {
+        if (this.DocumentStore) {
+            return await this.DocumentStore.closeWindow();
+        }
+
+        return true;
     }
 
     @action
     showCommandPalette() {
-        this.DocumentStore.uiStateStore.showCommandPalette = true;
+        if (this.DocumentStore) {
+            this.DocumentStore.uiStateStore.showCommandPalette = true;
+        }
     }
 }
 
@@ -669,7 +728,7 @@ class Tabs {
             if (tabDefinition) {
                 tab = tabDefinition.open();
             } else if (tabId.startsWith(ProjectEditorTab.ID_PREFIX)) {
-                tab = await ProjectEditorTab.addTab(
+                tab = this.addProjectTab(
                     tabId.substr(ProjectEditorTab.ID_PREFIX.length)
                 );
             } else {
@@ -758,8 +817,8 @@ class Tabs {
     }
 
     @action
-    addProjectTab(DocumentStore: DocumentStoreClass) {
-        const tab = new ProjectEditorTab(this, DocumentStore);
+    addProjectTab(filePath: string | undefined) {
+        const tab = new ProjectEditorTab(this, filePath);
         this.tabs.push(tab);
         return tab;
     }
@@ -834,9 +893,7 @@ class Tabs {
 
     findProjectEditorTab(filePath: string) {
         return this.tabs.find(
-            tab =>
-                tab instanceof ProjectEditorTab &&
-                tab.DocumentStore.filePath == filePath
+            tab => tab instanceof ProjectEditorTab && tab.filePath == filePath
         );
     }
 }

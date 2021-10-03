@@ -21,6 +21,8 @@ import {
     PageTabState
 } from "project-editor/features/page/PagesNavigation";
 
+import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
@@ -185,6 +187,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
                     !this.context.runtimeStore.isRuntimeMode && (
                         <CommandPalette />
                     )}
+                <LineMarkers />
             </div>
         );
     }
