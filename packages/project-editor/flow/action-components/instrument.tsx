@@ -1017,9 +1017,15 @@ export class ScpiActionComponent extends ActionComponent {
 
         if (!editor || !editor.instrument) {
             editor.onCreate();
+            let startTime = Date.now();
             await new Promise<void>(resolve => {
                 const intervalId = setInterval(() => {
                     if (editor.instrument) {
+                        clearInterval(intervalId);
+                        resolve();
+                    }
+
+                    if (Date.now() - startTime > 5000) {
                         clearInterval(intervalId);
                         resolve();
                     }

@@ -263,8 +263,12 @@ export class RuntimeStoreClass {
                 this.pumpTimeoutId = undefined;
             }
 
+            let startTime = Date.now();
             while (this.isRunning) {
                 await new Promise(resolve => setTimeout(resolve));
+                if (Date.now() - startTime > 3000) {
+                    break;
+                }
             }
 
             this.flowStates.forEach(flowState => flowState.finish());
