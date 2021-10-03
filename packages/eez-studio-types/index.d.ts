@@ -36,6 +36,12 @@ export const enum ProjectType {
     DASHBOARD = "dashboard"
 }
 
+interface IPropertyGridGroupDefinition {
+    id: string;
+    title: string;
+    position?: number;
+}
+
 interface PropertyInfo {
     name: string;
     displayName?: string | ((object: IEezObject) => string);
@@ -43,6 +49,7 @@ interface PropertyInfo {
     hideInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+    propertyGridGroup?: IPropertyGridGroupDefinition;
 }
 
 interface ClassInfo {
@@ -52,10 +59,7 @@ interface ClassInfo {
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
     enabledInComponentPalette?: (projectType: ProjectType) => boolean;
 
-    onVariableConstructor?: (
-        dataContext: IDataContext,
-        variable: IVariable
-    ) => Promise<void>;
+    onVariableConstructor?: (variable: IVariable) => Promise<any>;
     onVariableLoad?: (value: any) => Promise<any>;
     onVariableSave?: (value: any) => Promise<any>;
     renderVariableStatus?: (
@@ -104,6 +108,14 @@ interface InputData {
 
 type InputPropertyValue = InputData;
 
+export type LogItemType =
+    | "fatal"
+    | "error"
+    | "warning"
+    | "scpi"
+    | "info"
+    | "debug";
+
 interface IFlowState {
     getFlowStateByComponent(component: Component): IFlowState | undefined;
 
@@ -117,6 +129,7 @@ interface IFlowState {
     getComponentRunningState<T>(component: Component): T;
     setComponentRunningState<T>(component: Component, runningState: T): void;
 
+    DocumentStore: any;
     dataContext: IDataContext;
 
     getVariable(component: Component, variableName: string): any;
@@ -127,6 +140,12 @@ interface IFlowState {
         output: string,
         value: any,
         outputName?: string
+    ): void;
+
+    log(
+        type: LogItemType,
+        message: string,
+        component: Component | undefined
     ): void;
 }
 
@@ -180,6 +199,70 @@ interface IFlow {
     ): void;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+interface GenericDialogConfiguration {
+    dialogDefinition: DialogDefinition;
+    values: any;
+    okButtonText?: string;
+    onOk?: (result: GenericDialogResult) => Promise<boolean> | boolean | void;
+}
+
+interface DialogDefinition {
+    title?: string;
+    size?: "small" | "medium" | "large";
+    fields: IFieldProperties[];
+    error?: string;
+}
+
+interface IEnumItem {
+    id: string;
+    label: string;
+}
+
+type EnumItems = (number | string | IEnumItem)[];
+
+interface IFieldProperties {
+    name: string;
+    displayName?: string;
+    type?:
+        | "integer"
+        | "number"
+        | "string"
+        | "password"
+        | "boolean"
+        | "enum"
+        | "radio"
+        | "range"
+        | "button";
+    enumItems?: EnumItems | (() => EnumItems);
+    defaultValue?: number | string | boolean;
+    visible?: (values: any) => boolean;
+    validators?: Rule[];
+    minValue?: number;
+    maxValue?: number;
+}
+
+type Rule = (
+    object: any,
+    ruleName: string
+) => Promise<string | null> | string | null;
+
+interface GenericDialogResult {
+    values: any;
+    onPogress: (type: "info" | "error", message: string) => boolean;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IExpressionContext {
+    dataContext: IDataContext;
+    flowState?: IFlowState;
+    DocumentStore: any;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 interface IEezStudio {
     React: typeof React;
     mobx: typeof mobx;
@@ -190,5 +273,29 @@ interface IEezStudio {
         derivedClassInfoProperties: Partial<ClassInfo>
     ) => ClassInfo;
     ActionComponent: typeof ActionComponent;
-    getFlow(object: IEezObject): IFlow;
+    VariableType: typeof VariableType;
+    getFlow: (object: IEezObject) => IFlow;
+    showGenericDialog: (
+        conf: GenericDialogConfiguration
+    ) => Promise<GenericDialogResult>;
+    validators: {
+        required: Rule;
+        rangeInclusive: (min: number, max?: number) => Rule;
+    };
+    propertyGridGroups: {
+        specificGroup: IPropertyGridGroupDefinition;
+    };
+    RenderVariableStatus: React.ComponentType<{
+        variable: IVariable;
+        image?: React.ReactNode;
+        color: string;
+        error?: boolean;
+        title?: string;
+        onClick: () => void;
+    }>;
+    evalExpression: (
+        flowState: IFlowState,
+        component: Component,
+        expression: string
+    ) => any;
 }

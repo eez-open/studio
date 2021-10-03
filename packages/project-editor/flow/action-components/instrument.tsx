@@ -34,11 +34,13 @@ import {
     buildAssignableExpression,
     evalExpression
 } from "project-editor/flow/expression/expression";
-import { VariableType } from "project-editor/features/variable/variable";
+import {
+    RenderVariableStatus,
+    VariableType
+} from "project-editor/features/variable/variable";
 import type { IDataContext, IVariable } from "eez-studio-types";
 
 import * as notification from "eez-studio-ui/notification";
-import { Icon } from "eez-studio-ui/icon";
 import { humanize } from "eez-studio-shared/string";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
@@ -1445,19 +1447,14 @@ async function connectToInstrument(instrument: InstrumentObject) {
 export class InstrumentVariableType extends VariableType {
     static classInfo = makeDerivedClassInfo(VariableType.classInfo, {
         properties: [],
-        onVariableConstructor: async (
-            dataContext: IDataContext,
-            variable: IVariable
-        ) => {
-            if (!dataContext.get(variable.name)) {
-                const instrument = await showSelectInstrumentDialog(
-                    variable.description || humanize(variable.name)
-                );
-                if (instrument) {
-                    await connectToInstrument(instrument);
-                }
-                dataContext.set(variable.name, instrument);
+        onVariableConstructor: async (variable: IVariable) => {
+            const instrument = await showSelectInstrumentDialog(
+                variable.description || humanize(variable.name)
+            );
+            if (instrument) {
+                await connectToInstrument(instrument);
             }
+            return instrument;
         },
         onVariableLoad: async (value: any) => {
             if (typeof value == "string") {
@@ -1479,9 +1476,24 @@ export class InstrumentVariableType extends VariableType {
             const instrumentObject: InstrumentObject | undefined =
                 dataContext.get(variable.name);
             return (
-                <div
+                <RenderVariableStatus
                     key={variable.name}
-                    className="EezStudio_CustomVariableStatus"
+                    variable={variable}
+                    image={instrumentObject?.image}
+                    color={
+                        instrumentObject
+                            ? instrumentObject.connectionState.color
+                            : "red"
+                    }
+                    error={
+                        instrumentObject
+                            ? !!instrumentObject.connectionState.error
+                            : false
+                    }
+                    title={
+                        instrumentObject &&
+                        instrumentObject.connectionState.error
+                    }
                     onClick={async () => {
                         const instrument = await showSelectInstrumentDialog(
                             variable.description || humanize(variable.name),
@@ -1492,29 +1504,7 @@ export class InstrumentVariableType extends VariableType {
                             await connectToInstrument(instrument);
                         }
                     }}
-                >
-                    {instrumentObject && instrumentObject.image && (
-                        <img src={instrumentObject.image} draggable={false} />
-                    )}
-                    <span className="label">
-                        {variable.description || humanize(variable.name)}
-                    </span>
-                    <span
-                        className="status"
-                        style={{
-                            backgroundColor: instrumentObject
-                                ? instrumentObject.connectionState.color
-                                : "red"
-                        }}
-                    />
-                    {instrumentObject &&
-                        instrumentObject.connectionState.error && (
-                            <Icon
-                                className="text-danger"
-                                icon="material:error"
-                            />
-                        )}
-                </div>
+                />
             );
         }
     });

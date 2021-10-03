@@ -33,6 +33,13 @@
         "persistent": true
       },
       {
+        "name": "postgresql_connection",
+        "description": "PostgreSQL Connection",
+        "type": "custom:eez-flow-ext-postgres/PostgreSQLConnection",
+        "defaultValue": "null",
+        "persistent": true
+      },
+      {
         "name": "run_all_tests",
         "type": "boolean",
         "defaultValue": "false"
@@ -115,20 +122,20 @@
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": 16,
           "top": 123,
-          "width": 613,
+          "width": 570,
           "height": 113,
           "wireID": "e63ab18d-c017-483e-827d-b4582c088cab",
           "customInputs": [],
           "customOutputs": [],
           "catchError": false,
-          "connection": "envox.hr",
+          "connection": "postgresql_connection",
           "sql": "INSERT INTO modules(serial, model, version, added_by, created_at) \nVALUES('{serial}', '{model}', '{version}', current_user, NOW())\nRETURNING *"
         },
         {
           "type": "CompareActionComponent",
           "left": -403,
           "top": -189,
-          "width": 123,
+          "width": 122,
           "height": 87,
           "wireID": "85054d0b-75bb-410d-ff67-9957c5b5dd9b",
           "customInputs": [],
@@ -143,7 +150,7 @@
           "type": "ConstantActionComponent",
           "left": -531,
           "top": -123,
-          "width": 116,
+          "width": 114,
           "height": 61,
           "wireID": "b10a9619-d531-4588-8fb4-66b91573ccf8",
           "customInputs": [],
@@ -154,19 +161,19 @@
           "type": "eez-flow-ext-postgres/PostgresActionComponent",
           "left": -210,
           "top": -102,
-          "width": 642,
-          "height": 153,
+          "width": 597,
+          "height": 157,
           "wireID": "9295cb6f-5f50-487a-cc46-4ae3c5000f69",
           "customInputs": [],
           "customOutputs": [],
-          "connection": "envox.hr",
+          "connection": "postgresql_connection",
           "sql": "INSERT INTO modules(serial, model, version, added_by, created_at) \nVALUES(\n    (SELECT LPAD(CAST(CAST(COALESCE(MAX(serial),\n        '000000000000000000000000') AS DECIMAL) + 1 AS TEXT), 24, '0')\n        AS serial FROM modules WHERE model= '{model}'), \n    '{model}', '{version}', current_user, NOW()) RETURNING *"
         },
         {
           "type": "OutputActionComponent",
           "left": 844,
           "top": 236,
-          "width": 123,
+          "width": 115,
           "height": 31,
           "wireID": "1cfed536-419f-45b1-ebea-d97722e826cc",
           "customInputs": [],
@@ -188,7 +195,7 @@
           "type": "InputActionComponent",
           "left": -670,
           "top": 83,
-          "width": 104,
+          "width": 103,
           "height": 31,
           "wireID": "027b1223-1be0-454f-e54b-ee482db04174",
           "customInputs": [],
@@ -199,7 +206,7 @@
           "type": "InputActionComponent",
           "left": -670,
           "top": -133,
-          "width": 93,
+          "width": 91,
           "height": 31,
           "wireID": "93c12e8c-f701-4171-fb62-5c4075f1e043",
           "customInputs": [],
@@ -210,7 +217,7 @@
           "type": "EvalActionComponent",
           "left": 608,
           "top": -3,
-          "width": 249,
+          "width": 236,
           "height": 67,
           "wireID": "9552acf4-8e37-41c7-cbee-78f18e567113",
           "customInputs": [],
@@ -235,7 +242,7 @@
           "type": "IsTrueActionComponent",
           "left": -118,
           "top": 234,
-          "width": 98,
+          "width": 97,
           "height": 87,
           "wireID": "6d1986b0-5002-46b8-c49c-78136e21f19f",
           "customInputs": [],
@@ -370,7 +377,7 @@
           "wireID": "d4a736ad-f8bb-447c-b06f-1a1248b9ca2c",
           "customInputs": [],
           "customOutputs": [],
-          "connection": "envox.hr",
+          "connection": "postgresql_connection",
           "sql": "SELECT * FROM modules \nWHERE serial = '{serial}'"
         },
         {
@@ -422,7 +429,7 @@
           "wireID": "da681ea1-ea85-47bc-b86e-7ac728f6b29d",
           "customInputs": [],
           "customOutputs": [],
-          "connection": "envox.hr",
+          "connection": "postgresql_connection",
           "sql": "SELECT params AS cal_params\nFROM cal_params \nWHERE module_id = {module_id} \n  AND channel = 1"
         },
         {
@@ -920,18 +927,18 @@
           "left": -270,
           "top": -49,
           "width": 538,
-          "height": 117,
+          "height": 121,
           "wireID": "b01418b8-ec40-49b7-96fc-e4d4c79493a7",
           "customInputs": [],
           "customOutputs": [],
-          "connection": "envox.hr",
+          "connection": "postgresql_connection",
           "sql": "INSERT INTO cal_params(module_id, channel, params)\n    VALUES('{module_id}', 1, '\"{cal_params}\"') \n    ON CONFLICT ON CONSTRAINT module_id_channel_unique_key\n    DO UPDATE SET params='\"{cal_params}\"'"
         },
         {
           "type": "OutputActionComponent",
           "left": 323,
           "top": -49,
-          "width": 93,
+          "width": 84,
           "height": 31,
           "wireID": "fe33bc79-0ec0-4ef0-f71b-3ae7cf302390",
           "customInputs": [],
@@ -1258,7 +1265,7 @@
           "type": "EndActionComponent",
           "left": 896,
           "top": -56,
-          "width": 73,
+          "width": 64,
           "height": 31,
           "wireID": "d413e999-338a-46c4-cde4-6fe9a3d23433",
           "customInputs": [],
@@ -1269,12 +1276,12 @@
           "left": -93,
           "top": -101,
           "width": 557,
-          "height": 297,
+          "height": 301,
           "wireID": "e7b734f5-e1aa-4a3a-9ba9-466eed4f673f",
           "customInputs": [],
           "customOutputs": [],
           "catchError": true,
-          "connection": "envox.hr",
+          "connection": "postgresql_connection",
           "sql": "INSERT INTO tests(\n    tester, test_executed, start_time, end_time, result, \n    error_test, error_test_step, error_message, module_id\n) VALUES(\n    current_user,\n    '{test_executed}', \n    to_timestamp({start_time}), \n    to_timestamp({end_time}),\n    '{test_result}',\n    {error_test},\n    {error_test_step},\n    {error_message},\n    {module_id}\n)"
         },
         {
@@ -13844,23 +13851,6 @@
           "layout": "bb3"
         },
         {
-          "type": "eez-flow-ext-postgres/PostgresConnectionActionComponent",
-          "left": 0,
-          "top": -53,
-          "width": 174,
-          "height": 31,
-          "wireID": "6f2c97c8-73cc-4b75-b253-b9fb97a01bbd",
-          "customInputs": [],
-          "customOutputs": [],
-          "connection": "envox.hr",
-          "user": "USERNAME",
-          "password": "PASSWORD",
-          "host": "envox.hr",
-          "port": 5432,
-          "database": "bb3_ate",
-          "ssl": false
-        },
-        {
           "type": "ShowPageActionComponent",
           "left": 216,
           "top": 654,
@@ -13870,39 +13860,6 @@
           "customInputs": [],
           "customOutputs": [],
           "page": "DCP405"
-        },
-        {
-          "type": "GetVariableActionComponent",
-          "left": -523,
-          "top": 526,
-          "width": 133,
-          "height": 61,
-          "wireID": "d900c38c-800a-481e-c3cc-388daacf038e",
-          "customInputs": [],
-          "customOutputs": [],
-          "variable": "bb3_1.isConnected"
-        },
-        {
-          "type": "GetVariableActionComponent",
-          "left": -523,
-          "top": 613,
-          "width": 133,
-          "height": 61,
-          "wireID": "0e3850ce-4a0d-4d5e-d775-9bbbe1c488fc",
-          "customInputs": [],
-          "customOutputs": [],
-          "variable": "bb3_2.isConnected"
-        },
-        {
-          "type": "EvalActionComponent",
-          "left": -349,
-          "top": 554,
-          "width": 324,
-          "height": 87,
-          "wireID": "45c7b03c-1cb2-4112-9363-45db7cf64e73",
-          "customInputs": [],
-          "customOutputs": [],
-          "expression": "{bb3_1_connected} && \n{bb3_2_connected}"
         },
         {
           "type": "GetVariableActionComponent",
@@ -13925,6 +13882,17 @@
           "customInputs": [],
           "customOutputs": [],
           "variable": "bb3_2"
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -527,
+          "top": 554,
+          "width": 479,
+          "height": 61,
+          "wireID": "736a24c4-d99c-4189-d002-de14b3369c3e",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "bb3_1.isConnected && bb3_2.isConnected && postgresql_connection.isConnected"
         }
       ],
       "connectionLines": [
@@ -13935,46 +13903,34 @@
           "input": "@seqin"
         },
         {
-          "source": "d900c38c-800a-481e-c3cc-388daacf038e",
+          "source": "568f8560-c5c9-4b14-fc47-b99d5f26b455",
           "output": "variable",
-          "target": "45c7b03c-1cb2-4112-9363-45db7cf64e73",
-          "input": "bb3_1_connected"
+          "target": "3f1e1df9-2a64-4ab9-c745-52d1d907de2f",
+          "input": "f37a31c5-6b3c-4529-a6c1-05650031a072"
         },
         {
-          "source": "0e3850ce-4a0d-4d5e-d775-9bbbe1c488fc",
+          "source": "d5748591-031f-4c00-e081-a5c1e9c0580d",
           "output": "variable",
-          "target": "45c7b03c-1cb2-4112-9363-45db7cf64e73",
-          "input": "bb3_2_connected"
+          "target": "eceb8986-94a1-449f-e9bd-3d61ad3bd489",
+          "input": "f37a31c5-6b3c-4529-a6c1-05650031a072"
         },
         {
-          "source": "45c7b03c-1cb2-4112-9363-45db7cf64e73",
-          "output": "result",
+          "source": "568f8560-c5c9-4b14-fc47-b99d5f26b455",
+          "output": "variable",
+          "target": "3f1e1df9-2a64-4ab9-c745-52d1d907de2f",
+          "input": "de93efe4-7590-4e36-e173-81b24f3193c4"
+        },
+        {
+          "source": "d5748591-031f-4c00-e081-a5c1e9c0580d",
+          "output": "variable",
+          "target": "eceb8986-94a1-449f-e9bd-3d61ad3bd489",
+          "input": "de93efe4-7590-4e36-e173-81b24f3193c4"
+        },
+        {
+          "source": "736a24c4-d99c-4189-d002-de14b3369c3e",
+          "output": "variable",
           "target": "65116438-08da-4903-a214-222d223d461c",
           "input": "enabled"
-        },
-        {
-          "source": "568f8560-c5c9-4b14-fc47-b99d5f26b455",
-          "output": "variable",
-          "target": "3f1e1df9-2a64-4ab9-c745-52d1d907de2f",
-          "input": "f37a31c5-6b3c-4529-a6c1-05650031a072"
-        },
-        {
-          "source": "d5748591-031f-4c00-e081-a5c1e9c0580d",
-          "output": "variable",
-          "target": "eceb8986-94a1-449f-e9bd-3d61ad3bd489",
-          "input": "f37a31c5-6b3c-4529-a6c1-05650031a072"
-        },
-        {
-          "source": "568f8560-c5c9-4b14-fc47-b99d5f26b455",
-          "output": "variable",
-          "target": "3f1e1df9-2a64-4ab9-c745-52d1d907de2f",
-          "input": "de93efe4-7590-4e36-e173-81b24f3193c4"
-        },
-        {
-          "source": "d5748591-031f-4c00-e081-a5c1e9c0580d",
-          "output": "variable",
-          "target": "eceb8986-94a1-449f-e9bd-3d61ad3bd489",
-          "input": "de93efe4-7590-4e36-e173-81b24f3193c4"
         }
       ],
       "localVariables": [],
@@ -14052,8 +14008,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": -172,
-          "top": 253,
+          "left": -174,
+          "top": 287,
           "width": 114,
           "height": 61,
           "wireID": "cd3cc276-6785-4b2a-fc1e-c237b6f73508",
@@ -14063,8 +14019,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": 216,
-          "top": 93,
+          "left": 213,
+          "top": 287,
           "width": 114,
           "height": 61,
           "wireID": "d8e04051-1f7b-4a69-cbc1-574f0f7cada6",
@@ -14074,8 +14030,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": 595,
-          "top": 93,
+          "left": 563,
+          "top": 287,
           "width": 114,
           "height": 61,
           "wireID": "963944a3-de42-4d68-fc56-3754545a52f6",
@@ -14085,8 +14041,8 @@
         },
         {
           "type": "GetVariableActionComponent",
-          "left": -191,
-          "top": 65,
+          "left": -193,
+          "top": 40,
           "width": 133,
           "height": 61,
           "wireID": "cbf9650c-e82b-4e16-b7c2-35827c0e9f8f",
@@ -14096,8 +14052,8 @@
         },
         {
           "type": "GetVariableActionComponent",
-          "left": -207,
-          "top": 154,
+          "left": -209,
+          "top": 118,
           "width": 149,
           "height": 61,
           "wireID": "d363844c-7850-4e61-93f0-fa678e7f0b9b",

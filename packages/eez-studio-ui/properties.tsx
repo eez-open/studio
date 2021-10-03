@@ -201,6 +201,24 @@ export class TextInputProperty extends React.Component<
 }
 
 @observer
+export class PasswordInputProperty extends React.Component<
+    {
+        id?: string;
+        name?: string;
+        value: string;
+        suggestions?: string[];
+        title?: string;
+        onChange: (value: string) => void;
+        errors?: string[];
+    },
+    {}
+> {
+    render() {
+        return <InputProperty {...this.props} type="password" />;
+    }
+}
+
+@observer
 export class MultilineTextInputProperty extends React.Component<
     {
         id?: string;

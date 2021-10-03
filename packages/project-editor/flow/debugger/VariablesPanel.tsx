@@ -42,7 +42,7 @@ export class VariablesPanel extends React.Component<{
         return (
             <Panel
                 id="project-editor/debugger/variables"
-                title="Variables"
+                title="Watch"
                 collapsed={this.props.collapsed}
                 body={<VariablesTable />}
             />
@@ -209,7 +209,7 @@ class VariablesTable extends React.Component {
     @computed get globalVariables() {
         return observable({
             id: "global-variables",
-            name: "Global",
+            name: "Global variables",
             value: undefined,
             type: "",
             children: () =>
@@ -229,7 +229,7 @@ class VariablesTable extends React.Component {
 
         return observable({
             id: "local-variables",
-            name: "Local",
+            name: "Local variables",
             value: undefined,
             type: "",
             children: () =>

@@ -46,6 +46,7 @@ import { humanize } from "eez-studio-shared/string";
 import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
 import { evalConstantExpression } from "project-editor/flow/expression/expression";
 import { _difference } from "eez-studio-shared/algorithm";
+import { Icon } from "eez-studio-ui/icon";
 
 const VariableIcon = (
     <svg
@@ -1395,3 +1396,48 @@ function isValueTypeOf(
 
     return `not an ${type}`;
 }
+
+export const RenderVariableStatus = observer(
+    ({
+        variable,
+        image,
+        color,
+        error,
+        title,
+        onClick
+    }: {
+        variable: IVariable;
+        image?: React.ReactNode;
+        color: string;
+        error?: boolean;
+        title?: string;
+        onClick: () => void;
+    }) => {
+        return (
+            <div
+                className="EezStudio_CustomVariableStatus"
+                onClick={onClick}
+                title={title}
+            >
+                {image &&
+                    (typeof image == "string" ? (
+                        <img src={image} draggable={false} />
+                    ) : (
+                        image
+                    ))}
+                <span className="label">
+                    {variable.description || humanize(variable.name)}
+                </span>
+                <span
+                    className="status"
+                    style={{
+                        backgroundColor: color
+                    }}
+                />
+                {error && (
+                    <Icon className="text-danger" icon="material:error" />
+                )}
+            </div>
+        );
+    }
+);

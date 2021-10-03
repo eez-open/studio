@@ -32,13 +32,13 @@ import {
     ExecuteWidgetActionLogItem,
     ExecutionErrorLogItem,
     LogItem,
-    LogItemType,
     LogsState,
     NoStartActionComponentLogItem,
     OutputValueLogItem,
     WidgetActionNotDefinedLogItem,
     WidgetActionNotFoundLogItem
 } from "project-editor/flow/debugger/logs";
+import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow//debugger/VariablesPanel";
 import { RemoteRuntime } from "project-editor/flow/remote-debugger";
 import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
@@ -80,6 +80,8 @@ export class RuntimeStoreClass {
     @observable singleStep = false;
     resumed = false;
 
+    @observable globalVariablesInitialized = false;
+
     remoteRuntime = new RemoteRuntime(this);
 
     setRuntimeMode = async (isDebuggerActive: boolean) => {
@@ -93,6 +95,8 @@ export class RuntimeStoreClass {
             this.queueTaskId = 0;
 
             runInAction(() => {
+                this.globalVariablesInitialized = false;
+
                 this.isRuntimeMode = true;
                 this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
                     !isDebuggerActive;
@@ -126,6 +130,10 @@ export class RuntimeStoreClass {
                 await this.loadPersistentVariables();
 
                 await this.constructCustomGlobalVariables();
+
+                runInAction(() => {
+                    this.globalVariablesInitialized = true;
+                });
 
                 this.flowStates.forEach(flowState => flowState.start());
                 this.pumpQueue();
@@ -214,12 +222,15 @@ export class RuntimeStoreClass {
     async constructCustomGlobalVariables() {
         for (const variable of this.DocumentStore.project.variables
             .globalVariables) {
-            const aClass = getCustomTypeClassFromType(variable.type);
-            if (aClass && aClass.classInfo.onVariableConstructor) {
-                await aClass.classInfo.onVariableConstructor(
-                    this.DocumentStore.dataContext,
-                    variable
-                );
+            let value = this.DocumentStore.dataContext.get(variable.name);
+            if (value == null) {
+                const aClass = getCustomTypeClassFromType(variable.type);
+                if (aClass && aClass.classInfo.onVariableConstructor) {
+                    value = await aClass.classInfo.onVariableConstructor(
+                        variable
+                    );
+                    this.DocumentStore.dataContext.set(variable.name, value);
+                }
             }
         }
     }
@@ -244,6 +255,7 @@ export class RuntimeStoreClass {
 
             runInAction(() => {
                 this.isStopped = true;
+                this.globalVariablesInitialized = false;
             });
 
             await this.saveSettings();

@@ -45,6 +45,14 @@ export interface IDataContext {
     getMax(variableName: string): number;
 }
 
+export type LogItemType =
+    | "fatal"
+    | "error"
+    | "warning"
+    | "scpi"
+    | "info"
+    | "debug";
+
 export interface IFlowState {
     getFlowStateByComponent(component: Component): IFlowState | undefined;
 
@@ -59,9 +67,16 @@ export interface IFlowState {
     setComponentRunningState<T>(component: Component, runningState: T): void;
 
     dataContext: IDataContext;
+    DocumentStore: any;
 
     getVariable(component: Component, variableName: string): any;
     setVariable(component: Component, variableName: string, value: any): void;
+
+    log(
+        type: LogItemType,
+        message: string,
+        component: Component | undefined
+    ): void;
 }
 
 export interface IDocument {

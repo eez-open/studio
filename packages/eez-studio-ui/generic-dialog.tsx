@@ -1,8 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { computed } from "mobx";
+import { action, computed, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { humanize } from "eez-studio-shared/string";
 import { _map } from "eez-studio-shared/algorithm";
@@ -20,8 +19,11 @@ import {
     SelectProperty,
     Radio,
     RangeProperty,
-    ButtonProperty
+    ButtonProperty,
+    PasswordInputProperty
 } from "eez-studio-ui/properties";
+import classNames from "classnames";
+import { Loader } from "eez-studio-ui//loader";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,6 +42,7 @@ export interface IFieldProperties {
         | "integer"
         | "number"
         | "string"
+        | "password"
         | "boolean"
         | "enum"
         | "radio"
@@ -141,6 +144,7 @@ export interface DialogDefinition {
 export interface GenericDialogResult {
     values: any;
     context: any;
+    onPogress: (type: "info" | "error", message: string) => boolean;
 }
 
 interface GenericDialogProps {
@@ -153,56 +157,56 @@ interface GenericDialogProps {
     okButtonText?: string;
     cancelButtonText?: string;
     okEnabled?: (result: GenericDialogResult) => boolean;
-    onOk?: (result: GenericDialogResult) => void;
+    onOk?: (result: GenericDialogResult) => Promise<boolean> | boolean | void;
     onCancel?: () => void;
     onValueChange?: (name: string, value: string) => void;
 }
 
-interface GenericDialogState {
-    values: any;
-    errorMessages?: any;
-}
-
 @observer
-export class GenericDialog extends React.Component<
-    GenericDialogProps,
-    GenericDialogState
-> {
+export class GenericDialog extends React.Component<GenericDialogProps> {
     fieldContext: any = {};
+
+    @observable fieldValues: {
+        [fieldName: string]: any;
+    };
+    @observable errorMessages: any;
+
+    @observable progressType: "none" | "info" | "error" = "none";
+    @observable progressMessage: string;
+
+    abort: boolean = false;
 
     constructor(props: GenericDialogProps) {
         super(props);
 
-        const values: any = {};
+        const fieldValues: any = {};
 
         this.props.dialogDefinition.fields.forEach(fieldProperties => {
             if (fieldProperties.unit !== undefined) {
-                values[fieldProperties.name] = UNITS[
+                fieldValues[fieldProperties.name] = UNITS[
                     fieldProperties.unit
                 ].formatValue(this.props.values[fieldProperties.name]);
             } else {
-                values[fieldProperties.name] =
+                fieldValues[fieldProperties.name] =
                     this.props.values[fieldProperties.name];
             }
         });
 
-        this.state = {
-            values,
-            errorMessages: undefined
-        };
+        this.fieldValues = fieldValues;
+        this.errorMessages = undefined;
     }
 
     @computed
     get values() {
         var values: any = {};
-        this.props.dialogDefinition.fields.forEach(fieldProperties => {
+        for (const fieldProperties of this.props.dialogDefinition.fields) {
             if (fieldProperties.type === "integer") {
                 values[fieldProperties.name] = parseInt(
-                    this.state.values[fieldProperties.name]
+                    this.fieldValues[fieldProperties.name]
                 );
             } else if (fieldProperties.type === "number") {
                 values[fieldProperties.name] = parseFloat(
-                    this.state.values[fieldProperties.name]
+                    this.fieldValues[fieldProperties.name]
                 );
             } else if (fieldProperties.type === "enum") {
                 let enumItems;
@@ -213,7 +217,7 @@ export class GenericDialog extends React.Component<
                 }
 
                 let enumItem;
-                const value = this.state.values[fieldProperties.name];
+                const value = this.fieldValues[fieldProperties.name];
                 if (value) {
                     const id = value.toString();
                     enumItem = enumItems.find(enumItem => {
@@ -243,12 +247,12 @@ export class GenericDialog extends React.Component<
             } else if (fieldProperties.unit !== undefined) {
                 values[fieldProperties.name] = UNITS[
                     fieldProperties.unit
-                ].parseValue(this.state.values[fieldProperties.name]);
+                ].parseValue(this.fieldValues[fieldProperties.name]);
             } else {
                 values[fieldProperties.name] =
-                    this.state.values[fieldProperties.name];
+                    this.fieldValues[fieldProperties.name];
             }
-        });
+        }
         return values;
     }
 
@@ -264,16 +268,16 @@ export class GenericDialog extends React.Component<
         return true;
     }
 
+    @action
     onChange(fieldProperties: any, value: any) {
-        this.state.values[fieldProperties.name] = value;
+        this.fieldValues[fieldProperties.name] = value;
 
-        if (this.state.errorMessages) {
+        if (this.errorMessages) {
             // revalidate
-            this.setState({
-                values: this.state.values,
-                errorMessages: this.validate()
-            });
-        } else {
+            this.errorMessages = this.validate();
+        }
+
+        if (!this.errorMessages) {
             if (this.props.embedded) {
                 if (this.props.onValueChange) {
                     this.props.onValueChange(fieldProperties.name, value);
@@ -281,7 +285,7 @@ export class GenericDialog extends React.Component<
             }
         }
 
-        this.forceUpdate();
+        this.progressType = "none";
     }
 
     validate() {
@@ -317,7 +321,7 @@ export class GenericDialog extends React.Component<
 
                 fieldValidators.forEach(validator => {
                     let message = validator(
-                        this.state.values,
+                        this.fieldValues,
                         fieldProperties.name
                     );
                     if (message) {
@@ -336,25 +340,39 @@ export class GenericDialog extends React.Component<
         return errorMessages;
     }
 
-    @bind
-    onOk() {
+    onOk = action(() => {
         let errorMessages = this.validate();
 
-        if (!errorMessages) {
-            this.props.onOk!({
-                values: this.values,
-                context: this.fieldContext
-            });
+        if (errorMessages) {
+            this.errorMessages = errorMessages;
+            return false;
+        }
+
+        if (!this.props.onOk) {
             return true;
         }
 
-        this.setState({
-            values: this.state.values,
-            errorMessages: errorMessages
-        });
+        this.abort = false;
 
-        return false;
-    }
+        return this.props.onOk({
+            values: this.values,
+            context: this.fieldContext,
+            onPogress: (type: "info" | "error", message: string) => {
+                if (this.abort) {
+                    runInAction(() => {
+                        this.progressType = "none";
+                    });
+                    return false; // abort
+                }
+
+                runInAction(() => {
+                    this.progressType = type;
+                    this.progressMessage = message;
+                });
+                return true; // continue
+            }
+        });
+    });
 
     render() {
         let fields = (
@@ -363,7 +381,7 @@ export class GenericDialog extends React.Component<
                     .filter(fieldProperties => {
                         return (
                             !fieldProperties.visible ||
-                            fieldProperties.visible(this.state.values)
+                            fieldProperties.visible(this.fieldValues)
                         );
                     })
                     .map(fieldProperties => {
@@ -372,14 +390,14 @@ export class GenericDialog extends React.Component<
                                 ? fieldProperties.displayName
                                 : humanize(fieldProperties.name);
                         const value =
-                            this.state.values[fieldProperties.name] || "";
+                            this.fieldValues[fieldProperties.name] || "";
                         const onChange = this.onChange.bind(
                             this,
                             fieldProperties
                         );
                         const errors =
-                            this.state.errorMessages &&
-                            this.state.errorMessages[fieldProperties.name];
+                            this.errorMessages &&
+                            this.errorMessages[fieldProperties.name];
 
                         let Field: any;
                         let children: JSX.Element | JSX.Element[] | null = null;
@@ -395,6 +413,8 @@ export class GenericDialog extends React.Component<
                             fieldProperties.unit
                         ) {
                             Field = TextInputProperty;
+                        } else if (fieldProperties.type === "password") {
+                            Field = PasswordInputProperty;
                         } else if (fieldProperties.type === "radio") {
                             Field = RadioGroupProperty;
 
@@ -519,7 +539,7 @@ export class GenericDialog extends React.Component<
                                                 fieldProperties={
                                                     fieldProperties
                                                 }
-                                                values={this.state.values}
+                                                values={this.fieldValues}
                                                 fieldContext={this.fieldContext}
                                                 onChange={this.onChange.bind(
                                                     this,
@@ -578,7 +598,8 @@ export class GenericDialog extends React.Component<
                         this.props.okEnabled
                             ? this.props.okEnabled({
                                   values: this.values,
-                                  context: this.fieldContext
+                                  context: this.fieldContext,
+                                  onPogress: () => true
                               })
                             : true
                     }
@@ -591,6 +612,39 @@ export class GenericDialog extends React.Component<
                         </div>
                     )}
                     {fields}
+                    {this.progressType != "none" && (
+                        <div
+                            className={classNames(
+                                "alert",
+                                this.progressType == "error"
+                                    ? "alert-danger"
+                                    : "alert-secondary"
+                            )}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                marginTop: 15
+                            }}
+                        >
+                            {this.progressMessage}
+                            {this.progressType == "info" && (
+                                <>
+                                    <Loader style={{ marginLeft: 20 }} />
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={event => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            this.abort = true;
+                                        }}
+                                        style={{ marginLeft: 20 }}
+                                    >
+                                        Abort
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </Dialog>
             );
         } else {
@@ -607,6 +661,7 @@ export function showGenericDialog(conf: {
     okButtonText?: string;
     okEnabled?: (result: GenericDialogResult) => boolean;
     showOkButton?: boolean;
+    onOk?: (result: GenericDialogResult) => Promise<boolean> | boolean | void;
     opts?: IDialogOptions;
 }) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
@@ -619,7 +674,8 @@ export function showGenericDialog(conf: {
                 okButtonText={conf.okButtonText}
                 okEnabled={conf.okEnabled}
                 onOk={
-                    conf.showOkButton === undefined || conf.showOkButton
+                    conf.onOk ||
+                    (conf.showOkButton === undefined || conf.showOkButton
                         ? values => {
                               if (modalDialog) {
                                   ReactDOM.unmountComponentAtNode(element);
@@ -627,7 +683,7 @@ export function showGenericDialog(conf: {
                               }
                               resolve(values);
                           }
-                        : undefined
+                        : undefined)
                 }
                 onCancel={() => {
                     if (modalDialog) {

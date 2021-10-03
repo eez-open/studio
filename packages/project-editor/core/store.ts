@@ -56,7 +56,8 @@ import {
     getAncestorOfType,
     makeDerivedClassInfo,
     EezClass,
-    registerClassByName
+    registerClassByName,
+    specificGroup
 } from "project-editor/core/object";
 import {
     checkClipboard,
@@ -88,7 +89,11 @@ import { OutputSections, OutputSection } from "project-editor/core/output";
 import { getProjectFeatures } from "project-editor/core/extensions";
 
 import * as SearchModule from "project-editor/core/search";
-import { DataContext } from "project-editor/features/variable/variable";
+import {
+    DataContext,
+    RenderVariableStatus,
+    VariableType
+} from "project-editor/features/variable/variable";
 import { CurrentSearch } from "project-editor/core/search";
 import { Project, getFlow, ProjectType } from "project-editor/project/project";
 
@@ -111,6 +116,8 @@ import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
 import { RuntimeStoreClass as RuntimeStore } from "project-editor/flow/runtime";
 import { theme } from "eez-studio-ui/theme";
+import { evalExpression } from "project-editor/flow/expression/expression";
+import { validators } from "eez-studio-shared/validation";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -2239,7 +2246,18 @@ async function initExtensions() {
                             },
                             makeDerivedClassInfo,
                             ActionComponent,
-                            getFlow
+                            VariableType,
+                            getFlow,
+                            showGenericDialog,
+                            validators: {
+                                required: validators.required,
+                                rangeInclusive: validators.rangeInclusive
+                            },
+                            propertyGridGroups: {
+                                specificGroup
+                            },
+                            RenderVariableStatus,
+                            evalExpression: evalExpression
                         });
                     } catch (err) {
                         console.error(err);

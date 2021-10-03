@@ -117,12 +117,8 @@ export interface PropertyInfo {
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     propertyGridGroup?: IPropertyGridGroupDefinition;
-    propertyGridRowComponent?:
-        | React.ComponentClass<PropertyProps>
-        | React.FunctionComponent<PropertyProps>;
-    propertyGridColumnComponent?:
-        | React.ComponentClass<PropertyProps>
-        | React.FunctionComponent<PropertyProps>;
+    propertyGridRowComponent?: React.ComponentType<PropertyProps>;
+    propertyGridColumnComponent?: React.ComponentType<PropertyProps>;
     propertyGridCollapsable?: boolean;
     propertyGridCollapsableDefaultPropertyName?: string;
     propertyGridCollapsableEnabled?: (object: IEezObject) => boolean;
@@ -281,10 +277,7 @@ export interface ClassInfo {
 
     isFlowExecutableComponent?: boolean;
 
-    onVariableConstructor?: (
-        dataContext: IDataContext,
-        variable: IVariable
-    ) => Promise<void>;
+    onVariableConstructor?: (variable: IVariable) => Promise<any>;
     onVariableLoad?: (value: any) => Promise<any>;
     onVariableSave?: (value: any) => Promise<any>;
     renderVariableStatus?: (

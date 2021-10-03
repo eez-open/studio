@@ -6,6 +6,7 @@ import { getLabel } from "project-editor/core/object";
 import { guid } from "eez-studio-shared/guid";
 import { FlowState } from "project-editor/flow/runtime";
 import { Component, Widget } from "project-editor/flow/component";
+import { LogItemType } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,14 +37,6 @@ function getOutputName(component: Component | undefined, outputName: string) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export type LogItemType =
-    | "fatal"
-    | "error"
-    | "warning"
-    | "scpi"
-    | "info"
-    | "debug";
 
 export class LogItem {
     date: Date = new Date();

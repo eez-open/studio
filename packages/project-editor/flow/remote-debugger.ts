@@ -15,7 +15,7 @@ import { getObjectFromStringPath } from "project-editor/core/object";
 import { action, observable, runInAction } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
-import { LogItemType } from "./debugger/logs";
+import { LogItemType } from "project-editor/flow/flow-interfaces";
 import {
     getArrayElementTypeFromType,
     getStructureFromType,

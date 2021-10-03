@@ -46,7 +46,7 @@ export class Dialog extends React.Component<
         size?: "small" | "medium" | "large";
         okButtonText?: string;
         cancelButtonText?: string;
-        onOk?: () => Promise<boolean> | boolean;
+        onOk?: () => Promise<boolean> | boolean | void;
         okEnabled?: () => boolean;
         onCancel?: (() => void) | null;
         cancelDisabled?: boolean;
@@ -69,7 +69,7 @@ export class Dialog extends React.Component<
         event.stopPropagation();
 
         let result = this.props.onOk!();
-        if (result) {
+        if (result != false) {
             if (result instanceof Promise) {
                 action(() => (this.disableButtons = true))();
                 result.then(isValid => {
