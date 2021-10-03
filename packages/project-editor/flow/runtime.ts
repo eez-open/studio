@@ -39,7 +39,7 @@ import {
     WidgetActionNotFoundLogItem
 } from "project-editor/flow/debugger/logs";
 import { LogItemType } from "project-editor/flow/flow-interfaces";
-import { valueToString } from "project-editor/flow//debugger/VariablesPanel";
+import { valueToString } from "project-editor/flow/debugger/WatchPanel";
 import { RemoteRuntime } from "project-editor/flow/remote-debugger";
 import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
 
@@ -635,6 +635,22 @@ export class RuntimeStoreClass {
         this.selectedQueueTask = queueTask;
         if (queueTask) {
             this.selectedFlowState = queueTask.flowState;
+            this.showSelectedFlowState();
+        }
+    }
+
+    showSelectedFlowState() {
+        const flowState = this.selectedFlowState;
+        if (flowState) {
+            this.DocumentStore.navigationStore.showObject(flowState.flow);
+
+            const editorState =
+                this.DocumentStore.editorsStore.activeEditor?.state;
+            if (editorState instanceof FlowTabState) {
+                setTimeout(() => {
+                    runInAction(() => (editorState.flowState = flowState));
+                }, 0);
+            }
         }
     }
 

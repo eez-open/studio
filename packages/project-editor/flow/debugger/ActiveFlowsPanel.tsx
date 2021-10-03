@@ -4,8 +4,7 @@ import classNames from "classnames";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
-import { action, computed, IObservableValue, runInAction } from "mobx";
-import { FlowTabState } from "project-editor/flow/flow";
+import { action, computed, IObservableValue } from "mobx";
 import { getLabel } from "project-editor/core/object";
 import { FlowState } from "project-editor/flow/runtime";
 
@@ -74,16 +73,7 @@ class FlowsTree extends React.Component {
 
         this.context.runtimeStore.selectedFlowState = flowState;
 
-        if (flowState) {
-            this.context.navigationStore.showObject(flowState.flow);
-
-            const editorState = this.context.editorsStore.activeEditor?.state;
-            if (editorState instanceof FlowTabState) {
-                setTimeout(() => {
-                    runInAction(() => (editorState.flowState = flowState));
-                }, 0);
-            }
-        }
+        this.context.runtimeStore.showSelectedFlowState();
     }
 
     render() {

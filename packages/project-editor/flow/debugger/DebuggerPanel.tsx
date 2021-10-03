@@ -4,7 +4,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
 import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
-import { VariablesPanel } from "project-editor/flow/debugger/VariablesPanel";
+import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { Splitter } from "eez-studio-ui/splitter";
 import { computed, observable } from "mobx";
@@ -140,7 +140,7 @@ export class DebuggerPanel extends React.Component {
                 childrenOverflow="hidden|hidden|hidden|hidden|hidden"
             >
                 <QueuePanel collapsed={this.queuePanelCollapsed} />
-                <VariablesPanel collapsed={this.variablesPanelCollapsed} />
+                <WatchPanel collapsed={this.variablesPanelCollapsed} />
                 <BreakpointsPanel collapsed={this.breakpointsPanelCollapsed} />
                 <ActiveFlowsPanel collapsed={this.activeFlowsPanelCollapsed} />
                 <LogsPanel collapsed={this.logsPanelCollapsed} />

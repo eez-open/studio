@@ -11,6 +11,9 @@ import {
     Variable
 } from "project-editor/features/variable/variable";
 import { computedFn } from "mobx-utils";
+import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
+import { Component } from "project-editor/flow/component";
+import { ComponentState } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +35,7 @@ export function valueToString(value: any) {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class VariablesPanel extends React.Component<{
+export class WatchPanel extends React.Component<{
     collapsed: IObservableValue<boolean>;
 }> {
     static contextType = ProjectContext;
@@ -44,14 +47,14 @@ export class VariablesPanel extends React.Component<{
                 id="project-editor/debugger/variables"
                 title="Watch"
                 collapsed={this.props.collapsed}
-                body={<VariablesTable />}
+                body={<WatchTable />}
             />
         );
     }
 }
 
 @observer
-class VariablesTable extends React.Component {
+class WatchTable extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -111,7 +114,7 @@ class VariablesTable extends React.Component {
                 return () => {
                     const elementType = type
                         ? getArrayElementTypeFromType(type)
-                        : null;
+                        : undefined;
 
                     return value.map((element, i) => {
                         const elementValue = value[i];
@@ -124,7 +127,7 @@ class VariablesTable extends React.Component {
 
                             children: this.getValueChildren(
                                 elementValue,
-                                elementType
+                                elementType ?? typeof elementValue
                             ),
                             selected: false,
                             expanded: false
@@ -160,7 +163,7 @@ class VariablesTable extends React.Component {
                                 id: name,
                                 name,
                                 value: this.getValueLabel(propertyValue),
-                                type: fieldType ?? "?",
+                                type: fieldType ?? typeof propertyValue,
 
                                 children: this.getValueChildren(
                                     propertyValue,
@@ -239,16 +242,101 @@ class VariablesTable extends React.Component {
         });
     }
 
+    getComponentStateInputsTreeNodes = (componentState: ComponentState) => {
+        const inputs = componentState.component.inputs.filter(
+            input => input.name != "@seqin"
+        );
+        return inputs.map(input => {
+            let value = componentState.getInputValue(input.name);
+            if (value) {
+                value = value.value;
+            }
+
+            return observable({
+                id: input.name,
+
+                name: input.name,
+                value: this.getValueLabel(value),
+                type: typeof value,
+
+                children: this.getValueChildren(value, null),
+                selected: false,
+                expanded: false
+            });
+        });
+    };
+
+    @computed get componentInputs() {
+        const flowState = this.context.runtimeStore.selectedFlowState;
+        if (!flowState) {
+            return undefined;
+        }
+
+        const editorState = this.context.editorsStore.activeEditor?.state;
+        if (!(editorState instanceof FlowTabState)) {
+            return undefined;
+        }
+
+        const selectedObjects = editorState.selectedObjects;
+
+        let component;
+        if (selectedObjects.length == 1) {
+            component = selectedObjects[0];
+        } else if (selectedObjects.length == 3) {
+            const connectionLines = selectedObjects.filter(
+                selectedObject => selectedObject instanceof ConnectionLine
+            ) as ConnectionLine[];
+            if (connectionLines.length == 1) {
+                component = connectionLines[0].targetComponent;
+            }
+        }
+        if (!component) {
+            return undefined;
+        }
+        if (!(component instanceof Component)) {
+            return undefined;
+        }
+
+        const inputs = component.inputs.filter(input => input.name != "@seqin");
+        if (inputs.length == 0) {
+            return undefined;
+        }
+
+        if (flowState.flow.components.indexOf(component) == -1) {
+            return undefined;
+        }
+
+        const componentState = flowState.getComponentState(component);
+
+        return observable({
+            id: "component-inputs",
+            name: "ComponentInput",
+            value: undefined,
+            type: "",
+            children: () =>
+                this.getComponentStateInputsTreeNodes(componentState),
+            selected: false,
+            expanded: true
+        });
+    }
+
     @computed get rootNode(): ITreeNode {
         const treeNode: ITreeNode = {
             id: "root",
             label: "",
             children: () => {
                 const children = [this.globalVariables];
+
                 const localVariables = this.localVariables;
                 if (localVariables) {
                     children.push(localVariables);
                 }
+
+                const componentInputs = this.componentInputs;
+                if (componentInputs) {
+                    children.push(componentInputs);
+                }
+
                 return children;
             },
             selected: false,
