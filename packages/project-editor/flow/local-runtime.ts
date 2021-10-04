@@ -259,7 +259,9 @@ export class LocalRuntime extends RuntimeBase {
             }
         }
 
-        this.pumpTimeoutId = setTimeout(this.pumpQueue);
+        if (!this.isStopped) {
+            this.pumpTimeoutId = setTimeout(this.pumpQueue);
+        }
     };
 
     @action
