@@ -193,16 +193,18 @@ export class RemoteRuntime extends RuntimeBase {
 
             connection.command(`SCR:RUN "/Scripts/${destinationFileName}"`);
 
-            notification.update(toastId, {
-                type: notification.SUCCESS,
-                render: `Flow started`,
-                autoClose: 1000
-            });
-
             if (isDebuggerActive) {
                 this.transition(StateMachineAction.PAUSE);
             } else {
                 this.transition(StateMachineAction.RUN);
+            }
+
+            if (!this.isStopped) {
+                notification.update(toastId, {
+                    type: notification.SUCCESS,
+                    render: `Flow started`,
+                    autoClose: 1000
+                });
             }
 
             return;

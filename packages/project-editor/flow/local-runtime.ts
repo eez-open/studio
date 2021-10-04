@@ -55,10 +55,6 @@ export class LocalRuntime extends RuntimeBase {
 
         EEZStudio.electron.ipcRenderer.send("preventAppSuspension", true);
 
-        notification.success(`Flow started`, {
-            autoClose: 1000
-        });
-
         if (isDebuggerActive) {
             this.transition(StateMachineAction.PAUSE);
         } else {
@@ -67,6 +63,12 @@ export class LocalRuntime extends RuntimeBase {
 
         if (this.isPaused) {
             this.showNextQueueTask();
+        }
+
+        if (!this.isStopped) {
+            notification.success(`Flow started`, {
+                autoClose: 1000
+            });
         }
     };
 

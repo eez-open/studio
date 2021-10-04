@@ -149,7 +149,22 @@ export abstract class RuntimeBase {
     }
 
     @action private setState(state: State) {
-        const wasDebuggerActive = this.isDebuggerActive;
+        let wasDebuggerActive;
+        if (
+            this.state == State.STARTING_WITH_DEBUGGER ||
+            this.state == State.PAUSED ||
+            this.state == State.RESUMED ||
+            this.state == State.SINGLE_STEP
+        ) {
+            wasDebuggerActive = true;
+        } else if (
+            this.state == State.STARTING_WITHOUT_DEBUGGER ||
+            this.state == State.RUNNING
+        ) {
+            wasDebuggerActive = false;
+        } else {
+            wasDebuggerActive = this.isDebuggerActive;
+        }
 
         this.state = state;
 
@@ -167,11 +182,9 @@ export abstract class RuntimeBase {
             this.isDebuggerActive = false;
         }
 
-        const isDebuggerActive = this.isDebuggerActive;
-
-        if (!wasDebuggerActive && isDebuggerActive) {
+        if (!wasDebuggerActive && this.isDebuggerActive) {
             this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
-        } else if (wasDebuggerActive && !isDebuggerActive) {
+        } else if (wasDebuggerActive && !this.isDebuggerActive) {
             this.DocumentStore.uiStateStore.pageRuntimeFrontFace = true;
         }
 
