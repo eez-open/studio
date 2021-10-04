@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { computed, IObservableValue, observable } from "mobx";
 import { IColumn, ITreeNode, TreeTable } from "eez-studio-ui/tree-table";
@@ -13,7 +12,7 @@ import {
 import { computedFn } from "mobx-utils";
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
-import { ComponentState } from "project-editor/flow/runtime";
+import { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,28 +35,23 @@ export function valueToString(value: any) {
 
 @observer
 export class WatchPanel extends React.Component<{
+    runtime: RuntimeBase;
     collapsed: IObservableValue<boolean>;
 }> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
     render() {
         return (
             <Panel
                 id="project-editor/debugger/variables"
                 title="Watch"
                 collapsed={this.props.collapsed}
-                body={<WatchTable />}
+                body={<WatchTable runtime={this.props.runtime} />}
             />
         );
     }
 }
 
 @observer
-class WatchTable extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
+class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
     @computed
     get columns() {
         let result: IColumn[] = [];
@@ -141,7 +135,7 @@ class WatchTable extends React.Component {
                     let structure;
                     if (type) {
                         structure = getStructureFromType(
-                            this.context.project,
+                            this.props.runtime.DocumentStore.project,
                             type
                         );
                     }
@@ -184,13 +178,13 @@ class WatchTable extends React.Component {
 
     getVariableTreeNodes = (variables: Variable[]) => {
         return variables.map(variable => {
-            const flowState = this.context.runtimeStore.selectedFlowState;
+            const flowState = this.props.runtime.selectedFlowState;
 
             let dataContext: IDataContext;
             if (flowState) {
                 dataContext = flowState.dataContext;
             } else {
-                dataContext = this.context.dataContext;
+                dataContext = this.props.runtime.DocumentStore.dataContext;
             }
 
             const value = dataContext.get(variable.name);
@@ -217,7 +211,8 @@ class WatchTable extends React.Component {
             type: "",
             children: () =>
                 this.getVariableTreeNodes(
-                    this.context.project.variables.globalVariables
+                    this.props.runtime.DocumentStore.project.variables
+                        .globalVariables
                 ),
             selected: false,
             expanded: true
@@ -225,7 +220,7 @@ class WatchTable extends React.Component {
     }
 
     @computed get localVariables() {
-        const flowState = this.context.runtimeStore.selectedFlowState;
+        const flowState = this.props.runtime.selectedFlowState;
         if (!flowState || flowState.flow.localVariables.length == 0) {
             return undefined;
         }
@@ -267,12 +262,13 @@ class WatchTable extends React.Component {
     };
 
     @computed get componentInputs() {
-        const flowState = this.context.runtimeStore.selectedFlowState;
+        const flowState = this.props.runtime.selectedFlowState;
         if (!flowState) {
             return undefined;
         }
 
-        const editorState = this.context.editorsStore.activeEditor?.state;
+        const editorState =
+            this.props.runtime.DocumentStore.editorsStore.activeEditor?.state;
         if (!(editorState instanceof FlowTabState)) {
             return undefined;
         }

@@ -113,7 +113,8 @@ export class Canvas extends React.Component<{
 
     componentDidMount() {
         if (
-            this.props.flowContext.DocumentStore.runtimeStore.isDebuggerActive
+            this.props.flowContext.DocumentStore.runtime &&
+            this.props.flowContext.DocumentStore.runtime.isDebuggerActive
         ) {
             this.draggable.attach(this.div);
         }
@@ -404,7 +405,7 @@ export class Canvas extends React.Component<{
             style.visibility = "hidden";
         }
 
-        const runtimeStore = this.props.flowContext.DocumentStore.runtimeStore;
+        const runtimeStore = this.props.flowContext.DocumentStore.runtime;
 
         return (
             <div
@@ -421,12 +422,14 @@ export class Canvas extends React.Component<{
                 >
                     {this.props.children}
                 </div>
-                {runtimeStore.isDebuggerActive && runtimeStore.isPaused && (
-                    <Selection
-                        context={this.props.flowContext}
-                        mouseHandler={undefined}
-                    />
-                )}
+                {runtimeStore &&
+                    runtimeStore.isDebuggerActive &&
+                    runtimeStore.isPaused && (
+                        <Selection
+                            context={this.props.flowContext}
+                            mouseHandler={undefined}
+                        />
+                    )}
             </div>
         );
     }

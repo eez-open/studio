@@ -53,9 +53,7 @@ class ViewState implements IViewState {
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined {
-        const isEditor =
-            this.document &&
-            !this.document.DocumentStore.runtimeStore.isRuntimeMode;
+        const isEditor = this.document && !this.document.DocumentStore.runtime;
 
         if (
             !isEditor ||

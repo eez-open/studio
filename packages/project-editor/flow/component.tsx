@@ -607,40 +607,29 @@ function addBreakpointMenuItems(
 
     const DocumentStore = getDocumentStore(component);
 
+    const uiStateStore = DocumentStore.uiStateStore;
+
     if (DocumentStore.isAppletProject || DocumentStore.isDashboardProject) {
-        if (
-            DocumentStore.runtimeStore.isBreakpointAddedForComponent(component)
-        ) {
+        if (uiStateStore.isBreakpointAddedForComponent(component)) {
             additionalMenuItems.push(
                 new MenuItem({
                     label: "Remove Breakpoint",
-                    click: () =>
-                        DocumentStore.runtimeStore.removeBreakpoint(component)
+                    click: () => uiStateStore.removeBreakpoint(component)
                 })
             );
 
-            if (
-                DocumentStore.runtimeStore.isBreakpointEnabledForComponent(
-                    component
-                )
-            ) {
+            if (uiStateStore.isBreakpointEnabledForComponent(component)) {
                 additionalMenuItems.push(
                     new MenuItem({
                         label: "Disable Breakpoint",
-                        click: () =>
-                            DocumentStore.runtimeStore.disableBreakpoint(
-                                component
-                            )
+                        click: () => uiStateStore.disableBreakpoint(component)
                     })
                 );
             } else {
                 additionalMenuItems.push(
                     new MenuItem({
                         label: "Enable Breakpoint",
-                        click: () =>
-                            DocumentStore.runtimeStore.enableBreakpoint(
-                                component
-                            )
+                        click: () => uiStateStore.enableBreakpoint(component)
                     })
                 );
             }
@@ -648,8 +637,7 @@ function addBreakpointMenuItems(
             additionalMenuItems.push(
                 new MenuItem({
                     label: "Add Breakpoint",
-                    click: () =>
-                        DocumentStore.runtimeStore.addBreakpoint(component)
+                    click: () => uiStateStore.addBreakpoint(component)
                 })
             );
         }

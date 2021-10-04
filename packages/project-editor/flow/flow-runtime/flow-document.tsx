@@ -21,8 +21,9 @@ export class FlowDocument implements IDocument {
 
     @computed get selectedConnectionLines() {
         if (
-            !this.DocumentStore.runtimeStore.isDebuggerActive ||
-            !this.DocumentStore.runtimeStore.isPaused
+            this.DocumentStore.runtime &&
+            (!this.DocumentStore.runtime.isDebuggerActive ||
+                !this.DocumentStore.runtime.isPaused)
         ) {
             return [];
         }
@@ -34,8 +35,9 @@ export class FlowDocument implements IDocument {
 
     @computed get nonSelectedConnectionLines() {
         if (
-            !this.DocumentStore.runtimeStore.isDebuggerActive ||
-            !this.DocumentStore.runtimeStore.isPaused
+            this.DocumentStore.runtime &&
+            (!this.DocumentStore.runtime.isDebuggerActive ||
+                !this.DocumentStore.runtime.isPaused)
         ) {
             return this.connectionLines;
         }

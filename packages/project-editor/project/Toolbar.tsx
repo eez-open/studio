@@ -27,11 +27,7 @@ export class Toolbar extends React.Component {
                     <div />
                 )}
 
-                {this.context.runtimeStore.isRuntimeMode ? (
-                    <GlobalVariableStatuses />
-                ) : (
-                    <Search />
-                )}
+                {this.context.runtime ? <GlobalVariableStatuses /> : <Search />}
             </nav>
         );
     }
@@ -45,10 +41,9 @@ class GlobalVariableStatuses extends React.Component {
     render() {
         let globalVariablesStatus: React.ReactNode[] = [];
 
-        if (
-            this.context.project._DocumentStore.runtimeStore
-                .globalVariablesInitialized
-        ) {
+        const runtime = this.context.project._DocumentStore.runtime!;
+
+        if (runtime.globalVariablesInitialized) {
             for (const variable of this.context.project.variables
                 .globalVariables) {
                 const aClass = getCustomTypeClassFromType(variable.type);
@@ -132,8 +127,7 @@ class Controls extends React.Component {
                     display: "flex"
                 }}
             >
-                {!this.context.project._DocumentStore.runtimeStore
-                    .isRuntimeMode && (
+                {!this.context.project._DocumentStore.runtime && (
                     <div className="btn-group" role="group">
                         <IconAction
                             title="Save"
@@ -144,8 +138,7 @@ class Controls extends React.Component {
                     </div>
                 )}
 
-                {!this.context.project._DocumentStore.runtimeStore
-                    .isRuntimeMode && (
+                {!this.context.project._DocumentStore.runtime && (
                     <div className="btn-group" role="group">
                         <IconAction
                             title={
@@ -170,8 +163,7 @@ class Controls extends React.Component {
                     </div>
                 )}
 
-                {!this.context.project._DocumentStore.runtimeStore
-                    .isRuntimeMode &&
+                {!this.context.project._DocumentStore.runtime &&
                     this.isBuildConfigurationSelectorVisible && (
                         <div className="btn-group">
                             <select
@@ -191,8 +183,7 @@ class Controls extends React.Component {
                         </div>
                     )}
 
-                {!this.context.project._DocumentStore.runtimeStore
-                    .isRuntimeMode &&
+                {!this.context.project._DocumentStore.runtime &&
                     !this.context.isDashboardProject && (
                         <div className="btn-group" role="group">
                             <IconAction
@@ -240,30 +231,6 @@ class RunEditSwitchControls extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    setRuntimeMode = () => {
-        if (this.context.runtimeStore.isRuntimeMode) {
-            if (this.context.runtimeStore.isDebuggerActive) {
-                this.context.runtimeStore.toggleDebugger();
-            }
-        } else {
-            this.context.runtimeStore.setRuntimeMode(false);
-        }
-    };
-
-    setDebuggerMode = async () => {
-        if (!this.context.runtimeStore.isRuntimeMode) {
-            await this.context.runtimeStore.setRuntimeMode(true);
-        } else {
-            if (!this.context.runtimeStore.isDebuggerActive) {
-                this.context.navigationStore.setSelection([
-                    this.context.runtimeStore.selectedPage
-                ]);
-
-                this.context.runtimeStore.toggleDebugger();
-            }
-        }
-    };
-
     render() {
         const iconSize = 30;
         return (
@@ -273,12 +240,8 @@ class RunEditSwitchControls extends React.Component {
                     title="Enter edit mode"
                     icon="material:mode_edit"
                     iconSize={iconSize}
-                    onClick={this.context.runtimeStore.setEditorMode}
-                    selected={!this.context.runtimeStore.isRuntimeMode}
-                    enabled={
-                        !this.context.runtimeStore.isStarting &&
-                        !this.context.runtimeStore.isStopping
-                    }
+                    onClick={this.context.onSetEditorMode}
+                    selected={!this.context.runtime}
                 />
 
                 <ButtonAction
@@ -308,14 +271,10 @@ class RunEditSwitchControls extends React.Component {
                         </svg>
                     }
                     iconSize={iconSize}
-                    onClick={this.setRuntimeMode}
+                    onClick={this.context.onSetRuntimeMode}
                     selected={
-                        this.context.runtimeStore.isRuntimeMode &&
-                        !this.context.runtimeStore.isDebuggerActive
-                    }
-                    enabled={
-                        !this.context.runtimeStore.isStarting &&
-                        !this.context.runtimeStore.isStopping
+                        this.context.runtime &&
+                        !this.context.runtime.isDebuggerActive
                     }
                 />
 
@@ -343,15 +302,13 @@ class RunEditSwitchControls extends React.Component {
                         </svg>
                     }
                     iconSize={iconSize}
-                    onClick={this.setDebuggerMode}
+                    onClick={this.context.onSetDebuggerMode}
                     selected={
-                        this.context.runtimeStore.isRuntimeMode &&
-                        this.context.runtimeStore.isDebuggerActive
+                        this.context.runtime &&
+                        this.context.runtime.isDebuggerActive
                     }
-                    attention={!!this.context.runtimeStore.error}
-                    enabled={
-                        !this.context.runtimeStore.isStarting &&
-                        !this.context.runtimeStore.isStopping
+                    attention={
+                        !!(this.context.runtime && this.context.runtime.error)
                     }
                 />
             </div>
@@ -398,9 +355,7 @@ class Search extends React.Component {
             <div
                 className="btn-group"
                 style={{
-                    visibility: this.context.runtimeStore.isRuntimeMode
-                        ? "hidden"
-                        : "inherit",
+                    visibility: this.context.runtime ? "hidden" : "inherit",
                     width: 0,
                     justifyContent: "flex-end"
                 }}

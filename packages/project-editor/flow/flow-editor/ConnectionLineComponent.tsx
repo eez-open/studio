@@ -79,8 +79,7 @@ const VisiblePath = observer(
                     seq,
                     active:
                         connectionLine.active &&
-                        context.document.DocumentStore.runtimeStore
-                            .isRuntimeMode
+                        context.document.DocumentStore.runtime
                 })}
                 vectorEffect={selected ? "non-scaling-stroke" : "none"}
             ></path>
@@ -164,7 +163,8 @@ const DebugValue = observer(
         let valueStr;
         if (
             context.flowState &&
-            context.document.DocumentStore.runtimeStore.isDebuggerActive &&
+            context.document.DocumentStore.runtime &&
+            context.document.DocumentStore.runtime.isDebuggerActive &&
             connectionLine.targetComponent &&
             connectionLine.input !== "@seqin"
         ) {

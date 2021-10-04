@@ -221,17 +221,21 @@ export const ComponentEnclosure = observer(
 
         let breakpointClass;
 
-        const runtimeStore = flowContext.DocumentStore.runtimeStore;
+        const DocumentStore = flowContext.DocumentStore;
+
+        const uiStateStore = DocumentStore.uiStateStore;
 
         if (component instanceof Component) {
-            if (runtimeStore.isBreakpointAddedForComponent(component)) {
-                if (runtimeStore.isBreakpointEnabledForComponent(component)) {
+            if (uiStateStore.isBreakpointAddedForComponent(component)) {
+                if (uiStateStore.isBreakpointEnabledForComponent(component)) {
                     breakpointClass = "enabled-breakpoint";
                 } else {
                     breakpointClass = "disabled-breakpoint";
                 }
             }
         }
+
+        const runtime = DocumentStore.runtime;
 
         return (
             <div
@@ -243,11 +247,8 @@ export const ComponentEnclosure = observer(
                     className,
                     {
                         "eez-flow-editor-capture-pointers":
-                            runtimeStore.isRuntimeMode &&
-                            !(
-                                runtimeStore.isDebuggerActive &&
-                                runtimeStore.isPaused
-                            )
+                            runtime &&
+                            !(runtime.isDebuggerActive && runtime.isPaused)
                     }
                 )}
                 style={style}

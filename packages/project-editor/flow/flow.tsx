@@ -524,7 +524,10 @@ export abstract class FlowTabState implements IEditorState {
             return this._flowState;
         }
 
-        return this.DocumentStore.runtimeStore.getFlowState(this.flow);
+        if (this.DocumentStore.runtime) {
+            return this.DocumentStore.runtime.getFlowState(this.flow);
+        }
+        return undefined;
     }
 
     set flowState(flowState: IFlowState | undefined) {
@@ -536,7 +539,7 @@ export abstract class FlowTabState implements IEditorState {
     }
 
     @computed get isRuntime() {
-        return this.DocumentStore.runtimeStore.isRuntimeMode;
+        return !!this.DocumentStore.runtime;
     }
 
     abstract loadState(state: any): void;

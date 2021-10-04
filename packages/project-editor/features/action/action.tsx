@@ -186,7 +186,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
         if (tabState instanceof ActionTabState) {
             return <PropertyGrid objects={[tabState.selectedObject!]} />;
         } else {
-            if (this.context.runtimeStore.isRuntimeMode) {
+            if (this.context.runtime) {
                 return (
                     <div
                         style={{
@@ -215,7 +215,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
                     >
                         <PropertiesPanel
                             object={this.selectedObject}
-                            readOnly={this.context.runtimeStore.isRuntimeMode}
+                            readOnly={this.context.runtime}
                         />
                         <ComponentsPalette showOnlyActions={true} />
                     </Splitter>
@@ -320,7 +320,7 @@ export class ActionsNavigation extends NavigationComponent {
             <ListNavigation
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
-                editable={!this.context.runtimeStore.isRuntimeMode}
+                editable={!this.context.runtime}
                 navigationStore={this.props.navigationStore}
                 dragAndDropManager={this.props.dragAndDropManager}
                 onDoubleClickItem={this.props.onDoubleClickItem}
@@ -332,7 +332,7 @@ export class ActionsNavigation extends NavigationComponent {
             Action.classInfo
         );
 
-        if (this.context.runtimeStore.isRuntimeMode || !action) {
+        if (this.context.runtime || !action) {
             return listNavigation;
         }
 

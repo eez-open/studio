@@ -1,11 +1,10 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
-import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
 import { getLabel } from "project-editor/core/object";
-import { QueueTask } from "project-editor/flow/runtime";
+import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { RightArrow } from "project-editor/flow/action-components";
 import { IconAction } from "eez-studio-ui/action";
 
@@ -13,11 +12,9 @@ import { IconAction } from "eez-studio-ui/action";
 
 @observer
 export class QueuePanel extends React.Component<{
+    runtime: RuntimeBase;
     collapsed: IObservableValue<boolean>;
 }> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
     render() {
         return (
             <Panel
@@ -34,10 +31,10 @@ export class QueuePanel extends React.Component<{
                         }
                         iconSize={16}
                         title="Resume"
-                        onClick={() => this.context.runtimeStore.resume()}
+                        onClick={() => this.props.runtime.resume()}
                         enabled={
-                            !this.context.runtimeStore.isStopped &&
-                            this.context.runtimeStore.isPaused
+                            !this.props.runtime.isStopped &&
+                            this.props.runtime.isPaused
                         }
                     />,
                     <IconAction
@@ -49,10 +46,10 @@ export class QueuePanel extends React.Component<{
                         }
                         iconSize={16}
                         title="Pause"
-                        onClick={() => this.context.runtimeStore.pause()}
+                        onClick={() => this.props.runtime.pause()}
                         enabled={
-                            !this.context.runtimeStore.isStopped &&
-                            !this.context.runtimeStore.isPaused
+                            !this.props.runtime.isStopped &&
+                            !this.props.runtime.isPaused
                         }
                     />,
                     <IconAction
@@ -65,12 +62,10 @@ export class QueuePanel extends React.Component<{
                         iconSize={18}
                         style={{ marginTop: 4 }}
                         title="Single step"
-                        onClick={() =>
-                            this.context.runtimeStore.runSingleStep()
-                        }
+                        onClick={() => this.props.runtime.runSingleStep()}
                         enabled={
-                            !this.context.runtimeStore.isStopped &&
-                            this.context.runtimeStore.isPaused
+                            !this.props.runtime.isStopped &&
+                            this.props.runtime.isPaused
                         }
                     />,
                     <IconAction
@@ -95,26 +90,21 @@ export class QueuePanel extends React.Component<{
                         iconSize={18}
                         style={{ marginTop: 4, color: "green" }}
                         title="Restart"
-                        onClick={async () => {
-                            await this.context.runtimeStore.setEditorMode();
-                            await this.context.runtimeStore.setRuntimeMode(
-                                true
-                            );
-                        }}
-                        enabled={this.context.runtimeStore.isPaused}
+                        onClick={
+                            this.props.runtime.DocumentStore
+                                .onRestartRuntimeWithDebuggerActive
+                        }
+                        enabled={this.props.runtime.isPaused}
                     />
                 ]}
-                body={<QueueList />}
+                body={<QueueList runtime={this.props.runtime} />}
             />
         );
     }
 }
 
 @observer
-class QueueList extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
+class QueueList extends React.Component<{ runtime: RuntimeBase }> {
     @computed get rootNode(): ITreeNode<QueueTask> {
         function getQueueTaskLabel(queueTask: QueueTask) {
             if (
@@ -149,12 +139,12 @@ class QueueList extends React.Component {
             }));
         }
 
-        const selectedQueueTask = this.context.runtimeStore.selectedQueueTask;
+        const selectedQueueTask = this.props.runtime.selectedQueueTask;
 
         return {
             id: "root",
             label: "",
-            children: getChildren(this.context.runtimeStore.queue),
+            children: getChildren(this.props.runtime.queue),
             selected: false,
             expanded: true
         };
@@ -164,10 +154,10 @@ class QueueList extends React.Component {
     selectNode(node?: ITreeNode<QueueTask>) {
         const queueTask = node && node.data;
 
-        this.context.runtimeStore.selectQueueTask(queueTask);
+        this.props.runtime.selectQueueTask(queueTask);
 
         if (queueTask) {
-            this.context.runtimeStore.showQueueTask(queueTask);
+            this.props.runtime.showQueueTask(queueTask);
         }
     }
 

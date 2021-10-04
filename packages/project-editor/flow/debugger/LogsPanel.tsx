@@ -8,20 +8,19 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import { IconAction } from "eez-studio-ui/action";
 
 import { IEezObject } from "project-editor/core/object";
-import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { FlowTabState } from "project-editor/flow/flow";
 import { LogItem } from "project-editor/flow/debugger/logs";
+import { RuntimeBase } from "project-editor/flow/runtime";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class LogsPanel extends React.Component<{
+    runtime: RuntimeBase;
     collapsed: IObservableValue<boolean>;
 }> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
     render() {
         return (
             <Panel
@@ -33,22 +32,19 @@ export class LogsPanel extends React.Component<{
                         key="clear"
                         icon="material:delete"
                         title="Clear logs"
-                        onClick={this.context.runtimeStore.logsState.clear}
+                        onClick={this.props.runtime.logs.clear}
                     ></IconAction>
                 ]}
-                body={<LogList />}
+                body={<LogList runtime={this.props.runtime} />}
             />
         );
     }
 }
 
 @observer
-class LogList extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
+class LogList extends React.Component<{ runtime: RuntimeBase }> {
     render() {
-        const itemCount = this.context.runtimeStore.logsState.logs.length;
+        const itemCount = this.props.runtime.logs.logs.length;
         return (
             <div style={{ height: "100%" }}>
                 <AutoSizer>
@@ -77,9 +73,13 @@ class LogItemRow extends React.Component<{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
+    get runtime() {
+        return this.context.runtime!;
+    }
+
     @action.bound
     selectNode(logItem: LogItem) {
-        this.context.runtimeStore.logsState.selectedLogItem = logItem;
+        this.runtime.logs.selectedLogItem = logItem;
         if (!logItem) {
             return;
         }
@@ -122,18 +122,14 @@ class LogItemRow extends React.Component<{
 
     render() {
         const logItem =
-            this.context.runtimeStore.logsState.logs[
-                this.context.runtimeStore.logsState.logs.length -
-                    this.props.index -
-                    1
+            this.runtime.logs.logs[
+                this.runtime.logs.logs.length - this.props.index - 1
             ];
 
         return (
             <div
                 className={classNames("log-item", logItem.type, {
-                    selected:
-                        logItem ==
-                        this.context.runtimeStore.logsState.selectedLogItem
+                    selected: logItem == this.runtime.logs.selectedLogItem
                 })}
                 style={this.props.style}
                 onClick={() => this.selectNode(logItem)}

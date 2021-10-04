@@ -3,19 +3,14 @@ import type { Socket } from "net";
 import { showSelectInstrumentDialog } from "./action-components/instrument";
 import * as notification from "eez-studio-ui/notification";
 import { Connection, getConnection } from "instrument/window/connection";
-import {
-    ComponentState,
-    FlowState,
-    RuntimeStoreClass
-} from "project-editor/flow/runtime";
 import { InstrumentObject } from "instrument/instrument-object";
 import { ConnectionParameters } from "instrument/connection/interface";
 import { AssetsMap } from "project-editor/features/page/build/assets";
 import { getObjectFromStringPath } from "project-editor/core/object";
 import { action, observable, runInAction } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
-import { Component } from "project-editor/flow/component";
-import { LogItemType } from "project-editor/flow/flow-interfaces";
+import { Component, Widget } from "project-editor/flow/component";
+import { IFlowContext, LogItemType } from "project-editor/flow/flow-interfaces";
 import {
     getArrayElementTypeFromType,
     getStructureFromType,
@@ -23,6 +18,13 @@ import {
     isStructType
 } from "project-editor/features/variable/variable";
 import { getFlow, getProject } from "project-editor/project/project";
+import {
+    StateMachineAction,
+    ComponentState,
+    FlowState,
+    RuntimeBase
+} from "project-editor/flow/runtime";
+import { DocumentStoreClass } from "project-editor/core/store";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -48,7 +50,6 @@ enum MessagesFromDebugger {
     MESSAGE_FROM_DEBUGGER_RESUME, // no params
     MESSAGE_FROM_DEBUGGER_PAUSE, // no params
     MESSAGE_FROM_DEBUGGER_SINGLE_STEP, // no params
-    MESSAGE_FROM_DEBUGGER_RESTART, // no params
 
     MESSAGE_FROM_DEBUGGER_ADD_BREAKPOINT, // FLOW_INDEX, COMPONENT_INDEX
     MESSAGE_FROM_DEBUGGER_REMOVE_BREAKPOINT, // FLOW_INDEX, COMPONENT_INDEX
@@ -67,7 +68,7 @@ const LOG_ITEM_TYPE_SCPI = 3;
 const LOG_ITEM_TYPE_INFO = 4;
 const LOG_ITEM_TYPE_DEBUG = 5;
 
-export class RemoteRuntime {
+export class RemoteRuntime extends RuntimeBase {
     connection: Connection | undefined;
     debuggerConnection: DebuggerConnection | undefined;
     instrument: InstrumentObject | undefined;
@@ -77,19 +78,20 @@ export class RemoteRuntime {
         number,
         { flowIndex: number; flowState: FlowState }
     >();
+    transitionToRunningMode: boolean = false;
 
-    constructor(public runtimeStore: RuntimeStoreClass) {}
+    constructor(public DocumentStore: DocumentStoreClass) {
+        super(DocumentStore);
+    }
 
-    async startApplet(isDebuggerActive: boolean) {
-        this.debuggerValues.clear();
-        this.flowStateMap.clear();
-
-        const partsPromise = this.runtimeStore.DocumentStore.build();
+    async doStartRuntime(isDebuggerActive: boolean) {
+        const partsPromise = this.DocumentStore.build();
 
         const instrument = await showSelectInstrumentDialog();
 
         if (!instrument) {
-            return false;
+            this.DocumentStore.setEditorMode();
+            return;
         }
 
         this.instrument = instrument;
@@ -98,7 +100,8 @@ export class RemoteRuntime {
 
         this.assetsMap = parts["GUI_ASSETS_DATA_MAP_JS"] as AssetsMap;
         if (!this.assetsMap) {
-            return false;
+            this.DocumentStore.setEditorMode();
+            return;
         }
 
         const toastId = notification.info("Uploading app...", {
@@ -119,6 +122,7 @@ export class RemoteRuntime {
                 render: `Instrument not connected`,
                 autoClose: 1000
             });
+            this.DocumentStore.setEditorMode();
             return;
         }
 
@@ -143,7 +147,8 @@ export class RemoteRuntime {
                 render: `Error: ${acquireError.toString()}`,
                 autoClose: 1000
             });
-            return false;
+            this.DocumentStore.setEditorMode();
+            return;
         }
 
         try {
@@ -152,13 +157,13 @@ export class RemoteRuntime {
             const path = EEZStudio.remote.require("path");
 
             const destinationFolderPath =
-                this.runtimeStore.DocumentStore.getAbsoluteFilePath(
-                    this.runtimeStore.DocumentStore.project.settings.build
+                this.DocumentStore.getAbsoluteFilePath(
+                    this.DocumentStore.project.settings.build
                         .destinationFolder || "."
                 );
 
             const destinationFileName = `${path.basename(
-                this.runtimeStore.DocumentStore.filePath,
+                this.DocumentStore.filePath,
                 ".eez-project"
             )}.app`;
 
@@ -190,24 +195,33 @@ export class RemoteRuntime {
 
             notification.update(toastId, {
                 type: notification.SUCCESS,
-                render: `App started`,
+                render: `Flow started`,
                 autoClose: 1000
             });
 
-            return true;
+            if (isDebuggerActive) {
+                this.transition(StateMachineAction.PAUSE);
+            } else {
+                this.transition(StateMachineAction.RUN);
+            }
+
+            return;
         } catch (err) {
             notification.update(toastId, {
                 type: notification.ERROR,
                 render: `Error: ${err.toString()}`,
                 autoClose: 1000
             });
-            return false;
+
+            this.DocumentStore.setEditorMode();
+
+            return;
         } finally {
             connection.release();
         }
     }
 
-    async stopApplet() {
+    async doStopRuntime(notifyUser: boolean) {
         this.stopDebugger();
 
         this.debuggerValues.clear();
@@ -223,25 +237,39 @@ export class RemoteRuntime {
             return;
         }
 
-        try {
-            await connection.acquire(false);
-        } catch (err) {
-            notification.error(`Error: ${err.toString()}`);
-            return;
-        }
-
-        try {
-            const runningScript = await connection.query(`SCR:RUN?`);
-            if (runningScript != "" && runningScript != `""`) {
-                connection.command(`SCR:STOP`);
-                notification.success("App stopped", {
-                    autoClose: 1000
-                });
+        if (this.error) {
+            if (notifyUser) {
+                notification.error(
+                    `Flow stopped with error: ${this.error.toString()}`
+                );
             }
-        } catch (err) {
-            notification.error(`Error: ${err.toString()}`);
-        } finally {
-            connection.release();
+        } else {
+            try {
+                await connection.acquire(false);
+            } catch (err) {
+                notification.error(`Error: ${err.toString()}`);
+                return;
+            }
+
+            try {
+                const runningScript = await connection.query(`SCR:RUN?`);
+                if (runningScript != "" && runningScript != `""`) {
+                    connection.command(`SCR:STOP`);
+                    if (notifyUser) {
+                        notification.success("Flow stopped", {
+                            autoClose: 1000
+                        });
+                    }
+                }
+            } catch (err) {
+                if (notifyUser) {
+                    notification.error(
+                        `Flow stopped with error: ${err.toString()}`
+                    );
+                }
+            } finally {
+                connection.release();
+            }
         }
     }
 
@@ -263,6 +291,15 @@ export class RemoteRuntime {
         }
     }
 
+    toggleDebugger() {
+        if (this.isDebuggerActive) {
+            this.transitionToRunningMode = true;
+            this.resume();
+        } else {
+            this.pause();
+        }
+    }
+
     resume() {
         if (this.debuggerConnection) {
             this.debuggerConnection.sendMessageFromDebugger(
@@ -279,7 +316,7 @@ export class RemoteRuntime {
         }
     }
 
-    singleStep() {
+    runSingleStep() {
         if (this.debuggerConnection) {
             this.debuggerConnection.sendMessageFromDebugger(
                 `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_SINGLE_STEP}\n`
@@ -381,13 +418,20 @@ export class RemoteRuntime {
             );
         }
     }
+
+    executeWidgetAction(flowContext: IFlowContext, widget: Widget) {}
+
+    readSettings(key: string) {}
+    writeSettings(key: string, value: any) {}
 }
 
 class DebuggerConnection {
     socket: Socket | undefined;
     dataAccumulated: string = "";
 
-    constructor(private remoteRuntime: RemoteRuntime) {}
+    timeoutTimerId: any;
+
+    constructor(private runtime: RemoteRuntime) {}
 
     async start(connectionParameters: ConnectionParameters) {
         const net = await import("net");
@@ -436,8 +480,8 @@ class DebuggerConnection {
                 DEBUGGER_TCP_PORT,
                 connectionParameters.ethernetParameters.address,
                 () => {
-                    if (!this.remoteRuntime.runtimeStore.isDebuggerActive) {
-                        this.remoteRuntime.resume();
+                    if (!this.runtime.isDebuggerActive) {
+                        this.runtime.resume();
                     }
                 }
             );
@@ -476,6 +520,15 @@ class DebuggerConnection {
     sendMessageFromDebugger(data: string) {
         if (this.socket) {
             this.socket.write(data, "binary");
+
+            this.timeoutTimerId = setTimeout(() => {
+                this.timeoutTimerId = undefined;
+                this.runtime.stopRuntimeWithError(
+                    "Debugger connection timeout"
+                );
+            }, 3000);
+        } else if (this.runtime.isDebuggerActive) {
+            this.runtime.stopRuntimeWithError("Debugger connection timeout");
         }
     }
 
@@ -510,7 +563,7 @@ class DebuggerConnection {
 
         if (isStructType(type)) {
             const structure = getStructureFromType(
-                this.remoteRuntime.runtimeStore.DocumentStore.project,
+                this.runtime.DocumentStore.project,
                 type
             );
             if (!structure) {
@@ -563,7 +616,7 @@ class DebuggerConnection {
                 propertyType
             );
 
-            this.remoteRuntime.debuggerValues.set(
+            this.runtime.debuggerValues.set(
                 parseInt(arrayElementAddresses[i]),
                 objectMemberValue
             );
@@ -605,7 +658,7 @@ class DebuggerConnection {
 
     getFlowState(flowStateIndex: number) {
         return (
-            this.remoteRuntime.flowStateMap.get(flowStateIndex) ?? {
+            this.runtime.flowStateMap.get(flowStateIndex) ?? {
                 flowIndex: -1,
                 flowState: undefined
             }
@@ -613,6 +666,11 @@ class DebuggerConnection {
     }
 
     onMessageToDebugger(data: string) {
+        if (this.timeoutTimerId) {
+            clearTimeout(this.timeoutTimerId);
+            this.timeoutTimerId = undefined;
+        }
+
         this.dataAccumulated += data;
 
         while (true) {
@@ -633,43 +691,23 @@ class DebuggerConnection {
                 messageParameters[0]
             ) as MessagesToDebugger;
 
-            const runtimeStore = this.remoteRuntime.runtimeStore;
+            const runtime = this.runtime;
 
             switch (messageType) {
                 case MessagesToDebugger.MESSAGE_TO_DEBUGGER_STATE_CHANGED:
                     {
                         const state = parseInt(messageParameters[1]);
 
-                        runInAction(() => {
-                            if (state == DEBUGGER_STATE_RESUMED) {
-                                this.remoteRuntime.runtimeStore.resumed = true;
-                                this.remoteRuntime.runtimeStore.isPaused =
-                                    false;
-                                this.remoteRuntime.runtimeStore.singleStep =
-                                    false;
-                            } else if (state == DEBUGGER_STATE_PAUSED) {
-                                this.remoteRuntime.runtimeStore.resumed = false;
-                                this.remoteRuntime.runtimeStore.isPaused = true;
-                                this.remoteRuntime.runtimeStore.singleStep =
-                                    false;
-                            } else if (state == DEBUGGER_STATE_SINGLE_STEP) {
-                                this.remoteRuntime.runtimeStore.resumed = false;
-                                this.remoteRuntime.runtimeStore.isPaused =
-                                    false;
-                                this.remoteRuntime.runtimeStore.singleStep =
-                                    true;
-                            }
-                        });
-
-                        if (this.remoteRuntime.runtimeStore.isPaused) {
-                            if (
-                                !this.remoteRuntime.runtimeStore
-                                    .isDebuggerActive
-                            ) {
-                                this.remoteRuntime.resume();
+                        if (state == DEBUGGER_STATE_RESUMED) {
+                            if (runtime.transitionToRunningMode) {
+                                runtime.transition(StateMachineAction.RUN);
                             } else {
-                                this.remoteRuntime.runtimeStore.showNextQueueTask();
+                                runtime.transition(StateMachineAction.RESUME);
                             }
+                        } else if (state == DEBUGGER_STATE_PAUSED) {
+                            runtime.transition(StateMachineAction.PAUSE);
+                        } else if (state == DEBUGGER_STATE_SINGLE_STEP) {
+                            runtime.transition(StateMachineAction.SINGLE_STEP);
                         }
                     }
                     break;
@@ -696,7 +734,7 @@ class DebuggerConnection {
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[flowIndex];
+                            runtime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
@@ -710,7 +748,7 @@ class DebuggerConnection {
                         }
 
                         const targetComponent = getObjectFromStringPath(
-                            runtimeStore.DocumentStore.project,
+                            runtime.DocumentStore.project,
                             targetComponentInAssetsMap.path
                         ) as Component;
                         if (!targetComponent) {
@@ -731,7 +769,7 @@ class DebuggerConnection {
                             }
 
                             const sourceComponent = getObjectFromStringPath(
-                                runtimeStore.DocumentStore.project,
+                                runtime.DocumentStore.project,
                                 sourceComponentInAssetsMap.path
                             ) as Component;
                             if (!sourceComponent) {
@@ -781,24 +819,22 @@ class DebuggerConnection {
                         }
 
                         runInAction(() =>
-                            this.remoteRuntime.runtimeStore.pushTask({
+                            runtime.pushTask({
                                 flowState,
                                 component: targetComponent,
                                 connectionLine
                             })
                         );
 
-                        if (this.remoteRuntime.runtimeStore.isPaused) {
-                            this.remoteRuntime.runtimeStore.showNextQueueTask();
+                        if (runtime.isPaused) {
+                            runtime.showNextQueueTask();
                         }
                     }
                     break;
 
                 case MessagesToDebugger.MESSAGE_TO_DEBUGGER_REMOVE_FROM_QUEUE:
                     {
-                        runInAction(() =>
-                            this.remoteRuntime.runtimeStore.queue.shift()
-                        );
+                        runInAction(() => runtime.queue.shift());
                     }
                     break;
 
@@ -816,7 +852,7 @@ class DebuggerConnection {
                         const value = messageParameters[3];
 
                         const globalVariableInAssetsMap =
-                            this.remoteRuntime.assetsMap.globalVariables.find(
+                            runtime.assetsMap.globalVariables.find(
                                 globalVariable =>
                                     globalVariable.index == globalVariableIndex
                             );
@@ -826,7 +862,7 @@ class DebuggerConnection {
                         }
 
                         const globalVariable =
-                            this.remoteRuntime.runtimeStore.DocumentStore.project.variables.globalVariables.find(
+                            runtime.DocumentStore.project.variables.globalVariables.find(
                                 globalVariable =>
                                     globalVariable.name ==
                                     globalVariableInAssetsMap.name
@@ -837,7 +873,7 @@ class DebuggerConnection {
                         }
 
                         const globalVariableValue = new GlobalVariableValue(
-                            this.remoteRuntime.runtimeStore,
+                            runtime,
                             globalVariableInAssetsMap.name,
                             globalVariable.type
                         );
@@ -846,7 +882,7 @@ class DebuggerConnection {
                             this.parseDebuggerValue(value, globalVariable.type)
                         );
 
-                        this.remoteRuntime.debuggerValues.set(
+                        runtime.debuggerValues.set(
                             valueAddress,
                             globalVariableValue
                         );
@@ -875,7 +911,7 @@ class DebuggerConnection {
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[flowIndex];
+                            runtime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
@@ -912,7 +948,7 @@ class DebuggerConnection {
                             this.parseDebuggerValue(value, localVariable.type)
                         );
 
-                        this.remoteRuntime.debuggerValues.set(
+                        runtime.debuggerValues.set(
                             valueAddress,
                             localVariableValue
                         );
@@ -942,7 +978,7 @@ class DebuggerConnection {
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[flowIndex];
+                            runtime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
@@ -969,7 +1005,7 @@ class DebuggerConnection {
                         }
 
                         const component = getObjectFromStringPath(
-                            runtimeStore.DocumentStore.project,
+                            runtime.DocumentStore.project,
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -990,7 +1026,7 @@ class DebuggerConnection {
                             this.parseDebuggerValue(value, "any")
                         );
 
-                        this.remoteRuntime.debuggerValues.set(
+                        runtime.debuggerValues.set(
                             valueAddress,
                             componentInputValue
                         );
@@ -1008,7 +1044,7 @@ class DebuggerConnection {
                         const value = messageParameters[2];
 
                         const debuggerValue =
-                            this.remoteRuntime.debuggerValues.get(valueAddress);
+                            runtime.debuggerValues.get(valueAddress);
                         if (!debuggerValue) {
                             console.error("UNEXPECTED!");
                             return;
@@ -1042,14 +1078,14 @@ class DebuggerConnection {
                         // );
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[flowIndex];
+                            runtime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
                         }
 
                         const flow = getObjectFromStringPath(
-                            runtimeStore.DocumentStore.project,
+                            runtime.DocumentStore.project,
                             flowInAssetsMap.path
                         ) as Flow;
                         if (!flow) {
@@ -1077,9 +1113,7 @@ class DebuggerConnection {
 
                             if (parentComponentIndex != -1) {
                                 const parentFlowInAssetsMap =
-                                    this.remoteRuntime.assetsMap.flows[
-                                        flowIndex
-                                    ];
+                                    runtime.assetsMap.flows[flowIndex];
                                 if (!parentFlowInAssetsMap) {
                                     console.error("UNEXPECTED!");
                                     return;
@@ -1095,7 +1129,7 @@ class DebuggerConnection {
                                 }
 
                                 parentComponent = getObjectFromStringPath(
-                                    runtimeStore.DocumentStore.project,
+                                    runtime.DocumentStore.project,
                                     componentInAssetsMap.path
                                 ) as Component;
                                 if (!parentComponent) {
@@ -1106,22 +1140,21 @@ class DebuggerConnection {
                         }
 
                         let flowState = new FlowState(
-                            runtimeStore,
+                            runtime,
                             flow,
                             parentFlowState,
                             parentComponent
                         );
 
-                        this.remoteRuntime.flowStateMap.set(flowStateIndex, {
+                        runtime.flowStateMap.set(flowStateIndex, {
                             flowIndex,
                             flowState
                         });
 
                         runInAction(() =>
-                            (
-                                parentFlowState ||
-                                this.remoteRuntime.runtimeStore
-                            ).flowStates.push(flowState)
+                            (parentFlowState || runtime).flowStates.push(
+                                flowState
+                            )
                         );
                     }
                     break;
@@ -1142,7 +1175,7 @@ class DebuggerConnection {
                             return;
                         }
 
-                        runtimeStore.removeFlowState(flowState);
+                        runtime.removeFlowState(flowState);
                     }
                     break;
 
@@ -1161,7 +1194,7 @@ class DebuggerConnection {
                         }
 
                         const flowInAssetsMap =
-                            this.remoteRuntime.assetsMap.flows[flowIndex];
+                            runtime.assetsMap.flows[flowIndex];
                         if (!flowInAssetsMap) {
                             console.error("UNEXPECTED!");
                             return;
@@ -1177,7 +1210,7 @@ class DebuggerConnection {
                                 return;
                             }
                             component = getObjectFromStringPath(
-                                runtimeStore.DocumentStore.project,
+                                runtime.DocumentStore.project,
                                 componentInAssetsMap.path
                             ) as Component;
                             if (!component) {
@@ -1219,16 +1252,13 @@ interface DebuggerValue {
 
 class GlobalVariableValue implements DebuggerValue {
     constructor(
-        private runtimeStore: RuntimeStoreClass,
+        private runtime: RemoteRuntime,
         private variableName: string,
         public type: string
     ) {}
 
     set(value: any) {
-        this.runtimeStore.DocumentStore.dataContext.set(
-            this.variableName,
-            value
-        );
+        this.runtime.DocumentStore.dataContext.set(this.variableName, value);
     }
 }
 

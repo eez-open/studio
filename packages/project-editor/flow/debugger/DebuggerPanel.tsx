@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { ProjectContext } from "project-editor/project/context";
 import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
 import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
@@ -8,6 +7,7 @@ import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { Splitter } from "eez-studio-ui/splitter";
 import { computed, observable } from "mobx";
+import { RuntimeBase } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -20,10 +20,7 @@ interface CollapsedState {
 }
 
 @observer
-export class DebuggerPanel extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
+export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
     queuePanelCollapsed = observable.box(false);
     variablesPanelCollapsed = observable.box(false);
     breakpointsPanelCollapsed = observable.box(false);
@@ -139,11 +136,26 @@ export class DebuggerPanel extends React.Component {
                 sizes={this.sizes}
                 childrenOverflow="hidden|hidden|hidden|hidden|hidden"
             >
-                <QueuePanel collapsed={this.queuePanelCollapsed} />
-                <WatchPanel collapsed={this.variablesPanelCollapsed} />
-                <BreakpointsPanel collapsed={this.breakpointsPanelCollapsed} />
-                <ActiveFlowsPanel collapsed={this.activeFlowsPanelCollapsed} />
-                <LogsPanel collapsed={this.logsPanelCollapsed} />
+                <QueuePanel
+                    runtime={this.props.runtime}
+                    collapsed={this.queuePanelCollapsed}
+                />
+                <WatchPanel
+                    runtime={this.props.runtime}
+                    collapsed={this.variablesPanelCollapsed}
+                />
+                <BreakpointsPanel
+                    runtime={this.props.runtime}
+                    collapsed={this.breakpointsPanelCollapsed}
+                />
+                <ActiveFlowsPanel
+                    runtime={this.props.runtime}
+                    collapsed={this.activeFlowsPanelCollapsed}
+                />
+                <LogsPanel
+                    runtime={this.props.runtime}
+                    collapsed={this.logsPanelCollapsed}
+                />
             </Splitter>
         );
     }

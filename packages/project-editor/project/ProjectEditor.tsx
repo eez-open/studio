@@ -39,16 +39,13 @@ class Content extends React.Component {
     }
 
     render() {
-        if (
-            this.context.runtimeStore.isRuntimeMode &&
-            !this.context.runtimeStore.isDebuggerActive
-        ) {
+        if (this.context.runtime && !this.context.runtime.isDebuggerActive) {
             return (
                 <PageEditor
                     editor={{
-                        object: this.context.runtimeStore.selectedPage,
+                        object: this.context.runtime.selectedPage,
                         state: new PageTabState(
-                            this.context.runtimeStore.selectedPage
+                            this.context.runtime.selectedPage
                         )
                     }}
                 ></PageEditor>
@@ -60,7 +57,7 @@ class Content extends React.Component {
                 id="project"
                 navigationObject={this.context.project}
                 filter={object => {
-                    if (this.context.runtimeStore.isRuntimeMode) {
+                    if (this.context.runtime) {
                         // if runtime onde only show pages and actions
                         return (
                             object == this.context.project.pages ||
@@ -85,7 +82,7 @@ class Content extends React.Component {
         }
 
         if (editors) {
-            if (this.context.runtimeStore.isRuntimeMode) {
+            if (this.context.runtime) {
                 return (
                     <Splitter
                         type="horizontal"
@@ -95,7 +92,7 @@ class Content extends React.Component {
                     >
                         {menuNavigation}
                         {editors}
-                        {<DebuggerPanel />}
+                        {<DebuggerPanel runtime={this.context.runtime} />}
                     </Splitter>
                 );
             } else {
@@ -147,7 +144,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
                 </>
             );
         } else if (
-            this.context.runtimeStore.isRuntimeMode &&
+            this.context.runtime &&
             (this.context.isDashboardProject || this.context.isAppletProject)
         ) {
             mainContent = (
@@ -184,9 +181,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
                     {mainContent}
                 </div>
                 {this.context.uiStateStore.showCommandPalette &&
-                    !this.context.runtimeStore.isRuntimeMode && (
-                        <CommandPalette />
-                    )}
+                    !this.context.runtime && <CommandPalette />}
                 <LineMarkers />
             </div>
         );

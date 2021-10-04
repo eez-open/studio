@@ -1027,7 +1027,7 @@ export class ReadSettingActionComponent extends ActionComponent {
         flowState.propagateValue(
             this,
             "value",
-            flowState.runtimeStore.readSettings(key)
+            flowState.runtime.readSettings(key)
         );
         return undefined;
     }
@@ -1089,7 +1089,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
             this,
             "value"
         );
-        flowState.runtimeStore.writeSettings(key, inputPropertyValue?.value);
+        flowState.runtime.writeSettings(key, inputPropertyValue?.value);
         return undefined;
     }
 }
@@ -1766,7 +1766,7 @@ export class ShowPageActionComponent extends ActionComponent {
             throw "page not specified";
         }
         const page = findPage(
-            flowState.runtimeStore.DocumentStore.project,
+            flowState.runtime.DocumentStore.project,
             this.page
         );
         if (!page) {
@@ -1774,7 +1774,7 @@ export class ShowPageActionComponent extends ActionComponent {
         }
 
         runInAction(() => {
-            flowState.runtimeStore.selectedPage = page;
+            flowState.runtime.selectedPage = page;
         });
 
         return undefined;

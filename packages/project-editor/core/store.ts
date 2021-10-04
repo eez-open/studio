@@ -114,10 +114,12 @@ import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
-import { RuntimeStoreClass as RuntimeStore } from "project-editor/flow/runtime";
+import { RuntimeBase } from "project-editor/flow/runtime";
 import { theme } from "eez-studio-ui/theme";
 import { evalExpression } from "project-editor/flow/expression/expression";
 import { validators } from "eez-studio-shared/validation";
+import { LocalRuntime } from "project-editor/flow/local-runtime";
+import { RemoteRuntime } from "project-editor/flow/remote-runtime";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -751,10 +753,7 @@ class UIStateStore {
                     key
                 ) as Component;
                 if (component) {
-                    this.DocumentStore.runtimeStore.breakpoints.set(
-                        component,
-                        uiState.breakpoints[key]
-                    );
+                    this.breakpoints.set(component, uiState.breakpoints[key]);
                 }
             }
         }
@@ -794,9 +793,7 @@ class UIStateStore {
             activeOutputSection: this.activeOutputSection,
             pageEditorFrontFace: this.pageEditorFrontFace,
             pageRuntimeFrontFace: this.pageRuntimeFrontFace,
-            breakpoints: Array.from(
-                this.DocumentStore.runtimeStore.breakpoints
-            ).reduce(
+            breakpoints: Array.from(this.breakpoints).reduce(
                 (obj, [key, value]) =>
                     Object.assign(obj, {
                         [getObjectPathAsString(key)]: value
@@ -850,6 +847,51 @@ class UIStateStore {
             Object.assign(objectUIState, changes);
         } else {
             this.objectUIStates.set(key, changes);
+        }
+    }
+
+    ////////////////////////////////////////
+    // BREAKPOINTS
+
+    @observable breakpoints = new Map<Component, boolean>();
+
+    isBreakpointAddedForComponent(component: Component) {
+        return this.breakpoints.has(component);
+    }
+
+    isBreakpointEnabledForComponent(component: Component) {
+        return this.breakpoints.get(component) == true;
+    }
+
+    @action
+    addBreakpoint(component: Component) {
+        this.breakpoints.set(component, true);
+        if (this.DocumentStore.runtime) {
+            this.DocumentStore.runtime.onBreakpointAdded(component);
+        }
+    }
+
+    @action
+    removeBreakpoint(component: Component) {
+        this.breakpoints.delete(component);
+        if (this.DocumentStore.runtime) {
+            this.DocumentStore.runtime.onBreakpointRemoved(component);
+        }
+    }
+
+    @action
+    enableBreakpoint(component: Component) {
+        this.breakpoints.set(component, true);
+        if (this.DocumentStore.runtime) {
+            this.DocumentStore.runtime.onBreakpointEnabled(component);
+        }
+    }
+
+    @action
+    disableBreakpoint(component: Component) {
+        this.breakpoints.set(component, false);
+        if (this.DocumentStore.runtime) {
+            this.DocumentStore.runtime.onBreakpointDisabled(component);
         }
     }
 }
@@ -1077,7 +1119,8 @@ export class DocumentStoreClass {
     editorsStore = new EditorsStore(this);
     uiStateStore = new UIStateStore(this);
     outputSectionsStore = new OutputSections(this);
-    runtimeStore = new RuntimeStore(this);
+
+    @observable runtime: RuntimeBase | undefined;
 
     @observable private _project: Project | undefined;
     @observable modified: boolean = false;
@@ -1474,7 +1517,9 @@ export class DocumentStoreClass {
     }
 
     async closeWindow() {
-        await this.runtimeStore.stop();
+        if (this.runtime) {
+            await this.runtime.stopRuntime(false);
+        }
 
         if (this.project) {
             return await this.saveModified();
@@ -1826,6 +1871,57 @@ export class DocumentStoreClass {
         }
         return objectsToClipboardData(objects);
     }
+
+    setRuntimeMode(isDebuggerActive: boolean) {
+        let runtime: RuntimeBase | undefined;
+
+        if (this.isDashboardProject) {
+            runtime = new LocalRuntime(this);
+        } else {
+            runtime = new RemoteRuntime(this);
+        }
+
+        runInAction(() => (this.runtime = runtime));
+
+        runtime.startRuntime(isDebuggerActive);
+    }
+
+    @action
+    setEditorMode() {
+        if (this.runtime) {
+            this.runtime.stopRuntime(false);
+            this.runtime = undefined;
+        }
+    }
+
+    @action
+    onSetEditorMode = () => {
+        this.setEditorMode();
+    };
+
+    onSetRuntimeMode = async () => {
+        if (this.runtime && this.runtime.isDebuggerActive) {
+            this.runtime.toggleDebugger();
+        } else {
+            this.setRuntimeMode(false);
+        }
+    };
+
+    onSetDebuggerMode = () => {
+        if (!this.runtime) {
+            this.setRuntimeMode(true);
+        } else {
+            if (!this.runtime.isDebuggerActive) {
+                this.navigationStore.setSelection([this.runtime.selectedPage]);
+                this.runtime.toggleDebugger();
+            }
+        }
+    };
+
+    onRestartRuntimeWithDebuggerActive = () => {
+        this.onSetEditorMode();
+        this.setRuntimeMode(true);
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -423,7 +423,7 @@ export class PagesNavigation extends NavigationComponent {
             <ListNavigation
                 id={this.props.id}
                 navigationObject={this.props.navigationObject}
-                editable={!this.context.runtimeStore.isRuntimeMode}
+                editable={!this.context.runtime}
             />
         );
 
@@ -432,7 +432,7 @@ export class PagesNavigation extends NavigationComponent {
             Page.classInfo
         );
 
-        const navigation = this.context.runtimeStore.isRuntimeMode ? (
+        const navigation = this.context.runtime ? (
             listNavigation
         ) : (
             <Splitter

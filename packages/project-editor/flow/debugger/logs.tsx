@@ -194,7 +194,7 @@ export class NoStartActionComponentLogItem extends LogItem {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LogsState {
+export class RuntimeLogs {
     @observable logs: LogItem[] = [];
     @observable selectedLogItem: LogItem | undefined;
 

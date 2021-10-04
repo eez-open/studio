@@ -1,8 +1,7 @@
 import { guid } from "eez-studio-shared/guid";
 
-import { action, computed, observable, runInAction, toJS } from "mobx";
+import { action, computed, observable, runInAction } from "mobx";
 import { DocumentStoreClass } from "project-editor/core/store";
-import { Action, findAction } from "project-editor/features/action/action";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import {
     CatchErrorActionComponent,
@@ -23,26 +22,20 @@ import type {
     IFlowContext
 } from "project-editor/flow//flow-interfaces";
 import { visitObjects } from "project-editor/core/search";
-import { isWebStudio } from "eez-studio-shared/util-electron";
 import { Page } from "project-editor/features/page/page";
 import {
     ActionEndLogItem,
     ActionStartLogItem,
     ExecuteComponentLogItem,
-    ExecuteWidgetActionLogItem,
     ExecutionErrorLogItem,
     LogItem,
-    LogsState,
+    RuntimeLogs,
     NoStartActionComponentLogItem,
-    OutputValueLogItem,
-    WidgetActionNotDefinedLogItem,
-    WidgetActionNotFoundLogItem
+    OutputValueLogItem
 } from "project-editor/flow/debugger/logs";
 import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow/debugger/WatchPanel";
-import { RemoteRuntime } from "project-editor/flow/remote-debugger";
-import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
-import * as notification from "eez-studio-ui/notification";
+import { Action } from "project-editor/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,293 +60,192 @@ export interface QueueTask {
     connectionLine?: ConnectionLine;
 }
 
-export class RuntimeStoreClass {
-    constructor(public DocumentStore: DocumentStoreClass) {}
+enum State {
+    STARTING = "STARTING",
+    STARTING_WITHOUT_DEBUGGER = "STARTING_WITHOUT_DEBUGGER",
+    STARTING_WITH_DEBUGGER = "STARTING_WITH_DEBUGGER",
+    RUNNING = "RUNNING",
+    PAUSED = "PAUSED",
+    RESUMED = "RESUMED",
+    SINGLE_STEP = "SINGLE_STEP",
+    STOPPED = "STOPPED"
+}
 
-    @observable isRuntimeMode = false;
-    @observable isStopped = false;
-    @observable isStarting = false;
-    @observable isStopping = false;
+export enum StateMachineAction {
+    START_WITHOUT_DEBUGGER = "START_WITHOUT_DEBUGGER",
+    START_WITH_DEBUGGER = "START_WITH_DEBUGGER",
+    RUN = "RUN",
+    RESUME = "RESUME",
+    PAUSE = "PAUSE",
+    SINGLE_STEP = "SINGLE_STEP",
+    STOP = "STOP"
+}
+
+export abstract class RuntimeBase {
+    @observable state: State = State.STARTING;
+    @observable isDebuggerActive = false;
+    @observable globalVariablesInitialized = false;
+
     @observable selectedPage: Page;
+    @observable selectedFlowState: FlowState | undefined;
+    @observable selectedQueueTask: QueueTask | undefined;
 
     @observable error: string | undefined;
 
-    @observable isDebuggerActive = false;
-    @observable isPaused = false;
-    @observable singleStep = false;
-    resumed = false;
-
-    @observable globalVariablesInitialized = false;
-
-    remoteRuntime = new RemoteRuntime(this);
-
-    setRuntimeMode = async (isDebuggerActive: boolean) => {
-        if (!this.isRuntimeMode && !this.isStarting) {
-            runInAction(() => (this.isStarting = true));
-
-            if (this.DocumentStore.isAppletProject) {
-                if (!(await this.remoteRuntime.startApplet(isDebuggerActive))) {
-                    runInAction(() => (this.isStarting = false));
-                    return;
-                }
-            }
-
-            this.queueTaskId = 0;
-
-            runInAction(() => {
-                this.globalVariablesInitialized = false;
-
-                this.isRuntimeMode = true;
-                this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
-                    !isDebuggerActive;
-                this.selectedFlowState = undefined;
-                this.logsState.selectedLogItem = undefined;
-                this.isStopped = false;
-                this.error = undefined;
-                this.isDebuggerActive = isDebuggerActive;
-                this.isPaused = isDebuggerActive;
-                this.singleStep = false;
-                this.selectedPage = this.DocumentStore.project.pages[0];
-                this.selectedQueueTask = undefined;
-
-                this.settings = {};
-                this._settingsModified = false;
-
-                this.DocumentStore.dataContext.clearRuntimeValues();
-
-                if (this.DocumentStore.isDashboardProject) {
-                    this.flowStates = this.DocumentStore.project.pages
-                        .filter(page => !page.isUsedAsCustomWidget)
-                        .map(page => new FlowState(this, page));
-                } else {
-                    this.flowStates = [];
-                }
-            });
-
-            if (this.DocumentStore.isDashboardProject) {
-                await this.loadSettings();
-
-                await this.loadPersistentVariables();
-
-                await this.constructCustomGlobalVariables();
-
-                runInAction(() => {
-                    this.globalVariablesInitialized = true;
-                });
-
-                this.flowStates.forEach(flowState => flowState.start());
-                this.pumpQueue();
-                EEZStudio.electron.ipcRenderer.send(
-                    "preventAppSuspension",
-                    true
-                );
-            }
-
-            runInAction(() => (this.isStarting = false));
-        }
-    };
-
-    setEditorMode = async () => {
-        if (this.isRuntimeMode && !this.isStarting) {
-            await this.stop();
-
-            await this.saveSettings();
-
-            runInAction(() => {
-                this.queue = [];
-                this.flowStates = [];
-                this.logsState.clear();
-                this.error = undefined;
-                this.isRuntimeMode = false;
-            });
-
-            this.queueTaskId = 0;
-
-            this.DocumentStore.editorsStore.editors.forEach(editor => {
-                if (editor.state instanceof FlowTabState) {
-                    const flowTabState = editor.state;
-                    runInAction(() => {
-                        flowTabState.flowState = undefined;
-                    });
-                }
-            });
-        }
-    };
-
-    async loadPersistentVariables() {
-        if (this.settings.__persistentVariables) {
-            for (const variable of this.DocumentStore.project.variables
-                .globalVariables) {
-                if (variable.persistent) {
-                    const saveValue =
-                        this.settings.__persistentVariables[variable.name];
-                    if (saveValue) {
-                        const aClass = getCustomTypeClassFromType(
-                            variable.type
-                        );
-                        if (aClass && aClass.classInfo.onVariableLoad) {
-                            const value = await aClass.classInfo.onVariableLoad(
-                                saveValue
-                            );
-                            this.DocumentStore.dataContext.set(
-                                variable.name,
-                                value
-                            );
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    async savePersistentVariables() {
-        for (const variable of this.DocumentStore.project.variables
-            .globalVariables) {
-            if (variable.persistent) {
-                const aClass = getCustomTypeClassFromType(variable.type);
-                if (aClass && aClass.classInfo.onVariableSave) {
-                    const saveValue = await aClass.classInfo.onVariableSave(
-                        this.DocumentStore.dataContext.get(variable.name)
-                    );
-
-                    runInAction(() => {
-                        if (!this.settings.__persistentVariables) {
-                            this.settings.__persistentVariables = {};
-                        }
-                        this.settings.__persistentVariables[variable.name] =
-                            saveValue;
-                    });
-                    this._settingsModified = true;
-                }
-            }
-        }
-    }
-
-    async constructCustomGlobalVariables() {
-        for (const variable of this.DocumentStore.project.variables
-            .globalVariables) {
-            let value = this.DocumentStore.dataContext.get(variable.name);
-            if (value == null) {
-                const aClass = getCustomTypeClassFromType(variable.type);
-                if (aClass && aClass.classInfo.onVariableConstructor) {
-                    value = await aClass.classInfo.onVariableConstructor(
-                        variable
-                    );
-                    this.DocumentStore.dataContext.set(variable.name, value);
-                }
-            }
-        }
-    }
-
-    async stop(notifyUser = false) {
-        if (!this.isRuntimeMode) {
-            return;
-        }
-
-        if (this.isStopped || this.isStopping || this.isStarting) {
-            await this.saveSettings();
-            return;
-        }
-
-        runInAction(() => (this.isStopping = true));
-
-        if (this.DocumentStore.isDashboardProject) {
-            if (this.pumpTimeoutId) {
-                clearTimeout(this.pumpTimeoutId);
-                this.pumpTimeoutId = undefined;
-            }
-
-            let startTime = Date.now();
-            while (this.isRunning) {
-                await new Promise(resolve => setTimeout(resolve));
-                if (Date.now() - startTime > 3000) {
-                    break;
-                }
-            }
-
-            this.flowStates.forEach(flowState => flowState.finish());
-            EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
-
-            runInAction(() => {
-                this.isStopped = true;
-            });
-
-            if (notifyUser) {
-                if (this.error) {
-                    notification.error(
-                        `Flow execution finished due to error: ${this.error}!`
-                    );
-                } else {
-                    notification.info("Flow execution finished!");
-                }
-            }
-        } else {
-            await this.remoteRuntime.stopApplet();
-        }
-
-        runInAction(() => (this.isStopping = false));
-    }
-
-    @computed get isRunning() {
-        return (
-            this.flowStates.find(flowState => flowState.isRunning) != undefined
-        );
-    }
-
-    @action
-    toggleDebugger() {
-        this.isDebuggerActive = !this.isDebuggerActive;
-        if (this.isDebuggerActive) {
-            this.pause();
-        } else {
-            this.resume();
-        }
-        this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
-            !this.isDebuggerActive;
-    }
-
-    @action
-    resume() {
-        if (this.DocumentStore.isAppletProject) {
-            this.remoteRuntime.resume();
-        } else {
-            this.isPaused = false;
-            this.singleStep = false;
-            this.resumed = true;
-        }
-    }
-
-    @action
-    pause() {
-        if (this.DocumentStore.isAppletProject) {
-            this.remoteRuntime.pause();
-        } else {
-            this.isPaused = true;
-            this.singleStep = false;
-        }
-    }
-
-    @action
-    runSingleStep() {
-        if (this.DocumentStore.isAppletProject) {
-            this.remoteRuntime.singleStep();
-        } else {
-            if (this.isPaused) {
-                this.isPaused = false;
-                this.singleStep = true;
-            }
-        }
-    }
-
-    ////////////////////////////////////////
-
-    queueTaskId: 0;
+    queueTaskId = 0;
     @observable queue: QueueTask[] = [];
-    pumpTimeoutId: any;
 
     @observable flowStates: FlowState[] = [];
 
-    @observable runningComponents: number;
+    logs = new RuntimeLogs();
+
+    get isPaused() {
+        return this.state == State.PAUSED;
+    }
+
+    get isSingleStep() {
+        return this.state == State.SINGLE_STEP;
+    }
+
+    get isResumed() {
+        return this.state == State.RESUMED;
+    }
+
+    get isStopped() {
+        return this.state == State.STOPPED;
+    }
+
+    constructor(public DocumentStore: DocumentStoreClass) {
+        this.selectedPage = this.DocumentStore.project.pages[0];
+    }
+
+    startRuntime(isDebuggerActive: boolean) {
+        if (isDebuggerActive) {
+            this.transition(StateMachineAction.START_WITH_DEBUGGER);
+        } else {
+            this.transition(StateMachineAction.START_WITHOUT_DEBUGGER);
+        }
+
+        this.doStartRuntime(isDebuggerActive);
+    }
+
+    stopRuntime(notifyUser: boolean) {
+        if (this.state == State.STOPPED) {
+            return;
+        }
+
+        this.transition(StateMachineAction.STOP);
+
+        this.doStopRuntime(notifyUser);
+    }
+
+    abstract doStartRuntime(isDebuggerActive: boolean): any;
+    abstract doStopRuntime(notifyUser: boolean): any;
+
+    @action
+    stopRuntimeWithError(error: string) {
+        this.error = error;
+        this.stopRuntime(true);
+    }
+
+    @action private setState(state: State) {
+        const wasDebuggerActive = this.isDebuggerActive;
+
+        this.state = state;
+
+        if (
+            this.state == State.STARTING_WITH_DEBUGGER ||
+            this.state == State.PAUSED ||
+            this.state == State.RESUMED ||
+            this.state == State.SINGLE_STEP
+        ) {
+            this.isDebuggerActive = true;
+        } else if (
+            this.state == State.STARTING_WITHOUT_DEBUGGER ||
+            this.state == State.RUNNING
+        ) {
+            this.isDebuggerActive = false;
+        }
+
+        const isDebuggerActive = this.isDebuggerActive;
+
+        if (!wasDebuggerActive && isDebuggerActive) {
+            this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
+        } else if (wasDebuggerActive && !isDebuggerActive) {
+            this.DocumentStore.uiStateStore.pageRuntimeFrontFace = true;
+        }
+
+        if (this.state == State.PAUSED) {
+            this.showNextQueueTask();
+        }
+    }
+
+    @action
+    transition(action: StateMachineAction) {
+        const wasState = this.state;
+
+        if (this.state == State.STARTING) {
+            if (action == StateMachineAction.START_WITHOUT_DEBUGGER) {
+                this.setState(State.STARTING_WITHOUT_DEBUGGER);
+            } else if (action == StateMachineAction.START_WITH_DEBUGGER) {
+                this.setState(State.STARTING_WITH_DEBUGGER);
+            }
+        } else if (this.state == State.STARTING_WITHOUT_DEBUGGER) {
+            if (action == StateMachineAction.RUN) {
+                this.setState(State.RUNNING);
+            }
+        } else if (this.state == State.STARTING_WITH_DEBUGGER) {
+            if (action == StateMachineAction.PAUSE) {
+                this.setState(State.PAUSED);
+            }
+        } else if (this.state == State.RUNNING) {
+            if (action == StateMachineAction.PAUSE) {
+                this.setState(State.PAUSED);
+            }
+        } else if (this.state == State.PAUSED) {
+            if (action == StateMachineAction.RUN) {
+                this.setState(State.RUNNING);
+            } else if (action == StateMachineAction.RESUME) {
+                this.setState(State.RESUMED);
+            } else if (action == StateMachineAction.SINGLE_STEP) {
+                this.setState(State.SINGLE_STEP);
+            }
+        } else if (this.state == State.RESUMED) {
+            if (action == StateMachineAction.RUN) {
+                this.setState(State.RUNNING);
+            } else if (action == StateMachineAction.PAUSE) {
+                this.setState(State.PAUSED);
+            }
+        } else if (this.state == State.SINGLE_STEP) {
+            if (action == StateMachineAction.PAUSE) {
+                this.setState(State.PAUSED);
+            }
+        }
+
+        if (action == StateMachineAction.STOP) {
+            this.setState(State.STOPPED);
+        }
+
+        if (wasState == this.state) {
+            console.error(
+                `INVALID TRANSITION: state=${wasState} action=${action}`
+            );
+        } else {
+            console.info(
+                `Transition: stateBefore=${wasState} action=${action} stateAfter=${this.state}`
+            );
+        }
+    }
+
+    abstract toggleDebugger(): void;
+
+    abstract resume(): void;
+
+    abstract pause(): void;
+
+    abstract runSingleStep(): void;
+
+    ////////////////////////////////////////
 
     getFlowState(flow: Flow) {
         for (let flowState of this.flowStates) {
@@ -388,145 +280,23 @@ export class RuntimeStoreClass {
             component,
             connectionLine
         });
-
-        if (this.isDebuggerActive && this.isPaused && !this.selectedQueueTask) {
-            this.showNextQueueTask();
-        }
     }
-
-    showNextQueueTask() {
-        const nextQueueTask = this.queue[0];
-
-        runInAction(() => {
-            this.selectQueueTask(nextQueueTask);
-        });
-
-        if (nextQueueTask) {
-            this.showQueueTask(nextQueueTask);
-        }
-    }
-
-    pumpQueue = async () => {
-        this.pumpTimeoutId = undefined;
-
-        if (!(this.isDebuggerActive && this.isPaused)) {
-            if (this.queue.length > 0) {
-                const runningComponents: QueueTask[] = [];
-
-                let singleStep = this.singleStep;
-
-                const queueLength = this.queue.length;
-
-                for (let i = 0; i < queueLength; i++) {
-                    let task: QueueTask | undefined;
-                    runInAction(() => (task = this.queue.shift()));
-                    if (!task) {
-                        break;
-                    }
-
-                    const { flowState, component, connectionLine } = task;
-
-                    const componentState =
-                        flowState.getComponentState(component);
-
-                    if (componentState.isRunning) {
-                        runningComponents.push(task);
-                    } else {
-                        if (
-                            this.isDebuggerActive &&
-                            !singleStep &&
-                            !this.resumed &&
-                            this.breakpoints.has(component)
-                        ) {
-                            runningComponents.push(task);
-                            singleStep = true;
-                            break;
-                        }
-
-                        await componentState.run();
-
-                        if (connectionLine) {
-                            connectionLine.setActive();
-                        }
-                    }
-
-                    this.resumed = false;
-
-                    if (singleStep) {
-                        break;
-                    }
-
-                    if (this.isDebuggerActive && this.isPaused) {
-                        break;
-                    }
-                }
-
-                this.resumed = false;
-
-                runInAction(() => this.queue.unshift(...runningComponents));
-
-                if (singleStep) {
-                    const nextQueueTask =
-                        this.queue.length > 0 ? this.queue[0] : undefined;
-
-                    runInAction(() => {
-                        this.isPaused = true;
-                        this.singleStep = false;
-                        this.selectQueueTask(nextQueueTask);
-                    });
-
-                    if (nextQueueTask) {
-                        this.showQueueTask(nextQueueTask);
-                    }
-                }
-            }
-        }
-
-        this.pumpTimeoutId = setTimeout(this.pumpQueue);
-    };
 
     @action
-    executeWidgetAction(flowContext: IFlowContext, widget: Widget) {
-        if (this.isStopped) {
-            return;
-        }
+    showNextQueueTask() {
+        const nextQueueTask = this.queue.length > 0 ? this.queue[0] : undefined;
 
-        const parentFlowState = flowContext.flowState! as FlowState;
+        this.selectQueueTask(nextQueueTask);
 
-        if (widget.isOutputProperty("action")) {
-            parentFlowState.propagateValue(widget, "action", null);
-        } else if (widget.action) {
-            // execute action given by name
-            const action = findAction(
-                this.DocumentStore.project,
-                widget.action
-            );
-
-            if (action) {
-                const newFlowState = new FlowState(
-                    this,
-                    action,
-                    parentFlowState
-                );
-
-                this.logsState.addLogItem(
-                    new ExecuteWidgetActionLogItem(newFlowState, widget)
-                );
-
-                parentFlowState.flowStates.push(newFlowState);
-
-                newFlowState.executeStartAction();
-            } else {
-                this.logsState.addLogItem(
-                    new WidgetActionNotFoundLogItem(undefined, widget)
-                );
-            }
-        } else {
-            this.logsState.addLogItem(
-                new WidgetActionNotDefinedLogItem(undefined, widget)
-            );
+        if (nextQueueTask) {
+            setTimeout(() => this.showQueueTask(nextQueueTask), 10);
         }
     }
+
+    abstract executeWidgetAction(
+        flowContext: IFlowContext,
+        widget: Widget
+    ): void;
 
     removeFlowState(flowState: FlowState) {
         let flowStates: FlowState[];
@@ -547,115 +317,6 @@ export class RuntimeStoreClass {
             flowStates.splice(i, 1);
         });
     }
-
-    ////////////////////////////////////////
-    // RUNNING FLOWS PANEL
-
-    @observable selectedFlowState: FlowState | undefined;
-
-    ////////////////////////////////////////
-    // HISTORY
-
-    logsState = new LogsState();
-
-    ////////////////////////////////////////
-    // RUNTIME SETTINGS
-
-    @observable settings: any = {};
-    _settingsModified: boolean;
-
-    readSettings(key: string) {
-        return this.settings[key];
-    }
-
-    @action
-    writeSettings(key: string, value: any) {
-        this.settings[key] = value;
-        this._settingsModified = true;
-    }
-
-    getSettingsFilePath() {
-        if (this.DocumentStore.filePath) {
-            return this.DocumentStore.filePath + "-runtime-settings";
-        }
-        return undefined;
-    }
-
-    async loadSettings() {
-        if (isWebStudio()) {
-            return;
-        }
-
-        const filePath = this.getSettingsFilePath();
-        if (!filePath) {
-            return;
-        }
-
-        const fs = EEZStudio.remote.require("fs");
-
-        return new Promise<void>(resolve => {
-            fs.readFile(filePath, "utf8", (err: any, data: string) => {
-                if (err) {
-                    // TODO
-                    console.error(err);
-                } else {
-                    runInAction(() => {
-                        try {
-                            this.settings = JSON.parse(data);
-                        } catch (err) {
-                            console.error(err);
-                            this.settings = {};
-                        }
-                    });
-                    console.log("Runtime settings loaded");
-                }
-                resolve();
-            });
-        });
-    }
-
-    async saveSettings() {
-        if (isWebStudio()) {
-            return;
-        }
-
-        const filePath = this.getSettingsFilePath();
-        if (!filePath) {
-            return;
-        }
-
-        await this.savePersistentVariables();
-
-        if (!this._settingsModified) {
-            return;
-        }
-
-        const fs = EEZStudio.remote.require("fs");
-
-        return new Promise<void>(resolve => {
-            fs.writeFile(
-                this.getSettingsFilePath(),
-                JSON.stringify(toJS(this.settings), undefined, "  "),
-                "utf8",
-                (err: any) => {
-                    if (err) {
-                        // TODO
-                        console.error(err);
-                    } else {
-                        this._settingsModified = false;
-                        console.log("Runtime settings saved");
-                    }
-
-                    resolve();
-                }
-            );
-        });
-    }
-
-    ////////////////////////////////////////
-    // DEBUGGER
-
-    @observable selectedQueueTask: QueueTask | undefined;
 
     selectQueueTask(queueTask: QueueTask | undefined) {
         this.selectedQueueTask = queueTask;
@@ -718,42 +379,16 @@ export class RuntimeStoreClass {
         }
     }
 
-    ////////////////////////////////////////
-    // BREAKPOINTS
+    onBreakpointAdded(component: Component) {}
 
-    @observable breakpoints = new Map<Component, boolean>();
+    onBreakpointRemoved(component: Component) {}
 
-    isBreakpointAddedForComponent(component: Component) {
-        return this.breakpoints.has(component);
-    }
+    onBreakpointEnabled(component: Component) {}
 
-    isBreakpointEnabledForComponent(component: Component) {
-        return this.breakpoints.get(component) == true;
-    }
+    onBreakpointDisabled(component: Component) {}
 
-    @action
-    addBreakpoint(component: Component) {
-        this.breakpoints.set(component, true);
-        this.remoteRuntime.onBreakpointAdded(component);
-    }
-
-    @action
-    removeBreakpoint(component: Component) {
-        this.breakpoints.delete(component);
-        this.remoteRuntime.onBreakpointRemoved(component);
-    }
-
-    @action
-    enableBreakpoint(component: Component) {
-        this.breakpoints.set(component, true);
-        this.remoteRuntime.onBreakpointEnabled(component);
-    }
-
-    @action
-    disableBreakpoint(component: Component) {
-        this.breakpoints.set(component, false);
-        this.remoteRuntime.onBreakpointDisabled(component);
-    }
+    abstract readSettings(key: string): any;
+    abstract writeSettings(key: string, value: any): void;
 }
 
 export class FlowState {
@@ -764,19 +399,19 @@ export class FlowState {
     @observable error: string | undefined = undefined;
 
     constructor(
-        public runtimeStore: RuntimeStoreClass,
+        public runtime: RuntimeBase,
         public flow: Flow,
         public parentFlowState?: FlowState,
         public component?: Component
     ) {
         this.dataContext =
-            this.runtimeStore.DocumentStore.dataContext.createWithLocalVariables(
+            this.runtime.DocumentStore.dataContext.createWithLocalVariables(
                 flow.localVariables
             );
     }
 
     get DocumentStore() {
-        return this.runtimeStore.DocumentStore;
+        return this.runtime.DocumentStore;
     }
 
     get flowState() {
@@ -910,7 +545,7 @@ export class FlowState {
                     if (componentState.component instanceof Widget) {
                         await componentState.run();
                     } else {
-                        this.runtimeStore.pushTask({
+                        this.runtime.pushTask({
                             flowState: this,
                             component: visitResult.value
                         });
@@ -925,11 +560,11 @@ export class FlowState {
 
         this.componentStates.forEach(componentState => componentState.finish());
 
-        this.runtimeStore.logsState.addLogItem(new ActionEndLogItem(this));
+        this.runtime.logs.addLogItem(new ActionEndLogItem(this));
     }
 
     executeStartAction() {
-        this.runtimeStore.logsState.addLogItem(new ActionStartLogItem(this));
+        this.runtime.logs.addLogItem(new ActionStartLogItem(this));
 
         const startActionComponent = this.flow.components.find(
             component => component instanceof StartActionComponent
@@ -937,30 +572,25 @@ export class FlowState {
 
         if (startActionComponent) {
             runInAction(() =>
-                this.runtimeStore.pushTask({
+                this.runtime.pushTask({
                     flowState: this,
                     component: startActionComponent
                 })
             );
         } else {
-            this.runtimeStore.logsState.addLogItem(
+            this.runtime.logs.addLogItem(
                 new NoStartActionComponentLogItem(this)
             );
 
-            this.runtimeStore.error = this.error = "No Start action component";
+            this.runtime.error = this.error = "No Start action component";
 
-            this.flowState.runtimeStore.stop(true);
+            this.flowState.runtime.stopRuntime(true);
         }
     }
 
     @action
     executeAction(component: Component, action: Action) {
-        const flowState = new FlowState(
-            this.runtimeStore,
-            action,
-            this,
-            component
-        );
+        const flowState = new FlowState(this.runtime, action, this, component);
         this.flowStates.push(flowState);
         flowState.start();
         return flowState;
@@ -980,7 +610,7 @@ export class FlowState {
             ) {
                 connectionLine.setActive();
 
-                this.runtimeStore.logsState.addLogItem(
+                this.runtime.logs.addLogItem(
                     new OutputValueLogItem(
                         this,
                         connectionLine,
@@ -1013,7 +643,7 @@ export class FlowState {
         });
 
         if (componentState.isReadyToRun()) {
-            this.runtimeStore.pushTask({
+            this.runtime.pushTask({
                 flowState: this,
                 component,
                 connectionLine
@@ -1037,19 +667,19 @@ export class FlowState {
     }
 
     log(type: LogItemType, message: string, component: Component | undefined) {
-        this.runtimeStore.logsState.addLogItem(
+        this.runtime.logs.addLogItem(
             new LogItem(type, message, this, component)
         );
     }
 
     logScpi(message: string, component: Component) {
-        this.runtimeStore.logsState.addLogItem(
+        this.runtime.logs.addLogItem(
             new LogItem("scpi", message, this, component)
         );
     }
 
     logInfo(value: any, component: Component) {
-        this.runtimeStore.logsState.addLogItem(
+        this.runtime.logs.addLogItem(
             new LogItem("scpi", valueToString(value), this, component)
         );
     }
@@ -1150,7 +780,7 @@ export class ComponentState {
             this._inputPropertyValues.set(key, value);
         }
 
-        this.flowState.runtimeStore.logsState.addLogItem(
+        this.flowState.runtime.logs.addLogItem(
             new ExecuteComponentLogItem(this.flowState, this.component)
         );
 
@@ -1177,18 +807,18 @@ export class ComponentState {
             }
         } catch (err) {
             runInAction(() => {
-                this.flowState.runtimeStore.error = err.toString();
+                this.flowState.runtime.error = err.toString();
                 this.flowState.error = err.toString();
             });
 
-            this.flowState.runtimeStore.logsState.addLogItem(
+            this.flowState.runtime.logs.addLogItem(
                 new ExecutionErrorLogItem(this.flowState, this.component, err)
             );
 
             const catchErrorOutput = this.findCatchErrorOutput();
             if (catchErrorOutput) {
                 catchErrorOutput.connectionLines.forEach(connectionLine => {
-                    this.flowState.runtimeStore.logsState.addLogItem(
+                    this.flowState.runtime.logs.addLogItem(
                         new OutputValueLogItem(
                             catchErrorOutput.componentState.flowState,
                             connectionLine,
@@ -1220,7 +850,7 @@ export class ComponentState {
                         err
                     );
                 } else {
-                    this.flowState.runtimeStore.stop(true);
+                    this.flowState.runtime.stopRuntime(true);
                 }
             }
         } finally {

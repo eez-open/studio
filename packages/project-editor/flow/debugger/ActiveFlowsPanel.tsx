@@ -2,40 +2,34 @@ import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
-import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
 import { getLabel } from "project-editor/core/object";
-import { FlowState } from "project-editor/flow/runtime";
+import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class ActiveFlowsPanel extends React.Component<{
+    runtime: RuntimeBase;
     collapsed: IObservableValue<boolean>;
 }> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
     render() {
         return (
             <Panel
                 id="project-editor/debugger/flows"
                 title="Active flows"
                 collapsed={this.props.collapsed}
-                body={<FlowsTree />}
+                body={<FlowsTree runtime={this.props.runtime} />}
             />
         );
     }
 }
 
 @observer
-class FlowsTree extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
+class FlowsTree extends React.Component<{ runtime: RuntimeBase }> {
     @computed get rootNode(): ITreeNode<FlowState> {
-        const selectedFlowState = this.context.runtimeStore.selectedFlowState;
+        const selectedFlowState = this.props.runtime.selectedFlowState;
 
         function getChildren(flowStates: FlowState[]): ITreeNode<FlowState>[] {
             return flowStates.map(flowState => ({
@@ -59,7 +53,7 @@ class FlowsTree extends React.Component {
         return {
             id: "all",
             label: "All",
-            children: getChildren(this.context.runtimeStore.flowStates),
+            children: getChildren(this.props.runtime.flowStates),
             selected: false,
             expanded: true
         };
@@ -67,13 +61,13 @@ class FlowsTree extends React.Component {
 
     @action.bound
     selectNode(node?: ITreeNode<FlowState>) {
-        this.context.runtimeStore.logsState.selectedLogItem = undefined;
+        this.props.runtime.logs.selectedLogItem = undefined;
 
         const flowState = node?.data;
 
-        this.context.runtimeStore.selectedFlowState = flowState;
+        this.props.runtime.selectedFlowState = flowState;
 
-        this.context.runtimeStore.showSelectedFlowState();
+        this.props.runtime.showSelectedFlowState();
     }
 
     render() {

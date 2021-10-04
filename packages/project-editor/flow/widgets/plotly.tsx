@@ -330,8 +330,7 @@ const LineChartElement = observer(
                     height: widget.height
                 }}
                 className={classNames("EezStudio_Plotly", {
-                    interactive:
-                        flowContext.DocumentStore.runtimeStore.isRuntimeMode
+                    interactive: !!flowContext.DocumentStore.runtime
                 })}
             ></div>
         );
@@ -580,8 +579,7 @@ const GaugeElement = observer(
                     height: widget.height
                 }}
                 className={classNames("EezStudio_Plotly", {
-                    interactive:
-                        flowContext.DocumentStore.runtimeStore.isRuntimeMode
+                    interactive: !!flowContext.DocumentStore.runtime
                 })}
             ></div>
         );
