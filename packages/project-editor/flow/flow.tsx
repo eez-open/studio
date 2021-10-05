@@ -612,10 +612,20 @@ export abstract class FlowTabState implements IEditorState {
             this.frontFace = false;
         }
 
-        const el = document.getElementById(this.containerId);
-        if (el) {
-            const event = new Event("ensure-selection-visible");
-            el.dispatchEvent(event);
-        }
+        setTimeout(() => {
+            const el = document.getElementById(this.containerId);
+            if (el) {
+                const event = new Event("ensure-selection-visible");
+                el.dispatchEvent(event);
+
+                setTimeout(() => {
+                    const el = document.getElementById(this.containerId);
+                    if (el) {
+                        const event = new Event("ensure-selection-visible");
+                        el.dispatchEvent(event);
+                    }
+                }, 50);
+            }
+        }, 50);
     };
 }

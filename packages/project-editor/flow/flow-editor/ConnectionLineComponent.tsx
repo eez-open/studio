@@ -160,7 +160,8 @@ const DebugValue = observer(
         selected: boolean;
         id: string;
     }) => {
-        let valueStr;
+        let valueStr: string | undefined;
+
         if (
             context.flowState &&
             context.document.DocumentStore.runtime &&
@@ -172,40 +173,32 @@ const DebugValue = observer(
                 connectionLine.targetComponent,
                 connectionLine.input
             );
-            if (inputValue) {
-                if (inputValue.value == null) {
-                    valueStr = "null";
-                } else {
-                    try {
-                        valueStr = inputValue.value.toString();
-                    } catch (err) {
-                        valueStr = "err!";
-                    }
+            if (inputValue !== undefined) {
+                try {
+                    valueStr = JSON.stringify(inputValue).substr(0, 50);
+                } catch (err) {
+                    valueStr = "err!";
                 }
             }
         }
 
-        if (!valueStr) return null;
+        if (!valueStr) {
+            return null;
+        }
 
         return (
-            valueStr && (
-                <>
-                    <SvgLabel
-                        text={valueStr}
-                        x={connectionLine.targetPosition!.x - 15}
-                        y={connectionLine.targetPosition!.y}
-                        horizontalAlignement="right"
-                        verticalAlignment="center"
-                        border={{ size: 1, color: "#fff740", radius: 4 }}
-                        padding={{ left: 4, top: 2, right: 4, bottom: 0 }}
-                        backgroundColor="#feff9c"
-                        textColor={
-                            selected ? theme().selectionBackgroundColor : "#333"
-                        }
-                        textWeight={selected ? "bold" : "normal"}
-                    />
-                </>
-            )
+            <SvgLabel
+                text={valueStr}
+                x={connectionLine.targetPosition!.x - 15}
+                y={connectionLine.targetPosition!.y}
+                horizontalAlignement="right"
+                verticalAlignment="center"
+                border={{ size: 1, color: "#fff740", radius: 4 }}
+                padding={{ left: 4, top: 2, right: 4, bottom: 0 }}
+                backgroundColor="#feff9c"
+                textColor={selected ? theme().selectionBackgroundColor : "#333"}
+                textWeight={selected ? "bold" : "normal"}
+            />
         );
     }
 );

@@ -26,7 +26,8 @@ import { guid } from "eez-studio-shared/guid";
 import {
     ActionComponent,
     componentOutputUnique,
-    makeToggablePropertyToInput
+    makeToggablePropertyToInput,
+    outputIsOptionalIfAtLeastOneOutputExists
 } from "project-editor/flow/component";
 
 import { FlowState } from "project-editor/flow/runtime";
@@ -38,8 +39,7 @@ import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
     buildAssignableExpression,
     buildExpression,
-    evalConstantExpression,
-    evalExpression
+    evalConstantExpression
 } from "project-editor/flow/expression/expression";
 
 export const LeftArrow = () => (
@@ -233,7 +233,7 @@ export class OutputActionComponent extends ActionComponent {
             flowState.parentFlowState.propagateValue(
                 flowState.component,
                 this.wireID,
-                value.value,
+                value,
                 this.name
             );
         }
@@ -304,7 +304,7 @@ export class GetVariableActionComponent extends ActionComponent {
         let lastValue: any = undefined;
 
         return autorun(() => {
-            const value = evalExpression(flowState, this, this.variable);
+            const value = flowState.evalExpression(this, this.variable);
             if (first || value !== lastValue) {
                 first = false;
                 lastValue = value;
@@ -323,11 +323,11 @@ export class EvalActionComponent extends ActionComponent {
         flowComponentId: 1006,
 
         properties: [
-            makeToggablePropertyToInput({
+            {
                 name: "expression",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup
-            })
+            }
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
@@ -440,29 +440,29 @@ export class EvalActionComponent extends ActionComponent {
     }
 
     expandExpression(flowState: FlowState) {
-        let expression = this.expression;
+        let jsEvalExpression = this.expression;
         let values: any = {};
 
-        EvalActionComponent.parse(expression).inputs.forEach(input => {
-            const inputPropertyValue = flowState.getInputPropertyValue(
-                this,
-                input
-            );
-            values[input] = inputPropertyValue && inputPropertyValue.value;
-            expression = expression.replace(
-                new RegExp(`\{${input}\}`, "g"),
-                `values.${input}`
-            );
-        });
+        EvalActionComponent.parse(jsEvalExpression).inputs.forEach(
+            (expression, i) => {
+                const value = flowState.evalExpression(this, expression);
+                const name = `_val${i}`;
+                values[name] = value;
+                jsEvalExpression = jsEvalExpression.replace(
+                    new RegExp(`\{${expression}\}`, "g"),
+                    `values.${name}`
+                );
+            }
+        );
 
-        return { expression, values };
+        return { jsEvalExpression, values };
     }
 
     async execute(flowState: FlowState) {
         // try {
-        const { expression, values } = this.expandExpression(flowState);
+        const { jsEvalExpression, values } = this.expandExpression(flowState);
         values;
-        let result = eval(expression);
+        let result = eval(jsEvalExpression);
         flowState.propagateValue(this, "result", result);
         // } catch (err) {
         //     flowState.propagateValue(this, "result", err);
@@ -535,7 +535,7 @@ export class SetVariableActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        let value = flowState.getPropertyValue(this, "value");
+        let value = flowState.evalExpression(this, this.value);
         flowState.setVariable(this, this.variable, value);
         return undefined;
     }
@@ -696,7 +696,8 @@ export class CompareActionComponent extends ActionComponent {
                     { id: "OR", label: "OR" },
                     { id: "XOR", label: "XOR" },
                     { id: "BETWEEN", label: "BETWEEN" }
-                ]
+                ],
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (
@@ -732,11 +733,13 @@ export class CompareActionComponent extends ActionComponent {
             ...super.getOutputs(),
             {
                 name: "True",
-                type: PropertyType.Null
+                type: PropertyType.Null,
+                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
-                type: PropertyType.Null
+                type: PropertyType.Null,
+                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             }
         ];
     }
@@ -771,12 +774,12 @@ export class CompareActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         let result;
-        let A = flowState.getPropertyValue(this, "A");
+        let A = flowState.evalExpression(this, this.A);
 
         if (this.operator == "NOT") {
             result = !A;
         } else {
-            let B = flowState.getPropertyValue(this, "B");
+            let B = flowState.evalExpression(this, this.B);
             if (this.operator === "=") {
                 result = A === B;
             } else if (this.operator === "<") {
@@ -796,7 +799,7 @@ export class CompareActionComponent extends ActionComponent {
             } else if (this.operator === "XOR") {
                 result = A ? !B : B;
             } else if (this.operator === "BETWEEN") {
-                let C = flowState.getPropertyValue(this, "C");
+                let C = flowState.evalExpression(this, this.C);
                 result = A >= B && A <= C;
             }
         }
@@ -821,7 +824,7 @@ export class IsTrueActionComponent extends ActionComponent {
         properties: [
             makeToggablePropertyToInput({
                 name: "value",
-                type: PropertyType.Any,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             })
         ],
@@ -843,7 +846,13 @@ export class IsTrueActionComponent extends ActionComponent {
         ),
         componentHeaderColor: "#AAAA66",
         defaultValue: {
-            asInputProperties: ["value"]
+            value: "value",
+            customInputs: [
+                {
+                    name: "value",
+                    type: "any"
+                }
+            ]
         }
     });
 
@@ -855,18 +864,20 @@ export class IsTrueActionComponent extends ActionComponent {
             {
                 name: "True",
                 displayName: "Yes",
-                type: PropertyType.Null
+                type: PropertyType.Null,
+                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
                 displayName: "No",
-                type: PropertyType.Null
+                type: PropertyType.Null,
+                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             }
         ];
     }
 
     async execute(flowState: FlowState) {
-        let value = flowState.getPropertyValue(this, "value");
+        let value = flowState.evalExpression(this, this.value);
 
         if (value) {
             flowState.propagateValue(this, "True", true);
@@ -1010,7 +1021,7 @@ export class ReadSettingActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         let key;
         if (flowContext.flowState) {
-            key = flowContext.flowState.getPropertyValue(this, "key");
+            key = flowContext.flowState.evalExpression(this, this.key);
         } else {
             key = this.key;
         }
@@ -1023,7 +1034,7 @@ export class ReadSettingActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        let key = flowState.getPropertyValue(this, "key");
+        let key = flowState.evalExpression(this, this.key);
         flowState.propagateValue(
             this,
             "value",
@@ -1046,6 +1057,11 @@ export class WriteSettingsActionComponent extends ActionComponent {
                 name: "key",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            }),
+            makeToggablePropertyToInput({
+                name: "value",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             })
         ],
         icon: (
@@ -1057,39 +1073,12 @@ export class WriteSettingsActionComponent extends ActionComponent {
     });
 
     @observable key: string;
-
-    getInputs() {
-        return [
-            ...super.getInputs(),
-            {
-                name: "value",
-                type: PropertyType.Any
-            }
-        ];
-    }
-
-    getBody(flowContext: IFlowContext): React.ReactNode {
-        let key;
-        if (flowContext.flowState) {
-            key = flowContext.flowState.getPropertyValue(this, "key");
-        } else {
-            key = this.key;
-        }
-
-        return key ? (
-            <div className="body">
-                <pre>{key}</pre>
-            </div>
-        ) : null;
-    }
+    @observable value: string;
 
     async execute(flowState: FlowState) {
-        let key = flowState.getPropertyValue(this, "key");
-        const inputPropertyValue = flowState.getInputPropertyValue(
-            this,
-            "value"
-        );
-        flowState.runtime.writeSettings(key, inputPropertyValue?.value);
+        let key = flowState.evalExpression(this, this.key);
+        let value = flowState.evalExpression(this, this.value);
+        flowState.runtime.writeSettings(key, value);
         return undefined;
     }
 }
@@ -1134,7 +1123,7 @@ export class LogActionComponent extends ActionComponent {
     @observable value: string;
 
     async execute(flowState: FlowState) {
-        const value = evalExpression(flowState, this, this.value);
+        const value = flowState.evalExpression(this, this.value);
         flowState.logInfo(value, this);
         return undefined;
     }
@@ -1230,7 +1219,8 @@ export class CallActionActionComponent extends ActionComponent {
             (outputActionComponent: OutputActionComponent) => ({
                 name: outputActionComponent.wireID,
                 displayName: outputActionComponent.name,
-                type: PropertyType.Any
+                type: PropertyType.Any,
+                isOutputOptional: true
             })
         );
 
@@ -1254,7 +1244,7 @@ export class CallActionActionComponent extends ActionComponent {
                         actionFlowState.propagateValue(
                             component,
                             "@seqout",
-                            inputData.value
+                            inputData
                         );
                     }
                 }
@@ -1419,7 +1409,7 @@ export class DelayActionComponent extends ActionComponent {
         componentHeaderColor: "#E6E0F8"
     });
 
-    @observable milliseconds: number;
+    @observable milliseconds: string;
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
@@ -1430,7 +1420,7 @@ export class DelayActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        const milliseconds = flowState.getPropertyValue(this, "milliseconds");
+        const milliseconds = flowState.evalExpression(this, this.milliseconds);
         await new Promise<void>(resolve =>
             setTimeout(resolve, milliseconds ?? 0)
         );
@@ -1461,7 +1451,7 @@ export class ErrorActionComponent extends ActionComponent {
         componentHeaderColor: "#fc9b9b"
     });
 
-    @observable message: number;
+    @observable message: string;
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.isInputProperty("message")) {
@@ -1475,7 +1465,7 @@ export class ErrorActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        const message = flowState.getPropertyValue(this, "message");
+        const message = flowState.evalExpression(this, this.message);
         throw message;
         return undefined;
     }
@@ -1513,7 +1503,7 @@ export class CatchErrorActionComponent extends ActionComponent {
         flowState.propagateValue(
             this,
             "Message",
-            messageInputValue?.value ?? "unknow error"
+            messageInputValue ?? "unknow error"
         );
 
         return undefined;
@@ -1703,9 +1693,9 @@ export class LoopActionComponent extends ActionComponent {
 
         if (!runningState) {
             runningState = new LoopRunningState(
-                evalExpression(flowState, this, this.from),
-                evalExpression(flowState, this, this.to),
-                evalExpression(flowState, this, this.step)
+                flowState.evalExpression(this, this.from),
+                flowState.evalExpression(this, this.to),
+                flowState.evalExpression(this, this.step)
             );
             flowState.setComponentRunningState(this, runningState);
             flowState.dataContext.set(this.variable, runningState.value);

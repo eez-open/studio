@@ -1284,10 +1284,7 @@ class ComponentInputValue implements DebuggerValue {
     ) {}
 
     set(value: any) {
-        this.componentState.setInputData(this.inputName, {
-            time: Date.now(),
-            value
-        });
+        this.componentState.setInputData(this.inputName, value);
     }
 }
 

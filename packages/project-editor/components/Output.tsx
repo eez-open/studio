@@ -88,9 +88,16 @@ class Messages extends React.Component {
     dispose: IReactionDisposer;
     @observable rows: React.ReactNode[];
 
-    onSelectMessage(message: OutputMessage) {
+    onSelectMessage = (message: OutputMessage) => {
         this.context.outputSectionsStore.activeSection.selectMessage(message);
-    }
+
+        const editorState =
+            this.context.editorsStore.activeEditor &&
+            this.context.editorsStore.activeEditor.state;
+        if (editorState) {
+            editorState.ensureSelectionVisible();
+        }
+    };
 
     scrollToBottom() {
         if (
@@ -114,7 +121,7 @@ class Messages extends React.Component {
                             <Message
                                 key={message.id}
                                 message={message}
-                                onSelect={this.onSelectMessage.bind(this)}
+                                onSelect={this.onSelectMessage}
                             />
                         )
                     );

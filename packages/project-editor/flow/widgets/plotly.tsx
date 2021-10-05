@@ -1,5 +1,5 @@
 import React from "react";
-import { autorun, observable, reaction, runInAction } from "mobx";
+import { observable, reaction } from "mobx";
 
 import {
     registerClass,
@@ -16,15 +16,20 @@ import { observer } from "mobx-react";
 
 import * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
-import { InputPropertyValue, FlowState } from "project-editor/flow/runtime";
+import { FlowState } from "project-editor/flow/runtime";
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface InputData {
+    time: number;
+    value: any;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 function Plotly() {
     return require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -122,7 +127,7 @@ function doUpdateChart() {
 
 function updateLineChart(
     el: HTMLElement,
-    inputPropertyValue: InputPropertyValue,
+    inputValue: InputData,
     maxPoints: number
 ) {
     let chart = charts.get(el) as ILineChart | undefined;
@@ -130,8 +135,8 @@ function updateLineChart(
         chart = {
             type: "lineChart",
             data: {
-                x: [[new Date(inputPropertyValue.time)]],
-                y: [[inputPropertyValue.value]]
+                x: [[new Date(inputValue.time)]],
+                y: [[inputValue.value]]
             },
             maxPoints
         };
@@ -142,8 +147,8 @@ function updateLineChart(
             doUpdateChartTimeoutId = setTimeout(doUpdateChart);
         }
     } else {
-        chart.data.x[0].push(new Date(inputPropertyValue.time));
-        chart.data.y[0].push(inputPropertyValue.value);
+        chart.data.x[0].push(new Date(inputValue.time));
+        chart.data.y[0].push(inputValue.value);
     }
 }
 
@@ -204,13 +209,12 @@ const LineChartElement = observer(
                 {
                     x: runningState
                         ? runningState.values.map(
-                              inputPropertyValue =>
-                                  new Date(inputPropertyValue.time)
+                              inputValue => new Date(inputValue.time)
                           )
                         : [1, 2, 3, 4],
                     y: runningState
                         ? runningState.values.map(
-                              inputPropertyValue => inputPropertyValue.value
+                              inputValue => inputValue.value
                           )
                         : [2, 6, 4, 8],
                     type: "scatter",
@@ -259,22 +263,27 @@ const LineChartElement = observer(
 
                         disposeReaction = reaction(
                             () => {
+                                let runningState;
                                 if (
                                     widget.isInputProperty("data") &&
                                     flowContext.flowState
                                 ) {
-                                    return flowContext.flowState.getInputPropertyValue(
-                                        widget,
-                                        "data"
-                                    );
+                                    runningState =
+                                        flowContext.flowState.getComponentRunningState<RunningState>(
+                                            widget
+                                        );
                                 }
-                                return undefined;
+                                return runningState
+                                    ? runningState.values[
+                                          runningState.values.length - 1
+                                      ]
+                                    : undefined;
                             },
-                            inputPropertyValue => {
-                                if (inputPropertyValue) {
+                            inputData => {
+                                if (inputData !== undefined) {
                                     updateLineChart(
                                         el,
-                                        inputPropertyValue,
+                                        inputData,
                                         widget.maxPoints
                                     );
                                 }
@@ -338,7 +347,7 @@ const LineChartElement = observer(
 );
 
 class RunningState {
-    @observable values: InputPropertyValue[] = [];
+    @observable values: InputData[] = [];
 }
 
 export class LineChartWidget extends Widget {
@@ -411,30 +420,30 @@ export class LineChartWidget extends Widget {
     }
 
     async execute(flowState: FlowState, dispose: (() => void) | undefined) {
-        if (dispose) {
-            return dispose;
+        let runningState =
+            flowState.getComponentRunningState<RunningState>(this);
+
+        if (!runningState) {
+            runningState = new RunningState();
+            flowState.setComponentRunningState(this, runningState);
         }
 
-        const runningState = new RunningState();
+        if (this.isInputProperty("data")) {
+            const value = this.data
+                ? flowState.evalExpression(this, this.data)
+                : undefined;
 
-        flowState.setComponentRunningState(this, runningState);
+            runningState.values.push({
+                time: Date.now(),
+                value
+            });
 
-        return autorun(() => {
-            if (this.isInputProperty("data")) {
-                const inputPropertyValue = flowState.getInputPropertyValue(
-                    this,
-                    "data"
-                );
-                if (inputPropertyValue) {
-                    runInAction(() => {
-                        runningState.values.push(inputPropertyValue);
-                        if (runningState.values.length == this.maxPoints) {
-                            runningState.values.shift();
-                        }
-                    });
-                }
+            if (runningState.values.length == this.maxPoints) {
+                runningState.values.shift();
             }
-        });
+        }
+
+        return undefined;
     }
 }
 
@@ -459,7 +468,9 @@ const GaugeElement = observer(
             return [
                 {
                     domain: { x: [0, 1], y: [0, 1] },
-                    value: (widget.minRange + widget.maxRange) / 2,
+                    value: flowContext.flowState
+                        ? 0
+                        : (widget.minRange + widget.maxRange) / 2,
                     title: { text: widget.title },
                     type: "indicator",
                     mode: "gauge+number",
@@ -518,17 +529,17 @@ const GaugeElement = observer(
                                     widget.isInputProperty("data") &&
                                     flowContext.flowState
                                 ) {
-                                    return flowContext.flowState.getInputPropertyValue(
-                                        widget,
-                                        "data"
-                                    );
+                                    return widget.data
+                                        ? flowContext.flowState.evalExpression(
+                                              widget,
+                                              widget.data
+                                          )
+                                        : undefined;
                                 }
                                 return undefined;
                             },
-                            inputPropertyValue => {
-                                if (inputPropertyValue) {
-                                    updateGauge(el, inputPropertyValue.value);
-                                }
+                            inputData => {
+                                updateGauge(el, inputData);
                             }
                         );
                     }

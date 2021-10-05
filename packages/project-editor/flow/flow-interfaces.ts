@@ -4,7 +4,6 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DocumentStoreClass } from "project-editor/core/store";
 
 import type { Transform } from "project-editor/flow/flow-editor/transform";
-import type { InputPropertyValue } from "project-editor/flow/runtime";
 import { Component } from "project-editor/flow/component";
 
 export interface IFlowContext {
@@ -58,12 +57,9 @@ export interface IFlowState {
 
     getInputValue(component: Component, input: string): any;
     getPropertyValue(component: Component, propertyName: string): any;
-    getInputPropertyValue(
-        component: Component,
-        input: string
-    ): InputPropertyValue | undefined;
+    evalExpression(component: Component, expression: string): any;
 
-    getComponentRunningState<T>(component: Component): T;
+    getComponentRunningState<T>(component: Component): T | undefined;
     setComponentRunningState<T>(component: Component, runningState: T): void;
 
     dataContext: IDataContext;

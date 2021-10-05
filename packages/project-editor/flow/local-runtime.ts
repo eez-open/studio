@@ -24,6 +24,7 @@ export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
     @observable settings: any = {};
     _settingsModified: boolean = false;
+    _lastBreakpointTaks: QueueTask | undefined;
 
     constructor(public DocumentStore: DocumentStoreClass) {
         super(DocumentStore);
@@ -223,17 +224,23 @@ export class LocalRuntime extends RuntimeBase {
                         runningComponents.push(task);
                     } else {
                         if (
-                            this.isDebuggerActive &&
-                            !singleStep &&
-                            !this.isResumed &&
                             this.DocumentStore.uiStateStore.breakpoints.has(
                                 component
                             )
                         ) {
-                            runningComponents.push(task);
-                            singleStep = true;
-                            break;
+                            if (
+                                this.isDebuggerActive &&
+                                !singleStep &&
+                                task != this._lastBreakpointTaks
+                            ) {
+                                this._lastBreakpointTaks = task;
+                                runningComponents.push(task);
+                                singleStep = true;
+                                break;
+                            }
                         }
+
+                        this._lastBreakpointTaks = undefined;
 
                         await componentState.run();
 

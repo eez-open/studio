@@ -58,7 +58,7 @@ class Content extends React.Component {
                 navigationObject={this.context.project}
                 filter={object => {
                     if (this.context.runtime) {
-                        // if runtime onde only show pages and actions
+                        // if runtime then only show pages and actions
                         return (
                             object == this.context.project.pages ||
                             object == this.context.project.actions

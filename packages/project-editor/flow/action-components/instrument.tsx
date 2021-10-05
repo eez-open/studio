@@ -23,18 +23,15 @@ import {
 } from "project-editor/flow/component";
 import { getConnection } from "instrument/window/connection";
 import { FlowState } from "project-editor/flow//runtime";
-import type {
-    IFlowContext,
-    IFlowState
-} from "project-editor/flow//flow-interfaces";
+import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { getDocumentStore } from "project-editor/core/store";
 import {
     buildExpression,
-    buildAssignableExpression,
-    evalExpression
+    buildAssignableExpression
 } from "project-editor/flow/expression/expression";
 import {
+    getVariableTypeFromPropertyType,
     RenderVariableStatus,
     VariableType
 } from "project-editor/features/variable/variable";
@@ -939,7 +936,9 @@ export class ScpiActionComponent extends ActionComponent {
                             ) {
                                 jsObject.customInputs.push({
                                     name: inputName,
-                                    type: PropertyType.String
+                                    type: getVariableTypeFromPropertyType(
+                                        PropertyType.String
+                                    )
                                 });
                             }
                         } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
@@ -950,7 +949,9 @@ export class ScpiActionComponent extends ActionComponent {
 
                             jsObject.customOutputs.push({
                                 name: outputName,
-                                type: PropertyType.String
+                                type: getVariableTypeFromPropertyType(
+                                    PropertyType.String
+                                )
                             });
                         }
                     }
@@ -982,33 +983,8 @@ export class ScpiActionComponent extends ActionComponent {
     @observable instrument: string;
     @observable scpi: string;
 
-    getInstrumentObject(
-        flowContext?: IFlowContext,
-        flowState?: IFlowState
-    ): InstrumentObject | undefined {
-        flowState = flowState || flowContext?.flowState;
-
-        if (this.isInputProperty("instrument")) {
-            if (flowState) {
-                const inputPropertyValue = flowState.getInputPropertyValue(
-                    this,
-                    "instrument"
-                );
-                return inputPropertyValue?.value;
-            }
-        } else {
-            const dataContext =
-                flowState?.dataContext || flowContext?.dataContext;
-            if (dataContext) {
-                return dataContext.get(this.instrument);
-            }
-        }
-
-        return undefined;
-    }
-
     async execute(flowState: FlowState) {
-        const instrument = this.getInstrumentObject(undefined, flowState);
+        const instrument = flowState.evalExpression(this, this.instrument);
         if (!instrument) {
             throw "instrument not found";
         }
@@ -1053,7 +1029,7 @@ export class ScpiActionComponent extends ActionComponent {
                 } else if (tag == SCPI_PART_EXPR) {
                     const expr = str.substring(1, str.length - 1);
 
-                    const value = evalExpression(flowState, this, expr);
+                    const value = flowState.evalExpression(this, expr);
 
                     command += value.toString();
                 } else if (
@@ -1310,7 +1286,13 @@ registerClass(SelectInstrumentActionComponent);
 
 export class GetInstrumentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        properties: [],
+        properties: [
+            makeToggablePropertyToInput({
+                name: "id",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            })
+        ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 448">
                 <path d="M224 144c-44.004 0-80.001 36-80.001 80 0 44.004 35.997 80 80.001 80 44.005 0 79.999-35.996 79.999-80 0-44-35.994-80-79.999-80zm190.938 58.667c-9.605-88.531-81.074-160-169.605-169.599V0h-42.666v33.067c-88.531 9.599-160 81.068-169.604 169.599H0v42.667h33.062c9.604 88.531 81.072 160 169.604 169.604V448h42.666v-33.062c88.531-9.604 160-81.073 169.605-169.604H448v-42.667h-33.062zM224 373.333c-82.137 0-149.334-67.198-149.334-149.333 0-82.136 67.197-149.333 149.334-149.333 82.135 0 149.332 67.198 149.332 149.333S306.135 373.333 224 373.333z" />
@@ -1319,16 +1301,6 @@ export class GetInstrumentActionComponent extends ActionComponent {
         componentHeaderColor: "#FDD0A2",
         componentPaletteGroupName: "Instrument"
     });
-
-    getInputs() {
-        return [
-            ...super.getInputs(),
-            {
-                name: "id",
-                type: PropertyType.String
-            }
-        ];
-    }
 
     getOutputs() {
         return [
@@ -1341,17 +1313,9 @@ export class GetInstrumentActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        let instrument;
-
-        const inputPropertyValue = flowState.getInputPropertyValue(this, "id");
-
-        if (inputPropertyValue) {
-            const id = inputPropertyValue.value;
-            instrument = instruments.get(id);
-        }
-
+        const id = flowState.evalExpression(this, "id");
+        const instrument = instruments.get(id);
         flowState.propagateValue(this, "instrument", instrument);
-
         return undefined;
     }
 }
@@ -1390,33 +1354,8 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
 
     @observable instrument: string;
 
-    getInstrumentObject(
-        flowContext?: IFlowContext,
-        flowState?: IFlowState
-    ): InstrumentObject | undefined {
-        flowState = flowState || flowContext?.flowState;
-
-        if (this.isInputProperty("instrument")) {
-            if (flowState) {
-                const inputPropertyValue = flowState.getInputPropertyValue(
-                    this,
-                    "instrument"
-                );
-                return inputPropertyValue?.value;
-            }
-        } else {
-            const dataContext =
-                flowState?.dataContext || flowContext?.dataContext;
-            if (dataContext) {
-                return dataContext.get(this.instrument);
-            }
-        }
-
-        return undefined;
-    }
-
     async execute(flowState: FlowState) {
-        const instrument = this.getInstrumentObject(undefined, flowState);
+        const instrument = flowState.evalExpression(this, this.instrument);
         if (!instrument) {
             throw "instrument not found";
         }

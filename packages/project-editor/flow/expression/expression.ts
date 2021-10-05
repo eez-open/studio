@@ -1023,14 +1023,7 @@ function evalExpressionWithContext(
                     throw `cannot get input "${input.name}" value without flow state`;
                 }
 
-                const inputPropertyValue = flowState.getInputPropertyValue(
-                    component,
-                    input.name
-                );
-
-                return inputPropertyValue
-                    ? inputPropertyValue.value
-                    : undefined;
+                return flowState.getInputValue(component, input.name);
             }
 
             return expressionContext.dataContext.get(node.name);

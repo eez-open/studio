@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
 import {
+    EezValueObject,
     findPropertyByChildObject,
     getClass,
     getParent,
@@ -71,7 +72,11 @@ export class PropertiesPanel extends React.Component<{
         if (this.objects.length == 0) {
             title = "Properties";
         } else if (this.objects.length == 1) {
-            title = `Properties (${getClass(this.objects[0]).name})`;
+            let object = this.objects[0];
+            if (object instanceof EezValueObject) {
+                object = getParent(object);
+            }
+            title = `Properties (${getClass(object).name})`;
         } else {
             title = `Properties (multiple objects)`;
         }

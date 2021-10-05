@@ -148,6 +148,7 @@ export class ContainerWidget extends EmbeddedWidget {
     @observable widgets: Widget[];
     @observable overlay?: string;
     @observable shadow?: boolean;
+    @observable visible?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         flowComponentId: WIDGET_TYPE_CONTAINER,
@@ -209,8 +210,10 @@ export class ContainerWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         let visible = true;
 
-        if (flowContext.flowState && this.isInputProperty("visible")) {
-            let value = flowContext.flowState.getPropertyValue(this, "visible");
+        if (flowContext.flowState) {
+            let value: any = this.visible
+                ? flowContext.flowState.evalExpression(this, this.visible)
+                : true;
             if (typeof value === "boolean") {
                 visible = value;
             } else if (typeof value === "number") {
@@ -704,9 +707,7 @@ export class SelectWidget extends EmbeddedWidget {
             let messages: output.Message[] = [];
 
             if (!object.data) {
-                if (!object.isInputProperty("data")) {
-                    messages.push(output.propertyNotSetMessage(object, "data"));
-                }
+                messages.push(output.propertyNotSetMessage(object, "data"));
             } else {
                 let variable = findVariable(getProject(object), object.data);
                 if (variable) {
@@ -1246,7 +1247,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                             layoutFlowState?.propagateValue(
                                 component,
                                 "@seqout",
-                                inputData.value
+                                inputData
                             );
                         }
                     }
@@ -1257,7 +1258,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                                 layoutFlowState?.propagateValue(
                                     component,
                                     "@seqout",
-                                    inputData.value
+                                    inputData
                                 );
                             }
                         }
@@ -1646,16 +1647,13 @@ export class TextWidget extends EmbeddedWidget {
             if (this.text) {
                 text = this.text;
             } else {
-                let data;
-                if (this.isInputProperty("data")) {
-                    data = "data";
-                } else {
-                    data = this.data;
-                }
-
-                if (data) {
+                if (this.data) {
                     try {
-                        const value = evalExpression(flowContext, this, data);
+                        const value = evalExpression(
+                            flowContext,
+                            this,
+                            this.data
+                        );
                         if (value != null && value != undefined) {
                             text = value.toString();
                         } else {
@@ -2562,11 +2560,10 @@ export class ButtonWidget extends EmbeddedWidget {
 
         let buttonEnabled = false;
         if (flowContext.flowState) {
-            const value = flowContext.flowState.getInputPropertyValue(
-                this,
-                "enabled"
-            );
-            if (value == undefined || value.value) {
+            const enabled = this.enabled
+                ? flowContext.flowState.evalExpression(this, this.enabled)
+                : false;
+            if (enabled) {
                 buttonEnabled = true;
             }
         } else {
@@ -4859,6 +4856,7 @@ export class TextInputWidget extends Widget {
     });
 
     @observable password: boolean;
+    @observable value: string;
 
     getOutputs() {
         return [
@@ -4900,19 +4898,13 @@ export class TextInputWidget extends Widget {
     }
 
     async execute(flowState: FlowState) {
-        let runningState =
+        const runningState =
             flowState.getComponentRunningState<TextInputRunningState>(this);
 
-        let value: string;
-        const inputValue = flowState.getInputValue(this, "value");
-        if (inputValue) {
-            value = inputValue.value ?? "";
-        } else {
-            value = "";
-        }
+        const value = flowState.evalExpression(this, this.value);
 
         if (!runningState) {
-            runningState = new TextInputRunningState(value);
+            let runningState = new TextInputRunningState(value);
             flowState.setComponentRunningState(this, runningState);
         } else {
             if (value != runningState.value) {

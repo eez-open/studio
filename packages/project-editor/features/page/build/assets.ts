@@ -607,15 +607,9 @@ export class Assets {
     }
 
     getFlowWidgetDataItemIndex(widget: Widget, propertyName: string) {
-        if (
-            !widget.asInputProperties ||
-            widget.asInputProperties.indexOf(propertyName) == -1
-        ) {
-            if (!getProperty(widget, propertyName)) {
-                return 0;
-            }
+        if (!getProperty(widget, propertyName)) {
+            return 0;
         }
-
         const flowState = this.getFlowState(getFlow(widget));
         const path =
             getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;

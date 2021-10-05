@@ -130,7 +130,7 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
                 };
             }
 
-            if (typeof value == "object") {
+            if (value != null && typeof value == "object") {
                 return () => {
                     let structure;
                     if (type) {
@@ -243,9 +243,6 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
         );
         return inputs.map(input => {
             let value = componentState.getInputValue(input.name);
-            if (value) {
-                value = value.value;
-            }
 
             return observable({
                 id: input.name,

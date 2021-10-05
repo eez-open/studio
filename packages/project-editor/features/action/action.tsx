@@ -414,6 +414,8 @@ export class ActionTabState implements IEditorState {
     selectObject(object: IEezObject) {}
 
     selectObjects(objects: IEezObject[]) {}
+
+    ensureSelectionVisible() {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

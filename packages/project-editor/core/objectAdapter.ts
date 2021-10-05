@@ -846,6 +846,8 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
             menu.popup({});
         }
     }
+
+    ensureSelectionVisible() {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -551,6 +551,57 @@ function getEnumValues(variable: Variable): any[] {
     return [];
 }
 
+export function getVariableTypeFromPropertyType(propertyType: PropertyType) {
+    switch (propertyType) {
+        case PropertyType.String:
+            return "string";
+        case PropertyType.StringArray:
+            return "array:string";
+        case PropertyType.MultilineText:
+            return "string";
+        case PropertyType.JSON:
+            return "string";
+        case PropertyType.CSS:
+            return "string";
+        case PropertyType.CPP:
+            return "string";
+        case PropertyType.Number:
+            return "double";
+        case PropertyType.NumberArray:
+            return "array:double";
+        case PropertyType.Array:
+            return "array:any";
+        case PropertyType.Object:
+            return "any";
+        case PropertyType.Enum:
+            return "any";
+        case PropertyType.Image:
+            return "any";
+        case PropertyType.Color:
+            return "string";
+        case PropertyType.ThemedColor:
+            return "any";
+        case PropertyType.RelativeFolder:
+            return "string";
+        case PropertyType.RelativeFile:
+            return "string";
+        case PropertyType.ObjectReference:
+            return "any";
+        case PropertyType.ConfigurationReference:
+            return "string";
+        case PropertyType.Boolean:
+            return "boolean";
+        case PropertyType.GUID:
+            return "string";
+        case PropertyType.Any:
+            return "any";
+        case PropertyType.Null:
+            return "null";
+    }
+
+    return "undefined";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DataContext implements IDataContext {

@@ -116,7 +116,6 @@ import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
 import { RuntimeBase } from "project-editor/flow/runtime";
 import { theme } from "eez-studio-ui/theme";
-import { evalExpression } from "project-editor/flow/expression/expression";
 import { validators } from "eez-studio-shared/validation";
 import { LocalRuntime } from "project-editor/flow/local-runtime";
 import { RemoteRuntime } from "project-editor/flow/remote-runtime";
@@ -1900,8 +1899,10 @@ export class DocumentStoreClass {
     };
 
     onSetRuntimeMode = async () => {
-        if (this.runtime && this.runtime.isDebuggerActive) {
-            this.runtime.toggleDebugger();
+        if (this.runtime) {
+            if (this.runtime.isDebuggerActive) {
+                this.runtime.toggleDebugger();
+            }
         } else {
             this.setRuntimeMode(false);
         }
@@ -2352,8 +2353,7 @@ async function initExtensions() {
                             propertyGridGroups: {
                                 specificGroup
                             },
-                            RenderVariableStatus,
-                            evalExpression: evalExpression
+                            RenderVariableStatus
                         });
                     } catch (err) {
                         console.error(err);

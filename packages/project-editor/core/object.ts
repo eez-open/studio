@@ -158,6 +158,9 @@ export interface PropertyInfo {
         | "input"
         | "output"
         | ((DocumentStore: DocumentStoreClass) => "input" | "output");
+    isOutputOptional?:
+        | boolean
+        | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
 }
 
 export interface NavigationComponentProps {
@@ -178,6 +181,7 @@ export interface IEditorState {
     saveState(): any;
     selectObject(object: IEezObject): void;
     selectObjects(objects: IEezObject[]): void;
+    ensureSelectionVisible(): void;
 }
 
 export interface IEditor {

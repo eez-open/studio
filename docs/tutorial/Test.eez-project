@@ -49,11 +49,13 @@
           "width": 103,
           "height": 32,
           "wireID": "96d0e6bf-5efa-4147-810c-d20b4089ddef",
-          "customInputs": [],
-          "customOutputs": [],
-          "asInputProperties": [
-            "enabled"
+          "customInputs": [
+            {
+              "name": "enabled",
+              "type": "any"
+            }
           ],
+          "customOutputs": [],
           "asOutputProperties": [
             "action"
           ],
@@ -62,6 +64,7 @@
             "inheritFrom": "button"
           },
           "text": "Start",
+          "enabled": "enabled",
           "disabledStyle": {
             "inheritFrom": "disabled_button"
           }
@@ -89,7 +92,6 @@
               "type": 0
             }
           ],
-          "asInputProperties": [],
           "instrument": "instrument",
           "scpi": "syst:delay {delay}\nvoltage = meas:volt?\ncurrent = meas:curr?"
         },
@@ -100,11 +102,14 @@
           "width": 479,
           "height": 190,
           "wireID": "85873f52-29f9-4c3c-e1f9-fdd8a2ba4e94",
-          "customInputs": [],
-          "customOutputs": [],
-          "asInputProperties": [
-            "data"
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "any"
+            }
           ],
+          "customOutputs": [],
+          "data": "data",
           "title": "Voltage",
           "maxPoints": 100,
           "color": "#0000ff",
@@ -133,11 +138,14 @@
           "width": 233,
           "height": 190,
           "wireID": "e09a754c-f52c-41c3-e5cb-091fc475b670",
-          "customInputs": [],
-          "customOutputs": [],
-          "asInputProperties": [
-            "data"
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "any"
+            }
           ],
+          "customOutputs": [],
+          "data": "data",
           "title": "Voltage",
           "minRange": 0,
           "maxRange": 40,
@@ -156,11 +164,14 @@
           "width": 233,
           "height": 190,
           "wireID": "2ae88f53-4898-4d54-ea81-e0d4b8c134b6",
-          "customInputs": [],
-          "customOutputs": [],
-          "asInputProperties": [
-            "data"
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "any"
+            }
           ],
+          "customOutputs": [],
+          "data": "data",
           "title": "Current",
           "minRange": 0,
           "maxRange": 5,
@@ -179,11 +190,14 @@
           "width": 479,
           "height": 190,
           "wireID": "72b6face-cd0f-40cf-cbd0-51e4c30b5123",
-          "customInputs": [],
-          "customOutputs": [],
-          "asInputProperties": [
-            "data"
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "any"
+            }
           ],
+          "customOutputs": [],
+          "data": "data",
           "title": "Current",
           "maxPoints": 100,
           "color": "#ff0000",
@@ -201,11 +215,13 @@
           "width": 103,
           "height": 32,
           "wireID": "17a56676-cba2-425f-cb12-87e07fe927ac",
-          "customInputs": [],
-          "customOutputs": [],
-          "asInputProperties": [
-            "enabled"
+          "customInputs": [
+            {
+              "name": "enabled",
+              "type": "any"
+            }
           ],
+          "customOutputs": [],
           "asOutputProperties": [
             "action"
           ],
@@ -213,6 +229,7 @@
             "inheritFrom": "button"
           },
           "text": "Stop",
+          "enabled": "enabled",
           "disabledStyle": {
             "inheritFrom": "disabled_button"
           }
@@ -224,11 +241,14 @@
           "width": 97,
           "height": 87,
           "wireID": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
           "customOutputs": [],
-          "asInputProperties": [
-            "value"
-          ]
+          "value": "value"
         },
         {
           "type": "GetVariableActionComponent",

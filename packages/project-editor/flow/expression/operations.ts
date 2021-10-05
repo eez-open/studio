@@ -419,7 +419,7 @@ export const builtInFunctions: {
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
-        ) => Math.log(args[0]),
+        ) => args[0].indexOf(args[1]),
         getValueType: (...args: VariableTypePrefix[]) => {
             if (args[0] != "string" && args[1] != "string") {
                 return "undefined";

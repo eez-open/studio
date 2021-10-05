@@ -128,26 +128,13 @@ function buildComponent(
     );
     dataBuffer.writeArray(properties, propertyInfo => {
         try {
-            if (
-                component.asInputProperties &&
-                component.asInputProperties.indexOf(propertyInfo.name) != -1
-            ) {
-                // as input
-                buildExpression(
-                    assets,
-                    dataBuffer,
-                    component,
-                    propertyInfo.name
-                );
-            } else {
-                // as property
-                buildExpression(
-                    assets,
-                    dataBuffer,
-                    component,
-                    getProperty(component, propertyInfo.name)
-                );
-            }
+            // as property
+            buildExpression(
+                assets,
+                dataBuffer,
+                component,
+                getProperty(component, propertyInfo.name)
+            );
         } catch (err) {
             assets.DocumentStore.outputSectionsStore.write(
                 output.Section.OUTPUT,

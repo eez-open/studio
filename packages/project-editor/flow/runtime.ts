@@ -36,6 +36,7 @@ import {
 import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow/debugger/WatchPanel";
 import { Action } from "project-editor/features/action/action";
+import { evalExpression } from "project-editor/flow/expression/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,11 +48,6 @@ system outputs: @seqout
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-
-interface InputData {
-    time: number;
-    value: any;
-}
 
 export interface QueueTask {
     id: number;
@@ -86,7 +82,7 @@ export abstract class RuntimeBase {
     @observable isDebuggerActive = false;
     @observable globalVariablesInitialized = false;
 
-    @observable selectedPage: Page;
+    @observable _selectedPage: Page;
     @observable selectedFlowState: FlowState | undefined;
     @observable selectedQueueTask: QueueTask | undefined;
 
@@ -113,6 +109,22 @@ export abstract class RuntimeBase {
 
     get isStopped() {
         return this.state == State.STOPPED;
+    }
+
+    get selectedPage() {
+        return this._selectedPage;
+    }
+
+    set selectedPage(value: Page) {
+        runInAction(() => {
+            this._selectedPage = value;
+        });
+
+        if (this.isDebuggerActive && !this.isPaused) {
+            this.DocumentStore.navigationStore.setSelection([
+                this.selectedPage
+            ]);
+        }
     }
 
     constructor(public DocumentStore: DocumentStoreClass) {
@@ -149,22 +161,7 @@ export abstract class RuntimeBase {
     }
 
     @action private setState(state: State) {
-        let wasDebuggerActive;
-        if (
-            this.state == State.STARTING_WITH_DEBUGGER ||
-            this.state == State.PAUSED ||
-            this.state == State.RESUMED ||
-            this.state == State.SINGLE_STEP
-        ) {
-            wasDebuggerActive = true;
-        } else if (
-            this.state == State.STARTING_WITHOUT_DEBUGGER ||
-            this.state == State.RUNNING
-        ) {
-            wasDebuggerActive = false;
-        } else {
-            wasDebuggerActive = this.isDebuggerActive;
-        }
+        let wasDebuggerActive = this.state;
 
         this.state = state;
 
@@ -200,8 +197,10 @@ export abstract class RuntimeBase {
         if (this.state == State.STARTING) {
             if (action == StateMachineAction.START_WITHOUT_DEBUGGER) {
                 this.setState(State.STARTING_WITHOUT_DEBUGGER);
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = true;
             } else if (action == StateMachineAction.START_WITH_DEBUGGER) {
                 this.setState(State.STARTING_WITH_DEBUGGER);
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
             }
         } else if (this.state == State.STARTING_WITHOUT_DEBUGGER) {
             if (action == StateMachineAction.RUN) {
@@ -232,6 +231,12 @@ export abstract class RuntimeBase {
         } else if (this.state == State.SINGLE_STEP) {
             if (action == StateMachineAction.PAUSE) {
                 this.setState(State.PAUSED);
+            }
+        } else if (this.state == State.STOPPED) {
+            if (action == StateMachineAction.PAUSE) {
+                this.isDebuggerActive = true;
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
+                return;
             }
         }
 
@@ -471,13 +476,13 @@ export class FlowState {
         return componentState;
     }
 
+    getInputValue(component: Component, input: string) {
+        return this.getComponentState(component).getInputValue(input);
+    }
+
     getPropertyValue(component: Component, propertyName: string) {
         if (component.isInputProperty(propertyName)) {
-            const inputPropertyValue = this.getInputPropertyValue(
-                component,
-                propertyName
-            );
-            return inputPropertyValue && inputPropertyValue.value;
+            return this.getInputValue(component, propertyName);
         } else {
             const value = (component as any)[propertyName];
 
@@ -498,18 +503,15 @@ export class FlowState {
         }
     }
 
-    getInputValue(component: Component, input: string) {
-        return this.getComponentState(component).getInputValue(input);
+    evalExpression(component: Component, expression: string): any {
+        return evalExpression(this, component, expression);
     }
 
-    getInputPropertyValue(component: Component, input: string) {
-        return this.getComponentState(component).getInputPropertyValue(input);
-    }
-
-    getComponentRunningState<T>(component: Component): T {
+    getComponentRunningState<T>(component: Component): T | undefined {
         return this.getComponentState(component).runningState;
     }
 
+    @action
     setComponentRunningState<T>(component: Component, runningState: T) {
         this.getComponentState(component).runningState = runningState;
     }
@@ -650,10 +652,7 @@ export class FlowState {
     ) {
         const componentState = this.getComponentState(component);
 
-        componentState.setInputData(input, {
-            time: Date.now(),
-            value
-        });
+        componentState.setInputData(input, value);
 
         if (componentState.isReadyToRun()) {
             this.runtime.pushTask({
@@ -700,11 +699,8 @@ export class FlowState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type InputPropertyValue = InputData;
-
 export class ComponentState {
-    @observable inputsData = new Map<string, InputData>();
-    @observable _inputPropertyValues = new Map<string, InputPropertyValue>();
+    @observable inputsData = new Map<string, any>();
     @observable isRunning: boolean = false;
     @observable runningState: any;
     dispose: (() => void) | undefined = undefined;
@@ -715,12 +711,8 @@ export class ComponentState {
         return this.inputsData.get(input);
     }
 
-    getInputPropertyValue(input: string) {
-        return this._inputPropertyValues.get(input);
-    }
-
     @action
-    setInputData(input: string, inputData: InputData) {
+    setInputData(input: string, inputData: any) {
         this.inputsData.set(input, inputData);
     }
 
@@ -789,10 +781,6 @@ export class ComponentState {
 
     @action
     async run() {
-        for (let [key, value] of this.inputsData) {
-            this._inputPropertyValues.set(key, value);
-        }
-
         this.flowState.runtime.logs.addLogItem(
             new ExecuteComponentLogItem(this.flowState, this.component)
         );
@@ -820,8 +808,8 @@ export class ComponentState {
             }
         } catch (err) {
             runInAction(() => {
-                this.flowState.runtime.error = err.toString();
-                this.flowState.error = err.toString();
+                this.flowState.runtime.error = this.flowState.error =
+                    err.toString();
             });
 
             this.flowState.runtime.logs.addLogItem(

@@ -101,13 +101,6 @@ interface IFlowContext {
     overrideFlowState(component: Component): IFlowContext;
 }
 
-interface InputData {
-    time: number;
-    value: any;
-}
-
-type InputPropertyValue = InputData;
-
 export type LogItemType =
     | "fatal"
     | "error"
@@ -121,12 +114,9 @@ interface IFlowState {
 
     getInputValue(component: Component, input: string): any;
     getPropertyValue(component: Component, propertyName: string): any;
-    getInputPropertyValue(
-        component: Component,
-        input: string
-    ): InputPropertyValue | undefined;
+    evalExpression: (component: Component, expression: string) => any;
 
-    getComponentRunningState<T>(component: Component): T;
+    getComponentRunningState<T>(component: Component): T | undefined;
     setComponentRunningState<T>(component: Component, runningState: T): void;
 
     DocumentStore: any;
@@ -293,9 +283,4 @@ interface IEezStudio {
         title?: string;
         onClick: () => void;
     }>;
-    evalExpression: (
-        flowState: IFlowState,
-        component: Component,
-        expression: string
-    ) => any;
 }

@@ -74,6 +74,7 @@ import {
     parseIdentifier
 } from "project-editor/flow/expression/expression";
 import {
+    getVariableTypeFromPropertyType,
     variableTypeProperty,
     variableTypeUIProperty
 } from "project-editor/features/variable/variable";
@@ -208,6 +209,42 @@ function getClassFromType(type: string) {
     return NotFoundComponent;
 }
 
+export function outputIsOptionalIfAtLeastOneOutputExists(
+    component: Component,
+    propertyInfo: PropertyInfo
+) {
+    const connectionLines = getFlow(component).connectionLines;
+
+    for (const componentOutput of component.outputs) {
+        if (componentOutput.name != "@seqout") {
+            if (
+                connectionLines.find(
+                    connectionLine =>
+                        connectionLine.sourceComponent === component &&
+                        connectionLine.output === componentOutput.name
+                )
+            ) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function isComponentOutputOptional(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    if (propertyInfo.isOutputOptional == undefined) {
+        return false;
+    }
+
+    return typeof propertyInfo.isOutputOptional == "boolean"
+        ? propertyInfo.isOutputOptional
+        : propertyInfo.isOutputOptional(object, propertyInfo);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function makeToggablePropertyToInput(
@@ -222,46 +259,49 @@ export function makeToggablePropertyToInput(
             if (props.objects.length == 1) {
                 const component = props.objects[0] as Component;
 
-                let asInputProperties = (
-                    component.asInputProperties ?? []
-                ).slice();
-                const i = asInputProperties.indexOf(props.propertyInfo.name);
+                if (
+                    !getProperty(component, props.propertyInfo.name) &&
+                    !component.customInputs.find(
+                        componentInput =>
+                            componentInput.name == props.propertyInfo.name
+                    )
+                ) {
+                    menuItems.push(
+                        new MenuItem({
+                            label: "Convert to input",
+                            click: () => {
+                                const DocumentStore = getDocumentStore(
+                                    props.objects[0]
+                                );
 
-                menuItems.push(
-                    new MenuItem({
-                        label:
-                            i === -1
-                                ? "Convert to input"
-                                : "Convert to property",
-                        click: () => {
-                            const DocumentStore = getDocumentStore(
-                                props.objects[0]
-                            );
+                                DocumentStore.undoManager.setCombineCommands(
+                                    true
+                                );
 
-                            DocumentStore.undoManager.setCombineCommands(true);
+                                const customInput = new CustomInput();
+                                customInput.name = props.propertyInfo.name;
+                                customInput.type =
+                                    getVariableTypeFromPropertyType(
+                                        props.propertyInfo.type
+                                    );
 
-                            if (i === -1) {
-                                asInputProperties.push(props.propertyInfo.name);
-                            } else {
-                                asInputProperties.splice(i, 1);
+                                DocumentStore.addObject(
+                                    component.customInputs,
+                                    customInput
+                                );
 
-                                getFlow(component).deleteConnectionLinesToInput(
-                                    component,
-                                    props.propertyInfo.name
+                                DocumentStore.updateObject(component, {
+                                    [props.propertyInfo.name]:
+                                        props.propertyInfo.name
+                                });
+
+                                DocumentStore.undoManager.setCombineCommands(
+                                    false
                                 );
                             }
-
-                            asInputProperties.sort();
-
-                            DocumentStore.updateObject(component, {
-                                asInputProperties,
-                                [props.propertyInfo.name]: undefined
-                            });
-
-                            DocumentStore.undoManager.setCombineCommands(false);
-                        }
-                    })
-                );
+                        })
+                    );
+                }
             }
 
             return menuItems;
@@ -271,10 +311,7 @@ export function makeToggablePropertyToInput(
             component: Component,
             propertyInfo: PropertyInfo
         ) {
-            return (
-                component.isInputProperty(propertyInfo) ||
-                component.isOutputProperty(propertyInfo)
-            );
+            return component.isOutputProperty(propertyInfo);
         }
     } as Partial<PropertyInfo>);
 }
@@ -669,7 +706,6 @@ export class Component extends EezObject {
     @observable customInputs: CustomInput[];
     @observable customOutputs: CustomOutput[];
 
-    @observable asInputProperties: string[];
     @observable asOutputProperties: string[];
 
     @observable _geometry: ComponentGeometry;
@@ -784,12 +820,6 @@ export class Component extends EezObject {
                     !component.catchError
             },
             {
-                name: "asInputProperties",
-                type: PropertyType.StringArray,
-                hideInPropertyGrid: true,
-                defaultValue: []
-            },
-            {
                 name: "asOutputProperties",
                 type: PropertyType.StringArray,
                 hideInPropertyGrid: true,
@@ -826,6 +856,32 @@ export class Component extends EezObject {
 
             if (typeof jsObject.height === "string") {
                 jsObject.height = parseInt(jsObject.height);
+            }
+
+            if (jsObject.asInputProperties) {
+                if (!jsObject.customInputs) {
+                    jsObject.customInputs = [];
+                }
+
+                const classInfo = getClassInfo(object);
+
+                for (const inputProperty of jsObject.asInputProperties) {
+                    jsObject[inputProperty] = inputProperty;
+
+                    const propertyInfo = classInfo.properties.find(
+                        propertyInfo => propertyInfo.name == inputProperty
+                    );
+
+                    jsObject.customInputs.push({
+                        name: inputProperty,
+                        type: getVariableTypeFromPropertyType(
+                            propertyInfo
+                                ? propertyInfo.type
+                                : PropertyType.String
+                        )
+                    });
+                }
+                delete jsObject.asInputProperties;
             }
         },
 
@@ -897,14 +953,16 @@ export class Component extends EezObject {
                 }
             });
 
+            const connectionLines = getFlow(component).connectionLines;
             component.outputs.forEach(componentOutput => {
                 if (
                     componentOutput.name != "@seqout" &&
-                    !getFlow(component).connectionLines.find(
+                    !connectionLines.find(
                         connectionLine =>
                             connectionLine.sourceComponent === component &&
                             connectionLine.output === componentOutput.name
-                    )
+                    ) &&
+                    !isComponentOutputOptional(component, componentOutput)
                 ) {
                     messages.push(
                         new output.Message(
@@ -927,7 +985,14 @@ export class Component extends EezObject {
             ) {
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (
-                        isToggableProperty(DocumentStore, propertyInfo, "input")
+                        isToggableProperty(
+                            DocumentStore,
+                            propertyInfo,
+                            "input"
+                        ) &&
+                        propertyInfo.type != PropertyType.ObjectReference &&
+                        propertyInfo.referencedObjectCollectionPath !=
+                            "variables/globalVariables"
                     ) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
@@ -1010,14 +1075,10 @@ export class Component extends EezObject {
     }
 
     isInputProperty(property: PropertyInfo | string) {
-        if (!this.asInputProperties) {
-            return false;
-        }
-
-        return (
-            this.asInputProperties.indexOf(
-                typeof property === "string" ? property : property.name
-            ) !== -1
+        const propertyName =
+            typeof property == "string" ? property : property.name;
+        return !!this.customInputs.find(
+            customInput => customInput.name == propertyName
         );
     }
 
@@ -1041,18 +1102,7 @@ export class Component extends EezObject {
         return [
             ...(this.customInputs ?? []).map(
                 customInput => customInput.asPropertyInfo
-            ),
-            ...((this.asInputProperties ?? [])
-                .map(inputPropertyName =>
-                    findPropertyByNameInClassInfo(
-                        getClassInfo(this),
-                        inputPropertyName
-                    )
-                )
-                .filter(
-                    propertyInfo =>
-                        propertyInfo && !isPropertyHidden(this, propertyInfo)
-                ) as PropertyInfo[])
+            )
         ];
     }
 
