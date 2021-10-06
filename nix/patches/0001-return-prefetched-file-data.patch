@@ -1,0 +1,21 @@
+diff --git a/installation/make-electron-builder-yml.ts b/installation/make-electron-builder-yml.ts
+index 71bc671..e45bae3 100644
+--- a/installation/make-electron-builder-yml.ts
++++ b/installation/make-electron-builder-yml.ts
+@@ -1,4 +1,5 @@
+ import fs from "fs";
++import fsPromises from "fs/promises";
+ import path from "path";
+ 
+ var request = require("request-promise-native");
+@@ -49,6 +50,10 @@ async function download(
+     localPath: string,
+     encoding: "utf8" | null
+ ) {
++    try {
++        return await fsPromises.readFile(localPath, { encoding });
++    } catch { }
++
+     const data = await request({
+         method: "GET",
+         url,
