@@ -6,13 +6,16 @@ import { IColumn, ITreeNode, TreeTable } from "eez-studio-ui/tree-table";
 import { IDataContext } from "eez-studio-types";
 import {
     getArrayElementTypeFromType,
+    getEnumTypeNameFromType,
     getStructureFromType,
+    isEnumType,
     Variable
 } from "project-editor/features/variable/variable";
 import { computedFn } from "mobx-utils";
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 import { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
+import { getInputName } from "project-editor/flow/debugger/logs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +39,8 @@ export function valueToString(value: any) {
 @observer
 export class WatchPanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed: IObservableValue<boolean>;
+    collapsed?: IObservableValue<boolean>;
+    onHeaderDoubleClick: () => void;
 }> {
     render() {
         return (
@@ -44,6 +48,7 @@ export class WatchPanel extends React.Component<{
                 id="project-editor/debugger/variables"
                 title="Watch"
                 collapsed={this.props.collapsed}
+                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
                 body={<WatchTable runtime={this.props.runtime} />}
             />
         );
@@ -74,13 +79,33 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
         return result;
     }
 
-    getValueLabel(value: any) {
+    getValueLabel(value: any, type: string | null) {
         if (value === undefined) {
             return "undefined";
         }
 
         if (value == "null") {
             return "null";
+        }
+
+        if (type) {
+            if (isEnumType(type)) {
+                const enumTypeName = getEnumTypeNameFromType(type);
+                if (enumTypeName) {
+                    const enumType =
+                        this.props.runtime.DocumentStore.project.variables.enumsMap.get(
+                            enumTypeName
+                        );
+                    if (enumType) {
+                        const enumMember = enumType.members.find(
+                            member => member.value == value
+                        );
+                        if (enumMember) {
+                            return enumMember.name;
+                        }
+                    }
+                }
+            }
         }
 
         if (Array.isArray(value)) {
@@ -113,16 +138,14 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
                     return value.map((element, i) => {
                         const elementValue = value[i];
                         const name = `[${i}]`;
+                        const type = elementType ?? typeof elementValue;
                         return observable({
                             id: name,
                             name,
-                            value: this.getValueLabel(elementValue),
-                            type: elementType ?? "?",
+                            value: this.getValueLabel(elementValue, type),
+                            type: type,
 
-                            children: this.getValueChildren(
-                                elementValue,
-                                elementType ?? typeof elementValue
-                            ),
+                            children: this.getValueChildren(elementValue, type),
                             selected: false,
                             expanded: false
                         });
@@ -156,7 +179,10 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
                             observable({
                                 id: name,
                                 name,
-                                value: this.getValueLabel(propertyValue),
+                                value: this.getValueLabel(
+                                    propertyValue,
+                                    fieldType
+                                ),
                                 type: fieldType ?? typeof propertyValue,
 
                                 children: this.getValueChildren(
@@ -193,7 +219,7 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
                 id: variable.name,
 
                 name: variable.name,
-                value: this.getValueLabel(value),
+                value: this.getValueLabel(value, variable.type),
                 type: variable.type,
 
                 children: this.getValueChildren(value, variable.type),
@@ -247,8 +273,8 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
             return observable({
                 id: input.name,
 
-                name: input.name,
-                value: this.getValueLabel(value),
+                name: getInputName(componentState.component, input.name),
+                value: this.getValueLabel(value, null),
                 type: typeof value,
 
                 children: this.getValueChildren(value, null),

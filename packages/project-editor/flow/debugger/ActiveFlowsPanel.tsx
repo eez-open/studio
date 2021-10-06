@@ -12,7 +12,8 @@ import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
 @observer
 export class ActiveFlowsPanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed: IObservableValue<boolean>;
+    collapsed?: IObservableValue<boolean>;
+    onHeaderDoubleClick: () => void;
 }> {
     render() {
         return (
@@ -20,6 +21,7 @@ export class ActiveFlowsPanel extends React.Component<{
                 id="project-editor/debugger/flows"
                 title="Active flows"
                 collapsed={this.props.collapsed}
+                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
                 body={<FlowsTree runtime={this.props.runtime} />}
             />
         );

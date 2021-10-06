@@ -438,12 +438,9 @@ export class Page extends Flow {
     }
 
     getClassName() {
-        return classNames(
-            { EezStudio_PageFlowContainer: !this.isUsedAsCustomWidget },
-            {
-                [this.css]: getDocumentStore(this).isDashboardProject
-            }
-        );
+        return classNames({
+            [this.css]: getDocumentStore(this).isDashboardProject
+        });
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {

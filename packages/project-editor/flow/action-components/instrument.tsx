@@ -1146,7 +1146,17 @@ export class SelectInstrumentDialog extends React.Component<
             <ListItem
                 leftIcon={instrument.image}
                 leftIconSize={48}
-                label={instrument.name}
+                label={
+                    <div className="EezStudio_InstrumentConnectionState">
+                        <span
+                            style={{
+                                backgroundColor:
+                                    instrument.connectionState.color
+                            }}
+                        />
+                        <span>{instrument.name}</span>
+                    </div>
+                }
             />
         );
     }

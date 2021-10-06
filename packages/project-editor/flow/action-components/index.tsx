@@ -12,12 +12,15 @@ import {
     specificGroup,
     IEezObject,
     EezObject,
-    ClassInfo
+    ClassInfo,
+    getChildOfObject
 } from "project-editor/core/object";
 import {
     DocumentStoreClass,
     getDocumentStore
 } from "project-editor/core/store";
+
+import * as output from "project-editor/core/output";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
@@ -41,6 +44,8 @@ import {
     buildExpression,
     evalConstantExpression
 } from "project-editor/flow/expression/expression";
+
+const NOT_NAMED_LABEL = "<not named>";
 
 export const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
@@ -148,7 +153,7 @@ export class InputActionComponent extends ActionComponent {
         ],
         label: (component: InputActionComponent) => {
             if (!component.name) {
-                return ActionComponent.classInfo.label!(component);
+                return NOT_NAMED_LABEL;
             }
             return component.name;
         },
@@ -196,7 +201,7 @@ export class OutputActionComponent extends ActionComponent {
         ],
         label: (component: OutputActionComponent) => {
             if (!component.name) {
-                return ActionComponent.classInfo.label!(component);
+                return NOT_NAMED_LABEL;
             }
             return component.name;
         },
@@ -1187,6 +1192,31 @@ export class CallActionActionComponent extends ActionComponent {
         componentHeaderColor: "#C7E9C0",
         open: (object: CallActionActionComponent) => {
             object.open();
+        },
+        check: (component: CallActionActionComponent) => {
+            let messages: output.Message[] = [];
+
+            if (!component.action) {
+                messages.push(
+                    output.propertyNotSetMessage(component, "action")
+                );
+            } else {
+                const action = findAction(
+                    getProject(component),
+                    component.action
+                );
+                if (!action) {
+                    messages.push(
+                        new output.Message(
+                            output.Type.ERROR,
+                            `Action "${component.action}" not found`,
+                            getChildOfObject(component, "action")
+                        )
+                    );
+                }
+            }
+
+            return messages;
         }
     });
 
@@ -1201,7 +1231,9 @@ export class CallActionActionComponent extends ActionComponent {
         const inputs = action.inputComponents.map(
             (inputActionComponent: InputActionComponent) => ({
                 name: inputActionComponent.wireID,
-                displayName: inputActionComponent.name,
+                displayName: inputActionComponent.name
+                    ? inputActionComponent.name
+                    : NOT_NAMED_LABEL,
                 type: PropertyType.Any
             })
         );
@@ -1218,7 +1250,9 @@ export class CallActionActionComponent extends ActionComponent {
         const outputs = action.outputComponents.map(
             (outputActionComponent: OutputActionComponent) => ({
                 name: outputActionComponent.wireID,
-                displayName: outputActionComponent.name,
+                displayName: outputActionComponent.name
+                    ? outputActionComponent.name
+                    : NOT_NAMED_LABEL,
                 type: PropertyType.Any,
                 isOutputOptional: true
             })
@@ -1398,7 +1432,8 @@ export class DelayActionComponent extends ActionComponent {
         properties: [
             makeToggablePropertyToInput({
                 name: "milliseconds",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
             })
         ],
         icon: (

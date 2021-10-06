@@ -359,7 +359,7 @@ class InstrumentTab implements IHomeTab {
 export class ProjectEditorTab implements IHomeTab {
     static ID_PREFIX = "PROJECT_TAB_";
 
-    constructor(public tabs: Tabs, public filePath: string | undefined) {}
+    constructor(public tabs: Tabs, public _filePath: string | undefined) {}
 
     permanent: boolean = true;
     @observable _active: boolean = false;
@@ -388,8 +388,8 @@ export class ProjectEditorTab implements IHomeTab {
 
         const DocumentStore = await DocumentStoreClass.create();
 
-        if (this.filePath) {
-            await DocumentStore.openFile(this.filePath);
+        if (this._filePath) {
+            await DocumentStore.openFile(this._filePath);
         } else {
             DocumentStore.newProject();
         }
@@ -521,8 +521,16 @@ export class ProjectEditorTab implements IHomeTab {
         };
     }
 
+    get filePath() {
+        return (
+            (this.DocumentStore && this.DocumentStore.filePath) ||
+            this._filePath ||
+            ""
+        );
+    }
+
     get id() {
-        return ProjectEditorTab.ID_PREFIX + this.filePath || "";
+        return ProjectEditorTab.ID_PREFIX + this.filePath;
     }
 
     get title() {
@@ -728,9 +736,13 @@ class Tabs {
             if (tabDefinition) {
                 tab = tabDefinition.open();
             } else if (tabId.startsWith(ProjectEditorTab.ID_PREFIX)) {
-                tab = this.addProjectTab(
-                    tabId.substr(ProjectEditorTab.ID_PREFIX.length)
+                const filePath = tabId.substr(
+                    ProjectEditorTab.ID_PREFIX.length
                 );
+                if (filePath === "undefined") {
+                    return;
+                }
+                tab = this.addProjectTab(filePath);
             } else {
                 const instrument = instruments.get(tabId);
                 if (instrument) {

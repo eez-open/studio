@@ -131,8 +131,6 @@ input[type="color"] {
         flex-grow: 1;
         align-self: center;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     & > div:nth-child(3) {
@@ -365,11 +363,12 @@ input[type="color"] {
 }
 
 .EezStudio_PanelHeader {
-    padding: 6px 10px;
+    padding: 0px 6px;
     border: 0 solid @borderColor;
     border-bottom-width: 1px;
     background-color: @panelHeaderColor;
     justify-content: space-between;
+    align-items: center;
 }
 
 .EezStudio_ToolbarHeader {
@@ -2545,6 +2544,11 @@ button.EezStudio_Action {
         background-color: @nonFocusedSelectionBackgroundColor;
         color: @nonFocusedSelectionColor;
     }
+
+    td:first-child {
+        display: flex;
+        align-items: center;
+    }
 }
 
 .EezStudio_Messages {
@@ -2621,7 +2625,6 @@ button.EezStudio_Action {
 .EezStudio_PanelHeader {
     flex-grow: 0;
     flex-shrink: 0;
-    padding: 3px;
     background-color: @panelHeaderColor;
     display: flex;
     flex-direction: row;
@@ -2958,7 +2961,7 @@ button.EezStudio_Action {
                         justify-content: space-between;
                         align-items: center;
                         & > div.group-title {
-                            font-size: 90%;
+                            font-size: 85%;
                             text-transform: uppercase;
                             font-weight: bold;
                         }
@@ -3238,6 +3241,9 @@ button.EezStudio_Action {
 }
 
 .EezStudio_DebuggerPanel {
+    height: 100%;
+    display: flex;
+
     .EezStudio_PanelContainer:not(:last-child) {
         margin-bottom: 5px;
     }
@@ -3371,23 +3377,22 @@ button.EezStudio_Action {
     overflow: auto;
 
     .card {
-        border-left: none;
-        border-right: none;
-        border-top: none;
-        border-bottom: 1px solid @borderColor;
+        border: none;
         border-radius: 0;
+
+        & > div:not(.card-header) {
+            padding-left: 10px;
+        }
     }
 
-    .card:last-child {
-        border-bottom: none;
+    .card:not(:last-child) {
+        margin-bottom: 10px;
     }
 
     .card-header {
-        padding: 5px;
-        button {
-            text-decoration: none;
-            color: inherit;
-        }
+        padding: 2px 2px 2px 5px;
+        border: none;
+        background: none;
     }
 
     .card-body {
@@ -3395,11 +3400,11 @@ button.EezStudio_Action {
         flex-wrap: wrap;
         align-content: flex-start;
         align-items: flex-start;
-        padding: 5px;
+        padding: 2px;
     }
 
     .eez-component-palette-item {
-        margin: 4px;
+        margin: 2px;
         padding: 4px;
         cursor: grab;
         display: flex;
@@ -3416,7 +3421,7 @@ button.EezStudio_Action {
         min-width: 120px;
         background-color: #3fadb5;
         color: #333;
-        border-radius: 5px;
+        border-radius: 3px;
 
         &.selected {
             background-color: @nonFocusedSelectionBackgroundColor;
@@ -3952,7 +3957,6 @@ button.EezStudio_Action {
 }
 
 .EezStudio_PanelHeader {
-    padding: 5px 5px;
     border: 0 solid @borderColor;
     border-bottom-width: 1px;
     background-color: @panelHeaderColor;
@@ -4225,10 +4229,6 @@ button.EezStudio_Action {
         position: absolute;
         margin-left: -100%;
     }
-}
-
-.EezStudio_PageFlowContainer {
-    border: 1px dotted @borderColor;
 }
 
 .EezStudio_TreeTable {

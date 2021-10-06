@@ -7,13 +7,15 @@ import { getLabel } from "project-editor/core/object";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { RightArrow } from "project-editor/flow/action-components";
 import { IconAction } from "eez-studio-ui/action";
+import { getInputName, getOutputName } from "./logs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class QueuePanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed: IObservableValue<boolean>;
+    collapsed?: IObservableValue<boolean>;
+    onHeaderDoubleClick: () => void;
 }> {
     render() {
         return (
@@ -21,6 +23,7 @@ export class QueuePanel extends React.Component<{
                 id="project-editor/debugger/queue"
                 title="Queue"
                 collapsed={this.props.collapsed}
+                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
                 buttons={[
                     <IconAction
                         key="resume"
@@ -116,11 +119,17 @@ class QueueList extends React.Component<{ runtime: RuntimeBase }> {
                     <div>
                         {`${getLabel(
                             queueTask.connectionLine.sourceComponent
-                        )}:${queueTask.connectionLine.output}`}
+                        )}:${getOutputName(
+                            queueTask.connectionLine.sourceComponent,
+                            queueTask.connectionLine.output
+                        )}`}
                         <RightArrow />{" "}
                         {`${getLabel(
                             queueTask.connectionLine.targetComponent
-                        )}:${queueTask.connectionLine.input}`}
+                        )}:${getInputName(
+                            queueTask.connectionLine.targetComponent,
+                            queueTask.connectionLine.input
+                        )}`}
                     </div>
                 );
             } else {

@@ -14,23 +14,39 @@ export const MAX_LOGS_ITEMS = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getInputName(component: Component | undefined, inputName: string) {
+export function getInputName(
+    component: Component | undefined,
+    inputName: string
+) {
     if (component) {
         const input = component.inputs.find(input => input.name == inputName);
         if (input) {
-            return input.displayName || input.name;
+            if (input.displayName) {
+                if (typeof input.displayName === "string") {
+                    return input.displayName;
+                }
+            }
+            return input.name;
         }
     }
     return inputName;
 }
 
-function getOutputName(component: Component | undefined, outputName: string) {
+export function getOutputName(
+    component: Component | undefined,
+    outputName: string
+) {
     if (component) {
         const output = component.outputs.find(
             output => output.name == outputName
         );
         if (output) {
-            return output.displayName || output.name;
+            if (output.displayName) {
+                if (typeof output.displayName === "string") {
+                    return output.displayName;
+                }
+            }
+            return output.name;
         }
     }
     return outputName;
@@ -202,6 +218,15 @@ export class RuntimeLogs {
     addLogItem(logItem: LogItem) {
         this.logs.push(logItem);
         if (this.logs.length > MAX_LOGS_ITEMS) {
+            // remove oldest non error log item
+            for (let i = 0; i < this.logs.length; i++) {
+                if (this.logs[i].type != "error") {
+                    this.logs.splice(i, 1);
+                    return;
+                }
+            }
+
+            // remove oldest error item
             this.logs.shift();
         }
     }

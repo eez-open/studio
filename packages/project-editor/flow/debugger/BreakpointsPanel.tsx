@@ -13,7 +13,8 @@ import { getFlow } from "project-editor/project/project";
 @observer
 export class BreakpointsPanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed: IObservableValue<boolean>;
+    collapsed?: IObservableValue<boolean>;
+    onHeaderDoubleClick: () => void;
 }> {
     render() {
         return (
@@ -21,6 +22,7 @@ export class BreakpointsPanel extends React.Component<{
                 id="project-editor/debugger/breakpoints"
                 title="Breakpoints"
                 collapsed={this.props.collapsed}
+                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
                 body={<BreakpointsList runtime={this.props.runtime} />}
             />
         );

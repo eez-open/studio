@@ -177,17 +177,7 @@ class PaletteGroup extends React.Component<{
             .replace(/[\W]/g, "-")}`;
         return (
             <div className="card">
-                <div className="card-header">
-                    <h4 className="mb-0">
-                        <button
-                            className="btn btn-link"
-                            data-bs-toggle="collapse"
-                            data-target={`#${target}`}
-                        >
-                            {name}
-                        </button>
-                    </h4>
-                </div>
+                <div className="card-header">{name}</div>
                 <div id={target} className="collapse show">
                     <div className="card-body">
                         {this.props.componentClasses.map(componentClass => {

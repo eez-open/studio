@@ -1616,7 +1616,6 @@ export class TextWidget extends EmbeddedWidget {
         ],
 
         defaultValue: {
-            text: "Text",
             left: 0,
             top: 0,
             width: 64,
@@ -1641,51 +1640,37 @@ export class TextWidget extends EmbeddedWidget {
     });
 
     render(flowContext: IFlowContext) {
-        let text = "";
+        let text: string;
 
-        if (flowContext.flowState) {
-            if (this.text) {
-                text = this.text;
-            } else {
-                if (this.data) {
-                    try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.data
-                        );
-                        if (value != null && value != undefined) {
-                            text = value.toString();
-                        } else {
-                            text = "";
-                        }
-                    } catch (err) {
-                        text = "err!";
+        if (this.text) {
+            text = this.text;
+        } else if (this.data) {
+            if (flowContext.flowState) {
+                try {
+                    const value = evalExpression(flowContext, this, this.data);
+                    if (value != null && value != undefined) {
+                        text = value.toString();
+                    } else {
+                        text = "";
                     }
+                } catch (err) {
+                    text = "err!";
+                }
+            } else {
+                if (this.name) {
+                    text = this.name;
                 } else {
-                    text = "";
+                    text = `{${this.data}}`;
                 }
             }
         } else {
-            if (this.text) {
-                text = this.text;
+            if (flowContext.flowState) {
+                text = "";
             } else {
-                if (this.data) {
-                    if (
-                        flowContext.DocumentStore.isAppletProject ||
-                        flowContext.DocumentStore.isDashboardProject
-                    ) {
-                        try {
-                            text = evalExpression(flowContext, this, this.data);
-                        } catch (err) {
-                            text = this.data;
-                        }
-                    } else {
-                        text = flowContext.dataContext.get(this.data) as string;
-                    }
-                }
-                if (text == undefined) {
+                if (this.name) {
                     text = this.name;
+                } else {
+                    text = "<no text>";
                 }
             }
         }
@@ -2558,37 +2543,14 @@ export class ButtonWidget extends EmbeddedWidget {
             text = this.text;
         }
 
-        let buttonEnabled = false;
-        if (flowContext.flowState) {
-            const enabled = this.enabled
-                ? flowContext.flowState.evalExpression(this, this.enabled)
-                : false;
-            if (enabled) {
-                buttonEnabled = true;
-            }
-        } else {
-            if (this.enabled) {
-                if (flowContext.DocumentStore.isAppletProject) {
-                    try {
-                        const value = evalExpression(
-                            flowContext,
-                            this,
-                            this.enabled
-                        );
+        let buttonEnabled;
 
-                        if (
-                            typeof value == "number" ||
-                            typeof value == "boolean"
-                        ) {
-                            buttonEnabled = !!value;
-                        }
-                    } catch (err) {}
-                } else {
-                    buttonEnabled = flowContext.dataContext.getBool(
-                        this.enabled
-                    );
-                }
-            }
+        if (flowContext.flowState) {
+            buttonEnabled = this.enabled
+                ? flowContext.flowState.evalExpression(this, this.enabled)
+                : true;
+        } else {
+            buttonEnabled = true;
         }
 
         let style = buttonEnabled ? this.style : this.disabledStyle;

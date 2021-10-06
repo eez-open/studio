@@ -37,6 +37,7 @@ const CONF_HOUSEKEEPING_INTERVAL = 100;
 const CONF_IDN_EXPECTED_TIMEOUT = 1000;
 const CONF_COMBINE_IF_BELOW_MS = 250;
 const CONF_START_LONG_OPERATION_TIMEOUT = 5000;
+const CONF_ACQUIRE_TIMEOUT = 3000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +122,8 @@ export interface LongOperation {
 
 export class Connection
     extends ConnectionBase
-    implements CommunicationInterfaceHost {
+    implements CommunicationInterfaceHost
+{
     @observable _state: ConnectionState = ConnectionState.IDLE;
     get state() {
         return this._state;
@@ -370,6 +372,25 @@ export class Connection
 
     @bind
     housekeeping() {
+        if (this.acquireQueue.length > 0) {
+            const acquireTask = this.acquireQueue[0];
+            if (Date.now() - acquireTask.requestTime > CONF_ACQUIRE_TIMEOUT) {
+                this.acquireQueue.shift()!;
+
+                const browserWindow = require("electron").BrowserWindow.fromId(
+                    acquireTask.callbackWindowId
+                )!;
+
+                browserWindow.webContents.send(
+                    "instrument/connection/acquire-result",
+                    {
+                        acquireId: acquireTask.acquireId,
+                        rejectReason: "timeout"
+                    }
+                );
+            }
+        }
+
         if (this.longOperation && this.longOperation.isDone()) {
             let dataSurplus = this.longOperation.dataSurplus;
             this.longOperationDone();
@@ -671,6 +692,7 @@ export class Connection
     }
 
     acquireQueue: {
+        requestTime: number;
         acquireId: string;
         callbackWindowId: number;
         traceEnabled: boolean;
@@ -681,13 +703,13 @@ export class Connection
         callbackWindowId: number,
         traceEnabled: boolean
     ) {
-        let browserWindow = require("electron").BrowserWindow.fromId(
-            callbackWindowId
-        )!;
+        let browserWindow =
+            require("electron").BrowserWindow.fromId(callbackWindowId)!;
 
         if (this.isConnected) {
             if (this.callbackWindowId != undefined) {
                 this.acquireQueue.push({
+                    requestTime: Date.now(),
                     acquireId,
                     callbackWindowId,
                     traceEnabled
@@ -819,9 +841,8 @@ export class IpcConnection extends ConnectionBase {
         if (commandName.endsWith("?")) {
             // get expected query response
             options = {
-                queryResponseType: this.instrument.getQueryResponseType(
-                    commandName
-                )
+                queryResponseType:
+                    this.instrument.getQueryResponseType(commandName)
             };
         } else {
             if (this.instrument.isCommandSendsBackDataBlock(commandName)) {
@@ -1027,18 +1048,20 @@ export function setupIpcServer() {
                 connection.upload(
                     arg.instructions,
                     () => {
-                        let browserWindow = require("electron").BrowserWindow.fromId(
-                            arg.callbackWindowId
-                        )!;
+                        let browserWindow =
+                            require("electron").BrowserWindow.fromId(
+                                arg.callbackWindowId
+                            )!;
                         browserWindow.webContents.send(
                             "instrument/connection/long-operation-result",
                             {}
                         );
                     },
                     error => {
-                        let browserWindow = require("electron").BrowserWindow.fromId(
-                            arg.callbackWindowId
-                        )!;
+                        let browserWindow =
+                            require("electron").BrowserWindow.fromId(
+                                arg.callbackWindowId
+                            )!;
                         browserWindow.webContents.send(
                             "instrument/connection/long-operation-result",
                             {
