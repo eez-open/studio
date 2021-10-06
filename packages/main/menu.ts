@@ -372,10 +372,13 @@ const helpMenu: Electron.MenuItemConstructorOptions = {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function openProject(projectFilePath: string, focusedWindow?: any) {
-    (focusedWindow || BrowserWindow.getFocusedWindow()!).webContents.send(
-        "open-project",
-        projectFilePath
-    );
+    if (!focusedWindow) {
+        focusedWindow = BrowserWindow.getFocusedWindow();
+    }
+
+    if (focusedWindow) {
+        focusedWindow.webContents.send("open-project", projectFilePath);
+    }
 }
 
 function createNewProject() {

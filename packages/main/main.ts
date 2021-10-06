@@ -32,14 +32,14 @@ app.on("ready", async function () {
     }
 
     app.on("second-instance", function (event, commandLine, workingDirectory) {
+        const { bringHomeWindowToFocus } =
+            require("main/home-window") as typeof HomeWindowModule;
+        bringHomeWindowToFocus();
+
         const projectFilePath = commandLine[commandLine.length - 1];
         const { openProject } = require("main/menu");
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
             openProject(projectFilePath);
-        } else {
-            const { bringHomeWindowToFocus } =
-                require("main/home-window") as typeof HomeWindowModule;
-            bringHomeWindowToFocus();
         }
     });
 
