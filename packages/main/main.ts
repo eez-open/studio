@@ -25,21 +25,20 @@ app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.allowRendererProcessReuse = false;
 
 app.on("ready", async function () {
-    // make sure there is only one instance of this application
-    // var gotTheLock = app.requestSingleInstanceLock();
-    // if (!gotTheLock) {
-    //     app.quit();
-    //     return;
-    // }
+    var gotTheLock = app.requestSingleInstanceLock();
+    if (!gotTheLock) {
+        app.quit();
+        return;
+    }
+
     app.on("second-instance", function (event, commandLine, workingDirectory) {
         const projectFilePath = commandLine[commandLine.length - 1];
         const { openProject } = require("main/menu");
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
             openProject(projectFilePath);
         } else {
-            const {
-                bringHomeWindowToFocus
-            } = require("main/home-window") as typeof HomeWindowModule;
+            const { bringHomeWindowToFocus } =
+                require("main/home-window") as typeof HomeWindowModule;
             bringHomeWindowToFocus();
         }
     });
@@ -74,9 +73,8 @@ app.on("ready", async function () {
         if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
             openProject(projectFilePath);
         } else {
-            const {
-                openHomeWindow
-            } = require("main/home-window") as typeof HomeWindowModule;
+            const { openHomeWindow } =
+                require("main/home-window") as typeof HomeWindowModule;
             openHomeWindow();
         }
     }
