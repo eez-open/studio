@@ -115,7 +115,7 @@ const ConnectionLineShape = observer(
                     d={lineShape}
                     style={{
                         fill: "none",
-                        stroke: "white",
+                        stroke: theme().backgroundColor,
                         strokeOpacity: 0,
                         strokeWidth: scale
                             ? strokeBackgroundWidth / scale
@@ -126,7 +126,7 @@ const ConnectionLineShape = observer(
                     d={lineShape}
                     style={{
                         fill: "none",
-                        stroke: "white",
+                        stroke: theme().backgroundColor,
                         strokeOpacity: 0.4,
                         strokeWidth: strokeOutlineWidth
                     }}

@@ -282,7 +282,7 @@ class RunEditSwitchControls extends React.Component {
                     text="Debug"
                     title="Enter debug mode"
                     icon={
-                        <svg viewBox="0 0 64 64">
+                        <svg viewBox="0 0 64 64" fill="currentColor">
                             <g transform="translate(-1,-1)">
                                 <path
                                     id="path2"

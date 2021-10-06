@@ -165,6 +165,7 @@ interface IDataContext {
 }
 
 interface ThemeInterface {
+    backgroundColor: string;
     borderColor: string;
     panelHeaderColor: string;
     selectionBackgroundColor: string;

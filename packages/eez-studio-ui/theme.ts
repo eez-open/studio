@@ -1,6 +1,7 @@
 import { settingsController } from "home/settings";
 
 export interface ThemeInterface {
+    backgroundColor: string;
     borderColor: string;
     panelHeaderColor: string;
     selectionBackgroundColor: string;
@@ -11,6 +12,7 @@ export interface ThemeInterface {
 }
 
 export const lightTheme: ThemeInterface = {
+    backgroundColor: "white",
     borderColor: "#e0e0e0",
     panelHeaderColor: "#f0f0f0",
     selectionBackgroundColor: "#337bb7",
@@ -21,6 +23,7 @@ export const lightTheme: ThemeInterface = {
 };
 
 export const darkTheme: ThemeInterface = {
+    backgroundColor: "#222222",
     borderColor: "#444444",
     panelHeaderColor: "#333333",
     selectionBackgroundColor: "#337bb7",
