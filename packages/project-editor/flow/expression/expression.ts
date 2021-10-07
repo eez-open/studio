@@ -422,10 +422,15 @@ function findValueTypeInExpressionNode(
 
         let enumDef = project.variables.enumsMap.get(node.name);
         if (!enumDef) {
-            throw `identifier '${node.name}' is neither input or local or global variable or enum`;
+            node.valueType = `enum:${node.name}` as VariableTypePrefix;
+            return;
         }
 
-        node.valueType = `enum:${node.name}` as VariableTypePrefix;
+        // TODO test inputs and outputs (assignable expression)
+        // throw `identifier '${node.name}' is neither input or local or global variable or enum`;
+
+        node.valueType = "any";
+        return;
     } else if (node.type == "BinaryExpression") {
         let operator = binaryOperators[node.operator];
         if (!operator) {
