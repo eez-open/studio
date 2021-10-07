@@ -212,6 +212,84 @@ export function evalExpression(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type AssignableValueType =
+    | "null"
+    | "output"
+    | "local-variable"
+    | "global-variable"
+    | "flow-value";
+
+class AssignableValue {
+    constructor(
+        private type: AssignableValueType,
+        public name?: any,
+        public object?: any
+    ) {}
+
+    isOutput() {
+        return this.type == "output";
+    }
+
+    isLocalVariable() {
+        return this.type == "local-variable";
+    }
+
+    isGlobalVariable() {
+        return this.type == "global-variable";
+    }
+
+    isFlowValue() {
+        return this.type == "flow-value";
+    }
+
+    getValue(expressionContext: IExpressionContext) {
+        if (this.isLocalVariable() || this.isGlobalVariable()) {
+            return expressionContext.dataContext.get(this.name);
+        } else if (this.isFlowValue()) {
+            return this.object[this.name];
+        } else {
+            return null;
+        }
+    }
+}
+
+export function evalAssignableExpression(
+    expressionContext: IExpressionContext,
+    component: Component,
+    expression: string
+): AssignableValue {
+    let assignableValue: AssignableValue | undefined;
+
+    if (typeof expression == "string") {
+        let rootNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+
+        try {
+            findValueTypeInExpressionNode(component, rootNode, false);
+
+            assignableValue = evalAssignableExpressionWithContext(
+                expressionContext,
+                component,
+                rootNode
+            );
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    if (!assignableValue) {
+        return new AssignableValue("null");
+    }
+
+    return assignableValue;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 type IdentifierExpressionNode = {
     type: "Identifier";
     name: string;
@@ -529,6 +607,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
 
             checkNode(node.left);
             checkNode(node.right);
+            return;
         }
 
         if (node.type == "LogicalExpression") {
@@ -539,6 +618,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
 
             checkNode(node.left);
             checkNode(node.right);
+            return;
         }
 
         if (node.type == "UnaryExpression") {
@@ -548,12 +628,14 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             }
 
             checkNode(node.argument);
+            return;
         }
 
         if (node.type == "ConditionalExpression") {
             checkNode(node.test);
             checkNode(node.consequent);
             checkNode(node.alternate);
+            return;
         }
 
         if (node.type == "CallExpression") {
@@ -579,6 +661,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             }
 
             node.arguments.forEach(checkNode);
+            return;
         }
 
         if (node.type == "MemberExpression") {
@@ -613,12 +696,10 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
 
         if (node.type == "ArrayExpression") {
             console.log("TODO check ArrayExpression", node);
-            return;
         }
 
         if (node.type == "ObjectExpression") {
             console.log("TODO check ObjectExpression", node);
-            return;
         }
 
         throw `Unknown expression node "${node.type}"`;
@@ -1149,6 +1230,90 @@ function evalExpressionWithContext(
         if (node.type == "ObjectExpression") {
             console.log("TODO eval_in_flow ObjectExpression", node);
             return undefined;
+        }
+
+        throw `Unknown expression node "${node.type}"`;
+    }
+
+    return evalNode(rootNode);
+}
+
+function evalAssignableExpressionWithContext(
+    expressionContext: IExpressionContext,
+    component: Component,
+    rootNode: ExpressionNode
+) {
+    function evalNode(node: ExpressionNode): AssignableValue {
+        if (node.type == "Literal") {
+            return node.value;
+        }
+
+        if (node.type == "Identifier") {
+            const output = component.outputs.find(
+                output => output.name == node.name
+            );
+            if (output != undefined) {
+                return new AssignableValue("output", output.name);
+            }
+
+            const flow = getFlow(component);
+            let localVariable = flow.localVariables.find(
+                localVariable => localVariable.name == node.name
+            );
+            if (localVariable) {
+                return new AssignableValue(
+                    "local-variable",
+                    localVariable.name
+                );
+            }
+
+            let globalVariable =
+                expressionContext.DocumentStore.project.variables.globalVariables.find(
+                    globalVariable => globalVariable.name == node.name
+                );
+            if (globalVariable) {
+                node.valueType = globalVariable.type as VariableTypePrefix;
+                return new AssignableValue(
+                    "global-variable",
+                    globalVariable.name
+                );
+            }
+
+            return new AssignableValue("null");
+        }
+
+        if (node.type == "ConditionalExpression") {
+            return evalNode(node.test)
+                ? evalNode(node.consequent)
+                : evalNode(node.alternate);
+        }
+
+        if (node.type == "MemberExpression") {
+            const object = evalNode(node.object);
+            if (object != undefined) {
+                const property = node.computed
+                    ? evalNode(node.property)
+                    : (node.property as NonComputedPropertyExpressionNode).name;
+                if (property != undefined) {
+                    return new AssignableValue(
+                        "flow-value",
+                        property,
+                        object.getValue(expressionContext)
+                    );
+                }
+            }
+
+            return new AssignableValue("null");
+        }
+
+        if (node.type == "ArrayExpression") {
+            console.log("TODO eval_in_flow ArrayExpression", node);
+            return new AssignableValue("null");
+        }
+
+        if (node.type == "ObjectExpression") {
+            console.log("TODO eval_in_flow ObjectExpression", node);
+            return new AssignableValue("null");
         }
 
         throw `Unknown expression node "${node.type}"`;

@@ -306,6 +306,94 @@
           "customInputs": [],
           "customOutputs": [],
           "variable": "continue"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -275,
+          "top": -230,
+          "width": 114,
+          "height": 61,
+          "wireID": "c5f7ab0c-d7eb-44da-cc0f-df525015096a",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "3"
+        },
+        {
+          "type": "SwitchActionComponent",
+          "left": -100,
+          "top": -229,
+          "width": 167,
+          "height": 147,
+          "wireID": "79fa48dd-7a18-4790-9bd3-4ecdacaebcbb",
+          "customInputs": [
+            {
+              "name": "trt",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "tests": [
+            {
+              "condition": "trt==1",
+              "outputName": "a1"
+            },
+            {
+              "condition": "trt==2",
+              "outputName": "a2"
+            },
+            {
+              "condition": "trt==3",
+              "outputName": "a3"
+            },
+            {
+              "condition": "trt==4",
+              "outputName": "a4"
+            }
+          ]
+        },
+        {
+          "type": "LogActionComponent",
+          "left": 157,
+          "top": -290,
+          "width": 74,
+          "height": 31,
+          "wireID": "f5a08244-8eba-42e1-aaf5-dd1872db8b06",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "1"
+        },
+        {
+          "type": "LogActionComponent",
+          "left": 157,
+          "top": -209,
+          "width": 74,
+          "height": 31,
+          "wireID": "6998b56f-302b-4c7b-c0b1-33d2b46e347e",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "2"
+        },
+        {
+          "type": "LogActionComponent",
+          "left": 157,
+          "top": -125,
+          "width": 74,
+          "height": 31,
+          "wireID": "77ecdd6a-f152-4821-9acd-5a0b8f03524e",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "3"
+        },
+        {
+          "type": "LogActionComponent",
+          "left": 157,
+          "top": -66,
+          "width": 74,
+          "height": 31,
+          "wireID": "04b4b37f-4aa7-4444-8c57-17ad76c7f2fc",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "4"
         }
       ],
       "connectionLines": [
@@ -386,6 +474,36 @@
           "output": "variable",
           "target": "17a56676-cba2-425f-cb12-87e07fe927ac",
           "input": "enabled"
+        },
+        {
+          "source": "c5f7ab0c-d7eb-44da-cc0f-df525015096a",
+          "output": "value",
+          "target": "79fa48dd-7a18-4790-9bd3-4ecdacaebcbb",
+          "input": "trt"
+        },
+        {
+          "source": "79fa48dd-7a18-4790-9bd3-4ecdacaebcbb",
+          "output": "a1",
+          "target": "f5a08244-8eba-42e1-aaf5-dd1872db8b06",
+          "input": "@seqin"
+        },
+        {
+          "source": "79fa48dd-7a18-4790-9bd3-4ecdacaebcbb",
+          "output": "a2",
+          "target": "6998b56f-302b-4c7b-c0b1-33d2b46e347e",
+          "input": "@seqin"
+        },
+        {
+          "source": "79fa48dd-7a18-4790-9bd3-4ecdacaebcbb",
+          "output": "a3",
+          "target": "77ecdd6a-f152-4821-9acd-5a0b8f03524e",
+          "input": "@seqin"
+        },
+        {
+          "source": "79fa48dd-7a18-4790-9bd3-4ecdacaebcbb",
+          "output": "a4",
+          "target": "04b4b37f-4aa7-4444-8c57-17ad76c7f2fc",
+          "input": "@seqin"
         }
       ],
       "localVariables": [

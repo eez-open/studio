@@ -637,7 +637,13 @@ export class SwitchActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        // TODO
+        for (const test of this.tests) {
+            let value = flowState.evalExpression(this, test.condition);
+            if (value) {
+                flowState.propagateValue(this, test.outputName, null);
+                break;
+            }
+        }
         return undefined;
     }
 

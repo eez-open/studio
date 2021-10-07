@@ -212,15 +212,9 @@ function buildComponent(
     if (errorCatchOutputIndex != -1) {
         // errorCatchOutput
         dataBuffer.writeInt16(errorCatchOutputIndex);
-
-        // logError
-        dataBuffer.writeUint16(component.logError ? 1 : 0);
     } else {
         // errorCatchOutput
         dataBuffer.writeInt16(-1);
-
-        // logError
-        dataBuffer.writeUint16(1);
     }
 
     // specific

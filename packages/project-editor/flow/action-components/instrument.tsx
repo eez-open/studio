@@ -1057,12 +1057,16 @@ export class ScpiActionComponent extends ActionComponent {
                             result = resultStr;
                         }
 
-                        const outputName =
+                        const assignableExpression =
                             str[0] == "{"
                                 ? str.substring(1, str.length - 1)
                                 : str;
 
-                        flowState.propagateValue(this, outputName, result);
+                        flowState.assignValue(
+                            this,
+                            assignableExpression,
+                            result
+                        );
                     }
                 } else if (tag == SCPI_PART_COMMAND) {
                     flowState.logScpi(

@@ -36,7 +36,10 @@ import {
 import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow/debugger/WatchPanel";
 import { Action } from "project-editor/features/action/action";
-import { evalExpression } from "project-editor/flow/expression/expression";
+import {
+    evalExpression,
+    evalAssignableExpression
+} from "project-editor/flow/expression/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -522,6 +525,29 @@ export class FlowState {
 
     setVariable(component: Component, variableName: string, value: any) {
         return this.dataContext.set(variableName, value);
+    }
+
+    assignValue(
+        component: Component,
+        assignableExpression: string,
+        value: any
+    ) {
+        const result = evalAssignableExpression(
+            this,
+            component,
+            assignableExpression
+        );
+        if (result.isOutput()) {
+            this.propagateValue(component, result.name, value);
+        } else if (result.isLocalVariable()) {
+            this.dataContext.set(result.name, value);
+        } else if (result.isGlobalVariable()) {
+            this.dataContext.set(result.name, value);
+        } else if (result.isFlowValue()) {
+            runInAction(() => (result.object[result.name] = value));
+        } else {
+            throw "";
+        }
     }
 
     @computed get isRunning(): boolean {

@@ -711,7 +711,6 @@ export class Component extends EezObject {
     @observable _geometry: ComponentGeometry;
 
     @observable catchError: boolean;
-    @observable logError: boolean;
 
     get autoSize() {
         return false;
@@ -811,13 +810,6 @@ export class Component extends EezObject {
                 name: "catchError",
                 type: PropertyType.Boolean,
                 propertyGridGroup: flowGroup
-            },
-            {
-                name: "logError",
-                type: PropertyType.Boolean,
-                propertyGridGroup: flowGroup,
-                hideInPropertyGrid: (component: Component) =>
-                    !component.catchError
             },
             {
                 name: "asOutputProperties",

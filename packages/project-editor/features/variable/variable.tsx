@@ -1367,7 +1367,7 @@ function isValueTypeOf(
     } else if (type == "boolean") {
         if (typeof value == "boolean" || Number.isInteger(value)) return null;
     } else if (type == "string") {
-        if (!(typeof value == "string")) return null;
+        if (typeof value == "string") return null;
     } else if (type == "date") {
         return null;
     } else if (isArrayType(type)) {
