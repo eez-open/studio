@@ -1,26 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8" />
+    </head>
 
-<head>
-    <meta charset="utf-8">
-    <title>shared/service</title>
-</head>
-
-<body>
-
-    <script>
-        var EEZStudio = {
-            title: document.title,
-            electron: require("electron"),
-            windowType: "shared/service",
-            remote: require('@electron/remote')
-        };
-        const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(process.execPath)
-        process.env.NODE_ENV = isDev ? "development" : "production";
-        require("app-module-path").addPath(__dirname + "/..");
-        require("eez-studio-shared/service");
-    </script>
-
-</body>
-
+    <body>
+        <script>
+            var EEZStudio = {
+                electron: require("electron"),
+                windowType: "shared/service",
+                remote: require("@electron/remote")
+            };
+            const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(
+                process.execPath
+            );
+            process.env.NODE_ENV = isDev ? "development" : "production";
+            require("app-module-path").addPath(__dirname + "/..");
+            require("eez-studio-shared/service");
+        </script>
+    </body>
 </html>

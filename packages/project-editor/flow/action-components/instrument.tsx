@@ -1043,7 +1043,9 @@ export class ScpiActionComponent extends ActionComponent {
                     let result = await connection.query(command);
                     command = "";
                     flowState.logScpi(
-                        `SCPI QUERY RESULT [${instrument.name}]: ${result}`,
+                        `SCPI QUERY RESULT [${instrument.name}]: ${
+                            result != undefined ? JSON.stringify(result) : ""
+                        }`,
                         this
                     );
 

@@ -587,7 +587,6 @@ export class FlowViewer
                 className="EezStudio_FlowViewerCanvasContainer"
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
-                tabIndex={0}
                 onFocus={this.focusHander}
                 onDoubleClick={this.onDoubleClick}
             >

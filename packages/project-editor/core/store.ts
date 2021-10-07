@@ -110,7 +110,12 @@ import {
     CustomOutput
 } from "project-editor/flow/component";
 import { Page } from "project-editor/features/page/page";
-import { ConnectionLine, Flow, FlowFragment } from "project-editor/flow/flow";
+import {
+    ConnectionLine,
+    Flow,
+    FlowFragment,
+    FlowTabState
+} from "project-editor/flow/flow";
 
 import { Section } from "project-editor/core/output";
 import { isWebStudio } from "eez-studio-shared/util-electron";
@@ -1271,7 +1276,7 @@ export class DocumentStoreClass {
             }
         }
 
-        title += EEZStudio.title;
+        title += " - EEZ Studio";
 
         if (title != document.title) {
             document.title = title;
@@ -1889,6 +1894,21 @@ export class DocumentStoreClass {
     setEditorMode() {
         if (this.runtime) {
             this.runtime.stopRuntime(false);
+
+            if (this.runtime.isDebuggerActive) {
+                // after exit from debugger, select last target component
+                // when queue task is selected (we know this because number
+                // of selected objects is 3: source, target and connection line)
+                const editorState = this.editorsStore.activeEditor?.state;
+                if (editorState instanceof FlowTabState) {
+                    if (editorState.selectedObjects.length == 3) {
+                        editorState.selectObjects([
+                            editorState.selectedObjects[1]
+                        ]);
+                    }
+                }
+            }
+
             this.runtime = undefined;
         }
     }

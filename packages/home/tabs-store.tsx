@@ -45,6 +45,7 @@ export interface IHomeTab extends ITab {
     attention?: boolean;
     beforeAppClose?(): Promise<boolean>;
     showCommandPalette?(): void;
+    titleStr: string;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +60,10 @@ class WorkbenchTab implements IHomeTab {
     id = "workbench";
     title = "Workbench";
     icon = "material:developer_board";
+
+    get titleStr() {
+        return this.title;
+    }
 
     render() {
         const { Workbench } =
@@ -86,6 +91,10 @@ class HistoryTab implements IHomeTab {
     id = "history";
     title = "History";
     icon = "material:history";
+
+    get titleStr() {
+        return this.title;
+    }
 
     render() {
         if (tabs.viewDeletedHistory) {
@@ -120,6 +129,10 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     title = "Shortcuts and Groups";
     icon = "material:playlist_play";
 
+    get titleStr() {
+        return this.title;
+    }
+
     render() {
         const { ShortcutsAndGroups } =
             require("home/shortcuts") as typeof ShortcutsModule;
@@ -145,6 +158,10 @@ class ExtensionManagerTab implements IHomeTab {
 
     id = "extensions";
     title = "Extension Manager";
+
+    get titleStr() {
+        return this.title;
+    }
 
     @computed
     get numNewVersions() {
@@ -208,6 +225,10 @@ class SettingsTab implements IHomeTab {
     id = "settings";
     title = "Settings";
 
+    get titleStr() {
+        return this.title;
+    }
+
     @computed
     get attention() {
         const { settingsController } =
@@ -261,6 +282,10 @@ class HomeSectionTab implements IHomeTab {
     }
     get icon() {
         return this.homeSection.icon;
+    }
+
+    get titleStr() {
+        return this.title;
     }
 
     render() {
@@ -319,6 +344,24 @@ class InstrumentTab implements IHomeTab {
     }
 
     get title() {
+        return this.object.isConnected ? (
+            <div
+                className="EezStudio_InstrumentConnectionState"
+                style={{ flexGrow: 1, paddingLeft: 5 }}
+            >
+                <span
+                    style={{
+                        backgroundColor: this.object.connectionState.color
+                    }}
+                />
+                <span>{this.object.name}</span>
+            </div>
+        ) : (
+            this.object.name
+        );
+    }
+
+    get titleStr() {
         return this.object.name;
     }
 
@@ -537,6 +580,10 @@ export class ProjectEditorTab implements IHomeTab {
         return path.parse(this.filePath || "").name || "Untitled project";
     }
 
+    get titleStr() {
+        return this.title;
+    }
+
     get icon() {
         return <Icon icon="material:developer_board" />;
     }
@@ -684,9 +731,9 @@ class Tabs {
 
         autorun(() => {
             if (this.activeTab) {
-                document.title = `${this.activeTab.title} - Home - EEZ Studio`;
+                document.title = `${this.activeTab.titleStr} - EEZ Studio`;
             } else {
-                document.title = `Home - EEZ Studio`;
+                document.title = `EEZ Studio`;
             }
         });
 

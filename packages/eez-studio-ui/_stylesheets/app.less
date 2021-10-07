@@ -3324,33 +3324,59 @@ button.EezStudio_Action {
     white-space: nowrap;
 }
 
+.EezStudio_IsTrueActionComponent,
 .EezStudio_CompareActionComponent {
     display: flex;
     align-items: center;
     white-space: nowrap;
 }
 
-.EezStudio_TrixEditor {
-    position: relative;
+.EezStudio_CommentActionComponent {
     background-color: #ffff88;
-    padding: 5px;
-    .trix-button-group {
-        border: none !important;
-        margin-bottom: 5px;
+
+    .title-enclosure {
+        overflow: hidden;
     }
-    .trix-button {
-        border: none !important;
-        font-size: 80%;
+
+    & > .content {
+        width: 100%;
+        height: 100%;
     }
-    trix-editor {
-        border: 1px solid @borderColor;
-    }
-    trix-toolbar .trix-button-group:not(:first-child) {
-        margin-left: 5px;
-    }
-    &:focus {
+
+    .EezStudio_TrixEditor {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background-color: #ffff88;
+
+        .trix-button-group {
+            border: none !important;
+            margin-bottom: 5px;
+        }
+
+        .trix-button {
+            border: none !important;
+            font-size: 80%;
+        }
+
+        trix-editor {
+            border: none;
+            border-top: 1px solid @borderColor;
+            min-height: 2rem;
+        }
+
+        trix-toolbar .trix-button-group:not(:first-child) {
+            margin-left: 5px;
+        }
+
         trix-toolbar {
             visibility: hidden;
+            position: absolute;
+            top: -55px;
+            left: 0px;
+            background-color: @panelHeaderColor;
+            border: 1px solid @borderColor;
+            padding-top: 3px;
         }
     }
 }

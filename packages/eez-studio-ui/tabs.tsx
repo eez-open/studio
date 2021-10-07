@@ -220,7 +220,12 @@ export const TabView: React.FC<TabViewProps> = observer(
                 </>
             );
         } else {
-            title = tab.title;
+            title = (
+                <>
+                    {icon}
+                    {tab.title}
+                </>
+            );
         }
 
         const opacity = isDragging ? 0 : 1;

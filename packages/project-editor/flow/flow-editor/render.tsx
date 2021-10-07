@@ -71,6 +71,14 @@ function calcComponentGeometry(
 
     const rect = transform.clientToPageRect(el.getBoundingClientRect());
 
+    if (!(component.autoSize == "width" || component.autoSize == "both")) {
+        rect.width = component.width;
+    }
+
+    if (!(component.autoSize == "height" || component.autoSize == "both")) {
+        rect.height = component.height;
+    }
+
     const inputs: PortsGeometry = {};
     const outputs: PortsGeometry = {};
 
@@ -194,7 +202,6 @@ export const ComponentEnclosure = observer(
                     el,
                     flowContext
                 );
-                geometry.width = Math.round(geometry.width);
                 geometry.height = Math.round(geometry.height);
                 runInAction(() => {
                     component.geometry = geometry;
@@ -207,8 +214,10 @@ export const ComponentEnclosure = observer(
             top: top ?? component.top
         };
 
-        if (!component.autoSize) {
+        if (!(component.autoSize == "width" || component.autoSize == "both")) {
             style.width = component.width;
+        }
+        if (!(component.autoSize == "height" || component.autoSize == "both")) {
             style.height = component.height;
         }
 

@@ -179,6 +179,21 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
 
         basicTypes.unshift(<option key="__empty" value="" />);
 
+        const customTypes = getClassesDerivedFrom(VariableType).map(
+            variableTypeClass => {
+                let name = variableTypeClass.name;
+                if (name.endsWith("VariableType")) {
+                    name = name.substr(0, name.length - "VariableType".length);
+                }
+
+                return (
+                    <option key={name} value={`custom:${name}`}>
+                        {name}
+                    </option>
+                );
+            }
+        );
+
         const project = getProject(this.props.objects[0]);
 
         const enums = project.variables.enums.map(enumDef => (
@@ -199,37 +214,22 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                     key={`array:${basicTypeName}`}
                     value={`array:${basicTypeName}`}
                 >
-                    {humanize(basicTypeName)}
+                    Array of {humanize(basicTypeName)}
                 </option>
             );
         });
 
         const arrayOfEnums = project.variables.enums.map(enumDef => (
             <option key={enumDef.name} value={`array:enum:${enumDef.name}`}>
-                {enumDef.name}
+                Array of {enumDef.name}
             </option>
         ));
 
         const arrayOfStructures = project.variables.structures.map(struct => (
             <option key={struct.name} value={`array:struct:${struct.name}`}>
-                {struct.name}
+                Array of {struct.name}
             </option>
         ));
-
-        const customTypes = getClassesDerivedFrom(VariableType).map(
-            variableTypeClass => {
-                let name = variableTypeClass.name;
-                if (name.endsWith("VariableType")) {
-                    name = name.substr(0, name.length - "VariableType".length);
-                }
-
-                return (
-                    <option key={name} value={`custom:${name}`}>
-                        {name}
-                    </option>
-                );
-            }
-        );
 
         return (
             <select
@@ -248,7 +248,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                 {structures.length > 0 && (
                     <optgroup label="Structures">{structures}</optgroup>
                 )}
-                <optgroup label="Array of">{arrayOfBasicTypes}</optgroup>
+                <optgroup label="Arrays">{arrayOfBasicTypes}</optgroup>
                 {arrayOfEnums.length > 0 && (
                     <optgroup label="Array of Enumerations">
                         {arrayOfEnums}

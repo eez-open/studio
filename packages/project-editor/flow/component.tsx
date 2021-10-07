@@ -693,6 +693,8 @@ function addBreakpointMenuItems(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export type AutoSize = "width" | "height" | "both" | "none";
+
 export class Component extends EezObject {
     @observable type: string;
 
@@ -712,8 +714,8 @@ export class Component extends EezObject {
 
     @observable catchError: boolean;
 
-    get autoSize() {
-        return false;
+    get autoSize(): AutoSize {
+        return "none";
     }
 
     static classInfo: ClassInfo = {
@@ -898,16 +900,20 @@ export class Component extends EezObject {
                 props.left = value.left;
             }
 
+            if (!(object.autoSize == "width" || object.autoSize == "both")) {
+                if (value.width !== object.width) {
+                    props.width = value.width;
+                }
+            }
+
             if (value.top !== object.top) {
                 props.top = value.top;
             }
 
-            if (value.width !== object.width) {
-                props.width = value.width;
-            }
-
-            if (value.height !== object.height) {
-                props.height = value.height;
+            if (!(object.autoSize == "height" || object.autoSize == "both")) {
+                if (value.height !== object.height) {
+                    props.height = value.height;
+                }
             }
 
             const DocumentStore = getDocumentStore(object);
@@ -1027,10 +1033,8 @@ export class Component extends EezObject {
 
     set geometry(value: ComponentGeometry) {
         this._geometry = value;
-        if (this.autoSize) {
-            this.width = this._geometry.width;
-            this.height = this._geometry.height;
-        }
+        this.width = this._geometry.width;
+        this.height = this._geometry.height;
     }
 
     get rect() {
@@ -1736,13 +1740,15 @@ function renderActionComponent(
     const inputs = actionNode.inputs.filter(input => input.name != "@seqin");
     const hasSeqIn = !(
         actionNode.type == "StartActionComponent" ||
-        actionNode.type == "InputActionComponent"
+        actionNode.type == "InputActionComponent" ||
+        actionNode.type == "CommentActionComponent"
     );
 
     let outputs = actionNode.outputs.filter(output => output.name != "@seqout");
     const hasSeqOut = !(
         actionNode.type == "EndActionComponent" ||
-        actionNode.type == "OutputActionComponent"
+        actionNode.type == "OutputActionComponent" ||
+        actionNode.type == "CommentActionComponent"
     );
 
     // move @error output to end
@@ -1845,8 +1851,8 @@ export class ActionComponent extends Component {
         ];
     }
 
-    get autoSize() {
-        return true;
+    get autoSize(): AutoSize {
+        return "both";
     }
 
     @computed
@@ -1919,13 +1925,8 @@ export class NotFoundComponent extends ActionComponent {
             }));
     }
 
-    get autoSize() {
-        return (
-            this.inputs.length > 0 ||
-            this.outputs.length > 0 ||
-            this.width === 0 ||
-            this.height == 0
-        );
+    get autoSize(): AutoSize {
+        return this.type.endsWith("ActionComponent") ? "both" : "none";
     }
 
     render(flowContext: IFlowContext): JSX.Element {

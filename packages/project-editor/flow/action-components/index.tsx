@@ -22,12 +22,16 @@ import {
 
 import * as output from "project-editor/core/output";
 
-import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import type {
+    IFlowContext,
+    IResizeHandler
+} from "project-editor/flow/flow-interfaces";
 
 import { guid } from "eez-studio-shared/guid";
 
 import {
     ActionComponent,
+    AutoSize,
     componentOutputUnique,
     makeToggablePropertyToInput,
     outputIsOptionalIfAtLeastOneOutputExists
@@ -887,6 +891,21 @@ export class IsTrueActionComponent extends ActionComponent {
         ];
     }
 
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (
+            this.customInputs.length == 1 &&
+            this.customInputs[0].name == this.value
+        ) {
+            return null;
+        }
+
+        return (
+            <div className="body EezStudio_IsTrueActionComponent">
+                {this.value}
+            </div>
+        );
+    }
+
     async execute(flowState: FlowState) {
         let value = flowState.evalExpression(this, this.value);
 
@@ -1354,23 +1373,36 @@ const TrixEditor = observer(
             const trixEditor = document.getElementById(editorId) as HTMLElement;
 
             if (value != trixEditor.innerHTML) {
-                // console.log(
-                //     `update trix "${value}" -> "${trixEditor.innerHTML}"`
-                // );
                 (trixEditor as any).editor.loadHTML(value);
             }
 
-            const onBlur = (e: any) => {
+            const onFocus = (e: any) => {
+                const trixToolbar =
+                    trixEditor.parentElement?.querySelector("trix-toolbar");
+                if (trixToolbar instanceof HTMLElement) {
+                    trixToolbar.style.visibility = "visible";
+                }
+
                 if (trixEditor.innerHTML != value) {
-                    // console.log(
-                    //     `fromTrix "${trixEditor.innerHTML}" -> "${value}"`
-                    // );
                     setValue(trixEditor.innerHTML);
                 }
             };
+            const onBlur = (e: any) => {
+                const trixToolbar =
+                    trixEditor.parentElement?.querySelector("trix-toolbar");
+                if (trixToolbar instanceof HTMLElement) {
+                    trixToolbar.style.visibility = "";
+                }
+
+                if (trixEditor.innerHTML != value) {
+                    setValue(trixEditor.innerHTML);
+                }
+            };
+            trixEditor.addEventListener("trix-focus", onFocus, false);
             trixEditor.addEventListener("trix-blur", onBlur, false);
 
             return () => {
+                trixEditor.removeEventListener("trix-focus", onBlur, false);
                 trixEditor.removeEventListener("trix-blur", onBlur, false);
             };
         }, [value]);
@@ -1408,10 +1440,45 @@ export class CommentActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#ffff88",
-        isFlowExecutableComponent: false
+        isFlowExecutableComponent: false,
+        getResizeHandlers(object: CommentActionComponent) {
+            return object.getResizeHandlers();
+        },
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 435,
+            height: 134
+        }
     });
 
     @observable text: string;
+
+    get autoSize(): AutoSize {
+        return "height";
+    }
+
+    getResizeHandlers(): IResizeHandler[] | undefined | false {
+        return [
+            {
+                x: 0,
+                y: 50,
+                type: "w-resize"
+            },
+            {
+                x: 100,
+                y: 50,
+                type: "e-resize"
+            }
+        ];
+    }
+
+    getClassName() {
+        return classNames(
+            super.getClassName(),
+            "EezStudio_CommentActionComponent"
+        );
+    }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
@@ -1817,3 +1884,4 @@ registerClass(ShowPageActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 import "project-editor/flow/action-components/instrument";
+import classNames from "classnames";

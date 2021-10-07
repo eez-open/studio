@@ -123,7 +123,10 @@ export abstract class RuntimeBase {
             this._selectedPage = value;
         });
 
-        if (this.isDebuggerActive && !this.isPaused) {
+        if (
+            this.state == State.STARTING ||
+            (this.isDebuggerActive && !this.isPaused)
+        ) {
             this.DocumentStore.navigationStore.setSelection([
                 this.selectedPage
             ]);

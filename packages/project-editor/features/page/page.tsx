@@ -37,7 +37,7 @@ import {
     getProject
 } from "project-editor/project/project";
 
-import { Component, Widget } from "project-editor/flow/component";
+import { AutoSize, Component, Widget } from "project-editor/flow/component";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -352,8 +352,8 @@ export class Page extends Flow {
         this._geometry = value;
     }
 
-    get autoSize() {
-        return false;
+    get autoSize(): AutoSize {
+        return "none";
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
