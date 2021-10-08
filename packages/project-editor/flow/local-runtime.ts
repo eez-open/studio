@@ -19,6 +19,7 @@ import {
     QueueTask,
     RuntimeBase
 } from "project-editor/flow/runtime";
+import { InputActionComponent } from "project-editor/flow/action-components";
 
 export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -279,8 +280,10 @@ export class LocalRuntime extends RuntimeBase {
 
         const parentFlowState = flowContext.flowState! as FlowState;
 
+        const it = flowContext.dataContext.get("$it");
+
         if (widget.isOutputProperty("action")) {
-            parentFlowState.propagateValue(widget, "action", null);
+            parentFlowState.propagateValue(widget, "action", it);
         } else if (widget.action) {
             // execute action given by name
             const action = findAction(
@@ -298,6 +301,12 @@ export class LocalRuntime extends RuntimeBase {
                 this.logs.addLogItem(
                     new ExecuteWidgetActionLogItem(newFlowState, widget)
                 );
+
+                for (let component of newFlowState.flow.components) {
+                    if (component instanceof InputActionComponent) {
+                        newFlowState.propagateValue(component, "@seqout", it);
+                    }
+                }
 
                 parentFlowState.flowStates.push(newFlowState);
 

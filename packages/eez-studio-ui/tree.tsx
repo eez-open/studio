@@ -1,5 +1,5 @@
 import React from "react";
-import { action } from "mobx";
+import { action, IObservableValue, observable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -23,6 +23,8 @@ export class TreeRow extends React.Component<{
     level: number;
     selectNode: (node: ITreeNode) => void;
     onDoubleClick?: () => void;
+    getExpanded: (level: number, node: ITreeNode) => boolean;
+    toggleExpanded: (level: number, node: ITreeNode) => void;
 }> {
     index: number;
 
@@ -32,7 +34,7 @@ export class TreeRow extends React.Component<{
         event.stopPropagation();
 
         this.props.selectNode(this.props.node);
-        this.props.node.expanded = !this.props.node.expanded;
+        this.props.toggleExpanded(this.props.level, this.props.node);
     }
 
     onClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -45,7 +47,10 @@ export class TreeRow extends React.Component<{
     render() {
         let childrenRows: JSX.Element[] = [];
 
-        if (this.props.showOnlyChildren || this.props.node.expanded) {
+        if (
+            this.props.showOnlyChildren ||
+            this.props.getExpanded(this.props.level, this.props.node)
+        ) {
             let childrenLevel = this.props.showOnlyChildren
                 ? this.props.level
                 : this.props.level + 1;
@@ -59,6 +64,8 @@ export class TreeRow extends React.Component<{
                         level={childrenLevel}
                         selectNode={this.props.selectNode}
                         onDoubleClick={this.props.onDoubleClick}
+                        getExpanded={this.props.getExpanded}
+                        toggleExpanded={this.props.toggleExpanded}
                     />
                 );
             });
@@ -82,7 +89,10 @@ export class TreeRow extends React.Component<{
                 let triangleClassName = classNames(
                     "EezStudio_TreeRowTriangle",
                     {
-                        EezStudio_Expanded: this.props.node.expanded
+                        EezStudio_Expanded: this.props.getExpanded(
+                            this.props.level,
+                            this.props.node
+                        )
                     }
                 );
 
@@ -138,6 +148,26 @@ export class Tree extends React.Component<
     },
     {}
 > {
+    expandedValues = new Map<string, IObservableValue<boolean>>();
+
+    getExpanded = (level: number, node: ITreeNode) => {
+        const key = `${level}:${node.id}`;
+        let observableValue = this.expandedValues.get(key);
+        if (observableValue == undefined) {
+            observableValue = observable.box(node.expanded);
+            this.expandedValues.set(key, observableValue);
+        }
+        return observableValue.get();
+    };
+
+    toggleExpanded = (level: number, node: ITreeNode) => {
+        const key = `${level}:${node.id}`;
+        let observableValue = this.expandedValues.get(key);
+        if (observableValue) {
+            observableValue.set(!observableValue.get());
+        }
+    };
+
     render() {
         return (
             <div className="EezStudio_SimpleTree" tabIndex={0}>
@@ -147,6 +177,8 @@ export class Tree extends React.Component<
                     level={0}
                     selectNode={this.props.selectNode}
                     onDoubleClick={this.props.onDoubleClick}
+                    getExpanded={this.getExpanded}
+                    toggleExpanded={this.toggleExpanded}
                 />
             </div>
         );

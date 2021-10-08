@@ -64,12 +64,13 @@ import { onSelectItem } from "project-editor/components/SelectItem";
 
 import { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
-import { ContainerWidget } from "project-editor/flow/widgets";
+import type { ContainerWidget, ListWidget } from "project-editor/flow/widgets";
 import { WIDGET_TYPE_NONE } from "project-editor/flow/widgets/widget_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
+    checkAssignableExpression,
     checkExpression,
     parseIdentifier
 } from "project-editor/flow/expression/expression";
@@ -95,12 +96,25 @@ export function makeDataPropertyInfo(
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: "variables/globalVariables",
         propertyGridGroup: propertyGridGroup || dataGroup,
-        onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-            onSelectItem(object, propertyInfo, {
-                title: propertyInfo.onSelectTitle!,
-                width: 800
-            }),
-        onSelectTitle: "Select Data"
+        onSelect: (object: IEezObject, propertyInfo: PropertyInfo) => {
+            const DocumentStore = getDocumentStore(object);
+            if (
+                DocumentStore.isAppletProject ||
+                DocumentStore.isDashboardProject
+            ) {
+                return expressionBuilder(object, propertyInfo, {
+                    assignableExpression: false,
+                    title: "Expression Builder",
+                    width: 400,
+                    height: 600
+                });
+            } else {
+                return onSelectItem(object, propertyInfo, {
+                    title: "Select Data",
+                    width: 800
+                });
+            }
+        }
     });
 }
 
@@ -250,11 +264,11 @@ function isComponentOutputOptional(
 
 export function makeExpressionProperty(
     propertyInfo: PropertyInfo,
-    toggableProperty?: (object: IEezObject) => "input" | undefined
+    flowProperty?: (object: IEezObject) => "input" | undefined
 ): PropertyInfo {
     return Object.assign(
         {
-            toggableProperty: toggableProperty || "input",
+            flowProperty: flowProperty || "input",
             propertyMenu(props: PropertyProps) {
                 let menuItems: Electron.MenuItem[] = [];
 
@@ -318,11 +332,10 @@ export function makeExpressionProperty(
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
                 expressionBuilder(object, propertyInfo, {
                     assignableExpression: false,
-                    title: propertyInfo.onSelectTitle!,
+                    title: "Expression Builder",
                     width: 400,
                     height: 600
-                }),
-            onSelectTitle: "Expression Builder"
+                })
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -333,6 +346,7 @@ export function makeAssignableExpressionProperty(
 ): PropertyInfo {
     return Object.assign(
         {
+            flowProperty: "assignable",
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
                 expressionBuilder(object, propertyInfo, {
                     assignableExpression: true,
@@ -348,10 +362,10 @@ export function makeAssignableExpressionProperty(
 
 export function makeToggablePropertyToOutput(
     propertyInfo: PropertyInfo,
-    toggableProperty?: (object: IEezObject) => "output" | undefined
+    flowProperty?: (object: IEezObject) => "output" | undefined
 ): PropertyInfo {
     return Object.assign(propertyInfo, {
-        toggableProperty: toggableProperty || "output",
+        flowProperty: flowProperty || "output",
 
         propertyMenu(props: PropertyProps) {
             let menuItems: Electron.MenuItem[] = [];
@@ -420,22 +434,20 @@ export function makeToggablePropertyToOutput(
     } as Partial<PropertyInfo>);
 }
 
-export function isToggableProperty(
+export function isFlowProperty(
     DocumentStore: DocumentStoreClass,
     propertyInfo: PropertyInfo,
-    toggablePropertyType: "input" | "output"
+    flowPropertyType: "input" | "output" | "assignable"
 ) {
-    if (!propertyInfo.toggableProperty) {
+    if (!propertyInfo.flowProperty) {
         return false;
     }
 
-    if (typeof propertyInfo.toggableProperty === "string") {
-        return propertyInfo.toggableProperty === toggablePropertyType;
+    if (typeof propertyInfo.flowProperty === "string") {
+        return propertyInfo.flowProperty === flowPropertyType;
     }
 
-    return (
-        propertyInfo.toggableProperty(DocumentStore) === toggablePropertyType
-    );
+    return propertyInfo.flowProperty(DocumentStore) === flowPropertyType;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1013,14 +1025,9 @@ export class Component extends EezObject {
             ) {
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (
-                        isToggableProperty(
-                            DocumentStore,
-                            propertyInfo,
-                            "input"
-                        ) &&
+                        isFlowProperty(DocumentStore, propertyInfo, "input") &&
                         propertyInfo.type != PropertyType.ObjectReference &&
-                        propertyInfo.referencedObjectCollectionPath !=
-                            "variables/globalVariables"
+                        propertyInfo.referencedObjectCollectionPath != "actions"
                     ) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
@@ -1031,6 +1038,34 @@ export class Component extends EezObject {
                                     new output.Message(
                                         output.Type.ERROR,
                                         `Invalid expression: ${err}`,
+                                        getChildOfObject(
+                                            component,
+                                            propertyInfo.name
+                                        )
+                                    )
+                                );
+                            }
+                        }
+                    } else if (
+                        isFlowProperty(
+                            DocumentStore,
+                            propertyInfo,
+                            "assignable"
+                        )
+                    ) {
+                        const value = getProperty(component, propertyInfo.name);
+                        if (value != undefined && value !== "") {
+                            try {
+                                checkAssignableExpression(
+                                    component,
+                                    value,
+                                    false
+                                );
+                            } catch (err) {
+                                messages.push(
+                                    new output.Message(
+                                        output.Type.ERROR,
+                                        `Invalid assignable expression: ${err}`,
                                         getChildOfObject(
                                             component,
                                             propertyInfo.name
@@ -1186,7 +1221,7 @@ export class Component extends EezObject {
         const DocumentStore = getDocumentStore(this);
 
         for (const propertyInfo of getClassInfo(this).properties) {
-            if (isToggableProperty(DocumentStore, propertyInfo, "output")) {
+            if (isFlowProperty(DocumentStore, propertyInfo, "output")) {
                 outputs.push({
                     name: propertyInfo.name,
                     type:
@@ -1297,6 +1332,18 @@ export class Widget extends Component {
                                 objects as Component[]
                             );
                             context.selectObject(containerWidget);
+                        }
+                    })
+                );
+
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Put in List",
+                        click: () => {
+                            const listWidget = Widget.putInList(
+                                objects as Component[]
+                            );
+                            context.selectObject(listWidget);
                         }
                     })
                 );
@@ -1509,6 +1556,60 @@ export class Widget extends Component {
                 DocumentStore,
                 getParent(fromWidgets[0]),
                 containerWidgetJsObject,
+                Component
+            )
+        );
+    }
+
+    static putInList(fromWidgets: Component[]) {
+        let containerWidgetJsObject: ContainerWidget;
+        if (
+            fromWidgets.length == 1 &&
+            (fromWidgets[0].type == "Container" ||
+                fromWidgets[0].type == "ContainerWidget")
+        ) {
+            containerWidgetJsObject = objectToJS(fromWidgets[0]);
+        } else {
+            containerWidgetJsObject = Object.assign(
+                {},
+                getClassFromType("Container")?.classInfo.defaultValue,
+                { type: "Container" }
+            );
+
+            const createWidgetsResult = Widget.createWidgets(fromWidgets);
+
+            containerWidgetJsObject.widgets = createWidgetsResult.widgets;
+
+            containerWidgetJsObject.left = createWidgetsResult.left;
+            containerWidgetJsObject.top = createWidgetsResult.top;
+            containerWidgetJsObject.width = createWidgetsResult.width;
+            containerWidgetJsObject.height = createWidgetsResult.height;
+        }
+
+        var listWidgetJsObject: ListWidget = Object.assign(
+            {},
+            getClassFromType("List")?.classInfo.defaultValue,
+            { type: "List" }
+        );
+
+        listWidgetJsObject.itemWidget = containerWidgetJsObject;
+
+        listWidgetJsObject.left = containerWidgetJsObject.left;
+        listWidgetJsObject.top = containerWidgetJsObject.top;
+        listWidgetJsObject.width = containerWidgetJsObject.width;
+        listWidgetJsObject.height = containerWidgetJsObject.height;
+
+        containerWidgetJsObject.left = 0;
+        containerWidgetJsObject.top = 0;
+
+        const DocumentStore = getDocumentStore(fromWidgets[0]);
+
+        return DocumentStore.replaceObjects(
+            fromWidgets,
+            loadObject(
+                DocumentStore,
+                getParent(fromWidgets[0]),
+                listWidgetJsObject,
                 Component
             )
         );

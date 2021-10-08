@@ -3748,6 +3748,10 @@ button.EezStudio_Action {
     &.TextWidget {
         display: flex;
         align-items: center;
+        & > span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     }
 
     &.enabled-breakpoint::before,
@@ -4444,6 +4448,21 @@ button.EezStudio_Action {
     border: 1px solid @borderColor;
     overflow: auto;
     width: 100%;
+
+    .name {
+        font-weight: bold;
+    }
+
+    .type {
+        &:before {
+            content: "<";
+        }
+        &:after {
+            content: ">";
+        }
+        margin-left: 10px;
+        font-style: italic;
+    }
 }
 
 .jsPanel-content {

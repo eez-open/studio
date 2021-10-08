@@ -408,10 +408,7 @@ export class ListWidget extends EmbeddedWidget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     render(flowContext: IFlowContext) {
@@ -420,23 +417,25 @@ export class ListWidget extends EmbeddedWidget {
             return null;
         }
 
-        let dataValue = this.data ? flowContext.dataContext.get(this.data) : 0;
-
-        if (!dataValue) {
-            return null;
-        }
-
-        if (!Array.isArray(dataValue)) {
-            if (flowContext.DocumentStore.isAppletProject) {
+        let dataValue;
+        if (this.data) {
+            if (
+                flowContext.DocumentStore.isAppletProject ||
+                flowContext.DocumentStore.isDashboardProject
+            ) {
                 try {
-                    dataValue = evalExpression(flowContext, this, dataValue);
+                    dataValue = evalExpression(flowContext, this, this.data);
                 } catch (err) {}
+            } else {
+                dataValue = flowContext.dataContext.get(this.data);
             }
         }
 
         if (!Array.isArray(dataValue)) {
-            return null;
+            dataValue = [{}];
         }
+
+        const iterators = flowContext.dataContext.get("$iterators") || [];
 
         return _range(dataValue.length).map(i => {
             let xListItem = 0;
@@ -450,20 +449,14 @@ export class ListWidget extends EmbeddedWidget {
                 yListItem += i * (itemWidget.height + gap);
             }
 
-            let flowContext1;
-            if (flowContext.DocumentStore.isAppletProject) {
-                flowContext1 = flowContext.overrideDataContext({
-                    $it: i
-                });
-            } else {
-                flowContext1 = flowContext.overrideDataContext(dataValue[i]);
-            }
-
             return (
                 <ComponentEnclosure
                     key={i}
                     component={itemWidget}
-                    flowContext={flowContext1}
+                    flowContext={flowContext.overrideDataContext({
+                        $it: i,
+                        $iterators: [i, ...iterators]
+                    })}
                     left={xListItem}
                     top={yListItem}
                 />
@@ -1654,7 +1647,7 @@ export class TextWidget extends EmbeddedWidget {
                         text = "";
                     }
                 } catch (err) {
-                    text = "err!";
+                    text = err.toString();
                 }
             } else {
                 if (this.name) {

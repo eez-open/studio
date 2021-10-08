@@ -27,6 +27,7 @@ import {
     getStructTypeNameFromType,
     isCustomType,
     isEnumType,
+    isStructType,
     VariableTypePrefix
 } from "project-editor/features/variable/variable";
 import type { IDataContext, IFlowState } from "../flow-interfaces";
@@ -63,6 +64,29 @@ export function checkExpression(
         }
         findValueTypeInExpressionNode(component, rootNode, assignable);
         checkExpressionNode(component, rootNode);
+    }
+}
+
+export function checkAssignableExpression(
+    component: Component,
+    expression: string,
+    assignableExpression: boolean
+) {
+    if (assignableExpression == undefined) {
+    } else if (typeof assignableExpression == "number") {
+    } else {
+        let rootNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+        findValueTypeInExpressionNode(
+            component,
+            rootNode,
+            assignableExpression
+        );
+        checkAssignableExpressionNode(component, rootNode);
     }
 }
 
@@ -193,18 +217,13 @@ export function evalExpression(
             throw `Expression error: ${err}`;
         }
 
-        try {
-            findValueTypeInExpressionNode(component, rootNode, false);
+        findValueTypeInExpressionNode(component, rootNode, false);
 
-            value = evalExpressionWithContext(
-                expressionContext,
-                component,
-                rootNode
-            );
-        } catch (err) {
-            console.error(err);
-            value = null;
-        }
+        value = evalExpressionWithContext(
+            expressionContext,
+            component,
+            rootNode
+        );
     }
 
     return value;
@@ -268,17 +287,13 @@ export function evalAssignableExpression(
             throw `Expression error: ${err}`;
         }
 
-        try {
-            findValueTypeInExpressionNode(component, rootNode, false);
+        findValueTypeInExpressionNode(component, rootNode, false);
 
-            assignableValue = evalAssignableExpressionWithContext(
-                expressionContext,
-                component,
-                rootNode
-            );
-        } catch (err) {
-            console.error(err);
-        }
+        assignableValue = evalAssignableExpressionWithContext(
+            expressionContext,
+            component,
+            rootNode
+        );
     }
 
     if (!assignableValue) {
@@ -522,6 +537,39 @@ function findValueTypeInExpressionNode(
                 }
                 node.valueType = valueType as VariableTypePrefix;
             } else {
+                const project = getProject(component);
+
+                if (
+                    node.object.type == "Identifier" &&
+                    node.property.type == "Identifier"
+                ) {
+                    const enumDef = project.variables.enumsMap.get(
+                        node.object.name
+                    );
+                    if (enumDef) {
+                        const enumMember = enumDef.membersMap.get(
+                            node.property.name
+                        );
+                        if (enumMember) {
+                            return;
+                        }
+                    } else {
+                        const builtInConstantName = `${node.object.name}.${node.property.name}`;
+                        const buildInConstantValue =
+                            builtInConstants[builtInConstantName];
+                        if (buildInConstantValue != undefined) {
+                            return;
+                        }
+                    }
+
+                    if (
+                        !isStructType(node.object.valueType) &&
+                        !isCustomType(node.object.valueType)
+                    ) {
+                        throw `Unknown "${node.object.name}.${node.property.name}"`;
+                    }
+                }
+
                 let structTypeName = getStructTypeNameFromType(
                     node.object.valueType
                 );
@@ -529,7 +577,6 @@ function findValueTypeInExpressionNode(
                     structTypeName = node.object.valueType;
                 }
 
-                const project = getProject(component);
                 const structure =
                     project.variables.structsMap.get(structTypeName);
                 if (structure) {
@@ -542,7 +589,7 @@ function findValueTypeInExpressionNode(
                     const field = structure.fieldsMap.get(fieldName);
 
                     if (!field) {
-                        throw `Struc field not found: '${fieldName}'`;
+                        throw `Struct field not found: '${fieldName}'`;
                     }
 
                     node.valueType = field.type as VariableTypePrefix;
@@ -695,6 +742,70 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 }
             }
 
+            console.log("TODO check MemberExpression", node);
+            return;
+        }
+
+        if (node.type == "ArrayExpression") {
+            console.log("TODO check ArrayExpression", node);
+        }
+
+        if (node.type == "ObjectExpression") {
+            console.log("TODO check ObjectExpression", node);
+        }
+
+        throw `Unknown expression node "${node.type}"`;
+    }
+
+    const project = getProject(component);
+
+    checkNode(rootNode);
+}
+
+function checkAssignableExpressionNode(
+    component: Component,
+    rootNode: ExpressionNode
+) {
+    function checkNode(node: ExpressionNode) {
+        if (node.type == "Literal") {
+            return;
+        }
+
+        if (node.type == "Identifier") {
+            const output = component.outputs.find(
+                output => output.name == node.name
+            );
+            if (output != undefined) {
+                return;
+            }
+
+            const flow = getFlow(component);
+            let localVariableIndex = flow.localVariables.findIndex(
+                localVariable => localVariable.name == node.name
+            );
+            if (localVariableIndex != -1) {
+                return;
+            }
+
+            let globalVariableIndex =
+                project.variables.globalVariables.findIndex(
+                    globalVariable => globalVariable.name == node.name
+                );
+            if (globalVariableIndex != -1) {
+                return;
+            }
+
+            throw `identifier '${node.name}' is neither output or local or global variable`;
+        }
+
+        if (node.type == "ConditionalExpression") {
+            checkExpressionNode(component, node.test);
+            checkNode(node.consequent);
+            checkNode(node.alternate);
+            return;
+        }
+
+        if (node.type == "MemberExpression") {
             console.log("TODO check MemberExpression", node);
             return;
         }

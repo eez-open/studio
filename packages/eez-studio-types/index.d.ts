@@ -144,6 +144,7 @@ interface IVariable {
     description?: string;
     type: string;
     defaultValue: any;
+    initialValue: any;
     defaultMinValue: any;
     defaultMaxValue: any;
     defaultValueList: any;

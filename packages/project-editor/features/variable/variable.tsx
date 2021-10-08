@@ -4,7 +4,10 @@ import { disposeOnUnmount, observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
 
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import {
+    FieldComponent,
+    showGenericDialog
+} from "eez-studio-ui/generic-dialog";
 
 import {
     ClassInfo,
@@ -24,6 +27,7 @@ import {
 import * as output from "project-editor/core/output";
 import {
     findReferencedObject,
+    getFlow,
     getProject,
     Project
 } from "project-editor/project/project";
@@ -119,7 +123,144 @@ export function humanizeVariableType(type: string): string {
     return humanize(type);
 }
 
+export function getDefaultValueForType(project: Project, type: string): string {
+    if (isCustomType(type)) {
+        return "null";
+    }
+    if (isEnumType(type)) {
+        const enumTypeName = getEnumTypeNameFromType(type);
+        if (enumTypeName) {
+            const enumType = project.variables.enumsMap.get(enumTypeName);
+            if (enumType) {
+                if (enumType.members.length > 0) {
+                    return `${enumTypeName}.${enumType.members[0].name}`;
+                }
+            }
+        }
+        return "0";
+    }
+    if (isStructType(type)) {
+        return "{}";
+    }
+    if (isArrayType(type)) {
+        return "[]";
+    }
+    if (type == "string") {
+        return '""';
+    }
+    if (type == "boolean") {
+        return "false";
+    }
+    if (type == "integer" || type == "float" || type == "double") {
+        return "0";
+    }
+    return "null";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+
+const VariableTypeSelect = observer(
+    React.forwardRef<
+        HTMLSelectElement,
+        {
+            value: string;
+            onChange: (value: string) => void;
+            project: Project;
+        }
+    >((props, ref) => {
+        const { value, onChange, project } = props;
+        const basicTypes = basicTypeNames.map(basicTypeName => {
+            return (
+                <option key={basicTypeName} value={basicTypeName}>
+                    {humanizeVariableType(basicTypeName)}
+                </option>
+            );
+        });
+
+        basicTypes.unshift(<option key="__empty" value="" />);
+
+        const customTypes = getClassesDerivedFrom(VariableType).map(
+            variableTypeClass => {
+                let name = variableTypeClass.name;
+                if (name.endsWith("VariableType")) {
+                    name = name.substr(0, name.length - "VariableType".length);
+                }
+
+                return (
+                    <option key={name} value={`custom:${name}`}>
+                        {humanizeVariableType(`custom:${name}`)}
+                    </option>
+                );
+            }
+        );
+
+        const enums = project.variables.enums.map(enumDef => (
+            <option key={enumDef.name} value={`enum:${enumDef.name}`}>
+                {humanizeVariableType(`enum:${enumDef.name}`)}
+            </option>
+        ));
+
+        const structures = project.variables.structures.map(struct => (
+            <option key={struct.name} value={`struct:${struct.name}`}>
+                {humanizeVariableType(`struct:${struct.name}`)}
+            </option>
+        ));
+
+        const arrayOfBasicTypes = basicTypeNames.map(basicTypeName => {
+            return (
+                <option
+                    key={`array:${basicTypeName}`}
+                    value={`array:${basicTypeName}`}
+                >
+                    {humanizeVariableType(`array:${basicTypeName}`)}
+                </option>
+            );
+        });
+
+        const arrayOfEnums = project.variables.enums.map(enumDef => (
+            <option key={enumDef.name} value={`array:enum:${enumDef.name}`}>
+                {humanizeVariableType(`array:enum:${enumDef.name}`)}
+            </option>
+        ));
+
+        const arrayOfStructures = project.variables.structures.map(struct => (
+            <option key={struct.name} value={`array:struct:${struct.name}`}>
+                {humanizeVariableType(`array:struct:${struct.name}`)}
+            </option>
+        ));
+
+        return (
+            <select
+                ref={ref}
+                className="form-select"
+                value={value}
+                onChange={event => onChange(event.target.value)}
+            >
+                {basicTypes}
+                {customTypes.length > 0 && (
+                    <optgroup label="Custom">{customTypes}</optgroup>
+                )}
+                {enums.length > 0 && (
+                    <optgroup label="Enumerations">{enums}</optgroup>
+                )}
+                {structures.length > 0 && (
+                    <optgroup label="Structures">{structures}</optgroup>
+                )}
+                <optgroup label="Arrays">{arrayOfBasicTypes}</optgroup>
+                {arrayOfEnums.length > 0 && (
+                    <optgroup label="Array of Enumerations">
+                        {arrayOfEnums}
+                    </optgroup>
+                )}
+                {arrayOfStructures.length > 0 && (
+                    <optgroup label="Array of Structures">
+                        {arrayOfStructures}
+                    </optgroup>
+                )}
+            </select>
+        );
+    })
+);
 
 @observer
 export class VariableTypeUI extends React.Component<PropertyProps> {
@@ -178,9 +319,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
         this.updateCounter++;
     }
 
-    onChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const type = event.target.value;
-
+    onChange = (type: string) => {
         runInAction(() => (this._type = type));
 
         this.props.updateObject({
@@ -189,97 +328,36 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
     };
 
     render() {
-        const basicTypes = basicTypeNames.map(basicTypeName => {
-            return (
-                <option key={basicTypeName} value={basicTypeName}>
-                    {humanizeVariableType(basicTypeName)}
-                </option>
-            );
-        });
-
-        basicTypes.unshift(<option key="__empty" value="" />);
-
-        const customTypes = getClassesDerivedFrom(VariableType).map(
-            variableTypeClass => {
-                let name = variableTypeClass.name;
-                if (name.endsWith("VariableType")) {
-                    name = name.substr(0, name.length - "VariableType".length);
-                }
-
-                return (
-                    <option key={name} value={`custom:${name}`}>
-                        {humanizeVariableType(`custom:${name}`)}
-                    </option>
-                );
-            }
-        );
-
-        const project = getProject(this.props.objects[0]);
-
-        const enums = project.variables.enums.map(enumDef => (
-            <option key={enumDef.name} value={`enum:${enumDef.name}`}>
-                {humanizeVariableType(`enum:${enumDef.name}`)}
-            </option>
-        ));
-
-        const structures = project.variables.structures.map(struct => (
-            <option key={struct.name} value={`struct:${struct.name}`}>
-                {humanizeVariableType(`struct:${struct.name}`)}
-            </option>
-        ));
-
-        const arrayOfBasicTypes = basicTypeNames.map(basicTypeName => {
-            return (
-                <option
-                    key={`array:${basicTypeName}`}
-                    value={`array:${basicTypeName}`}
-                >
-                    {humanizeVariableType(`array:${basicTypeName}`)}
-                </option>
-            );
-        });
-
-        const arrayOfEnums = project.variables.enums.map(enumDef => (
-            <option key={enumDef.name} value={`array:enum:${enumDef.name}`}>
-                {humanizeVariableType(`array:enum:${enumDef.name}`)}
-            </option>
-        ));
-
-        const arrayOfStructures = project.variables.structures.map(struct => (
-            <option key={struct.name} value={`array:struct:${struct.name}`}>
-                {humanizeVariableType(`array:struct:${struct.name}`)}
-            </option>
-        ));
-
         return (
-            <select
+            <VariableTypeSelect
                 ref={this.ref}
-                className="form-select"
                 value={this._type}
                 onChange={this.onChange}
-            >
-                {basicTypes}
-                {customTypes.length > 0 && (
-                    <optgroup label="Custom">{customTypes}</optgroup>
-                )}
-                {enums.length > 0 && (
-                    <optgroup label="Enumerations">{enums}</optgroup>
-                )}
-                {structures.length > 0 && (
-                    <optgroup label="Structures">{structures}</optgroup>
-                )}
-                <optgroup label="Arrays">{arrayOfBasicTypes}</optgroup>
-                {arrayOfEnums.length > 0 && (
-                    <optgroup label="Array of Enumerations">
-                        {arrayOfEnums}
-                    </optgroup>
-                )}
-                {arrayOfStructures.length > 0 && (
-                    <optgroup label="Array of Structures">
-                        {arrayOfStructures}
-                    </optgroup>
-                )}
-            </select>
+                project={this.context.project}
+            />
+        );
+    }
+}
+
+@observer
+export class VariableTypeFieldComponent extends FieldComponent {
+    get project() {
+        return this.props.dialogContext as Project;
+    }
+
+    render() {
+        return (
+            <VariableTypeSelect
+                value={this.props.values[this.props.fieldProperties.name] ?? ""}
+                onChange={(value: string) => {
+                    runInAction(() => {
+                        this.props.values["defaultValue"] =
+                            getDefaultValueForType(this.project, value);
+                    });
+                    this.props.onChange(value);
+                }}
+                project={this.project}
+            />
         );
     }
 }
@@ -330,6 +408,11 @@ export class Variable extends EezObject {
     @observable usedIn?: string[];
 
     @observable persistent: boolean;
+
+    @computed({ keepAlive: true })
+    get initialValue() {
+        return evalConstantExpression(getProject(this), this.defaultValue);
+    }
 
     static classInfo: ClassInfo = {
         properties: [
@@ -387,7 +470,9 @@ export class Variable extends EezObject {
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
-                    title: "New Global Variable",
+                    title: getFlow(parent)
+                        ? "New Local Variable"
+                        : "New Global Variable",
                     fields: [
                         {
                             name: "name",
@@ -396,13 +481,26 @@ export class Variable extends EezObject {
                                 validators.required,
                                 validators.unique({}, parent)
                             ]
+                        },
+                        {
+                            name: "type",
+                            type: VariableTypeFieldComponent,
+                            validators: [validators.required]
+                        },
+                        {
+                            name: "defaultValue",
+                            type: "string",
+                            validators: [validators.required]
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                dialogContext: getProject(parent)
             }).then(result => {
                 return Promise.resolve({
-                    name: result.values.name
+                    name: result.values.name,
+                    type: result.values.type,
+                    defaultValue: result.values.defaultValue
                 });
             });
         },
@@ -413,7 +511,9 @@ export class Variable extends EezObject {
             let messages: output.Message[] = [];
 
             if (!variable.type) {
-                messages.push(output.propertyNotSetMessage(variable, "type"));
+                messages.push(
+                    output.propertyNotSetMessage(variable, "variableTypeUI")
+                );
             }
 
             if (!variable.defaultValue) {
@@ -427,10 +527,7 @@ export class Variable extends EezObject {
                     project._DocumentStore.isDashboardProject
                 ) {
                     try {
-                        const value = evalConstantExpression(
-                            getProject(variable),
-                            variable.defaultValue
-                        );
+                        const value = variable.initialValue;
 
                         const error = isValueTypeOf(
                             project,
@@ -555,27 +652,27 @@ export function getCustomTypeClassFromType(type: string) {
     return aClass;
 }
 
-export function isIntegerVariable(variable: Variable) {
+export function isIntegerVariable(variable: IVariable) {
     return isIntegerType(variable.type);
 }
 
-export function isEnumVariable(variable: Variable) {
+export function isEnumVariable(variable: IVariable) {
     return isEnumType(variable.type);
 }
 
-export function isStructVariable(variable: Variable) {
+export function isStructVariable(variable: IVariable) {
     return isStructType(variable.type);
 }
 
-export function isArrayVariable(variable: Variable) {
+export function isArrayVariable(variable: IVariable) {
     return isArrayType(variable.type);
 }
 
-export function getEnumTypeNameFromVariable(variable: Variable) {
+export function getEnumTypeNameFromVariable(variable: IVariable) {
     return getEnumTypeNameFromType(variable.type);
 }
 
-function getEnumValues(variable: Variable): any[] {
+function getEnumValues(variable: IVariable): any[] {
     return [];
 }
 
@@ -750,6 +847,18 @@ export class DataContext implements IDataContext {
                 name: "$it",
                 type: "integer",
                 defaultValue: 0,
+                initialValue: 0,
+                defaultMinValue: undefined,
+                defaultMaxValue: undefined,
+                defaultValueList: undefined,
+                persistent: false
+            };
+        } else if (variableName === "$iterators") {
+            return {
+                name: "$iterators",
+                type: "array:integer",
+                defaultValue: null,
+                initialValue: null,
                 defaultMinValue: undefined,
                 defaultMaxValue: undefined,
                 defaultValueList: undefined,
@@ -783,21 +892,18 @@ export class DataContext implements IDataContext {
             } else {
                 let defaultValue = this.findVariableDefaultValue(variableName);
                 if (defaultValue == undefined) {
-                    defaultValue = variable.defaultValue;
-
                     if (
                         this.project._DocumentStore.isAppletProject ||
                         this.project._DocumentStore.isDashboardProject
                     ) {
                         try {
-                            defaultValue = evalConstantExpression(
-                                this.project,
-                                defaultValue
-                            );
+                            defaultValue = variable.initialValue;
                         } catch (err) {
                             console.error(err);
                             defaultValue = "ERR!";
                         }
+                    } else {
+                        defaultValue = variable.defaultValue;
                     }
                 }
 
@@ -986,7 +1092,9 @@ export class StructureField extends EezObject {
                 values: {}
             }).then(result => {
                 return Promise.resolve({
-                    name: result.values.name
+                    name: result.values.name,
+                    type: result.values.type,
+                    defaultValue: result.values.defaultValue
                 });
             });
         }

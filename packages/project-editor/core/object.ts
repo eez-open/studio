@@ -154,10 +154,13 @@ export interface PropertyInfo {
     embeddedImage?: boolean;
     partOfNavigation?: boolean;
     fileFilters?: any;
-    toggableProperty?:
+    flowProperty?:
         | "input"
         | "output"
-        | ((DocumentStore: DocumentStoreClass) => "input" | "output");
+        | "assignable"
+        | ((
+              DocumentStore: DocumentStoreClass
+          ) => "input" | "output" | "assignable");
     isOutputOptional?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);

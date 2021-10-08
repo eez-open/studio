@@ -346,10 +346,21 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => {
-            if (expressionContext) {
-                return expressionContext.dataContext.get("$it");
+            if (!expressionContext) {
+                return 0;
             }
-            return 0;
+            const iterators = expressionContext.dataContext.get("$iterators");
+            if (!iterators) {
+                throw "no iterators";
+            }
+            const i = args[0];
+            if (typeof i != "number") {
+                return `iterator index '${i}' is not an number`;
+            } else if (i < 0 && i >= iterators.length) {
+                return `iterator index ${i} is not in the range [0...${iterators.length}]`;
+            } else {
+                return iterators[i];
+            }
         },
         getValueType: (...args: VariableTypePrefix[]) => {
             return "integer";
@@ -431,6 +442,18 @@ export const builtInFunctions: {
                 return "undefined";
             }
             return "integer";
+        }
+    },
+
+    "Array.slice": {
+        arity: 3,
+        args: ["array", "from", "to"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0].slice(args[1], args[2]),
+        getValueType: (...args: VariableTypePrefix[]) => {
+            return args[0];
         }
     }
 };

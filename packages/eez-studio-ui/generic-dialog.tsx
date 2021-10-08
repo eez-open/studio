@@ -66,7 +66,7 @@ export interface IFieldComponentProps {
     fieldProperties: IFieldProperties;
     values: any;
     fieldContext: any;
-    onChange: (event: any) => void;
+    onChange: (value: any) => void;
     onOk: () => void;
 }
 
@@ -663,12 +663,13 @@ export function showGenericDialog(conf: {
     showOkButton?: boolean;
     onOk?: (result: GenericDialogResult) => Promise<boolean>;
     opts?: IDialogOptions;
+    dialogContext?: any;
 }) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
         const [modalDialog, element] = showDialog(
             <GenericDialog
                 dialogDefinition={conf.dialogDefinition}
-                dialogContext={undefined}
+                dialogContext={conf.dialogContext}
                 values={conf.values}
                 opts={conf.opts}
                 okButtonText={conf.okButtonText}

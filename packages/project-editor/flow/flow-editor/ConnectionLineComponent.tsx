@@ -175,7 +175,10 @@ const DebugValue = observer(
             );
             if (inputValue !== undefined) {
                 try {
-                    valueStr = JSON.stringify(inputValue).substr(0, 50);
+                    valueStr = JSON.stringify(inputValue);
+                    if (valueStr.length > 50) {
+                        valueStr = valueStr.substr(0, 50) + "...";
+                    }
                 } catch (err) {
                     valueStr = "err!";
                 }

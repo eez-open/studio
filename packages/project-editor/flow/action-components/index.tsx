@@ -16,10 +16,7 @@ import {
     ClassInfo,
     getChildOfObject
 } from "project-editor/core/object";
-import {
-    DocumentStoreClass,
-    getDocumentStore
-} from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/core/store";
 
 import * as output from "project-editor/core/output";
 
@@ -1173,28 +1170,18 @@ export class CallActionActionComponent extends ActionComponent {
         flowComponentId: 1016,
 
         properties: [
-            makeExpressionProperty(
-                {
-                    name: "action",
-                    type: PropertyType.ObjectReference,
-                    referencedObjectCollectionPath: "actions",
-                    propertyGridGroup: specificGroup,
-                    onSelect: (
-                        object: IEezObject,
-                        propertyInfo: PropertyInfo
-                    ) =>
-                        onSelectItem(object, propertyInfo, {
-                            title: propertyInfo.onSelectTitle!,
-                            width: 800
-                        }),
-                    onSelectTitle: "Select Action"
-                },
-                (DocumentStore: DocumentStoreClass) => {
-                    return DocumentStore.isDashboardProject
-                        ? "input"
-                        : undefined;
-                }
-            )
+            makeExpressionProperty({
+                name: "action",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "actions",
+                propertyGridGroup: specificGroup,
+                onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
+                    onSelectItem(object, propertyInfo, {
+                        title: propertyInfo.onSelectTitle!,
+                        width: 800
+                    }),
+                onSelectTitle: "Select Action"
+            })
         ],
         label: (component: CallActionActionComponent) => {
             if (!component.action) {
@@ -1236,13 +1223,15 @@ export class CallActionActionComponent extends ActionComponent {
                     component.action
                 );
                 if (!action) {
-                    messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
-                            `Action "${component.action}" not found`,
-                            getChildOfObject(component, "action")
-                        )
-                    );
+                    if (!component.isInputProperty(component.action)) {
+                        messages.push(
+                            new output.Message(
+                                output.Type.ERROR,
+                                `Action "${component.action}" not found`,
+                                getChildOfObject(component, "action")
+                            )
+                        );
+                    }
                 }
             }
 

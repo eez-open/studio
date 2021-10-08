@@ -27,8 +27,12 @@ import {
     unaryOperators
 } from "./operations";
 import {
+    getArrayElementTypeFromType,
+    getStructureFromType,
     getVariableTypeFromPropertyType,
-    humanizeVariableType
+    humanizeVariableType,
+    isArrayType,
+    isStructType
 } from "project-editor/features/variable/variable";
 
 export async function expressionBuilder(
@@ -79,6 +83,15 @@ export async function expressionBuilder(
         );
     });
 }
+
+const VariableLabel = observer(
+    ({ name, type }: { name: string; type: string }) => (
+        <>
+            <span className="name">{name}</span>
+            <span className="type">{type}</span>
+        </>
+    )
+);
 
 @observer
 class SelectItemDialog extends React.Component<{
@@ -150,6 +163,44 @@ class SelectItemDialog extends React.Component<{
         return this.context.project.variables.globalVariables;
     }
 
+    getTypeChildren(type: string, prefix: string): ITreeNode<string>[] {
+        if (isArrayType(type)) {
+            return this.getTypeChildren(
+                getArrayElementTypeFromType(type)!,
+                `${prefix}[]`
+            );
+        } else if (isStructType(type)) {
+            const structure = getStructureFromType(this.context.project, type);
+            if (structure) {
+                return structure.fields.map(field => {
+                    const data = `${prefix}.${field.name}`;
+                    return {
+                        id: field.name,
+                        label: (
+                            <VariableLabel
+                                name={
+                                    (prefix.endsWith("[]") ? "[]" : "") +
+                                    "." +
+                                    field.name
+                                }
+                                type={humanizeVariableType(field.type)}
+                            />
+                        ),
+                        children: this.getTypeChildren(
+                            field.type,
+                            `${prefix}.${field.name}`
+                        ),
+                        selected: this.selection == data,
+                        expanded: true,
+                        data: data
+                    };
+                });
+            }
+        }
+
+        return [];
+    }
+
     getOperators<
         T extends {
             [operator: string]: {
@@ -177,14 +228,12 @@ class SelectItemDialog extends React.Component<{
                 children: this.componentInputs.map(componentInput => ({
                     id: componentInput.name,
                     label: (
-                        <>
-                            {componentInput.name}
-                            <span className="ms-1 badge bg-secondary">
-                                {getVariableTypeFromPropertyType(
-                                    componentInput.type
-                                )}
-                            </span>
-                        </>
+                        <VariableLabel
+                            name={componentInput.name}
+                            type={getVariableTypeFromPropertyType(
+                                componentInput.type
+                            )}
+                        />
                     ),
                     children: [],
                     selected: this.selection == componentInput.name,
@@ -203,16 +252,17 @@ class SelectItemDialog extends React.Component<{
                 children: this.localVariables.map(localVariable => ({
                     id: localVariable.name,
                     label: (
-                        <>
-                            {localVariable.name}
-                            <span className="ms-1 badge bg-secondary">
-                                {humanizeVariableType(localVariable.type)}
-                            </span>
-                        </>
+                        <VariableLabel
+                            name={localVariable.name}
+                            type={humanizeVariableType(localVariable.type)}
+                        />
                     ),
-                    children: [],
+                    children: this.getTypeChildren(
+                        localVariable.type,
+                        localVariable.name
+                    ),
                     selected: this.selection == localVariable.name,
-                    expanded: false,
+                    expanded: true,
                     data: localVariable.name
                 })),
                 selected: false,
@@ -227,16 +277,17 @@ class SelectItemDialog extends React.Component<{
                 children: this.globalVariables.map(globalVariable => ({
                     id: globalVariable.name,
                     label: (
-                        <>
-                            {globalVariable.name}
-                            <span className="ms-1 badge bg-secondary">
-                                {humanizeVariableType(globalVariable.type)}
-                            </span>
-                        </>
+                        <VariableLabel
+                            name={globalVariable.name}
+                            type={humanizeVariableType(globalVariable.type)}
+                        />
                     ),
-                    children: [],
+                    children: this.getTypeChildren(
+                        globalVariable.type,
+                        globalVariable.name
+                    ),
                     selected: this.selection == globalVariable.name,
-                    expanded: false,
+                    expanded: true,
                     data: globalVariable.name
                 })),
                 selected: false,

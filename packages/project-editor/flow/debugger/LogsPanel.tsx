@@ -74,7 +74,7 @@ class LogList extends React.Component<{
     filter: Filter;
 }> {
     @computed get logs() {
-        const logs = this.props.runtime.logs.logs.reverse();
+        const logs = this.props.runtime.logs.logs.slice().reverse();
         if (this.props.filter == "all") {
             return logs;
         }

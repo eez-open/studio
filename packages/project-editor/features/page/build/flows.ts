@@ -3,7 +3,7 @@ import * as output from "project-editor/core/output";
 
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { Flow } from "project-editor/flow/flow";
-import { Component, isToggableProperty } from "project-editor/flow/component";
+import { Component, isFlowProperty } from "project-editor/flow/component";
 import {
     getChildOfObject,
     getClassesDerivedFrom,
@@ -116,7 +116,7 @@ function buildComponent(
 
     // property values
     const properties = getClassInfo(component).properties.filter(propertyInfo =>
-        isToggableProperty(assets.DocumentStore, propertyInfo, "input")
+        isFlowProperty(assets.DocumentStore, propertyInfo, "input")
     );
     properties.forEach((propertyInfo, propertyValueIndex) =>
         assets.registerComponentProperty(
@@ -212,9 +212,11 @@ function buildComponent(
     if (errorCatchOutputIndex != -1) {
         // errorCatchOutput
         dataBuffer.writeInt16(errorCatchOutputIndex);
+        dataBuffer.writeUint16(0);
     } else {
         // errorCatchOutput
         dataBuffer.writeInt16(-1);
+        dataBuffer.writeUint16(0);
     }
 
     // specific
@@ -398,11 +400,7 @@ export function buildFlowDefs(assets: Assets) {
         const properties =
             componentType.objectClass.classInfo.properties.filter(
                 propertyInfo =>
-                    isToggableProperty(
-                        assets.DocumentStore,
-                        propertyInfo,
-                        "input"
-                    )
+                    isFlowProperty(assets.DocumentStore, propertyInfo, "input")
             );
 
         let enumItems = properties.map(
