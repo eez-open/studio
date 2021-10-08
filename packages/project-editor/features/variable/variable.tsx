@@ -112,7 +112,9 @@ export function humanizeVariableType(type: string): string {
         return getStructTypeNameFromType(type) ?? "";
     }
     if (isArrayType(type)) {
-        return `Array of ${getArrayElementTypeFromType(type)}`;
+        return `Array of ${humanizeVariableType(
+            getArrayElementTypeFromType(type) ?? ""
+        )}`;
     }
     return humanize(type);
 }

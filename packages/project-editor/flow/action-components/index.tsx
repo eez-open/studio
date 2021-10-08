@@ -548,7 +548,9 @@ export class SetVariableActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         let value = flowState.evalExpression(this, this.value);
-        flowState.setVariable(this, this.variable, value);
+
+        flowState.assignValue(this, this.variable, value);
+
         return undefined;
     }
 
@@ -1830,7 +1832,7 @@ export class LoopActionComponent extends ActionComponent {
                 flowState.evalExpression(this, this.step)
             );
             flowState.setComponentRunningState(this, runningState);
-            flowState.dataContext.set(this.variable, runningState.value);
+            flowState.assignValue(this, this.variable, runningState.value);
         } else {
             runningState.value += runningState.step;
 
@@ -1839,7 +1841,7 @@ export class LoopActionComponent extends ActionComponent {
                 flowState.setComponentRunningState(this, undefined);
                 return false;
             } else {
-                flowState.dataContext.set(this.variable, runningState.value);
+                flowState.assignValue(this, this.variable, runningState.value);
             }
         }
 
