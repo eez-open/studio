@@ -62,7 +62,7 @@ export interface ComponentGeometry {
     outputs: PortsGeometry;
 }
 
-function calcComponentGeometry(
+export function calcComponentGeometry(
     component: Component | Page,
     el: HTMLElement,
     flowContext: IFlowContext
@@ -128,8 +128,8 @@ function calcComponentGeometry(
     }
 
     return {
-        width: rect.width,
-        height: rect.height,
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
         inputs,
         outputs
     };
@@ -202,7 +202,6 @@ export const ComponentEnclosure = observer(
                     el,
                     flowContext
                 );
-                geometry.height = Math.round(geometry.height);
                 runInAction(() => {
                     component.geometry = geometry;
                 });

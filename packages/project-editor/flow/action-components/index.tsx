@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, action, autorun, runInAction } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 
@@ -49,6 +50,7 @@ import {
     buildExpression,
     evalConstantExpression
 } from "project-editor/flow/expression/expression";
+import { calcComponentGeometry } from "project-editor/flow/flow-editor/render";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -1361,9 +1363,13 @@ registerClass(CallActionActionComponent);
 
 const TrixEditor = observer(
     ({
+        component,
+        flowContext,
         value,
         setValue
     }: {
+        component: CommentActionComponent;
+        flowContext: IFlowContext;
         value: string;
         setValue: (value: string) => void;
     }) => {
@@ -1377,7 +1383,18 @@ const TrixEditor = observer(
                 (trixEditor as any).editor.loadHTML(value);
             }
 
-            const onFocus = (e: any) => {
+            const onChange = () => {
+                const geometry = calcComponentGeometry(
+                    component,
+                    trixEditor.closest(".EezStudio_ComponentEnclosure")!,
+                    flowContext
+                );
+
+                runInAction(() => {
+                    component.geometry = geometry;
+                });
+            };
+            const onFocus = () => {
                 const trixToolbar =
                     trixEditor.parentElement?.querySelector("trix-toolbar");
                 if (trixToolbar instanceof HTMLElement) {
@@ -1388,7 +1405,7 @@ const TrixEditor = observer(
                     setValue(trixEditor.innerHTML);
                 }
             };
-            const onBlur = (e: any) => {
+            const onBlur = () => {
                 const trixToolbar =
                     trixEditor.parentElement?.querySelector("trix-toolbar");
                 if (trixToolbar instanceof HTMLElement) {
@@ -1399,11 +1416,13 @@ const TrixEditor = observer(
                     setValue(trixEditor.innerHTML);
                 }
             };
+            trixEditor.addEventListener("trix-change", onChange, false);
             trixEditor.addEventListener("trix-focus", onFocus, false);
             trixEditor.addEventListener("trix-blur", onBlur, false);
 
             return () => {
-                trixEditor.removeEventListener("trix-focus", onBlur, false);
+                trixEditor.removeEventListener("trix-change", onChange, false);
+                trixEditor.removeEventListener("trix-focus", onFocus, false);
                 trixEditor.removeEventListener("trix-blur", onBlur, false);
             };
         }, [value]);
@@ -1428,6 +1447,8 @@ const TrixEditor = observer(
 export class CommentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1017,
+
+        label: () => "",
 
         properties: [
             {
@@ -1484,6 +1505,8 @@ export class CommentActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <TrixEditor
+                component={this}
+                flowContext={flowContext}
                 value={this.text}
                 setValue={action((value: string) => {
                     const DocumentStore = getDocumentStore(this);
@@ -1885,4 +1908,3 @@ registerClass(ShowPageActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 import "project-editor/flow/action-components/instrument";
-import classNames from "classnames";
