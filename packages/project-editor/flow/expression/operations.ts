@@ -330,7 +330,7 @@ export const CONDITIONAL_OPERATOR = "conditional"; // {test} ? {consequent} : {a
 
 export const builtInFunctions: {
     [name: string]: {
-        arity: number;
+        arity: number | { min: number; max: number };
         args: string[];
         eval: (
             expressionContext: IExpressionContext | undefined,
@@ -446,8 +446,8 @@ export const builtInFunctions: {
     },
 
     "Array.slice": {
-        arity: 3,
-        args: ["array", "from", "to"],
+        arity: { min: 2, max: 3 },
+        args: ["array", "from", "[to]"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]

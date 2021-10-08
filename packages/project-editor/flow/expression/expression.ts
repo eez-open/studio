@@ -39,6 +39,27 @@ export { operationIndexes } from "./operations";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function checkArity(functionName: string, node: ExpressionNode) {
+    if (node.type != "CallExpression") {
+        throw "not an CallExpression node";
+    }
+
+    const arity = builtInFunctions[functionName].arity;
+
+    if (typeof arity == "object") {
+        if (
+            node.arguments.length < arity.min ||
+            node.arguments.length > arity.max
+        ) {
+            throw `In function '${functionName}' call expected ${arity.min} to ${arity.max} arguments, but got ${node.arguments.length}`;
+        }
+    } else {
+        if (node.arguments.length != arity) {
+            throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
+        }
+    }
+}
+
 export function parseIdentifier(identifier: string) {
     try {
         const rootNode: ExpressionNode = identifierParser.parse(identifier);
@@ -501,11 +522,7 @@ function findValueTypeInExpressionNode(
             throw `Unknown function '${functionName}'`;
         }
 
-        const arity = builtInFunctions[functionName].arity;
-
-        if (node.arguments.length != arity) {
-            throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-        }
+        checkArity(functionName, node);
 
         node.arguments.forEach(argument =>
             findValueTypeInExpressionNode(component, argument, assignable)
@@ -706,11 +723,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 throw `Unknown function '${functionName}'`;
             }
 
-            const arity = builtInFunctions[functionName].arity;
-
-            if (node.arguments.length != arity) {
-                throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-            }
+            checkArity(functionName, node);
 
             node.arguments.forEach(checkNode);
             return;
@@ -956,11 +969,7 @@ function buildExpressionNode(
             throw `Unknown function '${functionName}'`;
         }
 
-        const arity = builtInFunctions[functionName].arity;
-
-        if (node.arguments.length != arity) {
-            throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-        }
+        checkArity(functionName, node);
 
         return [
             ...node.arguments.reduce(
@@ -1136,11 +1145,7 @@ function evalConstantExpressionNode(
                 throw `Unknown function '${functionName}'`;
             }
 
-            const arity = builtInFunction.arity;
-
-            if (node.arguments.length != arity) {
-                throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-            }
+            checkArity(functionName, node);
 
             return builtInFunction.eval(
                 undefined,
@@ -1286,11 +1291,7 @@ function evalExpressionWithContext(
                 throw `Unknown function '${functionName}'`;
             }
 
-            const arity = builtInFunction.arity;
-
-            if (node.arguments.length != arity) {
-                throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-            }
+            checkArity(functionName, node);
 
             return builtInFunction.eval(
                 expressionContext,
