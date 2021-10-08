@@ -153,6 +153,7 @@ export interface IDialogOptions {
     jsPanel?: {
         title: string;
         width: number;
+        height?: number;
     };
     fieldsEnclosureDiv?: React.ComponentType;
 }
@@ -182,7 +183,12 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
                     Math.round(window.innerWidth * 0.8),
                     opts.jsPanel.width
                 ),
-                height: Math.round(window.innerHeight * 0.8)
+                height: opts.jsPanel.height
+                    ? Math.min(
+                          Math.round(window.innerHeight * 0.8),
+                          opts.jsPanel.height
+                      )
+                    : Math.round(window.innerHeight * 0.8)
             },
             content: element,
             headerControls: {

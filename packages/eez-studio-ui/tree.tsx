@@ -22,6 +22,7 @@ export class TreeRow extends React.Component<{
     node: ITreeNode;
     level: number;
     selectNode: (node: ITreeNode) => void;
+    onDoubleClick?: () => void;
 }> {
     index: number;
 
@@ -57,6 +58,7 @@ export class TreeRow extends React.Component<{
                         node={child}
                         level={childrenLevel}
                         selectNode={this.props.selectNode}
+                        onDoubleClick={this.props.onDoubleClick}
                     />
                 );
             });
@@ -113,7 +115,10 @@ export class TreeRow extends React.Component<{
         }
 
         return (
-            <div className={rowEnclosureClassName}>
+            <div
+                className={rowEnclosureClassName}
+                onDoubleClick={this.props.onDoubleClick}
+            >
                 {row}
                 {childrenRows}
             </div>
@@ -129,6 +134,7 @@ export class Tree extends React.Component<
         showOnlyChildren: boolean;
         rootNode: ITreeNode;
         selectNode: (node: ITreeNode) => void;
+        onDoubleClick?: () => void;
     },
     {}
 > {
@@ -140,6 +146,7 @@ export class Tree extends React.Component<
                     node={this.props.rootNode}
                     level={0}
                     selectNode={this.props.selectNode}
+                    onDoubleClick={this.props.onDoubleClick}
                 />
             </div>
         );

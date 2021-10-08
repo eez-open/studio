@@ -19,7 +19,7 @@ import { InstrumentObject, instruments } from "instrument/instrument-object";
 
 import {
     ActionComponent,
-    makeToggablePropertyToInput
+    makeExpressionProperty
 } from "project-editor/flow/component";
 import { getConnection } from "instrument/window/connection";
 import { FlowState } from "project-editor/flow//runtime";
@@ -901,7 +901,7 @@ export class ScpiActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1023,
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "instrument",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -1303,7 +1303,7 @@ registerClass(SelectInstrumentActionComponent);
 export class GetInstrumentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "id",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -1343,7 +1343,7 @@ registerClass(GetInstrumentActionComponent);
 export class ConnectInstrumentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "instrument",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup

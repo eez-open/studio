@@ -78,6 +78,7 @@ import {
     variableTypeProperty,
     variableTypeUIProperty
 } from "project-editor/features/variable/variable";
+import { expressionBuilder } from "./expression/ExpressionBuilder";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -88,7 +89,7 @@ export function makeDataPropertyInfo(
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ): PropertyInfo {
-    return makeToggablePropertyToInput({
+    return makeExpressionProperty({
         name,
         displayName,
         type: PropertyType.ObjectReference,
@@ -247,73 +248,83 @@ function isComponentOutputOptional(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function makeToggablePropertyToInput(
+export function makeExpressionProperty(
     propertyInfo: PropertyInfo,
     toggableProperty?: (object: IEezObject) => "input" | undefined
 ): PropertyInfo {
-    return Object.assign(propertyInfo, {
-        toggableProperty: toggableProperty || "input",
-        propertyMenu(props: PropertyProps) {
-            let menuItems: Electron.MenuItem[] = [];
+    return Object.assign(
+        {
+            toggableProperty: toggableProperty || "input",
+            propertyMenu(props: PropertyProps) {
+                let menuItems: Electron.MenuItem[] = [];
 
-            if (props.objects.length == 1) {
-                const component = props.objects[0] as Component;
+                if (props.objects.length == 1) {
+                    const component = props.objects[0] as Component;
 
-                if (
-                    !getProperty(component, props.propertyInfo.name) &&
-                    !component.customInputs.find(
-                        componentInput =>
-                            componentInput.name == props.propertyInfo.name
-                    )
-                ) {
-                    menuItems.push(
-                        new MenuItem({
-                            label: "Convert to input",
-                            click: () => {
-                                const DocumentStore = getDocumentStore(
-                                    props.objects[0]
-                                );
-
-                                DocumentStore.undoManager.setCombineCommands(
-                                    true
-                                );
-
-                                const customInput = new CustomInput();
-                                customInput.name = props.propertyInfo.name;
-                                customInput.type =
-                                    getVariableTypeFromPropertyType(
-                                        props.propertyInfo.type
+                    if (
+                        !getProperty(component, props.propertyInfo.name) &&
+                        !component.customInputs.find(
+                            componentInput =>
+                                componentInput.name == props.propertyInfo.name
+                        )
+                    ) {
+                        menuItems.push(
+                            new MenuItem({
+                                label: "Convert to input",
+                                click: () => {
+                                    const DocumentStore = getDocumentStore(
+                                        props.objects[0]
                                     );
 
-                                DocumentStore.addObject(
-                                    component.customInputs,
-                                    customInput
-                                );
+                                    DocumentStore.undoManager.setCombineCommands(
+                                        true
+                                    );
 
-                                DocumentStore.updateObject(component, {
-                                    [props.propertyInfo.name]:
-                                        props.propertyInfo.name
-                                });
+                                    const customInput = new CustomInput();
+                                    customInput.name = props.propertyInfo.name;
+                                    customInput.type =
+                                        getVariableTypeFromPropertyType(
+                                            props.propertyInfo.type
+                                        );
 
-                                DocumentStore.undoManager.setCombineCommands(
-                                    false
-                                );
-                            }
-                        })
-                    );
+                                    DocumentStore.addObject(
+                                        component.customInputs,
+                                        customInput
+                                    );
+
+                                    DocumentStore.updateObject(component, {
+                                        [props.propertyInfo.name]:
+                                            props.propertyInfo.name
+                                    });
+
+                                    DocumentStore.undoManager.setCombineCommands(
+                                        false
+                                    );
+                                }
+                            })
+                        );
+                    }
                 }
-            }
 
-            return menuItems;
-        },
+                return menuItems;
+            },
 
-        readOnlyInPropertyGrid(
-            component: Component,
-            propertyInfo: PropertyInfo
-        ) {
-            return component.isOutputProperty(propertyInfo);
-        }
-    } as Partial<PropertyInfo>);
+            readOnlyInPropertyGrid(
+                component: Component,
+                propertyInfo: PropertyInfo
+            ) {
+                return component.isOutputProperty(propertyInfo);
+            },
+            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
+                expressionBuilder(object, propertyInfo, {
+                    title: propertyInfo.onSelectTitle!,
+                    width: 400,
+                    height: 600
+                }),
+            onSelectTitle: "Expression Builder"
+        } as Partial<PropertyInfo>,
+        propertyInfo
+    );
 }
 
 export function makeToggablePropertyToOutput(

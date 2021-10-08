@@ -101,6 +101,24 @@ export class VariableType extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function humanizeVariableType(type: string): string {
+    if (isCustomType(type)) {
+        return getCustomType(type) ?? "";
+    }
+    if (isEnumType(type)) {
+        return getEnumTypeNameFromType(type) ?? "";
+    }
+    if (isStructType(type)) {
+        return getStructTypeNameFromType(type) ?? "";
+    }
+    if (isArrayType(type)) {
+        return `Array of ${getArrayElementTypeFromType(type)}`;
+    }
+    return humanize(type);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 @observer
 export class VariableTypeUI extends React.Component<PropertyProps> {
     static contextType = ProjectContext;
@@ -172,7 +190,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
         const basicTypes = basicTypeNames.map(basicTypeName => {
             return (
                 <option key={basicTypeName} value={basicTypeName}>
-                    {humanize(basicTypeName)}
+                    {humanizeVariableType(basicTypeName)}
                 </option>
             );
         });
@@ -188,7 +206,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
 
                 return (
                     <option key={name} value={`custom:${name}`}>
-                        {name}
+                        {humanizeVariableType(`custom:${name}`)}
                     </option>
                 );
             }
@@ -198,13 +216,13 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
 
         const enums = project.variables.enums.map(enumDef => (
             <option key={enumDef.name} value={`enum:${enumDef.name}`}>
-                {enumDef.name}
+                {humanizeVariableType(`enum:${enumDef.name}`)}
             </option>
         ));
 
         const structures = project.variables.structures.map(struct => (
             <option key={struct.name} value={`struct:${struct.name}`}>
-                {struct.name}
+                {humanizeVariableType(`struct:${struct.name}`)}
             </option>
         ));
 
@@ -214,20 +232,20 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
                     key={`array:${basicTypeName}`}
                     value={`array:${basicTypeName}`}
                 >
-                    Array of {humanize(basicTypeName)}
+                    {humanizeVariableType(`array:${basicTypeName}`)}
                 </option>
             );
         });
 
         const arrayOfEnums = project.variables.enums.map(enumDef => (
             <option key={enumDef.name} value={`array:enum:${enumDef.name}`}>
-                Array of {enumDef.name}
+                {humanizeVariableType(`array:enum:${enumDef.name}`)}
             </option>
         ));
 
         const arrayOfStructures = project.variables.structures.map(struct => (
             <option key={struct.name} value={`array:struct:${struct.name}`}>
-                Array of {struct.name}
+                {humanizeVariableType(`array:struct:${struct.name}`)}
             </option>
         ));
 
@@ -479,6 +497,14 @@ export function isArrayType(type: string) {
 
 export function isCustomType(type: string) {
     return type && type.match(CUSTOM_TYPE_REGEXP) != null;
+}
+
+export function getCustomType(type: string) {
+    const result = type.match(CUSTOM_TYPE_REGEXP);
+    if (result == null) {
+        return null;
+    }
+    return result[1];
 }
 
 export function getArrayElementTypeFromType(type: string) {

@@ -33,7 +33,7 @@ import {
     ActionComponent,
     AutoSize,
     componentOutputUnique,
-    makeToggablePropertyToInput,
+    makeExpressionProperty,
     outputIsOptionalIfAtLeastOneOutputExists
 } from "project-editor/flow/component";
 
@@ -494,7 +494,7 @@ export class SetVariableActionComponent extends ActionComponent {
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "value",
                 type: PropertyType.JSON,
                 propertyGridGroup: specificGroup
@@ -672,13 +672,13 @@ export class CompareActionComponent extends ActionComponent {
         flowComponentId: 1009,
 
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "A",
                 displayName: "A",
                 type: PropertyType.JSON,
                 propertyGridGroup: specificGroup
             }),
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "B",
                 displayName: "B",
                 type: PropertyType.JSON,
@@ -687,7 +687,7 @@ export class CompareActionComponent extends ActionComponent {
                     return object.operator == "NOT";
                 }
             }),
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "C",
                 displayName: "C",
                 type: PropertyType.JSON,
@@ -837,7 +837,7 @@ export class IsTrueActionComponent extends ActionComponent {
         flowComponentId: 1010,
 
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "value",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -1022,7 +1022,7 @@ export class ReadSettingActionComponent extends ActionComponent {
         flowComponentId: 1013,
 
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "key",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -1083,12 +1083,12 @@ export class WriteSettingsActionComponent extends ActionComponent {
         flowComponentId: 1014,
 
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "key",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             }),
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "value",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -1121,7 +1121,7 @@ export class LogActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1015,
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "value",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -1168,7 +1168,7 @@ export class CallActionActionComponent extends ActionComponent {
         flowComponentId: 1016,
 
         properties: [
-            makeToggablePropertyToInput(
+            makeExpressionProperty(
                 {
                     name: "action",
                     type: PropertyType.ObjectReference,
@@ -1503,7 +1503,7 @@ export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1018,
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "milliseconds",
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup
@@ -1545,7 +1545,7 @@ export class ErrorActionComponent extends ActionComponent {
         flowComponentId: 1019,
 
         properties: [
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "message",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
@@ -1718,17 +1718,17 @@ export class LoopActionComponent extends ActionComponent {
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "from",
                 type: PropertyType.JSON,
                 propertyGridGroup: specificGroup
             }),
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "to",
                 type: PropertyType.JSON,
                 propertyGridGroup: specificGroup
             }),
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "step",
                 type: PropertyType.JSON,
                 propertyGridGroup: specificGroup

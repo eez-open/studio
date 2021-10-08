@@ -331,6 +331,7 @@ export const CONDITIONAL_OPERATOR = "conditional"; // {test} ? {consequent} : {a
 export const builtInFunctions: {
     [name: string]: {
         arity: number;
+        args: string[];
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
@@ -340,6 +341,7 @@ export const builtInFunctions: {
 } = {
     "Flow.it": {
         arity: 1,
+        args: ["index"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
@@ -355,6 +357,7 @@ export const builtInFunctions: {
     },
     "Math.sin": {
         arity: 1,
+        args: ["value"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
@@ -375,6 +378,7 @@ export const builtInFunctions: {
     },
     "Math.cos": {
         arity: 1,
+        args: ["value"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
@@ -395,6 +399,7 @@ export const builtInFunctions: {
     },
     "Math.log": {
         arity: 1,
+        args: ["value"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
@@ -416,6 +421,7 @@ export const builtInFunctions: {
 
     "String.find": {
         arity: 2,
+        args: ["string", "substring"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]

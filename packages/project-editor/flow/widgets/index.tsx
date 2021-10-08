@@ -72,7 +72,7 @@ import {
     makeTextPropertyInfo,
     migrateStyleProperty,
     EmbeddedWidget,
-    makeToggablePropertyToInput
+    makeExpressionProperty
 } from "project-editor/flow/component";
 
 import {
@@ -4778,7 +4778,7 @@ export class TextInputWidget extends Widget {
                 name: "password",
                 type: PropertyType.Boolean
             },
-            makeToggablePropertyToInput({
+            makeExpressionProperty({
                 name: "value",
                 type: PropertyType.String
             })
