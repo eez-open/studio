@@ -1652,8 +1652,13 @@ export class TextWidget extends EmbeddedWidget {
             } else {
                 if (this.name) {
                     text = this.name;
+                } else if (
+                    flowContext.DocumentStore.isDashboardProject ||
+                    flowContext.DocumentStore.isAppletProject
+                ) {
+                    return <span className="expression">{this.data}</span>;
                 } else {
-                    text = `{${this.data}}`;
+                    text = flowContext.dataContext.get(this.data) ?? "";
                 }
             }
         } else {
