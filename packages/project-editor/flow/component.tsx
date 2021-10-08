@@ -317,6 +317,25 @@ export function makeExpressionProperty(
             },
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
                 expressionBuilder(object, propertyInfo, {
+                    assignableExpression: false,
+                    title: propertyInfo.onSelectTitle!,
+                    width: 400,
+                    height: 600
+                }),
+            onSelectTitle: "Expression Builder"
+        } as Partial<PropertyInfo>,
+        propertyInfo
+    );
+}
+
+export function makeAssignableExpressionProperty(
+    propertyInfo: PropertyInfo
+): PropertyInfo {
+    return Object.assign(
+        {
+            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
+                expressionBuilder(object, propertyInfo, {
+                    assignableExpression: true,
                     title: propertyInfo.onSelectTitle!,
                     width: 400,
                     height: 600

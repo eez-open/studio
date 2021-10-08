@@ -33,6 +33,7 @@ import {
     ActionComponent,
     AutoSize,
     componentOutputUnique,
+    makeAssignableExpressionProperty,
     makeExpressionProperty,
     outputIsOptionalIfAtLeastOneOutputExists
 } from "project-editor/flow/component";
@@ -264,11 +265,11 @@ export class GetVariableActionComponent extends ActionComponent {
         flowComponentId: 1005,
 
         properties: [
-            {
+            makeExpressionProperty({
                 name: "variable",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
-            }
+            })
         ],
         icon: (
             <svg
@@ -489,11 +490,11 @@ export class SetVariableActionComponent extends ActionComponent {
         flowComponentId: 1007,
 
         properties: [
-            {
+            makeAssignableExpressionProperty({
                 name: "variable",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
-            },
+            }),
             makeExpressionProperty({
                 name: "value",
                 type: PropertyType.String,
@@ -1713,11 +1714,11 @@ export class LoopActionComponent extends ActionComponent {
         flowComponentId: 1021,
 
         properties: [
-            {
+            makeAssignableExpressionProperty({
                 name: "variable",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
-            },
+            }),
             makeExpressionProperty({
                 name: "from",
                 type: PropertyType.String,

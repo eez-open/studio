@@ -26,12 +26,16 @@ import {
     logicalOperators,
     unaryOperators
 } from "./operations";
-import { humanizeVariableType } from "project-editor/features/variable/variable";
+import {
+    getVariableTypeFromPropertyType,
+    humanizeVariableType
+} from "project-editor/features/variable/variable";
 
 export async function expressionBuilder(
     object: IEezObject,
     propertyInfo: PropertyInfo,
     opts: {
+        assignableExpression: boolean;
         title: string;
         width: number;
         height?: number;
@@ -63,6 +67,7 @@ export async function expressionBuilder(
                 <SelectItemDialog
                     object={object}
                     propertyInfo={propertyInfo}
+                    assignableExpression={opts.assignableExpression}
                     params={params}
                     onOk={onOk}
                     onCancel={onDispose}
@@ -79,6 +84,7 @@ export async function expressionBuilder(
 class SelectItemDialog extends React.Component<{
     object: IEezObject;
     propertyInfo: PropertyInfo;
+    assignableExpression: boolean;
     params?: IOnSelectParams;
     onOk: (value: any) => void;
     onCancel: () => void;
@@ -164,7 +170,7 @@ class SelectItemDialog extends React.Component<{
     @computed get rootNode(): ITreeNode<string> {
         const children: ITreeNode<string>[] = [];
 
-        if (this.componentInputs.length) {
+        if (!this.props.assignableExpression && this.componentInputs.length) {
             children.push({
                 id: "component-inputs",
                 label: "Component inputs",
@@ -173,8 +179,10 @@ class SelectItemDialog extends React.Component<{
                     label: (
                         <>
                             {componentInput.name}
-                            <span className="ms-1 badge bg-primary me-1">
-                                input
+                            <span className="ms-1 badge bg-secondary">
+                                {getVariableTypeFromPropertyType(
+                                    componentInput.type
+                                )}
                             </span>
                         </>
                     ),
@@ -197,7 +205,7 @@ class SelectItemDialog extends React.Component<{
                     label: (
                         <>
                             {localVariable.name}
-                            <span className="ms-1 badge bg-success me-1">
+                            <span className="ms-1 badge bg-secondary">
                                 {humanizeVariableType(localVariable.type)}
                             </span>
                         </>
@@ -221,7 +229,7 @@ class SelectItemDialog extends React.Component<{
                     label: (
                         <>
                             {globalVariable.name}
-                            <span className="ms-1 badge bg-info text-dark">
+                            <span className="ms-1 badge bg-secondary">
                                 {humanizeVariableType(globalVariable.type)}
                             </span>
                         </>
@@ -236,93 +244,95 @@ class SelectItemDialog extends React.Component<{
             });
         }
 
-        if (this.context.project.variables.enums.length) {
+        if (!this.props.assignableExpression) {
+            if (this.context.project.variables.enums.length) {
+                children.push({
+                    id: "enumerations",
+                    label: "Enumerations",
+                    children: this.context.project.variables.enums.map(
+                        enumeration => ({
+                            id: enumeration.name,
+                            label: enumeration.name,
+                            children: enumeration.members.map(member => {
+                                const data = `${enumeration.name}.${member.name}`;
+                                return {
+                                    id: member.name,
+                                    label: member.name,
+                                    children: [],
+                                    selected: this.selection == member.name,
+                                    expanded: false,
+                                    data
+                                };
+                            }),
+                            selected: false,
+                            expanded: true,
+                            data: undefined
+                        })
+                    ),
+                    selected: false,
+                    expanded: true
+                });
+            }
+
             children.push({
-                id: "enumerations",
-                label: "Enumerations",
-                children: this.context.project.variables.enums.map(
-                    enumeration => ({
-                        id: enumeration.name,
-                        label: enumeration.name,
-                        children: enumeration.members.map(member => {
-                            const data = `${enumeration.name}.${member.name}`;
-                            return {
-                                id: member.name,
-                                label: member.name,
-                                children: [],
-                                selected: this.selection == member.name,
-                                expanded: false,
-                                data
-                            };
-                        }),
-                        selected: false,
-                        expanded: true,
-                        data: undefined
-                    })
-                ),
+                id: "binary-operators",
+                label: "Binary operators",
+                children: this.getOperators(binaryOperators),
+                selected: false,
+                expanded: true
+            });
+
+            children.push({
+                id: "logical-operators",
+                label: "Logical operators",
+                children: this.getOperators(logicalOperators),
+                selected: false,
+                expanded: true
+            });
+
+            children.push({
+                id: "unary-operators",
+                label: "Unary operators",
+                children: this.getOperators(unaryOperators),
+                selected: false,
+                expanded: true
+            });
+
+            children.push({
+                id: "built-in-functions",
+                label: "Built-in Functions",
+                children: _map(builtInFunctions, (func, functionName) => {
+                    const data = `${functionName}(${func.args
+                        .map(arg => `<${arg}>`)
+                        .join(",")})`;
+                    return {
+                        id: functionName,
+                        label: functionName,
+                        children: [],
+                        selected: this.selection == data,
+                        expanded: false,
+                        data
+                    };
+                }),
+                selected: false,
+                expanded: true
+            });
+
+            children.push({
+                id: "built-in-constants",
+                label: "Built-in Constants",
+                children: _map(builtInConstants, (constant, constantName) => ({
+                    id: constantName,
+                    label: constantName,
+                    children: [],
+                    selected: this.selection == constantName,
+                    expanded: false,
+                    data: constantName
+                })),
                 selected: false,
                 expanded: true
             });
         }
-
-        children.push({
-            id: "binary-operators",
-            label: "Binary operators",
-            children: this.getOperators(binaryOperators),
-            selected: false,
-            expanded: true
-        });
-
-        children.push({
-            id: "logical-operators",
-            label: "Logical operators",
-            children: this.getOperators(logicalOperators),
-            selected: false,
-            expanded: true
-        });
-
-        children.push({
-            id: "unary-operators",
-            label: "Unary operators",
-            children: this.getOperators(unaryOperators),
-            selected: false,
-            expanded: true
-        });
-
-        children.push({
-            id: "built-in-functions",
-            label: "Built-in Functions",
-            children: _map(builtInFunctions, (func, functionName) => {
-                const data = `${functionName}(${func.args
-                    .map(arg => `<${arg}>`)
-                    .join(",")})`;
-                return {
-                    id: functionName,
-                    label: functionName,
-                    children: [],
-                    selected: this.selection == data,
-                    expanded: false,
-                    data
-                };
-            }),
-            selected: false,
-            expanded: true
-        });
-
-        children.push({
-            id: "built-in-constants",
-            label: "Built-in Constants",
-            children: _map(builtInConstants, (constant, constantName) => ({
-                id: constantName,
-                label: constantName,
-                children: [],
-                selected: this.selection == constantName,
-                expanded: false,
-                data: constantName
-            })),
-            selected: false,
-            expanded: true
-        });
 
         return observable({
             id: "all",
