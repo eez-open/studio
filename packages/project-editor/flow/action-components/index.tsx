@@ -496,7 +496,7 @@ export class SetVariableActionComponent extends ActionComponent {
             },
             makeExpressionProperty({
                 name: "value",
-                type: PropertyType.JSON,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             })
         ],
@@ -675,13 +675,13 @@ export class CompareActionComponent extends ActionComponent {
             makeExpressionProperty({
                 name: "A",
                 displayName: "A",
-                type: PropertyType.JSON,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             }),
             makeExpressionProperty({
                 name: "B",
                 displayName: "B",
-                type: PropertyType.JSON,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (object: CompareActionComponent) => {
                     return object.operator == "NOT";
@@ -690,7 +690,7 @@ export class CompareActionComponent extends ActionComponent {
             makeExpressionProperty({
                 name: "C",
                 displayName: "C",
-                type: PropertyType.JSON,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (object: CompareActionComponent) => {
                     return object.operator !== "BETWEEN";
@@ -1505,7 +1505,7 @@ export class DelayActionComponent extends ActionComponent {
         properties: [
             makeExpressionProperty({
                 name: "milliseconds",
-                type: PropertyType.Number,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             })
         ],
@@ -1720,17 +1720,17 @@ export class LoopActionComponent extends ActionComponent {
             },
             makeExpressionProperty({
                 name: "from",
-                type: PropertyType.JSON,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             }),
             makeExpressionProperty({
                 name: "to",
-                type: PropertyType.JSON,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             }),
             makeExpressionProperty({
                 name: "step",
-                type: PropertyType.JSON,
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             })
         ],
