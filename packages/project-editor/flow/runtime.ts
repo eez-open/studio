@@ -150,22 +150,22 @@ export abstract class RuntimeBase {
         this.doStartRuntime(isDebuggerActive);
     }
 
-    stopRuntime(notifyUser: boolean) {
+    async stopRuntime(notifyUser: boolean) {
         if (this.state == State.STOPPED) {
             return;
         }
 
         this.transition(StateMachineAction.STOP);
 
-        this.doStopRuntime(notifyUser);
+        await this.doStopRuntime(notifyUser);
 
         runInAction(() => {
             this.DocumentStore.dataContext.clearRuntimeValues();
         });
     }
 
-    abstract doStartRuntime(isDebuggerActive: boolean): any;
-    abstract doStopRuntime(notifyUser: boolean): any;
+    abstract doStartRuntime(isDebuggerActive: boolean): Promise<void>;
+    abstract doStopRuntime(notifyUser: boolean): Promise<void>;
 
     @action
     stopRuntimeWithError(error: string) {
