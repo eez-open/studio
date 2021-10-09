@@ -255,6 +255,7 @@ export function evalExpression(
 
 type AssignableValueType =
     | "null"
+    | "input"
     | "output"
     | "local-variable"
     | "global-variable"
@@ -266,6 +267,10 @@ class AssignableValue {
         public name?: any,
         public object?: any
     ) {}
+
+    isInput() {
+        return this.type == "input";
+    }
 
     isOutput() {
         return this.type == "output";
@@ -286,6 +291,8 @@ class AssignableValue {
     getValue(expressionContext: IExpressionContext) {
         if (this.isLocalVariable() || this.isGlobalVariable()) {
             return expressionContext.dataContext.get(this.name);
+        } else if (this.isInput()) {
+            return this.object;
         } else if (this.isFlowValue()) {
             return this.object[this.name];
         } else {
@@ -1392,6 +1399,20 @@ function evalAssignableExpressionWithContext(
         }
 
         if (node.type == "Identifier") {
+            const input = component.inputs.find(
+                input => input.name == node.name
+            );
+            if (input != undefined) {
+                return new AssignableValue(
+                    "input",
+                    undefined,
+                    expressionContext.flowState?.getInputValue(
+                        component,
+                        input.name
+                    )
+                );
+            }
+
             const output = component.outputs.find(
                 output => output.name == node.name
             );
