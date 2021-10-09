@@ -1371,6 +1371,1416 @@
       "localVariables": [],
       "name": "consume_errors",
       "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "StartActionComponent",
+          "left": -586,
+          "top": -478,
+          "width": 78,
+          "height": 32,
+          "wireID": "d0459860-a422-4357-84b7-096d1f4678f4",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -374,
+          "top": -328,
+          "width": 157,
+          "height": 61,
+          "wireID": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "customInputs": [],
+          "customOutputs": [],
+          "action": "consume_errors"
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -547,
+          "top": -328,
+          "width": 133,
+          "height": 61,
+          "wireID": "abb9459a-eb82-4ee8-8a57-e390b471e7ff",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "bb3_1"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -576,
+          "top": -213,
+          "width": 233,
+          "height": 64,
+          "wireID": "e7b11ad7-050c-4323-84c6-21fa477c2403",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "model",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_1",
+          "scpi": "model = SYST:SLOT:MOD? 2"
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": -196,
+          "top": -545,
+          "width": 182,
+          "height": 67,
+          "wireID": "20252490-0e51-46aa-cff1-01c62a4d3a3a",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Can not power up BB3_1\""
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -311,
+          "top": -213,
+          "width": 168,
+          "height": 88,
+          "wireID": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "\"SMX46\"",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": -100,
+          "top": -112,
+          "width": 243,
+          "height": 67,
+          "wireID": "3ccd9cab-e4b2-4170-a533-b0a9a3628085",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"SMX46 is not in Slot 2 on BB3_1\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -115,
+          "top": -211,
+          "width": 244,
+          "height": 63,
+          "wireID": "0efd7939-cfaa-4a23-e4d8-4b70a4e9d751",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "status",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_1",
+          "scpi": "status = SYST:SLOT:STAT? 2"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 163,
+          "top": -211,
+          "width": 98,
+          "height": 87,
+          "wireID": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value"
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 311,
+          "top": -112,
+          "width": 303,
+          "height": 67,
+          "wireID": "b348ebaa-735e-4065-aa1a-8fa54064b225",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Module in Slot 2 on BB3_1 is not enabled\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 282,
+          "top": -209,
+          "width": 212,
+          "height": 63,
+          "wireID": "46b957fc-94bb-4536-ddde-9da7dd4a9fd8",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "test",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_1",
+          "scpi": "test = DIAG:TEST? SLOT2"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 540,
+          "top": -209,
+          "width": 122,
+          "height": 87,
+          "wireID": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 696,
+          "top": -112,
+          "width": 263,
+          "height": 67,
+          "wireID": "89e45b3e-b93d-4296-e802-e53be98fd28d",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Error on module in Slot 2 on BB3_1\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -576,
+          "top": -13,
+          "width": 233,
+          "height": 63,
+          "wireID": "7f6f2f89-49a7-4d21-dcc6-06f320669e97",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "model",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_1",
+          "scpi": "model = SYST:SLOT:MOD? 3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -311,
+          "top": -13,
+          "width": 175,
+          "height": 88,
+          "wireID": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "\"MIO168\"",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": -108,
+          "top": 88,
+          "width": 250,
+          "height": 67,
+          "wireID": "a4958e9f-e089-446e-d5a6-4d3a63f1de39",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"MIO168 is not in Slot 3 on BB3_1\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -114,
+          "top": -11,
+          "width": 244,
+          "height": 63,
+          "wireID": "de947dc7-6d33-42e3-82c4-49587097b411",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "status",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_1",
+          "scpi": "status = SYST:SLOT:STAT? 3"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 163,
+          "top": -11,
+          "width": 98,
+          "height": 88,
+          "wireID": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value"
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 311,
+          "top": 88,
+          "width": 303,
+          "height": 67,
+          "wireID": "3223da3e-b652-412b-a71b-b9722c746e3b",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Module in Slot 3 on BB3_1 is not enabled\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 282,
+          "top": -9,
+          "width": 212,
+          "height": 63,
+          "wireID": "56ae7c2b-d8cb-4d45-ae9f-a12ef9cfe9d5",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "test",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_1",
+          "scpi": "test = DIAG:TEST? SLOT3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 540,
+          "top": -9,
+          "width": 122,
+          "height": 87,
+          "wireID": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 696,
+          "top": 88,
+          "width": 263,
+          "height": 67,
+          "wireID": "24ed0828-1611-41d2-973f-56e279218eb0",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Error on module in Slot 3 on BB3_1\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -576,
+          "top": 182,
+          "width": 233,
+          "height": 63,
+          "wireID": "8ed4f0bb-ba12-46a4-e644-eaf2007346c1",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "model",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "model = SYST:SLOT:MOD? 1"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -311,
+          "top": 182,
+          "width": 174,
+          "height": 88,
+          "wireID": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "\"DCP405\"",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": -108,
+          "top": 283,
+          "width": 250,
+          "height": 67,
+          "wireID": "86fbda21-6a89-4917-8794-746d3b0b284c",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"DCP405 is not in Slot 1 on BB3_2\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -115,
+          "top": 186,
+          "width": 244,
+          "height": 64,
+          "wireID": "e6463c34-1304-4bb2-9405-1fb4d669824c",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "status",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "status = SYST:SLOT:STAT? 1"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 163,
+          "top": 184,
+          "width": 98,
+          "height": 88,
+          "wireID": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value"
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 311,
+          "top": 283,
+          "width": 303,
+          "height": 67,
+          "wireID": "2c37b5be-6116-4cbe-d6bd-8e0ba5591185",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Module in Slot 1 on BB3_2 is not enabled\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 282,
+          "top": 186,
+          "width": 212,
+          "height": 64,
+          "wireID": "4a37dffe-7fed-420d-8cee-493f232e6b09",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "test",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "test = DIAG:TEST? SLOT1"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 540,
+          "top": 186,
+          "width": 122,
+          "height": 88,
+          "wireID": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 696,
+          "top": 283,
+          "width": 263,
+          "height": 67,
+          "wireID": "068a2e30-f988-44c7-af63-3bceda87cbdf",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Error on module in Slot 1 on BB3_2\""
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -599,
+          "top": 391,
+          "width": 233,
+          "height": 63,
+          "wireID": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "model",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "model = SYST:SLOT:MOD? 3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": -333,
+          "top": 391,
+          "width": 174,
+          "height": 88,
+          "wireID": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "\"DCP405\"",
+          "operator": "="
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -130,
+          "top": 393,
+          "width": 258,
+          "height": 64,
+          "wireID": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "version",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "version = SYST:SLOT:VERS? 3"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 169,
+          "top": 393,
+          "width": 234,
+          "height": 64,
+          "wireID": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "serial",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "serial = SYST:SLOT:SNO? 3"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 462,
+          "top": 391,
+          "width": 159,
+          "height": 113,
+          "wireID": "1d775480-09d3-452d-922b-8c051e450c66",
+          "customInputs": [],
+          "customOutputs": [],
+          "catchError": true,
+          "action": "register_module"
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 687,
+          "top": 445,
+          "width": 330,
+          "height": 67,
+          "wireID": "2d9ed860-e4af-4d3b-e923-05aa101610bd",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Failed to register Module in Slot 3 on BB3_2\""
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": -563,
+          "top": 536,
+          "width": 160,
+          "height": 68,
+          "wireID": "45386773-777f-4691-9c41-84e20f3e2aaa",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "variable": "test_module_id",
+          "value": "value"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -99,
+          "top": 536,
+          "width": 244,
+          "height": 63,
+          "wireID": "6c44d32f-f0db-425d-d000-3221d2a230c4",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "status",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "status = SYST:SLOT:STAT? 3"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 192,
+          "top": 536,
+          "width": 98,
+          "height": 88,
+          "wireID": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 379,
+          "top": 640,
+          "width": 212,
+          "height": 64,
+          "wireID": "9aa1854f-33f8-41a4-d183-4b615db41ac7",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "test",
+              "type": 0
+            }
+          ],
+          "instrument": "bb3_2",
+          "scpi": "test = DIAG:TEST? SLOT3"
+        },
+        {
+          "type": "CompareActionComponent",
+          "left": 640,
+          "top": 640,
+          "width": 122,
+          "height": 88,
+          "wireID": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "customInputs": [
+            {
+              "name": "A",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "A": "A",
+          "B": "2",
+          "operator": "="
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -547,
+          "top": 739,
+          "width": 162,
+          "height": 63,
+          "wireID": "dbe748f6-af3f-41bb-ec02-768035586352",
+          "customInputs": [],
+          "customOutputs": [],
+          "instrument": "bb3_1",
+          "scpi": "route:open (@211:246)"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -360,
+          "top": 739,
+          "width": 128,
+          "height": 153,
+          "wireID": "0c4aed59-86c8-41dc-d972-55c7eab221d1",
+          "customInputs": [],
+          "customOutputs": [],
+          "instrument": "bb3_2",
+          "scpi": "OUTP:PROT:COUP 0\ninst (@301)\nOUTP:PROT:CLE\noutp 0\nvolt:prot:stat 0\nCURR:LIM MAX"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": -114,
+          "top": 803,
+          "width": 118,
+          "height": 63,
+          "wireID": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "customInputs": [],
+          "customOutputs": [],
+          "instrument": "bb3_2",
+          "scpi": "inst (@101)"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 73,
+          "top": 803,
+          "width": 118,
+          "height": 63,
+          "wireID": "6d1a91fd-f4f6-4289-cb42-10b2e9af99c3",
+          "customInputs": [],
+          "customOutputs": [],
+          "instrument": "bb3_2",
+          "scpi": "OUTP:PROT:CLE"
+        },
+        {
+          "type": "EndActionComponent",
+          "left": 270,
+          "top": 803,
+          "width": 64,
+          "height": 31,
+          "wireID": "c60b18f4-e97b-4b03-d7ac-b1ea6e0e4318",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 366,
+          "top": 550,
+          "width": 256,
+          "height": 63,
+          "wireID": "7b782885-21ae-408e-c868-f4a94931f9fc",
+          "customInputs": [],
+          "customOutputs": [],
+          "instrument": "bb3_2",
+          "scpi": "SYST:SLOT:STAT 3,1; :syst:delay 100"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 651,
+          "top": 552,
+          "width": 157,
+          "height": 61,
+          "wireID": "d2ffc1f1-248d-4470-cc6e-bd3f02b401d2",
+          "customInputs": [],
+          "customOutputs": [],
+          "action": "consume_errors"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 56,
+          "top": -328,
+          "width": 157,
+          "height": 61,
+          "wireID": "3025e691-4ff3-413a-bd99-2ee0c1af373f",
+          "customInputs": [],
+          "customOutputs": [],
+          "action": "consume_errors"
+        },
+        {
+          "type": "GetVariableActionComponent",
+          "left": -161,
+          "top": -301,
+          "width": 133,
+          "height": 62,
+          "wireID": "9c2186b6-21d8-4887-ff35-9deb0f1412eb",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "bb3_2"
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": -403,
+          "top": -478,
+          "width": 139,
+          "height": 88,
+          "wireID": "9c1bfd3d-eb39-49b7-c7aa-d57d9a2adaf6",
+          "customInputs": [],
+          "customOutputs": [],
+          "action": "power_check"
+        },
+        {
+          "type": "ErrorActionComponent",
+          "left": 261,
+          "top": -545,
+          "width": 182,
+          "height": 67,
+          "wireID": "9686c905-d6e4-4269-b77f-a8737f6c2f0b",
+          "customInputs": [],
+          "customOutputs": [],
+          "message": "\"Can not power up BB3_2\""
+        },
+        {
+          "type": "CallActionActionComponent",
+          "left": 43,
+          "top": -478,
+          "width": 139,
+          "height": 88,
+          "wireID": "a7f1b457-9edf-4855-c762-95cbbba4903f",
+          "customInputs": [],
+          "customOutputs": [],
+          "action": "power_check"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": -333,
+          "top": 536,
+          "width": 198,
+          "height": 70,
+          "wireID": "5a501cb0-9203-4a63-d91c-c0c4d9c55a6b",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "module_registered",
+          "value": "true"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "abb9459a-eb82-4ee8-8a57-e390b471e7ff",
+          "output": "variable",
+          "target": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "input": "9334994c-29b7-434a-a399-4fcdf3325913"
+        },
+        {
+          "source": "e7b11ad7-050c-4323-84c6-21fa477c2403",
+          "output": "model",
+          "target": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "input": "A"
+        },
+        {
+          "source": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "output": "False",
+          "target": "3ccd9cab-e4b2-4170-a533-b0a9a3628085",
+          "input": "@seqin"
+        },
+        {
+          "source": "78107f3e-9ae3-4fc0-93d0-0ceda6fd0c2b",
+          "output": "True",
+          "target": "0efd7939-cfaa-4a23-e4d8-4b70a4e9d751",
+          "input": "@seqin"
+        },
+        {
+          "source": "0efd7939-cfaa-4a23-e4d8-4b70a4e9d751",
+          "output": "status",
+          "target": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "input": "value"
+        },
+        {
+          "source": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "output": "False",
+          "target": "b348ebaa-735e-4065-aa1a-8fa54064b225",
+          "input": "@seqin"
+        },
+        {
+          "source": "7fd4699c-7675-449b-a247-6c6bc0931ef6",
+          "output": "True",
+          "target": "46b957fc-94bb-4536-ddde-9da7dd4a9fd8",
+          "input": "@seqin"
+        },
+        {
+          "source": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "output": "False",
+          "target": "89e45b3e-b93d-4296-e802-e53be98fd28d",
+          "input": "@seqin"
+        },
+        {
+          "source": "7f6f2f89-49a7-4d21-dcc6-06f320669e97",
+          "output": "model",
+          "target": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "input": "A"
+        },
+        {
+          "source": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "output": "False",
+          "target": "a4958e9f-e089-446e-d5a6-4d3a63f1de39",
+          "input": "@seqin"
+        },
+        {
+          "source": "20befad4-7450-430f-f3b7-9692f8b82e3f",
+          "output": "True",
+          "target": "de947dc7-6d33-42e3-82c4-49587097b411",
+          "input": "@seqin"
+        },
+        {
+          "source": "de947dc7-6d33-42e3-82c4-49587097b411",
+          "output": "status",
+          "target": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "input": "value"
+        },
+        {
+          "source": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "output": "False",
+          "target": "3223da3e-b652-412b-a71b-b9722c746e3b",
+          "input": "@seqin"
+        },
+        {
+          "source": "5ccd5176-9f37-48d0-aeaa-35a11100d700",
+          "output": "True",
+          "target": "56ae7c2b-d8cb-4d45-ae9f-a12ef9cfe9d5",
+          "input": "@seqin"
+        },
+        {
+          "source": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "output": "False",
+          "target": "24ed0828-1611-41d2-973f-56e279218eb0",
+          "input": "@seqin"
+        },
+        {
+          "source": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "output": "True",
+          "target": "7f6f2f89-49a7-4d21-dcc6-06f320669e97",
+          "input": "@seqin"
+        },
+        {
+          "source": "8ed4f0bb-ba12-46a4-e644-eaf2007346c1",
+          "output": "model",
+          "target": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "input": "A"
+        },
+        {
+          "source": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "output": "False",
+          "target": "86fbda21-6a89-4917-8794-746d3b0b284c",
+          "input": "@seqin"
+        },
+        {
+          "source": "45581301-59ff-4615-c631-f9f13f62e2d1",
+          "output": "True",
+          "target": "e6463c34-1304-4bb2-9405-1fb4d669824c",
+          "input": "@seqin"
+        },
+        {
+          "source": "e6463c34-1304-4bb2-9405-1fb4d669824c",
+          "output": "status",
+          "target": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "input": "value"
+        },
+        {
+          "source": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "output": "False",
+          "target": "2c37b5be-6116-4cbe-d6bd-8e0ba5591185",
+          "input": "@seqin"
+        },
+        {
+          "source": "9f2dde4c-1f2d-4c48-d6f8-4f8e6fbe1973",
+          "output": "True",
+          "target": "4a37dffe-7fed-420d-8cee-493f232e6b09",
+          "input": "@seqin"
+        },
+        {
+          "source": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "output": "False",
+          "target": "068a2e30-f988-44c7-af63-3bceda87cbdf",
+          "input": "@seqin"
+        },
+        {
+          "source": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "output": "True",
+          "target": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "input": "@seqin"
+        },
+        {
+          "source": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "output": "model",
+          "target": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "input": "A"
+        },
+        {
+          "source": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "output": "True",
+          "target": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "input": "@seqin"
+        },
+        {
+          "source": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "output": "@seqout",
+          "target": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "input": "@seqin"
+        },
+        {
+          "source": "4ceec4cd-508e-4f44-ed86-1676801f619c",
+          "output": "model",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "acfa6054-32bf-495f-8182-6445dacafdb6"
+        },
+        {
+          "source": "eede8b4c-84d9-42cb-e276-1afe4f2ec123",
+          "output": "version",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "027b1223-1be0-454f-e54b-ee482db04174"
+        },
+        {
+          "source": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "output": "serial",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "93c12e8c-f701-4171-fb62-5c4075f1e043"
+        },
+        {
+          "source": "649d5b9b-e2e4-4e10-90e6-4829dd9e3b54",
+          "output": "@seqout",
+          "target": "1d775480-09d3-452d-922b-8c051e450c66",
+          "input": "@seqin"
+        },
+        {
+          "source": "6c44d32f-f0db-425d-d000-3221d2a230c4",
+          "output": "status",
+          "target": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "input": "value"
+        },
+        {
+          "source": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "output": "True",
+          "target": "9aa1854f-33f8-41a4-d183-4b615db41ac7",
+          "input": "@seqin"
+        },
+        {
+          "source": "9aa1854f-33f8-41a4-d183-4b615db41ac7",
+          "output": "test",
+          "target": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "input": "A"
+        },
+        {
+          "source": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "output": "True",
+          "target": "dbe748f6-af3f-41bb-ec02-768035586352",
+          "input": "@seqin"
+        },
+        {
+          "source": "dbe748f6-af3f-41bb-ec02-768035586352",
+          "output": "@seqout",
+          "target": "0c4aed59-86c8-41dc-d972-55c7eab221d1",
+          "input": "@seqin"
+        },
+        {
+          "source": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "output": "@seqout",
+          "target": "6d1a91fd-f4f6-4289-cb42-10b2e9af99c3",
+          "input": "@seqin"
+        },
+        {
+          "source": "6d1a91fd-f4f6-4289-cb42-10b2e9af99c3",
+          "output": "@seqout",
+          "target": "c60b18f4-e97b-4b03-d7ac-b1ea6e0e4318",
+          "input": "@seqin"
+        },
+        {
+          "source": "975278b0-1a43-4d90-cccf-2cab97fd9668",
+          "output": "False",
+          "target": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "input": "@seqin"
+        },
+        {
+          "source": "e723aed1-1c04-4ca8-d108-630065ee3e4a",
+          "output": "False",
+          "target": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "input": "@seqin"
+        },
+        {
+          "source": "1d775480-09d3-452d-922b-8c051e450c66",
+          "output": "@Error",
+          "target": "2d9ed860-e4af-4d3b-e923-05aa101610bd",
+          "input": "@seqin"
+        },
+        {
+          "source": "1d775480-09d3-452d-922b-8c051e450c66",
+          "output": "@error",
+          "target": "2d9ed860-e4af-4d3b-e923-05aa101610bd",
+          "input": "@seqin"
+        },
+        {
+          "source": "46b957fc-94bb-4536-ddde-9da7dd4a9fd8",
+          "output": "test",
+          "target": "83c28664-3cb4-4b89-a4a3-3300c61a04b8",
+          "input": "A"
+        },
+        {
+          "source": "56ae7c2b-d8cb-4d45-ae9f-a12ef9cfe9d5",
+          "output": "test",
+          "target": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "input": "A"
+        },
+        {
+          "source": "4a37dffe-7fed-420d-8cee-493f232e6b09",
+          "output": "test",
+          "target": "1a69ae79-e785-4196-a18f-76a9c9c43ae8",
+          "input": "A"
+        },
+        {
+          "source": "63a739b5-e8d6-42bf-bd18-f22b2924eac8",
+          "output": "False",
+          "target": "7b782885-21ae-408e-c868-f4a94931f9fc",
+          "input": "@seqin"
+        },
+        {
+          "source": "7b782885-21ae-408e-c868-f4a94931f9fc",
+          "output": "@seqout",
+          "target": "d2ffc1f1-248d-4470-cc6e-bd3f02b401d2",
+          "input": "@seqin"
+        },
+        {
+          "source": "d2ffc1f1-248d-4470-cc6e-bd3f02b401d2",
+          "output": "@seqout",
+          "target": "9aa1854f-33f8-41a4-d183-4b615db41ac7",
+          "input": "@seqin"
+        },
+        {
+          "source": "0c4aed59-86c8-41dc-d972-55c7eab221d1",
+          "output": "@seqout",
+          "target": "53758824-ef05-496a-add7-f7e38bc84bf7",
+          "input": "@seqin"
+        },
+        {
+          "source": "9c2186b6-21d8-4887-ff35-9deb0f1412eb",
+          "output": "variable",
+          "target": "3025e691-4ff3-413a-bd99-2ee0c1af373f",
+          "input": "9334994c-29b7-434a-a399-4fcdf3325913"
+        },
+        {
+          "source": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "output": "@seqout",
+          "target": "3025e691-4ff3-413a-bd99-2ee0c1af373f",
+          "input": "@seqin"
+        },
+        {
+          "source": "3025e691-4ff3-413a-bd99-2ee0c1af373f",
+          "output": "@seqout",
+          "target": "e7b11ad7-050c-4323-84c6-21fa477c2403",
+          "input": "@seqin"
+        },
+        {
+          "source": "9c2186b6-21d8-4887-ff35-9deb0f1412eb",
+          "output": "variable",
+          "target": "d2ffc1f1-248d-4470-cc6e-bd3f02b401d2",
+          "input": "9334994c-29b7-434a-a399-4fcdf3325913"
+        },
+        {
+          "source": "6ed6f569-49a3-4a24-8273-76c768811b25",
+          "output": "True",
+          "target": "8ed4f0bb-ba12-46a4-e644-eaf2007346c1",
+          "input": "@seqin"
+        },
+        {
+          "source": "d0459860-a422-4357-84b7-096d1f4678f4",
+          "output": "@seqout",
+          "target": "9c1bfd3d-eb39-49b7-c7aa-d57d9a2adaf6",
+          "input": "@seqin"
+        },
+        {
+          "source": "9c1bfd3d-eb39-49b7-c7aa-d57d9a2adaf6",
+          "output": "8346fbac-3724-4854-9857-652c06f3c714",
+          "target": "20252490-0e51-46aa-cff1-01c62a4d3a3a",
+          "input": "@seqin"
+        },
+        {
+          "source": "abb9459a-eb82-4ee8-8a57-e390b471e7ff",
+          "output": "variable",
+          "target": "9c1bfd3d-eb39-49b7-c7aa-d57d9a2adaf6",
+          "input": "e2d6a524-6b76-4e53-b758-fa835403f950"
+        },
+        {
+          "source": "a7f1b457-9edf-4855-c762-95cbbba4903f",
+          "output": "8346fbac-3724-4854-9857-652c06f3c714",
+          "target": "9686c905-d6e4-4269-b77f-a8737f6c2f0b",
+          "input": "@seqin"
+        },
+        {
+          "source": "9c2186b6-21d8-4887-ff35-9deb0f1412eb",
+          "output": "variable",
+          "target": "a7f1b457-9edf-4855-c762-95cbbba4903f",
+          "input": "e2d6a524-6b76-4e53-b758-fa835403f950"
+        },
+        {
+          "source": "9c1bfd3d-eb39-49b7-c7aa-d57d9a2adaf6",
+          "output": "3b7fbe83-52ba-4962-8a2e-6388484d0d58",
+          "target": "a7f1b457-9edf-4855-c762-95cbbba4903f",
+          "input": "@seqin"
+        },
+        {
+          "source": "a7f1b457-9edf-4855-c762-95cbbba4903f",
+          "output": "3b7fbe83-52ba-4962-8a2e-6388484d0d58",
+          "target": "7ed38de0-7603-4599-b3e0-63e9c54881ec",
+          "input": "@seqin"
+        },
+        {
+          "source": "1d775480-09d3-452d-922b-8c051e450c66",
+          "output": "1cfed536-419f-45b1-ebea-d97722e826cc",
+          "target": "45386773-777f-4691-9c41-84e20f3e2aaa",
+          "input": "value"
+        },
+        {
+          "source": "45386773-777f-4691-9c41-84e20f3e2aaa",
+          "output": "@seqout",
+          "target": "5a501cb0-9203-4a63-d91c-c0c4d9c55a6b",
+          "input": "@seqin"
+        },
+        {
+          "source": "5a501cb0-9203-4a63-d91c-c0c4d9c55a6b",
+          "output": "@seqout",
+          "target": "6c44d32f-f0db-425d-d000-3221d2a230c4",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [],
+      "name": "init_check",
+      "implementationType": "flow"
+    },
+    {
+      "components": [
+        {
+          "type": "ScpiActionComponent",
+          "left": -383,
+          "top": 0,
+          "width": 161,
+          "height": 63,
+          "wireID": "fd6ca08c-a03d-4e27-97ee-b5089b81c229",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "pow",
+              "type": 0
+            }
+          ],
+          "instrument": "Instrument",
+          "scpi": "pow = syst:pow?"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": -23,
+          "top": 0,
+          "width": 86,
+          "height": 67,
+          "wireID": "e394f82d-75a5-4ad5-b094-7f1d139c9700",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": 6000
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": -168,
+          "top": -56,
+          "width": 98,
+          "height": 87,
+          "wireID": "5a609af0-6581-449c-c459-54c960f7f163",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value"
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 113,
+          "top": 0,
+          "width": 148,
+          "height": 63,
+          "wireID": "c75a51da-559c-4254-fd53-e6cd638a7f8e",
+          "customInputs": [],
+          "customOutputs": [],
+          "instrument": "Instrument",
+          "scpi": "syst:pow 1"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 306,
+          "top": 0,
+          "width": 86,
+          "height": 67,
+          "wireID": "6b052a2c-a3c6-4597-f1d6-848129bae664",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": 4000
+        },
+        {
+          "type": "ScpiActionComponent",
+          "left": 409,
+          "top": 0,
+          "width": 161,
+          "height": 63,
+          "wireID": "719215c8-cdb7-455b-d001-445271fd27cb",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "pow",
+              "type": 0
+            }
+          ],
+          "instrument": "Instrument",
+          "scpi": "pow = syst:pow?"
+        },
+        {
+          "type": "IsTrueActionComponent",
+          "left": 608,
+          "top": 0,
+          "width": 98,
+          "height": 87,
+          "wireID": "ca3888ba-1d9d-47c1-ffda-6cd8872c890f",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "value": "value"
+        },
+        {
+          "type": "InputActionComponent",
+          "left": -477,
+          "top": -147,
+          "width": 127,
+          "height": 31,
+          "wireID": "e2d6a524-6b76-4e53-b758-fa835403f950",
+          "customInputs": [],
+          "customOutputs": [],
+          "name": "Instrument"
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": -313,
+          "top": -147,
+          "width": 133,
+          "height": 67,
+          "wireID": "03a4bc46-38f4-4da9-fb48-594ed9466d0b",
+          "customInputs": [
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "variable": "Instrument",
+          "value": "value"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": -505,
+          "top": 0,
+          "width": 78,
+          "height": 31,
+          "wireID": "e2aef8db-83c8-4f45-8ffc-5937dfbd6e1e",
+          "customInputs": [],
+          "customOutputs": []
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 758,
+          "top": -47,
+          "width": 70,
+          "height": 31,
+          "wireID": "3b7fbe83-52ba-4962-8a2e-6388484d0d58",
+          "customInputs": [],
+          "customOutputs": [],
+          "name": "Yes"
+        },
+        {
+          "type": "OutputActionComponent",
+          "left": 763,
+          "top": 67,
+          "width": 69,
+          "height": 31,
+          "wireID": "8346fbac-3724-4854-9857-652c06f3c714",
+          "customInputs": [],
+          "customOutputs": [],
+          "name": "No"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "fd6ca08c-a03d-4e27-97ee-b5089b81c229",
+          "output": "pow",
+          "target": "5a609af0-6581-449c-c459-54c960f7f163",
+          "input": "value"
+        },
+        {
+          "source": "5a609af0-6581-449c-c459-54c960f7f163",
+          "output": "False",
+          "target": "e394f82d-75a5-4ad5-b094-7f1d139c9700",
+          "input": "@seqin"
+        },
+        {
+          "source": "e394f82d-75a5-4ad5-b094-7f1d139c9700",
+          "output": "@seqout",
+          "target": "c75a51da-559c-4254-fd53-e6cd638a7f8e",
+          "input": "@seqin"
+        },
+        {
+          "source": "c75a51da-559c-4254-fd53-e6cd638a7f8e",
+          "output": "@seqout",
+          "target": "6b052a2c-a3c6-4597-f1d6-848129bae664",
+          "input": "@seqin"
+        },
+        {
+          "source": "6b052a2c-a3c6-4597-f1d6-848129bae664",
+          "output": "@seqout",
+          "target": "719215c8-cdb7-455b-d001-445271fd27cb",
+          "input": "@seqin"
+        },
+        {
+          "source": "719215c8-cdb7-455b-d001-445271fd27cb",
+          "output": "pow",
+          "target": "ca3888ba-1d9d-47c1-ffda-6cd8872c890f",
+          "input": "value"
+        },
+        {
+          "source": "e2d6a524-6b76-4e53-b758-fa835403f950",
+          "output": "@seqout",
+          "target": "03a4bc46-38f4-4da9-fb48-594ed9466d0b",
+          "input": "value"
+        },
+        {
+          "source": "e2aef8db-83c8-4f45-8ffc-5937dfbd6e1e",
+          "output": "@seqout",
+          "target": "fd6ca08c-a03d-4e27-97ee-b5089b81c229",
+          "input": "@seqin"
+        },
+        {
+          "source": "ca3888ba-1d9d-47c1-ffda-6cd8872c890f",
+          "output": "True",
+          "target": "3b7fbe83-52ba-4962-8a2e-6388484d0d58",
+          "input": "@seqin"
+        },
+        {
+          "source": "ca3888ba-1d9d-47c1-ffda-6cd8872c890f",
+          "output": "False",
+          "target": "8346fbac-3724-4854-9857-652c06f3c714",
+          "input": "@seqin"
+        },
+        {
+          "source": "5a609af0-6581-449c-c459-54c960f7f163",
+          "output": "True",
+          "target": "3b7fbe83-52ba-4962-8a2e-6388484d0d58",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [
+        {
+          "name": "Instrument",
+          "type": "custom:Instrument",
+          "defaultValue": "null"
+        }
+      ],
+      "name": "power_check",
+      "implementationType": "flow"
     }
   ],
   "pages": [
