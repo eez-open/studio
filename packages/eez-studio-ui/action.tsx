@@ -98,7 +98,7 @@ export class IconAction extends React.Component<
         }
 
         return (
-            <Action className={className} {...this.props}>
+            <Action {...this.props} className={className}>
                 <Icon
                     icon={this.props.icon}
                     size={this.props.iconSize}

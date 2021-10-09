@@ -8,6 +8,55 @@ import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { Splitter } from "eez-studio-ui/splitter";
 import { RuntimeBase } from "project-editor/flow/runtime";
+import { IconAction } from "eez-studio-ui/action";
+
+export const MaximizeIcon = ({
+    maximized,
+    onToggleMaximized
+}: {
+    maximized: boolean;
+    onToggleMaximized: () => void;
+}) => (
+    <IconAction
+        icon={
+            maximized ? (
+                <svg
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M15 19v-2a2 2 0 0 1 2 -2h2"></path>
+                    <path d="M15 5v2a2 2 0 0 0 2 2h2"></path>
+                    <path d="M5 15h2a2 2 0 0 1 2 2v2"></path>
+                    <path d="M5 9h2a2 2 0 0 0 2 -2v-2"></path>
+                </svg>
+            ) : (
+                <svg
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path>
+                    <path d="M4 16v2a2 2 0 0 0 2 2h2"></path>
+                    <path d="M16 4h2a2 2 0 0 1 2 2v2"></path>
+                    <path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path>
+                </svg>
+            )
+        }
+        iconSize={20}
+        title={maximized ? "Minimize" : "Maximize"}
+        onClick={onToggleMaximized}
+        className="maximize-icon"
+    ></IconAction>
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -135,35 +184,35 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
         return sizes;
     }
 
-    onQueuePanelHeaderDoubleClick = action(() => {
+    onQueuePanelHeaderMaximize = action(() => {
         if (!this.maximizedPanel) {
             this.maximizedPanel = "queue";
         } else {
             this.maximizedPanel = undefined;
         }
     });
-    onWatchPanelHeaderDoubleClick = action(() => {
+    onWatchPanelHeaderMaximize = action(() => {
         if (!this.maximizedPanel) {
             this.maximizedPanel = "watch";
         } else {
             this.maximizedPanel = undefined;
         }
     });
-    onBreakpointsPanelHeaderDoubleClick = action(() => {
+    onBreakpointsPanelHeaderMaximize = action(() => {
         if (!this.maximizedPanel) {
             this.maximizedPanel = "breakpoints";
         } else {
             this.maximizedPanel = undefined;
         }
     });
-    onActiveFlowsPanelHeaderDoubleClick = action(() => {
+    onActiveFlowsPanelHeaderMaximize = action(() => {
         if (!this.maximizedPanel) {
             this.maximizedPanel = "active-flows";
         } else {
             this.maximizedPanel = undefined;
         }
     });
-    onLogsPanelHeaderDoubleClick = action(() => {
+    onLogsPanelHeaderMaximize = action(() => {
         if (!this.maximizedPanel) {
             this.maximizedPanel = "logs";
         } else {
@@ -177,7 +226,8 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
                 <div className="EezStudio_DebuggerPanel">
                     <QueuePanel
                         runtime={this.props.runtime}
-                        onHeaderDoubleClick={this.onQueuePanelHeaderDoubleClick}
+                        maximized={true}
+                        onToggleMaximized={this.onQueuePanelHeaderMaximize}
                     />
                 </div>
             );
@@ -186,7 +236,8 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
                 <div className="EezStudio_DebuggerPanel">
                     <WatchPanel
                         runtime={this.props.runtime}
-                        onHeaderDoubleClick={this.onWatchPanelHeaderDoubleClick}
+                        maximized={true}
+                        onToggleMaximized={this.onWatchPanelHeaderMaximize}
                     />
                 </div>
             );
@@ -195,8 +246,9 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
                 <div className="EezStudio_DebuggerPanel">
                     <BreakpointsPanel
                         runtime={this.props.runtime}
-                        onHeaderDoubleClick={
-                            this.onBreakpointsPanelHeaderDoubleClick
+                        maximized={true}
+                        onToggleMaximized={
+                            this.onBreakpointsPanelHeaderMaximize
                         }
                     />
                 </div>
@@ -206,8 +258,9 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
                 <div className="EezStudio_DebuggerPanel">
                     <ActiveFlowsPanel
                         runtime={this.props.runtime}
-                        onHeaderDoubleClick={
-                            this.onActiveFlowsPanelHeaderDoubleClick
+                        maximized={true}
+                        onToggleMaximized={
+                            this.onActiveFlowsPanelHeaderMaximize
                         }
                     />
                 </div>
@@ -217,7 +270,8 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
                 <div className="EezStudio_DebuggerPanel">
                     <LogsPanel
                         runtime={this.props.runtime}
-                        onHeaderDoubleClick={this.onLogsPanelHeaderDoubleClick}
+                        maximized={true}
+                        onToggleMaximized={this.onLogsPanelHeaderMaximize}
                     />
                 </div>
             );
@@ -234,31 +288,32 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
                 <QueuePanel
                     runtime={this.props.runtime}
                     collapsed={this.queuePanelCollapsed}
-                    onHeaderDoubleClick={this.onQueuePanelHeaderDoubleClick}
+                    maximized={false}
+                    onToggleMaximized={this.onQueuePanelHeaderMaximize}
                 />
                 <WatchPanel
                     runtime={this.props.runtime}
                     collapsed={this.watchPanelCollapsed}
-                    onHeaderDoubleClick={this.onWatchPanelHeaderDoubleClick}
+                    maximized={false}
+                    onToggleMaximized={this.onWatchPanelHeaderMaximize}
                 />
                 <BreakpointsPanel
                     runtime={this.props.runtime}
                     collapsed={this.breakpointsPanelCollapsed}
-                    onHeaderDoubleClick={
-                        this.onBreakpointsPanelHeaderDoubleClick
-                    }
+                    maximized={false}
+                    onToggleMaximized={this.onBreakpointsPanelHeaderMaximize}
                 />
                 <ActiveFlowsPanel
                     runtime={this.props.runtime}
                     collapsed={this.activeFlowsPanelCollapsed}
-                    onHeaderDoubleClick={
-                        this.onActiveFlowsPanelHeaderDoubleClick
-                    }
+                    maximized={false}
+                    onToggleMaximized={this.onActiveFlowsPanelHeaderMaximize}
                 />
                 <LogsPanel
                     runtime={this.props.runtime}
                     collapsed={this.logsPanelCollapsed}
-                    onHeaderDoubleClick={this.onLogsPanelHeaderDoubleClick}
+                    maximized={false}
+                    onToggleMaximized={this.onLogsPanelHeaderMaximize}
                 />
             </Splitter>
         );

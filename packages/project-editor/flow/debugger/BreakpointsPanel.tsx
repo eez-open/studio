@@ -7,14 +7,15 @@ import { getId, getLabel } from "project-editor/core/object";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { Component } from "project-editor/flow/component";
 import { getFlow } from "project-editor/project/project";
-
+import { MaximizeIcon } from "./DebuggerPanel";
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
 export class BreakpointsPanel extends React.Component<{
     runtime: RuntimeBase;
     collapsed?: IObservableValue<boolean>;
-    onHeaderDoubleClick: () => void;
+    maximized: boolean;
+    onToggleMaximized: () => void;
 }> {
     render() {
         return (
@@ -22,7 +23,13 @@ export class BreakpointsPanel extends React.Component<{
                 id="project-editor/debugger/breakpoints"
                 title="Breakpoints"
                 collapsed={this.props.collapsed}
-                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
+                buttons={[
+                    <MaximizeIcon
+                        key="toggle-maximize"
+                        maximized={this.props.maximized}
+                        onToggleMaximized={this.props.onToggleMaximized}
+                    />
+                ]}
                 body={<BreakpointsList runtime={this.props.runtime} />}
             />
         );

@@ -13,6 +13,7 @@ import { FlowTabState } from "project-editor/flow/flow";
 import { LogItem } from "project-editor/flow/debugger/logs";
 import { RuntimeBase } from "project-editor/flow/runtime";
 import { ProjectContext } from "project-editor/project/context";
+import { MaximizeIcon } from "./DebuggerPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +25,8 @@ const logsPanelFilter = observable.box<Filter>("all");
 export class LogsPanel extends React.Component<{
     runtime: RuntimeBase;
     collapsed?: IObservableValue<boolean>;
-    onHeaderDoubleClick: () => void;
+    maximized: boolean;
+    onToggleMaximized: () => void;
 }> {
     onChangeFilter = action((event: React.ChangeEvent<HTMLSelectElement>) => {
         logsPanelFilter.set(event.currentTarget.value as Filter);
@@ -36,7 +38,6 @@ export class LogsPanel extends React.Component<{
                 id="project-editor/runtime-info/logs"
                 title="Logs"
                 collapsed={this.props.collapsed}
-                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
                 buttons={[
                     <div key="filter">
                         <span style={{ marginRight: 5 }}>Filter:</span>
@@ -53,9 +54,16 @@ export class LogsPanel extends React.Component<{
                     <IconAction
                         key="clear"
                         icon="material:delete"
+                        iconSize={20}
                         title="Clear logs"
                         onClick={this.props.runtime.logs.clear}
-                    ></IconAction>
+                    ></IconAction>,
+
+                    <MaximizeIcon
+                        key="toggle-maximize"
+                        maximized={this.props.maximized}
+                        onToggleMaximized={this.props.onToggleMaximized}
+                    />
                 ]}
                 body={
                     <LogList

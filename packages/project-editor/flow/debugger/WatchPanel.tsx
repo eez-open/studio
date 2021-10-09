@@ -16,6 +16,7 @@ import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 import { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
 import { getInputName } from "project-editor/flow/debugger/logs";
+import { MaximizeIcon } from "./DebuggerPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +41,8 @@ export function valueToString(value: any) {
 export class WatchPanel extends React.Component<{
     runtime: RuntimeBase;
     collapsed?: IObservableValue<boolean>;
-    onHeaderDoubleClick: () => void;
+    maximized: boolean;
+    onToggleMaximized: () => void;
 }> {
     render() {
         return (
@@ -48,7 +50,13 @@ export class WatchPanel extends React.Component<{
                 id="project-editor/debugger/variables"
                 title="Watch"
                 collapsed={this.props.collapsed}
-                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
+                buttons={[
+                    <MaximizeIcon
+                        key="toggle-maximize"
+                        maximized={this.props.maximized}
+                        onToggleMaximized={this.props.onToggleMaximized}
+                    />
+                ]}
                 body={<WatchTable runtime={this.props.runtime} />}
             />
         );

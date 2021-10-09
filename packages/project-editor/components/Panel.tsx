@@ -13,7 +13,6 @@ export class Panel extends React.Component<{
     collapsed?: IObservableValue<boolean>;
     buttons?: JSX.Element[];
     body: JSX.Element | undefined;
-    onHeaderDoubleClick?: () => void;
 }> {
     toggleCollapsed = action(() => {
         if (this.props.collapsed) {
@@ -39,10 +38,7 @@ export class Panel extends React.Component<{
                     collapsable: !!this.props.collapsed
                 })}
             >
-                <div
-                    className="EezStudio_PanelHeader"
-                    onDoubleClick={this.props.onHeaderDoubleClick}
-                >
+                <div className="EezStudio_PanelHeader">
                     <span
                         onClick={this.toggleCollapsed}
                         className="EezStudio_ProjectEditorPanelTitle"

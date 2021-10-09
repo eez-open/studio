@@ -6,6 +6,7 @@ import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
 import { getLabel } from "project-editor/core/object";
 import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
+import { MaximizeIcon } from "./DebuggerPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -13,7 +14,8 @@ import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
 export class ActiveFlowsPanel extends React.Component<{
     runtime: RuntimeBase;
     collapsed?: IObservableValue<boolean>;
-    onHeaderDoubleClick: () => void;
+    maximized: boolean;
+    onToggleMaximized: () => void;
 }> {
     render() {
         return (
@@ -21,7 +23,13 @@ export class ActiveFlowsPanel extends React.Component<{
                 id="project-editor/debugger/flows"
                 title="Active flows"
                 collapsed={this.props.collapsed}
-                onHeaderDoubleClick={this.props.onHeaderDoubleClick}
+                buttons={[
+                    <MaximizeIcon
+                        key="toggle-maximize"
+                        maximized={this.props.maximized}
+                        onToggleMaximized={this.props.onToggleMaximized}
+                    />
+                ]}
                 body={<FlowsTree runtime={this.props.runtime} />}
             />
         );
