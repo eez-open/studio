@@ -47,6 +47,8 @@ import { findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
 import {
     findVariable,
+    FLOW_ITERATOR_INDEXES_VARIABLE,
+    FLOW_ITERATOR_INDEX_VARIABLE,
     getEnumTypeNameFromVariable,
     isEnumVariable
 } from "project-editor/features/variable/variable";
@@ -435,7 +437,8 @@ export class ListWidget extends EmbeddedWidget {
             dataValue = [{}];
         }
 
-        const iterators = flowContext.dataContext.get("$iterators") || [];
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
 
         return _range(dataValue.length).map(i => {
             let xListItem = 0;
@@ -454,8 +457,8 @@ export class ListWidget extends EmbeddedWidget {
                     key={i}
                     component={itemWidget}
                     flowContext={flowContext.overrideDataContext({
-                        $it: i,
-                        $iterators: [i, ...iterators]
+                        [FLOW_ITERATOR_INDEX_VARIABLE]: i,
+                        [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
                     })}
                     left={xListItem}
                     top={yListItem}

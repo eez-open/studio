@@ -22,6 +22,7 @@ import {
     makePushOutputInstruction
 } from "./instructions";
 import {
+    FLOW_ITERATOR_INDEX_VARIABLE,
     getArrayElementTypeFromType,
     getEnumTypeNameFromType,
     getStructTypeNameFromType,
@@ -457,8 +458,13 @@ function findValueTypeInExpressionNode(
         }
 
         let enumDef = project.variables.enumsMap.get(node.name);
-        if (!enumDef) {
+        if (enumDef) {
             node.valueType = `enum:${node.name}` as VariableTypePrefix;
+            return;
+        }
+
+        if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {
+            node.valueType = `integer`;
             return;
         }
 
@@ -533,6 +539,7 @@ function findValueTypeInExpressionNode(
         );
     } else if (node.type == "MemberExpression") {
         findValueTypeInExpressionNode(component, node.object, assignable);
+        findValueTypeInExpressionNode(component, node.property, assignable);
         if (isEnumType(node.object.valueType)) {
             const enumName = getEnumTypeNameFromType(node.object.valueType)!;
             const enumDef = project.variables.enumsMap.get(enumName)!;
@@ -662,6 +669,10 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 return;
             }
 
+            if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {
+                return;
+            }
+
             throw `identifier '${node.name}' is neither input or local or global variable`;
         }
 
@@ -732,7 +743,8 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
         if (node.type == "MemberExpression") {
             if (
                 node.object.type == "Identifier" &&
-                node.property.type == "Identifier"
+                node.property.type == "Identifier" &&
+                isEnumType(node.object.valueType)
             ) {
                 const enumDef = project.variables.enumsMap.get(
                     node.object.name
@@ -753,9 +765,12 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 if (buildInConstantValue != undefined) {
                     return;
                 }
+            } else {
+                checkNode(node.object);
+                if (node.computed) {
+                    checkNode(node.property);
+                }
             }
-
-            console.log("TODO check MemberExpression", node);
             return;
         }
 
@@ -883,6 +898,13 @@ function buildExpressionNode(
         );
         if (globalVariableIndex != -1) {
             return [makePushGlobalVariableInstruction(globalVariableIndex)];
+        }
+
+        if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {
+            return [
+                makePushConstantInstruction(assets, 0, "number"),
+                makeOperationInstruction(operationIndexes["Flow.index"])
+            ];
         }
 
         throw `identifier '${node.name}' is neither input or local or global variable`;

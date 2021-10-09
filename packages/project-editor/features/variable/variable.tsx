@@ -52,6 +52,9 @@ import { evalConstantExpression } from "project-editor/flow/expression/expressio
 import { _difference } from "eez-studio-shared/algorithm";
 import { Icon } from "eez-studio-ui/icon";
 
+export const FLOW_ITERATOR_INDEX_VARIABLE = "$index";
+export const FLOW_ITERATOR_INDEXES_VARIABLE = "$indexes";
+
 const VariableIcon = (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -842,9 +845,9 @@ export class DataContext implements IDataContext {
             variable = findVariable(this.project, variableName);
         }
 
-        if (variableName === "$it") {
+        if (variableName === FLOW_ITERATOR_INDEX_VARIABLE) {
             return {
-                name: "$it",
+                name: FLOW_ITERATOR_INDEX_VARIABLE,
                 type: "integer",
                 defaultValue: 0,
                 initialValue: 0,
@@ -853,9 +856,9 @@ export class DataContext implements IDataContext {
                 defaultValueList: undefined,
                 persistent: false
             };
-        } else if (variableName === "$iterators") {
+        } else if (variableName === FLOW_ITERATOR_INDEXES_VARIABLE) {
             return {
-                name: "$iterators",
+                name: FLOW_ITERATOR_INDEXES_VARIABLE,
                 type: "array:integer",
                 defaultValue: null,
                 initialValue: null,

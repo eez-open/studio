@@ -11,7 +11,10 @@ import {
     WidgetActionNotDefinedLogItem,
     WidgetActionNotFoundLogItem
 } from "project-editor/flow/debugger/logs";
-import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
+import {
+    FLOW_ITERATOR_INDEX_VARIABLE,
+    getCustomTypeClassFromType
+} from "project-editor/features/variable/variable";
 import * as notification from "eez-studio-ui/notification";
 import {
     StateMachineAction,
@@ -280,7 +283,7 @@ export class LocalRuntime extends RuntimeBase {
 
         const parentFlowState = flowContext.flowState! as FlowState;
 
-        const it = flowContext.dataContext.get("$it");
+        const it = flowContext.dataContext.get(FLOW_ITERATOR_INDEX_VARIABLE);
 
         if (widget.isOutputProperty("action")) {
             parentFlowState.propagateValue(widget, "action", it);

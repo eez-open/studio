@@ -444,6 +444,13 @@ export function isFlowProperty(
     }
 
     if (typeof propertyInfo.flowProperty === "string") {
+        if (
+            flowPropertyType == "input" &&
+            propertyInfo.type == PropertyType.ObjectReference &&
+            propertyInfo.referencedObjectCollectionPath == "actions"
+        ) {
+            return false;
+        }
         return propertyInfo.flowProperty === flowPropertyType;
     }
 
@@ -1024,11 +1031,7 @@ export class Component extends EezObject {
                 DocumentStore.isDashboardProject
             ) {
                 for (const propertyInfo of getClassInfo(component).properties) {
-                    if (
-                        isFlowProperty(DocumentStore, propertyInfo, "input") &&
-                        propertyInfo.type != PropertyType.ObjectReference &&
-                        propertyInfo.referencedObjectCollectionPath != "actions"
-                    ) {
+                    if (isFlowProperty(DocumentStore, propertyInfo, "input")) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
                             try {

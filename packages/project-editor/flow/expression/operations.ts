@@ -1,4 +1,7 @@
-import { VariableTypePrefix } from "project-editor/features/variable/variable";
+import {
+    FLOW_ITERATOR_INDEXES_VARIABLE,
+    VariableTypePrefix
+} from "project-editor/features/variable/variable";
 import type { IExpressionContext } from "./expression";
 
 export const binaryOperators: {
@@ -339,7 +342,7 @@ export const builtInFunctions: {
         getValueType: (...args: VariableTypePrefix[]) => VariableTypePrefix;
     };
 } = {
-    "Flow.it": {
+    "Flow.index": {
         arity: 1,
         args: ["index"],
         eval: (
@@ -349,7 +352,9 @@ export const builtInFunctions: {
             if (!expressionContext) {
                 return 0;
             }
-            const iterators = expressionContext.dataContext.get("$iterators");
+            const iterators = expressionContext.dataContext.get(
+                FLOW_ITERATOR_INDEXES_VARIABLE
+            );
             if (!iterators) {
                 throw "no iterators";
             }

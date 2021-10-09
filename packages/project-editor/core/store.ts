@@ -449,6 +449,9 @@ class EditorsStore {
     constructor(public DocumentStore: DocumentStoreClass) {
         // open editor when navigation selection has changed
         this.dispose1 = autorun(() => {
+            if (!DocumentStore.navigationStore.selectedPanel) {
+                return;
+            }
             let object = DocumentStore.navigationStore.selectedObject;
             while (object) {
                 let selectedObject =
