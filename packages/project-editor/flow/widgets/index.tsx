@@ -452,14 +452,18 @@ export class ListWidget extends EmbeddedWidget {
                 yListItem += i * (itemWidget.height + gap);
             }
 
+            // This must be created here, not inline inside Component constructor,
+            // otherwise observer will not work.
+            const overridenFlowContext = flowContext.overrideDataContext({
+                [FLOW_ITERATOR_INDEX_VARIABLE]: i,
+                [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
+            });
+
             return (
                 <ComponentEnclosure
                     key={i}
                     component={itemWidget}
-                    flowContext={flowContext.overrideDataContext({
-                        [FLOW_ITERATOR_INDEX_VARIABLE]: i,
-                        [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
-                    })}
+                    flowContext={overridenFlowContext}
                     left={xListItem}
                     top={yListItem}
                 />

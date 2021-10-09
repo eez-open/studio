@@ -143,10 +143,10 @@ export function getDefaultValueForType(project: Project, type: string): string {
         return "0";
     }
     if (isStructType(type)) {
-        return "{}";
+        return "null";
     }
     if (isArrayType(type)) {
-        return "[]";
+        return "null";
     }
     if (type == "string") {
         return '""';
@@ -414,7 +414,9 @@ export class Variable extends EezObject {
 
     @computed({ keepAlive: true })
     get initialValue() {
-        return evalConstantExpression(getProject(this), this.defaultValue);
+        return observable(
+            evalConstantExpression(getProject(this), this.defaultValue)
+        );
     }
 
     static classInfo: ClassInfo = {

@@ -1015,8 +1015,14 @@ export class Component extends EezObject {
                         new output.Message(
                             output.Type.ERROR,
                             `Output "${
-                                componentOutput.displayName ||
-                                componentOutput.name
+                                componentOutput.displayName
+                                    ? typeof componentOutput.displayName ==
+                                      "string"
+                                        ? componentOutput.displayName
+                                        : componentOutput.displayName(
+                                              componentOutput
+                                          )
+                                    : componentOutput.name
                             }" is not connected`,
                             component
                         )

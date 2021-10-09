@@ -36,8 +36,6 @@ export class LocalRuntime extends RuntimeBase {
 
     doStartRuntime = async (isDebuggerActive: boolean) => {
         runInAction(() => {
-            this.DocumentStore.dataContext.clearRuntimeValues();
-
             this.flowStates = this.DocumentStore.project.pages
                 .filter(page => !page.isUsedAsCustomWidget)
                 .map(page => new FlowState(this, page));

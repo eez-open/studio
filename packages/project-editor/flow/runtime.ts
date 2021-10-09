@@ -138,6 +138,10 @@ export abstract class RuntimeBase {
     }
 
     startRuntime(isDebuggerActive: boolean) {
+        runInAction(() => {
+            this.DocumentStore.dataContext.clearRuntimeValues();
+        });
+
         if (isDebuggerActive) {
             this.transition(StateMachineAction.START_WITH_DEBUGGER);
         } else {
@@ -155,6 +159,10 @@ export abstract class RuntimeBase {
         this.transition(StateMachineAction.STOP);
 
         this.doStopRuntime(notifyUser);
+
+        runInAction(() => {
+            this.DocumentStore.dataContext.clearRuntimeValues();
+        });
     }
 
     abstract doStartRuntime(isDebuggerActive: boolean): any;
