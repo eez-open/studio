@@ -27,7 +27,6 @@ import { InputActionComponent } from "project-editor/flow/action-components";
 export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
     @observable settings: any = {};
-    _settingsModified: boolean = false;
     _lastBreakpointTaks: QueueTask | undefined;
 
     constructor(public DocumentStore: DocumentStoreClass) {
@@ -44,10 +43,6 @@ export class LocalRuntime extends RuntimeBase {
         await this.loadSettings();
 
         await this.loadPersistentVariables();
-
-        runInAction(() => {
-            this.globalVariablesInitialized = true;
-        });
 
         await this.constructCustomGlobalVariables();
 
@@ -105,20 +100,22 @@ export class LocalRuntime extends RuntimeBase {
         for (const variable of this.DocumentStore.project.variables
             .globalVariables) {
             if (variable.persistent) {
-                const aClass = getCustomTypeClassFromType(variable.type);
-                if (aClass && aClass.classInfo.onVariableSave) {
-                    const saveValue = await aClass.classInfo.onVariableSave(
-                        this.DocumentStore.dataContext.get(variable.name)
-                    );
+                const value = this.DocumentStore.dataContext.get(variable.name);
+                if (value != null) {
+                    const aClass = getCustomTypeClassFromType(variable.type);
+                    if (aClass && aClass.classInfo.onVariableSave) {
+                        const saveValue = await aClass.classInfo.onVariableSave(
+                            this.DocumentStore.dataContext.get(variable.name)
+                        );
 
-                    runInAction(() => {
-                        if (!this.settings.__persistentVariables) {
-                            this.settings.__persistentVariables = {};
-                        }
-                        this.settings.__persistentVariables[variable.name] =
-                            saveValue;
-                    });
-                    this._settingsModified = true;
+                        runInAction(() => {
+                            if (!this.settings.__persistentVariables) {
+                                this.settings.__persistentVariables = {};
+                            }
+                            this.settings.__persistentVariables[variable.name] =
+                                saveValue;
+                        });
+                    }
                 }
             }
         }
@@ -351,7 +348,6 @@ export class LocalRuntime extends RuntimeBase {
     @action
     writeSettings(key: string, value: any) {
         this.settings[key] = value;
-        this._settingsModified = true;
     }
 
     getSettingsFilePath() {
@@ -376,8 +372,9 @@ export class LocalRuntime extends RuntimeBase {
         return new Promise<void>(resolve => {
             fs.readFile(filePath, "utf8", (err: any, data: string) => {
                 if (err) {
-                    // TODO
-                    console.error(err);
+                    notification.error(
+                        "Failed to load previous runtime settings!"
+                    );
                 } else {
                     runInAction(() => {
                         try {
@@ -387,7 +384,6 @@ export class LocalRuntime extends RuntimeBase {
                             this.settings = {};
                         }
                     });
-                    console.log("Runtime settings loaded");
                 }
                 resolve();
             });
@@ -404,13 +400,7 @@ export class LocalRuntime extends RuntimeBase {
             return;
         }
 
-        if (this.globalVariablesInitialized) {
-            await this.savePersistentVariables();
-        }
-
-        if (!this._settingsModified) {
-            return;
-        }
+        await this.savePersistentVariables();
 
         const fs = EEZStudio.remote.require("fs");
 
@@ -424,7 +414,6 @@ export class LocalRuntime extends RuntimeBase {
                         // TODO
                         console.error(err);
                     } else {
-                        this._settingsModified = false;
                         console.log("Runtime settings saved");
                     }
 

@@ -434,6 +434,30 @@ export const builtInFunctions: {
             return "double";
         }
     },
+    "Math.abs": {
+        arity: 1,
+        args: ["value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Math.abs(args[0]),
+        getValueType: (...args: VariableTypePrefix[]) => {
+            if (
+                args[0] != "integer" &&
+                args[0] != "float" &&
+                args[0] != "double"
+            ) {
+                return "undefined";
+            }
+            if (args[0] == "integer") {
+                return "integer";
+            }
+            if (args[0] == "float") {
+                return "float";
+            }
+            return "double";
+        }
+    },
 
     "String.find": {
         arity: 2,

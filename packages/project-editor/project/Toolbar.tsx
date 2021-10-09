@@ -41,20 +41,15 @@ class GlobalVariableStatuses extends React.Component {
     render() {
         let globalVariablesStatus: React.ReactNode[] = [];
 
-        const runtime = this.context.project._DocumentStore.runtime!;
-
-        if (runtime.globalVariablesInitialized) {
-            for (const variable of this.context.project.variables
-                .globalVariables) {
-                const aClass = getCustomTypeClassFromType(variable.type);
-                if (aClass && aClass.classInfo.renderVariableStatus) {
-                    globalVariablesStatus.push(
-                        aClass.classInfo.renderVariableStatus(
-                            variable,
-                            this.context.dataContext
-                        )
-                    );
-                }
+        for (const variable of this.context.project.variables.globalVariables) {
+            const aClass = getCustomTypeClassFromType(variable.type);
+            if (aClass && aClass.classInfo.renderVariableStatus) {
+                globalVariablesStatus.push(
+                    aClass.classInfo.renderVariableStatus(
+                        variable,
+                        this.context.dataContext
+                    )
+                );
             }
         }
 

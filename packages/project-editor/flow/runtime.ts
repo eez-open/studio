@@ -83,7 +83,6 @@ export enum StateMachineAction {
 export abstract class RuntimeBase {
     @observable state: State = State.STARTING;
     @observable isDebuggerActive = false;
-    @observable globalVariablesInitialized = false;
 
     @observable _selectedPage: Page;
     @observable selectedFlowState: FlowState | undefined;
