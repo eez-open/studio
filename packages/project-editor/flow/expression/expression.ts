@@ -567,6 +567,10 @@ function findValueTypeInExpressionNode(
                     node.object.type == "Identifier" &&
                     node.property.type == "Identifier"
                 ) {
+                    if (node.object.valueType === "any") {
+                        return;
+                    }
+
                     const enumDef = project.variables.enumsMap.get(
                         node.object.name
                     );

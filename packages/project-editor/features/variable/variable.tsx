@@ -414,9 +414,14 @@ export class Variable extends EezObject {
 
     @computed({ keepAlive: true })
     get initialValue() {
-        return observable(
-            evalConstantExpression(getProject(this), this.defaultValue)
+        const value = evalConstantExpression(
+            getProject(this),
+            this.defaultValue
         );
+        if (value && typeof value === "object") {
+            return observable(value);
+        }
+        return value;
     }
 
     static classInfo: ClassInfo = {
