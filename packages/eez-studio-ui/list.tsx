@@ -6,7 +6,7 @@ import { Icon } from "eez-studio-ui/icon";
 
 export interface IListNode<T = any> {
     id: string;
-    label?: string;
+    label?: React.ReactNode;
     data: T;
     selected: boolean;
 }
@@ -102,9 +102,13 @@ export class List extends React.Component<
             );
         });
 
-        let className = classNames("EezStudio_List", this.props.className, {
-            EezStudio_List_Selectable: !!this.props.selectNode
-        });
+        let className = classNames(
+            "EezStudio_List",
+            {
+                EezStudio_List_Selectable: !!this.props.selectNode
+            },
+            this.props.className
+        );
 
         return (
             <div

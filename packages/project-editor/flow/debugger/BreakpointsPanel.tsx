@@ -1,10 +1,9 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { ITreeNode, Tree } from "eez-studio-ui/tree";
+import { IListNode, List } from "eez-studio-ui/list";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue, observable } from "mobx";
 import { getId, getLabel } from "project-editor/core/object";
-import { QueueTask } from "project-editor/flow/runtime";
 import { Component } from "project-editor/flow/component";
 import { getFlow } from "project-editor/project/project";
 import { MaximizeIcon } from "./DebuggerPanel";
@@ -24,39 +23,26 @@ export class BreakpointsPanel extends React.Component<{
         undefined
     );
 
-    toggleEnable = () => {
-        const selectedBreakpoint = this.selectedBreakpoint.get();
-        if (selectedBreakpoint) {
-            if (
-                this.context.uiStateStore.isBreakpointEnabledForComponent(
-                    selectedBreakpoint
-                )
-            ) {
-                this.context.uiStateStore.disableBreakpoint(selectedBreakpoint);
-            } else {
-                this.context.uiStateStore.enableBreakpoint(selectedBreakpoint);
+    @computed get allBreakpointsEnabled() {
+        for (const enabled of this.context.uiStateStore.breakpoints.values()) {
+            if (!enabled) {
+                return false;
             }
         }
-    };
+        return true;
+    }
 
-    removeSelected = action(() => {
-        const selectedBreakpoint = this.selectedBreakpoint.get();
-        if (selectedBreakpoint) {
-            this.context.uiStateStore.removeBreakpoint(selectedBreakpoint);
-            this.selectedBreakpoint.set(undefined);
+    @computed get allBreakpointsDisabled() {
+        for (const enabled of this.context.uiStateStore.breakpoints.values()) {
+            if (enabled) {
+                return false;
+            }
         }
-    });
+        return true;
+    }
 
     toggleEnableAll = () => {
-        const breakpoint = this.context.uiStateStore.breakpoints
-            .keys()
-            .next().value;
-        if (
-            breakpoint &&
-            this.context.uiStateStore.isBreakpointEnabledForComponent(
-                breakpoint
-            )
-        ) {
+        if (this.allBreakpointsEnabled) {
             this.context.uiStateStore.breakpoints.forEach(
                 (enabled, breakpoint) => {
                     if (enabled) {
@@ -75,6 +61,14 @@ export class BreakpointsPanel extends React.Component<{
         }
     };
 
+    removeSelected = action(() => {
+        const selectedBreakpoint = this.selectedBreakpoint.get();
+        if (selectedBreakpoint) {
+            this.context.uiStateStore.removeBreakpoint(selectedBreakpoint);
+            this.selectedBreakpoint.set(undefined);
+        }
+    });
+
     removeAll = action(() => {
         this.context.uiStateStore.breakpoints.clear();
         this.selectedBreakpoint.set(undefined);
@@ -83,18 +77,20 @@ export class BreakpointsPanel extends React.Component<{
     render() {
         const buttons = [
             <IconAction
-                key="toggle-enable"
-                icon={"material:check_box_outline_blank"}
-                iconSize={16}
-                title={"Toggle enable/disable selected component"}
-                onClick={this.toggleEnable}
-                enabled={!!this.selectedBreakpoint.get()}
-            />,
-            <IconAction
                 key="toggle-enable-all"
-                icon={"material:check_box"}
+                icon={
+                    this.allBreakpointsEnabled
+                        ? "material:check_box"
+                        : this.allBreakpointsDisabled
+                        ? "material:check_box_outline_blank"
+                        : "material:indeterminate_check_box"
+                }
                 iconSize={16}
-                title={"Toggle enable/disable all breakpoints"}
+                title={
+                    this.allBreakpointsEnabled
+                        ? "Disable all breakpoints"
+                        : "Enable all breakpoints"
+                }
                 onClick={this.toggleEnableAll}
                 enabled={this.context.uiStateStore.breakpoints.size > 0}
             />,
@@ -149,29 +145,19 @@ class BreakpointsList extends React.Component<{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @computed get rootNode(): ITreeNode<QueueTask> {
-        let children = [...this.context.uiStateStore.breakpoints.keys()].map(
+    @computed get nodes(): IListNode<Component>[] {
+        return [...this.context.uiStateStore.breakpoints.keys()].map(
             component => ({
                 id: getId(component),
-                label: `${getLabel(getFlow(component))}/${getLabel(component)}`,
-                children: [],
-                selected: component == this.props.selectedBreakpoint.get(),
-                expanded: false,
-                data: component
+                label: <BreakpointItem component={component} />,
+                data: component,
+                selected: component == this.props.selectedBreakpoint.get()
             })
         );
-
-        return {
-            id: "root",
-            label: "",
-            children,
-            selected: false,
-            expanded: true
-        };
     }
 
     @action.bound
-    selectNode(node?: ITreeNode<Component>) {
+    selectNode(node?: IListNode<Component>) {
         const component = node && node.data;
 
         this.props.selectedBreakpoint.set(component);
@@ -187,11 +173,56 @@ class BreakpointsList extends React.Component<{
 
     render() {
         return (
-            <Tree
-                showOnlyChildren={true}
-                rootNode={this.rootNode}
+            <List
+                className="EezStudio_BreakpointsList"
+                nodes={this.nodes}
                 selectNode={this.selectNode}
             />
+        );
+    }
+}
+
+@observer
+class BreakpointItem extends React.Component<{
+    component: Component;
+}> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const checked = event.target.checked;
+        setTimeout(() => {
+            if (checked) {
+                this.context.uiStateStore.enableBreakpoint(
+                    this.props.component
+                );
+            } else {
+                this.context.uiStateStore.disableBreakpoint(
+                    this.props.component
+                );
+            }
+        });
+    };
+
+    render() {
+        const { component } = this.props;
+        const checked =
+            this.context.uiStateStore.isBreakpointEnabledForComponent(
+                component
+            );
+        return (
+            <div className="form-check">
+                <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={checked}
+                    onChange={this.onChange}
+                    title={checked ? "Disable breakpoint" : "Enable breakpoint"}
+                />
+                <label className="form-check-label">
+                    {getLabel(getFlow(component))}/{getLabel(component)}
+                </label>
+            </div>
         );
     }
 }

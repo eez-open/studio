@@ -138,22 +138,37 @@ export class PageEditor extends EditorComponent implements IPanel {
 
         let properties;
 
-        properties = (
-            <Splitter
-                type="vertical"
-                persistId="page-editor/properties-widgets-palette-breakpoints"
-                sizes={`100%|200px|200px`}
-                childrenOverflow="hidden|hidden|hidden"
-            >
-                <PropertiesPanel
-                    object={this.selectedObject}
-                    buttons={buttons}
-                    readOnly={this.pageTabState.isRuntime}
-                />
-                <ComponentsPalette />
-                <BreakpointsPanel />
-            </Splitter>
-        );
+        properties =
+            this.context.uiStateStore.breakpoints.size > 0 ? (
+                <Splitter
+                    type="vertical"
+                    persistId="page-editor/properties-widgets-palette-breakpoints"
+                    sizes={`100%|200px|120px`}
+                    childrenOverflow="hidden|hidden|hidden"
+                >
+                    <PropertiesPanel
+                        object={this.selectedObject}
+                        buttons={buttons}
+                        readOnly={this.pageTabState.isRuntime}
+                    />
+                    <ComponentsPalette />
+                    <BreakpointsPanel />
+                </Splitter>
+            ) : (
+                <Splitter
+                    type="vertical"
+                    persistId="page-editor/properties-widgets-palette-breakpoints"
+                    sizes={`100%|200px`}
+                    childrenOverflow="hidden|hidden"
+                >
+                    <PropertiesPanel
+                        object={this.selectedObject}
+                        buttons={buttons}
+                        readOnly={this.pageTabState.isRuntime}
+                    />
+                    <ComponentsPalette />
+                </Splitter>
+            );
 
         return (
             <Splitter
