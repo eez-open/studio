@@ -3341,7 +3341,8 @@ button.EezStudio_Action {
 }
 
 .EezStudio_CommentActionComponent {
-    background-color: #ffff88;
+    background-color: #fff5c2;
+    border-radius: 0;
 
     .title-enclosure {
         overflow: hidden;
@@ -3356,8 +3357,10 @@ button.EezStudio_Action {
         position: relative;
         width: 100%;
         height: 100%;
-        background-color: #ffff88;
+        background-color: #fff5c2;
         color: @textColor;
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 3px;
 
         .trix-button-group {
             border: none !important;
@@ -3371,7 +3374,9 @@ button.EezStudio_Action {
 
         trix-editor {
             border: none;
-            border-top: 1px solid @borderColor;
+            border-top: 1px solid #e0e0e0;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
             min-height: 2rem;
             color: #333;
         }
@@ -3593,6 +3598,8 @@ button.EezStudio_Action {
                 flex-direction: row;
                 align-items: center;
                 white-space: nowrap;
+                border-top-left-radius: 3px;
+                border-top-right-radius: 3px;
 
                 span {
                     padding-left: 6px;
