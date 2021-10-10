@@ -245,7 +245,6 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
             return (
                 <div className="EezStudio_DebuggerPanel">
                     <BreakpointsPanel
-                        runtime={this.props.runtime}
                         maximized={true}
                         onToggleMaximized={
                             this.onBreakpointsPanelHeaderMaximize
@@ -298,7 +297,6 @@ export class DebuggerPanel extends React.Component<{ runtime: RuntimeBase }> {
                     onToggleMaximized={this.onWatchPanelHeaderMaximize}
                 />
                 <BreakpointsPanel
-                    runtime={this.props.runtime}
                     collapsed={this.breakpointsPanelCollapsed}
                     maximized={false}
                     onToggleMaximized={this.onBreakpointsPanelHeaderMaximize}

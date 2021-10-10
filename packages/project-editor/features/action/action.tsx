@@ -41,6 +41,7 @@ import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/render";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Transform } from "project-editor/flow/flow-editor/transform";
+import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -218,6 +219,7 @@ export class ActionEditor extends EditorComponent implements IPanel {
                             readOnly={this.context.runtime}
                         />
                         <ComponentsPalette showOnlyActions={true} />
+                        <BreakpointsPanel />
                     </Splitter>
                 </Splitter>
             );

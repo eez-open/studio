@@ -39,6 +39,7 @@ import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { Transform } from "project-editor/flow/flow-editor/transform";
+import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -140,9 +141,9 @@ export class PageEditor extends EditorComponent implements IPanel {
         properties = (
             <Splitter
                 type="vertical"
-                persistId="page-editor/properties-widgets-palette"
-                sizes={`100%|200px`}
-                childrenOverflow="hidden|hidden"
+                persistId="page-editor/properties-widgets-palette-breakpoints"
+                sizes={`100%|200px|200px`}
+                childrenOverflow="hidden|hidden|hidden"
             >
                 <PropertiesPanel
                     object={this.selectedObject}
@@ -150,6 +151,7 @@ export class PageEditor extends EditorComponent implements IPanel {
                     readOnly={this.pageTabState.isRuntime}
                 />
                 <ComponentsPalette />
+                <BreakpointsPanel />
             </Splitter>
         );
 
