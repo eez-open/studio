@@ -208,19 +208,34 @@ export class ActionEditor extends EditorComponent implements IPanel {
                     childrenOverflow="hidden|hidden"
                 >
                     <FlowEditor tabState={tabState} />
-                    <Splitter
-                        type="vertical"
-                        persistId="page-editor/properties-widgets-palette"
-                        sizes={`100%|200px`}
-                        childrenOverflow="hidden|hidden"
-                    >
-                        <PropertiesPanel
-                            object={this.selectedObject}
-                            readOnly={this.context.runtime}
-                        />
-                        <ComponentsPalette showOnlyActions={true} />
-                        <BreakpointsPanel />
-                    </Splitter>
+                    {this.context.uiStateStore.breakpoints.size > 0 ? (
+                        <Splitter
+                            type="vertical"
+                            persistId="page-editor/properties-widgets-palette"
+                            sizes={`100%|200px|100px`}
+                            childrenOverflow="hidden|hidden|hidden"
+                        >
+                            <PropertiesPanel
+                                object={this.selectedObject}
+                                readOnly={this.context.runtime}
+                            />
+                            <ComponentsPalette showOnlyActions={true} />
+                            <BreakpointsPanel />
+                        </Splitter>
+                    ) : (
+                        <Splitter
+                            type="vertical"
+                            persistId="page-editor/properties-widgets-palette"
+                            sizes={`100%|200px`}
+                            childrenOverflow="hidden|hidden"
+                        >
+                            <PropertiesPanel
+                                object={this.selectedObject}
+                                readOnly={this.context.runtime}
+                            />
+                            <ComponentsPalette showOnlyActions={true} />
+                        </Splitter>
+                    )}
                 </Splitter>
             );
         }

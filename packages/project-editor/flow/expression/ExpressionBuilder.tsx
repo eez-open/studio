@@ -9,6 +9,7 @@ import { humanize } from "eez-studio-shared/string";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 
 import {
+    getAncestorOfType,
     getProperty,
     IEezObject,
     IOnSelectParams,
@@ -142,7 +143,10 @@ class SelectItemDialog extends React.Component<{
     };
 
     @computed get component() {
-        return this.props.object as Component;
+        return getAncestorOfType(
+            this.props.object,
+            Component.classInfo
+        ) as Component;
     }
 
     @computed get flow() {

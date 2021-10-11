@@ -219,6 +219,11 @@ export class ComponentsPalette extends React.Component<{
     @computed get allComponentClasses() {
         return getClassesDerivedFrom(
             this.props.showOnlyActions ? ActionComponent : Component
+        ).filter(objectClassInfo =>
+            this.context.isAppletProject
+                ? objectClassInfo.objectClass.classInfo.flowComponentId !=
+                  undefined
+                : true
         );
     }
 

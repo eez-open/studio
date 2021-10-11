@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, autorun, runInAction } from "mobx";
+import { observable, action, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -14,7 +14,8 @@ import {
     IEezObject,
     EezObject,
     ClassInfo,
-    getChildOfObject
+    getChildOfObject,
+    getParent
 } from "project-editor/core/object";
 import { getDocumentStore } from "project-editor/core/store";
 
@@ -30,7 +31,9 @@ import { guid } from "eez-studio-shared/guid";
 import {
     ActionComponent,
     AutoSize,
+    Component,
     componentOutputUnique,
+    CustomInput,
     makeAssignableExpressionProperty,
     makeExpressionProperty,
     outputIsOptionalIfAtLeastOneOutputExists
@@ -45,6 +48,7 @@ import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
     buildAssignableExpression,
     buildExpression,
+    checkExpression,
     evalConstantExpression
 } from "project-editor/flow/expression/expression";
 import { calcComponentGeometry } from "project-editor/flow/flow-editor/render";
@@ -261,8 +265,6 @@ registerClass(OutputActionComponent);
 
 export class GetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1005,
-
         properties: [
             makeExpressionProperty({
                 name: "variable",
@@ -304,22 +306,27 @@ export class GetVariableActionComponent extends ActionComponent {
         ];
     }
 
-    async execute(flowState: FlowState, dispose: (() => void) | undefined) {
+    async execute(
+        flowState: FlowState,
+        dispose: (() => void) | undefined
+    ): Promise<(() => void) | undefined | boolean> {
+        let lastValue = flowState.evalExpression(this, this.variable);
+
+        flowState.propagateValue(this, "variable", lastValue);
+
         if (dispose) {
             return dispose;
         }
 
-        let first = true;
-        let lastValue: any = undefined;
-
-        return autorun(() => {
-            const value = flowState.evalExpression(this, this.variable);
-            if (first || value !== lastValue) {
-                first = false;
-                lastValue = value;
-                flowState.propagateValue(this, "variable", value);
+        return reaction(
+            () => flowState.evalExpression(this, this.variable),
+            value => {
+                if (value !== lastValue) {
+                    lastValue = value;
+                    flowState.propagateValue(this, "variable", value);
+                }
             }
-        });
+        );
     }
 }
 
@@ -329,8 +336,6 @@ registerClass(GetVariableActionComponent);
 
 export class EvalActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1006,
-
         properties: [
             {
                 name: "expression",
@@ -338,57 +343,27 @@ export class EvalActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            const inputs = EvalActionComponent.parse(jsObject.expression);
+            for (const inputName of inputs) {
+                if (
+                    !jsObject.customInputs.find(
+                        (input: CustomInput) => input.name == inputName
+                    )
+                ) {
+                    jsObject.customInputs.push({
+                        name: inputName,
+                        type: PropertyType.Any
+                    });
+                }
+            }
+        },
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
                 <path d="M384 1536q0-53-37.5-90.5T256 1408t-90.5 37.5T128 1536t37.5 90.5T256 1664t90.5-37.5T384 1536zm384 0q0-53-37.5-90.5T640 1408t-90.5 37.5T512 1536t37.5 90.5T640 1664t90.5-37.5T768 1536zm-384-384q0-53-37.5-90.5T256 1024t-90.5 37.5T128 1152t37.5 90.5T256 1280t90.5-37.5T384 1152zm768 384q0-53-37.5-90.5T1024 1408t-90.5 37.5T896 1536t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm-384-384q0-53-37.5-90.5T640 1024t-90.5 37.5T512 1152t37.5 90.5T640 1280t90.5-37.5T768 1152zM384 768q0-53-37.5-90.5T256 640t-90.5 37.5T128 768t37.5 90.5T256 896t90.5-37.5T384 768zm768 384q0-53-37.5-90.5T1024 1024t-90.5 37.5T896 1152t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zM768 768q0-53-37.5-90.5T640 640t-90.5 37.5T512 768t37.5 90.5T640 896t90.5-37.5T768 768zm768 768v-384q0-52-38-90t-90-38-90 38-38 90v384q0 52 38 90t90 38 90-38 38-90zm-384-768q0-53-37.5-90.5T1024 640t-90.5 37.5T896 768t37.5 90.5T1024 896t90.5-37.5T1152 768zm384-320V192q0-26-19-45t-45-19H192q-26 0-45 19t-19 45v256q0 26 19 45t45 19h1280q26 0 45-19t19-45zm0 320q0-53-37.5-90.5T1408 640t-90.5 37.5T1280 768t37.5 90.5T1408 896t90.5-37.5T1536 768zm128-640v1536q0 52-38 90t-90 38H128q-52 0-90-38t-38-90V128q0-52 38-90t90-38h1408q52 0 90 38t38 90z" />
             </svg>
         ),
-        componentHeaderColor: "#A6BBCF",
-        updateObjectValueHook: (object: EvalActionComponent, values: any) => {
-            if (values.expression) {
-                const { inputs: inputsBefore, outputs: outputsBefore } =
-                    EvalActionComponent.parse(object.expression);
-
-                const { inputs: inputsAfter, outputs: outputsAfter } =
-                    EvalActionComponent.parse(values.expression);
-
-                const flow = getFlow(object);
-
-                inputsBefore.forEach((inputBefore, i) => {
-                    if (inputsAfter.indexOf(inputBefore) === -1) {
-                        if (inputsBefore.length === inputsAfter.length) {
-                            flow.rerouteConnectionLinesInput(
-                                object,
-                                inputBefore,
-                                inputsAfter[i]
-                            );
-                        } else {
-                            flow.deleteConnectionLinesToInput(
-                                object,
-                                inputBefore
-                            );
-                        }
-                    }
-                });
-
-                outputsBefore.forEach((outputBefore, i) => {
-                    if (outputsAfter.indexOf(outputBefore) === -1) {
-                        if (outputsBefore.length === outputsAfter.length) {
-                            flow.rerouteConnectionLinesOutput(
-                                object,
-                                outputBefore,
-                                outputsAfter[i]
-                            );
-                        } else {
-                            flow.deleteConnectionLinesFromOutput(
-                                object,
-                                outputBefore
-                            );
-                        }
-                    }
-                });
-            }
-        }
+        componentHeaderColor: "#A6BBCF"
     });
 
     @observable expression: string;
@@ -397,7 +372,6 @@ export class EvalActionComponent extends ActionComponent {
 
     static parse(expression: string) {
         const inputs = new Set<string>();
-        const outputs = new Set<string>();
 
         if (expression) {
             EvalActionComponent.PARAMS_REGEXP.lastIndex = 0;
@@ -413,21 +387,11 @@ export class EvalActionComponent extends ActionComponent {
             }
         }
 
-        return {
-            inputs: Array.from(inputs.keys()),
-            outputs: Array.from(outputs.keys())
-        };
+        return Array.from(inputs.keys());
     }
 
     getInputs() {
-        return [
-            ...super.getInputs(),
-            ...EvalActionComponent.parse(this.expression).inputs.map(input => ({
-                name: input,
-                displayName: input,
-                type: PropertyType.Any
-            }))
-        ];
+        return [...super.getInputs()];
     }
 
     getOutputs() {
@@ -452,30 +416,24 @@ export class EvalActionComponent extends ActionComponent {
         let jsEvalExpression = this.expression;
         let values: any = {};
 
-        EvalActionComponent.parse(jsEvalExpression).inputs.forEach(
-            (expression, i) => {
-                const value = flowState.evalExpression(this, expression);
-                const name = `_val${i}`;
-                values[name] = value;
-                jsEvalExpression = jsEvalExpression.replace(
-                    new RegExp(`\{${expression}\}`, "g"),
-                    `values.${name}`
-                );
-            }
-        );
+        EvalActionComponent.parse(jsEvalExpression).forEach((expression, i) => {
+            const value = flowState.evalExpression(this, expression);
+            const name = `_val${i}`;
+            values[name] = value;
+            jsEvalExpression = jsEvalExpression.replace(
+                new RegExp(`\{${expression}\}`, "g"),
+                `values.${name}`
+            );
+        });
 
         return { jsEvalExpression, values };
     }
 
     async execute(flowState: FlowState) {
-        // try {
         const { jsEvalExpression, values } = this.expandExpression(flowState);
         values;
         let result = eval(jsEvalExpression);
         flowState.propagateValue(this, "result", result);
-        // } catch (err) {
-        //     flowState.propagateValue(this, "result", err);
-        // }
         return undefined;
     }
 }
@@ -566,16 +524,35 @@ class SwitchTest extends EezObject {
 
     static classInfo: ClassInfo = {
         properties: [
-            {
+            makeExpressionProperty({
                 name: "condition",
                 type: PropertyType.String
-            },
+            }),
             {
                 name: "outputName",
                 type: PropertyType.String,
                 unique: componentOutputUnique
             }
         ],
+        check: (switchTest: SwitchTest) => {
+            let messages: output.Message[] = [];
+            try {
+                checkExpression(
+                    getParent(getParent(switchTest)!)! as Component,
+                    switchTest.condition,
+                    false
+                );
+            } catch (err) {
+                messages.push(
+                    new output.Message(
+                        output.Type.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(switchTest, "condition")
+                    )
+                );
+            }
+            return messages;
+        },
         defaultValue: {}
     };
 }
@@ -671,8 +648,6 @@ registerClass(SwitchActionComponent);
 
 export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1009,
-
         properties: [
             makeExpressionProperty({
                 name: "A",
@@ -836,8 +811,6 @@ registerClass(CompareActionComponent);
 
 export class IsTrueActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1010,
-
         properties: [
             makeExpressionProperty({
                 name: "value",
@@ -989,8 +962,6 @@ registerClass(ConstantActionComponent);
 
 export class DateNowActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1012,
-
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 40">
                 <path d="M12 18H8v4h4v-4zm8 0h-4v4h4v-4zm8 0h-4v4h4v-4zm4-14h-2V0h-4v4H10V0H6v4H4C1.78 4 .02 5.8.02 8L0 36c0 2.2 1.78 4 4 4h28c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4zm0 32H4V14h28v22z" />
@@ -1021,8 +992,6 @@ registerClass(DateNowActionComponent);
 
 export class ReadSettingActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1013,
-
         properties: [
             makeExpressionProperty({
                 name: "key",
@@ -1082,8 +1051,6 @@ registerClass(ReadSettingActionComponent);
 
 export class WriteSettingsActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1014,
-
         properties: [
             makeExpressionProperty({
                 name: "key",
@@ -1352,168 +1319,6 @@ registerClass(CallActionActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const TrixEditor = observer(
-    ({
-        component,
-        flowContext,
-        value,
-        setValue
-    }: {
-        component: CommentActionComponent;
-        flowContext: IFlowContext;
-        value: string;
-        setValue: (value: string) => void;
-    }) => {
-        const inputId = React.useMemo<string>(() => guid(), []);
-        const editorId = React.useMemo<string>(() => guid(), []);
-
-        React.useEffect(() => {
-            const trixEditor = document.getElementById(editorId) as HTMLElement;
-
-            if (value != trixEditor.innerHTML) {
-                (trixEditor as any).editor.loadHTML(value);
-            }
-
-            const onChange = () => {
-                const geometry = calcComponentGeometry(
-                    component,
-                    trixEditor.closest(".EezStudio_ComponentEnclosure")!,
-                    flowContext
-                );
-
-                runInAction(() => {
-                    component.geometry = geometry;
-                });
-            };
-            const onFocus = () => {
-                const trixToolbar =
-                    trixEditor.parentElement?.querySelector("trix-toolbar");
-                if (trixToolbar instanceof HTMLElement) {
-                    trixToolbar.style.visibility = "visible";
-                }
-
-                if (trixEditor.innerHTML != value) {
-                    setValue(trixEditor.innerHTML);
-                }
-            };
-            const onBlur = () => {
-                const trixToolbar =
-                    trixEditor.parentElement?.querySelector("trix-toolbar");
-                if (trixToolbar instanceof HTMLElement) {
-                    trixToolbar.style.visibility = "";
-                }
-
-                if (trixEditor.innerHTML != value) {
-                    setValue(trixEditor.innerHTML);
-                }
-            };
-            trixEditor.addEventListener("trix-change", onChange, false);
-            trixEditor.addEventListener("trix-focus", onFocus, false);
-            trixEditor.addEventListener("trix-blur", onBlur, false);
-
-            return () => {
-                trixEditor.removeEventListener("trix-change", onChange, false);
-                trixEditor.removeEventListener("trix-focus", onFocus, false);
-                trixEditor.removeEventListener("trix-blur", onBlur, false);
-            };
-        }, [value]);
-
-        var attributes: { [key: string]: string } = {
-            id: editorId,
-            input: inputId
-        };
-
-        return (
-            <div
-                className="eez-flow-editor-capture-pointers EezStudio_TrixEditor"
-                tabIndex={0}
-            >
-                {React.createElement("trix-editor", attributes)}
-                <input id={inputId} value={value ?? ""} type="hidden"></input>
-            </div>
-        );
-    }
-);
-
-export class CommentActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1017,
-
-        label: () => "",
-
-        properties: [
-            {
-                name: "text",
-                type: PropertyType.String
-            }
-        ],
-        icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 13.5">
-                <path d="M13 0H1C.45 0 0 .45 0 1v8c0 .55.45 1 1 1h2v3.5L6.5 10H13c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm0 9H6l-2 2V9H1V1h12v8z" />
-            </svg>
-        ),
-        componentHeaderColor: "#fff5c2",
-        isFlowExecutableComponent: false,
-        getResizeHandlers(object: CommentActionComponent) {
-            return object.getResizeHandlers();
-        },
-        defaultValue: {
-            left: 0,
-            top: 0,
-            width: 435,
-            height: 134
-        }
-    });
-
-    @observable text: string;
-
-    get autoSize(): AutoSize {
-        return "height";
-    }
-
-    getResizeHandlers(): IResizeHandler[] | undefined | false {
-        return [
-            {
-                x: 0,
-                y: 50,
-                type: "w-resize"
-            },
-            {
-                x: 100,
-                y: 50,
-                type: "e-resize"
-            }
-        ];
-    }
-
-    getClassName() {
-        return classNames(
-            super.getClassName(),
-            "EezStudio_CommentActionComponent"
-        );
-    }
-
-    getBody(flowContext: IFlowContext): React.ReactNode {
-        return (
-            <TrixEditor
-                component={this}
-                flowContext={flowContext}
-                value={this.text}
-                setValue={action((value: string) => {
-                    const DocumentStore = getDocumentStore(this);
-                    DocumentStore.updateObject(this, {
-                        text: value
-                    });
-                })}
-            ></TrixEditor>
-        );
-    }
-}
-
-registerClass(CommentActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1018,
@@ -1557,8 +1362,6 @@ registerClass(DelayActionComponent);
 
 export class ErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1019,
-
         properties: [
             makeExpressionProperty({
                 name: "message",
@@ -1600,8 +1403,6 @@ registerClass(ErrorActionComponent);
 
 export class CatchErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1020,
-
         properties: [],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
@@ -1643,8 +1444,6 @@ class CounterRunningState {
 
 export class CounterActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1021,
-
         properties: [
             {
                 name: "countValue",
@@ -1848,8 +1647,6 @@ registerClass(LoopActionComponent);
 
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1022,
-
         properties: [
             {
                 name: "page",
@@ -1895,6 +1692,166 @@ export class ShowPageActionComponent extends ActionComponent {
 }
 
 registerClass(ShowPageActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const TrixEditor = observer(
+    ({
+        component,
+        flowContext,
+        value,
+        setValue
+    }: {
+        component: CommentActionComponent;
+        flowContext: IFlowContext;
+        value: string;
+        setValue: (value: string) => void;
+    }) => {
+        const inputId = React.useMemo<string>(() => guid(), []);
+        const editorId = React.useMemo<string>(() => guid(), []);
+
+        React.useEffect(() => {
+            const trixEditor = document.getElementById(editorId) as HTMLElement;
+
+            if (value != trixEditor.innerHTML) {
+                (trixEditor as any).editor.loadHTML(value);
+            }
+
+            const onChange = () => {
+                const geometry = calcComponentGeometry(
+                    component,
+                    trixEditor.closest(".EezStudio_ComponentEnclosure")!,
+                    flowContext
+                );
+
+                runInAction(() => {
+                    component.geometry = geometry;
+                });
+            };
+            const onFocus = () => {
+                const trixToolbar =
+                    trixEditor.parentElement?.querySelector("trix-toolbar");
+                if (trixToolbar instanceof HTMLElement) {
+                    trixToolbar.style.visibility = "visible";
+                }
+
+                if (trixEditor.innerHTML != value) {
+                    setValue(trixEditor.innerHTML);
+                }
+            };
+            const onBlur = () => {
+                const trixToolbar =
+                    trixEditor.parentElement?.querySelector("trix-toolbar");
+                if (trixToolbar instanceof HTMLElement) {
+                    trixToolbar.style.visibility = "";
+                }
+
+                if (trixEditor.innerHTML != value) {
+                    setValue(trixEditor.innerHTML);
+                }
+            };
+            trixEditor.addEventListener("trix-change", onChange, false);
+            trixEditor.addEventListener("trix-focus", onFocus, false);
+            trixEditor.addEventListener("trix-blur", onBlur, false);
+
+            return () => {
+                trixEditor.removeEventListener("trix-change", onChange, false);
+                trixEditor.removeEventListener("trix-focus", onFocus, false);
+                trixEditor.removeEventListener("trix-blur", onBlur, false);
+            };
+        }, [value]);
+
+        var attributes: { [key: string]: string } = {
+            id: editorId,
+            input: inputId
+        };
+
+        return (
+            <div
+                className="eez-flow-editor-capture-pointers EezStudio_TrixEditor"
+                tabIndex={0}
+            >
+                {React.createElement("trix-editor", attributes)}
+                <input id={inputId} value={value ?? ""} type="hidden"></input>
+            </div>
+        );
+    }
+);
+
+export class CommentActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        label: () => "",
+
+        properties: [
+            {
+                name: "text",
+                type: PropertyType.String
+            }
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 13.5">
+                <path d="M13 0H1C.45 0 0 .45 0 1v8c0 .55.45 1 1 1h2v3.5L6.5 10H13c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm0 9H6l-2 2V9H1V1h12v8z" />
+            </svg>
+        ),
+        componentHeaderColor: "#fff5c2",
+        isFlowExecutableComponent: false,
+        getResizeHandlers(object: CommentActionComponent) {
+            return object.getResizeHandlers();
+        },
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 435,
+            height: 134
+        }
+    });
+
+    @observable text: string;
+
+    get autoSize(): AutoSize {
+        return "height";
+    }
+
+    getResizeHandlers(): IResizeHandler[] | undefined | false {
+        return [
+            {
+                x: 0,
+                y: 50,
+                type: "w-resize"
+            },
+            {
+                x: 100,
+                y: 50,
+                type: "e-resize"
+            }
+        ];
+    }
+
+    getClassName() {
+        return classNames(
+            super.getClassName(),
+            "EezStudio_CommentActionComponent"
+        );
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <TrixEditor
+                component={this}
+                flowContext={flowContext}
+                value={this.text}
+                setValue={action((value: string) => {
+                    const DocumentStore = getDocumentStore(this);
+                    DocumentStore.updateObject(this, {
+                        text: value
+                    });
+                })}
+            ></TrixEditor>
+        );
+    }
+}
+
+registerClass(CommentActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 

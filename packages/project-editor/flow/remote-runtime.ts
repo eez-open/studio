@@ -43,6 +43,8 @@ enum MessagesToDebugger {
     MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED, // FLOW_STATE_INDEX, FLOW_INDEX, PARENT_FLOW_STATE_INDEX (-1 - NO PARENT), PARENT_COMPONENT_INDEX (-1 - NO PARENT COMPONENT)
     MESSAGE_TO_DEBUGGER_FLOW_STATE_DESTROYED, // FLOW_STATE_INDEX
 
+    MESSAGE_TO_DEBUGGER_FLOW_STATE_ERROR, // FLOW_STATE_INDEX, COMPONENT_INDEX, ERROR_MESSAGE
+
     MESSAGE_TO_DEBUGGER_LOG // LOG_ITEM_TYPE, FLOW_STATE_INDEX, COMPONENT_INDEX, MESSAGE
 }
 
@@ -97,6 +99,13 @@ export class RemoteRuntime extends RuntimeBase {
         this.instrument = instrument;
 
         const parts = await partsPromise;
+        if (!parts) {
+            notification.error("Build error...", {
+                autoClose: false
+            });
+            this.DocumentStore.setEditorMode();
+            return;
+        }
 
         this.assetsMap = parts["GUI_ASSETS_DATA_MAP_JS"] as AssetsMap;
         if (!this.assetsMap) {
@@ -116,6 +125,16 @@ export class RemoteRuntime extends RuntimeBase {
         //await new Promise<void>(resolve => setTimeout(resolve, 1000));
 
         const connection = getConnection(editor);
+
+        if (connection) {
+            for (let i = 0; i < 10; i++) {
+                if (instrument.isConnected) {
+                    break;
+                }
+                await new Promise<void>(resolve => setTimeout(resolve, 100));
+            }
+        }
+
         if (!connection || !instrument.isConnected) {
             notification.update(toastId, {
                 type: notification.ERROR,
@@ -315,6 +334,10 @@ export class RemoteRuntime extends RuntimeBase {
             this.debuggerConnection.sendMessageFromDebugger(
                 `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_PAUSE}\n`
             );
+        } else {
+            runInAction(() => {
+                this.isDebuggerActive = true;
+            });
         }
     }
 
@@ -1178,6 +1201,62 @@ class DebuggerConnection {
                         }
 
                         runtime.removeFlowState(flowState);
+
+                        if (runtime.flowStates.length == 0) {
+                            flowState.runtime.stopRuntime(true);
+                        }
+                    }
+                    break;
+
+                case MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_ERROR:
+                    {
+                        const flowStateIndex = parseInt(messageParameters[1]);
+                        const componentIndex = parseInt(messageParameters[2]);
+                        const errorMessage = this.parseStringDebuggerValue(
+                            messageParameters[3].substr(
+                                1,
+                                messageParameters[3].length - 2
+                            )
+                        );
+
+                        const { flowIndex, flowState } =
+                            this.getFlowState(flowStateIndex);
+                        if (!flowState) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        const flowInAssetsMap =
+                            runtime.assetsMap.flows[flowIndex];
+                        if (!flowInAssetsMap) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        let component;
+
+                        const componentInAssetsMap =
+                            flowInAssetsMap.components[componentIndex];
+                        if (!componentInAssetsMap) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+                        component = getObjectFromStringPath(
+                            runtime.DocumentStore.project,
+                            componentInAssetsMap.path
+                        ) as Component;
+                        if (!component) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+
+                        flowState.log("error", errorMessage, component);
+
+                        runInAction(() => {
+                            flowState.runtime.error = flowState.error =
+                                errorMessage;
+                        });
+                        flowState.runtime.stopRuntime(true);
                     }
                     break;
 

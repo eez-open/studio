@@ -424,7 +424,7 @@ export class Canvas extends React.Component<{
                 </div>
                 {runtimeStore &&
                     runtimeStore.isDebuggerActive &&
-                    runtimeStore.isPaused && (
+                    (runtimeStore.isPaused || runtimeStore.isStopped) && (
                         <Selection
                             context={this.props.flowContext}
                             mouseHandler={undefined}

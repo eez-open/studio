@@ -209,19 +209,26 @@ function getClassFromType(type: string) {
         return findClass("LayoutViewWidget");
     }
 
-    let widgetClass;
+    let componentClass;
 
-    widgetClass = findClass(type + "Widget");
-    if (widgetClass) {
-        return widgetClass;
+    componentClass = findClass(type + "Widget");
+    if (componentClass) {
+        return componentClass;
     }
 
-    widgetClass = findClass(type);
-    if (widgetClass) {
-        return widgetClass;
+    componentClass = findClass(type);
+    if (componentClass) {
+        return componentClass;
     }
 
     return NotFoundComponent;
+}
+
+function getComponentClass(jsObject: any) {
+    // if (jsObject.type === "GetVariableActionComponent") {
+    //     jsObject.type = "ObserveActionComponent";
+    // }
+    return getClassFromType(jsObject.type);
 }
 
 export function outputIsOptionalIfAtLeastOneOutputExists(
@@ -323,12 +330,6 @@ export function makeExpressionProperty(
                 return menuItems;
             },
 
-            readOnlyInPropertyGrid(
-                component: Component,
-                propertyInfo: PropertyInfo
-            ) {
-                return component.isOutputProperty(propertyInfo);
-            },
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
                 expressionBuilder(object, propertyInfo, {
                     assignableExpression: false,
@@ -769,7 +770,7 @@ export class Component extends EezObject {
 
     static classInfo: ClassInfo = {
         getClass: function (jsObject: any) {
-            return getClassFromType(jsObject.type);
+            return getComponentClass(jsObject);
         },
 
         label: (component: Component) => {
