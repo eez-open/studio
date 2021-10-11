@@ -467,10 +467,19 @@ export const builtInFunctions: {
             ...args: any[]
         ) => args[0].indexOf(args[1]),
         getValueType: (...args: VariableTypePrefix[]) => {
-            if (args[0] != "string" && args[1] != "string") {
-                return "undefined";
-            }
             return "integer";
+        }
+    },
+
+    "String.padStart": {
+        arity: 3,
+        args: ["string", "targetLength", "padString"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0].toString().padStart(args[1], args[2]),
+        getValueType: (...args: VariableTypePrefix[]) => {
+            return "string";
         }
     },
 
