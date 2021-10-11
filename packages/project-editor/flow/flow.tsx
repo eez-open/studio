@@ -469,18 +469,34 @@ export class FlowFragment extends EezObject {
 
         const DocumentStore = getDocumentStore(flow);
 
-        const wireIDMap = new Map<string, string>();
+        const wireIDMap = new Set<string>();
 
         objects.forEach((object: Component) => {
             const clone = cloneObject(DocumentStore, object) as Component;
-            wireIDMap.set(object.wireID, object.wireID);
             this.components.push(clone);
+
+            wireIDMap.add(object.wireID);
+
+            const v = visitObjects(object);
+            while (true) {
+                let visitResult = v.next();
+                if (visitResult.done) {
+                    break;
+                }
+                if (
+                    visitResult.value != object &&
+                    visitResult.value instanceof Component
+                ) {
+                    wireIDMap.add(visitResult.value.wireID);
+                }
+            }
         });
 
         flow.connectionLines.forEach(connectionLine => {
-            const source = wireIDMap.get(connectionLine.source);
-            const target = wireIDMap.get(connectionLine.target);
-            if (source && target) {
+            if (
+                wireIDMap.has(connectionLine.source) &&
+                wireIDMap.has(connectionLine.target)
+            ) {
                 const clone = cloneObject(
                     DocumentStore,
                     connectionLine
@@ -497,6 +513,23 @@ export class FlowFragment extends EezObject {
             const wireID = guid();
             wireIDMap.set(object.wireID, wireID);
             object.wireID = wireID;
+
+            const v = visitObjects(object);
+            while (true) {
+                let visitResult = v.next();
+                if (visitResult.done) {
+                    break;
+                }
+
+                if (
+                    visitResult.value != object &&
+                    visitResult.value instanceof Component
+                ) {
+                    const wireID = guid();
+                    wireIDMap.set(visitResult.value.wireID, wireID);
+                    visitResult.value.wireID = wireID;
+                }
+            }
         });
 
         this.connectionLines.forEach(connectionLine => {

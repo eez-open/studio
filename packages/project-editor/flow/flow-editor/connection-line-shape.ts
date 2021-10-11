@@ -1,4 +1,4 @@
-import { getId } from "project-editor/core/object";
+import { getId, getParent, IEezObject } from "project-editor/core/object";
 import { ConnectionLine } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 
@@ -18,21 +18,23 @@ export function getConnectionLineShape(
     const dx = context.viewState.dxMouseDrag ?? 0;
     const dy = context.viewState.dyMouseDrag ?? 0;
 
+    function isObjectSelected(object: IEezObject | undefined): boolean {
+        if (!object) {
+            return false;
+        }
+        if (context.viewState.isObjectIdSelected(getId(object))) {
+            return true;
+        }
+        return isObjectSelected(getParent(object));
+    }
+
     if (dx || dy) {
-        if (
-            context.viewState.isObjectIdSelected(
-                getId(connectionLine.sourceComponent!)
-            )
-        ) {
+        if (isObjectSelected(connectionLine.sourceComponent)) {
             sourcePositionX += dx;
             sourcePositionY += dy;
         }
 
-        if (
-            context.viewState.isObjectIdSelected(
-                getId(connectionLine.targetComponent!)
-            )
-        ) {
+        if (isObjectSelected(connectionLine.targetComponent)) {
             targetPositionX += dx;
             targetPositionY += dy;
         }
