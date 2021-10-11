@@ -746,8 +746,19 @@ export class DataContext implements IDataContext {
         this.project = project;
         this.parentDataContext = parentDataContext;
         this.defaultValueOverrides = defaultValueOverrides;
-        this.localVariables = localVariables;
+
         this.runtimeValues = new Map<string, any>();
+
+        this.localVariables = localVariables;
+        if (this.localVariables) {
+            this.localVariables.forEach(variable => {
+                this.runtimeValues.set(
+                    variable.name,
+                    evalConstantExpression(project, variable.defaultValue)
+                );
+            });
+        }
+
         if (!this.parentDataContext) {
             this.initGlobalVariables();
         }
@@ -770,10 +781,6 @@ export class DataContext implements IDataContext {
         const localVariables = new Map<string, any>();
         variablesArray.forEach(variable => {
             localVariables.set(variable.name, variable);
-            this.runtimeValues.set(
-                variable.name,
-                evalConstantExpression(getProject(this), variable.defaultValue)
-            );
         });
         return new DataContext(this.project, this, undefined, localVariables);
     }
