@@ -199,11 +199,6 @@ export function evalConstantExpression(project: Project, expression: string) {
         let rootNode;
         try {
             rootNode = expressionParser.parse(expression);
-        } catch (err) {
-            throw `Expression error: ${err}`;
-        }
-
-        try {
             value = evalConstantExpressionNode(project, rootNode);
         } catch (err) {
             console.error(err);
