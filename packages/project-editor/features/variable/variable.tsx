@@ -412,18 +412,6 @@ export class Variable extends EezObject {
 
     @observable persistent: boolean;
 
-    @computed({ keepAlive: true })
-    get initialValue() {
-        const value = evalConstantExpression(
-            getProject(this),
-            this.defaultValue
-        );
-        if (value && typeof value === "object") {
-            return observable(value);
-        }
-        return value;
-    }
-
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -537,7 +525,10 @@ export class Variable extends EezObject {
                     project._DocumentStore.isDashboardProject
                 ) {
                     try {
-                        const value = variable.initialValue;
+                        const value = evalConstantExpression(
+                            project,
+                            variable.defaultValue
+                        );
 
                         const error = isValueTypeOf(
                             project,
@@ -757,6 +748,18 @@ export class DataContext implements IDataContext {
         this.defaultValueOverrides = defaultValueOverrides;
         this.localVariables = localVariables;
         this.runtimeValues = new Map<string, any>();
+        if (!this.parentDataContext) {
+            this.initGlobalVariables();
+        }
+    }
+
+    initGlobalVariables() {
+        this.project.variables.globalVariables.forEach(variable => {
+            this.runtimeValues.set(
+                variable.name,
+                evalConstantExpression(getProject(this), variable.defaultValue)
+            );
+        });
     }
 
     createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext {
@@ -767,6 +770,10 @@ export class DataContext implements IDataContext {
         const localVariables = new Map<string, any>();
         variablesArray.forEach(variable => {
             localVariables.set(variable.name, variable);
+            this.runtimeValues.set(
+                variable.name,
+                evalConstantExpression(getProject(this), variable.defaultValue)
+            );
         });
         return new DataContext(this.project, this, undefined, localVariables);
     }
@@ -809,8 +816,9 @@ export class DataContext implements IDataContext {
     }
 
     @action
-    clearRuntimeValues() {
+    clear() {
         this.runtimeValues.clear();
+        this.initGlobalVariables();
     }
 
     @action
@@ -857,7 +865,6 @@ export class DataContext implements IDataContext {
                 name: FLOW_ITERATOR_INDEX_VARIABLE,
                 type: "integer",
                 defaultValue: 0,
-                initialValue: 0,
                 defaultMinValue: undefined,
                 defaultMaxValue: undefined,
                 defaultValueList: undefined,
@@ -868,7 +875,6 @@ export class DataContext implements IDataContext {
                 name: FLOW_ITERATOR_INDEXES_VARIABLE,
                 type: "array:integer",
                 defaultValue: null,
-                initialValue: null,
                 defaultMinValue: undefined,
                 defaultMaxValue: undefined,
                 defaultValueList: undefined,
@@ -902,19 +908,7 @@ export class DataContext implements IDataContext {
             } else {
                 let defaultValue = this.findVariableDefaultValue(variableName);
                 if (defaultValue == undefined) {
-                    if (
-                        this.project._DocumentStore.isAppletProject ||
-                        this.project._DocumentStore.isDashboardProject
-                    ) {
-                        try {
-                            defaultValue = variable.initialValue;
-                        } catch (err) {
-                            console.error(err);
-                            defaultValue = "ERR!";
-                        }
-                    } else {
-                        defaultValue = variable.defaultValue;
-                    }
+                    defaultValue = variable.defaultValue;
                 }
 
                 if (defaultValue !== undefined) {
@@ -1096,15 +1090,20 @@ export class StructureField extends EezObject {
                                 validators.required,
                                 validators.unique({}, parent)
                             ]
+                        },
+                        {
+                            name: "type",
+                            type: VariableTypeFieldComponent,
+                            validators: [validators.required]
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                dialogContext: getProject(parent)
             }).then(result => {
                 return Promise.resolve({
                     name: result.values.name,
-                    type: result.values.type,
-                    defaultValue: result.values.defaultValue
+                    type: result.values.type
                 });
             });
         }

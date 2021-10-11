@@ -173,14 +173,10 @@ DecimalLiteral
     }
 
 DecimalIntegerLiteral
-  = "0"
-  / NonZeroDigit DecimalDigit*
+  = DecimalDigit+
 
 DecimalDigit
   = [0-9]
-
-NonZeroDigit
-  = [1-9]
 
 ExponentPart
   = ExponentIndicator SignedInteger

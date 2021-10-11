@@ -1456,7 +1456,11 @@ function evalAssignableExpressionWithContext(
             const object = evalNode(node.object);
             if (object != undefined) {
                 const property = node.computed
-                    ? evalNode(node.property)
+                    ? evalExpressionWithContext(
+                          expressionContext,
+                          component,
+                          node.property
+                      )
                     : (node.property as NonComputedPropertyExpressionNode).name;
                 if (property != undefined) {
                     return new AssignableValue(

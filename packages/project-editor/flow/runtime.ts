@@ -137,9 +137,7 @@ export abstract class RuntimeBase {
     }
 
     startRuntime(isDebuggerActive: boolean) {
-        runInAction(() => {
-            this.DocumentStore.dataContext.clearRuntimeValues();
-        });
+        this.DocumentStore.dataContext.clear();
 
         if (isDebuggerActive) {
             this.transition(StateMachineAction.START_WITH_DEBUGGER);
@@ -159,9 +157,7 @@ export abstract class RuntimeBase {
 
         await this.doStopRuntime(notifyUser);
 
-        runInAction(() => {
-            this.DocumentStore.dataContext.clearRuntimeValues();
-        });
+        this.DocumentStore.dataContext.clear();
     }
 
     abstract doStartRuntime(isDebuggerActive: boolean): Promise<void>;
