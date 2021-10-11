@@ -41,7 +41,7 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
 import { Flow, FlowTabState } from "project-editor/flow/flow";
-import { Component } from "project-editor/flow/component";
+import { Component, Widget } from "project-editor/flow/component";
 import {
     Svg,
     ComponentEnclosure
@@ -103,8 +103,14 @@ class DragSnapLinesOverlay extends React.Component {
         return (
             <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
                 {dragSnapLines.snapLines.render(dragSnapLines.flowContext!, {
-                    left: flow.pageRect.left + dragComponent.left,
-                    top: flow.pageRect.top + dragComponent.top,
+                    left:
+                        (dragComponent instanceof Widget
+                            ? flow.pageRect.left
+                            : 0) + dragComponent.left,
+                    top:
+                        (dragComponent instanceof Widget
+                            ? flow.pageRect.top
+                            : 0) + dragComponent.top,
                     width: dragComponent.rect.width,
                     height: dragComponent.rect.height
                 })}
@@ -117,11 +123,18 @@ class DragSnapLinesOverlay extends React.Component {
 
 const DragComponent = observer(
     ({ flow, flowContext }: { flow: Flow; flowContext: EditorFlowContext }) => {
+        const dragComponent = flowContext.dragComponent;
         return flowContext.dragComponent ? (
             <ComponentEnclosure
                 component={flowContext.dragComponent}
-                left={flow.pageRect.left + flowContext.dragComponent.left}
-                top={flow.pageRect.top + flowContext.dragComponent.top}
+                left={
+                    (dragComponent instanceof Widget ? flow.pageRect.left : 0) +
+                    flowContext.dragComponent.left
+                }
+                top={
+                    (dragComponent instanceof Widget ? flow.pageRect.top : 0) +
+                    flowContext.dragComponent.top
+                }
                 flowContext={flowContext}
             />
         ) : null;
@@ -892,8 +905,13 @@ export class FlowEditor
                 component.height
             );
 
-            component.left = Math.round(left - flow.pageRect.left);
-            component.top = Math.round(top - flow.pageRect.top);
+            if (component instanceof Widget) {
+                component.left = Math.round(left - flow.pageRect.left);
+                component.top = Math.round(top - flow.pageRect.top);
+            } else {
+                component.left = Math.round(left);
+                component.top = Math.round(top);
+            }
         }
     }
 
