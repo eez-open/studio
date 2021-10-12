@@ -108,7 +108,8 @@ export function getObjectIdFromPoint(
                     if (result) {
                         if (
                             !object.selected ||
-                            (result.connectionOutput && !connectionOutput)
+                            (result.connectionOutput && !connectionOutput) ||
+                            (result.connectionInput && !connectionInput)
                         ) {
                             continue;
                         }

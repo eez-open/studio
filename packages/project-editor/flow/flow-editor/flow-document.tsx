@@ -12,6 +12,7 @@ import { getDocumentStore } from "project-editor/core/store";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
+import { _intersection } from "eez-studio-shared/algorithm";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -26,7 +27,13 @@ export class FlowDocument implements IDocument {
     }
 
     @computed get selectedConnectionLines() {
-        return this.connectionLines.filter(
+        return this.connectionLines.filter(connectionLine =>
+            this.flowContext.viewState.isObjectIdSelected(connectionLine.id)
+        );
+    }
+
+    @computed get selectedAndHoveredConnectionLines() {
+        const selectedAndHoveredConnectionLines = this.connectionLines.filter(
             connectionLine =>
                 this.flowContext.viewState.isObjectIdSelected(
                     connectionLine.id
@@ -35,6 +42,13 @@ export class FlowDocument implements IDocument {
                     connectionLine.object as ConnectionLine
                 )
         );
+
+        return _intersection(
+            selectedAndHoveredConnectionLines,
+            this.selectedConnectionLines
+        ).length == 0
+            ? selectedAndHoveredConnectionLines
+            : this.selectedConnectionLines;
     }
 
     @computed get nonSelectedConnectionLines() {

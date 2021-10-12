@@ -21,5 +21,6 @@ export const _zipObject = _.zipObject;
 export const _max = _.max;
 export const _min = _.min;
 export const _difference = _.difference;
+export const _intersection = _.intersection;
 export const _flatten = _.flatten;
 export const _debounce = _.debounce;

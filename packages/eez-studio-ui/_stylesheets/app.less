@@ -4564,6 +4564,13 @@ button.EezStudio_Action {
 }
 
 .EezStudio_FlowEditorCanvasContainer {
+    [data-connection-input-id]:hover {
+        color: @selectionColor!important;
+        background-color: @selectionBackgroundColor!important;
+        opacity: 0.5;
+        cursor: crosshair;
+    }
+
     [data-connection-output-id]:hover {
         color: @selectionColor!important;
         background-color: @selectionBackgroundColor!important;

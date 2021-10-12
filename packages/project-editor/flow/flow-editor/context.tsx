@@ -10,7 +10,6 @@ import {
 } from "project-editor/core/objectAdapter";
 
 import type {
-    IDocument,
     IViewState,
     IFlowContext,
     IEditorOptions,
@@ -271,7 +270,7 @@ class ViewState implements IViewState {
 
 export class EditorFlowContext implements IFlowContext {
     tabState: FlowTabState;
-    document: IDocument;
+    document: FlowDocument;
 
     viewState: ViewState = new ViewState(this);
     editorOptions: IEditorOptions = {};

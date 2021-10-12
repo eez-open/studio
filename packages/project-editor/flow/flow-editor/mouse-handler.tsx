@@ -22,6 +22,9 @@ import {
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 import { generateNodeRedLinkPath } from "project-editor/flow/flow-editor/connection-line-shape";
+import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import { getId } from "project-editor/core/object";
+import { Component } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -805,7 +808,19 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ConnectionLineMouseHandler extends MouseHandler {
+const lineStyle = {
+    stroke: CONNECTION_LINE_DRAW_THEME.lineColor,
+    strokeWidth: CONNECTION_LINE_DRAW_THEME.lineWidth,
+    fill: "none"
+};
+
+const connectedLineStyle = {
+    stroke: CONNECTION_LINE_DRAW_THEME.connectedLineColor,
+    strokeWidth: CONNECTION_LINE_DRAW_THEME.connectedLineWidth,
+    fill: "none"
+};
+
+export class OutputConnectionLineMouseHandler extends MouseHandler {
     @observable startPoint: Point;
     @observable endPoint: Point;
     @observable.shallow target:
@@ -952,17 +967,6 @@ export class ConnectionLineMouseHandler extends MouseHandler {
 
         const offsetRect = transform.clientToOffsetRect(transform.clientRect);
 
-        const lineStyle = {
-            stroke: CONNECTION_LINE_DRAW_THEME.lineColor,
-            strokeWidth: CONNECTION_LINE_DRAW_THEME.lineWidth,
-            fill: "none"
-        };
-        const connectedLineStyle = {
-            stroke: CONNECTION_LINE_DRAW_THEME.connectedLineColor,
-            strokeWidth: CONNECTION_LINE_DRAW_THEME.connectedLineWidth,
-            fill: "none"
-        };
-
         const nodeHeight = Math.max(
             this.sourceNodeHeight,
             this.targetNodeHeight
@@ -1010,5 +1014,231 @@ export class ConnectionLineMouseHandler extends MouseHandler {
             context.viewState.transform.pageToOffsetPoint(startClientPoint);
 
         super.onTransformChanged(context);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class InputConnectionLineMouseHandler extends MouseHandler {
+    @observable sources: ConnectionLine[] = [];
+    @observable endPoint: Point;
+    @observable.shallow target:
+        | {
+              objectId: string;
+              connectionInput: string;
+          }
+        | undefined;
+
+    cursor: string = "crosshair";
+
+    targetNodeHeight: number;
+
+    constructor(
+        private targetObject: ITreeObjectAdapter,
+        private connectionInput: string
+    ) {
+        super();
+    }
+
+    @action
+    down(context: IFlowContext, event: IPointerEvent) {
+        super.down(context, event);
+
+        context.document.onDragStart();
+
+        // get selected connection lines, but only if all selected objects are only connection lines not components
+        let selectedConnectionLines: ConnectionLine[];
+
+        if (
+            context.document.selectedConnectionLines.length > 0 &&
+            !context.document.selectedConnectionLines.find(
+                objectAdapter =>
+                    !(objectAdapter.object instanceof ConnectionLine)
+            )
+        ) {
+            selectedConnectionLines =
+                context.document.selectedConnectionLines.map(
+                    objectAdapter => objectAdapter.object as ConnectionLine
+                );
+        } else {
+            selectedConnectionLines = [];
+        }
+
+        if (
+            selectedConnectionLines.length > 0 &&
+            !selectedConnectionLines.find(
+                connectionLine =>
+                    connectionLine.targetComponent !=
+                        this.targetObject.object ||
+                    connectionLine.input != this.connectionInput
+            )
+        ) {
+            // All selected connection lines are connected with (this.targetObject, this.connectionInput).
+            // Work only with these lines.
+            this.sources = selectedConnectionLines;
+        } else {
+            // Work with all connection lines connected to (this.targetObject, this.connectionInput).
+            this.sources = (
+                context.document.flow.object as Flow
+            ).connectionLines.filter(
+                connectionLine =>
+                    connectionLine.targetComponent ==
+                        this.targetObject.object &&
+                    connectionLine.input == this.connectionInput
+            );
+        }
+
+        context.viewState.selectObjects(
+            this.sources.map(
+                connectionLine =>
+                    context.document.findObjectById(getId(connectionLine))!
+            )
+        );
+
+        this.endPoint = this.lastOffsetPoint;
+        this.target = undefined;
+        this.targetNodeHeight = 0;
+    }
+
+    @action
+    move(context: IFlowContext, event: IPointerEvent) {
+        super.move(context, event);
+
+        const result = getObjectIdFromPoint(
+            context.document,
+            context.viewState,
+            this.lastModelPoint
+        );
+
+        if (
+            result &&
+            result.connectionInput &&
+            (result.id != this.targetObject.id ||
+                result.connectionInput != this.connectionInput)
+        ) {
+            const container = document.getElementById(
+                context.viewState.containerId
+            )!;
+
+            const targetNode = container!.querySelector(
+                `[data-eez-flow-object-id="${result.id}"]`
+            )!;
+
+            const targetNodeBoundingClientRect =
+                targetNode.getBoundingClientRect();
+            const targetNodePageRect =
+                context.viewState.transform.clientToOffsetRect(
+                    targetNodeBoundingClientRect
+                );
+            this.targetNodeHeight = targetNodePageRect.height;
+
+            const nodeInput = targetNode.querySelector(
+                `[data-connection-input-id="${result.connectionInput}"]`
+            )!;
+
+            const nodeInputBoundingClientRect =
+                nodeInput.getBoundingClientRect();
+            const nodeInputPageRect =
+                context.viewState.transform.clientToOffsetRect(
+                    nodeInputBoundingClientRect
+                );
+
+            this.endPoint = {
+                x: nodeInputPageRect.left,
+                y: nodeInputPageRect.top + nodeInputPageRect.height / 2
+            };
+            this.target = {
+                objectId: result.id,
+                connectionInput: result.connectionInput
+            };
+        } else {
+            this.endPoint = this.lastOffsetPoint;
+            this.target = undefined;
+            this.targetNodeHeight = 0;
+        }
+    }
+
+    up(context: IFlowContext) {
+        super.up(context);
+
+        if (this.target) {
+            const targetObject = context.DocumentStore.getObjectFromObjectId(
+                this.target.objectId
+            ) as Component;
+
+            const changes = {
+                target: targetObject.wireID,
+                input: this.target.connectionInput
+            };
+
+            if (this.sources.length > 0) {
+                context.DocumentStore.undoManager.setCombineCommands(true);
+
+                this.sources.forEach(connectionLine =>
+                    context.DocumentStore.updateObject(connectionLine, changes)
+                );
+
+                context.DocumentStore.undoManager.setCombineCommands(false);
+            }
+
+            context.viewState.deselectAllObjects();
+        }
+
+        context.document.onDragEnd();
+    }
+
+    render(context: IFlowContext) {
+        const transform = context.viewState.transform;
+
+        const offsetRect = transform.clientToOffsetRect(transform.clientRect);
+
+        const endPoint = this.endPoint;
+
+        return (
+            <svg
+                width={offsetRect.width}
+                height={offsetRect.height}
+                style={{
+                    position: "absolute",
+                    pointerEvents: "none",
+                    left: offsetRect.left,
+                    top: offsetRect.top
+                }}
+            >
+                {this.sources.map(connectionLine => {
+                    const startPoint =
+                        context.viewState.transform.pageToOffsetPoint(
+                            connectionLine.sourcePosition!
+                        );
+
+                    const nodeHeight = Math.max(
+                        connectionLine.sourceRect.height
+                    );
+
+                    const lineShape = generateNodeRedLinkPath(
+                        startPoint.x,
+                        startPoint.y,
+                        startPoint.y == endPoint.y
+                            ? endPoint.x + 1
+                            : endPoint.x,
+                        startPoint.x >= endPoint.x && startPoint.y == endPoint.y
+                            ? endPoint.y + 1
+                            : endPoint.y,
+                        1,
+                        nodeHeight
+                    );
+
+                    return (
+                        <path
+                            key={`${getId(connectionLine.sourceComponent!)}${
+                                connectionLine.output
+                            }}`}
+                            d={lineShape}
+                            style={this.target ? connectedLineStyle : lineStyle}
+                        />
+                    );
+                })}
+            </svg>
+        );
     }
 }

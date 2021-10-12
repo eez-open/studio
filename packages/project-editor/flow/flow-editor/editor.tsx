@@ -50,7 +50,8 @@ import { Draggable } from "eez-studio-ui/draggable";
 import {
     IMouseHandler,
     PanMouseHandler,
-    ConnectionLineMouseHandler,
+    OutputConnectionLineMouseHandler,
+    InputConnectionLineMouseHandler,
     DragMouseHandler,
     isSelectionMoveable,
     ResizeMouseHandler,
@@ -152,7 +153,7 @@ const AllConnectionLines = observer(
                 />
                 <ConnectionLines
                     connectionLines={
-                        flowContext.document.selectedConnectionLines
+                        flowContext.document.selectedAndHoveredConnectionLines
                     }
                     context={flowContext}
                     selected={true}
@@ -243,7 +244,8 @@ export class Canvas extends React.Component<{
         if (
             this.mouseHandler &&
             (this.mouseHandler instanceof RubberBandSelectionMouseHandler ||
-                this.mouseHandler instanceof ConnectionLineMouseHandler ||
+                this.mouseHandler instanceof OutputConnectionLineMouseHandler ||
+                this.mouseHandler instanceof InputConnectionLineMouseHandler ||
                 this.mouseHandler instanceof DragMouseHandler ||
                 this.mouseHandler instanceof ResizeMouseHandler)
         ) {
@@ -438,22 +440,29 @@ export class Canvas extends React.Component<{
                         result.id
                     );
                     if (object) {
-                        if (!flowContext.viewState.isObjectSelected(object)) {
-                            if (!event.ctrlKey && !event.shiftKey) {
-                                flowContext.viewState.deselectAllObjects();
-                            }
-                            flowContext.viewState.selectObject(object);
-                            event.preventDefault();
-                        }
-
-                        isMoveable = isSelectionMoveable(flowContext);
-
                         if (result.connectionOutput) {
-                            return new ConnectionLineMouseHandler(
+                            return new OutputConnectionLineMouseHandler(
                                 object,
                                 result.connectionOutput
                             );
+                        } else if (result.connectionInput) {
+                            return new InputConnectionLineMouseHandler(
+                                object,
+                                result.connectionInput
+                            );
                         } else {
+                            if (
+                                !flowContext.viewState.isObjectSelected(object)
+                            ) {
+                                if (!event.ctrlKey && !event.shiftKey) {
+                                    flowContext.viewState.deselectAllObjects();
+                                }
+                                flowContext.viewState.selectObject(object);
+                                event.preventDefault();
+                            }
+
+                            isMoveable = isSelectionMoveable(flowContext);
+
                             return isMoveable
                                 ? new DragMouseHandler()
                                 : undefined;
