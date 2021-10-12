@@ -223,7 +223,7 @@ export class LocalRuntime extends RuntimeBase {
                         runningComponents.push(task);
                     } else {
                         if (
-                            this.DocumentStore.uiStateStore.breakpoints.has(
+                            this.DocumentStore.uiStateStore.isBreakpointEnabledForComponent(
                                 component
                             )
                         ) {
