@@ -50,8 +50,10 @@ import { Draggable } from "eez-studio-ui/draggable";
 import {
     IMouseHandler,
     PanMouseHandler,
-    OutputConnectionLineMouseHandler,
-    InputConnectionLineMouseHandler,
+    NewConnectionLineFromOutputMouseHandler,
+    NewConnectionLineFromInputMouseHandler,
+    MoveInputConnectionLinesMouseHandler,
+    MoveOutputConnectionLinesMouseHandler,
     DragMouseHandler,
     isSelectionMoveable,
     ResizeMouseHandler,
@@ -244,8 +246,14 @@ export class Canvas extends React.Component<{
         if (
             this.mouseHandler &&
             (this.mouseHandler instanceof RubberBandSelectionMouseHandler ||
-                this.mouseHandler instanceof OutputConnectionLineMouseHandler ||
-                this.mouseHandler instanceof InputConnectionLineMouseHandler ||
+                this.mouseHandler instanceof
+                    NewConnectionLineFromOutputMouseHandler ||
+                this.mouseHandler instanceof
+                    NewConnectionLineFromInputMouseHandler ||
+                this.mouseHandler instanceof
+                    MoveOutputConnectionLinesMouseHandler ||
+                this.mouseHandler instanceof
+                    MoveInputConnectionLinesMouseHandler ||
                 this.mouseHandler instanceof DragMouseHandler ||
                 this.mouseHandler instanceof ResizeMouseHandler)
         ) {
@@ -441,15 +449,29 @@ export class Canvas extends React.Component<{
                     );
                     if (object) {
                         if (result.connectionOutput) {
-                            return new OutputConnectionLineMouseHandler(
-                                object,
-                                result.connectionOutput
-                            );
+                            if (event.shiftKey) {
+                                return new MoveOutputConnectionLinesMouseHandler(
+                                    object,
+                                    result.connectionOutput
+                                );
+                            } else {
+                                return new NewConnectionLineFromOutputMouseHandler(
+                                    object,
+                                    result.connectionOutput
+                                );
+                            }
                         } else if (result.connectionInput) {
-                            return new InputConnectionLineMouseHandler(
-                                object,
-                                result.connectionInput
-                            );
+                            if (event.shiftKey) {
+                                return new MoveInputConnectionLinesMouseHandler(
+                                    object,
+                                    result.connectionInput
+                                );
+                            } else {
+                                return new NewConnectionLineFromInputMouseHandler(
+                                    object,
+                                    result.connectionInput
+                                );
+                            }
                         } else {
                             if (
                                 !flowContext.viewState.isObjectSelected(object)
