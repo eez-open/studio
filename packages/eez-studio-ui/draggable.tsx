@@ -11,6 +11,7 @@ interface DraggableConfig {
     onDragMove?(e: PointerEvent, x: number, y: number, params: any): void;
     onDragEnd?(e: PointerEvent | undefined, cancel: boolean, params: any): void;
     onMove?(e: PointerEvent): void;
+    onDraggableWheel?(event: WheelEvent): void;
 }
 
 export class Draggable {
@@ -88,6 +89,9 @@ export class Draggable {
         this.overlayElement.addEventListener("pointermove", e => {
             this.finishDragging(e, true);
         });
+        this.overlayElement.addEventListener("wheel", this.onWheel, {
+            passive: false
+        });
 
         this.savedBodyUserSelect = document.body.style.userSelect;
         document.body.style.userSelect = "none";
@@ -139,6 +143,13 @@ export class Draggable {
     @bind
     onPointerCancel(e: PointerEvent) {
         this.finishDragging(e, true);
+    }
+
+    @bind
+    onWheel(e: WheelEvent) {
+        if (this.config.onDraggableWheel) {
+            this.config.onDraggableWheel(e);
+        }
     }
 
     @bind

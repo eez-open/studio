@@ -26,8 +26,14 @@ export class FlowDocument implements IDocument {
     }
 
     @computed get selectedConnectionLines() {
-        return this.connectionLines.filter(connectionLine =>
-            this.flowContext.viewState.isObjectIdSelected(connectionLine.id)
+        return this.connectionLines.filter(
+            connectionLine =>
+                this.flowContext.viewState.isObjectIdSelected(
+                    connectionLine.id
+                ) ||
+                this.flowContext.viewState.isConnectionLineHovered(
+                    connectionLine.object as ConnectionLine
+                )
         );
     }
 

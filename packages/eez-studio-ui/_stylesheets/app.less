@@ -3531,17 +3531,6 @@ button.EezStudio_Action {
         border: 2px dotted magenta;
     }
 
-    [data-connection-output-id]:hover {
-        color: @selectionColor!important;
-        background-color: @selectionBackgroundColor!important;
-        cursor: crosshair;
-    }
-
-    .title [data-connection-output-id]:hover {
-        color: @lightSelectionColor!important;
-        background-color: @lightSelectionBackgroundColor!important;
-    }
-
     .connection-line-path {
         stroke: @connectionLineColor;
         marker-start: url(#lineStart);
@@ -3588,6 +3577,7 @@ button.EezStudio_Action {
             display: flex;
             flex-direction: row;
             align-items: center;
+            position: relative;
 
             .title {
                 flex-grow: 1;
@@ -3627,11 +3617,6 @@ button.EezStudio_Action {
                     flex-grow: 1;
                     white-space: nowrap;
                 }
-
-                [data-connection-output-id] {
-                    width: 21px;
-                    height: 21px;
-                }
             }
         }
 
@@ -3654,19 +3639,6 @@ button.EezStudio_Action {
                 text-align: right;
             }
 
-            [data-connection-input-id],
-            [data-connection-output-id] {
-                border: 1px solid @componentBorder;
-                padding: 2px 5px;
-                margin-bottom: 2px;
-
-                white-space: nowrap;
-            }
-
-            [data-connection-output-id] {
-                text-align: right;
-            }
-
             .body {
                 margin: 4px;
                 border: 1px solid @borderColor;
@@ -3677,10 +3649,6 @@ button.EezStudio_Action {
             pre {
                 margin-bottom: 0;
             }
-        }
-
-        [data-connection-output-id].error {
-            color: @errorColor;
         }
     }
 
@@ -3704,48 +3672,6 @@ button.EezStudio_Action {
 
         .outputs {
             right: 0;
-        }
-
-        [data-connection-input-id],
-        [data-connection-output-id] {
-            background-color: #999;
-
-            margin-bottom: var(--size);
-
-            width: var(--size);
-            height: calc(var(--size) * 2);
-        }
-
-        [data-connection-input-id] {
-            margin-left: calc(var(--size) / -1);
-        }
-
-        [data-connection-output-id] {
-            margin-right: calc(var(--size) / -1);
-        }
-
-        [data-connection-input-id] {
-            border-bottom-left-radius: calc(var(--size) * 2 - 2px);
-            border-top-left-radius: calc(var(--size) * 2 - 2px);
-            border-bottom-right-radius: 2px;
-            border-top-right-radius: 2px;
-        }
-
-        [data-connection-output-id] {
-            border-bottom-left-radius: 2px;
-            border-top-left-radius: 2px;
-            border-bottom-right-radius: calc(var(--size) * 2 - 2px);
-            border-top-right-radius: calc(var(--size) * 2 - 2px);
-        }
-
-        [data-connection-input-id]:last-child,
-        [data-connection-output-id]:last-child {
-            margin-bottom: 0;
-        }
-
-        [data-connection-input-id].seq,
-        [data-connection-output-id].seq {
-            background-color: @seqConnectionLineColor;
         }
     }
 
@@ -4484,4 +4410,169 @@ button.EezStudio_Action {
 
 .EezStudio_BreakpointsList > div {
     cursor: default;
+}
+
+.seq-connection {
+    @d: 4px;
+
+    &.input,
+    &.output {
+        position: absolute;
+        width: 32px;
+        height: 100%;
+
+        &:before {
+            content: "";
+            position: absolute;
+            display: block;
+            top: calc(50% - @d / 2);
+            width: @d;
+            height: @d;
+            //border-radius: @d / 2;
+            background-color: @seqConnectionLineColor;
+        }
+    }
+
+    &.input {
+        left: 0;
+        &:before {
+            left: -@d / 2;
+        }
+    }
+
+    &.output {
+        right: 0;
+        &:before {
+            right: -@d / 2;
+        }
+    }
+}
+
+.data-connection {
+    @d: 4px;
+
+    &.input,
+    &.output {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+
+        &:before {
+            content: "";
+            position: absolute;
+            display: block;
+            top: calc(50% - @d / 2);
+            width: @d;
+            height: @d;
+            //border-radius: @d / 2;
+            background-color: @connectionLineColor;
+        }
+    }
+
+    &.input {
+        left: -2px;
+        &:before {
+            left: -@d / 2;
+        }
+    }
+
+    &.output {
+        right: -2px;
+        &:before {
+            right: -@d / 2;
+        }
+    }
+}
+
+.connection-input-label,
+.connection-output-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    padding: 2px 5px;
+    margin-bottom: 2px;
+
+    white-space: nowrap;
+
+    position: relative;
+}
+
+.connection-output-label {
+    justify-content: flex-end;
+}
+
+.eez-widget-component {
+    [data-connection-input-id],
+    [data-connection-output-id] {
+        position: relative;
+
+        &:before {
+            content: "";
+            position: absolute;
+            top: -4px;
+            left: -6px;
+            width: 20px;
+            height: 18px;
+        }
+
+        background-color: #999;
+
+        margin-bottom: var(--size);
+
+        width: var(--size);
+        height: calc(var(--size) * 2);
+    }
+
+    [data-connection-input-id] {
+        margin-left: calc(var(--size) / -1);
+    }
+
+    [data-connection-output-id] {
+        margin-right: calc(var(--size) / -1);
+    }
+
+    [data-connection-input-id] {
+        border-bottom-left-radius: calc(var(--size) * 2 - 2px);
+        border-top-left-radius: calc(var(--size) * 2 - 2px);
+        border-bottom-right-radius: 2px;
+        border-top-right-radius: 2px;
+    }
+
+    [data-connection-output-id] {
+        border-bottom-left-radius: 2px;
+        border-top-left-radius: 2px;
+        border-bottom-right-radius: calc(var(--size) * 2 - 2px);
+        border-top-right-radius: calc(var(--size) * 2 - 2px);
+    }
+
+    [data-connection-input-id]:last-child,
+    [data-connection-output-id]:last-child {
+        margin-bottom: 0;
+    }
+
+    [data-connection-input-id].seq,
+    [data-connection-output-id].seq {
+        background-color: @seqConnectionLineColor;
+    }
+}
+
+.eez-action-component {
+    [data-connection-output-id].error {
+        color: @errorColor;
+    }
+}
+
+.EezStudio_FlowEditorCanvasContainer {
+    [data-connection-output-id]:hover {
+        color: @selectionColor!important;
+        background-color: @selectionBackgroundColor!important;
+        opacity: 0.5;
+        cursor: crosshair;
+    }
+
+    .title [data-connection-output-id]:hover {
+        color: @lightSelectionColor!important;
+        background-color: @lightSelectionBackgroundColor!important;
+    }
 }

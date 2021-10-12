@@ -7,7 +7,8 @@ import {
 
 import type {
     IDocument,
-    IViewState
+    IViewState,
+    ObjectIdUnderPointer
 } from "project-editor/flow/flow-interfaces";
 
 import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
@@ -43,7 +44,7 @@ export function getObjectIdFromPoint(
     flowDocument: IDocument,
     viewState: IViewState,
     point: Point
-) {
+): ObjectIdUnderPointer | undefined {
     let canvas: HTMLElement | undefined = document.querySelector(
         `[id="${viewState.containerId}"] .eez-canvas`
     ) as HTMLElement;
@@ -134,9 +135,8 @@ export function getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
         const id = node.getAttribute("data-eez-flow-object-id");
         if (id) {
             const boundingClientRect = node.getBoundingClientRect();
-            const pageRect = viewState.transform.clientToPageRect(
-                boundingClientRect
-            );
+            const pageRect =
+                viewState.transform.clientToPageRect(boundingClientRect);
             if (isRectInsideRect(pageRect, rect)) {
                 if (ids.indexOf(id) == -1) {
                     ids.push(id);

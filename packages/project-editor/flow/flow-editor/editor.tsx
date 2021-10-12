@@ -18,14 +18,12 @@ import {
     closestBySelector
 } from "eez-studio-shared/dom";
 
-import type {
-    IEditorOptions,
-    IFlowContext
-} from "project-editor/flow/flow-interfaces";
+import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
 import { EditorFlowContext } from "project-editor/flow/flow-editor/context";
 
 import {
     getObjectBoundingRect,
+    getObjectIdFromPoint,
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/flow-editor/bounding-rects";
 
@@ -70,7 +68,7 @@ const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 
 class DragSnapLines {
     @observable snapLines: SnapLines | undefined;
-    flowContext: IFlowContext | undefined;
+    flowContext: EditorFlowContext | undefined;
     dragComponent: Component | undefined;
 
     start(flowContext: EditorFlowContext) {
@@ -142,7 +140,7 @@ const DragComponent = observer(
 );
 
 const AllConnectionLines = observer(
-    ({ flowContext }: { flowContext: IFlowContext }) => {
+    ({ flowContext }: { flowContext: EditorFlowContext }) => {
         return (
             <Svg flowContext={flowContext}>
                 <ConnectionLines
@@ -166,7 +164,7 @@ const AllConnectionLines = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function CenterLines({ flowContext }: { flowContext: IFlowContext }) {
+function CenterLines({ flowContext }: { flowContext: EditorFlowContext }) {
     const transform = flowContext.viewState.transform;
 
     const CENTER_LINES_COLOR = settingsController.isDarkTheme ? "#444" : "#eee";
@@ -205,7 +203,7 @@ function CenterLines({ flowContext }: { flowContext: IFlowContext }) {
 
 @observer
 export class Canvas extends React.Component<{
-    flowContext: IFlowContext;
+    flowContext: EditorFlowContext;
     pageRect?: Rect;
     dragAndDropActive: boolean;
 }> {
@@ -390,6 +388,10 @@ export class Canvas extends React.Component<{
         event.stopPropagation();
     }
 
+    onDraggableWheel(event: WheelEvent) {
+        this.onWheel(event);
+    }
+
     @bind
     onContextMenu(event: React.MouseEvent) {
         event.preventDefault();
@@ -514,6 +516,8 @@ export class Canvas extends React.Component<{
             };
 
             this.mouseHandler.move(this.props.flowContext, event);
+        } else {
+            console.log("trt");
         }
     }
 
@@ -623,6 +627,21 @@ export class Canvas extends React.Component<{
         }
     }
 
+    onPointerMove = action((event: React.PointerEvent<HTMLDivElement>) => {
+        if (this.mouseHandler) {
+            this.props.flowContext.viewState.hoveredConnectionLines = undefined;
+        } else {
+            this.props.flowContext.viewState.hoveredConnectionLines =
+                getObjectIdFromPoint(
+                    this.props.flowContext.document,
+                    this.props.flowContext.viewState,
+                    this.props.flowContext.viewState.transform.pointerEventToPagePoint(
+                        event
+                    )
+                );
+        }
+    });
+
     render() {
         let style: React.CSSProperties = {};
 
@@ -647,6 +666,7 @@ export class Canvas extends React.Component<{
                 ref={(ref: any) => (this.div = ref!)}
                 style={style}
                 onContextMenu={this.onContextMenu}
+                onPointerMove={this.onPointerMove}
             >
                 <div
                     className="eez-canvas"

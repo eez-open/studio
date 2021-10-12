@@ -10,7 +10,8 @@ import { getId } from "project-editor/core/object";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import { Page } from "project-editor/features/page/page";
-import { Component } from "project-editor/flow/component";
+import { Component, Widget } from "project-editor/flow/component";
+import { strokeWidth } from "./ConnectionLineComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +68,9 @@ export function calcComponentGeometry(
     el: HTMLElement,
     flowContext: IFlowContext
 ): ComponentGeometry {
+    const dInput = component instanceof Widget ? 2 : 4;
+    const dOutput = component instanceof Widget ? 0 : 4;
+
     const transform = flowContext.viewState.transform;
 
     const rect = transform.clientToPageRect(el.getBoundingClientRect());
@@ -97,7 +101,7 @@ export function calcComponentGeometry(
                             height: rectPort.height
                         },
                         position: {
-                            x: rectPort.left - rect.left - 1,
+                            x: rectPort.left - rect.left - dInput,
                             y: rectPort.top - rect.top + rectPort.height / 2
                         }
                     };
@@ -119,7 +123,12 @@ export function calcComponentGeometry(
                         height: rectPort.height
                     },
                     position: {
-                        x: rectPort.left - rect.left + rectPort.width + 1,
+                        x:
+                            rectPort.left -
+                            rect.left +
+                            rectPort.width +
+                            dOutput / 2 +
+                            strokeWidth / 2,
                         y: rectPort.top - rect.top + rectPort.height / 2
                     }
                 };
@@ -128,8 +137,8 @@ export function calcComponentGeometry(
     }
 
     return {
-        width: Math.ceil(rect.width),
-        height: Math.ceil(rect.height),
+        width: rect.width,
+        height: rect.height,
         inputs,
         outputs
     };

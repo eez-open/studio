@@ -15,12 +15,13 @@ import type {
     IFlowContext,
     IEditorOptions,
     IResizeHandler,
-    IDataContext
+    IDataContext,
+    ObjectIdUnderPointer
 } from "project-editor/flow/flow-interfaces";
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
-import { FlowTabState } from "../flow";
-import { FlowDocument } from "./flow-document";
+import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
+import { FlowDocument } from "project-editor/flow/flow-editor/flow-document";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,6 +37,8 @@ class ViewState implements IViewState {
 
     @observable dxMouseDrag: number | undefined;
     @observable dyMouseDrag: number | undefined;
+
+    @observable hoveredConnectionLines: ObjectIdUnderPointer | undefined;
 
     constructor(public flowContext: EditorFlowContext) {}
 
@@ -236,6 +239,31 @@ class ViewState implements IViewState {
         });
 
         DocumentStore.undoManager.setCombineCommands(false);
+    }
+
+    @computed get hoveredConnectionLinesComponent() {
+        if (!this.hoveredConnectionLines) {
+            return undefined;
+        }
+        return this.flowContext.DocumentStore.getObjectFromObjectId(
+            this.hoveredConnectionLines.id
+        ) as Component;
+    }
+
+    isConnectionLineHovered(connectionLine: ConnectionLine) {
+        if (!this.hoveredConnectionLines) {
+            return false;
+        }
+        return (
+            (connectionLine.sourceComponent ==
+                this.hoveredConnectionLinesComponent &&
+                connectionLine.output ==
+                    this.hoveredConnectionLines.connectionOutput) ||
+            (connectionLine.targetComponent ==
+                this.hoveredConnectionLinesComponent &&
+                connectionLine.input ==
+                    this.hoveredConnectionLines.connectionInput)
+        );
     }
 }
 

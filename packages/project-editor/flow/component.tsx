@@ -1908,31 +1908,35 @@ function renderActionComponent(
     return (
         <>
             <div className="title-enclosure">
-                <div className="title" style={titleStyle}>
+                {hasSeqIn && (
                     <span
-                        className="title-image"
-                        data-connection-input-id={
-                            hasSeqIn ? "@seqin" : undefined
-                        }
-                    >
-                        {classInfo.icon}
-                    </span>
-                    <span className="title-text">{getLabel(actionNode)}</span>
-                    <span
-                        data-connection-output-id={
-                            hasSeqOut ? "@seqout" : undefined
-                        }
+                        className="seq-connection input"
+                        data-connection-input-id={"@seqin"}
                     ></span>
+                )}
+                <div className="title" style={titleStyle}>
+                    <span className="title-image">{classInfo.icon}</span>
+                    <span className="title-text">{getLabel(actionNode)}</span>
                 </div>
+                {hasSeqOut && (
+                    <span
+                        className="seq-connection output"
+                        data-connection-output-id={"@seqout"}
+                    ></span>
+                )}
             </div>
             <div className="content">
                 {inputs.length > 0 && (
                     <div className="inputs">
                         {inputs.map(property => (
                             <div
+                                className="connection-input-label"
                                 key={property.name}
-                                data-connection-input-id={property.name}
                             >
+                                <span
+                                    className="data-connection input"
+                                    data-connection-input-id={property.name}
+                                ></span>
                                 {getObjectPropertyDisplayName(
                                     actionNode,
                                     property
@@ -1947,15 +1951,21 @@ function renderActionComponent(
                         {outputs.map(property => (
                             <div
                                 key={property.name}
-                                data-connection-output-id={property.name}
-                                className={classNames({
-                                    error: property.name === "@error"
-                                })}
+                                className={classNames(
+                                    "connection-output-label",
+                                    {
+                                        error: property.name === "@error"
+                                    }
+                                )}
                             >
                                 {getObjectPropertyDisplayName(
                                     actionNode,
                                     property
                                 )}
+                                <span
+                                    className="data-connection output"
+                                    data-connection-output-id={property.name}
+                                ></span>
                             </div>
                         ))}
                     </div>

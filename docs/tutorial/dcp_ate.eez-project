@@ -689,7 +689,16 @@
           "width": 457,
           "height": 87,
           "wireID": "609d045d-859b-422d-b2ce-7e1a782bf1db",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "cal_params_stored",
+              "type": 20
+            },
+            {
+              "name": "has_cal_params",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "!{cal_params_stored} && {has_cal_params}"
         },
@@ -722,7 +731,12 @@
           "width": 544,
           "height": 103,
           "wireID": "fc404e60-93c8-4d13-bb6b-8a95e95cc717",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "cal_params",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{cal_params}?.indexOf(\"u_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_5A_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_50mA_cal_params_exists=1\") !== -1\n"
         },
@@ -1421,7 +1435,12 @@
           "width": 198,
           "height": 67,
           "wireID": "db451b8e-ecee-4b2c-aea5-49dae4d0b39a",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "time",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{time} / 1000"
         },
@@ -1442,7 +1461,12 @@
           "width": 198,
           "height": 67,
           "wireID": "fbed472c-89d7-4954-cf6f-480593aea428",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "time",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{time} / 1000"
         },
@@ -1535,7 +1559,12 @@
           "width": 243,
           "height": 67,
           "wireID": "d7256a36-de7e-4c9a-f002-3b06f0fe8031",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "value",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"'\" + {value} + \"'\""
         },
@@ -1546,7 +1575,12 @@
           "width": 243,
           "height": 67,
           "wireID": "29ada574-ab11-48f9-b320-585882f67178",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "value",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"'\" + {value} + \"'\""
         },
@@ -1557,7 +1591,12 @@
           "width": 243,
           "height": 67,
           "wireID": "1a688ac5-4343-40ce-f8f9-e49364ccbe1e",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "value",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"'\" + {value} + \"'\""
         },
@@ -5663,7 +5702,12 @@
           "width": 271,
           "height": 67,
           "wireID": "dc6914f2-f08f-4643-f161-4cb186a14195",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{curr} + \" > 0.022 A\" "
         }
@@ -6209,7 +6253,12 @@
           "width": 512,
           "height": 67,
           "wireID": "2697f65d-08a9-41f9-a8f9-cad088d0f5e8",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not between 24.5 and 25.5 V\""
         }
@@ -6349,7 +6398,12 @@
           "width": 491,
           "height": 67,
           "wireID": "fd47eee5-e470-4fa4-e53d-2cc206622a10",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 0.035 and 0.085 A\""
         }
@@ -6483,7 +6537,12 @@
           "width": 528,
           "height": 67,
           "wireID": "8bafa61c-16ee-4b70-9cc0-22c033c84e29",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 0.015 and 0.045 A\""
         }
@@ -6704,7 +6763,12 @@
           "width": 499,
           "height": 67,
           "wireID": "e2184a3f-6b26-4910-d8f2-58d067801be1",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 2.3 and 2.7 A\""
         }
@@ -6838,7 +6902,12 @@
           "width": 499,
           "height": 67,
           "wireID": "39426034-092d-404e-9db7-df4db4c7a88e",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 4.4 and 4.8 A\""
         }
@@ -6967,7 +7036,16 @@
           "width": 267,
           "height": 87,
           "wireID": "fc0f2018-0736-4c04-889a-434d39e49e20",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "temp",
+              "type": 20
+            },
+            {
+              "name": "ch_temp",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{temp} - {ch_temp}"
         },
@@ -7027,7 +7105,12 @@
           "width": 365,
           "height": 67,
           "wireID": "56f2a9fd-cb01-44e3-8a42-759b96024269",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "temp",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"Temperature is \" + {temp} + \" ℃\""
         }
@@ -8317,7 +8400,12 @@
           "width": 273,
           "height": 67,
           "wireID": "c0446816-4071-4611-807f-345b08e7fa18",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "status",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "!!({status} & (1 << 7))"
         },
@@ -9145,7 +9233,12 @@
           "width": 475,
           "height": 67,
           "wireID": "12410e12-4ce0-4548-c050-5ffccabf96c1",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not between 6 and 10 V\""
         }
@@ -9291,7 +9384,12 @@
           "width": 482,
           "height": 67,
           "wireID": "627e3ffb-bca3-4b58-8276-712c5ff7f3b2",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not between 18 and 22 V\""
         }
@@ -9437,7 +9535,12 @@
           "width": 482,
           "height": 67,
           "wireID": "db293135-0c69-45f0-a95b-477cdd353158",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not between 27 and 33 V\""
         }
@@ -10133,7 +10236,12 @@
           "width": 379,
           "height": 67,
           "wireID": "6a1686ab-b0e9-4aec-f970-3965486676f3",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not < 5 V\""
         }
@@ -10260,7 +10368,12 @@
           "width": 379,
           "height": 67,
           "wireID": "f2f4575c-acb3-40ff-af57-6e4a5c7cc84d",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not > 5 V\""
         }
@@ -11382,7 +11495,12 @@
           "width": 537,
           "height": 67,
           "wireID": "b23e3d0d-868a-4c45-9feb-2f9200690a1e",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"1st point voltage \" + {volt} + \" is not between 0.05 and 0.4 V\""
         },
@@ -11484,7 +11602,12 @@
           "width": 531,
           "height": 67,
           "wireID": "d74b4930-f189-4c01-ba7c-5240f5cb2a6e",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"2nd point voltage \" + {volt} + \" is not between 35 and 37.5 V\""
         },
@@ -11595,7 +11718,12 @@
           "width": 209,
           "height": 67,
           "wireID": "e8b412a0-1ce8-4d00-c237-a5a1ddb62cd2",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "value",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{value} + 0.05"
         },
@@ -11617,7 +11745,12 @@
           "width": 162,
           "height": 67,
           "wireID": "a5635cbf-eee8-4b7b-a2c7-307df93c2cf6",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "value",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{value}"
         }
@@ -11953,7 +12086,12 @@
           "width": 498,
           "height": 67,
           "wireID": "a292fe07-88d2-4448-d891-88f995a1567b",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 0.0003 and 0.001 A\""
         },
@@ -12050,7 +12188,12 @@
           "width": 484,
           "height": 67,
           "wireID": "3cbcd8df-7ab6-4b32-ff4b-fcc3a170231f",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 0.015 and 0.03 A\""
         },
@@ -12234,7 +12377,7 @@
           "type": "StartActionComponent",
           "left": -419,
           "top": -214,
-          "width": 79,
+          "width": 63,
           "height": 31,
           "wireID": "044341d0-7751-42db-bdc2-9bde322dbb6f",
           "customInputs": [],
@@ -12244,7 +12387,7 @@
           "type": "EndActionComponent",
           "left": 230,
           "top": 530,
-          "width": 73,
+          "width": 58,
           "height": 31,
           "wireID": "9317a92f-a409-4cb4-942b-448b1434849b",
           "customInputs": [],
@@ -12254,7 +12397,7 @@
           "type": "ScpiActionComponent",
           "left": 78,
           "top": -214,
-          "width": 160,
+          "width": 148,
           "height": 63,
           "wireID": "4ac6a5b7-b6de-47a9-b214-9ec002799e35",
           "customInputs": [],
@@ -12266,7 +12409,7 @@
           "type": "ScpiActionComponent",
           "left": -268,
           "top": 36,
-          "width": 287,
+          "width": 268,
           "height": 81,
           "wireID": "91e734e5-aed7-4e03-e5d2-d5c2ab97d172",
           "customInputs": [
@@ -12288,7 +12431,7 @@
           "type": "ScpiActionComponent",
           "left": -218,
           "top": -214,
-          "width": 211,
+          "width": 195,
           "height": 81,
           "wireID": "90861103-2f09-49af-c644-3fbd4a2a5482",
           "customInputs": [],
@@ -12301,7 +12444,7 @@
           "left": 78,
           "top": -23,
           "width": 205,
-          "height": 87,
+          "height": 83,
           "wireID": "1ec50f28-dc63-4770-e46e-7ba884fea7ff",
           "customInputs": [
             {
@@ -12319,7 +12462,7 @@
           "type": "ScpiActionComponent",
           "left": 298,
           "top": 133,
-          "width": 168,
+          "width": 157,
           "height": 63,
           "wireID": "95785840-154d-4403-9821-7097cc4149da",
           "customInputs": [
@@ -12336,8 +12479,8 @@
           "type": "ErrorActionComponent",
           "left": 1012,
           "top": 30,
-          "width": 81,
-          "height": 61,
+          "width": 66,
+          "height": 59,
           "wireID": "ab1b37c4-df41-4acf-c13e-970c8d9c4579",
           "customInputs": [
             {
@@ -12352,10 +12495,15 @@
           "type": "EvalActionComponent",
           "left": 417,
           "top": 30,
-          "width": 521,
+          "width": 480,
           "height": 67,
           "wireID": "5b5f07ca-52f6-4ca4-d934-01efa92e6315",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 0.03 and 0.085 A\""
         },
@@ -12363,7 +12511,7 @@
           "type": "ScpiActionComponent",
           "left": -493,
           "top": 36,
-          "width": 167,
+          "width": 155,
           "height": 63,
           "wireID": "d906a346-bb69-4055-eb28-5ca7e4977694",
           "customInputs": [],
@@ -12375,7 +12523,7 @@
           "type": "ScpiActionComponent",
           "left": -237,
           "top": 288,
-          "width": 287,
+          "width": 268,
           "height": 81,
           "wireID": "65381fde-0812-4356-a5b6-53200a345001",
           "customInputs": [
@@ -12398,7 +12546,7 @@
           "left": 101,
           "top": 237,
           "width": 182,
-          "height": 87,
+          "height": 83,
           "wireID": "b6653e8e-a4b7-4bf2-ebae-2e97b7046ce3",
           "customInputs": [
             {
@@ -12416,7 +12564,7 @@
           "type": "ScpiActionComponent",
           "left": 298,
           "top": 400,
-          "width": 168,
+          "width": 157,
           "height": 63,
           "wireID": "7616f56a-6562-47d2-a460-ee9222861b98",
           "customInputs": [
@@ -12433,8 +12581,8 @@
           "type": "ErrorActionComponent",
           "left": 982,
           "top": 288,
-          "width": 81,
-          "height": 61,
+          "width": 66,
+          "height": 59,
           "wireID": "04098a29-44fe-46d6-bea4-d5365c36d4df",
           "customInputs": [
             {
@@ -12449,10 +12597,15 @@
           "type": "EvalActionComponent",
           "left": 417,
           "top": 288,
-          "width": 499,
+          "width": 460,
           "height": 67,
           "wireID": "5ae45082-08cf-40e3-eed3-c5e809b4b16e",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 4.7 and 5.1 A\""
         },
@@ -12460,7 +12613,7 @@
           "type": "ScpiActionComponent",
           "left": -445,
           "top": 288,
-          "width": 160,
+          "width": 148,
           "height": 171,
           "wireID": "5ec36d5f-9881-46d3-b68c-1e7343ec375a",
           "customInputs": [],
@@ -12472,7 +12625,7 @@
           "type": "ScpiActionComponent",
           "left": -422,
           "top": 530,
-          "width": 204,
+          "width": 188,
           "height": 117,
           "wireID": "77a97bf4-ef76-44a1-dc87-94690510455a",
           "customInputs": [],
@@ -12484,7 +12637,7 @@
           "type": "ScpiActionComponent",
           "left": 5,
           "top": 530,
-          "width": 138,
+          "width": 128,
           "height": 63,
           "wireID": "065ce024-3214-41bc-c8cc-8838c9cfb356",
           "customInputs": [],
@@ -12496,7 +12649,7 @@
           "type": "DelayActionComponent",
           "left": -151,
           "top": 530,
-          "width": 85,
+          "width": 70,
           "height": 67,
           "wireID": "27997ea6-2c68-4598-b9bc-d4a6c96ba938",
           "customInputs": [],
@@ -12505,10 +12658,10 @@
         },
         {
           "type": "CommentActionComponent",
-          "left": -447,
-          "top": 155,
-          "width": 2,
-          "height": 10,
+          "left": -674,
+          "top": 400,
+          "width": 190,
+          "height": 101,
           "wireID": "1936b7a9-e874-41c1-f6d6-1856991a421e",
           "customInputs": [],
           "customOutputs": [],
@@ -12518,8 +12671,8 @@
           "type": "ConstantActionComponent",
           "left": -651,
           "top": 146,
-          "width": 116,
-          "height": 61,
+          "width": 99,
+          "height": 59,
           "wireID": "77d14526-0975-4473-d832-fff79a878dd1",
           "customInputs": [],
           "customOutputs": [],
@@ -12529,7 +12682,7 @@
           "type": "ScpiActionComponent",
           "left": -704,
           "top": 288,
-          "width": 211,
+          "width": 195,
           "height": 81,
           "wireID": "0478e0aa-3eb6-4edf-946d-c5baf8091230",
           "customInputs": [],
@@ -12787,7 +12940,12 @@
           "width": 506,
           "height": 67,
           "wireID": "882a8db0-e1d9-46e7-fead-b2057b1320c2",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 4.8 and 5.2 mA\""
         },
@@ -12969,7 +13127,12 @@
           "width": 491,
           "height": 67,
           "wireID": "fc24c306-6ead-4083-be99-7d3737111268",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 43 and 47 mA\""
         },
@@ -13151,7 +13314,12 @@
           "width": 491,
           "height": 67,
           "wireID": "4bceab0f-1059-4212-fd6e-e7f8c3fb4064",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 52 and 58 mA\""
         },
@@ -13333,7 +13501,12 @@
           "width": 513,
           "height": 67,
           "wireID": "3edf8202-bd63-4870-9381-666855e068ec",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "curr",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"current \" + {curr} + \" is not between 4.49 and 4.51 A\""
         },
@@ -13515,7 +13688,12 @@
           "width": 512,
           "height": 67,
           "wireID": "1fe60773-78b8-4187-dc2b-c773bd32bf55",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not between 1.98 and 2.02 V\""
         },
@@ -13697,7 +13875,12 @@
           "width": 490,
           "height": 67,
           "wireID": "a3bdd3b8-75e2-4bdf-caf2-a1f00ba2fe82",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "volt",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "\"voltage \" + {volt} + \" is not between 34.95 and 35.05 V\""
         },
@@ -13855,7 +14038,12 @@
           "width": 544,
           "height": 103,
           "wireID": "1a011e66-e66b-4c6c-efe9-9d03759d6f68",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "cal_params",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{cal_params}?.indexOf(\"u_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_5A_cal_params_exists=1\") !== -1 &&\n{cal_params}?.indexOf(\"i_50mA_cal_params_exists=1\") !== -1\n"
         },
@@ -15837,7 +16025,20 @@
           "width": 324,
           "height": 113,
           "wireID": "5b162a81-27ef-4b0b-ff4c-341c78b44511",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "bb3_1_connected",
+              "type": 20
+            },
+            {
+              "name": "bb3_2_connected",
+              "type": 20
+            },
+            {
+              "name": "test_status",
+              "type": 20
+            }
+          ],
           "customOutputs": [],
           "expression": "{bb3_1_connected} && \n{bb3_2_connected} && \n{test_status} != 2"
         },

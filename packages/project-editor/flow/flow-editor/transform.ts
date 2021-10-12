@@ -156,10 +156,10 @@ export class Transform implements ITransform {
             y: rect.top + rect.height
         });
         return {
-            left: leftTop.x,
-            top: leftTop.y,
-            width: rightBottom.x - leftTop.x,
-            height: rightBottom.y - leftTop.y
+            left: Math.round(leftTop.x),
+            top: Math.round(leftTop.y),
+            width: Math.round(rightBottom.x - leftTop.x),
+            height: Math.round(rightBottom.y - leftTop.y)
         };
     }
 

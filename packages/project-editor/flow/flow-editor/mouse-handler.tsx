@@ -21,6 +21,7 @@ import {
 } from "project-editor/flow/flow-editor/bounding-rects";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/flow-editor/transform";
+import { generateNodeRedLinkPath } from "project-editor/flow/flow-editor/connection-line-shape";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -816,6 +817,9 @@ export class ConnectionLineMouseHandler extends MouseHandler {
 
     cursor: string = "crosshair";
 
+    sourceNodeHeight: number;
+    targetNodeHeight: number;
+
     constructor(
         private sourceObject: ITreeObjectAdapter,
         private connectionOutput: string
@@ -834,21 +838,36 @@ export class ConnectionLineMouseHandler extends MouseHandler {
         const container = document.getElementById(
             context.viewState.containerId
         )!;
-        const node = container!.querySelector(
-            `[data-eez-flow-object-id="${this.sourceObject.id}"] [data-connection-output-id="${this.connectionOutput}"]`
+
+        const sourceNode = container!.querySelector(
+            `[data-eez-flow-object-id="${this.sourceObject.id}"]`
         )!;
 
-        const boundingClientRect = node.getBoundingClientRect();
-        const pageRect =
-            context.viewState.transform.clientToOffsetRect(boundingClientRect);
+        const sourceNodeBoundingClientRect = sourceNode.getBoundingClientRect();
+        const sourceNodePageRect =
+            context.viewState.transform.clientToOffsetRect(
+                sourceNodeBoundingClientRect
+            );
+        this.sourceNodeHeight = sourceNodePageRect.height;
+
+        const nodeOutput = sourceNode.querySelector(
+            `[data-connection-output-id="${this.connectionOutput}"]`
+        )!;
+
+        const nodeOutputBoundingClientRect = nodeOutput.getBoundingClientRect();
+        const nodeOutputPageRect =
+            context.viewState.transform.clientToOffsetRect(
+                nodeOutputBoundingClientRect
+            );
 
         this.startPoint = {
-            x: pageRect.left + pageRect.width + 2,
-            y: pageRect.top + pageRect.height / 2
+            x: nodeOutputPageRect.left + nodeOutputPageRect.width,
+            y: nodeOutputPageRect.top + nodeOutputPageRect.height / 2
         };
 
-        this.endPoint = this.startPoint;
+        this.endPoint = this.lastOffsetPoint;
         this.target = undefined;
+        this.targetNodeHeight = 0;
     }
 
     @action
@@ -874,19 +893,33 @@ export class ConnectionLineMouseHandler extends MouseHandler {
             const container = document.getElementById(
                 context.viewState.containerId
             )!;
-            const node = container!.querySelector(
-                `[data-eez-flow-object-id="${result.id}"] [data-connection-input-id="${result.connectionInput}"]`
+
+            const targetNode = container!.querySelector(
+                `[data-eez-flow-object-id="${result.id}"]`
             )!;
 
-            const boundingClientRect = node.getBoundingClientRect();
-            const pageRect =
+            const targetNodeBoundingClientRect =
+                targetNode.getBoundingClientRect();
+            const targetNodePageRect =
                 context.viewState.transform.clientToOffsetRect(
-                    boundingClientRect
+                    targetNodeBoundingClientRect
+                );
+            this.targetNodeHeight = targetNodePageRect.height;
+
+            const nodeInput = targetNode.querySelector(
+                `[data-connection-input-id="${result.connectionInput}"]`
+            )!;
+
+            const nodeInputBoundingClientRect =
+                nodeInput.getBoundingClientRect();
+            const nodeInputPageRect =
+                context.viewState.transform.clientToOffsetRect(
+                    nodeInputBoundingClientRect
                 );
 
             this.endPoint = {
-                x: pageRect.left - 2,
-                y: pageRect.top + pageRect.height / 2
+                x: nodeInputPageRect.left,
+                y: nodeInputPageRect.top + nodeInputPageRect.height / 2
             };
             this.target = {
                 objectId: result.id,
@@ -895,6 +928,7 @@ export class ConnectionLineMouseHandler extends MouseHandler {
         } else {
             this.endPoint = this.lastOffsetPoint;
             this.target = undefined;
+            this.targetNodeHeight = 0;
         }
     }
 
@@ -920,21 +954,32 @@ export class ConnectionLineMouseHandler extends MouseHandler {
 
         const lineStyle = {
             stroke: CONNECTION_LINE_DRAW_THEME.lineColor,
-            strokeWidth: CONNECTION_LINE_DRAW_THEME.lineWidth
+            strokeWidth: CONNECTION_LINE_DRAW_THEME.lineWidth,
+            fill: "none"
         };
         const connectedLineStyle = {
             stroke: CONNECTION_LINE_DRAW_THEME.connectedLineColor,
-            strokeWidth: CONNECTION_LINE_DRAW_THEME.connectedLineWidth
+            strokeWidth: CONNECTION_LINE_DRAW_THEME.connectedLineWidth,
+            fill: "none"
         };
 
-        const line = (
-            <line
-                x1={this.startPoint.x}
-                y1={this.startPoint.y}
-                x2={this.endPoint.x}
-                y2={this.endPoint.y}
-                style={this.target ? connectedLineStyle : lineStyle}
-            />
+        const nodeHeight = Math.max(
+            this.sourceNodeHeight,
+            this.targetNodeHeight
+        );
+
+        const lineShape = generateNodeRedLinkPath(
+            this.startPoint.x,
+            this.startPoint.y,
+            this.startPoint.y == this.endPoint.y
+                ? this.endPoint.x + 1
+                : this.endPoint.x,
+            this.startPoint.x >= this.endPoint.x &&
+                this.startPoint.y == this.endPoint.y
+                ? this.endPoint.y + 1
+                : this.endPoint.y,
+            1,
+            nodeHeight
         );
 
         return (
@@ -948,7 +993,10 @@ export class ConnectionLineMouseHandler extends MouseHandler {
                     top: offsetRect.top
                 }}
             >
-                {line}
+                <path
+                    d={lineShape}
+                    style={this.target ? connectedLineStyle : lineStyle}
+                />
             </svg>
         );
     }

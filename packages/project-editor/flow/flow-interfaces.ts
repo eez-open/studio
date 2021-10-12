@@ -122,6 +122,12 @@ export interface IDocument {
     ): void;
 }
 
+export interface ObjectIdUnderPointer {
+    id: string;
+    connectionInput: string | undefined;
+    connectionOutput: string | undefined;
+}
+
 export interface IViewState {
     containerId: string;
 

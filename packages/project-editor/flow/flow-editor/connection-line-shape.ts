@@ -58,7 +58,7 @@ export function getConnectionLineShape(
 // Node-RED algorithm
 const LINE_CURVE_SCALE = 0.75;
 const NODE_WIDTH = 100;
-function generateNodeRedLinkPath(
+export function generateNodeRedLinkPath(
     origX: number,
     origY: number,
     destX: number,

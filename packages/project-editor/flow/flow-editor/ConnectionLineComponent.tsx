@@ -7,7 +7,7 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ConnectionLine } from "project-editor/flow/flow";
 import { getConnectionLineShape } from "project-editor/flow/flow-editor/connection-line-shape";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { OutputActionComponent } from "../action-components";
+import { OutputActionComponent } from "project-editor/flow/action-components";
 import { SvgLabel } from "eez-studio-ui/svg-label";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -16,9 +16,8 @@ const lineColor = () => theme().connectionLineColor;
 const seqLineColor = () => theme().seqConnectionLineColor;
 const selectedLineColor = () => theme().selectedConnectionLineColor;
 const selectedLineColorInViewer = () => theme().selectionBackgroundColor;
-const activeLineColor = () => theme().activeConnectionLineColor;
 
-const strokeWidth = 1.2;
+export const strokeWidth = 1.2;
 const seqStrokeWidth = 1.2;
 const strokeOutlineWidth = 1.5;
 const strokeBackgroundWidth = 8;
@@ -113,6 +112,7 @@ const ConnectionLineShape = observer(
             >
                 <path
                     d={lineShape}
+                    className="connection-line-path"
                     style={{
                         fill: "none",
                         stroke: theme().backgroundColor,
@@ -124,11 +124,13 @@ const ConnectionLineShape = observer(
                 ></path>
                 <path
                     d={lineShape}
+                    className="connection-line-path"
                     style={{
                         fill: "none",
                         stroke: theme().backgroundColor,
                         strokeOpacity: 0.4,
-                        strokeWidth: strokeOutlineWidth
+                        strokeWidth: strokeOutlineWidth,
+                        strokeLinecap: "round"
                     }}
                 ></path>
                 <VisiblePath
@@ -209,49 +211,16 @@ const DebugValue = observer(
 export const LineMarkers = () => (
     <svg style={{ width: 0, height: 0 }}>
         <defs>
-            <LineStartMarker id="lineStart" color={lineColor()} />
             <LineEndMarker id="lineEnd" color={lineColor()} />
-            <LineStartMarker id="seqLineStart" color={seqLineColor()} />
             <LineEndMarker id="seqLineEnd" color={seqLineColor()} />
-            <LineStartMarker
-                id="selectedLineStart"
-                color={selectedLineColor()}
-            />
-            <LineStartMarker
-                id="selectedLineStartInViewer"
-                color={selectedLineColorInViewer()}
-            />
             <LineEndMarker id="selectedLineEnd" color={selectedLineColor()} />
             <LineEndMarker
                 id="selectedLineEndInViewer"
                 color={selectedLineColorInViewer()}
             />
-            <LineStartMarker id="activeLineStart" color={activeLineColor()} />
-            <LineEndMarker id="activeLineEnd" color={activeLineColor()} />
         </defs>
     </svg>
 );
-
-function LineStartMarker({ id, color }: { id: string; color: string }) {
-    return (
-        <marker
-            id={id}
-            markerWidth="8"
-            markerHeight="8"
-            refX="4"
-            refY="5"
-            orient="auto"
-            markerUnits="userSpaceOnUse"
-        >
-            <circle
-                cx="5"
-                cy="5"
-                r="1.6"
-                style={{ stroke: "none", fill: color }}
-            />
-        </marker>
-    );
-}
 
 function LineEndMarker({ id, color }: { id: string; color: string }) {
     return (
@@ -259,7 +228,7 @@ function LineEndMarker({ id, color }: { id: string; color: string }) {
             id={id}
             markerWidth="10"
             markerHeight="10"
-            refX="7"
+            refX="6"
             refY="4"
             orient="auto"
             markerUnits="userSpaceOnUse"
