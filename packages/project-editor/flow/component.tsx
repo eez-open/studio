@@ -3,7 +3,6 @@ import { observable, computed } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
-import { humanize } from "eez-studio-shared/string";
 import { validators } from "eez-studio-shared/validation";
 import { Rect } from "eez-studio-shared/geometry";
 
@@ -80,6 +79,7 @@ import {
     variableTypeUIProperty
 } from "project-editor/features/variable/variable";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
+import { getComponentName } from "./flow-editor/ComponentsPalette";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -777,31 +777,13 @@ export class Component extends EezObject {
         },
 
         label: (component: Component) => {
-            let type = component.type;
-
-            const parts = type.split("/");
-            if (parts.length == 2) {
-                type = parts[1];
-            }
-
-            if (type.endsWith("Widget")) {
-                type = type.substring(0, type.length - "Widget".length);
-            } else if (type.endsWith("EmbeddedWidget")) {
-                type = type.substring(0, type.length - "EmbeddedWidget".length);
-            } else if (type.endsWith("ActionComponent")) {
-                type = type.substring(
-                    0,
-                    type.length - "ActionComponent".length
-                );
-            }
-
-            type = humanize(type);
+            let name = getComponentName(component.type);
 
             if (component instanceof Widget && component.data) {
-                return `${type}: ${component.data}`;
+                return `${name}: ${component.data}`;
             }
 
-            return humanize(type);
+            return name;
         },
 
         properties: [
@@ -1886,7 +1868,8 @@ function renderActionComponent(
         actionNode.type == "StartActionComponent" ||
         actionNode.type == "InputActionComponent" ||
         actionNode.type == "ConstantActionComponent" ||
-        actionNode.type == "CommentActionComponent"
+        actionNode.type == "CommentActionComponent" ||
+        actionNode.type == "CatchErrorActionComponent"
     );
 
     let outputs = actionNode.outputs.filter(output => output.name != "@seqout");
@@ -1894,7 +1877,8 @@ function renderActionComponent(
         actionNode.type == "EndActionComponent" ||
         actionNode.type == "OutputActionComponent" ||
         actionNode.type == "ConstantActionComponent" ||
-        actionNode.type == "CommentActionComponent"
+        actionNode.type == "CommentActionComponent" ||
+        actionNode.type == "ErrorActionComponent"
     );
 
     // move @error output to end

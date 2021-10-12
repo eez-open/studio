@@ -958,18 +958,15 @@ export class SCPIActionComponent extends ActionComponent {
                 }
             }
         },
-
         label: (component: SCPIActionComponent) => {
-            const label = ActionComponent.classInfo.label!(component);
-
             if (
                 !getDocumentStore(component).isAppletProject &&
-                !component.isInputProperty("instrument")
+                !component.instrument
             ) {
-                return `${label} ${component.instrument}`;
+                return `SCPI ${component.instrument}`;
             }
 
-            return label;
+            return "SCPI";
         },
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7 7">

@@ -24,31 +24,28 @@ import { ProjectContext } from "project-editor/project/context";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { Panel } from "project-editor/components/Panel";
 import { guid } from "eez-studio-shared/guid";
+import { humanize } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getLabel(componentClass: IObjectClassInfo) {
-    const parts = componentClass.name.split("/");
+export function getComponentName(componentClassName: string) {
+    const parts = componentClassName.split("/");
     let name;
     if (parts.length == 2) {
         name = parts[1];
     } else {
-        name = componentClass.name;
+        name = componentClassName;
     }
 
     if (name.endsWith("EmbeddedWidget")) {
-        return name.substring(0, name.length - "EmbeddedWidget".length);
+        name = name.substring(0, name.length - "EmbeddedWidget".length);
+    } else if (name.endsWith("Widget")) {
+        name = name.substring(0, name.length - "Widget".length);
+    } else if (name.endsWith("ActionComponent")) {
+        name = name.substring(0, name.length - "ActionComponent".length);
     }
 
-    if (name.endsWith("Widget")) {
-        return name.substring(0, name.length - "Widget".length);
-    }
-
-    if (name.endsWith("ActionComponent")) {
-        return name.substring(0, name.length - "ActionComponent".length);
-    }
-
-    return componentClass.name;
+    return humanize(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +127,7 @@ class PaletteItem extends React.Component<{
         });
 
         let icon = this.props.componentClass.objectClass.classInfo.icon;
-        let label = getLabel(this.props.componentClass);
+        let label = getComponentName(this.props.componentClass.name);
 
         let titleStyle: React.CSSProperties | undefined;
         if (
