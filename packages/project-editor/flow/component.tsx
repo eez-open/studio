@@ -1885,6 +1885,7 @@ function renderActionComponent(
     const hasSeqIn = !(
         actionNode.type == "StartActionComponent" ||
         actionNode.type == "InputActionComponent" ||
+        actionNode.type == "ConstantActionComponent" ||
         actionNode.type == "CommentActionComponent"
     );
 
@@ -1892,6 +1893,7 @@ function renderActionComponent(
     const hasSeqOut = !(
         actionNode.type == "EndActionComponent" ||
         actionNode.type == "OutputActionComponent" ||
+        actionNode.type == "ConstantActionComponent" ||
         actionNode.type == "CommentActionComponent"
     );
 
