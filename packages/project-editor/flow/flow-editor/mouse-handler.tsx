@@ -1352,22 +1352,37 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
     up(context: IFlowContext) {
         super.up(context);
 
-        if (this.source) {
+        const source = this.source;
+        if (source) {
             const sourceObject = context.DocumentStore.getObjectFromObjectId(
-                this.source.objectId
+                source.objectId
             ) as Component;
 
             const changes = {
                 source: sourceObject.wireID,
-                output: this.source.connectionOutput
+                output: source.connectionOutput
             };
 
             if (this.connectionLines.length > 0) {
                 context.DocumentStore.undoManager.setCombineCommands(true);
 
-                this.connectionLines.forEach(connectionLine =>
-                    context.DocumentStore.updateObject(connectionLine, changes)
-                );
+                this.connectionLines.forEach(connectionLine => {
+                    if (
+                        context.document.connectionExists(
+                            source.objectId,
+                            source.connectionOutput,
+                            getId(connectionLine.targetComponent!),
+                            connectionLine.input
+                        )
+                    ) {
+                        context.DocumentStore.deleteObject(connectionLine);
+                    } else {
+                        context.DocumentStore.updateObject(
+                            connectionLine,
+                            changes
+                        );
+                    }
+                });
 
                 context.DocumentStore.undoManager.setCombineCommands(false);
             }
@@ -1424,7 +1439,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
                         <path
                             key={`${getId(connectionLine.targetComponent!)}${
                                 connectionLine.input
-                            }}`}
+                            }`}
                             d={lineShape}
                             style={this.source ? connectedLineStyle : lineStyle}
                         />
@@ -1579,22 +1594,37 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
     up(context: IFlowContext) {
         super.up(context);
 
-        if (this.target) {
+        const target = this.target;
+        if (target) {
             const targetObject = context.DocumentStore.getObjectFromObjectId(
-                this.target.objectId
+                target.objectId
             ) as Component;
 
             const changes = {
                 target: targetObject.wireID,
-                input: this.target.connectionInput
+                input: target.connectionInput
             };
 
             if (this.connectionLines.length > 0) {
                 context.DocumentStore.undoManager.setCombineCommands(true);
 
-                this.connectionLines.forEach(connectionLine =>
-                    context.DocumentStore.updateObject(connectionLine, changes)
-                );
+                this.connectionLines.forEach(connectionLine => {
+                    if (
+                        context.document.connectionExists(
+                            getId(connectionLine.sourceComponent!),
+                            connectionLine.output,
+                            target.objectId,
+                            target.connectionInput
+                        )
+                    ) {
+                        context.DocumentStore.deleteObject(connectionLine);
+                    } else {
+                        context.DocumentStore.updateObject(
+                            connectionLine,
+                            changes
+                        );
+                    }
+                });
 
                 context.DocumentStore.undoManager.setCombineCommands(false);
             }
@@ -1649,9 +1679,9 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
 
                     return (
                         <path
-                            key={`${getId(connectionLine.sourceComponent!)}${
+                            key={`${getId(connectionLine.sourceComponent!)}:${
                                 connectionLine.output
-                            }}`}
+                            }`}
                             d={lineShape}
                             style={this.target ? connectedLineStyle : lineStyle}
                         />
