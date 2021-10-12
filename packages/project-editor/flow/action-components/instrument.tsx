@@ -897,9 +897,9 @@ function parseScpi(input: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScpiActionComponent extends ActionComponent {
+export class SCPIActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1023,
+        flowComponentId: 1020,
         properties: [
             makeExpressionProperty({
                 name: "instrument",
@@ -912,7 +912,7 @@ export class ScpiActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
-        beforeLoadHook: (component: ScpiActionComponent, jsObject: any) => {
+        beforeLoadHook: (component: SCPIActionComponent, jsObject: any) => {
             if (jsObject.scpi) {
                 if (!jsObject.customInputs && !jsObject.customOutputs) {
                     jsObject.customInputs = [];
@@ -959,7 +959,7 @@ export class ScpiActionComponent extends ActionComponent {
             }
         },
 
-        label: (component: ScpiActionComponent) => {
+        label: (component: SCPIActionComponent) => {
             const label = ActionComponent.classInfo.label!(component);
 
             if (
@@ -1123,7 +1123,7 @@ export class ScpiActionComponent extends ActionComponent {
     }
 }
 
-registerClass(ScpiActionComponent);
+registerClass(SCPIActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1349,7 +1349,7 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             })
         ],
-        label: (component: ScpiActionComponent) => {
+        label: (component: SCPIActionComponent) => {
             const label = ActionComponent.classInfo.label!(component);
             if (!component.isInputProperty("instrument")) {
                 return `${label} ${component.instrument}`;

@@ -49,7 +49,8 @@ import {
     buildAssignableExpression,
     buildExpression,
     checkExpression,
-    evalConstantExpression
+    evalConstantExpression,
+    evalExpression
 } from "project-editor/flow/expression/expression";
 import { calcComponentGeometry } from "project-editor/flow/flow-editor/render";
 
@@ -265,6 +266,7 @@ registerClass(OutputActionComponent);
 
 export class GetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1005,
         properties: [
             makeExpressionProperty({
                 name: "variable",
@@ -334,7 +336,56 @@ registerClass(GetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EvalActionComponent extends ActionComponent {
+export class EvalExprActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1006,
+        properties: [
+            makeExpressionProperty({
+                name: "expression",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            })
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
+                <path d="M384 1536q0-53-37.5-90.5T256 1408t-90.5 37.5T128 1536t37.5 90.5T256 1664t90.5-37.5T384 1536zm384 0q0-53-37.5-90.5T640 1408t-90.5 37.5T512 1536t37.5 90.5T640 1664t90.5-37.5T768 1536zm-384-384q0-53-37.5-90.5T256 1024t-90.5 37.5T128 1152t37.5 90.5T256 1280t90.5-37.5T384 1152zm768 384q0-53-37.5-90.5T1024 1408t-90.5 37.5T896 1536t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm-384-384q0-53-37.5-90.5T640 1024t-90.5 37.5T512 1152t37.5 90.5T640 1280t90.5-37.5T768 1152zM384 768q0-53-37.5-90.5T256 640t-90.5 37.5T128 768t37.5 90.5T256 896t90.5-37.5T384 768zm768 384q0-53-37.5-90.5T1024 1024t-90.5 37.5T896 1152t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zM768 768q0-53-37.5-90.5T640 640t-90.5 37.5T512 768t37.5 90.5T640 896t90.5-37.5T768 768zm768 768v-384q0-52-38-90t-90-38-90 38-38 90v384q0 52 38 90t90 38 90-38 38-90zm-384-768q0-53-37.5-90.5T1024 640t-90.5 37.5T896 768t37.5 90.5T1024 896t90.5-37.5T1152 768zm384-320V192q0-26-19-45t-45-19H192q-26 0-45 19t-19 45v256q0 26 19 45t45 19h1280q26 0 45-19t19-45zm0 320q0-53-37.5-90.5T1408 640t-90.5 37.5T1280 768t37.5 90.5T1408 896t90.5-37.5T1536 768zm128-640v1536q0 52-38 90t-90 38H128q-52 0-90-38t-38-90V128q0-52 38-90t90-38h1408q52 0 90 38t38 90z" />
+            </svg>
+        ),
+        componentHeaderColor: "#A6BBCF"
+    });
+
+    @observable expression: string;
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "result",
+                type: PropertyType.Any
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.expression}</pre>
+            </div>
+        );
+    }
+
+    async execute(flowState: FlowState) {
+        const value = evalExpression(flowState, this, this.expression);
+        flowState.propagateValue(this, "result", value);
+        return undefined;
+    }
+}
+
+registerClass(EvalExprActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class EvalJSExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             {
@@ -344,7 +395,7 @@ export class EvalActionComponent extends ActionComponent {
             }
         ],
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            const inputs = EvalActionComponent.parse(jsObject.expression);
+            const inputs = EvalJSExprActionComponent.parse(jsObject.expression);
             for (const inputName of inputs) {
                 if (
                     !jsObject.customInputs.find(
@@ -359,8 +410,8 @@ export class EvalActionComponent extends ActionComponent {
             }
         },
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
-                <path d="M384 1536q0-53-37.5-90.5T256 1408t-90.5 37.5T128 1536t37.5 90.5T256 1664t90.5-37.5T384 1536zm384 0q0-53-37.5-90.5T640 1408t-90.5 37.5T512 1536t37.5 90.5T640 1664t90.5-37.5T768 1536zm-384-384q0-53-37.5-90.5T256 1024t-90.5 37.5T128 1152t37.5 90.5T256 1280t90.5-37.5T384 1152zm768 384q0-53-37.5-90.5T1024 1408t-90.5 37.5T896 1536t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm-384-384q0-53-37.5-90.5T640 1024t-90.5 37.5T512 1152t37.5 90.5T640 1280t90.5-37.5T768 1152zM384 768q0-53-37.5-90.5T256 640t-90.5 37.5T128 768t37.5 90.5T256 896t90.5-37.5T384 768zm768 384q0-53-37.5-90.5T1024 1024t-90.5 37.5T896 1152t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zM768 768q0-53-37.5-90.5T640 640t-90.5 37.5T512 768t37.5 90.5T640 896t90.5-37.5T768 768zm768 768v-384q0-52-38-90t-90-38-90 38-38 90v384q0 52 38 90t90 38 90-38 38-90zm-384-768q0-53-37.5-90.5T1024 640t-90.5 37.5T896 768t37.5 90.5T1024 896t90.5-37.5T1152 768zm384-320V192q0-26-19-45t-45-19H192q-26 0-45 19t-19 45v256q0 26 19 45t45 19h1280q26 0 45-19t19-45zm0 320q0-53-37.5-90.5T1408 640t-90.5 37.5T1280 768t37.5 90.5T1408 896t90.5-37.5T1536 768zm128-640v1536q0 52-38 90t-90 38H128q-52 0-90-38t-38-90V128q0-52 38-90t90-38h1408q52 0 90 38t38 90z" />
+            <svg viewBox="0 0 22.556997299194336 17.176000595092773">
+                <path d="M4.912.27h3.751v10.514c0 4.738-2.271 6.392-5.899 6.392-.888 0-2.024-.148-2.764-.395l.42-3.036a6.18 6.18 0 0 0 1.925.296c1.58 0 2.567-.716 2.567-3.282V.27zm7.008 12.785c.987.518 2.567 1.037 4.171 1.037 1.728 0 2.641-.716 2.641-1.826 0-1.012-.79-1.629-2.789-2.32-2.764-.987-4.59-2.517-4.59-4.961C11.353 2.147 13.747 0 17.646 0c1.9 0 3.258.37 4.245.839l-.839 3.011a7.779 7.779 0 0 0-3.455-.79c-1.629 0-2.419.765-2.419 1.604 0 1.061.913 1.53 3.085 2.369 2.937 1.086 4.294 2.616 4.294 4.985 0 2.789-2.122 5.158-6.688 5.158-1.9 0-3.776-.518-4.714-1.037l.765-3.085z" />
             </svg>
         ),
         componentHeaderColor: "#A6BBCF"
@@ -374,10 +425,12 @@ export class EvalActionComponent extends ActionComponent {
         const inputs = new Set<string>();
 
         if (expression) {
-            EvalActionComponent.PARAMS_REGEXP.lastIndex = 0;
+            EvalJSExprActionComponent.PARAMS_REGEXP.lastIndex = 0;
             let str = expression;
             while (true) {
-                let matches = str.match(EvalActionComponent.PARAMS_REGEXP);
+                let matches = str.match(
+                    EvalJSExprActionComponent.PARAMS_REGEXP
+                );
                 if (!matches) {
                     break;
                 }
@@ -416,15 +469,17 @@ export class EvalActionComponent extends ActionComponent {
         let jsEvalExpression = this.expression;
         let values: any = {};
 
-        EvalActionComponent.parse(jsEvalExpression).forEach((expression, i) => {
-            const value = flowState.evalExpression(this, expression);
-            const name = `_val${i}`;
-            values[name] = value;
-            jsEvalExpression = jsEvalExpression.replace(
-                new RegExp(`\{${expression}\}`, "g"),
-                `values.${name}`
-            );
-        });
+        EvalJSExprActionComponent.parse(jsEvalExpression).forEach(
+            (expression, i) => {
+                const value = flowState.evalExpression(this, expression);
+                const name = `_val${i}`;
+                values[name] = value;
+                jsEvalExpression = jsEvalExpression.replace(
+                    new RegExp(`\{${expression}\}`, "g"),
+                    `values.${name}`
+                );
+            }
+        );
 
         return { jsEvalExpression, values };
     }
@@ -438,7 +493,7 @@ export class EvalActionComponent extends ActionComponent {
     }
 }
 
-registerClass(EvalActionComponent);
+registerClass(EvalJSExprActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -559,7 +614,7 @@ class SwitchTest extends EezObject {
 
 export class SwitchActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1009,
+        flowComponentId: 1008,
 
         properties: [
             {
@@ -648,6 +703,7 @@ registerClass(SwitchActionComponent);
 
 export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1009,
         properties: [
             makeExpressionProperty({
                 name: "A",
@@ -811,6 +867,7 @@ registerClass(CompareActionComponent);
 
 export class IsTrueActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1010,
         properties: [
             makeExpressionProperty({
                 name: "value",
@@ -1088,7 +1145,7 @@ registerClass(WriteSettingsActionComponent);
 
 export class LogActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1015,
+        flowComponentId: 1012,
         properties: [
             makeExpressionProperty({
                 name: "value",
@@ -1134,7 +1191,7 @@ registerClass(LogActionComponent);
 
 export class CallActionActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1016,
+        flowComponentId: 1013,
 
         properties: [
             makeExpressionProperty({
@@ -1321,7 +1378,7 @@ registerClass(CallActionActionComponent);
 
 export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1018,
+        flowComponentId: 1014,
         properties: [
             makeExpressionProperty({
                 name: "milliseconds",
@@ -1362,6 +1419,7 @@ registerClass(DelayActionComponent);
 
 export class ErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1015,
         properties: [
             makeExpressionProperty({
                 name: "message",
@@ -1403,6 +1461,7 @@ registerClass(ErrorActionComponent);
 
 export class CatchErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1016,
         properties: [],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
@@ -1444,6 +1503,7 @@ class CounterRunningState {
 
 export class CounterActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1017,
         properties: [
             {
                 name: "countValue",
@@ -1524,7 +1584,7 @@ class LoopRunningState {
 
 export class LoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1021,
+        flowComponentId: 1018,
 
         properties: [
             makeAssignableExpressionProperty({
@@ -1647,6 +1707,7 @@ registerClass(LoopActionComponent);
 
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1019,
         properties: [
             {
                 name: "page",

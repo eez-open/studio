@@ -225,9 +225,12 @@ function getClassFromType(type: string) {
 }
 
 function getComponentClass(jsObject: any) {
-    // if (jsObject.type === "GetVariableActionComponent") {
-    //     jsObject.type = "ObserveActionComponent";
-    // }
+    if (jsObject.type === "EvalActionComponent") {
+        jsObject.type = "EvalJSExprActionComponent";
+    }
+    if (jsObject.type === "ScpiActionComponent") {
+        jsObject.type = "SCPIActionComponent";
+    }
     return getClassFromType(jsObject.type);
 }
 
