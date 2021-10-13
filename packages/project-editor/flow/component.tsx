@@ -79,7 +79,6 @@ import {
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./flow-editor/ComponentsPalette";
-import { humanize } from "eez-studio-shared/string";
 
 const { MenuItem } = EEZStudio.remote || {};
 
