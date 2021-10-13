@@ -310,9 +310,11 @@ export abstract class RuntimeBase {
     }
 
     removeQueueTasksForFlowState(flowState: FlowState) {
-        flowState.runtime.queue = flowState.runtime.queue.filter(
-            queueTask => queueTask.flowState != flowState
-        );
+        runInAction(() => {
+            flowState.runtime.queue = flowState.runtime.queue.filter(
+                queueTask => queueTask.flowState != flowState
+            );
+        });
     }
 
     @action
@@ -858,9 +860,21 @@ export class ComponentState {
                     err.toString();
             });
 
-            this.flowState.runtime.logs.addLogItem(
-                new ExecutionErrorLogItem(this.flowState, this.component, err)
-            );
+            if (this.component instanceof ErrorActionComponent) {
+                this.flowState.log(
+                    "error",
+                    `Error: ${err.toString()}`,
+                    this.component
+                );
+            } else {
+                this.flowState.runtime.logs.addLogItem(
+                    new ExecutionErrorLogItem(
+                        this.flowState,
+                        this.component,
+                        err
+                    )
+                );
+            }
 
             const catchErrorOutput = this.findCatchErrorOutput();
             if (!this.flowState.isFinished && catchErrorOutput) {
