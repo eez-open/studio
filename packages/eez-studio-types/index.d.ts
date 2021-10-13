@@ -68,13 +68,19 @@ interface ClassInfo {
     ) => React.ReactNode;
 }
 
-type BasicType = "integer" | "float" | "double" | "boolean" | "string" | "date";
+type BasicType =
+    | "integer"
+    | "float"
+    | "double"
+    | "boolean"
+    | "string"
+    | "date"
+    | "any";
 
 type ValueType =
     | BasicType
     | "undefined"
     | "null"
-    | "any"
     | `object:${string}`
     | "enum:${string}"
     | `struct:${string}`

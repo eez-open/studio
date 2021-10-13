@@ -866,6 +866,9 @@ class UIStateStore {
     // BREAKPOINTS
 
     @observable breakpoints = new Map<Component, boolean>();
+    @observable selectedBreakpoint = observable.box<Component | undefined>(
+        undefined
+    );
 
     isBreakpointAddedForComponent(component: Component) {
         return this.breakpoints.has(component);

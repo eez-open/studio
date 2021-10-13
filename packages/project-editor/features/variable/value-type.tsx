@@ -27,7 +27,8 @@ const basicTypeNames = [
     "double",
     "boolean",
     "string",
-    "date"
+    "date",
+    "any"
 ];
 
 export type BasicType =
@@ -36,13 +37,13 @@ export type BasicType =
     | "double"
     | "boolean"
     | "string"
-    | "date";
+    | "date"
+    | "any";
 
 export type ValueType =
     | BasicType
     | "undefined"
     | "null"
-    | "any"
     | `object:${string}`
     | "enum:${string}"
     | `struct:${string}`

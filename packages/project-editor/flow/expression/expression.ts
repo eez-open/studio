@@ -616,13 +616,17 @@ function findValueTypeInExpressionNode(
             node.valueType = "integer";
         } else {
             if (node.computed) {
-                const valueType = getArrayElementTypeFromType(
-                    node.object.valueType
-                );
-                if (!valueType) {
-                    throw `Array type expected but found '${node.object.valueType}'`;
+                if (node.object.valueType == "any") {
+                    node.valueType = "any";
+                } else {
+                    const valueType = getArrayElementTypeFromType(
+                        node.object.valueType
+                    );
+                    if (!valueType) {
+                        throw `Array type expected but found '${node.object.valueType}'`;
+                    }
+                    node.valueType = valueType as ValueType;
                 }
-                node.valueType = valueType as ValueType;
             } else {
                 const project = getProject(component);
 
@@ -631,6 +635,7 @@ function findValueTypeInExpressionNode(
                     node.property.type == "Identifier"
                 ) {
                     if (node.object.valueType === "any") {
+                        node.valueType = "any";
                         return;
                     }
 
@@ -642,6 +647,8 @@ function findValueTypeInExpressionNode(
                             node.property.name
                         );
                         if (enumMember) {
+                            // TODO
+                            node.valueType = "any";
                             return;
                         }
                     } else {
@@ -649,6 +656,8 @@ function findValueTypeInExpressionNode(
                         const buildInConstantValue =
                             builtInConstants[builtInConstantName];
                         if (buildInConstantValue != undefined) {
+                            // TODO
+                            node.valueType = "any";
                             return;
                         }
                     }
@@ -685,6 +694,8 @@ function findValueTypeInExpressionNode(
 
                     node.valueType = field.type as ValueType;
                 } else if (isObjectType(node.object.valueType)) {
+                    node.valueType = "any";
+                } else if (node.object.valueType == "any") {
                     node.valueType = "any";
                 } else {
                     throw `Struct or object type expected but found '${node.object.valueType}'`;

@@ -2,7 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { IListNode, List } from "eez-studio-ui/list";
 import { Panel } from "project-editor/components/Panel";
-import { action, computed, IObservableValue, observable } from "mobx";
+import { action, computed, IObservableValue } from "mobx";
 import { getId, getLabel } from "project-editor/core/object";
 import { Component } from "project-editor/flow/component";
 import { getFlow } from "project-editor/project/project";
@@ -18,10 +18,6 @@ export class BreakpointsPanel extends React.Component<{
 }> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
-
-    @observable selectedBreakpoint = observable.box<Component | undefined>(
-        undefined
-    );
 
     @computed get allBreakpointsEnabled() {
         for (const enabled of this.context.uiStateStore.breakpoints.values()) {
@@ -62,16 +58,17 @@ export class BreakpointsPanel extends React.Component<{
     };
 
     removeSelected = action(() => {
-        const selectedBreakpoint = this.selectedBreakpoint.get();
+        const selectedBreakpoint =
+            this.context.uiStateStore.selectedBreakpoint.get();
         if (selectedBreakpoint) {
             this.context.uiStateStore.removeBreakpoint(selectedBreakpoint);
-            this.selectedBreakpoint.set(undefined);
+            this.context.uiStateStore.selectedBreakpoint.set(undefined);
         }
     });
 
     removeAll = action(() => {
         this.context.uiStateStore.breakpoints.clear();
-        this.selectedBreakpoint.set(undefined);
+        this.context.uiStateStore.selectedBreakpoint.set(undefined);
     });
 
     render() {
@@ -100,7 +97,7 @@ export class BreakpointsPanel extends React.Component<{
                 iconSize={16}
                 title="Remove selected breakpoint"
                 onClick={this.removeSelected}
-                enabled={!!this.selectedBreakpoint.get()}
+                enabled={!!this.context.uiStateStore.selectedBreakpoint.get()}
             />,
             <IconAction
                 key="remove-all"
@@ -130,7 +127,9 @@ export class BreakpointsPanel extends React.Component<{
                 buttons={buttons}
                 body={
                     <BreakpointsList
-                        selectedBreakpoint={this.selectedBreakpoint}
+                        selectedBreakpoint={
+                            this.context.uiStateStore.selectedBreakpoint
+                        }
                     />
                 }
             />
