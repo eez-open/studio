@@ -958,7 +958,7 @@ export class SCPIActionComponent extends ActionComponent {
         label: (component: SCPIActionComponent) => {
             if (
                 !getDocumentStore(component).isAppletProject &&
-                !component.instrument
+                component.instrument
             ) {
                 return `SCPI ${component.instrument}`;
             }
