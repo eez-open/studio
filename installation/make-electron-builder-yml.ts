@@ -260,7 +260,7 @@ let files = [
             category: "Utility",
             synopsis: packageJson.description,
             description:
-                "The EEZ Studio is an open source cross-platform modular visual tool aimed to address various programming and management tasks for EEZ H24005 programmable power supply, EEZ Bench Box 3 and other test and measurement instruments that support SCPI.",
+                "The EEZ Studio is an open source cross-platform modular visual tool for communication with various T&M instruments that allows simple data acquisition, analysis, presentation and archiving. Flow Editor allows easy creation of complex scenarios for testing and measurement automation.",
             mimeTypes: ["application/x-eez-project"]
         }
     };

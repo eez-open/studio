@@ -602,7 +602,13 @@ export class FlowState {
         }
     }
 
+    @action
     finish() {
+        // remove from queue all tasks beloging to this flow state
+        this.runtime.queue = this.runtime.queue.filter(
+            queueTask => queueTask.flowState != this
+        );
+
         this.flowStates.forEach(flowState => flowState.finish());
 
         this.componentStates.forEach(componentState => componentState.finish());
@@ -877,6 +883,8 @@ export class ComponentState {
                 const catchErrorActionComponentState =
                     flowState && flowState.findCatchErrorActionComponent();
                 if (catchErrorActionComponentState) {
+                    this.flowState.finish();
+
                     catchErrorActionComponentState.flowState.setInputValue(
                         catchErrorActionComponentState.component,
                         "message",
