@@ -143,6 +143,7 @@ export class EndActionComponent extends ActionComponent {
                 null
             );
         }
+        flowState.finish();
         return undefined;
     }
 }

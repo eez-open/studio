@@ -135,6 +135,8 @@ class LogItemRow extends React.Component<{
             return;
         }
 
+        this.runtime.selectedFlowState = logItem.flowState;
+
         const objects: IEezObject[] = [];
 
         if (logItem.connectionLine) {

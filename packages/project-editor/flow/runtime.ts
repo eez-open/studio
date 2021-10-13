@@ -309,6 +309,12 @@ export abstract class RuntimeBase {
         });
     }
 
+    removeQueueTasksForFlowState(flowState: FlowState) {
+        flowState.runtime.queue = flowState.runtime.queue.filter(
+            queueTask => queueTask.flowState != flowState
+        );
+    }
+
     @action
     showNextQueueTask() {
         const nextQueueTask = this.queue.length > 0 ? this.queue[0] : undefined;
@@ -424,6 +430,7 @@ export class FlowState {
     @observable flowStates: FlowState[] = [];
     dataContext: IDataContext;
     @observable error: string | undefined = undefined;
+    @observable isFinished: boolean = false;
 
     constructor(
         public runtime: RuntimeBase,
@@ -604,16 +611,13 @@ export class FlowState {
 
     @action
     finish() {
-        // remove from queue all tasks beloging to this flow state
-        this.runtime.queue = this.runtime.queue.filter(
-            queueTask => queueTask.flowState != this
-        );
-
         this.flowStates.forEach(flowState => flowState.finish());
 
         this.componentStates.forEach(componentState => componentState.finish());
 
         this.runtime.logs.addLogItem(new ActionEndLogItem(this));
+
+        this.isFinished = true;
     }
 
     executeStartAction() {
@@ -830,6 +834,10 @@ export class ComponentState {
         let propagateThroughSeqout = false;
 
         try {
+            if (this.flowState.isFinished) {
+                throw "The flow has already completed execution.";
+            }
+
             const result = await this.component.execute(
                 this.flowState,
                 this.dispose
@@ -855,7 +863,7 @@ export class ComponentState {
             );
 
             const catchErrorOutput = this.findCatchErrorOutput();
-            if (catchErrorOutput) {
+            if (!this.flowState.isFinished && catchErrorOutput) {
                 catchErrorOutput.connectionLines.forEach(connectionLine => {
                     this.flowState.runtime.logs.addLogItem(
                         new OutputValueLogItem(
@@ -883,6 +891,11 @@ export class ComponentState {
                 const catchErrorActionComponentState =
                     flowState && flowState.findCatchErrorActionComponent();
                 if (catchErrorActionComponentState) {
+                    // remove from the queue all the tasks beloging to this flow state
+                    this.flowState.runtime.removeQueueTasksForFlowState(
+                        this.flowState
+                    );
+
                     this.flowState.finish();
 
                     catchErrorActionComponentState.flowState.setInputValue(

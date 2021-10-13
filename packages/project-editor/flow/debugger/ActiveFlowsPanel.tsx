@@ -50,7 +50,15 @@ class FlowsTree extends React.Component<{ runtime: RuntimeBase }> {
                             error: !!flowState.error
                         })}
                     >
-                        {getLabel(flowState.flow)}
+                        <span
+                            style={{
+                                opacity: flowState.isFinished
+                                    ? "0.5"
+                                    : undefined
+                            }}
+                        >
+                            {getLabel(flowState.flow)}
+                        </span>
                     </div>
                 ),
                 children: getChildren(flowState.flowStates),
