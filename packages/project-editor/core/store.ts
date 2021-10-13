@@ -91,9 +91,9 @@ import { getProjectFeatures } from "project-editor/core/extensions";
 import * as SearchModule from "project-editor/core/search";
 import {
     DataContext,
-    RenderVariableStatus,
-    VariableType
+    RenderVariableStatus
 } from "project-editor/features/variable/variable";
+import { ObjectType } from "project-editor/features/variable/value-type";
 import { CurrentSearch } from "project-editor/core/search";
 import { Project, getFlow, ProjectType } from "project-editor/project/project";
 
@@ -107,7 +107,8 @@ import {
     ActionComponent,
     Component,
     CustomInput,
-    CustomOutput
+    CustomOutput,
+    makeExpressionProperty
 } from "project-editor/flow/component";
 import { Page } from "project-editor/features/page/page";
 import {
@@ -2374,8 +2375,9 @@ async function initExtensions() {
                                 );
                             },
                             makeDerivedClassInfo,
+                            makeExpressionProperty,
                             ActionComponent,
-                            VariableType,
+                            ObjectType,
                             getFlow,
                             showGenericDialog,
                             validators: {

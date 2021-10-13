@@ -16,7 +16,7 @@ import {
     getStructureFromType,
     isArrayType,
     isStructType
-} from "project-editor/features/variable/variable";
+} from "project-editor/features/variable/value-type";
 import { getFlow, getProject } from "project-editor/project/project";
 import {
     StateMachineAction,

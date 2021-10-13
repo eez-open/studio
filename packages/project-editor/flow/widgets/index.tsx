@@ -48,10 +48,12 @@ import { Style } from "project-editor/features/style/style";
 import {
     findVariable,
     FLOW_ITERATOR_INDEXES_VARIABLE,
-    FLOW_ITERATOR_INDEX_VARIABLE,
+    FLOW_ITERATOR_INDEX_VARIABLE
+} from "project-editor/features/variable/variable";
+import {
     getEnumTypeNameFromVariable,
     isEnumVariable
-} from "project-editor/features/variable/variable";
+} from "project-editor/features/variable/value-type";
 import {
     drawText,
     styleGetBorderRadius,
@@ -74,7 +76,9 @@ import {
     makeTextPropertyInfo,
     migrateStyleProperty,
     EmbeddedWidget,
-    makeExpressionProperty
+    makeExpressionProperty,
+    ComponentInput,
+    ComponentOutput
 } from "project-editor/flow/component";
 
 import {
@@ -1108,23 +1112,23 @@ export class LayoutViewWidget extends EmbeddedWidget {
             return super.getInputs();
         }
 
-        return [
-            ...super.getInputs(),
-            ...page.components
-                .filter(component => component instanceof StartActionComponent)
-                .map(() => ({
-                    name: "@seqin",
-                    type: PropertyType.Null
-                })),
-            ...page.components
-                .filter(component => component instanceof InputActionComponent)
-                .sort((a, b) => a.top - b.top)
-                .map((inputActionComponent: InputActionComponent) => ({
-                    name: inputActionComponent.wireID,
-                    displayName: inputActionComponent.name,
-                    type: PropertyType.Any
-                }))
-        ];
+        const startComponents: ComponentInput[] = page.components
+            .filter(component => component instanceof StartActionComponent)
+            .map(() => ({
+                name: "@seqin",
+                type: "null"
+            }));
+
+        const inputComponents: ComponentInput[] = page.components
+            .filter(component => component instanceof InputActionComponent)
+            .sort((a, b) => a.top - b.top)
+            .map((inputActionComponent: InputActionComponent) => ({
+                name: inputActionComponent.wireID,
+                displayName: inputActionComponent.name,
+                type: "any"
+            }));
+
+        return [...super.getInputs(), ...startComponents, ...inputComponents];
     }
 
     getOutputs() {
@@ -1133,23 +1137,23 @@ export class LayoutViewWidget extends EmbeddedWidget {
             return super.getOutputs();
         }
 
-        return [
-            ...super.getOutputs(),
-            ...page.components
-                .filter(component => component instanceof EndActionComponent)
-                .map(() => ({
-                    name: "@seqout",
-                    type: PropertyType.Any
-                })),
-            ...page.components
-                .filter(component => component instanceof OutputActionComponent)
-                .sort((a, b) => a.top - b.top)
-                .map((outputActionComponent: OutputActionComponent) => ({
-                    name: outputActionComponent.wireID,
-                    displayName: outputActionComponent.name,
-                    type: PropertyType.Any
-                }))
-        ];
+        const endComponents: ComponentOutput[] = page.components
+            .filter(component => component instanceof EndActionComponent)
+            .map(() => ({
+                name: "@seqout",
+                type: "any"
+            }));
+
+        const outputComponents: ComponentOutput[] = page.components
+            .filter(component => component instanceof OutputActionComponent)
+            .sort((a, b) => a.top - b.top)
+            .map((outputActionComponent: OutputActionComponent) => ({
+                name: outputActionComponent.wireID,
+                displayName: outputActionComponent.name,
+                type: "any"
+            }));
+
+        return [...super.getOutputs(), ...endComponents, ...outputComponents];
     }
 
     // This is for prevention of circular rendering of layouts, i.e Layout A is using Layout B and Layout B is using Layout A.
@@ -4783,10 +4787,13 @@ export class TextInputWidget extends Widget {
                 name: "password",
                 type: PropertyType.Boolean
             },
-            makeExpressionProperty({
-                name: "value",
-                type: PropertyType.String
-            })
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.String
+                },
+                "string"
+            )
         ],
         defaultValue: {
             left: 0,
@@ -4825,12 +4832,12 @@ export class TextInputWidget extends Widget {
     @observable password: boolean;
     @observable value: string;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "value",
-                type: PropertyType.String
+                type: "string"
             }
         ];
     }

@@ -30,7 +30,7 @@
       {
         "name": "instrument",
         "description": "BB3 Instrument",
-        "type": "custom:Instrument",
+        "type": "object:Instrument",
         "defaultValue": "null",
         "persistent": true
       }
@@ -70,26 +70,26 @@
           }
         },
         {
-          "type": "ScpiActionComponent",
+          "type": "SCPIActionComponent",
           "left": -100,
           "top": 681,
-          "width": 258,
-          "height": 100,
+          "width": 253,
+          "height": 99,
           "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
           "customInputs": [
             {
               "name": "delay",
-              "type": 0
+              "type": "integer"
             }
           ],
           "customOutputs": [
             {
               "name": "voltage",
-              "type": 0
+              "type": "float"
             },
             {
               "name": "current",
-              "type": 0
+              "type": "float"
             }
           ],
           "instrument": "instrument",
@@ -124,8 +124,8 @@
           "type": "ConstantActionComponent",
           "left": -298,
           "top": 681,
-          "width": 115,
-          "height": 62,
+          "width": 99,
+          "height": 59,
           "wireID": "dacb4d9d-04e2-47d6-876d-44be32382828",
           "customInputs": [],
           "customOutputs": [],
@@ -238,8 +238,8 @@
           "type": "IsTrueActionComponent",
           "left": 12,
           "top": 884,
-          "width": 98,
-          "height": 87,
+          "width": 86,
+          "height": 83,
           "wireID": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
           "customInputs": [
             {
@@ -254,8 +254,8 @@
           "type": "GetVariableActionComponent",
           "left": -184,
           "top": 884,
-          "width": 133,
-          "height": 61,
+          "width": 118,
+          "height": 59,
           "wireID": "3e958be7-9ce1-4645-844c-d3b0380dbcfb",
           "customInputs": [],
           "customOutputs": [],
@@ -289,8 +289,8 @@
           "type": "GetVariableActionComponent",
           "left": -298,
           "top": 65,
-          "width": 229,
-          "height": 61,
+          "width": 118,
+          "height": 59,
           "wireID": "894df5b9-459f-4aae-db8a-8ad0926a4157",
           "customInputs": [],
           "customOutputs": [],
@@ -300,8 +300,8 @@
           "type": "GetVariableActionComponent",
           "left": -258,
           "top": 181,
-          "width": 133,
-          "height": 61,
+          "width": 118,
+          "height": 59,
           "wireID": "8e014cae-346a-48b2-fbe1-dc1b33607f6f",
           "customInputs": [],
           "customOutputs": [],

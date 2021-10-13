@@ -23,10 +23,8 @@ import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/core/commands";
 import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
-import {
-    Variable,
-    VariableTypePrefix
-} from "project-editor/features/variable/variable";
+import { Variable } from "project-editor/features/variable/variable";
+import { ValueType } from "project-editor/features/variable/value-type";
 import {
     InputActionComponent,
     OutputActionComponent
@@ -242,7 +240,7 @@ export abstract class Flow extends EezObject {
                                 value = JSON.parse(component.value);
                             } catch (err) {}
 
-                            let type: VariableTypePrefix | undefined;
+                            let type: ValueType | undefined;
 
                             if (typeof value === "number") {
                                 type = "float";

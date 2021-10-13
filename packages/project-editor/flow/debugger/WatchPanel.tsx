@@ -10,13 +10,13 @@ import {
 } from "mobx";
 import { IColumn, ITreeNode, TreeTable } from "eez-studio-ui/tree-table";
 import { IDataContext } from "eez-studio-types";
+import { Variable } from "project-editor/features/variable/variable";
 import {
     getArrayElementTypeFromType,
     getEnumTypeNameFromType,
     getStructureFromType,
-    isEnumType,
-    Variable
-} from "project-editor/features/variable/variable";
+    isEnumType
+} from "project-editor/features/variable/value-type";
 import { computedFn } from "mobx-utils";
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";

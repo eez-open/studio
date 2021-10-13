@@ -1,10 +1,10 @@
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import { Variable } from "project-editor/features/variable/variable";
 import {
     isArrayType,
     isEnumType,
-    isStructType,
-    Variable
-} from "project-editor/features/variable/variable";
+    isStructType
+} from "project-editor/features/variable/value-type";
 import { evalConstantExpression } from "project-editor/flow/expression/expression";
 import * as output from "project-editor/core/output";
 

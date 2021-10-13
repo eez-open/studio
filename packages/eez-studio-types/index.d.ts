@@ -59,20 +59,45 @@ interface ClassInfo {
     updateObjectValueHook?: (object: IEezObject, values: any) => void;
     enabledInComponentPalette?: (projectType: ProjectType) => boolean;
 
-    onVariableConstructor?: (variable: IVariable) => Promise<any>;
-    onVariableLoad?: (value: any) => Promise<any>;
-    onVariableSave?: (value: any) => Promise<any>;
-    renderVariableStatus?: (
+    onObjectVariableConstructor?: (variable: IVariable) => Promise<any>;
+    onObjectVariableLoad?: (value: any) => Promise<any>;
+    onObjectVariableSave?: (value: any) => Promise<any>;
+    renderObjectVariableStatus?: (
         variable: IVariable,
         dataContext: IDataContext
     ) => React.ReactNode;
 }
 
+type BasicType = "integer" | "float" | "double" | "boolean" | "string" | "date";
+
+type ValueType =
+    | BasicType
+    | "undefined"
+    | "null"
+    | "any"
+    | `object:${string}`
+    | "enum:${string}"
+    | `struct:${string}`
+    | `array:${BasicType}`
+    | `array:object:${string}`
+    | `array:struct:${string}`
+    | `array:enum:${string}`;
+
+interface ComponentInput {
+    name: string;
+    type: ValueType;
+}
+
+interface ComponentOutput {
+    name: string;
+    type: ValueType;
+}
+
 declare class Component {
     static classInfo: ClassInfo;
 
-    getInputs(): PropertyInfo[];
-    getOutputs(): PropertyInfo[];
+    getInputs(): ComponentInput[];
+    getOutputs(): ComponentOutput[];
 
     execute(
         flowState: IFlowState,
@@ -84,7 +109,7 @@ declare class ActionComponent extends Component {
     getBody(flowContext: IFlowContext): React.ReactNode;
 }
 
-declare class VariableType {
+declare class ObjectType {
     static classInfo: ClassInfo;
 }
 
@@ -264,8 +289,12 @@ interface IEezStudio {
         baseClassInfo: ClassInfo,
         derivedClassInfoProperties: Partial<ClassInfo>
     ) => ClassInfo;
+    makeExpressionProperty(
+        propertyInfo: PropertyInfo,
+        expressionType: ValueType
+    ): PropertyInfo;
     ActionComponent: typeof ActionComponent;
-    VariableType: typeof VariableType;
+    ObjectType: typeof ObjectType;
     getFlow: (object: IEezObject) => IFlow;
     showGenericDialog: (
         conf: GenericDialogConfiguration

@@ -19,6 +19,7 @@ import { InstrumentObject, instruments } from "instrument/instrument-object";
 
 import {
     ActionComponent,
+    ComponentOutput,
     makeExpressionProperty
 } from "project-editor/flow/component";
 import { getConnection } from "instrument/window/connection";
@@ -30,11 +31,8 @@ import {
     buildExpression,
     buildAssignableExpression
 } from "project-editor/flow/expression/expression";
-import {
-    getVariableTypeFromPropertyType,
-    RenderVariableStatus,
-    VariableType
-} from "project-editor/features/variable/variable";
+import { RenderVariableStatus } from "project-editor/features/variable/variable";
+import { ObjectType } from "project-editor/features/variable/value-type";
 import type { IDataContext, IVariable } from "eez-studio-types";
 
 import * as notification from "eez-studio-ui/notification";
@@ -901,11 +899,14 @@ export class SCPIActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1020,
         properties: [
-            makeExpressionProperty({
-                name: "instrument",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }),
+            makeExpressionProperty(
+                {
+                    name: "instrument",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "object:Instrument"
+            ),
             {
                 name: "scpi",
                 type: PropertyType.MultilineText,
@@ -936,9 +937,7 @@ export class SCPIActionComponent extends ActionComponent {
                             ) {
                                 jsObject.customInputs.push({
                                     name: inputName,
-                                    type: getVariableTypeFromPropertyType(
-                                        PropertyType.String
-                                    )
+                                    type: "string"
                                 });
                             }
                         } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
@@ -949,9 +948,7 @@ export class SCPIActionComponent extends ActionComponent {
 
                             jsObject.customOutputs.push({
                                 name: outputName,
-                                type: getVariableTypeFromPropertyType(
-                                    PropertyType.String
-                                )
+                                type: "any"
                             });
                         }
                     }
@@ -1263,12 +1260,12 @@ export class SelectInstrumentActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "instrument",
-                type: PropertyType.Any
+                type: "object:Instrument"
             }
         ];
     }
@@ -1301,11 +1298,14 @@ registerClass(SelectInstrumentActionComponent);
 export class GetInstrumentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            makeExpressionProperty({
-                name: "id",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "id",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 448">
@@ -1316,12 +1316,12 @@ export class GetInstrumentActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "instrument",
-                type: PropertyType.Any
+                type: "any"
             }
         ];
     }
@@ -1341,11 +1341,14 @@ registerClass(GetInstrumentActionComponent);
 export class ConnectInstrumentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            makeExpressionProperty({
-                name: "instrument",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "instrument",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "object:Instrument"
+            )
         ],
         label: (component: SCPIActionComponent) => {
             const label = ActionComponent.classInfo.label!(component);
@@ -1403,10 +1406,10 @@ async function connectToInstrument(instrument: InstrumentObject) {
     notification.error("Failed to connect to the instrument!");
 }
 
-export class InstrumentVariableType extends VariableType {
-    static classInfo = makeDerivedClassInfo(VariableType.classInfo, {
+export class InstrumentVariableType extends ObjectType {
+    static classInfo = makeDerivedClassInfo(ObjectType.classInfo, {
         properties: [],
-        onVariableConstructor: async (variable: IVariable) => {
+        onObjectVariableConstructor: async (variable: IVariable) => {
             const instrument = await showSelectInstrumentDialog(
                 variable.description || humanize(variable.name)
             );
@@ -1415,7 +1418,7 @@ export class InstrumentVariableType extends VariableType {
             }
             return instrument;
         },
-        onVariableLoad: async (value: any) => {
+        onObjectVariableLoad: async (value: any) => {
             if (typeof value == "string") {
                 const instrument = instruments.get(value);
                 if (instrument) {
@@ -1425,10 +1428,10 @@ export class InstrumentVariableType extends VariableType {
             }
             return null;
         },
-        onVariableSave: async (value: InstrumentObject | null) => {
+        onObjectVariableSave: async (value: InstrumentObject | null) => {
             return value != null ? value.id : null;
         },
-        renderVariableStatus: (
+        renderObjectVariableStatus: (
             variable: IVariable,
             dataContext: IDataContext
         ) => {

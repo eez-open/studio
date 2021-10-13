@@ -11,10 +11,8 @@ import {
     WidgetActionNotDefinedLogItem,
     WidgetActionNotFoundLogItem
 } from "project-editor/flow/debugger/logs";
-import {
-    FLOW_ITERATOR_INDEX_VARIABLE,
-    getCustomTypeClassFromType
-} from "project-editor/features/variable/variable";
+import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/variable";
+import { getObjectTypeClassFromType } from "project-editor/features/variable/value-type";
 import * as notification from "eez-studio-ui/notification";
 import {
     StateMachineAction,
@@ -78,13 +76,14 @@ export class LocalRuntime extends RuntimeBase {
                     const saveValue =
                         this.settings.__persistentVariables[variable.name];
                     if (saveValue) {
-                        const aClass = getCustomTypeClassFromType(
+                        const aClass = getObjectTypeClassFromType(
                             variable.type
                         );
-                        if (aClass && aClass.classInfo.onVariableLoad) {
-                            const value = await aClass.classInfo.onVariableLoad(
-                                saveValue
-                            );
+                        if (aClass && aClass.classInfo.onObjectVariableLoad) {
+                            const value =
+                                await aClass.classInfo.onObjectVariableLoad(
+                                    saveValue
+                                );
                             this.DocumentStore.dataContext.set(
                                 variable.name,
                                 value
@@ -102,11 +101,14 @@ export class LocalRuntime extends RuntimeBase {
             if (variable.persistent) {
                 const value = this.DocumentStore.dataContext.get(variable.name);
                 if (value != null) {
-                    const aClass = getCustomTypeClassFromType(variable.type);
-                    if (aClass && aClass.classInfo.onVariableSave) {
-                        const saveValue = await aClass.classInfo.onVariableSave(
-                            this.DocumentStore.dataContext.get(variable.name)
-                        );
+                    const aClass = getObjectTypeClassFromType(variable.type);
+                    if (aClass && aClass.classInfo.onObjectVariableSave) {
+                        const saveValue =
+                            await aClass.classInfo.onObjectVariableSave(
+                                this.DocumentStore.dataContext.get(
+                                    variable.name
+                                )
+                            );
 
                         runInAction(() => {
                             if (!this.settings.__persistentVariables) {
@@ -126,9 +128,9 @@ export class LocalRuntime extends RuntimeBase {
             .globalVariables) {
             let value = this.DocumentStore.dataContext.get(variable.name);
             if (value == null) {
-                const aClass = getCustomTypeClassFromType(variable.type);
-                if (aClass && aClass.classInfo.onVariableConstructor) {
-                    value = await aClass.classInfo.onVariableConstructor(
+                const aClass = getObjectTypeClassFromType(variable.type);
+                if (aClass && aClass.classInfo.onObjectVariableConstructor) {
+                    value = await aClass.classInfo.onObjectVariableConstructor(
                         variable
                     );
                     this.DocumentStore.dataContext.set(variable.name, value);

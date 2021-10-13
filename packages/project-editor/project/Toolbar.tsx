@@ -7,7 +7,7 @@ import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
-import { getCustomTypeClassFromType } from "project-editor/features/variable/variable";
+import { getObjectTypeClassFromType } from "project-editor/features/variable/value-type";
 import { PageTabState } from "project-editor/features/page/PagesNavigation";
 
 @observer
@@ -42,10 +42,10 @@ class GlobalVariableStatuses extends React.Component {
         let globalVariablesStatus: React.ReactNode[] = [];
 
         for (const variable of this.context.project.variables.globalVariables) {
-            const aClass = getCustomTypeClassFromType(variable.type);
-            if (aClass && aClass.classInfo.renderVariableStatus) {
+            const aClass = getObjectTypeClassFromType(variable.type);
+            if (aClass && aClass.classInfo.renderObjectVariableStatus) {
                 globalVariablesStatus.push(
-                    aClass.classInfo.renderVariableStatus(
+                    aClass.classInfo.renderObjectVariableStatus(
                         variable,
                         this.context.dataContext
                     )

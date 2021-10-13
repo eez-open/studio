@@ -21,17 +21,16 @@ import {
     makePushLocalVariableInstruction,
     makePushOutputInstruction
 } from "./instructions";
+import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/variable";
 import {
-    FLOW_ITERATOR_INDEX_VARIABLE,
+    ValueType as ValueType,
     getArrayElementTypeFromType,
     getEnumTypeNameFromType,
     getStructTypeNameFromType,
-    getVariableTypeFromPropertyType,
-    isCustomType,
+    isObjectType,
     isEnumType,
-    isStructType,
-    VariableTypePrefix
-} from "project-editor/features/variable/variable";
+    isStructType
+} from "project-editor/features/variable/value-type";
 import type { IDataContext, IFlowState } from "../flow-interfaces";
 import { DocumentStoreClass } from "project-editor/core/store";
 
@@ -394,14 +393,14 @@ export function evalAssignableExpression(
 type IdentifierExpressionNode = {
     type: "Identifier";
     name: string;
-    valueType: VariableTypePrefix;
+    valueType: ValueType;
 };
 
 type ExpressionNode =
     | {
           type: "Literal";
           value: any;
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | IdentifierExpressionNode
     | {
@@ -409,19 +408,19 @@ type ExpressionNode =
           operator: string;
           left: ExpressionNode;
           right: ExpressionNode;
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "LogicalExpression";
           operator: string;
           left: ExpressionNode;
           right: ExpressionNode;
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "ArrayExpression";
           elements: ExpressionNode[];
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "ObjectExpression";
@@ -433,37 +432,37 @@ type ExpressionNode =
               value: ExpressionNode;
               kind: "init";
           }[];
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "MemberExpression";
           object: ExpressionNode;
           property: ExpressionNode;
           computed: boolean;
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "CallExpression";
           callee: ExpressionNode;
           arguments: ExpressionNode[];
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "ConditionalExpression";
           test: ExpressionNode;
           consequent: ExpressionNode;
           alternate: ExpressionNode;
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "UnaryExpression";
           operator: string;
           argument: ExpressionNode;
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       }
     | {
           type: "__Unknown";
-          valueType: VariableTypePrefix;
+          valueType: ValueType;
       };
 
 type NonComputedPropertyExpressionNode = ExpressionNode & { name: string };
@@ -491,9 +490,7 @@ function findValueTypeInExpressionNode(
                 output => output.name === node.name
             );
             if (output) {
-                node.valueType = getVariableTypeFromPropertyType(
-                    output.type
-                ) as VariableTypePrefix;
+                node.valueType = output.type;
                 return;
             }
         } else {
@@ -501,9 +498,7 @@ function findValueTypeInExpressionNode(
                 input => input.name == node.name
             );
             if (input) {
-                node.valueType = getVariableTypeFromPropertyType(
-                    input.type
-                ) as VariableTypePrefix;
+                node.valueType = input.type;
                 return;
             }
         }
@@ -513,7 +508,7 @@ function findValueTypeInExpressionNode(
             localVariable => localVariable.name == node.name
         );
         if (localVariable) {
-            node.valueType = localVariable.type as VariableTypePrefix;
+            node.valueType = localVariable.type as ValueType;
             return;
         }
 
@@ -521,13 +516,13 @@ function findValueTypeInExpressionNode(
             globalVariable => globalVariable.name == node.name
         );
         if (globalVariable) {
-            node.valueType = globalVariable.type as VariableTypePrefix;
+            node.valueType = globalVariable.type as ValueType;
             return;
         }
 
         let enumDef = project.variables.enumsMap.get(node.name);
         if (enumDef) {
-            node.valueType = `enum:${node.name}` as VariableTypePrefix;
+            node.valueType = `enum:${node.name}` as ValueType;
             return;
         }
 
@@ -627,7 +622,7 @@ function findValueTypeInExpressionNode(
                 if (!valueType) {
                     throw `Array type expected but found '${node.object.valueType}'`;
                 }
-                node.valueType = valueType as VariableTypePrefix;
+                node.valueType = valueType as ValueType;
             } else {
                 const project = getProject(component);
 
@@ -660,7 +655,7 @@ function findValueTypeInExpressionNode(
 
                     if (
                         !isStructType(node.object.valueType) &&
-                        !isCustomType(node.object.valueType)
+                        !isObjectType(node.object.valueType)
                     ) {
                         throw `Unknown "${node.object.name}.${node.property.name}"`;
                     }
@@ -688,11 +683,11 @@ function findValueTypeInExpressionNode(
                         throw `Struct field not found: '${fieldName}'`;
                     }
 
-                    node.valueType = field.type as VariableTypePrefix;
-                } else if (isCustomType(node.object.valueType)) {
+                    node.valueType = field.type as ValueType;
+                } else if (isObjectType(node.object.valueType)) {
                     node.valueType = "any";
                 } else {
-                    throw `Struct or custom type expected but found '${node.object.valueType}'`;
+                    throw `Struct or object type expected but found '${node.object.valueType}'`;
                 }
             }
         }
@@ -1501,7 +1496,7 @@ function evalAssignableExpressionWithContext(
                     globalVariable => globalVariable.name == node.name
                 );
             if (globalVariable) {
-                node.valueType = globalVariable.type as VariableTypePrefix;
+                node.valueType = globalVariable.type as ValueType;
                 return new AssignableValue(
                     "global-variable",
                     globalVariable.name

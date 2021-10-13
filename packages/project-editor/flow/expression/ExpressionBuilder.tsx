@@ -30,11 +30,10 @@ import {
 import {
     getArrayElementTypeFromType,
     getStructureFromType,
-    getVariableTypeFromPropertyType,
-    humanizeVariableType,
     isArrayType,
-    isStructType
-} from "project-editor/features/variable/variable";
+    isStructType,
+    humanizeVariableType
+} from "project-editor/features/variable/value-type";
 
 export async function expressionBuilder(
     object: IEezObject,
@@ -234,9 +233,7 @@ class SelectItemDialog extends React.Component<{
                     label: (
                         <VariableLabel
                             name={componentInput.name}
-                            type={getVariableTypeFromPropertyType(
-                                componentInput.type
-                            )}
+                            type={componentInput.type}
                         />
                     ),
                     children: [],

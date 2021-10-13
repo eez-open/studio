@@ -1,7 +1,5 @@
-import {
-    FLOW_ITERATOR_INDEXES_VARIABLE,
-    VariableTypePrefix
-} from "project-editor/features/variable/variable";
+import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/variable";
+import { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "./expression";
 
 export const binaryOperators: {
@@ -12,17 +10,14 @@ export const binaryOperators: {
             a: any,
             b: any
         ) => any;
-        getValueType: (
-            a: VariableTypePrefix,
-            b: VariableTypePrefix
-        ) => VariableTypePrefix;
+        getValueType: (a: ValueType, b: ValueType) => ValueType;
     };
 } = {
     "+": {
         name: "add",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a + b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (
                 a != "integer" &&
                 a != "float" &&
@@ -55,7 +50,7 @@ export const binaryOperators: {
         name: "sub",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a - b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
             }
@@ -75,7 +70,7 @@ export const binaryOperators: {
         name: "mul",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a * b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
             }
@@ -95,7 +90,7 @@ export const binaryOperators: {
         name: "div",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a / b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
             }
@@ -115,7 +110,7 @@ export const binaryOperators: {
         name: "mod",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a % b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer") {
                 return "undefined";
             }
@@ -129,7 +124,7 @@ export const binaryOperators: {
         name: "left_shift",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a << b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer") {
                 return "undefined";
             }
@@ -143,7 +138,7 @@ export const binaryOperators: {
         name: "right_shift",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a >> b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer") {
                 return "undefined";
             }
@@ -157,7 +152,7 @@ export const binaryOperators: {
         name: "binary_and",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a & b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer") {
                 return "undefined";
             }
@@ -171,7 +166,7 @@ export const binaryOperators: {
         name: "binary_or",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a | b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer") {
                 return "undefined";
             }
@@ -185,7 +180,7 @@ export const binaryOperators: {
         name: "binary_xor",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a ^ b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             if (a != "integer") {
                 return "undefined";
             }
@@ -205,17 +200,14 @@ export const logicalOperators: {
             a: any,
             b: any
         ) => any;
-        getValueType: (
-            a: VariableTypePrefix,
-            b: VariableTypePrefix
-        ) => VariableTypePrefix;
+        getValueType: (a: ValueType, b: ValueType) => ValueType;
     };
 } = {
     "==": {
         name: "equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a == b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     },
@@ -223,7 +215,7 @@ export const logicalOperators: {
         name: "not_equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a != b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     },
@@ -231,7 +223,7 @@ export const logicalOperators: {
         name: "less",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a < b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     },
@@ -239,7 +231,7 @@ export const logicalOperators: {
         name: "greater",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a > b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     },
@@ -247,7 +239,7 @@ export const logicalOperators: {
         name: "less_or_equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a <= b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     },
@@ -255,7 +247,7 @@ export const logicalOperators: {
         name: "greater_or_equal",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a >= b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     },
@@ -263,7 +255,7 @@ export const logicalOperators: {
         name: "logical_and",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a && b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     },
@@ -271,7 +263,7 @@ export const logicalOperators: {
         name: "logical_or",
         eval: (expressionContext: IExpressionContext | undefined, a, b) =>
             a || b,
-        getValueType: (a: VariableTypePrefix, b: VariableTypePrefix) => {
+        getValueType: (a: ValueType, b: ValueType) => {
             return "boolean";
         }
     }
@@ -284,13 +276,13 @@ export const unaryOperators: {
             expressionContext: IExpressionContext | undefined,
             a: any
         ) => any;
-        getValueType: (a: VariableTypePrefix) => VariableTypePrefix;
+        getValueType: (a: ValueType) => ValueType;
     };
 } = {
     "+": {
         name: "unary_plus",
         eval: (expressionContext: IExpressionContext | undefined, a) => +a,
-        getValueType: (a: VariableTypePrefix) => {
+        getValueType: (a: ValueType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
             }
@@ -300,7 +292,7 @@ export const unaryOperators: {
     "-": {
         name: "unary_minus",
         eval: (expressionContext: IExpressionContext | undefined, a) => -a,
-        getValueType: (a: VariableTypePrefix) => {
+        getValueType: (a: ValueType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
             }
@@ -310,7 +302,7 @@ export const unaryOperators: {
     "~": {
         name: "binary_one_complement",
         eval: (expressionContext: IExpressionContext | undefined, a) => ~a,
-        getValueType: (a: VariableTypePrefix) => {
+        getValueType: (a: ValueType) => {
             if (a != "integer") {
                 return "undefined";
             }
@@ -320,7 +312,7 @@ export const unaryOperators: {
     "!": {
         name: "not",
         eval: (expressionContext: IExpressionContext | undefined, a) => !a,
-        getValueType: (a: VariableTypePrefix) => {
+        getValueType: (a: ValueType) => {
             if (a != "integer" && a != "float" && a != "double") {
                 return "undefined";
             }
@@ -339,7 +331,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => any;
-        getValueType: (...args: VariableTypePrefix[]) => VariableTypePrefix;
+        getValueType: (...args: ValueType[]) => ValueType;
     };
 } = {
     "Flow.index": {
@@ -367,7 +359,7 @@ export const builtInFunctions: {
                 return iterators[i];
             }
         },
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             return "integer";
         }
     },
@@ -378,7 +370,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => Math.sin(args[0]),
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             if (
                 args[0] != "integer" &&
                 args[0] != "float" &&
@@ -399,7 +391,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => Math.cos(args[0]),
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             if (
                 args[0] != "integer" &&
                 args[0] != "float" &&
@@ -420,7 +412,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => Math.log(args[0]),
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             if (
                 args[0] != "integer" &&
                 args[0] != "float" &&
@@ -441,7 +433,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => Math.abs(args[0]),
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             if (
                 args[0] != "integer" &&
                 args[0] != "float" &&
@@ -466,7 +458,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => args[0].indexOf(args[1]),
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             return "integer";
         }
     },
@@ -478,7 +470,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => args[0].toString().padStart(args[1], args[2]),
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             return "string";
         }
     },
@@ -490,7 +482,7 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => args[0].slice(args[1], args[2]),
-        getValueType: (...args: VariableTypePrefix[]) => {
+        getValueType: (...args: ValueType[]) => {
             return args[0];
         }
     }
@@ -499,7 +491,7 @@ export const builtInFunctions: {
 export const builtInConstants: {
     [name: string]: {
         value: any;
-        valueType: VariableTypePrefix;
+        valueType: ValueType;
     };
 } = {
     "Math.PI": {

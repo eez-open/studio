@@ -33,7 +33,6 @@ import {
     findPropertyByNameInClassInfo,
     PropertyProps,
     isPropertyHidden,
-    getObjectPropertyDisplayName,
     getProperty,
     getAncestorOfType,
     flowGroup
@@ -74,12 +73,13 @@ import {
     parseIdentifier
 } from "project-editor/flow/expression/expression";
 import {
-    getVariableTypeFromPropertyType,
     variableTypeProperty,
-    variableTypeUIProperty
-} from "project-editor/features/variable/variable";
+    variableTypeUIProperty,
+    ValueType
+} from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./flow-editor/ComponentsPalette";
+import { humanize } from "eez-studio-shared/string";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -90,32 +90,35 @@ export function makeDataPropertyInfo(
     displayName?: string,
     propertyGridGroup?: IPropertyGridGroupDefinition
 ): PropertyInfo {
-    return makeExpressionProperty({
-        name,
-        displayName,
-        type: PropertyType.ObjectReference,
-        referencedObjectCollectionPath: "variables/globalVariables",
-        propertyGridGroup: propertyGridGroup || dataGroup,
-        onSelect: (object: IEezObject, propertyInfo: PropertyInfo) => {
-            const DocumentStore = getDocumentStore(object);
-            if (
-                DocumentStore.isAppletProject ||
-                DocumentStore.isDashboardProject
-            ) {
-                return expressionBuilder(object, propertyInfo, {
-                    assignableExpression: false,
-                    title: "Expression Builder",
-                    width: 400,
-                    height: 600
-                });
-            } else {
-                return onSelectItem(object, propertyInfo, {
-                    title: "Select Data",
-                    width: 800
-                });
+    return makeExpressionProperty(
+        {
+            name,
+            displayName,
+            type: PropertyType.ObjectReference,
+            referencedObjectCollectionPath: "variables/globalVariables",
+            propertyGridGroup: propertyGridGroup || dataGroup,
+            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) => {
+                const DocumentStore = getDocumentStore(object);
+                if (
+                    DocumentStore.isAppletProject ||
+                    DocumentStore.isDashboardProject
+                ) {
+                    return expressionBuilder(object, propertyInfo, {
+                        assignableExpression: false,
+                        title: "Expression Builder",
+                        width: 400,
+                        height: 600
+                    });
+                } else {
+                    return onSelectItem(object, propertyInfo, {
+                        title: "Select Data",
+                        width: 800
+                    });
+                }
             }
-        }
-    });
+        },
+        "any"
+    );
 }
 
 export function makeActionPropertyInfo(
@@ -236,7 +239,7 @@ function getComponentClass(jsObject: any) {
 
 export function outputIsOptionalIfAtLeastOneOutputExists(
     component: Component,
-    propertyInfo: PropertyInfo
+    componentOutput: ComponentOutput
 ) {
     const connectionLines = getFlow(component).connectionLines;
 
@@ -258,27 +261,28 @@ export function outputIsOptionalIfAtLeastOneOutputExists(
 }
 
 function isComponentOutputOptional(
-    object: IEezObject,
-    propertyInfo: PropertyInfo
+    component: Component,
+    componentOutput: ComponentOutput
 ) {
-    if (propertyInfo.isOutputOptional == undefined) {
+    if (componentOutput.isOutputOptional == undefined) {
         return false;
     }
 
-    return typeof propertyInfo.isOutputOptional == "boolean"
-        ? propertyInfo.isOutputOptional
-        : propertyInfo.isOutputOptional(object, propertyInfo);
+    return typeof componentOutput.isOutputOptional == "boolean"
+        ? componentOutput.isOutputOptional
+        : componentOutput.isOutputOptional(component, componentOutput);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function makeExpressionProperty(
     propertyInfo: PropertyInfo,
-    flowProperty?: (object: IEezObject) => "input" | undefined
+    expressionType: ValueType
 ): PropertyInfo {
     return Object.assign(
         {
-            flowProperty: flowProperty || "input",
+            flowProperty: "input",
+            expressionType,
             propertyMenu(props: PropertyProps) {
                 let menuItems: Electron.MenuItem[] = [];
 
@@ -307,9 +311,8 @@ export function makeExpressionProperty(
                                     const customInput = new CustomInput();
                                     customInput.name = props.propertyInfo.name;
                                     customInput.type =
-                                        getVariableTypeFromPropertyType(
-                                            props.propertyInfo.type
-                                        );
+                                        props.propertyInfo.expressionType ||
+                                        "any";
 
                                     DocumentStore.addObject(
                                         component.customInputs,
@@ -346,11 +349,13 @@ export function makeExpressionProperty(
 }
 
 export function makeAssignableExpressionProperty(
-    propertyInfo: PropertyInfo
+    propertyInfo: PropertyInfo,
+    expressionType: ValueType
 ): PropertyInfo {
     return Object.assign(
         {
             flowProperty: "assignable",
+            expressionType,
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
                 expressionBuilder(object, propertyInfo, {
                     assignableExpression: true,
@@ -365,12 +370,11 @@ export function makeAssignableExpressionProperty(
 }
 
 export function makeToggablePropertyToOutput(
-    propertyInfo: PropertyInfo,
-    flowProperty?: (object: IEezObject) => "output" | undefined
+    propertyInfo: PropertyInfo
 ): PropertyInfo {
     return Object.assign(propertyInfo, {
-        flowProperty: flowProperty || "output",
-
+        flowProperty: "output",
+        expressionType: "null",
         propertyMenu(props: PropertyProps) {
             let menuItems: Electron.MenuItem[] = [];
 
@@ -542,9 +546,29 @@ export function componentOutputUnique(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class CustomInput extends EezObject {
+export interface ComponentInput {
+    name: string;
+    type: ValueType;
+
+    displayName?: string;
+}
+
+export interface ComponentOutput {
+    name: string;
+    type: ValueType;
+
+    displayName?:
+        | ((component: Component, componentOutput: ComponentOutput) => string)
+        | string;
+
+    isOutputOptional?:
+        | boolean
+        | ((component: Component, componentOutput: ComponentOutput) => boolean);
+}
+
+export class CustomInput extends EezObject implements ComponentInput {
     @observable name: string;
-    @observable type: string;
+    @observable type: ValueType;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -613,9 +637,9 @@ export class CustomInput extends EezObject {
     }
 }
 
-export class CustomOutput extends EezObject {
+export class CustomOutput extends EezObject implements ComponentOutput {
     @observable name: string;
-    @observable type: string;
+    @observable type: ValueType;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -681,6 +705,21 @@ export class CustomOutput extends EezObject {
             displayName: this.name
         };
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getDisplayName(
+    component: Component,
+    inputOrOutput: ComponentInput | ComponentOutput
+) {
+    if (inputOrOutput.displayName) {
+        if (typeof inputOrOutput.displayName === "string") {
+            return inputOrOutput.displayName;
+        }
+        return inputOrOutput.displayName(component, inputOrOutput);
+    }
+    return inputOrOutput.name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -903,11 +942,7 @@ export class Component extends EezObject {
 
                     jsObject.customInputs.push({
                         name: inputProperty,
-                        type: getVariableTypeFromPropertyType(
-                            propertyInfo
-                                ? propertyInfo.type
-                                : PropertyType.String
-                        )
+                        type: propertyInfo?.expressionType ?? "string"
                     });
                 }
                 delete jsObject.asInputProperties;
@@ -1006,6 +1041,7 @@ export class Component extends EezObject {
                                       "string"
                                         ? componentOutput.displayName
                                         : componentOutput.displayName(
+                                              component,
                                               componentOutput
                                           )
                                     : componentOutput.name
@@ -1150,28 +1186,21 @@ export class Component extends EezObject {
         );
     }
 
-    @computed get inputs() {
+    @computed get inputs(): ComponentInput[] {
         return this.getInputs();
     }
 
-    getInputs() {
-        return [
-            ...(this.customInputs ?? []).map(
-                customInput => customInput.asPropertyInfo
-            )
-        ];
+    getInputs(): ComponentInput[] {
+        return this.customInputs ?? [];
     }
 
-    @computed get outputs() {
+    @computed get outputs(): ComponentOutput[] {
         return this.getOutputs();
     }
 
-    getOutputs() {
-        const outputs = [
-            ...(this.customOutputs ?? []).map(
-                customOutput => customOutput.asPropertyInfo
-            ),
-            ...((this.asOutputProperties ?? [])
+    getOutputs(): ComponentOutput[] {
+        const asOutputs: ComponentOutput[] = (
+            (this.asOutputProperties ?? [])
                 .map(outputPropertyName =>
                     findPropertyByNameInClassInfo(
                         getClassInfo(this),
@@ -1181,14 +1210,22 @@ export class Component extends EezObject {
                 .filter(
                     propertyInfo =>
                         propertyInfo && !isPropertyHidden(this, propertyInfo)
-                ) as PropertyInfo[])
+                ) as PropertyInfo[]
+        ).map(propertyInfo => ({
+            name: propertyInfo.name,
+            type: propertyInfo.expressionType ?? "any"
+        }));
+
+        const outputs: ComponentOutput[] = [
+            ...(this.customOutputs ?? []),
+            ...asOutputs
         ];
 
         if (this.catchError) {
             outputs.push({
                 name: "@error",
                 displayName: "@Error",
-                type: PropertyType.String
+                type: "string"
             });
         }
 
@@ -1789,26 +1826,26 @@ export class Widget extends Component {
         return (
             <>
                 <div className="inputs">
-                    {inputs.map(property => (
+                    {inputs.map(input => (
                         <div
-                            key={property.name}
-                            data-connection-input-id={property.name}
+                            key={input.name}
+                            data-connection-input-id={input.name}
                             className={classNames({
-                                seq: property.name === "@seqin"
+                                seq: input.name === "@seqin"
                             })}
-                            title={getObjectPropertyDisplayName(this, property)}
+                            title={getDisplayName(this, input)}
                         ></div>
                     ))}
                 </div>
                 <div className="outputs">
-                    {outputs.map(property => (
+                    {outputs.map(output => (
                         <div
-                            key={property.name}
-                            data-connection-output-id={property.name}
+                            key={output.name}
+                            data-connection-output-id={output.name}
                             className={classNames({
-                                seq: property.name === "@seqout"
+                                seq: output.name === "@seqout"
                             })}
-                            title={getObjectPropertyDisplayName(this, property)}
+                            title={getDisplayName(this, output)}
                         ></div>
                     ))}
                 </div>
@@ -1917,19 +1954,16 @@ function renderActionComponent(
             <div className="content">
                 {inputs.length > 0 && (
                     <div className="inputs">
-                        {inputs.map(property => (
+                        {inputs.map(input => (
                             <div
                                 className="connection-input-label"
-                                key={property.name}
+                                key={input.name}
                             >
                                 <span
                                     className="data-connection input"
-                                    data-connection-input-id={property.name}
+                                    data-connection-input-id={input.name}
                                 ></span>
-                                {getObjectPropertyDisplayName(
-                                    actionNode,
-                                    property
-                                )}
+                                {getDisplayName(actionNode, input)}
                             </div>
                         ))}
                     </div>
@@ -1937,23 +1971,20 @@ function renderActionComponent(
                 {actionNode.getBody(flowContext)}
                 {outputs.length > 0 && (
                     <div className="outputs">
-                        {outputs.map(property => (
+                        {outputs.map(output => (
                             <div
-                                key={property.name}
+                                key={output.name}
                                 className={classNames(
                                     "connection-output-label",
                                     {
-                                        error: property.name === "@error"
+                                        error: output.name === "@error"
                                     }
                                 )}
                             >
-                                {getObjectPropertyDisplayName(
-                                    actionNode,
-                                    property
-                                )}
+                                {getDisplayName(actionNode, output)}
                                 <span
                                     className="data-connection output"
-                                    data-connection-output-id={property.name}
+                                    data-connection-output-id={output.name}
                                 ></span>
                             </div>
                         ))}
@@ -1971,21 +2002,21 @@ export class ActionComponent extends Component {
         properties: []
     });
 
-    getInputs() {
+    getInputs(): ComponentInput[] {
         return [
             {
                 name: "@seqin",
-                type: PropertyType.Null
+                type: "null"
             },
             ...super.getInputs()
         ];
     }
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             {
                 name: "@seqout",
-                type: PropertyType.Null
+                type: "null"
             },
             ...super.getOutputs()
         ];
@@ -2043,25 +2074,25 @@ export class NotFoundComponent extends ActionComponent {
         componentHeaderColor: "#fc9b9b"
     });
 
-    getInputs() {
+    getInputs(): ComponentInput[] {
         return getFlow(this)
             .connectionLines.filter(
                 connectionLine => connectionLine.target == this.wireID
             )
             .map(connectionLine => ({
                 name: connectionLine.input,
-                type: PropertyType.Any
+                type: "any"
             }));
     }
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return getFlow(this)
             .connectionLines.filter(
                 connectionLine => connectionLine.source == this.wireID
             )
             .map(connectionLine => ({
                 name: connectionLine.output,
-                type: PropertyType.Any
+                type: "any"
             }));
     }
 

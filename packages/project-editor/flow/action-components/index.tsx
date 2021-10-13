@@ -32,6 +32,8 @@ import {
     ActionComponent,
     AutoSize,
     Component,
+    ComponentInput,
+    ComponentOutput,
     componentOutputUnique,
     CustomInput,
     makeAssignableExpressionProperty,
@@ -268,11 +270,14 @@ export class GetVariableActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1005,
         properties: [
-            makeExpressionProperty({
-                name: "variable",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "variable",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
         ],
         icon: (
             <svg
@@ -296,14 +301,14 @@ export class GetVariableActionComponent extends ActionComponent {
 
     @observable variable: string;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "variable",
                 displayName: (component: GetVariableActionComponent) =>
                     component.variable,
-                type: PropertyType.Any
+                type: "any"
             }
         ];
     }
@@ -342,11 +347,14 @@ export class EvalExprActionComponent extends ActionComponent {
         label: () => "Eval Expression",
         componentPaletteLabel: "Eval expr.",
         properties: [
-            makeExpressionProperty({
-                name: "expression",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "expression",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
@@ -358,12 +366,12 @@ export class EvalExprActionComponent extends ActionComponent {
 
     @observable expression: string;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "result",
-                type: PropertyType.Any
+                type: "any"
             }
         ];
     }
@@ -452,12 +460,12 @@ export class EvalJSExprActionComponent extends ActionComponent {
         return [...super.getInputs()];
     }
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "result",
-                type: PropertyType.Any
+                type: "any"
             }
         ];
     }
@@ -507,16 +515,22 @@ export class SetVariableActionComponent extends ActionComponent {
         flowComponentId: 1007,
 
         properties: [
-            makeAssignableExpressionProperty({
-                name: "variable",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }),
-            makeExpressionProperty({
-                name: "value",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeAssignableExpressionProperty(
+                {
+                    name: "variable",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
         ],
         icon: (
             <svg
@@ -584,10 +598,13 @@ class SwitchTest extends EezObject {
 
     static classInfo: ClassInfo = {
         properties: [
-            makeExpressionProperty({
-                name: "condition",
-                type: PropertyType.String
-            }),
+            makeExpressionProperty(
+                {
+                    name: "condition",
+                    type: PropertyType.String
+                },
+                "boolean"
+            ),
             {
                 name: "outputName",
                 type: PropertyType.String,
@@ -655,14 +672,14 @@ export class SwitchActionComponent extends ActionComponent {
 
     @observable tests: SwitchTest[];
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             ...this.tests
                 .filter(test => !!test.outputName)
                 .map(test => ({
                     name: test.outputName,
-                    type: PropertyType.Null
+                    type: "null" as ValueType
                 }))
         ];
     }
@@ -710,30 +727,39 @@ export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1009,
         properties: [
-            makeExpressionProperty({
-                name: "A",
-                displayName: "A",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }),
-            makeExpressionProperty({
-                name: "B",
-                displayName: "B",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (object: CompareActionComponent) => {
-                    return object.operator == "NOT";
-                }
-            }),
-            makeExpressionProperty({
-                name: "C",
-                displayName: "C",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (object: CompareActionComponent) => {
-                    return object.operator !== "BETWEEN";
-                }
-            }),
+            makeExpressionProperty(
+                {
+                    name: "A",
+                    displayName: "A",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "B",
+                    displayName: "B",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (object: CompareActionComponent) => {
+                        return object.operator == "NOT";
+                    }
+                },
+                "any"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "C",
+                    displayName: "C",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (object: CompareActionComponent) => {
+                        return object.operator !== "BETWEEN";
+                    }
+                },
+                "any"
+            ),
             {
                 name: "operator",
                 type: PropertyType.Enum,
@@ -781,17 +807,17 @@ export class CompareActionComponent extends ActionComponent {
     @observable C: string;
     @observable operator: string;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "True",
-                type: PropertyType.Null,
+                type: "null",
                 isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
-                type: PropertyType.Null,
+                type: "null",
                 isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             }
         ];
@@ -874,11 +900,14 @@ export class IsTrueActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1010,
         properties: [
-            makeExpressionProperty({
-                name: "value",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "boolean"
+            )
         ],
         icon: (
             <svg
@@ -910,19 +939,19 @@ export class IsTrueActionComponent extends ActionComponent {
 
     @observable value: any;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "True",
                 displayName: "Yes",
-                type: PropertyType.Null,
+                type: "null",
                 isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
                 displayName: "No",
-                type: PropertyType.Null,
+                type: "null",
                 isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
             }
         ];
@@ -993,13 +1022,13 @@ export class ConstantActionComponent extends ActionComponent {
 
     @observable value: string;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "value",
                 displayName: this.value,
-                type: PropertyType.Any
+                type: "any"
             }
         ];
     }
@@ -1032,12 +1061,12 @@ export class DateNowActionComponent extends ActionComponent {
         componentHeaderColor: "#C0C0C0"
     });
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "value",
-                type: PropertyType.Any
+                type: "date"
             }
         ];
     }
@@ -1055,11 +1084,14 @@ registerClass(DateNowActionComponent);
 export class ReadSettingActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            makeExpressionProperty({
-                name: "key",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "key",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1179">
@@ -1071,12 +1103,12 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     @observable key: string;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "value",
-                type: PropertyType.Any
+                type: "any"
             }
         ];
     }
@@ -1114,16 +1146,22 @@ registerClass(ReadSettingActionComponent);
 export class WriteSettingsActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
-            makeExpressionProperty({
-                name: "key",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }),
-            makeExpressionProperty({
-                name: "value",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "key",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1200">
@@ -1152,11 +1190,14 @@ export class LogActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1012,
         properties: [
-            makeExpressionProperty({
-                name: "value",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
         ],
         beforeLoadHook: (object: LogActionComponent, objectJS: any) => {
             if (
@@ -1199,18 +1240,24 @@ export class CallActionActionComponent extends ActionComponent {
         flowComponentId: 1013,
 
         properties: [
-            makeExpressionProperty({
-                name: "action",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "actions",
-                propertyGridGroup: specificGroup,
-                onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-                    onSelectItem(object, propertyInfo, {
-                        title: propertyInfo.onSelectTitle!,
-                        width: 800
-                    }),
-                onSelectTitle: "Select Action"
-            })
+            makeExpressionProperty(
+                {
+                    name: "action",
+                    type: PropertyType.ObjectReference,
+                    referencedObjectCollectionPath: "actions",
+                    propertyGridGroup: specificGroup,
+                    onSelect: (
+                        object: IEezObject,
+                        propertyInfo: PropertyInfo
+                    ) =>
+                        onSelectItem(object, propertyInfo, {
+                            title: propertyInfo.onSelectTitle!,
+                            width: 800
+                        }),
+                    onSelectTitle: "Select Action"
+                },
+                "string"
+            )
         ],
         label: (component: CallActionActionComponent) => {
             if (!component.action) {
@@ -1270,19 +1317,19 @@ export class CallActionActionComponent extends ActionComponent {
 
     @observable action: string;
 
-    getInputs() {
+    getInputs(): ComponentInput[] {
         const action = findAction(getProject(this), this.action);
         if (!action) {
             return super.getInputs();
         }
 
-        const inputs = action.inputComponents.map(
+        const inputs: ComponentInput[] = action.inputComponents.map(
             (inputActionComponent: InputActionComponent) => ({
                 name: inputActionComponent.wireID,
                 displayName: inputActionComponent.name
                     ? inputActionComponent.name
                     : NOT_NAMED_LABEL,
-                type: PropertyType.Any
+                type: "any"
             })
         );
 
@@ -1295,13 +1342,13 @@ export class CallActionActionComponent extends ActionComponent {
             return super.getOutputs();
         }
 
-        const outputs = action.outputComponents.map(
+        const outputs: ComponentOutput[] = action.outputComponents.map(
             (outputActionComponent: OutputActionComponent) => ({
                 name: outputActionComponent.wireID,
                 displayName: outputActionComponent.name
                     ? outputActionComponent.name
                     : NOT_NAMED_LABEL,
-                type: PropertyType.Any,
+                type: "any",
                 isOutputOptional: true
             })
         );
@@ -1385,11 +1432,14 @@ export class DelayActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1014,
         properties: [
-            makeExpressionProperty({
-                name: "milliseconds",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "milliseconds",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            )
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
@@ -1426,11 +1476,14 @@ export class ErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1015,
         properties: [
-            makeExpressionProperty({
-                name: "message",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeExpressionProperty(
+                {
+                    name: "message",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
         ],
         icon: (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
@@ -1476,12 +1529,12 @@ export class CatchErrorActionComponent extends ActionComponent {
         componentHeaderColor: "#FFAAAA"
     });
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "Message",
-                type: PropertyType.String
+                type: "string"
             }
         ];
     }
@@ -1541,12 +1594,12 @@ export class CounterActionComponent extends ActionComponent {
 
     @observable countValue: number;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "done",
-                type: PropertyType.Null
+                type: "null"
             }
         ];
     }
@@ -1592,26 +1645,38 @@ export class LoopActionComponent extends ActionComponent {
         flowComponentId: 1018,
 
         properties: [
-            makeAssignableExpressionProperty({
-                name: "variable",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }),
-            makeExpressionProperty({
-                name: "from",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }),
-            makeExpressionProperty({
-                name: "to",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }),
-            makeExpressionProperty({
-                name: "step",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            })
+            makeAssignableExpressionProperty(
+                {
+                    name: "variable",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "from",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "to",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "step",
+                    type: PropertyType.String,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            )
         ],
         icon: (
             <svg
@@ -1646,12 +1711,12 @@ export class LoopActionComponent extends ActionComponent {
     @observable to: string;
     @observable step: string;
 
-    getOutputs() {
+    getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "done",
-                type: PropertyType.Null
+                type: "null"
             }
         ];
     }
@@ -1922,3 +1987,4 @@ registerClass(CommentActionComponent);
 ////////////////////////////////////////////////////////////////////////////////
 
 import "project-editor/flow/action-components/instrument";
+import { ValueType } from "project-editor/features/variable/value-type";

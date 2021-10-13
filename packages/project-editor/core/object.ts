@@ -21,6 +21,7 @@ import {
     ProjectType,
     PropertyType
 } from "eez-studio-types";
+import { ValueType } from "project-editor/features/variable/value-type";
 export { ProjectType, PropertyType } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +155,7 @@ export interface PropertyInfo {
     embeddedImage?: boolean;
     partOfNavigation?: boolean;
     fileFilters?: any;
+
     flowProperty?:
         | "input"
         | "output"
@@ -161,6 +163,7 @@ export interface PropertyInfo {
         | ((
               DocumentStore: DocumentStoreClass
           ) => "input" | "output" | "assignable");
+    expressionType?: ValueType;
     isOutputOptional?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
@@ -285,10 +288,10 @@ export interface ClassInfo {
 
     isFlowExecutableComponent?: boolean;
 
-    onVariableConstructor?: (variable: IVariable) => Promise<any>;
-    onVariableLoad?: (value: any) => Promise<any>;
-    onVariableSave?: (value: any) => Promise<any>;
-    renderVariableStatus?: (
+    onObjectVariableConstructor?: (variable: IVariable) => Promise<any>;
+    onObjectVariableLoad?: (value: any) => Promise<any>;
+    onObjectVariableSave?: (value: any) => Promise<any>;
+    renderObjectVariableStatus?: (
         variable: IVariable,
         dataContext: IDataContext
     ) => React.ReactNode;
