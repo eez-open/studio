@@ -26,6 +26,7 @@ import {
     getArrayElementTypeFromType,
     getEnumTypeNameFromType,
     getStructTypeNameFromType,
+    getVariableTypeFromPropertyType,
     isCustomType,
     isEnumType,
     isStructType,
@@ -40,41 +41,15 @@ export { operationIndexes } from "./operations";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function checkArity(functionName: string, node: ExpressionNode) {
-    if (node.type != "CallExpression") {
-        throw "not an CallExpression node";
-    }
-
-    const arity = builtInFunctions[functionName].arity;
-
-    if (typeof arity == "object") {
-        if (
-            node.arguments.length < arity.min ||
-            node.arguments.length > arity.max
-        ) {
-            throw `In function '${functionName}' call expected ${arity.min} to ${arity.max} arguments, but got ${node.arguments.length}`;
-        }
-    } else {
-        if (node.arguments.length != arity) {
-            throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
-        }
-    }
-}
-
-export function parseIdentifier(identifier: string) {
-    try {
-        const rootNode: ExpressionNode = identifierParser.parse(identifier);
-        return rootNode && rootNode.type === "Identifier";
-    } catch (err) {
-        return false;
-    }
-}
-
 export function checkExpression(
     component: Component,
     expression: string,
     assignable: boolean
 ) {
+    if (typeof expression == "string") {
+        expression = expression.trim();
+    }
+
     if (expression == undefined) {
     } else if (typeof expression == "number") {
     } else {
@@ -94,6 +69,10 @@ export function checkAssignableExpression(
     expression: string,
     assignableExpression: boolean
 ) {
+    if (typeof expression == "string") {
+        expression = expression.trim();
+    }
+
     if (assignableExpression == undefined) {
     } else if (typeof assignableExpression == "number") {
     } else {
@@ -118,6 +97,10 @@ export function buildExpression(
     component: Component,
     expression: string
 ) {
+    if (typeof expression == "string") {
+        expression = expression.trim();
+    }
+
     let instructions;
     if (
         expression == undefined ||
@@ -150,6 +133,10 @@ export function buildAssignableExpression(
     component: Component,
     expression: string
 ) {
+    if (typeof expression == "string") {
+        expression = expression.trim();
+    }
+
     function isAssignableExpression(node: ExpressionNode): boolean {
         if (node.type === "Identifier") {
             return true;
@@ -190,6 +177,10 @@ export function buildAssignableExpression(
 }
 
 export function evalConstantExpression(project: Project, expression: string) {
+    if (typeof expression == "string") {
+        expression = expression.trim();
+    }
+
     let value;
     if (expression == undefined) {
         value = undefined;
@@ -220,6 +211,10 @@ export function evalExpression(
     component: Component,
     expression: string
 ) {
+    if (typeof expression == "string") {
+        expression = expression.trim();
+    }
+
     let value;
 
     if (expression == undefined) {
@@ -244,6 +239,73 @@ export function evalExpression(
     }
 
     return value;
+}
+
+export function evalExpressionGetValueType(
+    expressionContext: IExpressionContext,
+    component: Component,
+    expression: string
+) {
+    let value;
+    let valueType;
+
+    if (expression == undefined) {
+        value = undefined;
+    } else if (typeof expression == "number") {
+        value = expression;
+    } else {
+        expression = expression.trim();
+
+        let rootNode: ExpressionNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+
+        findValueTypeInExpressionNode(component, rootNode, false);
+
+        value = evalExpressionWithContext(
+            expressionContext,
+            component,
+            rootNode
+        );
+        valueType = rootNode.valueType;
+    }
+
+    return { value, valueType };
+}
+
+export function parseIdentifier(identifier: string) {
+    try {
+        const rootNode: ExpressionNode = identifierParser.parse(identifier);
+        return rootNode && rootNode.type === "Identifier";
+    } catch (err) {
+        return false;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function checkArity(functionName: string, node: ExpressionNode) {
+    if (node.type != "CallExpression") {
+        throw "not an CallExpression node";
+    }
+
+    const arity = builtInFunctions[functionName].arity;
+
+    if (typeof arity == "object") {
+        if (
+            node.arguments.length < arity.min ||
+            node.arguments.length > arity.max
+        ) {
+            throw `In function '${functionName}' call expected ${arity.min} to ${arity.max} arguments, but got ${node.arguments.length}`;
+        }
+    } else {
+        if (node.arguments.length != arity) {
+            throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -425,19 +487,23 @@ function findValueTypeInExpressionNode(
         }
     } else if (node.type == "Identifier") {
         if (assignable) {
-            const output = component.buildOutputs.find(
+            const output = component.outputs.find(
                 output => output.name === node.name
             );
             if (output) {
-                node.valueType = "any";
+                node.valueType = getVariableTypeFromPropertyType(
+                    output.type
+                ) as VariableTypePrefix;
                 return;
             }
         } else {
-            const input = component.buildInputs.find(
+            const input = component.inputs.find(
                 input => input.name == node.name
             );
             if (input) {
-                node.valueType = "any";
+                node.valueType = getVariableTypeFromPropertyType(
+                    input.type
+                ) as VariableTypePrefix;
                 return;
             }
         }
@@ -1256,7 +1322,11 @@ function evalExpressionWithContext(
                 return flowState.getInputValue(component, input.name);
             }
 
-            return expressionContext.dataContext.get(node.name);
+            if (expressionContext.dataContext.has(node.name)) {
+                return expressionContext.dataContext.get(node.name);
+            }
+
+            throw `Unknown identifier "${node.name}"`;
         }
 
         if (node.type == "BinaryExpression") {

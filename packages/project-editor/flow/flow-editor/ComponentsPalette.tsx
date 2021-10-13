@@ -126,17 +126,16 @@ class PaletteItem extends React.Component<{
                     this.props.componentClass.objectClass
         });
 
-        let icon = this.props.componentClass.objectClass.classInfo.icon;
-        let label = getComponentName(this.props.componentClass.name);
+        const classInfo = this.props.componentClass.objectClass.classInfo;
+        let icon = classInfo.icon;
+        let label =
+            classInfo.componentPaletteLabel ||
+            getComponentName(this.props.componentClass.name);
 
         let titleStyle: React.CSSProperties | undefined;
-        if (
-            this.props.componentClass.objectClass.classInfo.componentHeaderColor
-        ) {
+        if (classInfo.componentHeaderColor) {
             titleStyle = {
-                backgroundColor:
-                    this.props.componentClass.objectClass.classInfo
-                        .componentHeaderColor
+                backgroundColor: classInfo.componentHeaderColor
             };
         }
 

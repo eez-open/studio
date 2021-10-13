@@ -1,7 +1,13 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { Panel } from "project-editor/components/Panel";
-import { computed, IObservableValue, observable } from "mobx";
+import {
+    computed,
+    IObservableValue,
+    observable,
+    runInAction,
+    action
+} from "mobx";
 import { IColumn, ITreeNode, TreeTable } from "eez-studio-ui/tree-table";
 import { IDataContext } from "eez-studio-types";
 import {
@@ -17,6 +23,10 @@ import { Component } from "project-editor/flow/component";
 import { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
 import { getInputName } from "project-editor/flow/debugger/logs";
 import { MaximizeIcon } from "./DebuggerPanel";
+import { evalExpressionGetValueType } from "../expression/expression";
+import { IconAction } from "eez-studio-ui/action";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { validators } from "eez-studio-shared/validation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +54,78 @@ export class WatchPanel extends React.Component<{
     maximized: boolean;
     onToggleMaximized: () => void;
 }> {
+    onAddExpression = async () => {
+        const result = await showGenericDialog({
+            dialogDefinition: {
+                title: "New Watch Expression",
+                fields: [
+                    {
+                        name: "expression",
+                        type: "string",
+                        validators: [validators.required]
+                    }
+                ]
+            },
+            values: {},
+            dialogContext: this.props.runtime.DocumentStore.project
+        });
+
+        runInAction(() =>
+            this.props.runtime.DocumentStore.uiStateStore.watchExpressions.push(
+                result.values.expression
+            )
+        );
+    };
+
+    onEditExpression = async () => {
+        const i = this.selectedExpression.get();
+        if (i == -1) {
+            return;
+        }
+
+        const result = await showGenericDialog({
+            dialogDefinition: {
+                title: "Edit Watch Expression",
+                fields: [
+                    {
+                        name: "expression",
+                        type: "string",
+                        validators: [validators.required]
+                    }
+                ]
+            },
+            values: {
+                expression:
+                    this.props.runtime.DocumentStore.uiStateStore
+                        .watchExpressions[i]
+            },
+            dialogContext: this.props.runtime.DocumentStore.project
+        });
+
+        runInAction(
+            () =>
+                (this.props.runtime.DocumentStore.uiStateStore.watchExpressions[
+                    i
+                ] = result.values.expression)
+        );
+    };
+
+    onDeleteEpression = action(() => {
+        const i = this.selectedExpression.get();
+        if (i == -1) {
+            return;
+        }
+
+        runInAction(() =>
+            this.props.runtime.DocumentStore.uiStateStore.watchExpressions.splice(
+                i,
+                1
+            )
+        );
+    });
+
+    selectedExpression = observable.box<number>(-1);
+
     render() {
         return (
             <Panel
@@ -51,20 +133,51 @@ export class WatchPanel extends React.Component<{
                 title="Watch"
                 collapsed={this.props.collapsed}
                 buttons={[
+                    <IconAction
+                        key="add"
+                        icon="material:add"
+                        iconSize={20}
+                        title="Add Watch Expression"
+                        onClick={this.onAddExpression}
+                    />,
+                    <IconAction
+                        key="edit"
+                        icon="material:edit"
+                        iconSize={20}
+                        title="Edit Watch Expression"
+                        onClick={this.onEditExpression}
+                        enabled={this.selectedExpression.get() != -1}
+                    />,
+                    <IconAction
+                        key="delete"
+                        icon="material:delete"
+                        iconSize={20}
+                        title="Delete Watch Expression"
+                        onClick={this.onDeleteEpression}
+                        enabled={this.selectedExpression.get() != -1}
+                    />,
                     <MaximizeIcon
                         key="toggle-maximize"
                         maximized={this.props.maximized}
                         onToggleMaximized={this.props.onToggleMaximized}
                     />
                 ]}
-                body={<WatchTable runtime={this.props.runtime} />}
+                body={
+                    <WatchTable
+                        runtime={this.props.runtime}
+                        selectedExpression={this.selectedExpression}
+                    />
+                }
             />
         );
     }
 }
 
 @observer
-class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
+class WatchTable extends React.Component<{
+    runtime: RuntimeBase;
+    selectedExpression: IObservableValue<number>;
+}> {
     @computed
     get columns() {
         let result: IColumn[] = [];
@@ -210,6 +323,69 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
         }
     );
 
+    @computed get watchExpressions() {
+        const result = this.selectedComponent;
+
+        return observable({
+            id: "expressions",
+            name: "Expressions",
+            value: undefined,
+            type: "",
+            children: () =>
+                this.props.runtime.DocumentStore.uiStateStore.watchExpressions.map(
+                    (expression, i) => {
+                        let value;
+                        let type: any;
+                        let className: string | undefined;
+                        if (result) {
+                            try {
+                                ({ value, valueType: type } =
+                                    evalExpressionGetValueType(
+                                        result.flowState,
+                                        result.component,
+                                        expression
+                                    ));
+
+                                value = this.getValueLabel(value, type);
+                            } catch (err) {
+                                value = err.toString();
+                                type = "";
+                                className = "error";
+                            }
+                        } else {
+                            value = "undefined";
+                            type = "undefined";
+                        }
+
+                        let valueTitle: string | undefined;
+                        if (
+                            typeof value == "string" ||
+                            typeof value == "number"
+                        ) {
+                            valueTitle = value.toString();
+                        }
+
+                        return observable({
+                            id: expression,
+
+                            name: expression,
+                            value,
+                            valueTitle,
+                            type,
+
+                            children: this.getValueChildren(value, type),
+                            selected: i == this.props.selectedExpression.get(),
+                            expanded: false,
+                            className,
+                            data: i
+                        });
+                    }
+                ),
+            selected: false,
+            expanded: true
+        });
+    }
+
     getVariableTreeNodes = (variables: Variable[]) => {
         return variables.map(variable => {
             const flowState = this.props.runtime.selectedFlowState;
@@ -292,7 +468,7 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
         });
     };
 
-    @computed get componentInputs() {
+    @computed get selectedComponent() {
         const flowState = this.props.runtime.selectedFlowState;
         if (!flowState) {
             return undefined;
@@ -324,6 +500,17 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
             return undefined;
         }
 
+        return { flowState, component };
+    }
+
+    @computed get componentInputs() {
+        const result = this.selectedComponent;
+        if (!result) {
+            return undefined;
+        }
+
+        const { flowState, component } = result;
+
         const inputs = component.inputs.filter(input => input.name != "@seqin");
         if (inputs.length == 0) {
             return undefined;
@@ -352,7 +539,16 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
             id: "root",
             label: "",
             children: () => {
-                const children = [this.globalVariables];
+                const children: ITreeNode[] = [];
+
+                if (
+                    this.props.runtime.DocumentStore.uiStateStore
+                        .watchExpressions.length > 0
+                ) {
+                    children.push(this.watchExpressions);
+                }
+
+                children.push(this.globalVariables);
 
                 const localVariables = this.localVariables;
                 if (localVariables) {
@@ -373,7 +569,13 @@ class WatchTable extends React.Component<{ runtime: RuntimeBase }> {
         return treeNode;
     }
 
-    selectNode = (node?: ITreeNode) => {};
+    selectNode = action((node?: ITreeNode) => {
+        if (node && typeof node.data == "number") {
+            this.props.selectedExpression.set(node.data);
+        } else {
+            this.props.selectedExpression.set(-1);
+        }
+    });
 
     render() {
         return (

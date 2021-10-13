@@ -761,6 +761,12 @@ class UIStateStore {
                 }
             }
         }
+
+        if (uiState.watchExpressions) {
+            this.watchExpressions = uiState.watchExpressions;
+        } else {
+            this.watchExpressions = [];
+        }
     }
 
     get featuresJS() {
@@ -803,7 +809,8 @@ class UIStateStore {
                         [getObjectPathAsString(key)]: value
                     }),
                 {}
-            )
+            ),
+            watchExpressions: toJS(this.watchExpressions)
         };
 
         state.objects = this.objectsJS;
@@ -898,6 +905,11 @@ class UIStateStore {
             this.DocumentStore.runtime.onBreakpointDisabled(component);
         }
     }
+
+    ////////////////////////////////////////
+    // WATCH EXPRESSIONS
+
+    @observable watchExpressions: string[] = [];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

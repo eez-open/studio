@@ -154,6 +154,7 @@ interface IDataContext {
     createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext;
     createWithLocalVariables(variables: IVariable[]): IDataContext;
 
+    has(variableName: string): any;
     get(variableName: string): any;
     set(variableName: string, value: any): void;
 

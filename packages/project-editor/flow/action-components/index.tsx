@@ -340,6 +340,7 @@ export class EvalExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1006,
         label: () => "Eval Expression",
+        componentPaletteLabel: "Eval expr.",
         properties: [
             makeExpressionProperty({
                 name: "expression",
@@ -389,6 +390,8 @@ registerClass(EvalExprActionComponent);
 export class EvalJSExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         label: () => "Eval JS expression",
+        componentPaletteLabel: "Eval JS expr.",
+        componentPaletteGroupName: "Dashboard Specific",
         properties: [
             {
                 name: "expression",

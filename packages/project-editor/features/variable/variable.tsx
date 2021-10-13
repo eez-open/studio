@@ -892,13 +892,14 @@ export class DataContext implements IDataContext {
         return variable;
     }
 
+    has(variableName: string) {
+        return !!this.findVariable(variableName);
+    }
+
     get(variableName: string): any {
         if (!variableName) {
             return undefined;
         }
-
-        const parts = variableName.split(".");
-        variableName = parts[0];
 
         if (variableName === undefined) {
             return undefined;
@@ -981,14 +982,6 @@ export class DataContext implements IDataContext {
                     value = undefined;
                 }
             }
-        }
-
-        for (let i = 1; i < parts.length; i++) {
-            if (value == undefined) {
-                return value;
-            }
-
-            value = value[parts[i]];
         }
 
         return value;

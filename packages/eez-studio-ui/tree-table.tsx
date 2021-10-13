@@ -97,6 +97,7 @@ class TreeTableRow extends React.Component<{
             const firstColumn = this.props.columns[0];
 
             let labelText = this.props.node[firstColumn.name];
+            let labelTitle = this.props.node[firstColumn.name + "Title"];
 
             let label: JSX.Element | undefined;
             let triangle: JSX.Element | undefined;
@@ -117,10 +118,12 @@ class TreeTableRow extends React.Component<{
                         <Icon icon="material:keyboard_arrow_right" size={18} />
                     </span>
                 );
-                label = <span>{labelText}</span>;
+                label = <span title={labelTitle}>{labelText}</span>;
             } else {
                 label = (
-                    <span className="EezStudio_TreeRowLabel">{labelText}</span>
+                    <span className="EezStudio_TreeRowLabel" title={labelTitle}>
+                        {labelText}
+                    </span>
                 );
             }
 
@@ -131,7 +134,10 @@ class TreeTableRow extends React.Component<{
                     onClick={this.onClick.bind(this)}
                 >
                     <td
-                        className={"col" + capitalize(firstColumn.name)}
+                        className={classNames(
+                            this.props.node.className,
+                            "col" + capitalize(firstColumn.name)
+                        )}
                         style={{ paddingLeft: this.props.level * 20 }}
                     >
                         {triangle}
@@ -140,7 +146,11 @@ class TreeTableRow extends React.Component<{
                     {this.props.columns.slice(1).map(column => (
                         <td
                             key={column.name}
-                            className={"col" + capitalize(column.name)}
+                            className={classNames(
+                                this.props.node.className,
+                                "col" + capitalize(column.name)
+                            )}
+                            title={this.props.node[column.name + "Title"]}
                         >
                             {column.name + "Component" in this.props.node
                                 ? this.props.node[column.name + "Component"]

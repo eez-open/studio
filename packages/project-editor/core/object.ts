@@ -221,6 +221,7 @@ export interface ClassInfo {
     parentClassInfo?: ClassInfo;
 
     componentPaletteGroupName?: string;
+    componentPaletteLabel?: string;
     enabledInComponentPalette?: (projectType: ProjectType) => boolean;
 
     showInNavigation?: boolean;
