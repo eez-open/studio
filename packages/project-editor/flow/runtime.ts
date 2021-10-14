@@ -872,22 +872,7 @@ export class ComponentState {
 
             const catchErrorOutput = this.findCatchErrorOutput();
             if (!this.flowState.isFinished && catchErrorOutput) {
-                catchErrorOutput.connectionLines.forEach(connectionLine => {
-                    this.flowState.runtime.logs.addLogItem(
-                        new OutputValueLogItem(
-                            catchErrorOutput.componentState.flowState,
-                            connectionLine,
-                            "@error",
-                            err
-                        )
-                    );
-
-                    this.flowState.propagateValue(
-                        this.component,
-                        "@error",
-                        err
-                    );
-                });
+                this.flowState.propagateValue(this.component, "@error", err);
             } else {
                 let flowState: FlowState | undefined;
                 if (this.component instanceof ErrorActionComponent) {
