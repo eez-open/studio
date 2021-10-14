@@ -217,9 +217,14 @@ export class ContainerWidget extends EmbeddedWidget {
         let visible = true;
 
         if (flowContext.flowState) {
-            let value: any = this.visible
-                ? flowContext.flowState.evalExpression(this, this.visible)
-                : true;
+            let value: any;
+            try {
+                value = this.visible
+                    ? flowContext.flowState.evalExpression(this, this.visible)
+                    : true;
+            } catch (err) {
+                console.error(err);
+            }
             if (typeof value === "boolean") {
                 visible = value;
             } else if (typeof value === "number") {
@@ -431,7 +436,9 @@ export class ListWidget extends EmbeddedWidget {
             ) {
                 try {
                     dataValue = evalExpression(flowContext, this, this.data);
-                } catch (err) {}
+                } catch (err) {
+                    console.error(err);
+                }
             } else {
                 dataValue = flowContext.dataContext.get(this.data);
             }
@@ -860,6 +867,7 @@ export class SelectWidget extends EmbeddedWidget {
                 try {
                     indexValue = evalExpression(flowContext, this, this.data);
                 } catch (err) {
+                    console.error(err);
                     indexValue = 0;
                 }
                 if (typeof indexValue === "number") {
@@ -1652,12 +1660,14 @@ export class TextWidget extends EmbeddedWidget {
             if (flowContext.flowState) {
                 try {
                     const value = evalExpression(flowContext, this, this.data);
+
                     if (value != null && value != undefined) {
                         text = value.toString();
                     } else {
                         text = "";
                     }
                 } catch (err) {
+                    console.error(err);
                     text = err.toString();
                 }
             } else {
@@ -2555,9 +2565,14 @@ export class ButtonWidget extends EmbeddedWidget {
         let buttonEnabled;
 
         if (flowContext.flowState) {
-            buttonEnabled = this.enabled
-                ? flowContext.flowState.evalExpression(this, this.enabled)
-                : true;
+            try {
+                buttonEnabled = this.enabled
+                    ? flowContext.flowState.evalExpression(this, this.enabled)
+                    : true;
+            } catch (err) {
+                console.error(err);
+                buttonEnabled = true;
+            }
         } else {
             buttonEnabled = true;
         }
@@ -4269,13 +4284,23 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
 
         const drawGauge = (ctx: CanvasRenderingContext2D) => {
             // min
-            let min = evalExpression(flowContext, this, this.min);
-            let max = evalExpression(flowContext, this, this.max);
-            let value =
-                this.data && evalExpression(flowContext, this, this.data);
-            let threshold = evalExpression(flowContext, this, this.threshold);
-            let unit =
-                this.data && evalExpression(flowContext, this, this.unit);
+            let min;
+            let max;
+            let value;
+            let threshold;
+            let unit;
+
+            try {
+                min = evalExpression(flowContext, this, this.min);
+                max = evalExpression(flowContext, this, this.max);
+                value =
+                    this.data && evalExpression(flowContext, this, this.data);
+                threshold = evalExpression(flowContext, this, this.threshold);
+                unit =
+                    this.data && evalExpression(flowContext, this, this.unit);
+            } catch (err) {
+                console.error(err);
+            }
 
             if (
                 !(typeof min == "number") ||
@@ -4702,11 +4727,16 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
 
                             if (flowContext.flowState) {
                                 if (this.data) {
-                                    text = evalExpression(
-                                        flowContext,
-                                        this,
-                                        this.data
-                                    );
+                                    try {
+                                        text = evalExpression(
+                                            flowContext,
+                                            this,
+                                            this.data
+                                        );
+                                    } catch (err) {
+                                        console.error(err);
+                                        text = "";
+                                    }
                                 } else {
                                     text = "";
                                 }

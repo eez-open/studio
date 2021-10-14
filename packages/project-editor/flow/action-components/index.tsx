@@ -143,7 +143,7 @@ export class EndActionComponent extends ActionComponent {
                 null
             );
         }
-        flowState.finish();
+        flowState.numActiveComponents--;
         return undefined;
     }
 }
@@ -1364,7 +1364,14 @@ export class CallActionActionComponent extends ActionComponent {
             return;
         }
 
-        const actionFlowState = flowState.executeAction(this, action);
+        const actionFlowState = new FlowState(
+            flowState.runtime,
+            action,
+            flowState,
+            this
+        );
+        flowState.flowStates.push(actionFlowState);
+        actionFlowState.start();
 
         const componentState = flowState.getComponentState(this);
         for (let [input, inputData] of componentState.inputsData) {
@@ -1379,6 +1386,13 @@ export class CallActionActionComponent extends ActionComponent {
                     }
                 }
             }
+        }
+
+        if (actionFlowState.numActiveComponents == 0) {
+            actionFlowState.isFinished = true;
+            flowState.propagateValue(this, "@seqout", null);
+        } else {
+            actionFlowState.numActiveComponents++;
         }
 
         return false;

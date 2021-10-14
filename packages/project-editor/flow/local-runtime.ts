@@ -323,26 +323,6 @@ export class LocalRuntime extends RuntimeBase {
         }
     }
 
-    removeFlowState(flowState: FlowState) {
-        let flowStates: FlowState[];
-        if (flowState.parentFlowState) {
-            flowStates = flowState.parentFlowState.flowStates;
-        } else {
-            flowStates = this.flowStates;
-        }
-
-        const i = flowStates.indexOf(flowState);
-
-        if (i == -1) {
-            console.error("UNEXPECTED!");
-            return;
-        }
-
-        runInAction(() => {
-            flowStates.splice(i, 1);
-        });
-    }
-
     readSettings(key: string) {
         return this.settings[key];
     }

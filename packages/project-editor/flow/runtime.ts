@@ -35,11 +35,11 @@ import {
 } from "project-editor/flow/debugger/logs";
 import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow/debugger/WatchPanel";
-import { Action } from "project-editor/features/action/action";
 import {
     evalExpression,
     evalAssignableExpression
 } from "project-editor/flow/expression/expression";
+import { Action } from "project-editor/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -307,13 +307,17 @@ export abstract class RuntimeBase {
             component,
             connectionLine
         });
+        flowState.numActiveComponents++;
     }
 
     removeQueueTasksForFlowState(flowState: FlowState) {
         runInAction(() => {
+            const queueTasksBefore = flowState.runtime.queue.length;
             flowState.runtime.queue = flowState.runtime.queue.filter(
                 queueTask => queueTask.flowState != flowState
             );
+            const queueTasksAfter = flowState.runtime.queue.length;
+            flowState.numActiveComponents -= queueTasksBefore - queueTasksAfter;
         });
     }
 
@@ -325,6 +329,13 @@ export abstract class RuntimeBase {
 
         if (nextQueueTask) {
             setTimeout(() => this.showQueueTask(nextQueueTask), 10);
+        } else {
+            // deselect all objects
+            const editorState =
+                this.DocumentStore.editorsStore.activeEditor?.state;
+            if (editorState instanceof FlowTabState) {
+                editorState.selectObjects([]);
+            }
         }
     }
 
@@ -332,26 +343,6 @@ export abstract class RuntimeBase {
         flowContext: IFlowContext,
         widget: Widget
     ): void;
-
-    removeFlowState(flowState: FlowState) {
-        let flowStates: FlowState[];
-        if (flowState.parentFlowState) {
-            flowStates = flowState.parentFlowState.flowStates;
-        } else {
-            flowStates = this.flowStates;
-        }
-
-        const i = flowStates.indexOf(flowState);
-
-        if (i == -1) {
-            console.error("UNEXPECTED!");
-            return;
-        }
-
-        runInAction(() => {
-            flowStates.splice(i, 1);
-        });
-    }
 
     selectQueueTask(queueTask: QueueTask | undefined) {
         this.selectedQueueTask = queueTask;
@@ -433,6 +424,7 @@ export class FlowState {
     dataContext: IDataContext;
     @observable error: string | undefined = undefined;
     @observable isFinished: boolean = false;
+    numActiveComponents = 0;
 
     constructor(
         public runtime: RuntimeBase,
@@ -647,14 +639,6 @@ export class FlowState {
         }
     }
 
-    @action
-    executeAction(component: Component, action: Action) {
-        const flowState = new FlowState(this.runtime, action, this, component);
-        this.flowStates.push(flowState);
-        flowState.start();
-        return flowState;
-    }
-
     propagateValue(
         sourceComponent: Component,
         output: string,
@@ -844,6 +828,14 @@ export class ComponentState {
                 this.flowState,
                 this.dispose
             );
+
+            if (
+                --this.flowState.numActiveComponents == 0 &&
+                this.flowState.flow instanceof Action
+            ) {
+                runInAction(() => (this.flowState.isFinished = true));
+            }
+
             if (result == undefined) {
                 propagateThroughSeqout = true;
             } else {
@@ -855,6 +847,8 @@ export class ComponentState {
                 }
             }
         } catch (err) {
+            --this.flowState.numActiveComponents;
+
             runInAction(() => {
                 this.flowState.runtime.error = this.flowState.error =
                     err.toString();
@@ -910,7 +904,12 @@ export class ComponentState {
                         this.flowState
                     );
 
-                    this.flowState.finish();
+                    if (
+                        catchErrorActionComponentState.flowState !=
+                        this.flowState
+                    ) {
+                        runInAction(() => (this.flowState.isFinished = true));
+                    }
 
                     catchErrorActionComponentState.flowState.setInputValue(
                         catchErrorActionComponentState.component,

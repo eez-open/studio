@@ -1431,16 +1431,20 @@ function evalExpressionWithContext(
             }
 
             const object = evalNode(node.object);
-            if (object != undefined) {
-                const property = node.computed
-                    ? evalNode(node.property)
-                    : (node.property as NonComputedPropertyExpressionNode).name;
-                if (property != undefined) {
-                    return object[property];
-                }
+
+            if (object == undefined) {
+                throw `undefined`;
             }
 
-            return undefined;
+            const property = node.computed
+                ? evalNode(node.property)
+                : (node.property as NonComputedPropertyExpressionNode).name;
+
+            if (property == undefined) {
+                throw `undefined`;
+            }
+
+            return object[property];
         }
 
         if (node.type == "ArrayExpression") {

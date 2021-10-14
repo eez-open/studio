@@ -1200,11 +1200,7 @@ class DebuggerConnection {
                             return;
                         }
 
-                        runtime.removeFlowState(flowState);
-
-                        if (runtime.flowStates.length == 0) {
-                            flowState.runtime.stopRuntime(true);
-                        }
+                        runInAction(() => (flowState.isFinished = true));
                     }
                     break;
 
