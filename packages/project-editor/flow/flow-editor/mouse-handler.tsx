@@ -22,9 +22,10 @@ import {
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 import { generateNodeRedLinkPath } from "project-editor/flow/flow-editor/connection-line-shape";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { getId } from "project-editor/core/object";
-import { Component } from "project-editor/flow/component";
+import type { Component } from "project-editor/flow/component";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1244,7 +1245,10 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
             context.document.selectedConnectionLines.length > 0 &&
             !context.document.selectedConnectionLines.find(
                 objectAdapter =>
-                    !(objectAdapter.object instanceof ConnectionLine)
+                    !(
+                        objectAdapter.object instanceof
+                        ProjectEditor.ConnectionLineClass
+                    )
             )
         ) {
             selectedConnectionLines =
@@ -1486,7 +1490,10 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
             context.document.selectedConnectionLines.length > 0 &&
             !context.document.selectedConnectionLines.find(
                 objectAdapter =>
-                    !(objectAdapter.object instanceof ConnectionLine)
+                    !(
+                        objectAdapter.object instanceof
+                        ProjectEditor.ConnectionLineClass
+                    )
             )
         ) {
             selectedConnectionLines =

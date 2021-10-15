@@ -1,7 +1,7 @@
 import { computed } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
-import { IDocument } from "project-editor/flow/flow-interfaces";
-import { EditorFlowContext } from "project-editor/flow/flow-editor/context";
+import type { IDocument } from "project-editor/flow/flow-interfaces";
+import type { EditorFlowContext } from "project-editor/flow/flow-editor/context";
 import {
     getObjectIdFromPoint,
     getObjectIdsInsideRect,
@@ -9,10 +9,11 @@ import {
 } from "project-editor/flow/flow-editor/bounding-rects";
 import { IEezObject, getParent } from "project-editor/core/object";
 import { getDocumentStore } from "project-editor/core/store";
-import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component } from "project-editor/flow/component";
 import { _intersection } from "eez-studio-shared/algorithm";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -22,7 +23,8 @@ export class FlowDocument implements IDocument {
 
     @computed get connectionLines(): ITreeObjectAdapter[] {
         return (this.flow.children as ITreeObjectAdapter[]).filter(
-            editorObject => editorObject.object instanceof ConnectionLine
+            editorObject =>
+                editorObject.object instanceof ProjectEditor.ConnectionLineClass
         );
     }
 
@@ -91,7 +93,10 @@ export class FlowDocument implements IDocument {
             const editorObject = this.findObjectById(id);
             if (
                 editorObject &&
-                !(editorObject.object instanceof ConnectionLine)
+                !(
+                    editorObject.object instanceof
+                    ProjectEditor.ConnectionLineClass
+                )
             ) {
                 const parent = getParent(editorObject.object);
 

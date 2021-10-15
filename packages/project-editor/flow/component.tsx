@@ -2,7 +2,6 @@ import React from "react";
 import { observable, computed } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
-import { to16bitsColor } from "eez-studio-shared/color";
 import { validators } from "eez-studio-shared/validation";
 import { Rect } from "eez-studio-shared/geometry";
 
@@ -15,7 +14,6 @@ import {
     PropertyInfo,
     PropertyType,
     findClass,
-    isArray,
     dataGroup,
     actionsGroup,
     geometryGroup,
@@ -24,28 +22,30 @@ import {
     IPropertyGridGroupDefinition,
     areAllChildrenOfTheSameParent,
     IOnSelectParams,
-    getChildOfObject,
     getParent,
-    getClassInfo,
     makeDerivedClassInfo,
-    getLabel,
-    findPropertyByNameInObject,
     findPropertyByNameInClassInfo,
     PropertyProps,
     isPropertyHidden,
     getProperty,
-    getAncestorOfType,
-    flowGroup
+    flowGroup,
+    MessageType
 } from "project-editor/core/object";
-import { loadObject, objectToJS } from "project-editor/core/serialization";
+import {
+    getChildOfObject,
+    isArray,
+    getClassInfo,
+    getLabel,
+    findPropertyByNameInObject,
+    getAncestorOfType,
+    Message
+} from "project-editor/core/store";
+import { loadObject, objectToJS } from "project-editor/core/store";
 import {
     IContextMenuContext,
     getDocumentStore,
     DocumentStoreClass
 } from "project-editor/core/store";
-import * as output from "project-editor/core/output";
-
-import { checkObjectReference, getFlow } from "project-editor/project/project";
 
 import type {
     IResizeHandler,
@@ -60,13 +60,16 @@ import {
 
 import { onSelectItem } from "project-editor/components/SelectItem";
 
-import { Page } from "project-editor/features/page/page";
+import type { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import type { ContainerWidget, ListWidget } from "project-editor/flow/widgets";
 import { WIDGET_TYPE_NONE } from "project-editor/flow/widgets/widget_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
 import {
     checkAssignableExpression,
     checkExpression,
@@ -79,6 +82,7 @@ import {
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./flow-editor/ComponentsPalette";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -99,8 +103,8 @@ export function makeDataPropertyInfo(
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) => {
                 const DocumentStore = getDocumentStore(object);
                 if (
-                    DocumentStore.isAppletProject ||
-                    DocumentStore.isDashboardProject
+                    DocumentStore.project.isAppletProject ||
+                    DocumentStore.project.isDashboardProject
                 ) {
                     return expressionBuilder(object, propertyInfo, {
                         assignableExpression: false,
@@ -154,7 +158,7 @@ export function makeStylePropertyInfo(
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
         enumerable: false,
         hideInPropertyGrid: (object: IEezObject) =>
-            getDocumentStore(object).isDashboardProject
+            getDocumentStore(object).project.isDashboardProject
     };
 }
 
@@ -240,7 +244,7 @@ export function outputIsOptionalIfAtLeastOneOutputExists(
     component: Component,
     componentOutput: ComponentOutput
 ) {
-    const connectionLines = getFlow(component).connectionLines;
+    const connectionLines = ProjectEditor.getFlow(component).connectionLines;
 
     for (const componentOutput of component.outputs) {
         if (componentOutput.name != "@seqout") {
@@ -405,7 +409,7 @@ export function makeToggablePropertyToOutput(
                             } else {
                                 asOutputProperties.splice(i, 1);
 
-                                getFlow(
+                                ProjectEditor.getFlow(
                                     component
                                 ).deleteConnectionLinesFromOutput(
                                     component,
@@ -613,13 +617,27 @@ export class CustomInput extends EezObject implements ComponentInput {
                     Component.classInfo
                 );
                 if (component) {
-                    getFlow(component).rerouteConnectionLinesInput(
+                    ProjectEditor.getFlow(
+                        component
+                    ).rerouteConnectionLinesInput(
                         component,
                         object.name,
                         values.name
                     );
                 }
             }
+        },
+
+        deleteObjectRefHook: (customInput: CustomInput) => {
+            const component = getAncestorOfType<Component>(
+                customInput,
+                Component.classInfo
+            ) as Component;
+
+            ProjectEditor.getFlow(component).deleteConnectionLinesToInput(
+                component,
+                customInput.name
+            );
         }
     };
 
@@ -683,13 +701,27 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                     Component.classInfo
                 );
                 if (component) {
-                    getFlow(component).rerouteConnectionLinesOutput(
+                    ProjectEditor.getFlow(
+                        component
+                    ).rerouteConnectionLinesOutput(
                         component,
                         object.name,
                         values.name
                     );
                 }
             }
+        },
+
+        deleteObjectRefHook: (customOutput: CustomOutput) => {
+            const component = getAncestorOfType<Component>(
+                customOutput,
+                Component.classInfo
+            ) as Component;
+
+            ProjectEditor.getFlow(component).deleteConnectionLinesFromOutput(
+                component,
+                customOutput.name
+            );
         }
     };
 
@@ -737,7 +769,10 @@ function addBreakpointMenuItems(
 
     const uiStateStore = DocumentStore.uiStateStore;
 
-    if (DocumentStore.isAppletProject || DocumentStore.isDashboardProject) {
+    if (
+        DocumentStore.project.isAppletProject ||
+        DocumentStore.project.isDashboardProject
+    ) {
         if (uiStateStore.isBreakpointAddedForComponent(component)) {
             additionalMenuItems.push(
                 new MenuItem({
@@ -996,20 +1031,20 @@ export class Component extends EezObject {
         },
 
         check: (component: Component) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             component.inputs.forEach(componentInput => {
                 if (
                     componentInput.name != "@seqin" &&
-                    !getFlow(component).connectionLines.find(
+                    !ProjectEditor.getFlow(component).connectionLines.find(
                         connectionLine =>
                             connectionLine.targetComponent === component &&
                             connectionLine.input === componentInput.name
                     )
                 ) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             `No connection to input "${
                                 componentInput.displayName ||
                                 componentInput.name
@@ -1020,7 +1055,8 @@ export class Component extends EezObject {
                 }
             });
 
-            const connectionLines = getFlow(component).connectionLines;
+            const connectionLines =
+                ProjectEditor.getFlow(component).connectionLines;
             component.outputs.forEach(componentOutput => {
                 if (
                     componentOutput.name != "@seqout" &&
@@ -1032,8 +1068,8 @@ export class Component extends EezObject {
                     !isComponentOutputOptional(component, componentOutput)
                 ) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             `Output "${
                                 componentOutput.displayName
                                     ? typeof componentOutput.displayName ==
@@ -1054,8 +1090,8 @@ export class Component extends EezObject {
             const DocumentStore = getDocumentStore(component);
 
             if (
-                DocumentStore.isAppletProject ||
-                DocumentStore.isDashboardProject
+                DocumentStore.project.isAppletProject ||
+                DocumentStore.project.isDashboardProject
             ) {
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (isFlowProperty(DocumentStore, propertyInfo, "input")) {
@@ -1065,8 +1101,8 @@ export class Component extends EezObject {
                                 checkExpression(component, value, false);
                             } catch (err) {
                                 messages.push(
-                                    new output.Message(
-                                        output.Type.ERROR,
+                                    new Message(
+                                        MessageType.ERROR,
                                         `Invalid expression: ${err}`,
                                         getChildOfObject(
                                             component,
@@ -1093,8 +1129,8 @@ export class Component extends EezObject {
                                 );
                             } catch (err) {
                                 messages.push(
-                                    new output.Message(
-                                        output.Type.ERROR,
+                                    new Message(
+                                        MessageType.ERROR,
                                         `Invalid assignable expression: ${err}`,
                                         getChildOfObject(
                                             component,
@@ -1107,8 +1143,16 @@ export class Component extends EezObject {
                     }
                 }
             } else {
-                checkObjectReference(component, "data", messages);
-                checkObjectReference(component, "action", messages);
+                ProjectEditor.documentSearch.checkObjectReference(
+                    component,
+                    "data",
+                    messages
+                );
+                ProjectEditor.documentSearch.checkObjectReference(
+                    component,
+                    "action",
+                    messages
+                );
             }
 
             return messages;
@@ -1117,13 +1161,37 @@ export class Component extends EezObject {
         updateObjectValueHook: (object: Component, values: any) => {
             if (values.catchError !== undefined) {
                 if (!values.catchError && object.catchError) {
-                    const flow = getFlow(object);
+                    const flow = ProjectEditor.getFlow(object);
                     flow.deleteConnectionLinesFromOutput(object, "@error");
                 }
             }
         },
 
-        isFlowExecutableComponent: true
+        isFlowExecutableComponent: true,
+
+        deleteObjectRefHook: (
+            component: Component,
+            options?: { dropPlace?: IEezObject }
+        ) => {
+            const flow = ProjectEditor.getFlow(component);
+
+            let keepConnectionLines =
+                options &&
+                options.dropPlace &&
+                flow == ProjectEditor.getFlow(options.dropPlace);
+
+            if (!keepConnectionLines) {
+                flow.deleteConnectionLines(component);
+            }
+        },
+
+        objectsToClipboardData: (components: Component[]) => {
+            const flow = ProjectEditor.getFlow(components[0]);
+            if (flow) {
+                return flow.objectsToClipboardData(components);
+            }
+            return undefined;
+        }
     };
 
     set geometry(value: ComponentGeometry) {
@@ -1148,7 +1216,9 @@ export class Component extends EezObject {
 
         for (
             let parent = getWidgetParent(this);
-            parent && (parent instanceof Page || parent instanceof Widget);
+            parent &&
+            (parent instanceof ProjectEditor.PageClass ||
+                parent instanceof ProjectEditor.WidgetClass);
             parent = getWidgetParent(parent)
         ) {
             x += parent.left;
@@ -1233,7 +1303,7 @@ export class Component extends EezObject {
 
     @computed({ keepAlive: true })
     get buildInputs() {
-        const flow = getFlow(this);
+        const flow = ProjectEditor.getFlow(this);
         return this.inputs.filter(
             input =>
                 input.name != "@seqin" ||
@@ -1319,7 +1389,7 @@ export class Widget extends Component {
                 type: PropertyType.String,
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    !getDocumentStore(object).isDashboardProject
+                    !getDocumentStore(object).project.isDashboardProject
             }
         ],
 
@@ -1420,13 +1490,13 @@ export class Widget extends Component {
         },
 
         check: (object: Component) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!(object instanceof ActionComponent)) {
                 if (object.left < 0) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "left")
                         )
@@ -1435,8 +1505,8 @@ export class Widget extends Component {
 
                 if (object.top < 0) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "top")
                         )
@@ -1448,8 +1518,8 @@ export class Widget extends Component {
                     getWidgetParent(object).width
                 ) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "width")
                         )
@@ -1461,8 +1531,8 @@ export class Widget extends Component {
                     getWidgetParent(object).height
                 ) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "height")
                         )
@@ -1473,13 +1543,21 @@ export class Widget extends Component {
             const DocumentStore = getDocumentStore(object);
 
             if (
-                !DocumentStore.isAppletProject &&
-                !DocumentStore.isDashboardProject
+                !DocumentStore.project.isAppletProject &&
+                !DocumentStore.project.isDashboardProject
             ) {
-                checkObjectReference(object, "data", messages);
+                ProjectEditor.documentSearch.checkObjectReference(
+                    object,
+                    "data",
+                    messages
+                );
             }
 
-            checkObjectReference(object, "action", messages);
+            ProjectEditor.documentSearch.checkObjectReference(
+                object,
+                "action",
+                messages
+            );
 
             return messages;
         },
@@ -1811,7 +1889,7 @@ export class Widget extends Component {
             return null;
         }
 
-        if (flowContext.document.flow.object !== getFlow(this)) {
+        if (flowContext.document.flow.object !== ProjectEditor.getFlow(this)) {
             return null;
         }
 
@@ -1857,38 +1935,6 @@ export class Widget extends Component {
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class EmbeddedWidget extends Widget {
-    @observable style: Style;
-
-    static classInfo: ClassInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [makeStylePropertyInfo("style", "Normal style")],
-
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            migrateStyleProperty(jsObject, "style");
-
-            if (jsObject.style && typeof jsObject.style.padding === "number") {
-                delete jsObject.style.padding;
-            }
-
-            delete jsObject.activeStyle;
-        }
-    });
-
-    @computed
-    get styleObject() {
-        return this.style;
-    }
-
-    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        if (!flowContext.DocumentStore.isDashboardProject) {
-            const backgroundColor = this.style.backgroundColorProperty;
-            style.backgroundColor = to16bitsColor(backgroundColor);
-        }
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2074,7 +2120,7 @@ export class NotFoundComponent extends ActionComponent {
     });
 
     getInputs(): ComponentInput[] {
-        return getFlow(this)
+        return ProjectEditor.getFlow(this)
             .connectionLines.filter(
                 connectionLine => connectionLine.target == this.wireID
             )
@@ -2085,7 +2131,7 @@ export class NotFoundComponent extends ActionComponent {
     }
 
     getOutputs(): ComponentOutput[] {
-        return getFlow(this)
+        return ProjectEditor.getFlow(this)
             .connectionLines.filter(
                 connectionLine => connectionLine.source == this.wireID
             )

@@ -1,7 +1,7 @@
 import React from "react";
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import { Section } from "project-editor/core/output";
+import { Section } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////

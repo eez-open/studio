@@ -6,10 +6,13 @@ import {
     DisplayItemChildrenObject,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
-import { IEezObject } from "project-editor/core/object";
-import * as output from "project-editor/core/output";
-import { loadObject } from "project-editor/core/serialization";
-import { BuildResult } from "project-editor/core/extensions";
+import { IEezObject, MessageType } from "project-editor/core/object";
+import {
+    loadObject,
+    propertyNotFoundMessage,
+    Section
+} from "project-editor/core/store";
+import type { BuildResult } from "project-editor/core/extensions";
 import { getDocumentStore } from "project-editor/core/store";
 
 import * as projectBuild from "project-editor/project/build";
@@ -26,11 +29,8 @@ import {
 import { Font } from "project-editor/features/font/font";
 import { Style } from "project-editor/features/style/style";
 import { Page, PageOrientation } from "project-editor/features/page/page";
-import {
-    Widget,
-    Component,
-    EmbeddedWidget
-} from "project-editor/flow/component";
+import { Widget, Component } from "project-editor/flow/component";
+import { EmbeddedWidget } from "project-editor/flow/widgets";
 import {
     BarGraphWidget,
     BitmapWidget,
@@ -494,9 +494,9 @@ function getItem(
         }
     }
 
-    const message = output.propertyNotFoundMessage(object, propertyName);
+    const message = propertyNotFoundMessage(object, propertyName);
     getDocumentStore(object).outputSectionsStore.write(
-        output.Section.OUTPUT,
+        Section.OUTPUT,
         message.type,
         message.text,
         message.object
@@ -549,9 +549,9 @@ function getStyleIndex(object: any, propertyName: string) {
         }
     }
 
-    const message = output.propertyNotFoundMessage(object, propertyName);
+    const message = propertyNotFoundMessage(object, propertyName);
     getDocumentStore(object).outputSectionsStore.write(
-        output.Section.OUTPUT,
+        Section.OUTPUT,
         message.type,
         message.text,
         message.object
@@ -1312,8 +1312,8 @@ function buildWidget(object: Widget | Page) {
             itemWidget = buildWidget(widget.itemWidget);
         } else {
             getDocumentStore(object).outputSectionsStore.write(
-                output.Section.OUTPUT,
-                output.Type.ERROR,
+                Section.OUTPUT,
+                MessageType.ERROR,
                 "List item widget is missing",
                 widget
             );

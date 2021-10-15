@@ -13,9 +13,9 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
-import { Component } from "project-editor/flow/component";
-import { FlowTabState } from "../flow";
-import { FlowDocument } from "./flow-document";
+import type { Component } from "project-editor/flow/component";
+import type { FlowTabState } from "project-editor/flow/flow";
+import { FlowDocument } from "project-editor/flow/flow-runtime/flow-document";
 
 ////////////////////////////////////////////////////////////////////////////////
 

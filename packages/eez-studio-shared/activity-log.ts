@@ -1,6 +1,6 @@
 import { observable, runInAction } from "mobx";
 
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 import { IStore } from "eez-studio-shared/store";
 import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
 
@@ -297,7 +297,10 @@ export const activityLogStore = createStore({
             return true;
         }
 
-        if (filterSpecification.oid && message.object.oid !== filterSpecification.oid) {
+        if (
+            filterSpecification.oid &&
+            message.object.oid !== filterSpecification.oid
+        ) {
             return false;
         }
 
@@ -324,7 +327,8 @@ export const activityLogStore = createStore({
             !(
                 filterSpecification.oid ||
                 filterSpecification.oids ||
-                (filterSpecification.types && filterSpecification.types.length > 0)
+                (filterSpecification.types &&
+                    filterSpecification.types.length > 0)
             )
         ) {
             return undefined;
@@ -340,7 +344,9 @@ export const activityLogStore = createStore({
 
         if (filterSpecification.oids !== undefined) {
             whereClause +=
-                "oid IN (" + Array(filterSpecification.oids.length).fill("?").join(",") + ")";
+                "oid IN (" +
+                Array(filterSpecification.oids.length).fill("?").join(",") +
+                ")";
             params.push(...filterSpecification.oids.map(oid => parseInt(oid)));
         }
 
@@ -424,7 +430,9 @@ export function logUndelete(
 
 export function loadData(store: IStore, id: string) {
     try {
-        let result = db.prepare(`SELECT data FROM "${store.storeName}" WHERE id = ?`).get(id);
+        let result = db
+            .prepare(`SELECT data FROM "${store.storeName}" WHERE id = ?`)
+            .get(id);
         const data = result && result.data;
         if (typeof data === "string") {
             return Buffer.from(data, "binary");
@@ -458,7 +466,10 @@ class ActiveSession {
                     }
                 },
                 updateObject: (changes: any) => {
-                    if (changes.id === this.id && changes.message !== undefined) {
+                    if (
+                        changes.id === this.id &&
+                        changes.message !== undefined
+                    ) {
                         try {
                             const message = JSON.parse(changes.message);
                             if (message.sessionCloseId) {

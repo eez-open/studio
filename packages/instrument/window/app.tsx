@@ -10,12 +10,12 @@ import { Loader } from "eez-studio-ui/loader";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
-
-import { InstrumentAppStore } from "instrument/window/app-store";
-import { getConnection } from "instrument/window/connection";
-import { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
-import { InstrumentObject } from "instrument/instrument-object";
 import { Header } from "eez-studio-ui/header-with-body";
+
+import type { InstrumentAppStore } from "instrument/window/app-store";
+import type { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
+import type { InstrumentObject } from "instrument/instrument-object";
+import { getConnection } from "instrument/window/connection";
 
 ////////////////////////////////////////////////////////////////////////////////
 

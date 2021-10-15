@@ -1,12 +1,12 @@
-import { observable } from "mobx";
+import { observable, action } from "mobx";
 
-import { action } from "mobx";
-import { ConnectionLine } from "project-editor/flow/flow";
-import { getLabel } from "project-editor/core/object";
 import { guid } from "eez-studio-shared/guid";
-import { FlowState } from "project-editor/flow/runtime";
-import { Component, Widget } from "project-editor/flow/component";
-import { LogItemType } from "project-editor/flow/flow-interfaces";
+
+import { getLabel } from "project-editor/core/store";
+import type { ConnectionLine } from "project-editor/flow/flow";
+import type { FlowState } from "project-editor/flow/runtime";
+import type { Component, Widget } from "project-editor/flow/component";
+import type { LogItemType } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 

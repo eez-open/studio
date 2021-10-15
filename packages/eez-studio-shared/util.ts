@@ -2,9 +2,9 @@ import MobXModule from "mobx";
 import MomentModule from "moment";
 import stringify from "json-stable-stringify";
 
-import * as GeometryModule from "eez-studio-shared/geometry";
+import type * as GeometryModule from "eez-studio-shared/geometry";
 
-import * as I10nModule from "eez-studio-shared/i10n";
+import type * as I10nModule from "eez-studio-shared/i10n";
 
 export function parseXmlString(xmlString: string) {
     // remove UTF-8 BOM
@@ -372,4 +372,8 @@ export function remap(
     y2: number
 ) {
     return y1 + ((x - x1) * (y2 - y1)) / (x2 - x1);
+}
+
+export function sourceRootDir() {
+    return "c:/work/eez/studio/build";
 }

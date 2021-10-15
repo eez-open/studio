@@ -1,3 +1,5 @@
+import { DataType } from "./DataType";
+
 export enum Unit {
     UNIT_UNKNOWN = 255,
     UNIT_NONE = 0,
@@ -72,32 +74,6 @@ enum Fields {
 
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
     FIELD_ID_CHANNEL_MODULE_REVISION = 51
-}
-
-export enum DataType {
-    DATA_TYPE_BIT, // supported
-    DATA_TYPE_INT8,
-    DATA_TYPE_UINT8,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT16_BE, // supported
-    DATA_TYPE_UINT16,
-    DATA_TYPE_UINT16_BE,
-    DATA_TYPE_INT24,
-    DATA_TYPE_INT24_BE, // supported
-    DATA_TYPE_UINT24,
-    DATA_TYPE_UINT24_BE,
-    DATA_TYPE_INT32,
-    DATA_TYPE_INT32_BE,
-    DATA_TYPE_UINT32,
-    DATA_TYPE_UINT32_BE,
-    DATA_TYPE_INT64,
-    DATA_TYPE_INT64_BE,
-    DATA_TYPE_UINT64,
-    DATA_TYPE_UINT64_BE,
-    DATA_TYPE_FLOAT, // supported
-    DATA_TYPE_FLOAT_BE,
-    DATA_TYPE_DOUBLE,
-    DATA_TYPE_DOUBLE_BE
 }
 
 export enum ScaleType {

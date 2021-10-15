@@ -3,11 +3,11 @@ import { observable, action, runInAction, reaction, autorun } from "mobx";
 import { bind } from "bind-decorator";
 
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
-import { IStore } from "eez-studio-shared/store";
+import type { IStore } from "eez-studio-shared/store";
 
-import { IEditor } from "eez-studio-shared/extensions/extension";
+import type { IEditor } from "eez-studio-shared/extensions/extension";
 
-import { IShortcut } from "shortcuts/interfaces";
+import type { IShortcut } from "shortcuts/interfaces";
 import { bindShortcuts } from "shortcuts/mousetrap";
 
 import { InstrumentObject, instruments } from "instrument/instrument-object";
@@ -15,7 +15,7 @@ import { InstrumentObject, instruments } from "instrument/instrument-object";
 import { App } from "instrument/window/app";
 import { NavigationStore } from "instrument/window/navigation-store";
 import { ScriptsModel, ScriptView } from "instrument/window/scripts";
-import * as ScriptModule from "instrument/window/script";
+import type * as ScriptModule from "instrument/window/script";
 import { ShortcutsStore, GroupsStore } from "instrument/window/shortcuts";
 import { UndoManager } from "instrument/window/undo";
 

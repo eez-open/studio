@@ -6,8 +6,8 @@ import {
     to16bitsColor
 } from "eez-studio-shared/color";
 
-import { Style } from "project-editor/features/style/style";
-import { Font, getPixelByteIndex } from "project-editor/features/font/font";
+import type { Style } from "project-editor/features/style/style";
+import type { Font, IGlyphBitmap } from "project-editor/features/font/font";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -931,4 +931,12 @@ export function fillArcBar(
     a = Math.floor(a * 255);
 
     filledPolygonRGBA(imageBuffer, vx, vy, n, r, g, b, a);
+}
+
+export function getPixelByteIndex(
+    glyphBitmap: IGlyphBitmap,
+    x: number,
+    y: number
+): number {
+    return y * Math.floor((glyphBitmap.width + 7) / 8) + Math.floor(x / 8);
 }

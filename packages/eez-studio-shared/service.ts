@@ -1,6 +1,7 @@
 import { isWebStudio, isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { toJS } from "mobx";
+import { sourceRootDir } from "eez-studio-shared/util";
 
 // Execute given function in service process.
 // There is exactly one service process, created
@@ -83,12 +84,13 @@ if (isWebStudio()) {
             let serviceWindow: Electron.BrowserWindow | undefined;
 
             if (!executeInsideMainProcess) {
-                serviceWindow = EEZStudio.remote.BrowserWindow.getAllWindows().find(
-                    window =>
-                        window.webContents
-                            .getURL()
-                            .endsWith("shared/service.html")
-                );
+                serviceWindow =
+                    EEZStudio.remote.BrowserWindow.getAllWindows().find(
+                        window =>
+                            window.webContents
+                                .getURL()
+                                .endsWith("shared/service.html")
+                    );
             }
 
             if (executeInsideMainProcess || serviceWindow) {
@@ -159,7 +161,7 @@ if (isWebStudio()) {
     };
     let browserWindow = new BrowserWindow(windowContructorParams);
     browserWindow.loadURL(
-        `file://${__dirname}/../eez-studio-shared/service.html`
+        `file://${sourceRootDir()}/eez-studio-shared/service.html`
     );
 
     // waiting for the new task

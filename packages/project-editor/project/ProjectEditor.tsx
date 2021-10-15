@@ -14,7 +14,6 @@ import { CommandPalette } from "project-editor/project/command-palette";
 import { Toolbar } from "project-editor/project/Toolbar";
 import { StatusBar } from "project-editor/project/StatusBar";
 import { Editors } from "./Editors";
-import { getClassInfo } from "project-editor/core/object";
 import { DebuggerPanel } from "project-editor/flow/debugger/DebuggerPanel";
 import {
     PageEditor,
@@ -22,6 +21,7 @@ import {
 } from "project-editor/features/page/PagesNavigation";
 
 import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+import { getClassInfo } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -122,7 +122,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
     declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
-        if (!this.context.project || !this.context.project.fullyLoaded) {
+        if (!this.context.project || !this.context.project._fullyLoaded) {
             return <div className="EezStudio_ProjectEditorWrapper" />;
         }
 
@@ -145,7 +145,8 @@ export class ProjectEditor extends React.Component<{}, {}> {
             );
         } else if (
             this.context.runtime &&
-            (this.context.isDashboardProject || this.context.isAppletProject)
+            (this.context.project.isDashboardProject ||
+                this.context.project.isAppletProject)
         ) {
             mainContent = (
                 <>

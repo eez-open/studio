@@ -1,6 +1,9 @@
 import * as projectBuild from "project-editor/project/build";
 import { getData as getBitmapData } from "project-editor/features/bitmap/bitmap";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
 
 export function buildGuiBitmapsEnum(assets: Assets) {
     let bitmaps = assets.bitmaps.map(

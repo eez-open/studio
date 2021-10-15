@@ -14,12 +14,15 @@ import {
     IEezObject,
     EezObject,
     ClassInfo,
-    getChildOfObject,
-    getParent
+    getParent,
+    MessageType
 } from "project-editor/core/object";
-import { getDocumentStore } from "project-editor/core/store";
-
-import * as output from "project-editor/core/output";
+import {
+    getChildOfObject,
+    getDocumentStore,
+    Message,
+    propertyNotSetMessage
+} from "project-editor/core/store";
 
 import type {
     IFlowContext,
@@ -55,6 +58,7 @@ import {
     evalExpression
 } from "project-editor/flow/expression/expression";
 import { calcComponentGeometry } from "project-editor/flow/flow-editor/render";
+import { ValueType } from "project-editor/features/variable/value-type";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -116,7 +120,7 @@ export class StartActionComponent extends ActionComponent {
     });
 }
 
-registerClass(StartActionComponent);
+registerClass("StartActionComponent", StartActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -148,7 +152,7 @@ export class EndActionComponent extends ActionComponent {
     }
 }
 
-registerClass(EndActionComponent);
+registerClass("EndActionComponent", EndActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -196,7 +200,7 @@ export class InputActionComponent extends ActionComponent {
     }
 }
 
-registerClass(InputActionComponent);
+registerClass("InputActionComponent", InputActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -263,7 +267,7 @@ export class OutputActionComponent extends ActionComponent {
     }
 }
 
-registerClass(OutputActionComponent);
+registerClass("OutputActionComponent", OutputActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -338,7 +342,7 @@ export class GetVariableActionComponent extends ActionComponent {
     }
 }
 
-registerClass(GetVariableActionComponent);
+registerClass("GetVariableActionComponent", GetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -392,7 +396,7 @@ export class EvalExprActionComponent extends ActionComponent {
     }
 }
 
-registerClass(EvalExprActionComponent);
+registerClass("EvalExprActionComponent", EvalExprActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -501,13 +505,13 @@ export class EvalJSExprActionComponent extends ActionComponent {
     async execute(flowState: FlowState) {
         const { jsEvalExpression, values } = this.expandExpression(flowState);
         values;
-        let result = eval(jsEvalExpression);
+        let result = (0, eval)(jsEvalExpression);
         flowState.propagateValue(this, "result", result);
         return undefined;
     }
 }
 
-registerClass(EvalJSExprActionComponent);
+registerClass("EvalJSExprActionComponent", EvalJSExprActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -589,7 +593,7 @@ export class SetVariableActionComponent extends ActionComponent {
     }
 }
 
-registerClass(SetVariableActionComponent);
+registerClass("SetVariableActionComponent", SetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -613,7 +617,7 @@ class SwitchTest extends EezObject {
             }
         ],
         check: (switchTest: SwitchTest) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
             try {
                 checkExpression(
                     getParent(getParent(switchTest)!)! as Component,
@@ -622,8 +626,8 @@ class SwitchTest extends EezObject {
                 );
             } catch (err) {
                 messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
+                    new Message(
+                        MessageType.ERROR,
                         `Invalid expression: ${err}`,
                         getChildOfObject(switchTest, "condition")
                     )
@@ -720,7 +724,7 @@ export class SwitchActionComponent extends ActionComponent {
     }
 }
 
-registerClass(SwitchActionComponent);
+registerClass("SwitchActionComponent", SwitchActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -893,7 +897,7 @@ export class CompareActionComponent extends ActionComponent {
     }
 }
 
-registerClass(CompareActionComponent);
+registerClass("CompareActionComponent", CompareActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -985,7 +989,7 @@ export class IsTrueActionComponent extends ActionComponent {
     }
 }
 
-registerClass(IsTrueActionComponent);
+registerClass("IsTrueActionComponent", IsTrueActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1048,7 +1052,7 @@ export class ConstantActionComponent extends ActionComponent {
     }
 }
 
-registerClass(ConstantActionComponent);
+registerClass("ConstantActionComponent", ConstantActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1078,7 +1082,7 @@ export class DateNowActionComponent extends ActionComponent {
     }
 }
 
-registerClass(DateNowActionComponent);
+registerClass("DateNowActionComponent", DateNowActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1140,7 +1144,7 @@ export class ReadSettingActionComponent extends ActionComponent {
     }
 }
 
-registerClass(ReadSettingActionComponent);
+registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1183,7 +1187,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
     }
 }
 
-registerClass(WriteSettingsActionComponent);
+registerClass("WriteSettingsActionComponent", WriteSettingsActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1232,7 +1236,7 @@ export class LogActionComponent extends ActionComponent {
     }
 }
 
-registerClass(LogActionComponent);
+registerClass("LogActionComponent", LogActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1288,12 +1292,10 @@ export class CallActionActionComponent extends ActionComponent {
             object.open();
         },
         check: (component: CallActionActionComponent) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!component.action) {
-                messages.push(
-                    output.propertyNotSetMessage(component, "action")
-                );
+                messages.push(propertyNotSetMessage(component, "action"));
             } else {
                 const action = findAction(
                     getProject(component),
@@ -1302,8 +1304,8 @@ export class CallActionActionComponent extends ActionComponent {
                 if (!action) {
                     if (!component.isInputProperty(component.action)) {
                         messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
+                            new Message(
+                                MessageType.ERROR,
                                 `Action "${component.action}" not found`,
                                 getChildOfObject(component, "action")
                             )
@@ -1439,7 +1441,7 @@ export class CallActionActionComponent extends ActionComponent {
     }
 }
 
-registerClass(CallActionActionComponent);
+registerClass("CallActionActionComponent", CallActionActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1483,7 +1485,7 @@ export class DelayActionComponent extends ActionComponent {
     }
 }
 
-registerClass(DelayActionComponent);
+registerClass("DelayActionComponent", DelayActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1528,7 +1530,7 @@ export class ErrorActionComponent extends ActionComponent {
     }
 }
 
-registerClass(ErrorActionComponent);
+registerClass("ErrorActionComponent", ErrorActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1566,7 +1568,7 @@ export class CatchErrorActionComponent extends ActionComponent {
     }
 }
 
-registerClass(CatchErrorActionComponent);
+registerClass("CatchErrorActionComponent", CatchErrorActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1647,7 +1649,7 @@ export class CounterActionComponent extends ActionComponent {
     }
 }
 
-registerClass(CounterActionComponent);
+registerClass("CounterActionComponent", CounterActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1786,7 +1788,7 @@ export class LoopActionComponent extends ActionComponent {
     }
 }
 
-registerClass(LoopActionComponent);
+registerClass("LoopActionComponent", LoopActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1837,7 +1839,7 @@ export class ShowPageActionComponent extends ActionComponent {
     }
 }
 
-registerClass(ShowPageActionComponent);
+registerClass("ShowPageActionComponent", ShowPageActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1997,9 +1999,4 @@ export class CommentActionComponent extends ActionComponent {
     }
 }
 
-registerClass(CommentActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
-import "project-editor/flow/action-components/instrument";
-import { ValueType } from "project-editor/features/variable/value-type";
+registerClass("CommentActionComponent", CommentActionComponent);

@@ -18,8 +18,11 @@ import {
     getId,
     makeDerivedClassInfo
 } from "project-editor/core/object";
-import { getDocumentStore } from "project-editor/core/store";
-import * as output from "project-editor/core/output";
+import {
+    getDocumentStore,
+    Message,
+    propertyInvalidValueMessage
+} from "project-editor/core/store";
 
 import type {
     IResizeHandler,
@@ -31,11 +34,7 @@ import {
     ComponentEnclosure
 } from "project-editor/flow/flow-editor/render";
 
-import {
-    Project,
-    findReferencedObject,
-    getProject
-} from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 
 import { AutoSize, Component, Widget } from "project-editor/flow/component";
 
@@ -50,10 +49,11 @@ import { Rect } from "eez-studio-shared/geometry";
 import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
 import { build } from "project-editor/features/page/build";
-import { Assets, DataBuffer } from "./build/assets";
+import type { Assets, DataBuffer } from "./build/assets";
 import { buildWidget } from "./build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/widgets/widget_types";
 import classNames from "classnames";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -134,7 +134,7 @@ export class PageOrientation extends EezObject {
     }
 }
 
-registerClass(PageOrientation);
+registerClass("PageOrientation", PageOrientation);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -205,7 +205,7 @@ export class Page extends Flow {
                 referencedObjectCollectionPath: "styles",
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).isDashboardProject
+                    getDocumentStore(object).project.isDashboardProject
             },
             {
                 name: "usedIn",
@@ -213,14 +213,14 @@ export class Page extends Flow {
                 referencedObjectCollectionPath: "settings/build/configurations",
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).isDashboardProject
+                    getDocumentStore(object).project.isDashboardProject
             },
             {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).isDashboardProject
+                    getDocumentStore(object).project.isDashboardProject
             },
             {
                 name: "portrait",
@@ -240,7 +240,7 @@ export class Page extends Flow {
                 type: PropertyType.String,
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    !getDocumentStore(object).isDashboardProject
+                    !getDocumentStore(object).project.isDashboardProject
             }
         ],
         beforeLoadHook: (page: Page, jsObject: any) => {
@@ -287,14 +287,14 @@ export class Page extends Flow {
         navigationComponent: PagesNavigation,
         icon: "filter",
         check: (object: Page) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (object.dataContextOverrides) {
                 try {
                     JSON.parse(object.dataContextOverrides);
                 } catch {
                     messages.push(
-                        output.propertyInvalidValueMessage(
+                        propertyInvalidValueMessage(
                             object,
                             "dataContextOverrides"
                         )
@@ -439,12 +439,15 @@ export class Page extends Flow {
 
     getClassName() {
         return classNames({
-            [this.css]: getDocumentStore(this).isDashboardProject
+            [this.css]: getDocumentStore(this).project.isDashboardProject
         });
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        const pageStyle = findStyle(getProject(this), this.style || "default");
+        const pageStyle = findStyle(
+            ProjectEditor.getProject(this),
+            this.style || "default"
+        );
         if (pageStyle && pageStyle.backgroundColorProperty) {
             style.backgroundColor = to16bitsColor(
                 getThemedColor(
@@ -492,12 +495,16 @@ export class Page extends Flow {
     }
 }
 
-registerClass(Page);
+registerClass("Page", Page);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findPage(project: Project, pageName: string) {
-    return findReferencedObject(project, "pages", pageName) as Page | undefined;
+    return ProjectEditor.documentSearch.findReferencedObject(
+        project,
+        "pages",
+        pageName
+    ) as Page | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

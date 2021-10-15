@@ -1,7 +1,12 @@
 import { guid } from "eez-studio-shared/guid";
 
 import { action, computed, observable, runInAction } from "mobx";
-import { DocumentStoreClass } from "project-editor/core/store";
+import {
+    DocumentStoreClass,
+    findPropertyByNameInObject,
+    getClassInfo,
+    getLabel
+} from "project-editor/core/store";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import {
     CatchErrorActionComponent,
@@ -10,13 +15,7 @@ import {
     StartActionComponent
 } from "project-editor/flow/action-components";
 import { Component, Widget } from "project-editor/flow/component";
-import {
-    findPropertyByNameInObject,
-    getClassInfo,
-    getLabel,
-    IEezObject,
-    PropertyType
-} from "project-editor/core/object";
+import { IEezObject, PropertyType } from "project-editor/core/object";
 import type {
     IDataContext,
     IFlowContext

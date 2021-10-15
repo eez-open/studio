@@ -22,6 +22,7 @@ import {
 import { tabs } from "./tabs-store";
 
 import { createInstrument } from "instrument/instrument-extension";
+import { firstTime } from "./first-time";
 
 const BB3_INSTRUMENT_EXTENSION_ID = "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
 const BB3_INSTRUMENT_MANUFACTURER = "EEZ";
@@ -120,7 +121,7 @@ function renderExtension(node: IListNode) {
 }
 
 function onSkip() {
-    tabs.firstTime = false;
+    firstTime.set(false);
 }
 
 async function onAdd() {
@@ -185,7 +186,7 @@ async function onAdd() {
     let instrumentId = createInstrument(installedVersion);
 
     runInAction(() => {
-        tabs.firstTime = false;
+        firstTime.set(false);
     });
 
     setTimeout(() => {

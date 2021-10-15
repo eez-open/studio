@@ -1,3 +1,4 @@
+import electron from "electron";
 import { isWebStudio, isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { BrowserWindow } from "electron";
@@ -30,7 +31,7 @@ function getBrowserWindow() {
     if (isRenderer()) {
         return EEZStudio.remote.BrowserWindow;
     } else {
-        return require("electron").BrowserWindow;
+        return electron.BrowserWindow;
     }
 }
 
@@ -181,7 +182,7 @@ if (!isWebStudio()) {
     if (isRenderer()) {
         ipc = EEZStudio.electron.ipcRenderer;
     } else {
-        ipc = require("electron").ipcMain;
+        ipc = electron.ipcMain;
     }
 
     ipc.on("notify/watch", function (event: any, args: INotifyWatchArgs) {

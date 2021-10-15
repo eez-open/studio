@@ -1,12 +1,16 @@
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { Variable } from "project-editor/features/variable/variable";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
+import type { Variable } from "project-editor/features/variable/variable";
 import {
     isArrayType,
     isEnumType,
     isStructType
 } from "project-editor/features/variable/value-type";
 import { evalConstantExpression } from "project-editor/flow/expression/expression";
-import * as output from "project-editor/core/output";
+import { Section } from "project-editor/core/store";
+import { MessageType } from "project-editor/core/object";
 
 export const FLOW_VALUE_TYPE_UNDEFINED = 0;
 export const FLOW_VALUE_TYPE_NULL = 1;
@@ -80,8 +84,8 @@ export function getVariableFlowValue(assets: Assets, variable: Variable) {
         type = getValueType(variable.type);
     } else {
         assets.DocumentStore.outputSectionsStore.write(
-            output.Section.OUTPUT,
-            output.Type.ERROR,
+            Section.OUTPUT,
+            MessageType.ERROR,
             "Variable type not set",
             variable
         );

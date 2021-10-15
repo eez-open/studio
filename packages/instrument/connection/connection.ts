@@ -14,16 +14,16 @@ import {
 } from "eez-studio-shared/notify";
 import { isRenderer } from "eez-studio-shared/util-electron";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
 import { SerialInterface } from "instrument/connection/interfaces/serial";
 import { UsbTmcInterface } from "instrument/connection/interfaces/usbtmc";
-import {
+import type {
     CommunicationInterface,
     CommunicationInterfaceHost,
-    ConnectionErrorCode,
     ConnectionParameters
 } from "instrument/connection/interface";
+import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 import { FileDownload } from "instrument/connection/file-download";
 import {
     IFileUploadInstructions,

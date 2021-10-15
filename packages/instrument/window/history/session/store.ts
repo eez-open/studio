@@ -1,7 +1,7 @@
 import { observable, action, runInAction, autorun } from "mobx";
 import { bind } from "bind-decorator";
 
-import { dbQuery } from "eez-studio-shared/db";
+import { dbQuery } from "eez-studio-shared/db-query";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import {
     IActivityLogEntry,
@@ -13,11 +13,12 @@ import {
 
 import { error } from "eez-studio-ui/notification";
 
-import { History, CONF_ITEMS_BLOCK_SIZE } from "instrument/window/history/history";
+import type { History } from "instrument/window/history/history";
+import { CONF_ITEMS_BLOCK_SIZE } from "instrument/window/history/CONF_ITEMS_BLOCK_SIZE";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import { moveToTopOfHistory } from "instrument/window/history/history-view";
 
-import { SessionHistoryItem } from "instrument/window/history/items/session";
+import type { SessionHistoryItem } from "instrument/window/history/items/session";
 import { showEditSessionNameDialog } from "instrument/window/history/session/list-view";
 
 export interface ISession {
@@ -33,7 +34,9 @@ export class HistorySessions {
                 let newActiveSession: SessionHistoryItem | undefined;
 
                 if (activeSession.id) {
-                    const activityLogEntry = activityLogStore.findById(activeSession.id);
+                    const activityLogEntry = activityLogStore.findById(
+                        activeSession.id
+                    );
                     if (activityLogEntry) {
                         newActiveSession = createHistoryItem(
                             activityLogEntry,
@@ -85,11 +88,13 @@ export class HistorySessions {
         ).all();
 
         runInAction(() => {
-            this.sessions = this.history.rowsToHistoryItems(rows).map(activityLogEntry => ({
-                selected: false,
-                id: activityLogEntry.id,
-                activityLogEntry
-            }));
+            this.sessions = this.history
+                .rowsToHistoryItems(rows)
+                .map(activityLogEntry => ({
+                    selected: false,
+                    id: activityLogEntry.id,
+                    activityLogEntry
+                }));
         });
     }
 
@@ -122,11 +127,16 @@ export class HistorySessions {
                                 date
                         )
                     LIMIT ?`
-            ).all(new Date(selectedSession.activityLogEntry.date).getTime(), CONF_ITEMS_BLOCK_SIZE);
+            ).all(
+                new Date(selectedSession.activityLogEntry.date).getTime(),
+                CONF_ITEMS_BLOCK_SIZE
+            );
 
             this.history.displayRows(rows);
 
-            moveToTopOfHistory(this.history.appStore.navigationStore.mainHistoryView);
+            moveToTopOfHistory(
+                this.history.appStore.navigationStore.mainHistoryView
+            );
         }
     }
 
@@ -134,10 +144,15 @@ export class HistorySessions {
         if (activityLogEntry.type === "activity-log/session-start") {
             let i: number;
             for (i = 0; i < this.sessions.length; i++) {
-                if (activityLogEntry.id === this.sessions[i].activityLogEntry.id) {
+                if (
+                    activityLogEntry.id === this.sessions[i].activityLogEntry.id
+                ) {
                     return;
                 }
-                if (activityLogEntry.date < this.sessions[i].activityLogEntry.date) {
+                if (
+                    activityLogEntry.date <
+                    this.sessions[i].activityLogEntry.date
+                ) {
                     break;
                 }
             }
@@ -157,7 +172,8 @@ export class HistorySessions {
             for (let i = 0; i < this.sessions.length; i++) {
                 if (this.sessions[i].id === activityLogEntry.id) {
                     runInAction(() => {
-                        this.sessions[i].activityLogEntry.message = activityLogEntry.message;
+                        this.sessions[i].activityLogEntry.message =
+                            activityLogEntry.message;
                     });
                     break;
                 }
@@ -199,7 +215,9 @@ export class HistorySessions {
                     );
                     commitTransaction();
                 } else {
-                    error("Failed to start new session because there is an active session");
+                    error(
+                        "Failed to start new session because there is an active session"
+                    );
                 }
             });
         }

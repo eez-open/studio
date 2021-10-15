@@ -14,7 +14,7 @@ import { IconAction } from "eez-studio-ui/action";
 
 import { showEditNoteDialog } from "instrument/window/note-dialog";
 
-import { IAppStore } from "instrument/window/history/history";
+import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { PreventDraggable } from "instrument/window/history/helper";
 

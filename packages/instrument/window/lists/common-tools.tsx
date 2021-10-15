@@ -15,11 +15,17 @@ export type ChartsDisplayOption = "split" | "voltage" | "current" | "both";
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class CommonTools extends React.Component<{ chartsController: ChartsController }, {}> {
+export class CommonTools extends React.Component<
+    { chartsController: ChartsController },
+    {}
+> {
     @action
     onDisplayOptionChange(event: React.ChangeEvent<HTMLSelectElement>) {
         displayOption.set(event.target.value);
-        localStorage.setItem("instrument/window/lists/displayOption", displayOption.get());
+        localStorage.setItem(
+            "instrument/window/lists/displayOption",
+            displayOption.get()
+        );
     }
 
     render() {
@@ -32,7 +38,9 @@ export class CommonTools extends React.Component<{ chartsController: ChartsContr
                                 <button
                                     className="btn btn-secondary"
                                     title="Zoom All"
-                                    onClick={this.props.chartsController.zoomAll}
+                                    onClick={
+                                        this.props.chartsController.zoomAll
+                                    }
                                 >
                                     Zoom All
                                 </button>

@@ -3,9 +3,9 @@ import net from "net";
 
 import {
     CommunicationInterface,
-    CommunicationInterfaceHost,
-    ConnectionErrorCode
+    CommunicationInterfaceHost
 } from "instrument/connection/interface";
+import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 
 export class EthernetInterface implements CommunicationInterface {
     socket: any;

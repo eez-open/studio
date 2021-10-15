@@ -2,14 +2,14 @@ import React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { dbQuery } from "eez-studio-shared/db";
+import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
+import { dbQuery } from "eez-studio-shared/db-query";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
 import { PropertyList, BooleanProperty } from "eez-studio-ui/properties";
 
-import { IAppStore, History } from "instrument/window/history/history";
-import { IHistoryItem } from "instrument/window/history/item";
+import type { IAppStore, History } from "instrument/window/history/history";
+import type { IHistoryItem } from "instrument/window/history/item";
 
 export class Filters {
     @observable session: boolean = true;

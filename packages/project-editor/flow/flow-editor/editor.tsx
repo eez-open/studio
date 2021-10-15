@@ -28,18 +28,17 @@ import {
 } from "project-editor/flow/flow-editor/bounding-rects";
 
 import {
-    isObjectInstanceOf,
     isAncestor,
     getParent,
     setParent,
     getId
 } from "project-editor/core/object";
-import { IPanel } from "project-editor/core/store";
+import { IPanel, isObjectInstanceOf } from "project-editor/core/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { Flow, FlowTabState } from "project-editor/flow/flow";
-import { Component, Widget } from "project-editor/flow/component";
+import type { Flow, FlowTabState } from "project-editor/flow/flow";
+import type { Component } from "project-editor/flow/component";
 import {
     Svg,
     ComponentEnclosure
@@ -63,6 +62,7 @@ import {
 import { Selection } from "project-editor/flow/flow-editor/selection";
 import { setupDragScroll } from "project-editor/flow/flow-editor/drag-scroll";
 import { settingsController } from "home/settings";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -105,11 +105,11 @@ class DragSnapLinesOverlay extends React.Component {
             <div style={{ left: 0, top: 0, pointerEvents: "none" }}>
                 {dragSnapLines.snapLines.render(dragSnapLines.flowContext!, {
                     left:
-                        (dragComponent instanceof Widget
+                        (dragComponent instanceof ProjectEditor.WidgetClass
                             ? flow.pageRect.left
                             : 0) + dragComponent.left,
                     top:
-                        (dragComponent instanceof Widget
+                        (dragComponent instanceof ProjectEditor.WidgetClass
                             ? flow.pageRect.top
                             : 0) + dragComponent.top,
                     width: dragComponent.rect.width,
@@ -129,12 +129,14 @@ const DragComponent = observer(
             <ComponentEnclosure
                 component={flowContext.dragComponent}
                 left={
-                    (dragComponent instanceof Widget ? flow.pageRect.left : 0) +
-                    flowContext.dragComponent.left
+                    (dragComponent instanceof ProjectEditor.WidgetClass
+                        ? flow.pageRect.left
+                        : 0) + flowContext.dragComponent.left
                 }
                 top={
-                    (dragComponent instanceof Widget ? flow.pageRect.top : 0) +
-                    flowContext.dragComponent.top
+                    (dragComponent instanceof ProjectEditor.WidgetClass
+                        ? flow.pageRect.top
+                        : 0) + flowContext.dragComponent.top
                 }
                 flowContext={flowContext}
             />
@@ -822,7 +824,8 @@ export class FlowEditor
                 this.flowContext.viewState.selectedObjects
                     .filter(
                         selectedObject =>
-                            selectedObject.object instanceof Component
+                            selectedObject.object instanceof
+                            ProjectEditor.ComponentClass
                     )
                     .map(selectedObject =>
                         getObjectBoundingRect(selectedObject)
@@ -906,7 +909,7 @@ export class FlowEditor
             DragAndDropManager.dragObject &&
             isObjectInstanceOf(
                 DragAndDropManager.dragObject,
-                Component.classInfo
+                ProjectEditor.ComponentClass.classInfo
             ) &&
             event.dataTransfer.effectAllowed === "copy"
         ) {
@@ -956,7 +959,7 @@ export class FlowEditor
                 component.height
             );
 
-            if (component instanceof Widget) {
+            if (component instanceof ProjectEditor.WidgetClass) {
                 component.left = Math.round(left - flow.pageRect.left);
                 component.top = Math.round(top - flow.pageRect.top);
             } else {

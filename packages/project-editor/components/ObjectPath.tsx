@@ -1,10 +1,7 @@
 import React from "react";
 
-import {
-    IEezObject,
-    objectToString,
-    getAncestors
-} from "project-editor/core/object";
+import { IEezObject, getAncestors } from "project-editor/core/object";
+import { objectToString } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

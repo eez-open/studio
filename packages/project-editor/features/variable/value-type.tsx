@@ -8,16 +8,16 @@ import {
     PropertyType,
     PropertyInfo,
     PropertyProps,
-    getClassInfo,
     getClassesDerivedFrom,
     getClassByName
 } from "project-editor/core/object";
-import { Project } from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
-import { IVariable } from "project-editor/flow/flow-interfaces";
+import type { IVariable } from "project-editor/flow/flow-interfaces";
 import { _difference } from "eez-studio-shared/algorithm";
+import { getClassInfo } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

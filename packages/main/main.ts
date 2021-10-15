@@ -7,8 +7,8 @@ require("@electron/remote/main").initialize();
 
 import { setup } from "setup/setup";
 
-import * as HomeWindowModule from "main/home-window";
-import * as SettingsModule from "main/settings";
+import type * as HomeWindowModule from "main/home-window";
+import type * as SettingsModule from "main/settings";
 
 // disable security warnings inside dev console
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;

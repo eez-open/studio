@@ -3,9 +3,9 @@ import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import { IActivityLogEntry } from "eez-studio-shared/activity-log";
+import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import { IAppStore } from "instrument/window/history/history";
+import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { PreventDraggable } from "instrument/window/history/helper";
 

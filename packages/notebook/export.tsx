@@ -6,7 +6,7 @@ import { values } from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";
 import { _flatten } from "eez-studio-shared/algorithm";
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 import { IStore } from "eez-studio-shared/store";
 import {
     IActivityLogEntry,
@@ -71,7 +71,9 @@ function getExternalSourceDescription(
     if (store === activityLogStore) {
         try {
             let result = db
-                .prepare(`SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`)
+                .prepare(
+                    `SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`
+                )
                 .get([item.oid]);
 
             if (result && result.id) {
@@ -123,7 +125,9 @@ function doExport(
     return new Promise<void>((resolve, reject) => {
         const fs = EEZStudio.remote.require("fs") as typeof fsModule;
         const path = EEZStudio.remote.require("path") as typeof pathModule;
-        const archiver = EEZStudio.remote.require("archiver") as typeof archiverModule;
+        const archiver = EEZStudio.remote.require(
+            "archiver"
+        ) as typeof archiverModule;
 
         var output = fs.createWriteStream(filePath);
         var archive = archiver("zip", {
@@ -136,7 +140,7 @@ function doExport(
 
         archive.pipe(output);
 
-        output.on("close", function() {
+        output.on("close", function () {
             if (failed) {
                 reject();
             } else {
@@ -144,14 +148,14 @@ function doExport(
             }
         });
 
-        archive.on("warning", function(warning: any) {
+        archive.on("warning", function (warning: any) {
             notification.update(progressToastId, {
                 render: warning,
                 type: notification.WARNING
             });
         });
 
-        archive.on("error", function(error: any) {
+        archive.on("error", function (error: any) {
             failed = true;
             notification.update(progressToastId, {
                 render: error,
@@ -176,7 +180,9 @@ function doExport(
             items
         };
 
-        archive.append(JSON.stringify(notebook, undefined, 2), { name: "notebook.json" });
+        archive.append(JSON.stringify(notebook, undefined, 2), {
+            name: "notebook.json"
+        });
 
         let index = 0;
 
@@ -187,7 +193,9 @@ function doExport(
             }
 
             notification.update(progressToastId, {
-                render: `Exporting item ${index + 1} of ${itemsToExport.length} ...`,
+                render: `Exporting item ${index + 1} of ${
+                    itemsToExport.length
+                } ...`,
                 type: notification.INFO
             });
 
@@ -207,7 +215,10 @@ function doExport(
     });
 }
 
-export async function exportActivityLogItems(store: IStore, items: IActivityLogEntry[]) {
+export async function exportActivityLogItems(
+    store: IStore,
+    items: IActivityLogEntry[]
+) {
     const result = await EEZStudio.remote.dialog.showSaveDialog(
         EEZStudio.remote.getCurrentWindow(),
         {
@@ -217,7 +228,6 @@ export async function exportActivityLogItems(store: IStore, items: IActivityLogE
             ]
         }
     );
-
 
     if (result.filePath) {
         let filePath = result.filePath;
@@ -238,7 +248,9 @@ export async function exportActivityLogItems(store: IStore, items: IActivityLogE
                             <button
                                 className="btn btn-sm"
                                 onClick={() => {
-                                    EEZStudio.electron.shell.showItemInFolder(filePath);
+                                    EEZStudio.electron.shell.showItemInFolder(
+                                        filePath
+                                    );
                                 }}
                             >
                                 Show in Folder
@@ -255,10 +267,17 @@ export async function exportActivityLogItems(store: IStore, items: IActivityLogE
 
 ////////////////////////////////////////////////////////////////////////////////
 
-async function addItemsToNotebook(store: IStore, items: IActivityLogEntry[], notebookId: string) {
-    const progressToastId = notification.info("Exporting items to notebook...", {
-        autoClose: false
-    });
+async function addItemsToNotebook(
+    store: IStore,
+    items: IActivityLogEntry[],
+    notebookId: string
+) {
+    const progressToastId = notification.info(
+        "Exporting items to notebook...",
+        {
+            autoClose: false
+        }
+    );
 
     db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
 
@@ -302,7 +321,10 @@ async function addItemsToNotebook(store: IStore, items: IActivityLogEntry[], not
             render: (
                 <div>
                     <p>Items added to notebook!</p>
-                    <button className="btn btn-sm" onClick={() => showNotebook(notebookId)}>
+                    <button
+                        className="btn btn-sm"
+                        onClick={() => showNotebook(notebookId)}
+                    >
                         Show Notebook
                     </button>
                 </div>
@@ -432,7 +454,9 @@ export function exportTool(controller: IActivityLogController) {
             {notebooks.size > 0 && (
                 <DropdownItem
                     text="Export to an existing notebook"
-                    onClick={() => addToExistingNotebook(controller.store, items)}
+                    onClick={() =>
+                        addToExistingNotebook(controller.store, items)
+                    }
                 />
             )}
         </DropdownIconAction>

@@ -4,10 +4,12 @@ import {
     PropertyType,
     PropertyInfo
 } from "project-editor/core/object";
-import { Message } from "project-editor/core/output";
-import { Project, BuildConfiguration } from "project-editor/project/project";
+import type {
+    Project,
+    BuildConfiguration
+} from "project-editor/project/project";
 
-import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 import actionFeature from "project-editor/features/action/action";
 import dataFeature from "project-editor/features/variable/variable";
@@ -17,7 +19,8 @@ import styleFeature from "project-editor/features/style/style";
 import fontFeature from "project-editor/features/font/font";
 import bitmapFeature from "project-editor/features/bitmap/bitmap";
 import scpiFeature from "project-editor/features/scpi/scpi";
-import shortcutsFeature from "project-editor/features/shortcuts/shortcuts";
+import shortcutsFeature from "project-editor/features/shortcuts/project-shortcuts";
+import type { Message } from "project-editor/core/store";
 
 export type BuildResult = { [key: string]: string };
 
@@ -61,23 +64,17 @@ export interface Extension {
     };
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-let extensions: Extension[] = [];
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function loadExtensions() {
-    extensions.push(pageFeature);
-    extensions.push(actionFeature);
-    extensions.push(dataFeature);
-    extensions.push(styleFeature);
-    extensions.push(fontFeature);
-    extensions.push(bitmapFeature);
-    extensions.push(extensionDefinitionsFeature);
-    extensions.push(scpiFeature);
-    extensions.push(shortcutsFeature);
-}
+let extensions: Extension[] = [
+    pageFeature,
+    actionFeature,
+    dataFeature,
+    styleFeature,
+    fontFeature,
+    bitmapFeature,
+    extensionDefinitionsFeature,
+    scpiFeature,
+    shortcutsFeature
+];
 
 export function getProjectFeatures() {
     return extensions;

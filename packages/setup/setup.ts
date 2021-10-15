@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { BrowserWindow, ipcMain, WebContents } from "electron";
 
-import * as ExtensionsModule from "eez-studio-shared/extensions/extensions";
+import type * as ExtensionsModule from "eez-studio-shared/extensions/extensions";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 
 import { delay } from "eez-studio-shared/util";

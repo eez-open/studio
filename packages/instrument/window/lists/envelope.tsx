@@ -21,20 +21,22 @@ import {
     Header
 } from "eez-studio-ui/header-with-body";
 import {
-    AxisController,
     ChartMode,
     ChartView,
     ChartController,
-    ChartsController,
-    ChartsView,
     getSnapToValue,
-    globalViewOptions,
     IAxisModel,
     ICursor,
     LineController,
     ILineController,
-    MouseHandler,
-    CONF_CURSOR_RADIUS
+    MouseHandler
+} from "eez-studio-ui/chart/chart";
+import {
+    globalViewOptions,
+    AxisController,
+    CONF_CURSOR_RADIUS,
+    ChartsController,
+    ChartsView
 } from "eez-studio-ui/chart/chart";
 import { showPopup } from "eez-studio-ui/popup";
 import { Toolbar } from "eez-studio-ui/toolbar";
@@ -45,9 +47,9 @@ import {
 } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 
 import {
     BaseList,

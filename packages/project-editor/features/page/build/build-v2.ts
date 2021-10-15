@@ -1,8 +1,6 @@
 import { strToColor16 } from "eez-studio-shared/color";
 
-import * as output from "project-editor/core/output";
-
-import { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/core/extensions";
 
 import * as projectBuild from "project-editor/project/build";
 import {
@@ -50,6 +48,8 @@ import {
     ButtonGroupWidget,
     ScrollBarWidget
 } from "project-editor/flow/widgets";
+import { propertyNotFoundMessage, Section } from "project-editor/core/store";
+import { MessageType } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1501,14 +1501,14 @@ async function buildGuiAssetsData(assets: Assets) {
     outputBuffer.copy(compressedData, 4, 0, compressedSize);
 
     assets.DocumentStore.outputSectionsStore.write(
-        output.Section.OUTPUT,
-        output.Type.INFO,
+        Section.OUTPUT,
+        MessageType.INFO,
         "Uncompressed size: " + inputBuffer.length
     );
 
     assets.DocumentStore.outputSectionsStore.write(
-        output.Section.OUTPUT,
-        output.Type.INFO,
+        Section.OUTPUT,
+        MessageType.INFO,
         "Compressed size: " + compressedSize
     );
 
@@ -1648,9 +1648,9 @@ class Assets {
             return this.DocumentStore.masterProject ? -assetIndex : assetIndex;
         }
 
-        const message = output.propertyNotFoundMessage(object, propertyName);
+        const message = propertyNotFoundMessage(object, propertyName);
         this.DocumentStore.outputSectionsStore.write(
-            output.Section.OUTPUT,
+            Section.OUTPUT,
             message.type,
             message.text,
             message.object
@@ -1859,8 +1859,8 @@ class Assets {
                     })
                 ) {
                     this.DocumentStore.outputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.INFO,
+                        Section.OUTPUT,
+                        MessageType.INFO,
                         "Unused style: " + style.name,
                         style
                     );
@@ -1870,8 +1870,8 @@ class Assets {
             project.fonts.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
                     this.DocumentStore.outputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.INFO,
+                        Section.OUTPUT,
+                        MessageType.INFO,
                         "Unused font: " + font.name,
                         font
                     );
@@ -1881,8 +1881,8 @@ class Assets {
             project.bitmaps.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
                     this.DocumentStore.outputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.INFO,
+                        Section.OUTPUT,
+                        MessageType.INFO,
                         "Unused bitmap: " + bitmap.name,
                         bitmap
                     );

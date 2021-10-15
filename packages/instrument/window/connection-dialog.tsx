@@ -16,8 +16,8 @@ import {
 } from "eez-studio-ui/properties";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
-import { ConnectionParameters } from "instrument/connection/interface";
-import * as UsbTmcModule from "instrument/connection/interfaces/usbtmc";
+import type { ConnectionParameters } from "instrument/connection/interface";
+import type * as UsbTmcModule from "instrument/connection/interfaces/usbtmc";
 
 interface ConnectionPropertiesProps {
     connectionParameters: ConnectionParameters;

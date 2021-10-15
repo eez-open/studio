@@ -1,5 +1,5 @@
 import { isRenderer } from "eez-studio-shared/util-electron";
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 import {
     createStore,
     types,
@@ -106,7 +106,10 @@ export const notebookItemSourcesStore = createStore({
     }
 });
 
-export function insertSource(instrumentName: string, instrumentExtensionId: string) {
+export function insertSource(
+    instrumentName: string,
+    instrumentExtensionId: string
+) {
     try {
         let result = db
             .prepare(
@@ -138,12 +141,18 @@ export function insertSource(instrumentName: string, instrumentExtensionId: stri
 export function insertSourceFromInstrumentId(instrumentId: string) {
     try {
         let result = db
-            .prepare(`SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`)
+            .prepare(
+                `SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`
+            )
             .get([instrumentId]);
 
         if (result && result.id) {
             return insertSource(
-                getInstrumentDescription(result.instrumentExtensionId, result.label, result.idn),
+                getInstrumentDescription(
+                    result.instrumentExtensionId,
+                    result.label,
+                    result.idn
+                ),
                 result.instrumentExtensionId
             );
         }
@@ -156,7 +165,9 @@ export function insertSourceFromInstrumentId(instrumentId: string) {
 export function getSource(sourceId: string): INotebookItemSource | null {
     try {
         let source = db
-            .prepare(`SELECT * FROM "${notebookItemSourcesStore.storeName}" WHERE id = ? `)
+            .prepare(
+                `SELECT * FROM "${notebookItemSourcesStore.storeName}" WHERE id = ? `
+            )
             .get([sourceId]);
 
         return source;
@@ -200,7 +211,8 @@ export interface INotebookItem {
     deleted: boolean;
 }
 
-export interface INotebookItemsFilterSpecification extends IFilterSpecification {
+export interface INotebookItemsFilterSpecification
+    extends IFilterSpecification {
     oid?: string;
     oids?: string[];
 }
@@ -273,7 +285,10 @@ export const itemsStore = createStore({
     },
 
     prepareWhereClause(filterSpecification: INotebookItemsFilterSpecification) {
-        if (!filterSpecification || !(filterSpecification.oid || filterSpecification.oids)) {
+        if (
+            !filterSpecification ||
+            !(filterSpecification.oid || filterSpecification.oids)
+        ) {
             return undefined;
         }
 
@@ -288,9 +303,7 @@ export const itemsStore = createStore({
         if (filterSpecification.oids !== undefined) {
             whereClause +=
                 "oid IN (" +
-                Array(filterSpecification.oids.length)
-                    .fill("?")
-                    .join(",") +
+                Array(filterSpecification.oids.length).fill("?").join(",") +
                 ")";
             params.push(...filterSpecification.oids.map(oid => parseInt(oid)));
         }
@@ -301,5 +314,13 @@ export const itemsStore = createStore({
         };
     },
 
-    orderBy: "date"
+    orderBy: "date",
+
+    getSourceDescription: (sid: string) => {
+        const source = getSource(sid);
+        if (source) {
+            return source.instrumentName;
+        }
+        return null;
+    }
 });

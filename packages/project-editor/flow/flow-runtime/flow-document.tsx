@@ -1,11 +1,11 @@
 import { computed } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
-import { IDocument } from "project-editor/flow/flow-interfaces";
-import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
+import type { IDocument } from "project-editor/flow/flow-interfaces";
+import type { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
 import { getDocumentStore } from "project-editor/core/store";
-import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { ConnectionLine } from "project-editor/flow/flow";
+import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { getObjectIdFromPoint } from "../flow-editor/bounding-rects";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -15,7 +15,8 @@ export class FlowDocument implements IDocument {
 
     @computed get connectionLines(): ITreeObjectAdapter[] {
         return (this.flow.children as ITreeObjectAdapter[]).filter(
-            editorObject => editorObject.object instanceof ConnectionLine
+            editorObject =>
+                editorObject.object instanceof ProjectEditor.ConnectionLineClass
         );
     }
 

@@ -14,29 +14,29 @@ import {
     InheritedValue,
     PropertyType,
     getProperty,
-    getChildOfObject,
     MessageType,
     NavigationComponent,
     PropertyProps,
-    isAnyPropertyModified,
     getParent
 } from "project-editor/core/object";
+import {
+    getChildOfObject,
+    isAnyPropertyModified,
+    Message,
+    propertyInvalidValueMessage,
+    propertyNotFoundMessage,
+    propertyNotUniqueMessage
+} from "project-editor/core/store";
 import {
     SimpleNavigationStoreClass,
     getDocumentStore
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
-import * as output from "project-editor/core/output";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { onSelectItem } from "project-editor/components/SelectItem";
 import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import {
-    Project,
-    findReferencedObject,
-    getProject
-} from "project-editor/project/project";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 
 import { findFont } from "project-editor/features/font/font";
@@ -45,10 +45,11 @@ import {
     getThemedColor,
     ThemesSideView
 } from "project-editor/features/style/theme";
-import { Font } from "project-editor/features/font/font";
+import type { Font } from "project-editor/features/font/font";
 import { ProjectContext } from "project-editor/project/context";
-import { Component } from "project-editor/flow/component";
 import { metrics } from "project-editor/features/style/metrics";
+import type { Project } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -56,7 +57,7 @@ const { MenuItem } = EEZStudio.remote || {};
 
 export function isWidgetParentOfStyle(object: IEezObject) {
     while (true) {
-        if (object instanceof Component) {
+        if (object instanceof ProjectEditor.ComponentClass) {
             return true;
         }
         if (!getParent(object)) {
@@ -140,7 +141,7 @@ export class StylesNavigation extends NavigationComponent {
                         onDoubleClickItem={this.props.onDoubleClickItem}
                         filter={(style: Style) =>
                             this.context.project.masterProject ==
-                            getProject(style)
+                            ProjectEditor.getProject(style)
                                 ? style.id != undefined
                                 : true
                         }
@@ -616,7 +617,7 @@ function getInheritedValue(
 
     if (styleObject.inheritFrom) {
         let inheritFromStyleObject = findStyle(
-            getProject(styleObject),
+            ProjectEditor.getProject(styleObject),
             styleObject.inheritFrom
         );
 
@@ -695,18 +696,18 @@ export class Style extends EezObject {
         icon: "format_color_fill",
         defaultValue: {},
         check: (object: Style) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
-            const Projectstore = getDocumentStore(object);
+            const DocumentStore = getDocumentStore(object);
 
-            if (Projectstore.isDashboardProject) {
+            if (DocumentStore.project.isDashboardProject) {
                 return messages;
             }
 
             if (object.id != undefined) {
                 if (!(object.id > 0 || object.id < 32768)) {
                     messages.push(
-                        new output.Message(
+                        new Message(
                             MessageType.ERROR,
                             `"Id": invalid value, should be greater then 0 and less then 32768.`,
                             getChildOfObject(object, "id")
@@ -714,24 +715,20 @@ export class Style extends EezObject {
                     );
                 } else {
                     if (
-                        Projectstore.project.allStyleIdToStyleMap.get(
+                        DocumentStore.project.allStyleIdToStyleMap.get(
                             object.id
                         )!.length > 1
                     ) {
-                        messages.push(
-                            output.propertyNotUniqueMessage(object, "id")
-                        );
+                        messages.push(propertyNotUniqueMessage(object, "id"));
                     }
                 }
             }
 
             if (
                 object.inheritFrom &&
-                !findStyle(Projectstore.project, object.inheritFrom)
+                !findStyle(DocumentStore.project, object.inheritFrom)
             ) {
-                messages.push(
-                    output.propertyNotFoundMessage(object, "inheritFrom")
-                );
+                messages.push(propertyNotFoundMessage(object, "inheritFrom"));
             } else {
                 // if (!object.fontName) {
                 //     messages.push(output.propertyNotFoundMessage(object, "font"));
@@ -742,7 +739,7 @@ export class Style extends EezObject {
                 ).error;
                 if (borderSizeError) {
                     messages.push(
-                        new output.Message(
+                        new Message(
                             MessageType.ERROR,
                             `"Border size": ${borderSizeError}.`,
                             getChildOfObject(object, "borderSize")
@@ -753,10 +750,7 @@ export class Style extends EezObject {
                 let borderRadius = object.borderRadiusProperty;
                 if (borderRadius < 0) {
                     messages.push(
-                        output.propertyInvalidValueMessage(
-                            object,
-                            "borderRadius"
-                        )
+                        propertyInvalidValueMessage(object, "borderRadius")
                     );
                 }
 
@@ -767,10 +761,7 @@ export class Style extends EezObject {
                     alignHorizontal != "right"
                 ) {
                     messages.push(
-                        output.propertyInvalidValueMessage(
-                            object,
-                            "alignHorizontal"
-                        )
+                        propertyInvalidValueMessage(object, "alignHorizontal")
                     );
                 }
 
@@ -781,44 +772,33 @@ export class Style extends EezObject {
                     alignVertical != "bottom"
                 ) {
                     messages.push(
-                        output.propertyInvalidValueMessage(
-                            object,
-                            "alignVertical"
-                        )
+                        propertyInvalidValueMessage(object, "alignVertical")
                     );
                 }
 
                 if (isNaN(object.color16)) {
-                    messages.push(
-                        output.propertyInvalidValueMessage(object, "color")
-                    );
+                    messages.push(propertyInvalidValueMessage(object, "color"));
                 }
 
                 if (isNaN(object.backgroundColor16)) {
                     messages.push(
-                        output.propertyInvalidValueMessage(
-                            object,
-                            "backgroundColor"
-                        )
+                        propertyInvalidValueMessage(object, "backgroundColor")
                     );
                 }
 
                 if (
-                    Projectstore.project.settings.general.projectVersion !==
+                    DocumentStore.project.settings.general.projectVersion !==
                     "v1"
                 ) {
                     if (isNaN(object.activeColor16)) {
                         messages.push(
-                            output.propertyInvalidValueMessage(
-                                object,
-                                "activeColor"
-                            )
+                            propertyInvalidValueMessage(object, "activeColor")
                         );
                     }
 
                     if (isNaN(object.activeBackgroundColor16)) {
                         messages.push(
-                            output.propertyInvalidValueMessage(
+                            propertyInvalidValueMessage(
                                 object,
                                 "activeBackgroundColor"
                             )
@@ -827,16 +807,13 @@ export class Style extends EezObject {
 
                     if (isNaN(object.focusColor16)) {
                         messages.push(
-                            output.propertyInvalidValueMessage(
-                                object,
-                                "focusColor"
-                            )
+                            propertyInvalidValueMessage(object, "focusColor")
                         );
                     }
 
                     if (isNaN(object.focusBackgroundColor16)) {
                         messages.push(
-                            output.propertyInvalidValueMessage(
+                            propertyInvalidValueMessage(
                                 object,
                                 "focusBackgroundColor"
                             )
@@ -846,17 +823,14 @@ export class Style extends EezObject {
 
                 if (isNaN(object.borderColor16)) {
                     messages.push(
-                        output.propertyInvalidValueMessage(
-                            object,
-                            "borderColor"
-                        )
+                        propertyInvalidValueMessage(object, "borderColor")
                     );
                 }
 
                 let paddingError = Style.getRect(object.paddingProperty).error;
                 if (paddingError) {
                     messages.push(
-                        new output.Message(
+                        new Message(
                             MessageType.ERROR,
                             `"Padding": ${paddingError}.`,
                             getChildOfObject(object, "padding")
@@ -867,7 +841,7 @@ export class Style extends EezObject {
                 let marginError = Style.getRect(object.marginProperty).error;
                 if (marginError) {
                     messages.push(
-                        new output.Message(
+                        new Message(
                             MessageType.ERROR,
                             `"Margin": ${marginError}.`,
                             getChildOfObject(object, "margin")
@@ -892,12 +866,12 @@ export class Style extends EezObject {
     })
     get fontObject(): Font | undefined {
         if (this.font) {
-            return findFont(getProject(this), this.font);
+            return findFont(ProjectEditor.getProject(this), this.font);
         }
 
         if (this.inheritFrom) {
             let inheritFromStyleObject = findStyle(
-                getProject(this),
+                ProjectEditor.getProject(this),
                 this.inheritFrom
             );
 
@@ -1266,7 +1240,7 @@ export class Style extends EezObject {
     }
 }
 
-registerClass(Style);
+registerClass("Style", Style);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1350,9 +1324,11 @@ export function findStyle(project: Project, styleName: string | undefined) {
         return undefined;
     }
 
-    return findReferencedObject(project, "styles", styleName) as
-        | Style
-        | undefined;
+    return ProjectEditor.documentSearch.findReferencedObject(
+        project,
+        "styles",
+        styleName
+    ) as Style | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

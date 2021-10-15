@@ -11,7 +11,6 @@ import {
     IEezObject,
     PropertyType,
     getProperty,
-    objectToString,
     PropertyProps,
     getParent,
     getObjectPropertyDisplayName
@@ -26,6 +25,7 @@ import { CodeEditorProperty } from "./CodeEditorProperty";
 import { ThemedColorInput } from "./ThemedColorInput";
 import { ArrayProperty } from "./ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "./EmbeddedPropertyGrid";
+import { objectToString } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

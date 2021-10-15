@@ -15,9 +15,12 @@ import { SearchInput } from "eez-studio-ui/search-input";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
-import { IAppStore, INavigationStore } from "instrument/window/history/history";
+import type {
+    IAppStore,
+    INavigationStore
+} from "instrument/window/history/history";
 import { HistoryListComponent } from "instrument/window/history/list-component";
-import { IHistoryItem } from "instrument/window/history/item";
+import type { IHistoryItem } from "instrument/window/history/item";
 import { SearchResults } from "instrument/window/history/search-results";
 import { FiltersComponent } from "instrument/window/history/filters";
 import { Calendar } from "instrument/window/history/calendar";

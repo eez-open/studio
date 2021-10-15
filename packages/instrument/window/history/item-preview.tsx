@@ -16,7 +16,7 @@ import {
 
 @observer
 class ZoomedPreview extends React.Component<{
-    toolbar?: JSX.Element;
+    toolbar?: React.ReactNode;
     className?: string;
     toggleZoom: (event: React.MouseEvent<HTMLElement>) => void;
     enableUnzoomWithEsc: boolean;
@@ -102,7 +102,7 @@ class UnzoomedPreview extends React.Component<{
 @observer
 export class HistoryItemPreview extends React.Component<{
     className?: string;
-    toolbarWhenZoomed?: JSX.Element;
+    toolbarWhenZoomed?: React.ReactNode;
     zoom: boolean;
     toggleZoom: () => void;
     enableUnzoomWithEsc: boolean;

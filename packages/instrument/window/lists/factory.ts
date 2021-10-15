@@ -1,4 +1,7 @@
-import { IListType, BaseListData } from "instrument/window/lists/store-renderer";
+import {
+    IListType,
+    BaseListData
+} from "instrument/window/lists/store-renderer";
 
 import { InstrumentObject } from "instrument/instrument-object";
 
@@ -6,8 +9,15 @@ import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { HistoryItem } from "instrument/window/history/item";
 
-import { createEmptyTableListData, TableList, TableListData } from "instrument/window/lists/table";
-import { createEmptyEnvelopeListData, EnvelopeList } from "instrument/window/lists/envelope";
+import {
+    createEmptyTableListData,
+    TableList,
+    TableListData
+} from "instrument/window/lists/table";
+import {
+    createEmptyEnvelopeListData,
+    EnvelopeList
+} from "instrument/window/lists/envelope";
 
 ////////////////////////////////////////////////////////////////////////////////
 

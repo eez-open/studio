@@ -1,9 +1,12 @@
-import { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/core/extensions";
 
-import { Project, BuildConfiguration } from "project-editor/project/project";
+import type {
+    Project,
+    BuildConfiguration
+} from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
-import { Action } from "project-editor/features/action/action";
+import type { Action } from "project-editor/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,9 +75,9 @@ function buildActionsArrayDef(projectActions: Action[]) {
             )}`
     );
 
-    return `ActionExecFunc g_actionExecFunctions[] = {\n${projectBuild.TAB}0,\n${actions.join(
-        ",\n"
-    )}\n};`;
+    return `ActionExecFunc g_actionExecFunctions[] = {\n${
+        projectBuild.TAB
+    }0,\n${actions.join(",\n")}\n};`;
 }
 
 export function build(
@@ -98,7 +101,8 @@ export function build(
                         action =>
                             !buildConfiguration ||
                             !action.usedIn ||
-                            action.usedIn.indexOf(buildConfiguration.name) !== -1
+                            action.usedIn.indexOf(buildConfiguration.name) !==
+                                -1
                     )
                 );
             }
@@ -108,7 +112,10 @@ export function build(
             result.ACTIONS_ENUM = buildActionsEnum(projectActions);
         }
 
-        if (!sectionNames || sectionNames.indexOf("ACTIONS_FUNCS_DECL") !== -1) {
+        if (
+            !sectionNames ||
+            sectionNames.indexOf("ACTIONS_FUNCS_DECL") !== -1
+        ) {
             result.ACTIONS_FUNCS_DECL = buildActionsFuncsDecl(projectActions);
         }
 
@@ -116,7 +123,10 @@ export function build(
             result.ACTIONS_FUNCS_DEF = buildActionsFuncsDef(projectActions);
         }
 
-        if (!sectionNames || sectionNames.indexOf("ACTIONS_ARRAY_DECL") !== -1) {
+        if (
+            !sectionNames ||
+            sectionNames.indexOf("ACTIONS_ARRAY_DECL") !== -1
+        ) {
             result.ACTIONS_ARRAY_DECL = buildActionsArrayDecl();
         }
 

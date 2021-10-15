@@ -1,8 +1,8 @@
 import { createStore, types } from "eez-studio-shared/store";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 
-import * as ListsFactoryModule from "instrument/window/lists/factory";
+import type * as ListsFactoryModule from "instrument/window/lists/factory";
 
 export function createInstrumentListStore(appStore: InstrumentAppStore | null) {
     return createStore({
@@ -66,9 +66,8 @@ export function createInstrumentListStore(appStore: InstrumentAppStore | null) {
         },
         create: (props: any) => {
             if (appStore) {
-                const {
-                    createListObject
-                } = require("instrument/window/lists/factory") as typeof ListsFactoryModule;
+                const { createListObject } =
+                    require("instrument/window/lists/factory") as typeof ListsFactoryModule;
                 props = createListObject(props, appStore, appStore.instrument!);
             }
             return props;

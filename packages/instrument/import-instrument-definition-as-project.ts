@@ -4,7 +4,7 @@ import {
     getFolderName,
     localPathToFileUrl
 } from "eez-studio-shared/util-electron";
-import { objectToJS } from "project-editor/core/serialization";
+import { objectToJS } from "project-editor/core/store";
 import { importExtensionToFolder } from "eez-studio-shared/extensions/extensions";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 
@@ -17,6 +17,7 @@ import { loadCommandsFromExtensionFolder } from "instrument/import";
 import { splitCommandToMnemonics } from "instrument/commands-tree";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { tabs } from "home/tabs-store";
+import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 
 function generateExtensionGuid(extensionName: string) {
     var sha256 = require("sha256");
@@ -126,6 +127,7 @@ export async function importInstrumentDefinitionAsProject(
             return;
         }
 
+        await initProjectEditor();
         const DocumentStore = await DocumentStoreClass.create();
 
         const project = DocumentStore.getNewProject();

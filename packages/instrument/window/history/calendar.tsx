@@ -11,7 +11,7 @@ import {
     getWeekNumber
 } from "eez-studio-shared/util";
 
-import { History } from "instrument/window/history/history";
+import type { History } from "instrument/window/history/history";
 
 @observer
 export class Day extends React.Component<{ history: History; day: Date }> {

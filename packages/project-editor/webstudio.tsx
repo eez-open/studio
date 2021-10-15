@@ -8,7 +8,8 @@ import * as notification from "eez-studio-ui/notification";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
-import { LineMarkers } from "./flow/flow-editor/ConnectionLineComponent";
+import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 
 configure({ enforceActions: "observed" });
 
@@ -17,6 +18,7 @@ async function main() {
     const url = params.get("url");
     console.log(url);
 
+    await initProjectEditor();
     const DocumentStore = await DocumentStoreClass.create();
     if (url) {
         DocumentStore.openFile(url);
@@ -26,7 +28,7 @@ async function main() {
 
     await DocumentStore.loadAllExternalProjects();
     runInAction(() => {
-        DocumentStore.project.fullyLoaded = true;
+        DocumentStore.project._fullyLoaded = true;
     });
     DocumentStore.startBackgroundCheck();
 

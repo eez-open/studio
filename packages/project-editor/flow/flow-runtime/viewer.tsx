@@ -18,7 +18,7 @@ import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
 
 import { IPanel } from "project-editor/core/store";
 
-import { Flow, FlowTabState } from "project-editor/flow/flow";
+import type { Flow, FlowTabState } from "project-editor/flow/flow";
 import { Svg } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
@@ -27,10 +27,10 @@ import {
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/flow-editor/bounding-rects";
-import { Component } from "project-editor/flow/component";
 import { attachCssToElement } from "eez-studio-shared/dom";
 import { Draggable } from "eez-studio-ui/draggable";
 import { IMouseHandler, PanMouseHandler } from "../flow-editor/mouse-handler";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -495,7 +495,8 @@ export class FlowViewer
                 this.flowContext.viewState.selectedObjects
                     .filter(
                         selectedObject =>
-                            selectedObject.object instanceof Component
+                            selectedObject.object instanceof
+                            ProjectEditor.ComponentClass
                     )
                     .map(selectedObject =>
                         getObjectBoundingRect(selectedObject)

@@ -1,12 +1,12 @@
 import { getProperty } from "project-editor/core/object";
-import { getProjectFeatures } from "project-editor/core/extensions";
-import { DocumentStoreClass } from "project-editor/core/store";
+import type { DocumentStoreClass } from "project-editor/core/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function getAllMetrics(DocumentStore: DocumentStoreClass) {
     let allMetrics: any = {};
 
     const project = DocumentStore.project;
-    let projectFeatures = getProjectFeatures();
+    let projectFeatures = ProjectEditor.extensions;
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature
@@ -17,9 +17,10 @@ export function getAllMetrics(DocumentStore: DocumentStoreClass) {
                     .key
             )
         ) {
-            let featureMetrics = projectFeature.eezStudioExtension.implementation.projectFeature.metrics(
-                project
-            );
+            let featureMetrics =
+                projectFeature.eezStudioExtension.implementation.projectFeature.metrics(
+                    project
+                );
             allMetrics = Object.assign(allMetrics, featureMetrics);
         }
     }

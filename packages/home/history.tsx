@@ -2,7 +2,11 @@ import React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
 
 import {
     IAppStore,
@@ -11,11 +15,15 @@ import {
     DeletedItemsHistory
 } from "instrument/window/history/history";
 import { Filters } from "instrument/window/history/filters";
-import { HistoryTools, HistoryView } from "instrument/window/history/history-view";
+import {
+    HistoryTools,
+    HistoryView
+} from "instrument/window/history/history-view";
 import {
     DeletedHistoryItemsTools,
     DeletedHistoryItemsView
 } from "instrument/window/history/deleted-history-items-view";
+
 import { tabs } from "home/tabs-store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,7 +31,9 @@ import { tabs } from "home/tabs-store";
 class HomeAppStore implements IAppStore {
     constructor(public oids?: string[]) {}
 
-    @observable selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
+    @observable selectHistoryItemsSpecification:
+        | SelectHistoryItemsSpecification
+        | undefined;
     @observable selectedHistoryItems = new Map<string, boolean>();
 
     instrument: {
@@ -63,7 +73,9 @@ class HomeAppStore implements IAppStore {
     }
 
     @action
-    selectHistoryItems(specification: SelectHistoryItemsSpecification | undefined) {
+    selectHistoryItems(
+        specification: SelectHistoryItemsSpecification | undefined
+    ) {
         this.selectHistoryItemsSpecification = specification;
         this.selectedHistoryItems.clear();
     }

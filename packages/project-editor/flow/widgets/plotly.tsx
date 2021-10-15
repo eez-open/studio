@@ -14,7 +14,7 @@ import { Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
-import * as PlotlyModule from "plotly.js-dist-min";
+import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { FlowState } from "project-editor/flow/runtime";
 
@@ -447,7 +447,7 @@ export class LineChartWidget extends Widget {
     }
 }
 
-registerClass(LineChartWidget);
+registerClass("LineChartWidget", LineChartWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -672,4 +672,4 @@ export class GaugeWidget extends Widget {
     }
 }
 
-registerClass(GaugeWidget);
+registerClass("GaugeWidget", GaugeWidget);

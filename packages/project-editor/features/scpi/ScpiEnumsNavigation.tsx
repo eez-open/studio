@@ -9,7 +9,7 @@ import { NavigationComponent } from "project-editor/core/object";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
-import { ScpiEnum } from "project-editor/features/scpi/enum";
+import type { ScpiEnum } from "project-editor/features/scpi/enum";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ProjectContext } from "project-editor/project/context";
 

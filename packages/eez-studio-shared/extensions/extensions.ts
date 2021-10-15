@@ -1,9 +1,9 @@
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, action, runInAction } from "mobx";
 const EventEmitter = require("events");
 const fs = require("fs");
 const path = require("path");
 
-import { delay } from "eez-studio-shared/util";
+import { delay, sourceRootDir } from "eez-studio-shared/util";
 import {
     localPathToFileUrl,
     zipExtract,
@@ -37,7 +37,7 @@ import {
     getExtensionFolderPath
 } from "eez-studio-shared/extensions/extension-folder";
 
-import * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
+import type * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
 
 const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
 const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
@@ -175,7 +175,7 @@ async function loadAndRegisterExtension(folder: string) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function yarnFn(args: string[]) {
-    const yarn = path.resolve(__dirname, "../../../libs/yarn-1.22.10.js");
+    const yarn = sourceRootDir() + "/../libs/yarn-1.22.10.js";
     const cp = require("child_process");
     const queue = require("queue");
     const spawnQueue = queue({ concurrency: 1 });
@@ -735,9 +735,3 @@ export function isInstrumentExtension(extension: IExtension) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export const extensions = observable(new Map<string, IExtension>());
-
-export const installedExtensions = computed(() => {
-    return Array.from(extensions.values()).filter(
-        extension => !extension.preInstalled
-    );
-});

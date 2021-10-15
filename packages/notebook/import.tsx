@@ -8,7 +8,7 @@ import {
     readBinaryFile,
     fileExists
 } from "eez-studio-shared/util-electron";
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { confirm } from "eez-studio-ui/dialog-electron";
@@ -39,11 +39,15 @@ export async function importNotebook(
         autoClose: false
     });
 
-    const [tempDir, cleanupCallback] = await getTempDirPath({ unsafeCleanup: true });
+    const [tempDir, cleanupCallback] = await getTempDirPath({
+        unsafeCleanup: true
+    });
 
     await zipExtract(filePath, tempDir);
 
-    const notebook: IExportedNotebook = await readJsObjectFromFile(tempDir + "/notebook.json");
+    const notebook: IExportedNotebook = await readJsObjectFromFile(
+        tempDir + "/notebook.json"
+    );
 
     const notebookName = (options && options.notebookName) || notebook.name;
 
@@ -151,7 +155,10 @@ export async function importNotebook(
                     <div>
                         <p>Notebook imported!</p>
                         {!(options && options.showNotebook) && (
-                            <button className="btn btn-sm" onClick={() => showNotebook(notebookId)}>
+                            <button
+                                className="btn btn-sm"
+                                onClick={() => showNotebook(notebookId)}
+                            >
                                 Show Notebook
                             </button>
                         )}

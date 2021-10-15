@@ -8,21 +8,19 @@ import { IconAction } from "eez-studio-ui/action";
 import {
     IEezObject,
     PropertyInfo,
-    isValue,
     PropertyProps,
     getParent,
     getId,
-    getClassInfo,
     isPropertyReadOnly,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
-import { addItem } from "project-editor/core/store";
+import { isValue, getClassInfo, addItem } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import {
     deleteObject,
     insertObjectAfter,
     insertObjectBefore
-} from "project-editor/core/commands";
+} from "project-editor/core/store";
 import {
     isArrayElementPropertyVisible,
     isHighlightedProperty,

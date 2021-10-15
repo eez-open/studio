@@ -8,14 +8,15 @@ import {
     EezObject,
     registerClass,
     PropertyType,
-    NavigationComponent
+    NavigationComponent,
+    MessageType
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import { getDocumentStore } from "project-editor/core/store";
+import { getDocumentStore, Message } from "project-editor/core/store";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -25,14 +26,10 @@ import { showGenericDialog } from "project-editor/core/util";
 import { ProjectContext } from "project-editor/project/context";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
-import {
-    Project,
-    findReferencedObject,
-    getProject
-} from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 
 import { metrics } from "project-editor/features/bitmap/metrics";
-import * as output from "project-editor/core/output";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -225,7 +222,10 @@ export class Bitmap extends EezObject {
     @computed
     get backgroundColor() {
         if (this.bpp !== 32) {
-            const style = findStyle(getProject(this), this.style || "default");
+            const style = findStyle(
+                ProjectEditor.getProject(this),
+                this.style || "default"
+            );
             if (style && style.backgroundColorProperty) {
                 return getThemedColor(
                     getDocumentStore(this),
@@ -256,7 +256,7 @@ export class Bitmap extends EezObject {
     }
 }
 
-registerClass(Bitmap);
+registerClass("Bitmap", Bitmap);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -340,9 +340,11 @@ export function getData(bitmap: Bitmap): Promise<BitmapData> {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findBitmap(project: Project, bitmapName: any) {
-    return findReferencedObject(project, "bitmaps", bitmapName) as
-        | Bitmap
-        | undefined;
+    return ProjectEditor.documentSearch.findReferencedObject(
+        project,
+        "bitmaps",
+        bitmapName
+    ) as Bitmap | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,12 +367,12 @@ export default {
                 icon: "image",
                 create: () => [],
                 check: (object: IEezObject[]) => {
-                    let messages: output.Message[] = [];
+                    let messages: Message[] = [];
 
                     if (object.length > 255) {
                         messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
+                            new Message(
+                                MessageType.ERROR,
                                 "Max. 255 bitmaps are supported",
                                 object
                             )
@@ -381,8 +383,8 @@ export default {
                         !findStyle(getDocumentStore(object).project, "default")
                     ) {
                         messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
+                            new Message(
+                                MessageType.ERROR,
                                 "'Default' style is missing.",
                                 object
                             )

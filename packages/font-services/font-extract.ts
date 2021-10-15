@@ -1,7 +1,7 @@
 import { service } from "eez-studio-shared/service";
 
-import * as BdfModule from "font-services/bdf";
-import * as FreeTypeModule from "font-services/freetype";
+import type * as BdfModule from "font-services/bdf";
+import type * as FreeTypeModule from "font-services/freetype";
 
 const path = require("path");
 
@@ -20,7 +20,8 @@ interface Params {
 
 function serviceImplementation(data: Params) {
     if (path.extname(data.relativeFilePath) == ".bdf") {
-        const { extractBdfFont } = require("font-services/bdf") as typeof BdfModule;
+        const { extractBdfFont } =
+            require("font-services/bdf") as typeof BdfModule;
         return extractBdfFont(
             data.name,
             data.absoluteFilePath,
@@ -32,7 +33,8 @@ function serviceImplementation(data: Params) {
             data.createBlankGlyphs || false
         );
     } else {
-        const { extractFreeTypeFont } = require("font-services/freetype") as typeof FreeTypeModule;
+        const { extractFreeTypeFont } =
+            require("font-services/freetype") as typeof FreeTypeModule;
         return extractFreeTypeFont(
             data.name,
             data.absoluteFilePath,
@@ -48,4 +50,8 @@ function serviceImplementation(data: Params) {
     }
 }
 
-export default service("font-services/font-extract", serviceImplementation, true);
+export default service(
+    "font-services/font-extract",
+    serviceImplementation,
+    true
+);

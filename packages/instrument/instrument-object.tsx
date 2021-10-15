@@ -17,32 +17,30 @@ import { activityLogStore, log } from "eez-studio-shared/activity-log";
 import { objectEqual } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { IUnit } from "eez-studio-shared/units";
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 import { _defer } from "eez-studio-shared/algorithm";
 
 import * as notification from "eez-studio-ui/notification";
 
-import * as MainWindowModule from "main/window";
+import type * as MainWindowModule from "main/window";
 
-import * as ExtensionMangerModule from "home/extensions-manager/extensions-manager";
-import * as CatalogModule from "home/extensions-manager/catalog";
+import type * as ExtensionMangerModule from "home/extensions-manager/extensions-manager";
+import type * as CatalogModule from "home/extensions-manager/catalog";
 
-import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
-import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
-import { IInstrumentProperties } from "instrument/export";
-import { ICommandSyntax, IQuerySyntax } from "instrument/commands-tree";
+import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
+import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";
+import type { IInstrumentProperties } from "instrument/export";
+import type { ICommandSyntax, IQuerySyntax } from "instrument/commands-tree";
 
-import { IConnection } from "instrument/connection/connection";
+import type { IConnection } from "instrument/connection/connection";
+import type { ConnectionParameters } from "instrument/connection/interface";
+import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
+import type { IFileUploadInstructions } from "instrument/connection/file-upload";
 import { createConnection } from "instrument/connection/connection";
-import {
-    ConnectionErrorCode,
-    ConnectionParameters
-} from "instrument/connection/interface";
-import { IFileUploadInstructions } from "instrument/connection/file-upload";
 
-import * as UiPropertiesModule from "eez-studio-ui/properties";
-import * as AppStoreModule from "instrument/window/app-store";
-import * as Bb3Module from "instrument/bb3";
+import type * as UiPropertiesModule from "eez-studio-ui/properties";
+import type * as AppStoreModule from "instrument/window/app-store";
+import type * as Bb3Module from "instrument/bb3";
 
 ////////////////////////////////////////////////////////////////////////////////
 

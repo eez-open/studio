@@ -5,10 +5,7 @@ import { observer } from "mobx-react";
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
 
-import {
-    NavigationComponent,
-    getAncestorOfType
-} from "project-editor/core/object";
+import { NavigationComponent } from "project-editor/core/object";
 
 import {
     ListNavigation,
@@ -16,9 +13,14 @@ import {
 } from "project-editor/components/ListNavigation";
 
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
-import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
+import type {
+    ScpiCommand,
+    ScpiSubsystem
+} from "project-editor/features/scpi/scpi";
 import { ScpiSubsystemOrCommandEditor } from "project-editor/features/scpi/ScpiSubsystemOrCommandEditor";
 import { ProjectContext } from "project-editor/project/context";
+import { getAncestorOfType } from "project-editor/core/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 @observer
 export class ScpiSubsystemsNavigation extends NavigationComponent {
@@ -36,14 +38,17 @@ export class ScpiSubsystemsNavigation extends NavigationComponent {
             ? this.context.navigationStore.selectedPanel.selectedObject
             : this.context.navigationStore.selectedObject;
         if (object) {
-            const command = getAncestorOfType(object, ScpiCommand.classInfo);
+            const command = getAncestorOfType(
+                object,
+                ProjectEditor.ScpiCommandClass.classInfo
+            );
             if (command) {
                 return command as ScpiCommand;
             }
 
             const subsystem = getAncestorOfType(
                 object,
-                ScpiSubsystem.classInfo
+                ProjectEditor.ScpiSubsystemClass.classInfo
             );
             if (subsystem) {
                 return subsystem as ScpiSubsystem;

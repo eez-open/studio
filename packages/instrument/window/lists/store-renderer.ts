@@ -9,18 +9,18 @@ import {
 } from "eez-studio-shared/units";
 
 import {
-    ChartsController,
     IAxisModel,
     ZoomMode,
     IViewOptions,
     IViewOptionsAxesLines,
     IViewOptionsAxesLinesType,
-    ChartMode
+    ChartMode,
+    ChartsController
 } from "eez-studio-ui/chart/chart";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 
 import { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 

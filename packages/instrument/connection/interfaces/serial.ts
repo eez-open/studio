@@ -2,9 +2,9 @@ import SerialPortModule from "serialport";
 
 import {
     CommunicationInterface,
-    CommunicationInterfaceHost,
-    ConnectionErrorCode
+    CommunicationInterfaceHost
 } from "instrument/connection/interface";
+import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 
 const CONF_CHUNK_SIZE = 64;
 
@@ -23,12 +23,17 @@ export class SerialInterface implements CommunicationInterface {
             this.port = new SerialPort(
                 this.host.connectionParameters.serialParameters.port,
                 {
-                    baudRate: this.host.connectionParameters.serialParameters.baudRate,
+                    baudRate:
+                        this.host.connectionParameters.serialParameters
+                            .baudRate,
                     rtscts: true
                 },
                 (err: any) => {
                     if (err) {
-                        this.host.setError(ConnectionErrorCode.NONE, err.toString());
+                        this.host.setError(
+                            ConnectionErrorCode.NONE,
+                            err.toString()
+                        );
                         this.destroy();
                     } else {
                         if (!this.connectedCalled) {

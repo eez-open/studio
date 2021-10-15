@@ -25,32 +25,38 @@ import {
     registerClass,
     PropertyType,
     getProperty,
-    cloneObject,
     NavigationComponent,
     getParent,
     getId,
-    getLabel
+    MessageType
 } from "project-editor/core/object";
 import {
     INavigationStore,
     IPanel,
-    getDocumentStore
+    getLabel,
+    getDocumentStore,
+    Message
 } from "project-editor/core/store";
-import { loadObject, objectToJS } from "project-editor/core/serialization";
+import { cloneObject, loadObject, objectToJS } from "project-editor/core/store";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
-import { Project, findReferencedObject } from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 
 import extractFont from "font-services/font-extract";
 import rebuildFont from "font-services/font-rebuild";
 import { FontProperties as FontValue } from "font-services/interfaces";
 
-import { drawGlyph, setColor, setBackColor } from "project-editor/flow/draw";
+import {
+    drawGlyph,
+    setColor,
+    setBackColor,
+    getPixelByteIndex
+} from "project-editor/flow/draw";
 import { showGenericDialog } from "project-editor/core/util";
 
 import { metrics } from "project-editor/features/page/metrics";
-import * as output from "project-editor/core/output";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -204,7 +210,7 @@ export class GlyphSource extends EezObject {
     }
 }
 
-registerClass(GlyphSource);
+registerClass("GlyphSource", GlyphSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -212,14 +218,6 @@ export interface IGlyphBitmap {
     width: number;
     height: number;
     pixelArray: number[];
-}
-
-export function getPixelByteIndex(
-    glyphBitmap: IGlyphBitmap,
-    x: number,
-    y: number
-): number {
-    return y * Math.floor((glyphBitmap.width + 7) / 8) + Math.floor(x / 8);
 }
 
 export function getPixel(
@@ -1029,7 +1027,7 @@ export class Glyph extends EezObject {
     }
 }
 
-registerClass(Glyph);
+registerClass("Glyph", Glyph);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2182,7 +2180,7 @@ export class FontSource extends EezObject {
     };
 }
 
-registerClass(FontSource);
+registerClass("FontSource", FontSource);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2431,7 +2429,7 @@ export class Font extends EezObject {
     }
 }
 
-registerClass(Font);
+registerClass("Font", Font);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2439,7 +2437,11 @@ export function findFont(project: Project, fontName: string | undefined) {
     if (fontName == undefined) {
         return undefined;
     }
-    return findReferencedObject(project, "fonts", fontName) as Font | undefined;
+    return ProjectEditor.documentSearch.findReferencedObject(
+        project,
+        "fonts",
+        fontName
+    ) as Font | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2462,12 +2464,12 @@ export default {
                 icon: "font_download",
                 create: () => [],
                 check: (object: IEezObject[]) => {
-                    let messages: output.Message[] = [];
+                    let messages: Message[] = [];
 
                     if (object.length > 255) {
                         messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
+                            new Message(
+                                MessageType.ERROR,
                                 "Max. 255 fonts are supported",
                                 object
                             )

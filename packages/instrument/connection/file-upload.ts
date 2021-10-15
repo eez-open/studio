@@ -12,9 +12,9 @@ import {
 } from "eez-studio-shared/util-electron";
 import { Buffer } from "buffer";
 
-import { FileState } from "instrument/connection/file-state";
+import type { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";
-import { Connection } from "instrument/connection/connection";
+import type { Connection } from "instrument/connection/connection";
 import { detectFileType, SAMPLE_LENGTH } from "instrument/connection/file-type";
 
 export interface IFileUploadInstructions {

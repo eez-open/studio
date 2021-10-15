@@ -1,19 +1,121 @@
-import { observable } from "mobx";
+import React from "react";
+import { observable, computed, action } from "mobx";
+import { observer } from "mobx-react";
+
+import { guid } from "eez-studio-shared/guid";
+
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
+
+import type { IShortcut, IActionType } from "shortcuts/interfaces";
+import {
+    Shortcuts as ShortcutsComponent,
+    ShortcutsToolbarButtons
+} from "shortcuts/shortcuts";
+
+import type { Project } from "project-editor/project/project";
 
 import {
     ClassInfo,
     registerClass,
     EezObject,
-    PropertyType
+    PropertyType,
+    NavigationComponent
 } from "project-editor/core/object";
-import { objectToJS } from "project-editor/core/serialization";
+import { objectToJS } from "project-editor/core/store";
 
-import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
-import { IActionType } from "shortcuts/interfaces";
+import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+
+import { ProjectContext } from "project-editor/project/context";
+
 import { metrics } from "project-editor/features/shortcuts/metrics";
-import { ShortcutsNavigation } from "project-editor/features/shortcuts/navigation";
-import { Project } from "project-editor/project/project";
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ShortcutsNavigation extends NavigationComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    @computed
+    get object() {
+        if (this.context.navigationStore.selectedPanel) {
+            return this.context.navigationStore.selectedPanel.selectedObject;
+        }
+        return this.context.navigationStore.selectedObject;
+    }
+
+    @computed
+    get shortcutsStore() {
+        const shortcuts = this.context.project.shortcuts.shortcuts;
+
+        let shortcutsMap = new Map<string, Shortcut>();
+        shortcuts.forEach(shortcut => shortcutsMap.set(shortcut.id, shortcut));
+
+        const DocumentStore = this.context;
+
+        return {
+            shortcuts: observable.map(shortcutsMap),
+
+            addShortcut(shortcut: Partial<IShortcut>) {
+                shortcut.id = guid();
+                DocumentStore.addObject(shortcuts, shortcut as any);
+                return shortcut.id;
+            },
+
+            updateShortcut(shortcut: Partial<IShortcut>): void {
+                let shortcutObject = shortcutsMap.get(shortcut.id!);
+                if (shortcutObject) {
+                    DocumentStore.updateObject(shortcutObject, shortcut);
+                }
+            },
+
+            deleteShortcut(shortcut: Partial<IShortcut>): void {
+                let shortcutObject = shortcutsMap.get(shortcut.id!);
+                if (shortcutObject) {
+                    DocumentStore.deleteObject(shortcutObject);
+                }
+            },
+
+            renderUsedInProperty(shortcut: Partial<IShortcut>) {
+                return (
+                    <tr>
+                        <td>Used in</td>
+                        <td>
+                            <ConfigurationReferencesPropertyValue
+                                value={shortcut.usedIn}
+                                onChange={value => {
+                                    action(() => (shortcut.usedIn = value))();
+                                }}
+                                readOnly={false}
+                            />
+                        </td>
+                    </tr>
+                );
+            }
+        };
+    }
+
+    render() {
+        return (
+            <VerticalHeaderWithBody>
+                <ToolbarHeader>
+                    <ShortcutsToolbarButtons
+                        shortcutsStore={this.shortcutsStore}
+                    />
+                </ToolbarHeader>
+                <Body tabIndex={0}>
+                    <ShortcutsComponent shortcutsStore={this.shortcutsStore} />
+                </Body>
+            </VerticalHeaderWithBody>
+        );
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +141,7 @@ export class ShortcutAction extends EezObject {
     };
 }
 
-registerClass(ShortcutAction);
+registerClass("ShortcutAction", ShortcutAction);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -103,7 +205,7 @@ export class Shortcut extends EezObject {
     };
 }
 
-registerClass(Shortcut);
+registerClass("Shortcut", Shortcut);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +229,7 @@ export class Shortcuts extends EezObject {
     };
 }
 
-registerClass(Shortcuts);
+registerClass("Shortcuts", Shortcuts);
 
 ////////////////////////////////////////////////////////////////////////////////
 

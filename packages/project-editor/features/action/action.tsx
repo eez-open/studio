@@ -11,14 +11,10 @@ import {
     NavigationComponent,
     EditorComponent,
     IEditorState,
-    getAncestorOfType
+    MessageType
 } from "project-editor/core/object";
-import { Message, Type } from "project-editor/core/output";
-import {
-    findReferencedObject,
-    Project,
-    getProject
-} from "project-editor/project/project";
+import { Message } from "project-editor/core/store";
+import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { build } from "project-editor/features/action/build";
 import { metrics } from "project-editor/features/action/metrics";
@@ -28,7 +24,11 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { FlowEditor } from "project-editor/flow/flow-editor/editor";
 import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
-import { getDocumentStore, IPanel } from "project-editor/core/store";
+import {
+    getAncestorOfType,
+    getDocumentStore,
+    IPanel
+} from "project-editor/core/store";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
 import { bind } from "bind-decorator";
 import {
@@ -42,6 +42,7 @@ import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/re
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -464,23 +465,25 @@ export class Action extends Flow {
                     }
                 ],
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectVersion !== "v1"
+                    ProjectEditor.getProject(object).settings.general
+                        .projectVersion !== "v1"
             },
             {
                 name: "implementation",
                 type: PropertyType.CPP,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getProject(object).settings.general.projectVersion !== "v1"
+                    ProjectEditor.getProject(object).settings.general
+                        .projectVersion !== "v1"
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 hideInPropertyGrid: (object: IEezObject) => {
-                    const DocumentStor = getDocumentStore(object);
+                    const DocumentStore = getDocumentStore(object);
                     return (
-                        DocumentStor.isDashboardProject ||
-                        DocumentStor.isAppletProject
+                        DocumentStore.project.isDashboardProject ||
+                        DocumentStore.project.isAppletProject
                     );
                 }
             }
@@ -516,8 +519,8 @@ export class Action extends Flow {
                         {
                             name: result.values.name
                         },
-                        DocumentStore.isDashboardProject ||
-                            DocumentStore.isAppletProject
+                        DocumentStore.project.isDashboardProject ||
+                            DocumentStore.project.isAppletProject
                             ? ({
                                   implementationType: "flow",
                                   components: [],
@@ -553,14 +556,16 @@ export class Action extends Flow {
     }
 }
 
-registerClass(Action);
+registerClass("Action", Action);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findAction(project: Project, actionName: string) {
-    return findReferencedObject(project, "actions", actionName) as
-        | Action
-        | undefined;
+    return ProjectEditor.documentSearch.findReferencedObject(
+        project,
+        "actions",
+        actionName
+    ) as Action | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,7 +592,7 @@ export default {
                     if (object.length > 32000) {
                         messages.push(
                             new Message(
-                                Type.ERROR,
+                                MessageType.ERROR,
                                 "Max. 32000 actions are supported",
                                 object
                             )

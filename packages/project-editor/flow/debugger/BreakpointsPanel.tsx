@@ -3,12 +3,13 @@ import { observer } from "mobx-react";
 import { IListNode, List } from "eez-studio-ui/list";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
-import { getId, getLabel } from "project-editor/core/object";
-import { Component } from "project-editor/flow/component";
-import { getFlow } from "project-editor/project/project";
-import { MaximizeIcon } from "./DebuggerPanel";
+import { getId } from "project-editor/core/object";
+import type { Component } from "project-editor/flow/component";
+import { MaximizeIcon } from "./Icons";
 import { ProjectContext } from "project-editor/project/context";
 import { IconAction } from "eez-studio-ui/action";
+import { getLabel } from "project-editor/core/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 @observer
 export class BreakpointsPanel extends React.Component<{
@@ -219,7 +220,8 @@ class BreakpointItem extends React.Component<{
                     title={checked ? "Disable breakpoint" : "Enable breakpoint"}
                 />
                 <label className="form-check-label">
-                    {getLabel(getFlow(component))}/{getLabel(component)}
+                    {getLabel(ProjectEditor.getFlow(component))}/
+                    {getLabel(component)}
                 </label>
             </div>
         );

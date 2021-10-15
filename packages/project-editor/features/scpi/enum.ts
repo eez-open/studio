@@ -3,7 +3,6 @@ import { observable } from "mobx";
 import { stringCompare } from "eez-studio-shared/string";
 
 import { validators } from "eez-studio-shared/validation";
-import * as output from "project-editor/core/output";
 
 //import { isReferenced } from "project-editor/core/search";
 
@@ -14,10 +13,15 @@ import {
     IEezObject,
     EezObject,
     PropertyType,
-    getChildOfObject,
     getParent,
-    getLabel
+    MessageType
 } from "project-editor/core/object";
+import {
+    getChildOfObject,
+    getLabel,
+    Message,
+    propertyNotSetMessage
+} from "project-editor/core/store";
 import { DocumentStoreClass } from "project-editor/core/store";
 
 import { ScpiEnumsNavigation } from "project-editor/features/scpi/ScpiEnumsNavigation";
@@ -43,7 +47,7 @@ export class ScpiEnumMember extends EezObject {
         defaultValue: {},
 
         check: (object: ScpiEnumMember) => {
-            const messages: output.Message[] = [];
+            const messages: Message[] = [];
 
             if (object.name) {
                 const arr = getParent(object) as ScpiEnumMember[];
@@ -61,15 +65,15 @@ export class ScpiEnumMember extends EezObject {
                 }
                 if (otherIndex !== -1 && thisIndex > otherIndex) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             `Member name '${object.name}' is not unique`,
                             getChildOfObject(object, "name")
                         )
                     );
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "name"));
+                messages.push(propertyNotSetMessage(object, "name"));
             }
 
             return messages;
@@ -127,7 +131,7 @@ export class ScpiEnum extends EezObject {
         navigationComponentId: "scpi-enums",
         icon: "format_list_numbered",
         check: (object: ScpiEnum) => {
-            const messages: output.Message[] = [];
+            const messages: Message[] = [];
 
             // TODO this check is removed because it is too slow
             // if (!isReferenced(this)) {

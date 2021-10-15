@@ -1,4 +1,4 @@
-import { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/core/extensions";
 
 import { Project, BuildConfiguration } from "project-editor/project/project";
 

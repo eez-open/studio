@@ -1,6 +1,6 @@
 import { observable, computed, action, toJS } from "mobx";
 
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import {
@@ -194,6 +194,7 @@ export interface IStore {
     ): string;
     nonTransientAndNonLazyProperties: string;
     dbRowToObject: (row: any) => any;
+    getSourceDescription?: (sid: string) => string | null;
 }
 
 export function createStore({
@@ -204,7 +205,8 @@ export function createStore({
     create,
     filterMessage,
     prepareWhereClause,
-    orderBy
+    orderBy,
+    getSourceDescription
 }: {
     storeName: string;
     versionTables?: (
@@ -224,6 +226,7 @@ export function createStore({
         filterSpecification: IFilterSpecification
     ) => { whereClause: string; params: any[] } | undefined;
     orderBy?: string;
+    getSourceDescription?: (sid: string) => string | null;
 }) {
     function execCreateObject(object: any, options?: IStoreOperationOptions) {
         let questionMarks = _map(
@@ -662,7 +665,8 @@ export function createStore({
         findByOid,
         watch: undefined as any,
         nonTransientAndNonLazyProperties,
-        dbRowToObject
+        dbRowToObject,
+        getSourceDescription
     };
 
     ////////////////////////////////////////////////////////////////////////////////

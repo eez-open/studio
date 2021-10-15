@@ -1,3 +1,5 @@
+import fs from "fs";
+
 import { _each } from "eez-studio-shared/algorithm";
 import { formatBytes } from "eez-studio-shared/formatBytes";
 
@@ -14,8 +16,6 @@ function collectModules(
     thirdPartyModules: ModuleInfo[],
     ourModules: ModuleInfo[]
 ) {
-    const fs = require("fs");
-
     _each(require.cache, (nodeModule: NodeModule) => {
         try {
             const moduleInfo: ModuleInfo = {

@@ -33,7 +33,10 @@ import {
 } from "project-editor/flow/expression/expression";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
 import { ObjectType } from "project-editor/features/variable/value-type";
-import type { IDataContext, IVariable } from "eez-studio-types";
+import type {
+    IDataContext,
+    IVariable
+} from "project-editor/flow/flow-interfaces";
 
 import * as notification from "eez-studio-ui/notification";
 import { humanize } from "eez-studio-shared/string";
@@ -957,7 +960,7 @@ export class SCPIActionComponent extends ActionComponent {
         },
         label: (component: SCPIActionComponent) => {
             if (
-                !getDocumentStore(component).isAppletProject &&
+                !getDocumentStore(component).project.isAppletProject &&
                 component.instrument
             ) {
                 return `SCPI ${component.instrument}`;
@@ -1118,7 +1121,7 @@ export class SCPIActionComponent extends ActionComponent {
     }
 }
 
-registerClass(SCPIActionComponent);
+registerClass("SCPIActionComponent", SCPIActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1291,7 +1294,10 @@ export class SelectInstrumentActionComponent extends ActionComponent {
     }
 }
 
-registerClass(SelectInstrumentActionComponent);
+registerClass(
+    "SelectInstrumentActionComponent",
+    SelectInstrumentActionComponent
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1334,7 +1340,7 @@ export class GetInstrumentActionComponent extends ActionComponent {
     }
 }
 
-registerClass(GetInstrumentActionComponent);
+registerClass("GetInstrumentActionComponent", GetInstrumentActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1383,7 +1389,10 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
     }
 }
 
-registerClass(ConnectInstrumentActionComponent);
+registerClass(
+    "ConnectInstrumentActionComponent",
+    ConnectInstrumentActionComponent
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1472,4 +1481,4 @@ export class InstrumentVariableType extends ObjectType {
     });
 }
 
-registerClass(InstrumentVariableType);
+registerClass("InstrumentVariableType", InstrumentVariableType);

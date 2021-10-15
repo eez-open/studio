@@ -11,8 +11,13 @@ import {
     EezObject,
     PropertyType
 } from "project-editor/core/object";
-import * as output from "project-editor/core/output";
-import { getDocumentStore } from "project-editor/core/store";
+import {
+    getDocumentStore,
+    Message,
+    propertyInvalidValueMessage,
+    propertyNotSetMessage,
+    propertyNotUniqueMessage
+} from "project-editor/core/store";
 
 import { ListNavigationWithProperties } from "project-editor/components/ListNavigation";
 
@@ -188,25 +193,23 @@ export class ExtensionDefinition extends EezObject {
         navigationComponentId: "extension-definitions",
         icon: "extension",
         check: (object: ExtensionDefinition) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.extensionName) {
-                messages.push(
-                    output.propertyNotSetMessage(object, "extensionName")
-                );
+                messages.push(propertyNotSetMessage(object, "extensionName"));
             }
 
             if (!object.idn) {
-                messages.push(output.propertyNotSetMessage(object, "idn"));
+                messages.push(propertyNotSetMessage(object, "idn"));
             }
 
             if (!object.idfGuid) {
-                messages.push(output.propertyNotSetMessage(object, "idfGuid"));
+                messages.push(propertyNotSetMessage(object, "idfGuid"));
             }
 
             if (!object.idfRevisionNumber) {
                 messages.push(
-                    output.propertyNotSetMessage(object, "idfRevisionNumber")
+                    propertyNotSetMessage(object, "idfRevisionNumber")
                 );
             }
 
@@ -221,9 +224,7 @@ export class ExtensionDefinition extends EezObject {
                         extensionDefinition.idfGuid === object.idfGuid
                 )
             ) {
-                messages.push(
-                    output.propertyNotUniqueMessage(object, "idfGuid")
-                );
+                messages.push(propertyNotUniqueMessage(object, "idfGuid"));
             }
 
             if (object.properties) {
@@ -231,7 +232,7 @@ export class ExtensionDefinition extends EezObject {
                     JSON.parse(object.properties);
                 } catch (err) {
                     messages.push(
-                        output.propertyInvalidValueMessage(object, "properties")
+                        propertyInvalidValueMessage(object, "properties")
                     );
                 }
             }
@@ -241,7 +242,7 @@ export class ExtensionDefinition extends EezObject {
     };
 }
 
-registerClass(ExtensionDefinition);
+registerClass("ExtensionDefinition", ExtensionDefinition);
 
 ////////////////////////////////////////////////////////////////////////////////
 

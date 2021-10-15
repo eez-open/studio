@@ -15,9 +15,7 @@ import {
     isSelectionMoveable
 } from "project-editor/flow/flow-editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
-import { ConnectionLine } from "project-editor/flow/flow";
-import { ActionComponent } from "project-editor/flow/component";
-import { Action } from "project-editor/features/action/action";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,8 +71,9 @@ export class Selection extends React.Component<
         return this.props.context.viewState.selectedObjects.filter(
             selectedObject =>
                 !(
-                    selectedObject.object instanceof ConnectionLine ||
-                    selectedObject.object instanceof Action
+                    selectedObject.object instanceof
+                        ProjectEditor.ConnectionLineClass ||
+                    selectedObject.object instanceof ProjectEditor.ActionClass
                 )
         );
     }
@@ -92,7 +91,8 @@ export class Selection extends React.Component<
         if (
             !selectedObjects.every(
                 selectedObject =>
-                    selectedObject.object instanceof ActionComponent
+                    selectedObject.object instanceof
+                    ProjectEditor.ActionComponentClass
             )
         ) {
             let parent = this.props.context.document.findObjectParent(

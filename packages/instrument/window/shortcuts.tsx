@@ -30,7 +30,7 @@ import {
 } from "instrument/instrument-object";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
-import * as ScriptModule from "instrument/window/script";
+import type * as ScriptModule from "instrument/window/script";
 
 ////////////////////////////////////////////////////////////////////////////////
 

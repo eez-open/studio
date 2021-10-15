@@ -13,7 +13,7 @@ import { FlowTabState } from "project-editor/flow/flow";
 import { LogItem } from "project-editor/flow/debugger/logs";
 import { RuntimeBase } from "project-editor/flow/runtime";
 import { ProjectContext } from "project-editor/project/context";
-import { MaximizeIcon } from "./DebuggerPanel";
+import { MaximizeIcon } from "./Icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 

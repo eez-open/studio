@@ -5,10 +5,10 @@ import { bind } from "bind-decorator";
 import { Icon } from "eez-studio-ui/icon";
 import {
     PropertyProps,
-    isAnyPropertyModified,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import { propertyCollapsedStore } from "./PropertyCollapsedStore";
+import { isAnyPropertyModified } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -13,13 +13,11 @@ import { Icon } from "eez-studio-ui/icon";
 import { TabsView } from "eez-studio-ui/tabs";
 import { IconAction } from "eez-studio-ui/action";
 
-import {
-    Message as OutputMessage,
-    Type as MessageType
-} from "project-editor/core/output";
+import { Message as OutputMessage } from "project-editor/core/store";
 
 import { ObjectPath } from "project-editor/components/ObjectPath";
 import { ProjectContext } from "project-editor/project/context";
+import { MessageType } from "project-editor/core/object";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 

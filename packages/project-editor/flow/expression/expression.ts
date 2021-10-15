@@ -1,6 +1,9 @@
-import { Component } from "project-editor/flow/component";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { getFlow, getProject, Project } from "project-editor/project/project";
+import type { Component } from "project-editor/flow/component";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
+import type { Project } from "project-editor/project/project";
 import {
     binaryOperators,
     builtInConstants,
@@ -21,7 +24,7 @@ import {
     makePushLocalVariableInstruction,
     makePushOutputInstruction
 } from "./instructions";
-import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/variable";
+import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import {
     ValueType as ValueType,
     getArrayElementTypeFromType,
@@ -32,7 +35,8 @@ import {
     isStructType
 } from "project-editor/features/variable/value-type";
 import type { IDataContext, IFlowState } from "../flow-interfaces";
-import { DocumentStoreClass } from "project-editor/core/store";
+import type { DocumentStoreClass } from "project-editor/core/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -472,7 +476,7 @@ function findValueTypeInExpressionNode(
     node: ExpressionNode,
     assignable: boolean
 ) {
-    const project = getProject(component);
+    const project = ProjectEditor.getProject(component);
 
     if (node.type == "Literal") {
         if (typeof node.value === "boolean") {
@@ -503,7 +507,7 @@ function findValueTypeInExpressionNode(
             }
         }
 
-        const flow = getFlow(component);
+        const flow = ProjectEditor.getFlow(component);
         let localVariable = flow.localVariables.find(
             localVariable => localVariable.name == node.name
         );
@@ -628,7 +632,7 @@ function findValueTypeInExpressionNode(
                     node.valueType = valueType as ValueType;
                 }
             } else {
-                const project = getProject(component);
+                const project = ProjectEditor.getProject(component);
 
                 if (
                     node.object.type == "Identifier" &&
@@ -731,7 +735,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 return;
             }
 
-            const flow = getFlow(component);
+            const flow = ProjectEditor.getFlow(component);
             let localVariableIndex = flow.localVariables.findIndex(
                 localVariable => localVariable.name == node.name
             );
@@ -863,7 +867,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
         throw `Unknown expression node "${node.type}"`;
     }
 
-    const project = getProject(component);
+    const project = ProjectEditor.getProject(component);
 
     checkNode(rootNode);
 }
@@ -885,7 +889,7 @@ function checkAssignableExpressionNode(
                 return;
             }
 
-            const flow = getFlow(component);
+            const flow = ProjectEditor.getFlow(component);
             let localVariableIndex = flow.localVariables.findIndex(
                 localVariable => localVariable.name == node.name
             );
@@ -927,7 +931,7 @@ function checkAssignableExpressionNode(
         throw `Unknown expression node "${node.type}"`;
     }
 
-    const project = getProject(component);
+    const project = ProjectEditor.getProject(component);
 
     checkNode(rootNode);
 }
@@ -963,7 +967,7 @@ function buildExpressionNode(
             }
         }
 
-        const flow = getFlow(component);
+        const flow = ProjectEditor.getFlow(component);
         let localVariableIndex = flow.localVariables.findIndex(
             localVariable => localVariable.name == node.name
         );
@@ -1138,7 +1142,7 @@ function buildExpressionNode(
             const structTypeName = getStructTypeNameFromType(
                 node.object.valueType
             )!;
-            const project = getProject(component);
+            const project = ProjectEditor.getProject(component);
             const structure = project.variables.structsMap.get(structTypeName)!;
             const fieldName = (node.property as IdentifierExpressionNode).name;
             const fieldIndex = structure.fields
@@ -1495,7 +1499,7 @@ function evalAssignableExpressionWithContext(
                 return new AssignableValue("output", output.name);
             }
 
-            const flow = getFlow(component);
+            const flow = ProjectEditor.getFlow(component);
             let localVariable = flow.localVariables.find(
                 localVariable => localVariable.name == node.name
             );

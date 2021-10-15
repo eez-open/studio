@@ -1,4 +1,4 @@
-import { Assets } from "project-editor/features/page/build/assets";
+import type { Assets } from "project-editor/features/page/build/assets";
 
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT = 0 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT = 1 << 13;

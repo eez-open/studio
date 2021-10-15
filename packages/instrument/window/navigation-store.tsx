@@ -1,23 +1,23 @@
 import React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 
-import { IRootNavigationItem } from "eez-studio-ui/app";
+import type { IRootNavigationItem } from "eez-studio-ui/app";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
-import * as ScriptsModule from "instrument/window/scripts";
-import * as ShortcutsModule from "instrument/window/shortcuts";
+import type { InstrumentAppStore } from "instrument/window/app-store";
+import type * as ScriptsModule from "instrument/window/scripts";
+import type * as ShortcutsModule from "instrument/window/shortcuts";
 
-import * as TerminalModule from "instrument/window/terminal/terminal";
+import type * as TerminalModule from "instrument/window/terminal/terminal";
 
-import * as DeletedHistoryItemsModule from "instrument/window/history/deleted-history-items-view";
+import type * as DeletedHistoryItemsModule from "instrument/window/history/deleted-history-items-view";
 import {
     HistoryView,
     showSessionsList
 } from "instrument/window/history/history-view";
 
-import * as ListsModule from "instrument/window/lists/lists";
+import type * as ListsModule from "instrument/window/lists/lists";
 
-import * as Bb3Module from "instrument/bb3";
+import type * as Bb3Module from "instrument/bb3";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,6 +1,6 @@
 import { service } from "eez-studio-shared/service";
 
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 
 interface Params {
     query: string;
@@ -12,17 +12,20 @@ interface Result {
     rows: any[];
 }
 
-export default service<Params, Result>("db-services/query", async (inputParams: Params) => {
-    try {
-        const rows = db.prepare(inputParams.query).all(...inputParams.args);
-        return {
-            err: null,
-            rows
-        };
-    } catch (err) {
-        throw {
-            err: err.toString(),
-            inputParams
-        };
+export default service<Params, Result>(
+    "db-services/query",
+    async (inputParams: Params) => {
+        try {
+            const rows = db.prepare(inputParams.query).all(...inputParams.args);
+            return {
+                err: null,
+                rows
+            };
+        } catch (err) {
+            throw {
+                err: err.toString(),
+                inputParams
+            };
+        }
     }
-});
+);

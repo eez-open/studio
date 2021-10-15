@@ -1,7 +1,10 @@
 import { strToColor16 } from "eez-studio-shared/color";
 import * as projectBuild from "project-editor/project/build";
-import { Theme } from "project-editor/features/style/theme";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type { Theme } from "project-editor/features/style/theme";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
 
 export function buildGuiThemesEnum(assets: Assets) {
     let themes = assets.rootProject.themes.map(

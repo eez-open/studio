@@ -1,12 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
+
 import { IDialogOptions, showDialog } from "eez-studio-ui/dialog";
 import {
     DialogDefinition,
     GenericDialog,
     GenericDialogResult
 } from "eez-studio-ui/generic-dialog";
-import { DocumentStoreClass } from "project-editor/core/store";
+
+import type { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 
 export async function confirm(

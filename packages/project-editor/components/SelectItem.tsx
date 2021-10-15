@@ -11,9 +11,7 @@ import {
     PropertyInfo,
     getProperty,
     PropertyType,
-    getObjectFromPath,
-    IOnSelectParams,
-    getClassInfo
+    IOnSelectParams
 } from "project-editor/core/object";
 import {
     SimpleNavigationStoreClass,
@@ -21,16 +19,12 @@ import {
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 
-import { EmbeddedWidget } from "project-editor/flow/component";
-import { Glyph } from "project-editor/features/font/font";
+import type { Glyph } from "project-editor/features/font/font";
 
-import {
-    Project,
-    getNameProperty,
-    findReferencedObject,
-    getProject
-} from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
+import { getClassInfo, getObjectFromPath } from "project-editor/core/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,7 +60,7 @@ class SelectItemDialog extends React.Component<{
             return this._selectedProject;
         }
         if (this.currentlySelectedObject) {
-            return getProject(this.currentlySelectedObject);
+            return ProjectEditor.getProject(this.currentlySelectedObject);
         }
         return this.context.project;
     }
@@ -93,12 +87,12 @@ class SelectItemDialog extends React.Component<{
 
         const name =
             propertyInfo.type === PropertyType.String
-                ? object instanceof EmbeddedWidget
+                ? object instanceof ProjectEditor.EmbeddedWidgetClass
                     ? object.style.fontName
                     : ""
                 : getProperty(object, propertyInfo.name);
 
-        return findReferencedObject(
+        return ProjectEditor.documentSearch.findReferencedObject(
             this.context.project,
             this.collectionPath,
             name
@@ -126,7 +120,10 @@ class SelectItemDialog extends React.Component<{
 
     onOkEnabled = () => {
         if (this.props.propertyInfo.type === PropertyType.String) {
-            return this.navigationStore.selectedObject instanceof Glyph;
+            return (
+                this.navigationStore.selectedObject instanceof
+                ProjectEditor.GlyphClass
+            );
         }
         return !!this.navigationStore.selectedObject;
     };
@@ -166,7 +163,9 @@ class SelectItemDialog extends React.Component<{
                 value = glyphCode;
             }
         } else {
-            value = getNameProperty(this.navigationStore.selectedObject!);
+            value = ProjectEditor.getNameProperty(
+                this.navigationStore.selectedObject!
+            );
         }
 
         this.props.onOk({

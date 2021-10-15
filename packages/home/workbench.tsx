@@ -11,8 +11,8 @@ import { Splitter } from "eez-studio-ui/splitter";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
-import * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
-import * as DeletedInstrumentsDialogModule from "instrument/deleted-instruments-dialog";
+import type * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
+import type * as DeletedInstrumentsDialogModule from "instrument/deleted-instruments-dialog";
 
 import { HistorySection } from "home/history";
 
@@ -21,7 +21,7 @@ import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { createInstrument } from "instrument/instrument-extension";
 
-import * as TabsStoreModule from "home/tabs-store";
+import type * as TabsStoreModule from "home/tabs-store";
 
 const { Menu, MenuItem } = EEZStudio.remote;
 

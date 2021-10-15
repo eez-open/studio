@@ -1,7 +1,7 @@
 import { ObservableMap, IComputedValue, autorun, values } from "mobx";
 import Mousetrap from "mousetrap";
 
-import { IShortcut } from "shortcuts/interfaces";
+import type { IShortcut } from "shortcuts/interfaces";
 
 export function bindShortcuts(
     instumentShortcuts: IComputedValue<ObservableMap<string, IShortcut>>,

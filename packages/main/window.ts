@@ -6,6 +6,7 @@ import {
     settingsRegisterWindow,
     settingsSetWindowBoundsIntoParams
 } from "main/settings";
+import { sourceRootDir } from "eez-studio-shared/util";
 
 export interface IWindowSate {
     modified: boolean;
@@ -37,7 +38,7 @@ export function setForceQuit() {
 export function createWindow(params: IWindowParams) {
     let windowUrl = params.url;
     if (!windowUrl.startsWith("file://")) {
-        windowUrl = `file://${__dirname}/../${windowUrl}`;
+        windowUrl = `file://${sourceRootDir()}/${windowUrl}`;
     }
 
     var windowContructorParams: Electron.BrowserWindowConstructorOptions = {

@@ -2,13 +2,12 @@ import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
+import { IEezObject, getId } from "project-editor/core/object";
 import {
-    IEezObject,
     getChildren,
     objectToString,
-    getId,
     getClassInfo
-} from "project-editor/core/object";
+} from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////

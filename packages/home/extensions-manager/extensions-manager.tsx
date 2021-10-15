@@ -10,7 +10,7 @@ import { humanize } from "eez-studio-shared/string";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import {
-    installedExtensions,
+    extensions,
     installExtension,
     uninstallExtension,
     changeExtensionImage,
@@ -48,6 +48,14 @@ import * as notification from "eez-studio-ui/notification";
 
 import { ExtensionShortcuts } from "home/extensions-manager/extension-shortcuts";
 import { extensionsCatalog } from "home/extensions-manager/catalog";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const installedExtensions = computed(() => {
+    return Array.from(extensions.values()).filter(
+        extension => !extension.preInstalled
+    );
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 

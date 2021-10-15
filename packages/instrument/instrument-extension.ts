@@ -1,6 +1,6 @@
 import { computed, values } from "mobx";
 
-import {
+import type {
     IExtensionDefinition,
     IExtension,
     IExtensionProperties,
@@ -12,15 +12,15 @@ import { stringCompare } from "eez-studio-shared/string";
 
 import { loadInstrumentExtension } from "instrument/import";
 import { instrumentStore } from "instrument/instrument-object";
-import { IInstrumentProperties } from "instrument/export";
+import type { IInstrumentProperties } from "instrument/export";
 
-import * as ConnectionModule from "instrument/connection/connection";
+import type * as ConnectionModule from "instrument/connection/connection";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 
-import * as InstrumentAppStoreModule from "instrument/window/app-store";
-import * as ScriptsModule from "instrument/window/scripts";
-import * as DlogModule from "instrument/window/waveform/dlog";
+import type * as InstrumentAppStoreModule from "instrument/window/app-store";
+import type * as ScriptsModule from "instrument/window/scripts";
+import type * as DlogModule from "instrument/window/waveform/dlog";
 
 if (!isRenderer()) {
     createInstrumentListStore(null);

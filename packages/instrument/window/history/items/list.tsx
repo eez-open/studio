@@ -27,7 +27,7 @@ import {
 } from "instrument/window/lists/factory";
 import { saveTableListData } from "instrument/window/lists/lists";
 
-import { IAppStore } from "instrument/window/history/history";
+import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +139,8 @@ export class ListHistoryItemComponent extends React.Component<
             </div>
         );
     }
+
+    isZoomable: false;
 }
 
 export class ListHistoryItem extends HistoryItem {

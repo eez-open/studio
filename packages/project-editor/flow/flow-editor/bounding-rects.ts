@@ -12,9 +12,9 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 
 import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
-import { ConnectionLine } from "project-editor/flow/flow";
-import { Component } from "project-editor/flow/component";
+import type { Component } from "project-editor/flow/component";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function getObjectBoundingRect(object: ITreeObjectAdapter) {
     const widget = object.object as Component;
@@ -29,7 +29,7 @@ export function getObjectBoundingRect(object: ITreeObjectAdapter) {
 export function getSelectedObjectsBoundingRect(viewState: IViewState) {
     let boundingRectBuilder = new BoundingRectBuilder();
     for (const object of viewState.selectedObjects) {
-        if (object.object instanceof ConnectionLine) {
+        if (object.object instanceof ProjectEditor.ConnectionLineClass) {
             continue;
         }
         const rect = getObjectBoundingRect(object);

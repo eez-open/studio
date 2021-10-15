@@ -19,23 +19,15 @@ import {
 import { stringCompare } from "eez-studio-shared/string";
 
 import {
-    isArray,
     getProperty,
     IEezObject,
     PropertyType,
     isAncestor,
     IEditorState,
     isPropertyEnumerable,
-    objectToString,
-    isShowOnlyChildrenInTree,
     PropertyInfo,
-    isArrayElement,
-    isObjectInstanceOf,
-    isPartOfNavigation,
     getParent,
-    getId,
-    getClassInfo,
-    getLabel
+    getId
 } from "project-editor/core/object";
 import {
     canDuplicate,
@@ -52,19 +44,25 @@ import {
     showContextMenu,
     canContainChildren,
     INavigationStore,
-    getDocumentStore
-} from "project-editor/core/store";
-import {
-    objectToClipboardData,
+    getDocumentStore,
+    copyToClipboard,
     setClipboardData,
+    objectToClipboardData,
     findPastePlaceInside,
-    copyToClipboard
-} from "project-editor/core/clipboard";
+    isArray,
+    objectToString,
+    isShowOnlyChildrenInTree,
+    isArrayElement,
+    isObjectInstanceOf,
+    isPartOfNavigation,
+    getClassInfo,
+    getLabel
+} from "project-editor/core/store";
 import {
     DragAndDropManagerClass,
     DragAndDropManager
 } from "project-editor/core/dd";
-import { objectToJson } from "project-editor/core/serialization";
+import { objectToJson } from "project-editor/core/store";
 import { Rect } from "eez-studio-shared/geometry";
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 

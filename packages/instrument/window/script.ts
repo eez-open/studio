@@ -9,7 +9,7 @@ import {
     logDelete
 } from "eez-studio-shared/activity-log";
 
-import * as NotificationModule from "eez-studio-ui/notification";
+import * as notification from "eez-studio-ui/notification";
 import { info, confirm, error } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -53,7 +53,7 @@ class ScpiSession {
     set _scriptDone(value: boolean) {}
 
     set scriptError(value: string) {
-        NotificationModule.error(value);
+        notification.error(value);
     }
 
     _stop() {}
@@ -283,7 +283,7 @@ function prepareJavaScriptModules(
             }
         },
 
-        notify: NotificationModule,
+        notify: notification,
 
         validators,
 

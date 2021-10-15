@@ -1,6 +1,9 @@
 import * as projectBuild from "project-editor/project/build";
-import { Style } from "project-editor/features/style/style";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type { Style } from "project-editor/features/style/style";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;

@@ -3,31 +3,28 @@ import { humanize } from "eez-studio-shared/string";
 
 import {
     IEezObject,
-    EezValueObject,
     PropertyType,
     getProperty,
-    isArray,
-    getObjectPath,
-    objectToString,
-    getObjectPropertyAsObject,
     getParent,
     getKey,
-    getClassInfo,
-    getRootObject
+    getRootObject,
+    MessageType
 } from "project-editor/core/object";
-
-import { Section, Type } from "project-editor/core/output";
-
 import {
+    getObjectPropertyAsObject,
+    isArray,
+    getObjectPath,
+    getClassInfo,
+    EezValueObject,
+    Section,
     DocumentStoreClass,
-    getDocumentStore
+    getDocumentStore,
+    objectToString
 } from "project-editor/core/store";
 
-import {
-    ImportDirective,
-    findReferencedObject,
-    getProject,
-    Project
+import type {
+    checkObjectReference,
+    findReferencedObject
 } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +125,7 @@ export function* visitObjects(
 
 type SearchResult = EezValueObject | null;
 
-function* searchForPattern(
+export function* searchForPattern(
     root: IEezObject,
     pattern: string,
     matchCase: boolean,
@@ -195,7 +192,7 @@ function* searchForPattern(
     }
 }
 
-function* searchForReference(
+export function* searchForReference(
     root: IEezObject,
     object: IEezObject,
     withPause: boolean
@@ -205,10 +202,14 @@ function* searchForReference(
     let objectName;
     let objectParentPath;
 
-    let importedProject;
+    const classInfo = getClassInfo(object);
 
-    if (object instanceof ImportDirective) {
-        importedProject = object.project;
+    let importedProject = classInfo.getImportedProject
+        ? classInfo.getImportedProject(object)
+        : undefined;
+
+    if (classInfo.getImportedProject) {
+        importedProject = classInfo.getImportedProject(object);
         if (!importedProject) {
             return;
         }
@@ -249,16 +250,13 @@ function* searchForReference(
                                 valueObject.propertyInfo
                                     .referencedObjectCollectionPath
                             ) {
-                                const object = findReferencedObject(
-                                    root as Project,
-                                    valueObject.propertyInfo
-                                        .referencedObjectCollectionPath,
-                                    valueObject.value
-                                );
-
                                 if (
-                                    object &&
-                                    getProject(object) == importedProject
+                                    importedProject.findReferencedObject(
+                                        root,
+                                        valueObject.propertyInfo
+                                            .referencedObjectCollectionPath,
+                                        valueObject.value
+                                    )
                                 ) {
                                     match = true;
                                 }
@@ -304,7 +302,7 @@ function* searchForReference(
     }
 }
 
-function* searchForAllReferences(
+export function* searchForAllReferences(
     root: IEezObject,
     withPause: boolean
 ): IterableIterator<SearchResult> {
@@ -354,7 +352,7 @@ export type SearchCallbackMessage =
     | SearchCallbackMessageValue
     | SearchCallbackMessageFinish;
 
-type SearchCallback = (message: SearchCallbackMessage) => boolean;
+export type SearchCallback = (message: SearchCallbackMessage) => boolean;
 
 export class CurrentSearch {
     interval: any;
@@ -430,7 +428,7 @@ export class CurrentSearch {
                         } else {
                             this.DocumentStore.outputSectionsStore.write(
                                 Section.SEARCH,
-                                Type.INFO,
+                                MessageType.INFO,
                                 objectToString(valueObject),
                                 valueObject
                             );
@@ -444,6 +442,14 @@ export class CurrentSearch {
             }, 0);
         }
     }
+}
+
+export interface IDocumentSearch {
+    CurrentSearch: typeof CurrentSearch;
+    findAllReferences: typeof findAllReferences;
+    isReferenced: typeof isReferenced;
+    findReferencedObject: typeof findReferencedObject;
+    checkObjectReference: typeof checkObjectReference;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

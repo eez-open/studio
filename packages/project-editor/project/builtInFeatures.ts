@@ -5,5 +5,5 @@ import "project-editor/features/font/font";
 import "project-editor/features/bitmap/bitmap";
 import "project-editor/features/action/action";
 import "project-editor/features/scpi/scpi";
-import "project-editor/features/shortcuts/shortcuts";
+import "project-editor/features/shortcuts/project-shortcuts";
 import "project-editor/features/extension-definitions/extension-definitions";

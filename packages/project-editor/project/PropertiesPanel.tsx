@@ -3,14 +3,13 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
+import { getParent, IEezObject } from "project-editor/core/object";
 import {
-    EezValueObject,
     findPropertyByChildObject,
     getClass,
-    getParent,
-    IEezObject,
+    EezValueObject,
     isValue
-} from "project-editor/core/object";
+} from "project-editor/core/store";
 import { INavigationStore } from "project-editor/core/store";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Panel } from "project-editor/components/Panel";

@@ -4,7 +4,10 @@ import React from "react";
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
-import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
+import type {
+    ScpiSubsystem,
+    ScpiCommand
+} from "project-editor/features/scpi/scpi";
 import { ProjectContext } from "project-editor/project/context";
 
 @observer

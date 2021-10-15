@@ -11,7 +11,7 @@ import {
     WidgetActionNotDefinedLogItem,
     WidgetActionNotFoundLogItem
 } from "project-editor/flow/debugger/logs";
-import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/variable";
+import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import { getObjectTypeClassFromType } from "project-editor/features/variable/value-type";
 import * as notification from "eez-studio-ui/notification";
 import {

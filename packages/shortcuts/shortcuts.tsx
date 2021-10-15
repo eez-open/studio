@@ -1,10 +1,8 @@
 import React from "react";
-import { observable, computed, action, IObservableValue, toJS } from "mobx";
+import { observable, computed, action, IObservableValue } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { bind } from "bind-decorator";
-
-import { objectEqual } from "eez-studio-shared/util";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
@@ -22,6 +20,7 @@ import {
     FROM_EXTENSION_GROUP_NAME,
     SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX
 } from "shortcuts/shortcuts-store";
+import { isSameShortcutFromDifferentExtension } from "./isSameShortcutFromDifferentExtension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -410,41 +409,6 @@ class ShortcutRow implements IRow {
             );
         }
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function isSameShortcutFromDifferentExtension(
-    s1: IShortcut,
-    s2: IShortcut
-) {
-    if (
-        !s1.groupName ||
-        !s1.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)
-    ) {
-        return false;
-    }
-
-    if (
-        !s2.groupName ||
-        !s2.groupName.startsWith(SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX)
-    ) {
-        return false;
-    }
-
-    let s1js: any = toJS(s1);
-    delete s1js.id;
-    delete s1js.originalId;
-    delete s1js.groupName;
-    delete s1js.selected;
-
-    let s2js: any = toJS(s2);
-    delete s2js.id;
-    delete s2js.originalId;
-    delete s2js.groupName;
-    delete s2js.selected;
-
-    return objectEqual(s1js, s2js);
 }
 
 @observer

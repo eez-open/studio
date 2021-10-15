@@ -9,14 +9,12 @@ import { _debounce } from "eez-studio-shared/algorithm";
 
 import { Icon } from "eez-studio-ui/icon";
 
-import { Waveform } from "instrument/window/waveform/generic";
-
-import {
+import type {
     History,
     IAppStore,
     SelectHistoryItemsSpecification
 } from "instrument/window/history/history";
-import { IHistoryItem } from "instrument/window/history/item";
+import type { IHistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,7 +91,7 @@ export class HistoryItems extends React.Component<{
                     this.props.selectHistoryItemsSpecification
                         .historyItemType === "chart"
                 ) {
-                    if (historyItem instanceof Waveform) {
+                    if (historyItem.canBePartOfMultiChart) {
                         showCheckbox = true;
                     } else {
                         element = <div />;

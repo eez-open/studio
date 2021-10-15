@@ -6,18 +6,20 @@ import {
     activityLogStore,
     IActivityLogEntry
 } from "eez-studio-shared/activity-log";
+
 import {
     VerticalHeaderWithBody,
     ToolbarHeader,
     Body
 } from "eez-studio-ui/header-with-body";
-import { IHistoryItem } from "instrument/window/history/item";
+
+import type { IHistoryItem } from "instrument/window/history/item";
 import {
     HistoryItems,
     CLIPBOARD_DATA_TYPE
 } from "instrument/window/history/list-component";
 import { createHistoryItem } from "instrument/window/history/item-factory";
-import { IAppStore, History } from "instrument/window/history/history";
+import type { IAppStore, History } from "instrument/window/history/history";
 import { instruments } from "instrument/instrument-object";
 
 class Selection {

@@ -1,9 +1,12 @@
-import { BuildResult } from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/core/extensions";
 
-import { Project, BuildConfiguration } from "project-editor/project/project";
+import type {
+    Project,
+    BuildConfiguration
+} from "project-editor/project/project";
 import * as projectBuild from "project-editor/project/build";
 
-import { Variable } from "project-editor/features/variable/variable";
+import type { Variable } from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 

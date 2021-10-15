@@ -25,3 +25,6 @@ tools/freetype-tools/FreeType-Emscripten
 
 # nix build
 /result*
+
+bundle-meta.json
+circular.txt

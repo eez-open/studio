@@ -9,17 +9,19 @@ import {
     getProperty,
     getParent
 } from "project-editor/core/object";
-import { loadObject } from "project-editor/core/serialization";
+import { loadObject } from "project-editor/core/store";
 
 import { confirm } from "project-editor/core/util";
-import { Extension, getProjectFeatures } from "project-editor/core/extensions";
+import type { Extension } from "project-editor/core/extensions";
 
-import { BuildFile } from "project-editor/project/project";
+import type { BuildFile } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/components/Panel";
 import { TreeNavigationPanel } from "project-editor/components/TreeNavigation";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { BuildFileEditor } from "project-editor/project/BuildFileEditor";
+import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -167,7 +169,7 @@ export class SettingsEditor extends React.Component<
         const object =
             this.props.object || this.context.project.settings.general;
         if (object === this.context.project.settings.general) {
-            let projectFeatures = getProjectFeatures().map(extension => (
+            let projectFeatures = ProjectEditor.extensions.map(extension => (
                 <ProjectFeature key={extension.name} extension={extension} />
             ));
 
@@ -214,11 +216,16 @@ export class SettingsNavigation extends NavigationComponent {
 
     render() {
         const navigationObjectAdapter =
-            this.context.navigationStore.settingsNavigationObjectAdapter;
+            this.context.navigationStore.getSettingsNavigationObjectAdapter(
+                () => new TreeObjectAdapter(this.context.project.settings)
+            );
 
         const selectedObject = navigationObjectAdapter.selectedObject;
 
-        if (this.context.isDashboardProject || this.context.isAppletProject) {
+        if (
+            this.context.project.isDashboardProject ||
+            this.context.project.isAppletProject
+        ) {
             return <SettingsEditor object={selectedObject} />;
         }
 

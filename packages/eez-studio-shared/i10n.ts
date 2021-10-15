@@ -1,7 +1,5 @@
 import { isRenderer } from "eez-studio-shared/util-electron";
 
-import * as MainSettingsModule from "main/settings";
-
 export const LOCALES = {
     af: "Afrikaans",
     am: "Amharic",
@@ -142,15 +140,15 @@ export let getLocale: () => string;
 export let setLocale: (value: string) => void;
 
 if (isRenderer()) {
-    getLocale = function() {
+    getLocale = function () {
         return EEZStudio.electron.ipcRenderer.sendSync("getLocale");
     };
 
-    setLocale = function(value: string) {
+    setLocale = function (value: string) {
         EEZStudio.electron.ipcRenderer.send("setLocale", value);
     };
 } else {
-    ({ getLocale, setLocale } = require("main/settings") as typeof MainSettingsModule);
+    ({ getLocale, setLocale } = require("main/settings") as any);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,15 +164,15 @@ export let getDateFormat: () => string;
 export let setDateFormat: (value: string) => void;
 
 if (isRenderer()) {
-    getDateFormat = function() {
+    getDateFormat = function () {
         return EEZStudio.electron.ipcRenderer.sendSync("getDateFormat");
     };
 
-    setDateFormat = function(value: string) {
+    setDateFormat = function (value: string) {
         EEZStudio.electron.ipcRenderer.send("setDateFormat", value);
     };
 } else {
-    ({ getDateFormat, setDateFormat } = require("main/settings") as typeof MainSettingsModule);
+    ({ getDateFormat, setDateFormat } = require("main/settings") as any);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,15 +183,15 @@ export let getTimeFormat: () => string;
 export let setTimeFormat: (value: string) => void;
 
 if (isRenderer()) {
-    getTimeFormat = function() {
+    getTimeFormat = function () {
         return EEZStudio.electron.ipcRenderer.sendSync("getTimeFormat");
     };
 
-    setTimeFormat = function(value: string) {
+    setTimeFormat = function (value: string) {
         EEZStudio.electron.ipcRenderer.send("setTimeFormat", value);
     };
 } else {
-    ({ getTimeFormat, setTimeFormat } = require("main/settings") as typeof MainSettingsModule);
+    ({ getTimeFormat, setTimeFormat } = require("main/settings") as any);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

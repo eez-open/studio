@@ -2,7 +2,7 @@ import { observable } from "mobx";
 
 import { _map } from "eez-studio-shared/algorithm";
 
-import { parseXmlString } from "eez-studio-shared/util";
+import { sourceRootDir, parseXmlString } from "eez-studio-shared/util";
 import {
     localPathToFileUrl,
     fileExists,
@@ -13,12 +13,13 @@ import {
     writeBinaryData,
     writeJsObjectToFile
 } from "eez-studio-shared/util-electron";
-import { getExtensionFolderPath } from "eez-studio-shared/extensions/extension-folder";
-import { IExtension } from "eez-studio-shared/extensions/extension";
 
-import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
-import * as PropertiesComponentModule from "instrument/properties-component";
-import {
+import type { IExtension } from "eez-studio-shared/extensions/extension";
+import { getExtensionFolderPath } from "eez-studio-shared/extensions/extension-folder";
+
+import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
+import type * as PropertiesComponentModule from "instrument/properties-component";
+import type {
     IEnum,
     IEnumMember,
     ICommand,
@@ -31,30 +32,6 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 const INSTRUMENT_NO_IMAGE = "../instrument/_images/instrument-no-image.png";
-
-export const DEFAULT_INSTRUMENT_PROPERTIES: IInstrumentExtensionProperties = {
-    properties: {
-        connection: {
-            ethernet: {
-                port: 5025
-            },
-            serial: {
-                baudRates: [4800, 9600, 19200, 38400, 57600, 74880, 115200],
-                defaultBaudRate: 9600
-            }
-        },
-        channels: [
-            {
-                maxVoltage: 40,
-                maxCurrent: 5
-            },
-            {
-                maxVoltage: 40,
-                maxCurrent: 5
-            }
-        ]
-    }
-};
 
 export const EMPTY_INSTRUMENT_PROPERTIES: IInstrumentExtensionProperties = {
     properties: {}
@@ -442,7 +419,7 @@ export function getNotFoundInstrumentExtension(instrumentExtensionId: string) {
         name: "no name",
         version: "no version",
         author: "no author",
-        image: `${__dirname}/../eez-studio-ui/_images/object-implementation-not-found.svg`
+        image: `${sourceRootDir()}/eez-studio-ui/_images/object-implementation-not-found.svg`
     };
 }
 
@@ -539,9 +516,8 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                             "Unknown author",
                         image: "",
                         renderPropertiesComponent: () => {
-                            const {
-                                renderPropertiesComponent
-                            } = require("instrument/properties-component") as typeof PropertiesComponentModule;
+                            const { renderPropertiesComponent } =
+                                require("instrument/properties-component") as typeof PropertiesComponentModule;
 
                             return new Promise<JSX.Element>(resolve => {
                                 resolve(renderPropertiesComponent(extension));

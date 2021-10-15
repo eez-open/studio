@@ -1,10 +1,10 @@
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
-import { DocumentStoreClass } from "project-editor/core/store";
+import type { DocumentStoreClass } from "project-editor/core/store";
 
 import type { Transform } from "project-editor/flow/flow-editor/transform";
-import { Component } from "project-editor/flow/component";
+import type { Component } from "project-editor/flow/component";
 
 export interface IFlowContext {
     dataContext: IDataContext;

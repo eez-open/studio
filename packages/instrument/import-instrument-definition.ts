@@ -1,14 +1,17 @@
 import { getFileNameWithoutExtension } from "eez-studio-shared/util-electron";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import { installExtension } from "eez-studio-shared/extensions/extensions";
+
 import { confirmWithButtons } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
+
 import { importInstrumentDefinitionAsProject } from "instrument/import-instrument-definition-as-project";
 
 function confirmMessage(extension: IExtension) {
-    return `You are about to install version ${extension.version} of the '${extension.displayName ||
-        extension.name}' instrument definition extension.`;
+    return `You are about to install version ${extension.version} of the '${
+        extension.displayName || extension.name
+    }' instrument definition extension.`;
 }
 
 const BUTTON_INSTRUCTIONS = `
@@ -49,9 +52,7 @@ export async function importInstrumentDefinitionAsExtension(filePath: string) {
                 return (
                     (await confirmWithButtons(
                         confirmMessage(newExtension),
-                        `The newer version ${
-                            existingExtension.version
-                        } is already installed.${BUTTON_INSTRUCTIONS}`,
+                        `The newer version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
                         BUTTONS
                     )) === 0
                 );
@@ -63,9 +64,7 @@ export async function importInstrumentDefinitionAsExtension(filePath: string) {
                 return (
                     (await confirmWithButtons(
                         confirmMessage(newExtension),
-                        `The older version ${
-                            existingExtension.version
-                        } is already installed.${BUTTON_INSTRUCTIONS}`,
+                        `The older version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
                         BUTTONS
                     )) === 0
                 );
@@ -86,8 +85,9 @@ export async function importInstrumentDefinitionAsExtension(filePath: string) {
 
         if (extension) {
             notification.update(progressToastId, {
-                render: `Instrument definition "${extension.displayName ||
-                    extension.name}" imported`,
+                render: `Instrument definition "${
+                    extension.displayName || extension.name
+                }" imported`,
                 type: notification.SUCCESS,
                 autoClose: 5000
             });
@@ -107,7 +107,9 @@ export async function importInstrumentDefinitionAsExtension(filePath: string) {
     }
 }
 
-export function importInstrumentDefinition(instrumentDefinitionFilePath: string) {
+export function importInstrumentDefinition(
+    instrumentDefinitionFilePath: string
+) {
     showGenericDialog({
         dialogDefinition: {
             fields: [
@@ -134,23 +136,31 @@ export function importInstrumentDefinition(instrumentDefinitionFilePath: string)
     })
         .then(async result => {
             if (result.values.importAs === "extension") {
-                importInstrumentDefinitionAsExtension(instrumentDefinitionFilePath);
+                importInstrumentDefinitionAsExtension(
+                    instrumentDefinitionFilePath
+                );
             } else {
                 const result = await EEZStudio.remote.dialog.showSaveDialog(
                     EEZStudio.remote.getCurrentWindow(),
                     {
                         defaultPath:
-                            getFileNameWithoutExtension(instrumentDefinitionFilePath) +
-                            ".eez-project",
+                            getFileNameWithoutExtension(
+                                instrumentDefinitionFilePath
+                            ) + ".eez-project",
                         filters: [
-                            { name: "EEZ Project", extensions: ["eez-project"] },
+                            {
+                                name: "EEZ Project",
+                                extensions: ["eez-project"]
+                            },
                             { name: "All Files", extensions: ["*"] }
                         ]
                     }
                 );
                 let projectFilePath = result.filePath;
                 if (projectFilePath) {
-                    if (!projectFilePath.toLowerCase().endsWith(".eez-project")) {
+                    if (
+                        !projectFilePath.toLowerCase().endsWith(".eez-project")
+                    ) {
                         projectFilePath += ".eez-project";
                     }
 

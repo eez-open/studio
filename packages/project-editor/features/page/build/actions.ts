@@ -1,4 +1,7 @@
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
 
 export function buildActionNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(

@@ -23,29 +23,27 @@ import {
     SelectFromListProperty
 } from "eez-studio-ui/properties";
 import { IListNode, ListItem } from "eez-studio-ui/list";
-import {
-    ChartMode,
-    ChartsController,
-    IAxisModel
-} from "eez-studio-ui/chart/chart";
+import { ChartMode, IAxisModel } from "eez-studio-ui/chart/chart";
 import { Icon } from "eez-studio-ui/icon";
 
-import { RulersModel } from "eez-studio-ui/chart/rulers";
-import { MeasurementsModel } from "eez-studio-ui/chart/measurements";
+import {
+    ChartsController,
+    RulersModel,
+    MeasurementsModel
+} from "eez-studio-ui/chart/chart";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { HistoryItem } from "instrument/window/history/item";
 
-import {
-    Waveform,
-    WaveformDefinitionProperties,
-    WaveformAxisModel,
-    ViewOptions
-} from "instrument/window/waveform/generic";
+import type { Waveform } from "instrument/window/waveform/generic";
+import { WaveformDefinitionProperties } from "instrument/window/waveform/WaveformDefinitionProperties";
+import { WaveformAxisModel } from "instrument/window/waveform/WaveformAxisModel";
+import { ViewOptions } from "instrument/window/waveform/ViewOptions";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
+import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,6 +76,8 @@ export class MultiWaveformChartsController extends ChartsController {
     get supportRulers() {
         return true;
     }
+
+    isMultiWaveformChartsController = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -304,7 +304,10 @@ export class MultiWaveform extends HistoryItem {
 
     chartsController: ChartsController;
 
-    createChartsController(mode: ChartMode): ChartsController {
+    createChartsController(
+        displayOption: ChartsDisplayOption,
+        mode: ChartMode
+    ): ChartsController {
         if (this.chartsController) {
             this.chartsController.destroy();
         }
@@ -363,6 +366,8 @@ export class MultiWaveform extends HistoryItem {
     get listItemElement(): JSX.Element | null {
         return <ChartHistoryItemComponent historyItem={this} />;
     }
+
+    isZoomable = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

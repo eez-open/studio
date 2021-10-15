@@ -7,24 +7,25 @@ import { objectClone } from "eez-studio-shared/util";
 
 import {
     setId,
-    getClass,
     getClassesDerivedFrom,
     IObjectClassInfo
 } from "project-editor/core/object";
-import { loadObject } from "project-editor/core/serialization";
-import {
-    objectToClipboardData,
-    setClipboardData
-} from "project-editor/core/clipboard";
+import { loadObject } from "project-editor/core/store";
 import { DragAndDropManager } from "project-editor/core/dd";
 
-import { ActionComponent, Component } from "project-editor/flow/component";
+import type { Component } from "project-editor/flow/component";
 
 import { ProjectContext } from "project-editor/project/context";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { Panel } from "project-editor/components/Panel";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
+import {
+    getClass,
+    objectToClipboardData,
+    setClipboardData
+} from "project-editor/core/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -214,9 +215,11 @@ export class ComponentsPalette extends React.Component<{
 
     @computed get allComponentClasses() {
         return getClassesDerivedFrom(
-            this.props.showOnlyActions ? ActionComponent : Component
+            this.props.showOnlyActions
+                ? ProjectEditor.ActionComponentClass
+                : ProjectEditor.ComponentClass
         ).filter(objectClassInfo =>
-            this.context.isAppletProject
+            this.context.project.isAppletProject
                 ? objectClassInfo.objectClass.classInfo.flowComponentId !=
                   undefined
                 : true

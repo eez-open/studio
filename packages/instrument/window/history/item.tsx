@@ -7,8 +7,7 @@ import {
     loadData,
     logDelete
 } from "eez-studio-shared/activity-log";
-import { IAppStore } from "instrument/window/history/history";
-import { itemsStore, getSource } from "notebook/store";
+import type { IAppStore } from "instrument/window/history/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +22,7 @@ export interface IHistoryItem {
     deleted: boolean;
     selected: boolean;
     listItemElement: JSX.Element | null;
+    canBePartOfMultiChart: boolean;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,6 +37,7 @@ export class HistoryItem implements IHistoryItem {
     _data: any;
     @observable selected: boolean;
     deleted: boolean;
+    canBePartOfMultiChart = false;
 
     constructor(
         activityLogEntry: IActivityLogEntry,
@@ -112,12 +113,18 @@ export class HistoryItem implements IHistoryItem {
     }
 
     get sourceDescriptionElement() {
-        if (this.appStore.history.options.store === itemsStore && this.sid) {
-            const source = getSource(this.sid);
+        if (
+            this.sid &&
+            this.appStore.history.options.store.getSourceDescription
+        ) {
+            const source =
+                this.appStore.history.options.store.getSourceDescription(
+                    this.sid
+                );
             if (source) {
                 return (
                     <p>
-                        <small className="EezStudio_HistoryItemDate">{`Source: ${source.instrumentName}`}</small>
+                        <small className="EezStudio_HistoryItemDate">{`Source: ${source}`}</small>
                     </p>
                 );
             }

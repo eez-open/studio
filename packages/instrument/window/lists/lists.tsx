@@ -33,12 +33,12 @@ import { PropertyList, NumberInputProperty } from "eez-studio-ui/properties";
 // import { SelectProperty } from "eez-studio-ui/properties";
 import { Header } from "eez-studio-ui/header-with-body";
 
-import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/import";
-import { InstrumentObject } from "instrument/instrument-object";
+import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";
+import type { InstrumentObject } from "instrument/instrument-object";
 
 import { getList, sendList } from "instrument/connection/list-operations";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 
 import {
     BaseList,

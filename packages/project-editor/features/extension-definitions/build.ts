@@ -6,14 +6,12 @@ import {
     buildInstrumentExtension,
     IdfProperties as InstrumentIdfProperties
 } from "instrument/export";
-import { getProperty } from "project-editor/core/object";
-import { objectToJS } from "project-editor/core/serialization";
-import { Section, Type } from "project-editor/core/output";
+import { getProperty, MessageType } from "project-editor/core/object";
+import { objectToJS, Section } from "project-editor/core/store";
 import type { DocumentStoreClass } from "project-editor/core/store";
 
-import { getProjectFeatures } from "project-editor/core/extensions";
-
 import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 function getInstrumentExtensionProperties(
     DocumentStore: DocumentStoreClass,
@@ -23,7 +21,7 @@ function getInstrumentExtensionProperties(
 
     let instrumentExtensionProperties: any = {};
 
-    let projectFeatures = getProjectFeatures();
+    let projectFeatures = ProjectEditor.extensions;
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature
@@ -163,7 +161,7 @@ export async function extensionDefinitionBuild(
 
             DocumentStore.outputSectionsStore.write(
                 Section.OUTPUT,
-                Type.INFO,
+                MessageType.INFO,
                 `Instrument definition file "${idfFileName}" builded.`
             );
         }

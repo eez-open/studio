@@ -1,7 +1,7 @@
 import { values } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
-import { db } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
 import { sendMessage } from "eez-studio-shared/notify";
 import {
     createStore,

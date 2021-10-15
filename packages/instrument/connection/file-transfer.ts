@@ -1,7 +1,10 @@
 import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import { Connection } from "instrument/connection/connection";
-import { FileState, FileStateState } from "instrument/connection/file-state";
+import type { Connection } from "instrument/connection/connection";
+import type {
+    FileState,
+    FileStateState
+} from "instrument/connection/file-state";
 
 const CONF_FILE_TRANSFER_TIMEOUT_MS = 10 * 1000;
 
@@ -93,7 +96,8 @@ export abstract class FileTransfer {
             let timeSpan = time - this.lastTime;
             if (timeSpan >= 100) {
                 this.lastTransferSpeed =
-                    (1000 * (state.dataLength - this.lastDataLength)) / timeSpan;
+                    (1000 * (state.dataLength - this.lastDataLength)) /
+                    timeSpan;
                 this.lastDataLength = state.dataLength;
                 this.lastTime = time;
             }

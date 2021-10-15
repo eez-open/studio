@@ -1,6 +1,6 @@
 import { getId, getParent, IEezObject } from "project-editor/core/object";
-import { ConnectionLine } from "project-editor/flow/flow";
-import { IFlowContext } from "project-editor/flow/flow-interfaces";
+import type { ConnectionLine } from "project-editor/flow/flow";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 export function getConnectionLineShape(
     context: IFlowContext,

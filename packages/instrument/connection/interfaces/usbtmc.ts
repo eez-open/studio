@@ -1,6 +1,6 @@
 import type usbTypes from "usb";
 
-import * as UsbModule from "usb";
+import type * as UsbModule from "usb";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1305,9 +1305,9 @@ export class Instrument {
 
 import {
     CommunicationInterface,
-    CommunicationInterfaceHost,
-    ConnectionErrorCode
+    CommunicationInterfaceHost
 } from "instrument/connection/interface";
+import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 
 export class UsbTmcInterface implements CommunicationInterface {
     instrument: Instrument | undefined = undefined;

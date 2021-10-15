@@ -1,51 +1,50 @@
-import { IActivityLogEntry } from "eez-studio-shared/activity-log";
+import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
-import * as FileTypeModule from "instrument/connection/file-type";
+import type * as FileTypeModule from "instrument/connection/file-type";
 
-import * as GenericWaveformModule from "instrument/window/waveform/generic";
-import * as MultiWaveformModule from "instrument/window/waveform/multi";
-import * as DlogWaveformModule from "instrument/window/waveform/dlog";
+import type * as GenericWaveformModule from "instrument/window/waveform/generic";
+import type * as MultiWaveformModule from "instrument/window/waveform/multi";
+import type * as DlogWaveformModule from "instrument/window/waveform/dlog";
 
-import { IHistoryItem, HistoryItem } from "instrument/window/history/item";
+import type { IHistoryItem, HistoryItem } from "instrument/window/history/item";
 
-import * as SessionHistoryItemModule from "instrument/window/history/items/session";
-import * as CreatedHistoryItemModule from "instrument/window/history/items/created";
-import * as ConnectedHistoryItemModule from "instrument/window/history/items/connected";
-import * as ConnectFailedHistoryItemModule from "instrument/window/history/items/connect-failed";
-import * as DisconnectedHistoryItemModule from "instrument/window/history/items/disconnected";
-import * as RequestHistoryItemModule from "instrument/window/history/items/request";
-import * as AnswerHistoryItemModule from "instrument/window/history/items/answer";
-import * as NoteHistoryItemModule from "instrument/window/history/items/note";
-import * as FileHistoryItemModule from "instrument/window/history/items/file";
-import * as ListHistoryItemModule from "instrument/window/history/items/list";
-import * as ScriptHistoryItemModule from "instrument/window/history/items/script";
+import type * as SessionHistoryItemModule from "instrument/window/history/items/session";
+import type * as CreatedHistoryItemModule from "instrument/window/history/items/created";
+import type * as ConnectedHistoryItemModule from "instrument/window/history/items/connected";
+import type * as ConnectFailedHistoryItemModule from "instrument/window/history/items/connect-failed";
+import type * as DisconnectedHistoryItemModule from "instrument/window/history/items/disconnected";
+import type * as RequestHistoryItemModule from "instrument/window/history/items/request";
+import type * as AnswerHistoryItemModule from "instrument/window/history/items/answer";
+import type * as NoteHistoryItemModule from "instrument/window/history/items/note";
+import type * as FileHistoryItemModule from "instrument/window/history/items/file";
+import type * as ListHistoryItemModule from "instrument/window/history/items/list";
+import type * as ScriptHistoryItemModule from "instrument/window/history/items/script";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getFileSpecializationItem(activityLogEntry: IActivityLogEntry, appStore?: any) {
-    const {
-        ListHistoryItem,
-        isTableList
-    } = require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
+function getFileSpecializationItem(
+    activityLogEntry: IActivityLogEntry,
+    appStore?: any
+) {
+    const { ListHistoryItem, isTableList } =
+        require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
 
     if (isTableList(activityLogEntry)) {
         return new ListHistoryItem(activityLogEntry, appStore);
     }
 
-    const { isDlogWaveform } = require("instrument/connection/file-type") as typeof FileTypeModule;
+    const { isDlogWaveform } =
+        require("instrument/connection/file-type") as typeof FileTypeModule;
 
-    const {
-        DlogWaveform
-    } = require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
+    const { DlogWaveform } =
+        require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
 
     if (isDlogWaveform(activityLogEntry)) {
         return new DlogWaveform(activityLogEntry, appStore);
     }
 
-    const {
-        isWaveform,
-        Waveform
-    } = require("instrument/window/waveform/generic") as typeof GenericWaveformModule;
+    const { isWaveform, Waveform } =
+        require("instrument/window/waveform/generic") as typeof GenericWaveformModule;
 
     if (isWaveform(activityLogEntry)) {
         return new Waveform(activityLogEntry, appStore);
@@ -59,9 +58,8 @@ export function createHistoryItem(
     appStore?: any
 ): HistoryItem {
     if (activityLogEntry.type.startsWith("activity-log/session")) {
-        const {
-            SessionHistoryItem
-        } = require("instrument/window/history/items/session") as typeof SessionHistoryItemModule;
+        const { SessionHistoryItem } =
+            require("instrument/window/history/items/session") as typeof SessionHistoryItemModule;
         return new SessionHistoryItem(activityLogEntry, appStore);
     }
 
@@ -70,51 +68,44 @@ export function createHistoryItem(
         activityLogEntry.type === "instrument/deleted" ||
         activityLogEntry.type === "instrument/restored"
     ) {
-        const {
-            CreatedHistoryItem
-        } = require("instrument/window/history/items/created") as typeof CreatedHistoryItemModule;
+        const { CreatedHistoryItem } =
+            require("instrument/window/history/items/created") as typeof CreatedHistoryItemModule;
         return new CreatedHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/connected") {
-        const {
-            ConnectedHistoryItem
-        } = require("instrument/window/history/items/connected") as typeof ConnectedHistoryItemModule;
+        const { ConnectedHistoryItem } =
+            require("instrument/window/history/items/connected") as typeof ConnectedHistoryItemModule;
         return new ConnectedHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/connect-failed") {
-        const {
-            ConnectFailedHistoryItem
-        } = require("instrument/window/history/items/connect-failed") as typeof ConnectFailedHistoryItemModule;
+        const { ConnectFailedHistoryItem } =
+            require("instrument/window/history/items/connect-failed") as typeof ConnectFailedHistoryItemModule;
         return new ConnectFailedHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/disconnected") {
-        const {
-            DisconnectedHistoryItem
-        } = require("instrument/window/history/items/disconnected") as typeof DisconnectedHistoryItemModule;
+        const { DisconnectedHistoryItem } =
+            require("instrument/window/history/items/disconnected") as typeof DisconnectedHistoryItemModule;
         return new DisconnectedHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/request") {
-        const {
-            RequestHistoryItem
-        } = require("instrument/window/history/items/request") as typeof RequestHistoryItemModule;
+        const { RequestHistoryItem } =
+            require("instrument/window/history/items/request") as typeof RequestHistoryItemModule;
         return new RequestHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/answer") {
-        const {
-            AnswerHistoryItem
-        } = require("instrument/window/history/items/answer") as typeof AnswerHistoryItemModule;
+        const { AnswerHistoryItem } =
+            require("instrument/window/history/items/answer") as typeof AnswerHistoryItemModule;
         return new AnswerHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "activity-log/note") {
-        const {
-            NoteHistoryItem
-        } = require("instrument/window/history/items/note") as typeof NoteHistoryItemModule;
+        const { NoteHistoryItem } =
+            require("instrument/window/history/items/note") as typeof NoteHistoryItemModule;
         return new NoteHistoryItem(activityLogEntry, appStore);
     }
 
@@ -126,38 +117,37 @@ export function createHistoryItem(
             }
         }
 
-        const {
-            FileHistoryItem
-        } = require("instrument/window/history/items/file") as typeof FileHistoryItemModule;
+        const { FileHistoryItem } =
+            require("instrument/window/history/items/file") as typeof FileHistoryItemModule;
 
         return new FileHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/list") {
-        const {
-            ListHistoryItem
-        } = require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
+        const { ListHistoryItem } =
+            require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
         return new ListHistoryItem(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/chart") {
-        const {
-            MultiWaveform
-        } = require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
+        const { MultiWaveform } =
+            require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
         return new MultiWaveform(activityLogEntry, appStore);
     }
 
     if (activityLogEntry.type === "instrument/script") {
-        const {
-            ScriptHistoryItem
-        } = require("instrument/window/history/items/script") as typeof ScriptHistoryItemModule;
+        const { ScriptHistoryItem } =
+            require("instrument/window/history/items/script") as typeof ScriptHistoryItemModule;
         return new ScriptHistoryItem(activityLogEntry, appStore);
     }
 
     throw "Unknown activity log entry";
 }
 
-export function updateHistoryItemClass(historyItem: IHistoryItem, appStore: any): IHistoryItem {
+export function updateHistoryItemClass(
+    historyItem: IHistoryItem,
+    appStore: any
+): IHistoryItem {
     if (historyItem.type.startsWith("instrument/file")) {
         const item = getFileSpecializationItem(historyItem, appStore);
         if (item) {
@@ -170,7 +160,8 @@ export function updateHistoryItemClass(historyItem: IHistoryItem, appStore: any)
 export function getReferencedItemIds(item: IActivityLogEntry): string[] {
     if (item.type === "instrument/chart") {
         const message = JSON.parse(item.message);
-        const waveformLinks: MultiWaveformModule.IWaveformLink[] = message.waveformLinks || message;
+        const waveformLinks: MultiWaveformModule.IWaveformLink[] =
+            message.waveformLinks || message;
         return waveformLinks.map(waveformLink => waveformLink.id);
     }
 
@@ -192,7 +183,9 @@ export function remapReferencedItemIds(
 
         const newWaveformLinks = oldWaveformLinks
             .map(waveformLink =>
-                Object.assign({}, waveformLink, { id: oldToNewId.get(waveformLink.id) })
+                Object.assign({}, waveformLink, {
+                    id: oldToNewId.get(waveformLink.id)
+                })
             )
             .filter(waveformLink => !!waveformLink.id);
 

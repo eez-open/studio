@@ -1,6 +1,9 @@
-import * as I10nModule from "eez-studio-shared/i10n";
+import type * as I10nModule from "eez-studio-shared/i10n";
 import { UNITS } from "eez-studio-shared/units";
-import { decodeDlog, Unit as DlogUnit } from "instrument/window/waveform/dlog-file";
+import {
+    decodeDlog,
+    Unit as DlogUnit
+} from "instrument/window/waveform/dlog-file";
 
 export function dlogUnitToStudioUnit(unit: DlogUnit) {
     if (unit === DlogUnit.UNIT_VOLT) {
@@ -24,7 +27,8 @@ export function convertDlogToCsv(data: Uint8Array) {
         return undefined;
     }
 
-    const { getLocale } = require("eez-studio-shared/i10n") as typeof I10nModule;
+    const { getLocale } =
+        require("eez-studio-shared/i10n") as typeof I10nModule;
 
     const locale = getLocale();
 
@@ -64,11 +68,13 @@ export function convertDlogToCsv(data: Uint8Array) {
     //
     for (let rowIndex = 0; rowIndex < dlog.length; rowIndex++) {
         csv += numberFormat.format(rowIndex * dlog.xAxis.step);
-        for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
+        for (
+            let columnIndex = 0;
+            columnIndex < dlog.yAxes.length;
+            columnIndex++
+        ) {
             csv += separator;
-            csv += numberFormat.format(
-                    dlog.getValue(rowIndex, columnIndex)
-            );
+            csv += numberFormat.format(dlog.getValue(rowIndex, columnIndex));
         }
         csv += "\n";
     }

@@ -6,14 +6,16 @@ import classNames from "classnames";
 import {
     IEezObject,
     PropertyType,
-    isValue,
-    getCommonProperties,
     IPropertyGridGroupDefinition,
     getParent,
     getKey,
-    getClassInfo,
     isAnyPropertyReadOnly
 } from "project-editor/core/object";
+import {
+    isValue,
+    getCommonProperties,
+    getClassInfo
+} from "project-editor/core/store";
 
 import { isAnyObjectReadOnly } from "project-editor/project/project";
 

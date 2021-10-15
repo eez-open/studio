@@ -23,13 +23,13 @@ import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { SAMPLING_RATE_UNIT } from "eez-studio-shared/units";
 import { IActivityLogEntry, logUpdate } from "eez-studio-shared/activity-log";
 
-import * as UiPropertiesModule from "eez-studio-ui/properties";
+import type * as UiPropertiesModule from "eez-studio-ui/properties";
 import { Balloon } from "eez-studio-ui/balloon";
 import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, TextAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
-import * as UiBalloonModule from "eez-studio-ui/balloon";
+import type * as UiBalloonModule from "eez-studio-ui/balloon";
 
 import pdfToPng from "pdf-services/pdf-to-png";
 
@@ -40,13 +40,10 @@ import {
     showEditNoteDialog
 } from "instrument/window/note-dialog";
 
-import { IAppStore } from "instrument/window/history/history";
+import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
-import { Waveform, convertToCsv } from "instrument/window/waveform/generic";
-import { DlogWaveform } from "instrument/window/waveform/dlog";
-import { convertDlogToCsv } from "instrument/connection/file-type-utils";
 import { PreventDraggable } from "instrument/window/history/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,19 +279,18 @@ export class FileHistoryItemComponent extends React.Component<
 
     @bind
     async onSaveAsCsv() {
+        const convertToCsv = this.props.historyItem.convertToCsv;
+        if (!convertToCsv) {
+            return;
+        }
+
         if (this.onSaveAsCsvInProgress) {
             return;
         }
 
         runInAction(() => (this.onSaveAsCsvInProgress = true));
 
-        let data;
-
-        if (this.props.historyItem instanceof DlogWaveform) {
-            data = convertDlogToCsv(this.props.historyItem.data);
-        } else if (this.props.historyItem instanceof Waveform) {
-            data = await convertToCsv(this.props.historyItem);
-        }
+        let data = await convertToCsv();
 
         if (!data) {
             notification.error(`Failed to convert to CSV!`);
@@ -440,8 +436,7 @@ export class FileHistoryItemComponent extends React.Component<
                             title="Save file"
                             onClick={this.onSave}
                         />
-                        {(this.props.historyItem instanceof DlogWaveform ||
-                            this.props.historyItem instanceof Waveform) && (
+                        {this.props.historyItem.convertToCsv && (
                             <IconAction
                                 icon="material:save"
                                 title="Save as CSV file"
@@ -837,4 +832,7 @@ export class FileHistoryItem extends HistoryItem {
             </React.Fragment>
         );
     }
+
+    convertToCsv?: () => Promise<string | Buffer | undefined> | undefined =
+        undefined;
 }

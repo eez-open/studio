@@ -1,6 +1,4 @@
-import { getObjectPathAsString, getProperty } from "project-editor/core/object";
-
-import * as output from "project-editor/core/output";
+import { getProperty, MessageType } from "project-editor/core/object";
 
 import {
     Project,
@@ -39,6 +37,11 @@ import {
     FlowValue,
     getConstantFlowValueType
 } from "project-editor/features/page/build/value";
+import {
+    getObjectPathAsString,
+    propertyNotFoundMessage,
+    Section
+} from "project-editor/core/store";
 
 export const PATH_SEPARATOR = "//";
 
@@ -222,12 +225,9 @@ export class Assets {
         }
 
         if (assetName != undefined) {
-            const message = output.propertyNotFoundMessage(
-                object,
-                propertyName
-            );
+            const message = propertyNotFoundMessage(object, propertyName);
             this.DocumentStore.outputSectionsStore.write(
-                output.Section.OUTPUT,
+                Section.OUTPUT,
                 message.type,
                 message.text,
                 message.object
@@ -238,7 +238,7 @@ export class Assets {
     }
 
     getWidgetDataItemIndex(object: any, propertyName: string) {
-        if (this.DocumentStore.isAppletProject) {
+        if (this.DocumentStore.project.isAppletProject) {
             return this.getFlowWidgetDataItemIndex(object, propertyName);
         }
 
@@ -255,7 +255,7 @@ export class Assets {
     }
 
     getWidgetActionIndex(object: any, propertyName: string) {
-        if (this.DocumentStore.isAppletProject) {
+        if (this.DocumentStore.project.isAppletProject) {
             return this.getFlowWidgetActionIndex(object, propertyName);
         }
 
@@ -493,8 +493,8 @@ export class Assets {
                     })
                 ) {
                     this.DocumentStore.outputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.INFO,
+                        Section.OUTPUT,
+                        MessageType.INFO,
                         "Unused style: " + style.name,
                         style
                     );
@@ -504,8 +504,8 @@ export class Assets {
             project.fonts.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
                     this.DocumentStore.outputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.INFO,
+                        Section.OUTPUT,
+                        MessageType.INFO,
                         "Unused font: " + font.name,
                         font
                     );
@@ -515,8 +515,8 @@ export class Assets {
             project.bitmaps.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
                     this.DocumentStore.outputSectionsStore.write(
-                        output.Section.OUTPUT,
-                        output.Type.INFO,
+                        Section.OUTPUT,
+                        MessageType.INFO,
                         "Unused bitmap: " + bitmap.name,
                         bitmap
                     );
@@ -1119,14 +1119,14 @@ export async function buildGuiAssetsData(assets: Assets) {
     compressedBuffer.copy(allData, headerBuffer.size, 0, compressedSize);
 
     assets.DocumentStore.outputSectionsStore.write(
-        output.Section.OUTPUT,
-        output.Type.INFO,
+        Section.OUTPUT,
+        MessageType.INFO,
         "Uncompressed size: " + uncompressedSize
     );
 
     assets.DocumentStore.outputSectionsStore.write(
-        output.Section.OUTPUT,
-        output.Type.INFO,
+        Section.OUTPUT,
+        MessageType.INFO,
         "Compressed size: " + compressedSize
     );
 

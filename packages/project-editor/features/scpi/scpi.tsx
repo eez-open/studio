@@ -4,7 +4,6 @@ import { observable, computed } from "mobx";
 import { humanize } from "eez-studio-shared/string";
 
 import { validators } from "eez-studio-shared/validation";
-import * as output from "project-editor/core/output";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -15,10 +14,16 @@ import {
     EezObject,
     PropertyType,
     PropertyInfo,
-    getChildOfObject,
-    getParent
+    getParent,
+    MessageType
 } from "project-editor/core/object";
-import { getDocumentStore } from "project-editor/core/store";
+import {
+    getDocumentStore,
+    getChildOfObject,
+    Message,
+    propertyNotSetMessage,
+    propertyNotFoundMessage
+} from "project-editor/core/store";
 
 import {
     IParameterType,
@@ -68,20 +73,16 @@ export class ScpiParameterType extends EezObject implements IParameterType {
     };
 
     check(object: IEezObject) {
-        const messages: output.Message[] = [];
+        const messages: Message[] = [];
 
         if (!this.type) {
-            messages.push(output.propertyNotSetMessage(this, "type"));
+            messages.push(propertyNotSetMessage(this, "type"));
         } else if (this.type === "discrete") {
             if (!this.enumeration) {
-                messages.push(
-                    output.propertyNotSetMessage(this, "enumeration")
-                );
+                messages.push(propertyNotSetMessage(this, "enumeration"));
             } else {
                 if (!findScpiEnum(getDocumentStore(object), this.enumeration)) {
-                    messages.push(
-                        output.propertyNotFoundMessage(this, "enumeration")
-                    );
+                    messages.push(propertyNotFoundMessage(this, "enumeration"));
                 }
             }
         }
@@ -324,7 +325,7 @@ export class ScpiParameter extends EezObject {
     };
 
     check(object: IEezObject) {
-        const messages: output.Message[] = [];
+        const messages: Message[] = [];
 
         if (this.name) {
             const arr = getParent(this) as ScpiParameter[];
@@ -339,15 +340,15 @@ export class ScpiParameter extends EezObject {
             }
             if (otherIndex !== -1 && thisIndex > otherIndex) {
                 messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
+                    new Message(
+                        MessageType.ERROR,
                         `Parameter name '${this.name}' is not unique`,
                         getChildOfObject(this, "name")
                     )
                 );
             }
         } else {
-            messages.push(output.propertyNotSetMessage(this, "name"));
+            messages.push(propertyNotSetMessage(this, "name"));
         }
 
         if (!this.isOptional) {
@@ -355,8 +356,8 @@ export class ScpiParameter extends EezObject {
             for (let i = 0; arr[i] !== this && i < arr.length; ++i) {
                 if (arr[i].isOptional) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             `Parameter must be optional`,
                             getChildOfObject(this, "isOptional")
                         )
@@ -367,7 +368,7 @@ export class ScpiParameter extends EezObject {
         }
 
         if (!this.type || this.type.length === 0) {
-            messages.push(output.propertyNotSetMessage(this, "type"));
+            messages.push(propertyNotSetMessage(this, "type"));
         }
 
         return messages;
@@ -405,20 +406,16 @@ export class ScpiResponseType extends EezObject implements IResponseType {
     };
 
     check(object: IEezObject) {
-        const messages: output.Message[] = [];
+        const messages: Message[] = [];
 
         if (!this.type) {
-            messages.push(output.propertyNotSetMessage(this, "type"));
+            messages.push(propertyNotSetMessage(this, "type"));
         } else if (this.type === "discrete") {
             if (!this.enumeration) {
-                messages.push(
-                    output.propertyNotSetMessage(this, "enumeration")
-                );
+                messages.push(propertyNotSetMessage(this, "enumeration"));
             } else {
                 if (!findScpiEnum(getDocumentStore(object), this.enumeration)) {
-                    messages.push(
-                        output.propertyNotFoundMessage(this, "enumeration")
-                    );
+                    messages.push(propertyNotFoundMessage(this, "enumeration"));
                 }
             }
         }
@@ -635,12 +632,12 @@ export class ScpiResponse extends EezObject {
     };
 
     check(object: IEezObject) {
-        const messages: output.Message[] = [];
+        const messages: Message[] = [];
 
         const command: ScpiCommand = getParent(this) as ScpiCommand;
         if (command.isQuery) {
             if (!this.type || this.type.length === 0) {
-                messages.push(output.propertyNotSetMessage(this, "type"));
+                messages.push(propertyNotSetMessage(this, "type"));
             }
         }
 
@@ -745,7 +742,7 @@ export class ScpiCommand extends EezObject {
     }
 }
 
-registerClass(ScpiCommand);
+registerClass("ScpiCommand", ScpiCommand);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -806,7 +803,7 @@ export class ScpiSubsystem extends EezObject {
     };
 }
 
-registerClass(ScpiSubsystem);
+registerClass("ScpiSubsystem", ScpiSubsystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -837,7 +834,7 @@ export class Scpi extends EezObject {
     };
 }
 
-registerClass(Scpi);
+registerClass("Scpi", Scpi);
 
 ////////////////////////////////////////////////////////////////////////////////
 

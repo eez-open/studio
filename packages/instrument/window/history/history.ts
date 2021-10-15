@@ -2,7 +2,8 @@ import { observable, computed, runInAction, action, reaction } from "mobx";
 import { bind } from "bind-decorator";
 
 import { formatTransferSpeed, formatDate } from "eez-studio-shared/util";
-import { db, dbQuery } from "eez-studio-shared/db";
+import { db } from "eez-studio-shared/db-path";
+import { dbQuery } from "eez-studio-shared/db-query";
 import {
     IActivityLogEntry,
     activityLogStore,
@@ -25,7 +26,7 @@ import { Filters, FilterStats } from "instrument/window/history/filters";
 
 import { HistorySessions } from "instrument/window/history/session/store";
 
-import { IHistoryItem } from "instrument/window/history/item";
+import type { IHistoryItem } from "instrument/window/history/item";
 import {
     createHistoryItem,
     updateHistoryItemClass
@@ -37,15 +38,15 @@ import {
     showHistoryItem
 } from "instrument/window/history/history-view";
 import { FileHistoryItem } from "instrument/window/history/items/file";
-import { ISelection } from "./list-component";
+import type { ISelection } from "./list-component";
 import { getScrapbookStore } from "instrument/window/history/scrapbook";
+import { CONF_ITEMS_BLOCK_SIZE } from "./CONF_ITEMS_BLOCK_SIZE";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_START_SEARCH_TIMEOUT = 250;
 const CONF_SINGLE_SEARCH_LIMIT = 1;
 
-export const CONF_ITEMS_BLOCK_SIZE = 10;
 const CONF_MAX_NUM_OF_LOADED_ITEMS = 100;
 
 ////////////////////////////////////////////////////////////////////////////////

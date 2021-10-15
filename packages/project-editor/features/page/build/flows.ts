@@ -1,18 +1,24 @@
 import * as projectBuild from "project-editor/project/build";
-import * as output from "project-editor/core/output";
 
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { Flow } from "project-editor/flow/flow";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
+import type { Flow } from "project-editor/flow/flow";
 import { Component, isFlowProperty } from "project-editor/flow/component";
 import {
-    getChildOfObject,
     getClassesDerivedFrom,
+    getProperty,
+    IObjectClassInfo,
+    MessageType
+} from "project-editor/core/object";
+import {
+    getChildOfObject,
     getClassInfo,
     getHumanReadableObjectPath,
     getObjectPathAsString,
-    getProperty,
-    IObjectClassInfo
-} from "project-editor/core/object";
+    Section
+} from "project-editor/core/store";
 import { visitObjects } from "project-editor/core/search";
 import {
     CommentActionComponent,
@@ -26,7 +32,7 @@ import {
     getVariableFlowValue,
     buildConstantFlowValue,
     buildVariableFlowValue
-} from "./value";
+} from "project-editor/features/page/build/value";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 
 function getComponentName(componentType: IObjectClassInfo) {
@@ -88,8 +94,8 @@ function buildComponent(
         dataBuffer.writeUint16(flowComponentId);
     } else {
         assets.DocumentStore.outputSectionsStore.write(
-            output.Section.OUTPUT,
-            output.Type.ERROR,
+            Section.OUTPUT,
+            MessageType.ERROR,
             "Component is not supported for the build target",
             component
         );
@@ -137,8 +143,8 @@ function buildComponent(
             );
         } catch (err) {
             assets.DocumentStore.outputSectionsStore.write(
-                output.Section.OUTPUT,
-                output.Type.ERROR,
+                Section.OUTPUT,
+                MessageType.ERROR,
                 err,
                 getChildOfObject(component, propertyInfo.name)
             );
@@ -224,8 +230,8 @@ function buildComponent(
         component.buildFlowComponentSpecific(assets, dataBuffer);
     } catch (err) {
         assets.DocumentStore.outputSectionsStore.write(
-            output.Section.OUTPUT,
-            output.Type.ERROR,
+            Section.OUTPUT,
+            MessageType.ERROR,
             err,
             component
         );
@@ -283,8 +289,8 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
             dataBuffer.writeInt16(componentPropertyValue.propertyValueIndex);
         } else {
             assets.DocumentStore.outputSectionsStore.write(
-                output.Section.OUTPUT,
-                output.Type.ERROR,
+                Section.OUTPUT,
+                MessageType.ERROR,
                 "Widget data item not found",
                 flowState.flowWidgetFromDataIndex.get(i)
             );
@@ -303,8 +309,8 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
             dataBuffer.writeInt16(componentOutput.componentOutputIndex);
         } else {
             assets.DocumentStore.outputSectionsStore.write(
-                output.Section.OUTPUT,
-                output.Type.ERROR,
+                Section.OUTPUT,
+                MessageType.ERROR,
                 "Widget action output not found",
                 flowState.flowWidgetFromActionIndex.get(i)
             );
@@ -324,7 +330,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 }
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
-    if (assets.DocumentStore.isAppletProject) {
+    if (assets.DocumentStore.project.isAppletProject) {
         dataBuffer.writeObjectOffset(() => {
             // flows
             dataBuffer.writeArray(assets.flows, flow =>

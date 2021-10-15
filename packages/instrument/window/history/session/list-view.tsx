@@ -15,8 +15,8 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Body } from "eez-studio-ui/header-with-body";
 import { confirm } from "eez-studio-ui/dialog-electron";
 
-import { IAppStore, History } from "instrument/window/history/history";
-import { ISession } from "instrument/window/history/session/store";
+import type { IAppStore, History } from "instrument/window/history/history";
+import type { ISession } from "instrument/window/history/session/store";
 
 export function showEditSessionNameDialog(
     name: string,

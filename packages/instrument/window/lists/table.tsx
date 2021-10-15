@@ -26,16 +26,18 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
-    AxisController,
     ChartController,
     ChartMode,
-    ChartsController,
-    ChartsView,
     IAxisModel,
     LineController,
     ChartView,
-    MouseHandler,
-    globalViewOptions
+    MouseHandler
+} from "eez-studio-ui/chart/chart";
+import {
+    globalViewOptions,
+    AxisController,
+    ChartsController,
+    ChartsView
 } from "eez-studio-ui/chart/chart";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import {
@@ -173,6 +175,12 @@ export class TableList extends BaseList {
 
     get tableListData() {
         return this.data;
+    }
+
+    isZoomable: false;
+
+    renderToolbar(chartsController: ChartsController): React.ReactNode {
+        return null;
     }
 }
 

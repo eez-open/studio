@@ -23,7 +23,7 @@ import { CodeEditorProperty } from "eez-studio-ui/code-editor";
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
-import {
+import type {
     IActionType,
     IShortcut,
     IShortcutsStore,
@@ -31,7 +31,7 @@ import {
 } from "shortcuts/interfaces";
 import { TOOLBAR_BUTTON_COLORS } from "shortcuts/toolbar-button-colors";
 
-import { isSameShortcutFromDifferentExtension } from "shortcuts/shortcuts";
+import { isSameShortcutFromDifferentExtension } from "shortcuts/isSameShortcutFromDifferentExtension";
 import {
     SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX,
     FROM_EXTENSION_GROUP_NAME
@@ -503,16 +503,4 @@ export function showShortcutDialog(
             hideCodeEditor={hideCodeEditor}
         />
     );
-
-    // let win = new EEZStudio.remote.BrowserWindow({
-    //     parent: EEZStudio.remote.getCurrentWindow(),
-    //     modal: true,
-    //     title: "Edit Shortuct Definition - EEZ Studio",
-    //     minimizable: false,
-    //     maximizable: false
-    // });
-
-    // win.loadURL(`file://${__dirname}/../../../../eez-studio-shared/download.html`);
-
-    // win.setMenu(null);
 }

@@ -9,17 +9,15 @@ import { humanize } from "eez-studio-shared/string";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 
 import {
-    getAncestorOfType,
     getProperty,
     IEezObject,
     IOnSelectParams,
     PropertyInfo
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { getDocumentStore } from "project-editor/core/store";
+import { getAncestorOfType, getDocumentStore } from "project-editor/core/store";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
-import { Component } from "project-editor/flow/component";
-import { getFlow } from "project-editor/project/project";
+import type { Component } from "project-editor/flow/component";
 import {
     binaryOperators,
     builtInConstants,
@@ -34,6 +32,7 @@ import {
     isStructType,
     humanizeVariableType
 } from "project-editor/features/variable/value-type";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export async function expressionBuilder(
     object: IEezObject,
@@ -144,12 +143,12 @@ class SelectItemDialog extends React.Component<{
     @computed get component() {
         return getAncestorOfType(
             this.props.object,
-            Component.classInfo
+            ProjectEditor.ComponentClass.classInfo
         ) as Component;
     }
 
     @computed get flow() {
-        return getFlow(this.component);
+        return ProjectEditor.getFlow(this.component);
     }
 
     @computed get componentInputs() {

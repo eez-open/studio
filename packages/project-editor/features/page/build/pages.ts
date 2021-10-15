@@ -1,6 +1,9 @@
 import * as projectBuild from "project-editor/project/build";
 
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
 import { buildWidget } from "project-editor/features/page/build/widgets";
 
 export function buildGuiPagesEnum(assets: Assets) {

@@ -5,6 +5,7 @@ import { bind } from "bind-decorator";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
+import { to16bitsColor } from "eez-studio-shared/color";
 
 import {
     IEezObject,
@@ -17,14 +18,21 @@ import {
     IPropertyGridGroupDefinition,
     isAncestor,
     getParent,
-    PropertyProps
+    PropertyProps,
+    MessageType
 } from "project-editor/core/object";
-import { loadObject, objectToJS } from "project-editor/core/serialization";
+import {
+    loadObject,
+    Message,
+    objectToJS,
+    propertyNotFoundMessage,
+    propertyNotSetMessage,
+    propertySetButNotUsedMessage
+} from "project-editor/core/store";
 import {
     getDocumentStore,
     IContextMenuContext
 } from "project-editor/core/store";
-import * as output from "project-editor/core/output";
 
 import {
     checkObjectReference,
@@ -45,11 +53,11 @@ import {
 import { Page, findPage } from "project-editor/features/page/page";
 import { findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
+import { findVariable } from "project-editor/features/variable/variable";
 import {
-    findVariable,
     FLOW_ITERATOR_INDEXES_VARIABLE,
     FLOW_ITERATOR_INDEX_VARIABLE
-} from "project-editor/features/variable/variable";
+} from "project-editor/features/variable/defs";
 import {
     getEnumTypeNameFromVariable,
     isEnumVariable
@@ -75,7 +83,6 @@ import {
     makeStylePropertyInfo,
     makeTextPropertyInfo,
     migrateStyleProperty,
-    EmbeddedWidget,
     makeExpressionProperty,
     ComponentInput,
     ComponentOutput
@@ -149,6 +156,38 @@ function buildWidgetText(text: string | undefined, defaultValue: string = "") {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class EmbeddedWidget extends Widget {
+    @observable style: Style;
+
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        properties: [makeStylePropertyInfo("style", "Normal style")],
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateStyleProperty(jsObject, "style");
+
+            if (jsObject.style && typeof jsObject.style.padding === "number") {
+                delete jsObject.style.padding;
+            }
+
+            delete jsObject.activeStyle;
+        }
+    });
+
+    @computed
+    get styleObject() {
+        return this.style;
+    }
+
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        if (!flowContext.DocumentStore.project.isDashboardProject) {
+            const backgroundColor = this.style.backgroundColorProperty;
+            style.backgroundColor = to16bitsColor(backgroundColor);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ContainerWidget extends EmbeddedWidget {
     @observable name?: string;
     @observable widgets: Widget[];
@@ -205,7 +244,7 @@ export class ContainerWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Container.png",
 
         check: (object: ContainerWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             checkObjectReference(object, "overlay", messages);
 
@@ -236,7 +275,7 @@ export class ContainerWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -342,7 +381,7 @@ export class ContainerWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(ContainerWidget);
+registerClass("ContainerWidget", ContainerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -402,16 +441,16 @@ export class ListWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/List.png",
 
         check: (object: ListWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             if (!object.itemWidget) {
                 messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
+                    new Message(
+                        MessageType.ERROR,
                         "List item widget is missing",
                         object
                     )
@@ -431,8 +470,8 @@ export class ListWidget extends EmbeddedWidget {
         let dataValue;
         if (this.data) {
             if (
-                flowContext.DocumentStore.isAppletProject ||
-                flowContext.DocumentStore.isDashboardProject
+                flowContext.DocumentStore.project.isAppletProject ||
+                flowContext.DocumentStore.project.isDashboardProject
             ) {
                 try {
                     dataValue = evalExpression(flowContext, this, this.data);
@@ -505,7 +544,7 @@ export class ListWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(ListWidget);
+registerClass("ListWidget", ListWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -558,16 +597,16 @@ export class GridWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Grid.png",
 
         check: (object: GridWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             if (!object.itemWidget) {
                 messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
+                    new Message(
+                        MessageType.ERROR,
                         "Grid item widget is missing",
                         object
                     )
@@ -648,7 +687,7 @@ export class GridWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(GridWidget);
+registerClass("GridWidget", GridWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -715,10 +754,10 @@ export class SelectWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Select.png",
 
         check: (object: SelectWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             } else {
                 let variable = findVariable(getProject(object), object.data);
                 if (variable) {
@@ -736,16 +775,16 @@ export class SelectWidget extends EmbeddedWidget {
                     }
                     if (enumItems.length > object.widgets.length) {
                         messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
+                            new Message(
+                                MessageType.ERROR,
                                 "Some select children are missing",
                                 object
                             )
                         );
                     } else if (enumItems.length < object.widgets.length) {
                         messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
+                            new Message(
+                                MessageType.ERROR,
                                 "Too many select children defined",
                                 object
                             )
@@ -757,8 +796,8 @@ export class SelectWidget extends EmbeddedWidget {
             object.widgets.forEach(childObject => {
                 if (childObject.width != object.width) {
                     messages.push(
-                        new output.Message(
-                            output.Type.WARNING,
+                        new Message(
+                            MessageType.WARNING,
                             "Child of Select widget has different width",
                             childObject
                         )
@@ -767,8 +806,8 @@ export class SelectWidget extends EmbeddedWidget {
 
                 if (childObject.height != object.height) {
                     messages.push(
-                        new output.Message(
-                            output.Type.WARNING,
+                        new Message(
+                            MessageType.WARNING,
                             "Child of Select widget has different height",
                             childObject
                         )
@@ -862,7 +901,7 @@ export class SelectWidget extends EmbeddedWidget {
 
         if (this.data) {
             let index: number;
-            if (flowContext.DocumentStore.isAppletProject) {
+            if (flowContext.DocumentStore.project.isAppletProject) {
                 let indexValue;
                 try {
                     indexValue = evalExpression(flowContext, this, this.data);
@@ -924,7 +963,7 @@ export class SelectWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(SelectWidget);
+registerClass("SelectWidget", SelectWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1010,12 +1049,12 @@ export class LayoutViewWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/LayoutView.png",
 
         check: (object: LayoutViewWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data && !object.layout) {
                 messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
+                    new Message(
+                        MessageType.ERROR,
                         "Either layout or data must be set",
                         object
                     )
@@ -1023,8 +1062,8 @@ export class LayoutViewWidget extends EmbeddedWidget {
             } else {
                 if (object.data && object.layout) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             "Both layout and data set, only layout is used",
                             object
                         )
@@ -1035,7 +1074,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                     let layout = findPage(getProject(object), object.layout);
                     if (!layout) {
                         messages.push(
-                            output.propertyNotFoundMessage(object, "layout")
+                            propertyNotFoundMessage(object, "layout")
                         );
                     }
                 }
@@ -1370,7 +1409,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(LayoutViewWidget);
+registerClass("LayoutViewWidget", LayoutViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1448,10 +1487,10 @@ export class DisplayDataWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Data.png",
 
         check: (object: DisplayDataWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             if (object.displayOption === undefined) {
@@ -1459,7 +1498,7 @@ export class DisplayDataWidget extends EmbeddedWidget {
                     getProject(object).settings.general.projectVersion !== "v1"
                 ) {
                     messages.push(
-                        output.propertyNotSetMessage(object, "displayOption")
+                        propertyNotSetMessage(object, "displayOption")
                     );
                 }
             }
@@ -1474,7 +1513,7 @@ export class DisplayDataWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -1576,7 +1615,7 @@ export class DisplayDataWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(DisplayDataWidget);
+registerClass("DisplayDataWidget", DisplayDataWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1637,14 +1676,14 @@ export class TextWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Text.png",
 
         check: (object: TextWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (
                 !object.text &&
                 !object.data &&
                 !object.isInputProperty("data")
             ) {
-                messages.push(output.propertyNotSetMessage(object, "text"));
+                messages.push(propertyNotSetMessage(object, "text"));
             }
 
             return messages;
@@ -1674,8 +1713,8 @@ export class TextWidget extends EmbeddedWidget {
                 if (this.name) {
                     text = this.name;
                 } else if (
-                    flowContext.DocumentStore.isDashboardProject ||
-                    flowContext.DocumentStore.isAppletProject
+                    flowContext.DocumentStore.project.isDashboardProject ||
+                    flowContext.DocumentStore.project.isAppletProject
                 ) {
                     return <span className="expression">{this.data}</span>;
                 } else {
@@ -1696,7 +1735,7 @@ export class TextWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? (
+                {flowContext.DocumentStore.project.isDashboardProject ? (
                     <span>{text}</span>
                 ) : (
                     <ComponentCanvas
@@ -1739,7 +1778,7 @@ export class TextWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(TextWidget);
+registerClass("TextWidget", TextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2042,10 +2081,10 @@ export class MultilineTextWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/MultilineText.png",
 
         check: (object: MultilineTextWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.text && !object.data) {
-                messages.push(output.propertyNotSetMessage(object, "text"));
+                messages.push(propertyNotSetMessage(object, "text"));
             }
 
             return messages;
@@ -2058,7 +2097,7 @@ export class MultilineTextWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2116,7 +2155,7 @@ export class MultilineTextWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(MultilineTextWidget);
+registerClass("MultilineTextWidget", MultilineTextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2152,12 +2191,10 @@ export class RectangleWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Rectangle.png",
 
         check: (object: RectangleWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (object.data) {
-                messages.push(
-                    output.propertySetButNotUsedMessage(object, "data")
-                );
+                messages.push(propertySetButNotUsedMessage(object, "data"));
             }
 
             return messages;
@@ -2170,7 +2207,7 @@ export class RectangleWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2260,7 +2297,7 @@ export class RectangleWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(RectangleWidget);
+registerClass("RectangleWidget", RectangleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2347,12 +2384,12 @@ export class BitmapWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Bitmap.png",
 
         check: (object: BitmapWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data && !object.bitmap) {
                 messages.push(
-                    new output.Message(
-                        output.Type.ERROR,
+                    new Message(
+                        MessageType.ERROR,
                         "Either bitmap or data must be set",
                         object
                     )
@@ -2360,8 +2397,8 @@ export class BitmapWidget extends EmbeddedWidget {
             } else {
                 if (object.data && object.bitmap) {
                     messages.push(
-                        new output.Message(
-                            output.Type.ERROR,
+                        new Message(
+                            MessageType.ERROR,
                             "Both bitmap and data set, only bitmap is used",
                             object
                         )
@@ -2372,7 +2409,7 @@ export class BitmapWidget extends EmbeddedWidget {
                     let bitmap = findBitmap(getProject(object), object.bitmap);
                     if (!bitmap) {
                         messages.push(
-                            output.propertyNotFoundMessage(object, "bitmap")
+                            propertyNotFoundMessage(object, "bitmap")
                         );
                     }
                 }
@@ -2401,7 +2438,7 @@ export class BitmapWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2502,7 +2539,7 @@ export class BitmapWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(BitmapWidget);
+registerClass("BitmapWidget", BitmapWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2534,20 +2571,20 @@ export class ButtonWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Button.png",
 
         check: (object: ButtonWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (
                 !object.text &&
                 !object.data &&
                 !object.isInputProperty("data")
             ) {
-                messages.push(output.propertyNotSetMessage(object, "text"));
+                messages.push(propertyNotSetMessage(object, "text"));
             }
 
             const DocumentStore = getDocumentStore(object);
             if (
-                !DocumentStore.isDashboardProject &&
-                !DocumentStore.isAppletProject
+                !DocumentStore.project.isDashboardProject &&
+                !DocumentStore.project.isAppletProject
             ) {
                 checkObjectReference(object, "enabled", messages, true);
             }
@@ -2581,7 +2618,7 @@ export class ButtonWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? (
+                {flowContext.DocumentStore.project.isDashboardProject ? (
                     <button
                         className="btn btn-secondary"
                         disabled={!buttonEnabled}
@@ -2637,7 +2674,7 @@ export class ButtonWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(ButtonWidget);
+registerClass("ButtonWidget", ButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2671,18 +2708,18 @@ export class ToggleButtonWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/ToggleButton.png",
 
         check: (object: ToggleButtonWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             if (!object.text1) {
-                messages.push(output.propertyNotSetMessage(object, "text1"));
+                messages.push(propertyNotSetMessage(object, "text1"));
             }
 
             if (!object.text2) {
-                messages.push(output.propertyNotSetMessage(object, "text2"));
+                messages.push(propertyNotSetMessage(object, "text2"));
             }
 
             return messages;
@@ -2695,7 +2732,7 @@ export class ToggleButtonWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2731,7 +2768,7 @@ export class ToggleButtonWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(ToggleButtonWidget);
+registerClass("ToggleButtonWidget", ToggleButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2753,10 +2790,10 @@ export class ButtonGroupWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/ButtonGroup.png",
 
         check: (object: ButtonGroupWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             return messages;
@@ -2769,7 +2806,7 @@ export class ButtonGroupWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -2887,7 +2924,7 @@ export class ButtonGroupWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(ButtonGroupWidget);
+registerClass("ButtonGroupWidget", ButtonGroupWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2952,36 +2989,28 @@ export class BarGraphWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/BarGraph.png",
 
         check: (object: BarGraphWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             const project = getProject(object);
 
             if (object.line1Data) {
                 if (!findVariable(project, object.line1Data)) {
-                    messages.push(
-                        output.propertyNotFoundMessage(object, "line1Data")
-                    );
+                    messages.push(propertyNotFoundMessage(object, "line1Data"));
                 }
             } else {
-                messages.push(
-                    output.propertyNotSetMessage(object, "line1Data")
-                );
+                messages.push(propertyNotSetMessage(object, "line1Data"));
             }
 
             if (object.line2Data) {
                 if (!findVariable(project, object.line2Data)) {
-                    messages.push(
-                        output.propertyNotFoundMessage(object, "line2Data")
-                    );
+                    messages.push(propertyNotFoundMessage(object, "line2Data"));
                 }
             } else {
-                messages.push(
-                    output.propertyNotSetMessage(object, "line2Data")
-                );
+                messages.push(propertyNotSetMessage(object, "line2Data"));
             }
 
             return messages;
@@ -2994,7 +3023,7 @@ export class BarGraphWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3281,7 +3310,7 @@ export class BarGraphWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(BarGraphWidget);
+registerClass("BarGraphWidget", BarGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3323,10 +3352,10 @@ export class YTGraphWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/YTGraph.png",
 
         check: (object: YTGraphWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             const project = getProject(object);
@@ -3335,13 +3364,11 @@ export class YTGraphWidget extends EmbeddedWidget {
                 if (object.y2Data) {
                     if (!findVariable(project, object.y2Data)) {
                         messages.push(
-                            output.propertyNotFoundMessage(object, "y2Data")
+                            propertyNotFoundMessage(object, "y2Data")
                         );
                     }
                 } else {
-                    messages.push(
-                        output.propertyNotSetMessage(object, "y2Data")
-                    );
+                    messages.push(propertyNotSetMessage(object, "y2Data"));
                 }
             }
 
@@ -3355,7 +3382,7 @@ export class YTGraphWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3414,7 +3441,7 @@ export class YTGraphWidget extends EmbeddedWidget {
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
-registerClass(YTGraphWidget);
+registerClass("YTGraphWidget", YTGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3448,22 +3475,18 @@ export class UpDownWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/UpDown.png",
 
         check: (object: UpDownWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             if (!object.downButtonText) {
-                messages.push(
-                    output.propertyNotSetMessage(object, "downButtonText")
-                );
+                messages.push(propertyNotSetMessage(object, "downButtonText"));
             }
 
             if (!object.upButtonText) {
-                messages.push(
-                    output.propertyNotSetMessage(object, "upButtonText")
-                );
+                messages.push(propertyNotSetMessage(object, "upButtonText"));
             }
 
             return messages;
@@ -3476,7 +3499,7 @@ export class UpDownWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3551,7 +3574,7 @@ export class UpDownWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(UpDownWidget);
+registerClass("UpDownWidget", UpDownWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3593,56 +3616,46 @@ export class ListGraphWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/ListGraph.png",
 
         check: (object: ListGraphWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             const project = getProject(object);
 
             if (object.dwellData) {
                 if (!findVariable(project, object.dwellData)) {
-                    messages.push(
-                        output.propertyNotFoundMessage(object, "dwellData")
-                    );
+                    messages.push(propertyNotFoundMessage(object, "dwellData"));
                 }
             } else {
-                messages.push(
-                    output.propertyNotSetMessage(object, "dwellData")
-                );
+                messages.push(propertyNotSetMessage(object, "dwellData"));
             }
 
             if (object.y1Data) {
                 if (!findVariable(project, object.y1Data)) {
-                    messages.push(
-                        output.propertyNotFoundMessage(object, "y1Data")
-                    );
+                    messages.push(propertyNotFoundMessage(object, "y1Data"));
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "y1Data"));
+                messages.push(propertyNotSetMessage(object, "y1Data"));
             }
 
             if (object.y2Data) {
                 if (!findVariable(project, object.y2Data)) {
-                    messages.push(
-                        output.propertyNotFoundMessage(object, "y2Data")
-                    );
+                    messages.push(propertyNotFoundMessage(object, "y2Data"));
                 }
             } else {
-                messages.push(output.propertyNotSetMessage(object, "y2Data"));
+                messages.push(propertyNotSetMessage(object, "y2Data"));
             }
 
             if (object.cursorData) {
                 if (!findVariable(project, object.cursorData)) {
                     messages.push(
-                        output.propertyNotFoundMessage(object, "cursorData")
+                        propertyNotFoundMessage(object, "cursorData")
                     );
                 }
             } else {
-                messages.push(
-                    output.propertyNotSetMessage(object, "cursorData")
-                );
+                messages.push(propertyNotSetMessage(object, "cursorData"));
             }
 
             return messages;
@@ -3655,7 +3668,7 @@ export class ListGraphWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3731,7 +3744,7 @@ export class ListGraphWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(ListGraphWidget);
+registerClass("ListGraphWidget", ListGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3751,10 +3764,10 @@ export class AppViewWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/AppView.png",
 
         check: (object: AppViewWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             return messages;
@@ -3785,7 +3798,7 @@ export class AppViewWidget extends EmbeddedWidget {
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
-registerClass(AppViewWidget);
+registerClass("AppViewWidget", AppViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3817,22 +3830,18 @@ export class ScrollBarWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/UpDown.png",
 
         check: (object: ScrollBarWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             if (!object.leftButtonText) {
-                messages.push(
-                    output.propertyNotSetMessage(object, "leftButtonText")
-                );
+                messages.push(propertyNotSetMessage(object, "leftButtonText"));
             }
 
             if (!object.rightButtonText) {
-                messages.push(
-                    output.propertyNotSetMessage(object, "rightButtonText")
-                );
+                messages.push(propertyNotSetMessage(object, "rightButtonText"));
             }
 
             return messages;
@@ -3845,7 +3854,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -3982,7 +3991,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(ScrollBarWidget);
+registerClass("ScrollBarWidget", ScrollBarWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4006,7 +4015,7 @@ export class ProgressWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4061,7 +4070,7 @@ export class ProgressWidget extends EmbeddedWidget {
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
-registerClass(ProgressWidget);
+registerClass("ProgressWidget", ProgressWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4079,10 +4088,10 @@ export class CanvasWidget extends EmbeddedWidget {
         icon: "../home/_images/widgets/Canvas.png",
 
         check: (object: CanvasWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             return messages;
@@ -4095,7 +4104,7 @@ export class CanvasWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4121,7 +4130,7 @@ export class CanvasWidget extends EmbeddedWidget {
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
-registerClass(CanvasWidget);
+registerClass("CanvasWidget", CanvasWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4166,10 +4175,10 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
         ),
 
         check: (object: CanvasWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!object.data) {
-                messages.push(output.propertyNotSetMessage(object, "data"));
+                messages.push(propertyNotSetMessage(object, "data"));
             }
 
             return messages;
@@ -4549,7 +4558,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4588,7 +4597,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(GaugeEmbeddedWidget);
+registerClass("GaugeEmbeddedWidget", GaugeEmbeddedWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4680,31 +4689,29 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
         ),
 
         check: (widget: InputEmbeddedWidget) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!widget.data) {
-                messages.push(output.propertyNotSetMessage(widget, "data"));
+                messages.push(propertyNotSetMessage(widget, "data"));
             }
 
             if (!widget.min) {
-                messages.push(output.propertyNotSetMessage(widget, "min"));
+                messages.push(propertyNotSetMessage(widget, "min"));
             }
 
             if (!widget.max) {
-                messages.push(output.propertyNotSetMessage(widget, "min"));
+                messages.push(propertyNotSetMessage(widget, "min"));
             }
 
             if (widget.type === "number") {
                 if (!widget.precision) {
-                    messages.push(
-                        output.propertyNotSetMessage(widget, "precision")
-                    );
+                    messages.push(propertyNotSetMessage(widget, "precision"));
                 }
             }
 
             if (widget.type === "number") {
                 if (!widget.unit) {
-                    messages.push(output.propertyNotSetMessage(widget, "unit"));
+                    messages.push(propertyNotSetMessage(widget, "unit"));
                 }
             }
 
@@ -4718,7 +4725,7 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext) {
         return (
             <>
-                {flowContext.DocumentStore.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         flowContext={flowContext}
                         component={this}
@@ -4798,7 +4805,7 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     }
 }
 
-registerClass(InputEmbeddedWidget);
+registerClass("InputEmbeddedWidget", InputEmbeddedWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4920,4 +4927,4 @@ export class TextInputWidget extends Widget {
     }
 }
 
-registerClass(TextInputWidget);
+registerClass("TextInputWidget", TextInputWidget);

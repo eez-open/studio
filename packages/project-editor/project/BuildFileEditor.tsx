@@ -4,7 +4,7 @@ import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
-import { BuildFile } from "project-editor/project/project";
+import type { BuildFile } from "project-editor/project/project";
 import { ProjectContext } from "./context";
 
 @observer

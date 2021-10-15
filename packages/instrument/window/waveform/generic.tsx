@@ -1,55 +1,59 @@
 import React from "react";
-import { observable, computed, runInAction, action, toJS, when, reaction } from "mobx";
+import {
+    observable,
+    computed,
+    runInAction,
+    action,
+    toJS,
+    when,
+    reaction
+} from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
-import tinycolor from "tinycolor2";
 
-import { objectEqual, objectClone } from "eez-studio-shared/util";
-import { capitalize } from "eez-studio-shared/string";
+import { objectEqual } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
-import { IUnit, SAMPLING_RATE_UNIT, UNITS, TIME_UNIT } from "eez-studio-shared/units";
+import { UNITS, TIME_UNIT } from "eez-studio-shared/units";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import { Point } from "eez-studio-shared/geometry";
-import * as I10nModule from "eez-studio-shared/i10n";
-
-import { makeValidator, validators } from "eez-studio-shared/validation";
+import type * as I10nModule from "eez-studio-shared/i10n";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
-import { PropertyList, TextInputProperty, SelectProperty } from "eez-studio-ui/properties";
+import { PropertyList } from "eez-studio-ui/properties";
 import {
-    AxisController,
     ChartController,
     ChartMode,
-    ChartsController,
     IAxisModel,
-    ZoomMode,
     LineController,
-    IViewOptions,
-    IViewOptionsAxesLines,
-    IViewOptionsAxesLinesType
+    AxisController,
+    ChartsController,
+    RulersModel,
+    MeasurementsModel,
+    initValuesAccesor,
+    WaveformFormat,
+    getNearestValuePoint,
+    WaveformLineView
 } from "eez-studio-ui/chart/chart";
-import { RulersModel } from "eez-studio-ui/chart/rulers";
-import { MeasurementsModel } from "eez-studio-ui/chart/measurements";
-import { initValuesAccesor, WaveformFormat } from "eez-studio-ui/chart/buffer";
-import { getNearestValuePoint } from "eez-studio-ui/chart/generic-chart";
 import * as notification from "eez-studio-ui/notification";
 
 import { checkMime } from "instrument/connection/file-type";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
 
-import { IWaveformLink, MultiWaveformChartsController } from "instrument/window/waveform/multi";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
-import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
+import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
+import { ViewOptions } from "./ViewOptions";
+import { WaveformAxisModel } from "./WaveformAxisModel";
+import { WaveformDefinitionProperties } from "./WaveformDefinitionProperties";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IWaveformDefinition {
+export interface IWaveformDefinition {
     samplingRate: number;
     format: WaveformFormat;
     unitName: keyof typeof UNITS;
@@ -86,184 +90,12 @@ export function isWaveform(activityLogEntry: IActivityLogEntry) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ViewOptions implements IViewOptions {
-    constructor(props?: any) {
-        if (props) {
-            Object.assign(this, props);
-        }
-    }
-
-    @observable axesLines: IViewOptionsAxesLines = {
-        type: "dynamic",
-        steps: {
-            x: [],
-            y: []
-        },
-        majorSubdivision: {
-            horizontal: 24,
-            vertical: 8
-        },
-        minorSubdivision: {
-            horizontal: 5,
-            vertical: 5
-        },
-        snapToGrid: true,
-        defaultZoomMode: "default"
-    };
-
-    @observable showAxisLabels: boolean = true;
-    @observable showZoomButtons: boolean = true;
-
-    setAxesLinesType(type: IViewOptionsAxesLinesType) {
-        this.axesLines.type = type;
-    }
-
-    setAxesLinesMajorSubdivisionHorizontal(value: number) {
-        this.axesLines.majorSubdivision.horizontal = value;
-    }
-
-    setAxesLinesMajorSubdivisionVertical(value: number) {
-        this.axesLines.majorSubdivision.vertical = value;
-    }
-
-    setAxesLinesMinorSubdivisionHorizontal(value: number) {
-        this.axesLines.minorSubdivision.horizontal = value;
-    }
-
-    setAxesLinesMinorSubdivisionVertical(value: number) {
-        this.axesLines.minorSubdivision.vertical = value;
-    }
-
-    setAxesLinesStepsX(steps: number[]) {
-        this.axesLines.steps.x = steps;
-    }
-
-    setAxesLinesStepsY(index: number, steps: number[]): void {
-        this.axesLines.steps.y[index] = steps;
-    }
-
-    setAxesLinesSnapToGrid(value: boolean): void {
-        this.axesLines.snapToGrid = value;
-    }
-
-    setShowAxisLabels(value: boolean) {
-        this.showAxisLabels = value;
-    }
-
-    setShowZoomButtons(value: boolean) {
-        this.showZoomButtons = value;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const CONF_RANGE_OVERFLOW_PERCENT = 5;
-
-export class WaveformAxisModel implements IAxisModel {
-    constructor(private waveform: Waveform, private waveformLink: IWaveformLink | undefined) {}
-
-    @computed
-    get minValue() {
-        return (
-            this.waveform.minValue -
-            (CONF_RANGE_OVERFLOW_PERCENT / 100) * (this.waveform.maxValue - this.waveform.minValue)
-        );
-    }
-
-    @computed
-    get maxValue() {
-        return (
-            this.waveform.maxValue +
-            (CONF_RANGE_OVERFLOW_PERCENT / 100) * (this.waveform.maxValue - this.waveform.minValue)
-        );
-    }
-
-    @computed
-    get defaultFrom() {
-        return this.minValue;
-    }
-
-    @computed
-    get defaultTo() {
-        return this.maxValue;
-    }
-
-    @computed
-    get unit() {
-        return UNITS[this.waveform.waveformDefinition.unitName];
-    }
-
-    @observable dynamic: {
-        zoomMode: ZoomMode;
-        from: number;
-        to: number;
-    } = {
-        zoomMode: "default",
-        from: 0,
-        to: 0
-    };
-
-    @observable fixed: {
-        zoomMode: ZoomMode;
-        subdivisionOffset: number;
-        subdivisonScale: number;
-    } = {
-        zoomMode: "default",
-        subdivisionOffset: 0,
-        subdivisonScale: 0
-    };
-
-    get defaultSubdivisionOffset(): number | undefined {
-        return this.waveform.yAxisDefaultSubdivisionOffset;
-    }
-
-    get defaultSubdivisionScale() {
-        return this.waveform.yAxisDefaultSubdivisionScale;
-    }
-
-    get label() {
-        return (
-            (this.waveformLink && this.waveformLink.label) ||
-            this.waveform.waveformDefinition.label ||
-            capitalize(this.unit.name)
-        );
-    }
-
-    get color() {
-        return (
-            (this.waveformLink && this.waveformLink.color) ||
-            this.waveform.waveformDefinition.color ||
-            this.unit.color
-        );
-    }
-
-    get colorInverse() {
-        let color =
-            (this.waveformLink && this.waveformLink.colorInverse) ||
-            this.waveform.waveformDefinition.colorInverse;
-        if (color) {
-            return color;
-        }
-
-        color =
-            (this.waveformLink && this.waveformLink.color) ||
-            this.waveform.waveformDefinition.color;
-        if (color) {
-            // make color a little bit darker to look better on white background
-            const c = tinycolor(color);
-            const hsl = c.toHsl();
-            hsl.l = hsl.l - 0.15;
-            return tinycolor(hsl).toHexString();
-        }
-
-        return this.unit.colorInverse;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class WaveformChartsController extends ChartsController {
-    constructor(public waveform: Waveform, mode: ChartMode, xAxisModel: IAxisModel) {
+    constructor(
+        public waveform: Waveform,
+        mode: ChartMode,
+        xAxisModel: IAxisModel
+    ) {
         super(mode, xAxisModel, waveform.viewOptions);
     }
 
@@ -282,6 +114,8 @@ export class WaveformChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Waveform extends FileHistoryItem {
+    canBePartOfMultiChart = true;
+
     constructor(
         activityLogEntry: IActivityLogEntry | FileHistoryItem,
         appStore: InstrumentAppStore
@@ -303,8 +137,10 @@ export class Waveform extends FileHistoryItem {
         when(
             () => this.transferSucceeded,
             () => {
-                scheduleTask(`Load waveform ${this.id}`, Priority.Lowest, async () =>
-                    this.initWaveformDefinition()
+                scheduleTask(
+                    `Load waveform ${this.id}`,
+                    Priority.Lowest,
+                    async () => this.initWaveformDefinition()
                 );
             }
         );
@@ -314,7 +150,9 @@ export class Waveform extends FileHistoryItem {
             () => toJS(this.waveformDefinition),
             waveformDefinition => {
                 const message = JSON.parse(this.message);
-                if (!objectEqual(message.waveformDefinition, waveformDefinition)) {
+                if (
+                    !objectEqual(message.waveformDefinition, waveformDefinition)
+                ) {
                     logUpdate(
                         this.appStore.history.options.store,
                         {
@@ -421,7 +259,9 @@ export class Waveform extends FileHistoryItem {
             () => JSON.parse(this.message),
             message => {
                 const waveformDefinition = toJS(this.waveformDefinition);
-                if (!objectEqual(message.waveformDefinition, waveformDefinition)) {
+                if (
+                    !objectEqual(message.waveformDefinition, waveformDefinition)
+                ) {
                     this.initWaveformDefinition();
                 }
             }
@@ -509,11 +349,15 @@ export class Waveform extends FileHistoryItem {
         let migrated = false;
 
         if (this.waveformHistoryItemMessage.waveformDefinition) {
-            const oldFormat = this.waveformDefinition && this.waveformDefinition.format;
-            const oldOffset = this.waveformDefinition && this.waveformDefinition.offset;
-            const oldScale = this.waveformDefinition && this.waveformDefinition.scale;
+            const oldFormat =
+                this.waveformDefinition && this.waveformDefinition.format;
+            const oldOffset =
+                this.waveformDefinition && this.waveformDefinition.offset;
+            const oldScale =
+                this.waveformDefinition && this.waveformDefinition.scale;
 
-            this.waveformDefinition = this.waveformHistoryItemMessage.waveformDefinition;
+            this.waveformDefinition =
+                this.waveformHistoryItemMessage.waveformDefinition;
             migrated = this.migrateWaveformDefinition();
             if (!migrated) {
                 if (
@@ -550,7 +394,8 @@ export class Waveform extends FileHistoryItem {
         return JSON.parse(this.message);
     }
 
-    @observable.shallow waveformDefinition = this.getDefaultWaveformDefinition();
+    @observable.shallow waveformDefinition =
+        this.getDefaultWaveformDefinition();
 
     @observable length: number = 0;
 
@@ -592,12 +437,17 @@ export class Waveform extends FileHistoryItem {
 
     chartsController: ChartsController;
 
-    createChartsController(mode: ChartMode): ChartsController {
+    createChartsController(
+        displayOption: ChartsDisplayOption,
+        mode: ChartMode
+    ): ChartsController {
         if (
             this.chartsController &&
             this.chartsController.mode === mode &&
-            this.chartsController.xAxisController.axisModel === this.xAxisModel &&
-            this.chartsController.chartControllers[0].yAxisController.axisModel === this.yAxisModel
+            this.chartsController.xAxisController.axisModel ===
+                this.xAxisModel &&
+            this.chartsController.chartControllers[0].yAxisController
+                .axisModel === this.yAxisModel
         ) {
             return this.chartsController;
         }
@@ -606,16 +456,24 @@ export class Waveform extends FileHistoryItem {
             this.chartsController.destroy();
         }
 
-        const chartsController = new WaveformChartsController(this, mode, this.xAxisModel);
+        const chartsController = new WaveformChartsController(
+            this,
+            mode,
+            this.xAxisModel
+        );
         this.chartsController = chartsController;
 
         this.xAxisModel.chartsController = chartsController;
 
         chartsController.chartControllers = [
-            this.createChartController(chartsController, "unknown", this.yAxisModel)
+            this.createChartController(
+                chartsController,
+                "unknown",
+                this.yAxisModel
+            )
         ];
 
-        if (!(chartsController instanceof MultiWaveformChartsController)) {
+        if (!chartsController.isMultiWaveformChartsController) {
             chartsController.createRulersController(this.rulers);
             chartsController.createMeasurementsController(this.measurements);
         }
@@ -623,7 +481,11 @@ export class Waveform extends FileHistoryItem {
         return chartsController;
     }
 
-    createChartController(chartsController: ChartsController, id: string, axisModel: IAxisModel) {
+    createChartController(
+        chartsController: ChartsController,
+        id: string,
+        axisModel: IAxisModel
+    ) {
         const chartController = new ChartController(chartsController, id);
 
         chartController.createYAxisController(axisModel);
@@ -658,7 +520,9 @@ export class Waveform extends FileHistoryItem {
             this.waveformDefinition.format === WaveformFormat.RIGOL_BYTE ||
             this.waveformDefinition.format === WaveformFormat.RIGOL_WORD
         ) {
-            return this.waveformDataToValue(this.waveformDefinition.cachedMinValue);
+            return this.waveformDataToValue(
+                this.waveformDefinition.cachedMinValue
+            );
         } else {
             return this.waveformDefinition.cachedMinValue;
         }
@@ -669,14 +533,21 @@ export class Waveform extends FileHistoryItem {
             this.waveformDefinition.format === WaveformFormat.RIGOL_BYTE ||
             this.waveformDefinition.format === WaveformFormat.RIGOL_WORD
         ) {
-            return this.waveformDataToValue(this.waveformDefinition.cachedMaxValue);
+            return this.waveformDataToValue(
+                this.waveformDefinition.cachedMaxValue
+            );
         } else {
             return this.waveformDefinition.cachedMaxValue;
         }
     }
 
     renderToolbar(chartsController: ChartsController): JSX.Element {
-        return <WaveformToolbar chartsController={chartsController} waveform={this} />;
+        return (
+            <WaveformToolbar
+                chartsController={chartsController}
+                waveform={this}
+            />
+        );
     }
 
     openConfigurationDialog() {
@@ -684,7 +555,9 @@ export class Waveform extends FileHistoryItem {
     }
 
     get xAxisDefaultSubdivisionOffset(): number | undefined {
-        return this.waveformHistoryItemMessage.horizontalScale !== undefined ? 0 : undefined;
+        return this.waveformHistoryItemMessage.horizontalScale !== undefined
+            ? 0
+            : undefined;
     }
 
     get xAxisDefaultSubdivisionScale() {
@@ -695,10 +568,15 @@ export class Waveform extends FileHistoryItem {
     get yAxisDefaultSubdivisionOffsetAndScale() {
         if (this.waveformHistoryItemMessage.verticalScale) {
             const verticalScale = this.waveformHistoryItemMessage.verticalScale;
-            const min = Math.floor(this.yAxisModel.minValue / verticalScale) * verticalScale;
-            const max = Math.ceil(this.yAxisModel.maxValue / verticalScale) * verticalScale;
-            const subdivision = this.waveformHistoryItemMessage.viewOptions.axesLines
-                .majorSubdivision.vertical;
+            const min =
+                Math.floor(this.yAxisModel.minValue / verticalScale) *
+                verticalScale;
+            const max =
+                Math.ceil(this.yAxisModel.maxValue / verticalScale) *
+                verticalScale;
+            const subdivision =
+                this.waveformHistoryItemMessage.viewOptions.axesLines
+                    .majorSubdivision.vertical;
 
             return {
                 offset: (min + max) / 2 - (verticalScale * subdivision) / 2,
@@ -728,6 +606,12 @@ export class Waveform extends FileHistoryItem {
     get valueUnit() {
         return this.waveformDefinition.unitName;
     }
+
+    isZoomable = true;
+
+    convertToCsv = () => {
+        return convertToCsv(this);
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -771,161 +655,6 @@ class WaveformLineController extends LineController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class WaveformDefinitionProperties {
-    constructor(public waveformDefinition: IWaveformDefinition) {
-        const unit = UNITS[this.waveformDefinition.unitName];
-
-        this.props = {
-            samplingRate: SAMPLING_RATE_UNIT.formatValue(this.waveformDefinition.samplingRate),
-            format: this.waveformDefinition.format,
-            unit,
-            offset: this.waveformDefinition.offset.toString(),
-            scale: this.waveformDefinition.scale.toString()
-        };
-
-        this.propsValidated = objectClone(this.waveformDefinition);
-    }
-
-    @observable props: {
-        samplingRate: string;
-        format: WaveformFormat;
-        unit: IUnit;
-        offset: string;
-        scale: string;
-    };
-
-    propsValidated: IWaveformDefinition;
-
-    @observable errors: boolean;
-
-    validator = makeValidator({
-        samplingRate: [
-            validators.required,
-            () => {
-                let samplingRate = SAMPLING_RATE_UNIT.parseValue(this.props.samplingRate);
-                if (typeof samplingRate !== "number") {
-                    return "Invalid value.";
-                }
-                this.propsValidated.samplingRate = samplingRate;
-                return null;
-            },
-            () => {
-                return validators.rangeExclusive(0)(this.propsValidated, "sampling rate");
-            }
-        ],
-
-        offset: [
-            validators.required,
-            () => {
-                let offset = parseFloat(this.props.offset);
-                if (typeof offset !== "number") {
-                    return "Invalid value.";
-                }
-                this.propsValidated.offset = offset;
-                return null;
-            }
-        ],
-
-        scale: [
-            validators.required,
-            () => {
-                let scale = parseFloat(this.props.scale);
-                if (typeof scale !== "number") {
-                    return "Invalid value.";
-                }
-                this.propsValidated.scale = scale;
-                return null;
-            },
-            () => {
-                if (this.propsValidated.scale <= 0) {
-                    return "Must be greater than 0";
-                }
-                return null;
-            }
-        ]
-    });
-
-    async checkValidity() {
-        const result = await this.validator.checkValidity(this.props);
-
-        runInAction(() => {
-            this.errors = !result;
-        });
-
-        if (!result) {
-            return undefined;
-        }
-
-        this.propsValidated.format = this.props.format;
-        this.propsValidated.unitName = this.props.unit.name as keyof typeof UNITS;
-
-        return this.propsValidated;
-    }
-
-    get units(): IUnit[] {
-        const units: IUnit[] = [];
-        Object.keys(UNITS).forEach((unitName: keyof typeof UNITS) => {
-            if (units.indexOf(UNITS[unitName]) === -1) {
-                units.push(UNITS[unitName]);
-            }
-        });
-        return units;
-    }
-
-    render() {
-        return [
-            <TextInputProperty
-                key="samplingRate"
-                name="Sampling rate"
-                value={this.props.samplingRate}
-                onChange={action((value: string) => (this.props.samplingRate = value))}
-                errors={this.validator.errors.samplingRate}
-            />,
-            <SelectProperty
-                key="format"
-                name="Format"
-                value={this.props.format.toString()}
-                onChange={action((value: string) => (this.props.format = parseInt(value)))}
-            >
-                <option value={WaveformFormat.UNKNOWN.toString()}>Unknown</option>
-                <option value={WaveformFormat.FLOATS_32BIT.toString()}>32-bit float</option>
-                <option value={WaveformFormat.FLOATS_64BIT.toString()}>64-bit float</option>
-                <option value={WaveformFormat.RIGOL_BYTE.toString()}>Byte (Rigol)</option>
-                <option value={WaveformFormat.RIGOL_WORD.toString()}>Word (Rigol)</option>
-                <option value={WaveformFormat.CSV_STRING.toString()}>CSV</option>
-            </SelectProperty>,
-            <SelectProperty
-                key="unit"
-                name="Unit"
-                value={this.props.unit.name}
-                onChange={action((value: keyof typeof UNITS) => (this.props.unit = UNITS[value]))}
-            >
-                {this.units.map(unit => (
-                    <option key={unit.name} value={unit.name}>
-                        {capitalize(unit.name)}
-                    </option>
-                ))}
-            </SelectProperty>,
-            <TextInputProperty
-                key="offset"
-                name="Offset"
-                value={this.props.offset}
-                onChange={action((value: string) => (this.props.offset = value))}
-                errors={this.validator.errors.offset}
-            />,
-            <TextInputProperty
-                key="scale"
-                name="Scale"
-                value={this.props.scale}
-                onChange={action((value: string) => (this.props.scale = value))}
-                errors={this.validator.errors.scale}
-            />
-        ];
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 @observer
 class WaveformConfigurationDialog extends React.Component<
     {
@@ -933,18 +662,25 @@ class WaveformConfigurationDialog extends React.Component<
     },
     {}
 > {
-    waveformProperties: WaveformDefinitionProperties = new WaveformDefinitionProperties(
-        this.props.waveform.waveformDefinition
-    );
+    waveformProperties: WaveformDefinitionProperties =
+        new WaveformDefinitionProperties(
+            this.props.waveform.waveformDefinition
+        );
 
     @bind
     async handleSubmit() {
-        const newWaveformDefinition = await this.waveformProperties.checkValidity();
+        const newWaveformDefinition =
+            await this.waveformProperties.checkValidity();
         if (!newWaveformDefinition) {
             return false;
         }
 
-        if (!objectEqual(this.props.waveform.waveformDefinition, newWaveformDefinition)) {
+        if (
+            !objectEqual(
+                this.props.waveform.waveformDefinition,
+                newWaveformDefinition
+            )
+        ) {
             const message = JSON.stringify(
                 Object.assign({}, this.props.waveform.fileState, {
                     waveformDefinition: newWaveformDefinition
@@ -979,7 +715,8 @@ class WaveformConfigurationDialog extends React.Component<
 }
 
 export async function convertToCsv(waveform: Waveform) {
-    const { getLocale } = require("eez-studio-shared/i10n") as typeof I10nModule;
+    const { getLocale } =
+        require("eez-studio-shared/i10n") as typeof I10nModule;
     const locale = getLocale();
 
     // determine CSV separator depending of locale usage of ","

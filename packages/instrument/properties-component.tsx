@@ -3,12 +3,12 @@ import { observable, action, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 
-import { IExtension } from "eez-studio-shared/extensions/extension";
 import { changeExtensionProperties } from "eez-studio-shared/extensions/extensions";
 import { PropertyList } from "eez-studio-ui/properties";
 import { CodeEditorProperty } from "eez-studio-ui/code-editor";
 
-import { IInstrumentExtensionProperties } from "instrument/instrument-extension";
+import type { IExtension } from "eez-studio-shared/extensions/extension";
+import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 
 interface PropertiesComponentProps {
     extension: IExtension;

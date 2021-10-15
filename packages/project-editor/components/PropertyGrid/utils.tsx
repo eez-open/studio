@@ -1,16 +1,18 @@
 import {
     IEezObject,
     PropertyInfo,
-    getInheritedValue,
-    getPropertyAsString,
     getParent,
     getKey,
     isPropertyHidden,
     isProperAncestor,
     getProperty
 } from "project-editor/core/object";
-import { Section } from "project-editor/core/output";
-import { getDocumentStore } from "project-editor/core/store";
+import { Section } from "project-editor/core/store";
+import {
+    getDocumentStore,
+    getInheritedValue,
+    getPropertyAsString
+} from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

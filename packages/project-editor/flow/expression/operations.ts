@@ -1,5 +1,5 @@
-import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/variable";
-import { ValueType } from "project-editor/features/variable/value-type";
+import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
+import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "./expression";
 
 export const binaryOperators: {

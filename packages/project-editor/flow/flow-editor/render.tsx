@@ -7,11 +7,14 @@ import { Point, Rect } from "eez-studio-shared/geometry";
 
 import { getId } from "project-editor/core/object";
 
+import { ProjectEditor } from "project-editor/project-editor-interface";
+
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
-import { Page } from "project-editor/features/page/page";
-import { Component, Widget } from "project-editor/flow/component";
-import { strokeWidth } from "./ConnectionLineComponent";
+import type { Page } from "project-editor/features/page/page";
+import type { Component } from "project-editor/flow/component";
+
+import { strokeWidth } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,8 +71,8 @@ export function calcComponentGeometry(
     el: HTMLElement,
     flowContext: IFlowContext
 ): ComponentGeometry {
-    const dInput = component instanceof Widget ? 2 : 4;
-    const dOutput = component instanceof Widget ? 0 : 4;
+    const dInput = component instanceof ProjectEditor.WidgetClass ? 2 : 4;
+    const dOutput = component instanceof ProjectEditor.WidgetClass ? 0 : 4;
 
     const transform = flowContext.viewState.transform;
 
@@ -86,7 +89,7 @@ export function calcComponentGeometry(
     const inputs: PortsGeometry = {};
     const outputs: PortsGeometry = {};
 
-    if (component instanceof Component) {
+    if (component instanceof ProjectEditor.ComponentClass) {
         el.querySelectorAll(`[data-connection-input-id]`).forEach(
             inputElement => {
                 const rectPort = transform.clientToPageRect(
@@ -242,7 +245,7 @@ export const ComponentEnclosure = observer(
 
         const uiStateStore = DocumentStore.uiStateStore;
 
-        if (component instanceof Component) {
+        if (component instanceof ProjectEditor.ComponentClass) {
             if (uiStateStore.isBreakpointAddedForComponent(component)) {
                 if (uiStateStore.isBreakpointEnabledForComponent(component)) {
                     breakpointClass = "enabled-breakpoint";

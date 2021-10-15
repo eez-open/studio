@@ -16,7 +16,6 @@ import {
 import { Tree } from "eez-studio-ui/tree";
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
 
-import { getProjectFeatures } from "project-editor/core/extensions";
 import {
     ClassInfo,
     PropertyInfo,
@@ -24,40 +23,36 @@ import {
     IEezObject,
     EezObject,
     PropertyType,
-    getChildOfObject,
     PropertyProps,
-    getObjectFromPath,
     getProperty,
-    findPropertyByNameInObject,
     getRootObject,
-    getAncestorOfType,
     getParent,
-    ProjectType
+    ProjectType,
+    MessageType
 } from "project-editor/core/object";
 import {
+    getChildOfObject,
+    getObjectFromPath,
+    findPropertyByNameInObject,
+    getAncestorOfType,
     Message,
     propertyNotSetMessage,
     propertyNotFoundMessage,
-    Type,
-    propertyInvalidValueMessage
-} from "project-editor/core/output";
-import {
+    propertyInvalidValueMessage,
     DocumentStoreClass,
     getDocumentStore
 } from "project-editor/core/store";
 
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
-import "project-editor/project/builtInFeatures";
-
-import { Action } from "project-editor/features/action/action";
-import {
+import type { Action } from "project-editor/features/action/action";
+import type {
     ProjectVariables,
     Variable
 } from "project-editor/features/variable/variable";
-import { Scpi } from "project-editor/features/scpi/scpi";
-import { Shortcuts } from "project-editor/features/shortcuts/shortcuts";
-import { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+import type { Scpi } from "project-editor/features/scpi/scpi";
+import type { Shortcuts } from "project-editor/features/shortcuts/project-shortcuts";
+import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 
 import {
     usage,
@@ -67,14 +62,15 @@ import {
 import { Color, Theme } from "project-editor/features/style/theme";
 import { guid } from "eez-studio-shared/guid";
 import { Page } from "project-editor/features/page/page";
-import { Style } from "project-editor/features/style/style";
-import { Font } from "project-editor/features/font/font";
-import { Bitmap } from "project-editor/features/bitmap/bitmap";
+import type { Style } from "project-editor/features/style/style";
+import type { Font } from "project-editor/features/font/font";
+import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Flow } from "project-editor/flow/flow";
 import { FlowEditor } from "project-editor/flow/flow-editor/editor";
 import { ContainerWidget, LayoutViewWidget } from "project-editor/flow/widgets";
 import { Widget } from "project-editor/flow/component";
 import { PagesNavigation } from "project-editor/features/page/PagesNavigation";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -142,7 +138,7 @@ export class BuildConfiguration extends EezObject {
     };
 }
 
-registerClass(BuildConfiguration);
+registerClass("BuildConfiguration", BuildConfiguration);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -181,7 +177,7 @@ export class BuildFile extends EezObject {
     };
 }
 
-registerClass(BuildFile);
+registerClass("BuildFile", BuildFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -226,7 +222,7 @@ export class Build extends EezObject {
     };
 }
 
-registerClass(Build);
+registerClass("Build", Build);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -489,7 +485,7 @@ export class ImportDirective {
                 ) {
                     messages.push(
                         new Message(
-                            Type.ERROR,
+                            MessageType.ERROR,
                             "File doesn't exists",
                             getChildOfObject(object, "projectFilePath")
                         )
@@ -500,7 +496,25 @@ export class ImportDirective {
             }
 
             return messages;
-        }
+        },
+
+        getImportedProject: (importDirective: ImportDirective) => ({
+            findReferencedObject: (
+                root: IEezObject,
+                referencedObjectCollectionPath: string,
+                referencedObjectName: string
+            ) => {
+                const object = findReferencedObject(
+                    root as Project,
+                    referencedObjectCollectionPath,
+                    referencedObjectName
+                );
+                if (object && getProject(object) == importDirective.project) {
+                    return object;
+                }
+                return undefined;
+            }
+        })
     };
 
     get projectAbsoluteFilePath() {
@@ -535,7 +549,7 @@ export class ImportDirective {
     }
 }
 
-registerClass(ImportDirective);
+registerClass("ImportDirective", ImportDirective);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -580,8 +594,8 @@ export class General extends EezObject {
                 hideInPropertyGrid: (general: General) => {
                     const documentStore = getDocumentStore(general);
                     return (
-                        documentStore.isDashboardProject ||
-                        documentStore.isAppletProject
+                        documentStore.project.isDashboardProject ||
+                        documentStore.project.isAppletProject
                     );
                 }
             },
@@ -596,8 +610,8 @@ export class General extends EezObject {
                     const documentStore = getDocumentStore(general);
                     return (
                         general.imports.length > 0 ||
-                        documentStore.isDashboardProject ||
-                        documentStore.isAppletProject
+                        documentStore.project.isDashboardProject ||
+                        documentStore.project.isAppletProject
                     );
                 }
             },
@@ -610,8 +624,8 @@ export class General extends EezObject {
                     const documentStore = getDocumentStore(general);
                     return (
                         !!getProject(general).masterProject ||
-                        documentStore.isDashboardProject ||
-                        documentStore.isAppletProject
+                        documentStore.project.isDashboardProject ||
+                        documentStore.project.isAppletProject
                     );
                 }
             },
@@ -619,7 +633,7 @@ export class General extends EezObject {
                 name: "css",
                 type: PropertyType.CSS,
                 hideInPropertyGrid: (object: IEezObject) =>
-                    !getDocumentStore(object).isDashboardProject
+                    !getDocumentStore(object).project.isDashboardProject
             }
         ],
         showInNavigation: true,
@@ -635,7 +649,7 @@ export class General extends EezObject {
                 ) {
                     messages.push(
                         new Message(
-                            Type.ERROR,
+                            MessageType.ERROR,
                             "File doesn't exists",
                             getChildOfObject(object, "masterProject")
                         )
@@ -682,7 +696,7 @@ export class General extends EezObject {
     }
 }
 
-registerClass(General);
+registerClass("General", General);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -711,7 +725,7 @@ export class Settings extends EezObject {
                 ) => {
                     const DocumentStore = getDocumentStore(object);
                     return (
-                        !DocumentStore.isDashboardProject &&
+                        !DocumentStore.project.isDashboardProject &&
                         !DocumentStore.masterProjectEnabled
                     );
                 }
@@ -724,7 +738,7 @@ export class Settings extends EezObject {
     };
 }
 
-registerClass(Settings);
+registerClass("Settings", Settings);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -867,7 +881,7 @@ function getProjectClassInfo() {
         };
     }
 
-    let projectFeatures = getProjectFeatures();
+    let projectFeatures = ProjectEditor.extensions;
     if (numProjectFeatures != projectFeatures.length) {
         numProjectFeatures = projectFeatures.length;
 
@@ -924,7 +938,7 @@ export class Project extends EezObject {
     _DocumentStore!: DocumentStoreClass;
     _isReadOnly: boolean = false;
 
-    @observable fullyLoaded = false;
+    @observable _fullyLoaded = false;
 
     @observable settings: Settings;
     @observable variables: ProjectVariables;
@@ -961,6 +975,14 @@ export class Project extends EezObject {
         }
 
         throw "unknown project";
+    }
+
+    get isDashboardProject() {
+        return this.settings.general.projectType === ProjectType.DASHBOARD;
+    }
+
+    get isAppletProject() {
+        return this.settings.general.projectType === ProjectType.APPLET;
     }
 
     @computed
@@ -1223,7 +1245,7 @@ export class Project extends EezObject {
     }
 }
 
-registerClass(Project);
+registerClass("Project", Project);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1278,7 +1300,7 @@ export function checkObjectReference(
         } else if (objects.length > 1) {
             messages.push(
                 new Message(
-                    Type.ERROR,
+                    MessageType.ERROR,
                     `Ambiguous, found in multiple projects: ${objects
                         .map(object => getProject(object).projectName)
                         .join(", ")}`,

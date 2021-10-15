@@ -3,12 +3,12 @@ import { observer } from "mobx-react";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
-import { getLabel } from "project-editor/core/object";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { RightArrow } from "project-editor/flow/action-components";
 import { IconAction } from "eez-studio-ui/action";
 import { getInputName, getOutputName } from "./logs";
-import { MaximizeIcon } from "./DebuggerPanel";
+import { MaximizeIcon } from "./Icons";
+import { getLabel } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

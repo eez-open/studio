@@ -10,7 +10,6 @@ import { IconAction } from "eez-studio-ui/action";
 
 import {
     EditorComponent,
-    getAncestorOfType,
     IEezObject,
     NavigationComponent
 } from "project-editor/core/object";
@@ -20,7 +19,7 @@ import {
     TreeObjectAdapter,
     TreeObjectAdapterChildren
 } from "project-editor/core/objectAdapter";
-import { IPanel } from "project-editor/core/store";
+import { IPanel, getAncestorOfType } from "project-editor/core/store";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";
@@ -35,11 +34,11 @@ import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ThemesSideView } from "project-editor/features/style/theme";
 import { ProjectContext } from "project-editor/project/context";
 
-import { Page } from "project-editor/features/page/page";
-import { Widget } from "project-editor/flow/component";
+import type { Page } from "project-editor/features/page/page";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +117,7 @@ export class PageEditor extends EditorComponent implements IPanel {
 
         const buttons: JSX.Element[] = [];
 
-        const hasThemes = !this.context.isDashboardProject;
+        const hasThemes = !this.context.project.isDashboardProject;
 
         if (hasThemes && !this.context.uiStateStore.viewOptions.themesVisible) {
             buttons.push(
@@ -216,7 +215,9 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
     get children(): TreeObjectAdapterChildren {
         if (this.frontFace) {
             return this.page.components
-                .filter(component => component instanceof Widget)
+                .filter(
+                    component => component instanceof ProjectEditor.WidgetClass
+                )
                 .map(child => this.transformer(child));
         }
 
@@ -387,7 +388,7 @@ export class PagesNavigation extends NavigationComponent {
             this.componentContainerDisplayItem,
             undefined,
             (object: IEezObject) => {
-                return object instanceof Widget;
+                return object instanceof ProjectEditor.WidgetClass;
             },
             true
         );
@@ -446,7 +447,7 @@ export class PagesNavigation extends NavigationComponent {
 
         const page = getAncestorOfType<Page>(
             this.selectedObject,
-            Page.classInfo
+            ProjectEditor.PageClass.classInfo
         );
 
         const navigation = this.context.runtime ? (

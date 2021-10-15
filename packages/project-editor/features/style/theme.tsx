@@ -28,7 +28,9 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { ProjectContext } from "project-editor/project/context";
-import { getProject, Project } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+
+import type { Project } from "project-editor/project/project";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -399,7 +401,7 @@ export class Color extends EezObject implements IColor {
     };
 }
 
-registerClass(Color);
+registerClass("Color", Color);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -453,21 +455,21 @@ export class Theme extends EezObject {
     };
 
     @computed get colors() {
-        const project = getProject(this);
+        const project = ProjectEditor.getProject(this);
         return project.colors.map(color =>
             project.getThemeColor(this.id, color.id)
         );
     }
 
     set colors(value: string[]) {
-        const project = getProject(this);
+        const project = ProjectEditor.getProject(this);
         for (let i = 0; i < value.length; i++) {
             project.setThemeColor(this.id, project.colors[i].id, value[i]);
         }
     }
 }
 
-registerClass(Theme);
+registerClass("Theme", Theme);
 
 ////////////////////////////////////////////////////////////////////////////////
 

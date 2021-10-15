@@ -4,7 +4,7 @@ import classNames from "classnames";
 
 import { theme } from "eez-studio-ui/theme";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { ConnectionLine } from "project-editor/flow/flow";
+import type { ConnectionLine } from "project-editor/flow/flow";
 import { getConnectionLineShape } from "project-editor/flow/flow-editor/connection-line-shape";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { OutputActionComponent } from "project-editor/flow/action-components";

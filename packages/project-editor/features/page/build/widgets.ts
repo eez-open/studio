@@ -1,6 +1,10 @@
-import { Page } from "project-editor/features/page/page";
-import { Widget } from "project-editor/flow/component";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type { Page } from "project-editor/features/page/page";
+import type { Widget } from "project-editor/flow/component";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function buildWidget(
     object: Widget | Page,
@@ -12,14 +16,14 @@ export function buildWidget(
 
     // data
     let data = 0;
-    if (object instanceof Widget) {
+    if (object instanceof ProjectEditor.WidgetClass) {
         data = assets.getWidgetDataItemIndex(object, "data");
     }
     dataBuffer.writeInt16(data);
 
     // action
     let action: number = 0;
-    if (object instanceof Widget) {
+    if (object instanceof ProjectEditor.WidgetClass) {
         action = assets.getWidgetActionIndex(object, "action");
     }
     dataBuffer.writeInt16(action);

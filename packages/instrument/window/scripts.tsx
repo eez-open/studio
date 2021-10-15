@@ -25,18 +25,18 @@ import { Icon } from "eez-studio-ui/icon";
 import * as notification from "eez-studio-ui/notification";
 import { Toolbar } from "eez-studio-ui/toolbar";
 
-import { IShortcut } from "shortcuts/interfaces";
+import type { IShortcut } from "shortcuts/interfaces";
 import { SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX } from "shortcuts/shortcuts-store";
 import { DEFAULT_TOOLBAR_BUTTON_COLOR } from "shortcuts/toolbar-button-colors";
 import { showShortcutDialog } from "shortcuts/shortcut-dialog";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 import {
     executeShortcut,
     isShorcutRunning,
     stopActiveShortcut
 } from "instrument/window/script";
-import { IModel } from "instrument/window/undo";
+import type { IModel } from "instrument/window/undo";
 
 import { Terminal } from "instrument/window/terminal/terminal";
 

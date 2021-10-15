@@ -14,14 +14,15 @@ import { TabsView } from "eez-studio-ui/tabs";
 import { ListContainer, List, IListNode, ListItem } from "eez-studio-ui/list";
 import { Icon } from "eez-studio-ui/icon";
 
+import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { SessionInfo } from "instrument/window/history/session/info-view";
 
 import { tabs } from "home/tabs-store";
 import { getAppStore } from "home/history";
 
-import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { Setup } from "home/setup";
 import "home/workbench";
+import { firstTime } from "home/first-time";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -163,7 +164,7 @@ class AppComponent extends React.Component {
     render() {
         const appStore = getAppStore();
 
-        if (tabs.firstTime) {
+        if (firstTime.get()) {
             return <Setup />;
         }
 

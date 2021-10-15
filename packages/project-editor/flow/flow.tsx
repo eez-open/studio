@@ -2,26 +2,31 @@ import React from "react";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import { action, computed, observable, runInAction } from "mobx";
-import { objectToClipboardData } from "project-editor/core/clipboard";
 import {
     ClassInfo,
-    cloneObject,
     EezObject,
-    getLabel,
     getParent,
     IEditorState,
     IEezObject,
     isSubclassOf,
     PropertyInfo,
     PropertyType,
-    registerClass
+    registerClass,
+    SerializedData
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
-import { getDocumentStore } from "project-editor/core/store";
+import {
+    getDocumentStore,
+    objectToClipboardData,
+    getLabel
+} from "project-editor/core/store";
 import { Component, Widget } from "project-editor/flow/component";
-import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
+import type {
+    IFlowContext,
+    IFlowState
+} from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
-import { deleteObject, updateObject } from "project-editor/core/commands";
+import { deleteObject, updateObject } from "project-editor/core/store";
 import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
 import { Variable } from "project-editor/features/variable/variable";
 import { ValueType } from "project-editor/features/variable/value-type";
@@ -31,6 +36,8 @@ import {
 } from "./action-components";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "./flow-editor/transform";
+import { cloneObject } from "project-editor/core/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +85,12 @@ export class ConnectionLine extends EezObject {
             }
         ],
 
-        isSelectable: () => true
+        isSelectable: () => true,
+
+        deleteObjectFilterHook: (connectionLine: ConnectionLine) => {
+            const page = getParent(getParent(connectionLine)) as Flow;
+            return page.connectionLines.indexOf(connectionLine) != -1;
+        }
     };
 
     @computed get sourceComponent() {
@@ -178,7 +190,7 @@ export class ConnectionLine extends EezObject {
     }
 }
 
-registerClass(ConnectionLine);
+registerClass("ConnectionLine", ConnectionLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -458,6 +470,20 @@ export class FlowFragment extends EezObject {
                 jsObject.components = jsObject.widgets;
                 delete jsObject.widgets;
             }
+        },
+
+        pasteItemHook: (
+            object: IEezObject,
+            clipboardData: {
+                serializedData: SerializedData;
+                pastePlace: EezObject;
+            }
+        ) => {
+            const flow = ProjectEditor.getFlow(clipboardData.pastePlace);
+            return flow.pasteFlowFragment(
+                clipboardData.serializedData.object as FlowFragment,
+                object
+            );
         }
     };
 
@@ -539,7 +565,7 @@ export class FlowFragment extends EezObject {
     }
 }
 
-registerClass(FlowFragment);
+registerClass("FlowFragment", FlowFragment);
 
 ////////////////////////////////////////////////////////////////////////////////
 

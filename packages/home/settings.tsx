@@ -8,7 +8,7 @@ import classNames from "classnames";
 const shell = require("electron").shell;
 import { app, createEmptyFile } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
-import { getDbPath, setDbPath } from "eez-studio-shared/db";
+import { getDbPath, setDbPath } from "eez-studio-shared/db-path";
 import {
     LOCALES,
     getLocale,

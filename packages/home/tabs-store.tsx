@@ -26,16 +26,22 @@ import {
 } from "instrument/window/history/history-view";
 
 import { instruments, InstrumentObject } from "instrument/instrument-object";
-import * as WorkbenchModule from "home/workbench";
-import * as HistoryModule from "home/history";
-import * as ShortcutsModule from "home/shortcuts";
-import * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
-import * as SettingsModule from "home/settings";
+import type * as WorkbenchModule from "home/workbench";
+import type * as HistoryModule from "home/history";
+import type * as ShortcutsModule from "home/shortcuts";
+import type * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
+import type * as SettingsModule from "home/settings";
 
-import * as DocumentStoreClassModule from "project-editor/core/store";
-import * as ProjectEditorModule from "project-editor/project/ProjectEditor";
+import type * as ProjectEditorModule from "project-editor/project/ProjectEditor";
 
 import { Loader } from "eez-studio-ui/loader";
+
+import { DocumentStoreClass } from "project-editor/core/store";
+
+import { ProjectContext } from "project-editor/project/context";
+import { ProjectEditor } from "project-editor/project/ProjectEditor";
+import { firstTime } from "./first-time";
+import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -409,26 +415,17 @@ export class ProjectEditorTab implements IHomeTab {
     loading: boolean = false;
 
     @observable
-    DocumentStore: DocumentStoreClassModule.DocumentStoreClass;
+    DocumentStore: DocumentStoreClass;
 
-    ProjectContext: React.Context<DocumentStoreClassModule.DocumentStoreClass>;
+    ProjectContext: React.Context<DocumentStoreClass>;
     ProjectEditor: typeof ProjectEditorModule.ProjectEditor;
 
     async loadProject() {
-        const { DocumentStoreClass } = await import(
-            "project-editor/core/store"
-        );
-
-        const { ProjectContext } = await import(
-            "project-editor/project/context"
-        );
         this.ProjectContext = ProjectContext;
 
-        const { ProjectEditor } = await import(
-            "project-editor/project/ProjectEditor"
-        );
         this.ProjectEditor = ProjectEditor;
 
+        await initProjectEditor();
         const DocumentStore = await DocumentStoreClass.create();
 
         if (this._filePath) {
@@ -439,7 +436,7 @@ export class ProjectEditorTab implements IHomeTab {
 
         await DocumentStore.loadAllExternalProjects();
         runInAction(() => {
-            DocumentStore.project.fullyLoaded = true;
+            DocumentStore.project._fullyLoaded = true;
         });
         DocumentStore.startBackgroundCheck();
 
@@ -656,16 +653,12 @@ interface ISavedTab {
 }
 
 class Tabs {
-    @observable _firstTime: boolean;
     @observable tabs: IHomeTab[] = [];
     @observable activeTab: IHomeTab;
 
     constructor() {
-        this._firstTime =
-            EEZStudio.electron.ipcRenderer.sendSync("getFirstTime");
-
         loadPreinstalledExtension("instrument").then(async () => {
-            if (!this.firstTime) {
+            if (!firstTime.get()) {
                 if (location.search) {
                     const instrumentId = location.search.substring(1);
                     if (instruments.get(instrumentId)) {
@@ -756,15 +749,6 @@ class Tabs {
                 this.navigateToTab(args.sectionId, args.itemId);
             }
         );
-    }
-
-    get firstTime() {
-        return this._firstTime;
-    }
-
-    set firstTime(value: boolean) {
-        runInAction(() => (this._firstTime = false));
-        EEZStudio.electron.ipcRenderer.send("setFirstTime", false);
     }
 
     findTabDefinition(tabId: string) {

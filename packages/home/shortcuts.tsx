@@ -12,7 +12,7 @@ import {
     deleteShortcut
 } from "shortcuts/shortcuts-store";
 
-import { isSameShortcutFromDifferentExtension } from "shortcuts/shortcuts";
+import { isSameShortcutFromDifferentExtension } from "shortcuts/isSameShortcutFromDifferentExtension";
 import { SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX } from "shortcuts/shortcuts-store";
 import {
     groups,
@@ -28,7 +28,7 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 
-import * as InstrumentObjectModule from "instrument/instrument-object";
+import type * as InstrumentObjectModule from "instrument/instrument-object";
 
 export const shortcutsOrGroups = observable.box<boolean>(true);
 

@@ -1,15 +1,15 @@
 import { bind } from "bind-decorator";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 
-import { ConnectionParameters } from "instrument/connection/interface";
-import { IFileUploadInstructions } from "instrument/connection/file-upload";
+import type { ConnectionParameters } from "instrument/connection/interface";
+import type { IFileUploadInstructions } from "instrument/connection/file-upload";
 
 import { showConnectionDialog } from "instrument/window/connection-dialog";
 
 import { createHistoryItem } from "instrument/window/history/item-factory";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////

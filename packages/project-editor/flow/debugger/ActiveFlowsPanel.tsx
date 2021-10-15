@@ -4,9 +4,9 @@ import classNames from "classnames";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
-import { getLabel } from "project-editor/core/object";
 import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
-import { MaximizeIcon } from "./DebuggerPanel";
+import { MaximizeIcon } from "./Icons";
+import { getLabel } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

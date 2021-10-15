@@ -13,16 +13,15 @@ import {
     EezObject,
     PropertyType,
     NavigationComponent,
-    getChildOfObject,
     MessageType
 } from "project-editor/core/object";
-import * as output from "project-editor/core/output";
 import {
-    findReferencedObject,
-    getFlow,
-    getProject,
-    Project
-} from "project-editor/project/project";
+    getChildOfObject,
+    Message,
+    propertyInvalidValueMessage,
+    propertyNotSetMessage
+} from "project-editor/core/store";
+import type { Project } from "project-editor/project/project";
 import {
     ListNavigation,
     ListNavigationWithProperties
@@ -54,11 +53,13 @@ import {
     isValueTypeOf,
     ValueType
 } from "project-editor/features/variable/value-type";
+import {
+    FLOW_ITERATOR_INDEXES_VARIABLE,
+    FLOW_ITERATOR_INDEX_VARIABLE
+} from "project-editor/features/variable/defs";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export const FLOW_ITERATOR_INDEX_VARIABLE = "$index";
-export const FLOW_ITERATOR_INDEXES_VARIABLE = "$indexes";
 
 const VariableIcon = (
     <svg
@@ -130,14 +131,14 @@ export class Variable extends EezObject {
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).isDashboardProject
+                    getDocumentStore(object).project.isDashboardProject
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).isDashboardProject
+                    getDocumentStore(object).project.isDashboardProject
             },
             {
                 name: "persistent",
@@ -152,7 +153,7 @@ export class Variable extends EezObject {
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
                 dialogDefinition: {
-                    title: getFlow(parent)
+                    title: ProjectEditor.getFlow(parent)
                         ? "New Local Variable"
                         : "New Global Variable",
                     fields: [
@@ -177,7 +178,7 @@ export class Variable extends EezObject {
                     ]
                 },
                 values: {},
-                dialogContext: getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent)
             }).then(result => {
                 return Promise.resolve({
                     name: result.values.name,
@@ -190,38 +191,36 @@ export class Variable extends EezObject {
         navigationComponentId: "global-variables",
         icon: VariableIcon,
         check: (variable: Variable) => {
-            let messages: output.Message[] = [];
+            let messages: Message[] = [];
 
             if (!variable.type) {
                 messages.push(
-                    output.propertyNotSetMessage(variable, "variableTypeUI")
+                    propertyNotSetMessage(variable, "variableTypeUI")
                 );
             }
 
             if (!variable.defaultValue) {
-                messages.push(
-                    output.propertyNotSetMessage(variable, "defaultValue")
-                );
+                messages.push(propertyNotSetMessage(variable, "defaultValue"));
             } else {
-                const project = getProject(variable);
+                const DocumentStore = getDocumentStore(variable);
                 if (
-                    project._DocumentStore.isAppletProject ||
-                    project._DocumentStore.isDashboardProject
+                    DocumentStore.project.isAppletProject ||
+                    DocumentStore.project.isDashboardProject
                 ) {
                     try {
                         const value = evalConstantExpression(
-                            project,
+                            DocumentStore.project,
                             variable.defaultValue
                         );
 
                         const error = isValueTypeOf(
-                            project,
+                            DocumentStore.project,
                             value,
                             variable.type
                         );
                         if (error) {
                             messages.push(
-                                new output.Message(
+                                new Message(
                                     MessageType.ERROR,
                                     error,
                                     getChildOfObject(variable, "defaultValue")
@@ -230,7 +229,7 @@ export class Variable extends EezObject {
                         }
                     } catch (err) {
                         messages.push(
-                            output.propertyInvalidValueMessage(
+                            propertyInvalidValueMessage(
                                 variable,
                                 "defaultValue"
                             )
@@ -244,7 +243,7 @@ export class Variable extends EezObject {
     };
 }
 
-registerClass(Variable);
+registerClass("Variable", Variable);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -283,12 +282,14 @@ export class DataContext implements IDataContext {
     }
 
     initGlobalVariables() {
-        this.project.variables.globalVariables.forEach(variable => {
-            this.runtimeValues.set(
-                variable.name,
-                evalConstantExpression(this.project, variable.defaultValue)
-            );
-        });
+        if (this.project.variables) {
+            this.project.variables.globalVariables.forEach(variable => {
+                this.runtimeValues.set(
+                    variable.name,
+                    evalConstantExpression(this.project, variable.defaultValue)
+                );
+            });
+        }
     }
 
     createWithDefaultValueOverrides(defaultValueOverrides: any): IDataContext {
@@ -617,7 +618,7 @@ export class StructureField extends EezObject {
                     ]
                 },
                 values: {},
-                dialogContext: getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent)
             }).then(result => {
                 return Promise.resolve({
                     name: result.values.name,
@@ -628,7 +629,7 @@ export class StructureField extends EezObject {
     };
 }
 
-registerClass(StructureField);
+registerClass("StructureField", StructureField);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -750,7 +751,7 @@ export class Structure extends EezObject {
     }
 }
 
-registerClass(Structure);
+registerClass("Structure", Structure);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -796,7 +797,7 @@ export class EnumMember extends EezObject {
     };
 }
 
-registerClass(EnumMember);
+registerClass("EnumMember", EnumMember);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -893,7 +894,7 @@ export class Enum extends EezObject {
     }
 }
 
-registerClass(Enum);
+registerClass("Enum", Enum);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -967,7 +968,7 @@ export class ProjectVariables extends EezObject {
     }
 }
 
-registerClass(ProjectVariables);
+registerClass("ProjectVariables", ProjectVariables);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1019,7 +1020,7 @@ export const RenderVariableStatus = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findVariable(project: Project, variableName: string) {
-    return findReferencedObject(
+    return ProjectEditor.documentSearch.findReferencedObject(
         project,
         "variables/globalVariables",
         variableName
@@ -1051,12 +1052,12 @@ export default {
                     };
                 },
                 check: (object: IEezObject[]) => {
-                    let messages: output.Message[] = [];
+                    let messages: Message[] = [];
 
                     if (object.length > 32000) {
                         messages.push(
-                            new output.Message(
-                                output.Type.ERROR,
+                            new Message(
+                                MessageType.ERROR,
                                 "Max. 32000 global variables are supported",
                                 object
                             )

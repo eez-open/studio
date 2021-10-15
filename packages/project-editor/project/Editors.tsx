@@ -4,8 +4,8 @@ import { observer } from "mobx-react";
 import update from "immutability-helper";
 
 import { TabsView } from "eez-studio-ui/tabs";
-import { getEditorComponent } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
+import { getEditorComponent } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

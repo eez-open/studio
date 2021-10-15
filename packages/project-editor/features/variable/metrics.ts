@@ -1,4 +1,4 @@
-import { Project } from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -4,12 +4,13 @@ import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 
+import type { IEezObject } from "project-editor/core/object";
 import {
-    IEezObject,
+    addItem,
+    canAdd,
     objectToString,
     getClassInfo
-} from "project-editor/core/object";
-import { addItem, canAdd } from "project-editor/core/store";
+} from "project-editor/core/store";
 import {
     TreeObjectAdapter,
     ITreeObjectAdapter,

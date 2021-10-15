@@ -14,13 +14,15 @@ import {
 import { Loader } from "eez-studio-ui/loader";
 
 import { getProperty } from "project-editor/core/object";
-import { objectToJS } from "project-editor/core/serialization";
-import { DocumentStoreClass } from "project-editor/core/store";
+import { objectToJS, DocumentStoreClass } from "project-editor/core/store";
 
-import { IParameter, IParameterType, IEnum } from "instrument/scpi";
+import type { IParameter, IParameterType, IEnum } from "instrument/scpi";
 
-import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
-import { ScpiEnum } from "project-editor/features/scpi/enum";
+import type {
+    ScpiCommand,
+    ScpiSubsystem
+} from "project-editor/features/scpi/scpi";
+import type { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////

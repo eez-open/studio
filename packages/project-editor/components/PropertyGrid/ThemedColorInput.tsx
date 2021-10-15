@@ -2,10 +2,10 @@ import React from "react";
 import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import { isDark } from "eez-studio-shared/color";
-import { getEezStudioDataFromDragEvent } from "project-editor/core/clipboard";
 import { getProperty } from "project-editor/core/object";
 import { getThemedColor } from "project-editor/features/style/theme";
 import { ProjectContext } from "project-editor/project/context";
+import { getEezStudioDataFromDragEvent } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { Panel } from "project-editor/components/Panel";
+import { computedFn } from "mobx-utils";
 import {
     computed,
     IObservableValue,
@@ -8,25 +8,26 @@ import {
     runInAction,
     action
 } from "mobx";
+
+import { Panel } from "project-editor/components/Panel";
 import { IColumn, ITreeNode, TreeTable } from "eez-studio-ui/tree-table";
-import { IDataContext } from "eez-studio-types";
-import { Variable } from "project-editor/features/variable/variable";
+import type { IDataContext } from "project-editor/flow/flow-interfaces";
+import type { Variable } from "project-editor/features/variable/variable";
 import {
     getArrayElementTypeFromType,
     getEnumTypeNameFromType,
     getStructureFromType,
     isEnumType
 } from "project-editor/features/variable/value-type";
-import { computedFn } from "mobx-utils";
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
-import { Component } from "project-editor/flow/component";
-import { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
+import type { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
 import { getInputName } from "project-editor/flow/debugger/logs";
-import { MaximizeIcon } from "./DebuggerPanel";
+import { MaximizeIcon } from "./Icons";
 import { evalExpressionGetValueType } from "../expression/expression";
 import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -496,7 +497,7 @@ class WatchTable extends React.Component<{
         if (!component) {
             return undefined;
         }
-        if (!(component instanceof Component)) {
+        if (!(component instanceof ProjectEditor.ComponentClass)) {
             return undefined;
         }
 

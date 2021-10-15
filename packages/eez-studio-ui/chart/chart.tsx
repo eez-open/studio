@@ -1,136 +1,97 @@
+const tinycolor = require("tinycolor2");
+import { clipboard, SaveDialogOptions } from "electron";
+
 import bootstrap from "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
-import { observable, computed, action, runInAction, autorun, toJS } from "mobx";
+import {
+    action,
+    computed,
+    autorun,
+    observable,
+    reaction,
+    runInAction,
+    toJS
+} from "mobx";
 import { observer } from "mobx-react";
+import bind from "bind-decorator";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
+import { cssTransition } from "react-toastify";
 
-import { clamp } from "eez-studio-shared/util";
-import { guid } from "eez-studio-shared/guid";
-import { capitalize } from "eez-studio-shared/string";
+import { getLocale } from "eez-studio-shared/i10n";
+import { extensions } from "eez-studio-shared/extensions/extensions";
+import { IUnit, UNITS, UNKNOWN_UNIT } from "eez-studio-shared/units";
 import { Point, pointDistance } from "eez-studio-shared/geometry";
-import { IUnit } from "eez-studio-shared/units";
-import { _uniqWith } from "eez-studio-shared/algorithm";
-//import { roundNumberWithMaxNumberOfDecimalDigits } from "eez-studio-shared/roundNumber";
+import { guid } from "eez-studio-shared/guid";
+import { capitalize, stringCompare } from "eez-studio-shared/string";
+import { writeBinaryData } from "eez-studio-shared/util-electron";
+import { closestByClass, scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 
-import { Draggable } from "eez-studio-ui/draggable";
-import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
-import { Splitter } from "eez-studio-ui/splitter";
 import { SvgLabel } from "eez-studio-ui/svg-label";
+import * as notification from "eez-studio-ui/notification";
+import { Draggable } from "eez-studio-ui/draggable";
+import {
+    _difference,
+    _map,
+    _range,
+    _uniqWith
+} from "eez-studio-shared/algorithm";
+import { DockablePanels, SideDock } from "eez-studio-ui/side-dock";
+import { Splitter } from "eez-studio-ui/splitter";
+import {
+    FieldComponent,
+    GenericDialog,
+    IFieldProperties
+} from "eez-studio-ui/generic-dialog";
+import { IconAction } from "eez-studio-ui/action";
+import { Checkbox, Radio } from "eez-studio-ui/properties";
 
-import {
-    ChartViewOptionsProps,
-    ChartViewOptions
-} from "eez-studio-ui/chart/view-options";
-import { WaveformRenderAlgorithm } from "eez-studio-ui/chart/render";
-import { WaveformModel } from "eez-studio-ui/chart/waveform";
-import {
-    RulersController,
-    RulersDockView,
-    RulersModel
-} from "eez-studio-ui/chart/rulers";
-import {
-    MeasurementsDockView,
-    MeasurementsController,
-    MeasurementsModel,
-    ChartMeasurements
-} from "eez-studio-ui/chart/measurements";
-import { BookmarksView } from "eez-studio-ui/chart/bookmarks";
+import { DataType } from "instrument/window/waveform/DataType";
+import type {
+    IChart,
+    IMeasurementFunction,
+    IMeasureTask
+} from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const SCROLL_BAR_SIZE = 16;
+export const SCROLL_BAR_SIZE = 16;
 
-const CONF_LABEL_TICK_GAP_HORZ = 10;
-const CONF_LABEL_TICK_GAP_VERT = 10;
+export const CONF_LABEL_TICK_GAP_HORZ = 10;
+export const CONF_LABEL_TICK_GAP_VERT = 10;
+export const CONF_ZOOM_STEP = 1.5;
+export const CONF_PAN_STEP = 0.05;
 
-const CONF_ZOOM_STEP = 1.5;
-const CONF_PAN_STEP = 0.05;
+export const ZOOM_ICON_SIZE = 32;
+export const ZOOM_ICON_PADDING = 4;
+export const CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION = 250;
+export const CONF_AXIS_MIN_TICK_DISTANCE = 4;
+export const CONF_AXIS_MAX_TICK_DISTANCE = 400;
+export const CONF_X_AXIS_MIN_TICK_LABEL_WIDTH = 100;
+export const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 20;
 
-const ZOOM_ICON_SIZE = 32;
-const ZOOM_ICON_PADDING = 4;
+export const CONF_MIN_Y_SCALE_LABELS_WIDTH = 70;
 
-const CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION = 250;
-
-const CONF_AXIS_MIN_TICK_DISTANCE = 4;
-const CONF_AXIS_MAX_TICK_DISTANCE = 400;
-const CONF_X_AXIS_MIN_TICK_LABEL_WIDTH = 100;
-const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 20;
-
-const CONF_MIN_Y_SCALE_LABELS_WIDTH = 70;
-
-const CONF_MIN_X_AXIS_BAND_HEIGHT = 20;
-
-const CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY = 0.1;
-const CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY = 0.9;
-const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND = "192, 192, 192";
-const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND = "164, 164, 164";
-
-const CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY = 0.8;
-const CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY = 1.0;
-const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "255, 255, 255";
-const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "0, 0, 0";
-
-const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#ccc";
-const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#f0f0f0";
-const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#444";
-const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#222";
-
-const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#666";
-const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#999";
-const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#eee";
-const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#ddd";
+export const CONF_MIN_X_AXIS_BAND_HEIGHT = 20;
+export const CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY = 0.1;
+export const CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY = 0.9;
+export const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND = "192, 192, 192";
+export const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND = "164, 164, 164";
+export const CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY = 0.8;
+export const CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY = 1.0;
+export const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND =
+    "255, 255, 255";
+export const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "0, 0, 0";
+export const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#ccc";
+export const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#f0f0f0";
+export const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#444";
+export const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#222";
+export const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#666";
+export const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#999";
+export const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#eee";
+export const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#ddd";
 
 export const CONF_CURSOR_RADIUS = 8;
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface IAnimation {
-    step(t: number): void;
-}
-
-class AnimationController {
-    animationState:
-        | {
-              duration: number;
-              animation: IAnimation;
-              startTime: number;
-          }
-        | undefined;
-
-    animate(duration: number, animation: IAnimation) {
-        this.finish();
-
-        this.animationState = {
-            duration,
-            animation,
-            startTime: new Date().getTime()
-        };
-    }
-
-    finish() {
-        if (this.animationState) {
-            this.animationState.animation.step(1);
-            this.animationState = undefined;
-        }
-    }
-
-    frameAnimation() {
-        if (this.animationState) {
-            let t = clamp(
-                (new Date().getTime() - this.animationState.startTime) /
-                    this.animationState.duration,
-                0,
-                1
-            );
-            this.animationState.animation.step(t);
-            if (t === 1) {
-                this.animationState = undefined;
-            }
-        }
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -174,7 +135,7 @@ export interface IAxisModel {
     };
 }
 
-interface ITick {
+export interface ITick {
     px: number;
     value: number;
     label: string;
@@ -183,1132 +144,6 @@ interface ITick {
     isMajorLine?: boolean;
     allowSnapTo: boolean;
     step?: number;
-}
-
-export abstract class AxisController {
-    constructor(
-        public position: "x" | "y" | "yRight",
-        public chartsController: ChartsController,
-        public chartController: ChartController | undefined, // undefined for position === 'x'
-        public axisModel: IAxisModel
-    ) {}
-
-    get unit() {
-        return this.axisModel.unit;
-    }
-
-    @observable labelTextsWidth: number = 0;
-    @observable labelTextsHeight: number = 0;
-
-    @observable isAnimationActive: boolean;
-    animationController = new AnimationController();
-
-    isDigital = false;
-
-    get logarithmic() {
-        return this.axisModel.logarithmic;
-    }
-
-    abstract get from(): number;
-    abstract get to(): number;
-
-    @computed
-    get isScrollBarEnabled() {
-        return (
-            (this.from > this.minValue || this.to < this.maxValue) &&
-            this.range != 0
-        );
-    }
-
-    get _minValue() {
-        return this.position === "x"
-            ? this.chartsController.minValue
-            : this.chartController!.minValue[this.position];
-    }
-
-    @computed
-    get minValue() {
-        return this._minValue;
-    }
-
-    get _maxValue() {
-        return this.position === "x"
-            ? this.chartsController.maxValue
-            : this.chartController!.maxValue[this.position];
-    }
-
-    @computed
-    get maxValue() {
-        return this._maxValue;
-    }
-
-    @computed
-    get range() {
-        return this.maxValue - this.minValue;
-    }
-
-    @computed
-    get distancePx() {
-        return this.position === "x"
-            ? this.chartsController.chartWidth
-            : this.chartsController.chartHeight;
-    }
-
-    @computed
-    get distance() {
-        return this.to - this.from || 1;
-    }
-
-    @computed
-    get scale() {
-        return this.distancePx / this.distance;
-    }
-
-    @computed
-    get minScale() {
-        return 1e-15;
-    }
-
-    @computed
-    get maxScale() {
-        return 1e15;
-    }
-
-    toLogScale(value: number) {
-        value = Math.pow(
-            10,
-            (value * Math.log10(this.maxValue)) / this.maxValue
-        );
-        if (value < this.minValue) {
-            value = this.minValue;
-        } else if (value > this.maxValue) {
-            value = this.maxValue;
-        }
-        return value;
-    }
-
-    fromLogScale(value: number) {
-        value = (Math.log10(value) * this.maxValue) / Math.log10(this.maxValue);
-        if (value < this.minValue) {
-            value = this.minValue;
-        } else if (value > this.maxValue) {
-            value = this.maxValue;
-        }
-        return value;
-    }
-
-    pxToLinearValue(px: number) {
-        return this.from + px / this.scale;
-    }
-
-    pxToValue(px: number) {
-        if (this.axisModel.logarithmic) {
-            return this.toLogScale(this.pxToLinearValue(px));
-        } else {
-            return this.pxToLinearValue(px);
-        }
-    }
-
-    linearValueToPx(value: number) {
-        return (value - this.from) * this.scale;
-    }
-
-    valueToPx(value: number) {
-        if (this.axisModel.logarithmic) {
-            return this.linearValueToPx(this.fromLogScale(value));
-        } else {
-            return this.linearValueToPx(value);
-        }
-    }
-
-    abstract get ticks(): ITick[];
-
-    panByDistanceInPx(distanceInPx: number) {
-        return this.panByDistance(distanceInPx / this.scale);
-    }
-
-    panByDistance(distance: number) {
-        this.panTo(this.from + distance);
-    }
-
-    abstract panByDirection(direction: number): void;
-
-    abstract panTo(to: number): void;
-
-    valueToPoint(timeValue: { time: number; value: number }) {
-        return {
-            x: this.chartsController.xAxisController.valueToPx(timeValue.time),
-            y: this.valueToPx(timeValue.value)
-        };
-    }
-
-    pointToValue(point: Point) {
-        return {
-            time: this.chartsController.xAxisController.pxToValue(point.x),
-            value: this.pxToValue(point.y)
-        };
-    }
-
-    abstract zoomAll(): void;
-
-    abstract zoomDefault(): void;
-
-    @computed
-    get zoomInEnabled() {
-        return this.scale < this.maxScale;
-    }
-
-    abstract zoomIn(): void;
-
-    @computed
-    get zoomOutEnabled() {
-        return this.scale > this.minScale;
-    }
-
-    abstract zoomOut(): void;
-
-    abstract zoom(from: number, to: number): void;
-
-    abstract zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean): void;
-
-    pageUp() {
-        this.panTo(this.from + this.distance / 2);
-    }
-
-    pageDown() {
-        this.panTo(this.from - this.distance / 2);
-    }
-
-    home() {
-        this.panTo(this.minValue);
-    }
-
-    end() {
-        this.panTo(this.maxValue - this.distance);
-    }
-
-    get numSamples() {
-        let numSamples = 0;
-        for (let i = 0; i < this.chartsController.lineControllers.length; ++i) {
-            let waveformModel =
-                this.chartsController.lineControllers[i].getWaveformModel();
-            if (waveformModel && waveformModel.length > numSamples) {
-                numSamples = waveformModel.length;
-            }
-        }
-        return numSamples;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class DynamicAxisController extends AxisController {
-    constructor(
-        public position: "x" | "y" | "yRight",
-        public chartsController: ChartsController,
-        public chartController: ChartController | undefined, // undefined for position === 'x'
-        public axisModel: IAxisModel
-    ) {
-        super(position, chartsController, chartController, axisModel);
-    }
-
-    @observable animationFrom: number;
-    @observable animationTo: number;
-
-    @computed
-    get from() {
-        if (this.isDigital) {
-            return 0;
-        }
-
-        if (this.chartsController.mode === "preview") {
-            return this.minValue;
-        }
-
-        if (this.isAnimationActive) {
-            return this.animationFrom;
-        }
-
-        if (this.axisModel.dynamic.zoomMode === "all") {
-            return this.minValue;
-        }
-
-        if (this.axisModel.dynamic.zoomMode === "default") {
-            return this.axisModel.defaultFrom;
-        }
-
-        return this.axisModel.dynamic.from;
-    }
-
-    set from(value: number) {
-        this.axisModel.dynamic.zoomMode = "custom";
-        this.axisModel.dynamic.from = value;
-    }
-
-    @computed
-    get to() {
-        if (this.isDigital) {
-            return 1.0;
-        }
-
-        if (this.chartsController.mode === "preview") {
-            return this.maxValue;
-        }
-
-        if (this.isAnimationActive) {
-            return this.animationTo;
-        }
-
-        if (this.axisModel.dynamic.zoomMode === "all") {
-            return this.maxValue;
-        }
-
-        if (this.axisModel.dynamic.zoomMode === "default") {
-            return this.axisModel.defaultTo;
-        }
-
-        return this.axisModel.dynamic.to;
-    }
-
-    set to(value: number) {
-        this.axisModel.dynamic.zoomMode = "custom";
-        this.axisModel.dynamic.to = value;
-    }
-
-    @computed
-    get steps() {
-        let steps;
-
-        if (this.chartsController.viewOptions.axesLines.steps) {
-            if (this.position === "x") {
-                steps = this.chartsController.viewOptions.axesLines.steps.x;
-            } else if (
-                Array.isArray(
-                    this.chartsController.viewOptions.axesLines.steps.y
-                )
-            ) {
-                steps =
-                    this.chartsController.viewOptions.axesLines.steps.y.find(
-                        (vale: number[], i: number) =>
-                            this.chartsController.chartControllers[i] ===
-                            this.chartController
-                    );
-            }
-        }
-
-        if (!steps || steps.length === 0) {
-            steps = this.unit.units;
-        }
-
-        return steps;
-    }
-
-    @computed
-    get ticks() {
-        const { from, to, scale, steps } = this;
-
-        const minDistanceInPx = CONF_AXIS_MIN_TICK_DISTANCE;
-        const maxDistanceInPx = CONF_AXIS_MAX_TICK_DISTANCE;
-        const minColorOpacity = CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY;
-        const maxColorOpacity = CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY;
-        const minTextColorOpacity =
-            CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY;
-        const maxTextColorOpacity =
-            CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY;
-
-        const minLabelPx =
-            this.position === "x"
-                ? CONF_X_AXIS_MIN_TICK_LABEL_WIDTH
-                : CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH;
-
-        let ticks: ITick[] = new Array();
-
-        let self = this;
-
-        function addLogarithmicLines(from: number, to: number, iStep: number) {
-            const step = steps[iStep];
-
-            let fromValue = Math.ceil(from / step) * step;
-            let toValue = Math.floor(to / step) * step;
-
-            let unitPx =
-                self.valueToPx(fromValue) - self.valueToPx(fromValue - step);
-            if (unitPx < minDistanceInPx) {
-                return;
-            }
-
-            let lastValue = from;
-
-            for (let value = fromValue; value <= toValue; value += step) {
-                let px = self.valueToPx(value);
-
-                let opacity = clamp(
-                    minColorOpacity +
-                        ((maxColorOpacity - minColorOpacity) *
-                            (unitPx - minDistanceInPx)) /
-                            (maxDistanceInPx - minDistanceInPx),
-                    minColorOpacity,
-                    maxColorOpacity
-                );
-
-                let textOpacity = clamp(
-                    minTextColorOpacity +
-                        ((maxTextColorOpacity - minTextColorOpacity) *
-                            (unitPx - minDistanceInPx)) /
-                            (maxDistanceInPx - minDistanceInPx),
-                    minTextColorOpacity,
-                    maxTextColorOpacity
-                );
-
-                ticks.push({
-                    px,
-                    value,
-                    label: "",
-                    color: globalViewOptions.blackBackground
-                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
-                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
-                    textColor: globalViewOptions.blackBackground
-                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${textOpacity})`
-                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${textOpacity})`,
-                    allowSnapTo: true,
-                    step
-                });
-
-                if (iStep > 0) {
-                    addLogarithmicLines(lastValue, value, iStep - 1);
-                }
-
-                lastValue = value;
-            }
-
-            if (iStep > 0) {
-                addLogarithmicLines(lastValue, to, iStep - 1);
-            }
-        }
-
-        function addLinearLines(from: number, to: number, iStep: number) {
-            if (from >= to) {
-                return;
-            }
-
-            const step = steps[iStep];
-
-            let unitPx = step * scale;
-            if (unitPx < minDistanceInPx) {
-                return;
-            }
-
-            let fromValue = Math.ceil(from / step) * step;
-            let toValue = Math.floor(to / step) * step;
-
-            let lastValue = from;
-
-            for (let value = fromValue; value <= toValue; value += step) {
-                let px = self.valueToPx(value);
-
-                let opacity = clamp(
-                    minColorOpacity +
-                        ((maxColorOpacity - minColorOpacity) *
-                            (unitPx - minDistanceInPx)) /
-                            (maxDistanceInPx - minDistanceInPx),
-                    minColorOpacity,
-                    maxColorOpacity
-                );
-
-                let textOpacity = clamp(
-                    minTextColorOpacity +
-                        ((maxTextColorOpacity - minTextColorOpacity) *
-                            (unitPx - minDistanceInPx)) /
-                            (maxDistanceInPx - minDistanceInPx),
-                    minTextColorOpacity,
-                    maxTextColorOpacity
-                );
-
-                let label =
-                    unitPx >= minLabelPx
-                        ? self.unit.formatValue(
-                              self.axisModel.semiLogarithmic
-                                  ? Math.pow(
-                                        10,
-                                        value + self.axisModel.semiLogarithmic.a
-                                    ) + self.axisModel.semiLogarithmic.b
-                                  : value,
-                              4
-                          )
-                        : "";
-
-                ticks.push({
-                    px,
-                    value,
-                    label: label,
-                    color: globalViewOptions.blackBackground
-                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
-                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
-                    textColor: globalViewOptions.blackBackground
-                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${textOpacity})`
-                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${textOpacity})`,
-                    allowSnapTo: true,
-                    step
-                });
-
-                if (iStep > 0) {
-                    addLinearLines(lastValue, value, iStep - 1);
-                }
-
-                lastValue = value;
-            }
-
-            if (iStep > 0) {
-                addLinearLines(lastValue, to, iStep - 1);
-            }
-        }
-
-        if (this.logarithmic) {
-            addLogarithmicLines(
-                this.pxToValue(this.linearValueToPx(from)),
-                this.pxToValue(this.linearValueToPx(to)),
-                steps.length - 1
-            );
-        } else {
-            addLinearLines(from, to, steps.length - 1);
-        }
-
-        if (ticks.length === 0 && !this.logarithmic) {
-            // no tick lines, at least add lines for "from" and "to"
-            let from = Math.ceil(this.from / this.steps[0]) * this.steps[0];
-            ticks.push({
-                px: this.valueToPx(from),
-                value: from,
-                label: this.unit.formatValue(from),
-                color: globalViewOptions.blackBackground
-                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
-                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
-                textColor: globalViewOptions.blackBackground
-                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${maxTextColorOpacity})`
-                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${maxTextColorOpacity})`,
-                allowSnapTo: false,
-                step: undefined
-            });
-
-            let to = Math.floor(this.to / this.steps[0]) * this.steps[0];
-            ticks.push({
-                px: this.valueToPx(to),
-                value: to,
-                label: this.unit.formatValue(to),
-                color: globalViewOptions.blackBackground
-                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
-                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
-                textColor: globalViewOptions.blackBackground
-                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${maxTextColorOpacity})`
-                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${maxTextColorOpacity})`,
-                allowSnapTo: false,
-                step: undefined
-            });
-        } else if (this.logarithmic) {
-            ticks = ticks.sort((a, b) => a.px - b.px);
-
-            // set labels from the largest magnitude to the smallest
-            for (let iStep = steps.length - 1; iStep >= 0; iStep--) {
-                let step = steps[iStep];
-                for (let iTick = 0; iTick < ticks.length; ++iTick) {
-                    const tick = ticks[iTick];
-                    if (tick.step === step) {
-                        let foundTooCloseLabel = false;
-
-                        // test if there is a label on the left that is too close to this tick
-                        for (
-                            let i = iTick - 1;
-                            i >= 0 && tick.px - ticks[i].px < minLabelPx;
-                            i--
-                        ) {
-                            if (ticks[i].label) {
-                                foundTooCloseLabel = true;
-                                break;
-                            }
-                        }
-                        if (foundTooCloseLabel) {
-                            continue;
-                        }
-
-                        // test if there is a label on the right that is too close to this tick
-                        for (
-                            let i = iTick + 1;
-                            i < ticks.length &&
-                            ticks[i].px - tick.px < minLabelPx;
-                            i++
-                        ) {
-                            if (ticks[i].label) {
-                                foundTooCloseLabel = true;
-                                break;
-                            }
-                        }
-                        if (foundTooCloseLabel) {
-                            continue;
-                        }
-
-                        tick.label = this.unit.formatValue(tick.value);
-                    }
-                }
-            }
-        }
-
-        // remove duplicates, i.e. ticks with the same label
-        ticks = _uniqWith(ticks, (a, b) =>
-            a.label ? a.label === b.label : false
-        );
-
-        return ticks;
-    }
-
-    @computed
-    get maxScale() {
-        return this.axisModel.maxScale !== undefined
-            ? this.axisModel.maxScale
-            : 1e15;
-    }
-
-    panByDirection(direction: number) {
-        this.panByDistance(direction * CONF_PAN_STEP * this.distance);
-    }
-
-    panTo(newFrom: number) {
-        const distance = this.distance;
-        this.from = newFrom;
-        this.to = this.from + distance;
-    }
-
-    zoomAll() {
-        this.animate(() => (this.axisModel.dynamic.zoomMode = "all"));
-    }
-
-    zoomDefault() {
-        this.animate(() => (this.axisModel.dynamic.zoomMode = "default"));
-    }
-
-    @bind
-    zoomIn() {
-        if (!this.zoomInEnabled) {
-            return;
-        }
-
-        const c = (this.to + this.from) / 2;
-        const newDistance = this.distance / CONF_ZOOM_STEP;
-
-        this.zoom(c - newDistance / 2, c + newDistance / 2);
-    }
-
-    @bind
-    zoomOut() {
-        if (!this.zoomOutEnabled) {
-            return;
-        }
-
-        const c = (this.to + this.from) / 2;
-        const newDistance = this.distance * CONF_ZOOM_STEP;
-
-        this.zoom(c - newDistance / 2, c + newDistance / 2);
-    }
-
-    zoom(from: number, to: number) {
-        this.animate(() => {
-            this.from = from;
-            this.to = to;
-        });
-    }
-
-    zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean) {
-        if (zoomIn) {
-            if (!this.zoomInEnabled) {
-                return;
-            }
-        } else {
-            if (!this.zoomOutEnabled) {
-                return;
-            }
-        }
-
-        let distance = zoomIn
-            ? this.distance / CONF_ZOOM_STEP
-            : this.distance * CONF_ZOOM_STEP;
-
-        let from =
-            this.from +
-            ((this.distance - distance) * pivotPx) / this.distancePx;
-        let to = from + distance;
-
-        this.animate(() => {
-            this.from = from;
-            this.to = to;
-        });
-    }
-
-    @action
-    animate(set: () => void) {
-        if (!globalViewOptions.enableZoomAnimations) {
-            set();
-            return;
-        }
-
-        this.animationController.finish();
-
-        const oldFrom = this.from;
-        const oldTo = this.to;
-
-        this.animationFrom = oldFrom;
-        this.animationTo = oldTo;
-        this.isAnimationActive = true;
-
-        set();
-
-        const newFrom = this.from;
-        const newTo = this.to;
-
-        this.animationController.animate(
-            CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION,
-            {
-                step: action((t: number) => {
-                    if (t === 1) {
-                        this.isAnimationActive = false;
-                    } else {
-                        this.animationFrom = oldFrom + t * (newFrom - oldFrom);
-                        this.animationTo = oldTo + t * (newTo - oldTo);
-                    }
-                })
-            }
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-const MIN_FIXED_SCALE_POWER = -15;
-const MAX_FIXED_SCALE_POWER = 15;
-
-function calcSubdivisionScaleAndOffset(
-    from: number,
-    to: number,
-    subdivision: number
-) {
-    // first try heuristic to find nice round numbers
-    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
-        for (let k = 1; k < 10.0; k += 0.01) {
-            const scale = k * Math.pow(10, i);
-            const offset = Math.floor(from / scale) * scale;
-            const range = scale * subdivision;
-            if (offset + range >= to) {
-                return {
-                    scale,
-                    offset
-                };
-            }
-        }
-    }
-
-    const scale = (to - from) / subdivision;
-    const offset = from;
-
-    return {
-        scale,
-        offset
-    };
-}
-
-function scaleZoomIn(currentScale: number) {
-    for (let i = MAX_FIXED_SCALE_POWER; i >= MIN_FIXED_SCALE_POWER; i--) {
-        for (let k = 9; k >= 1; k--) {
-            const scale = k * Math.pow(10, i);
-            if (scale < currentScale) {
-                return scale;
-            }
-        }
-    }
-
-    return currentScale;
-}
-
-function scaleZoomOut(currentScale: number) {
-    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
-        for (let k = 1; k <= 9; k++) {
-            const scale = k * Math.pow(10, i);
-            if (scale > currentScale) {
-                return scale;
-            }
-        }
-    }
-
-    return currentScale;
-}
-
-class FixedAxisController extends AxisController {
-    constructor(
-        public position: "x" | "y" | "yRight",
-        public chartsController: ChartsController,
-        public chartController: ChartController | undefined, // undefined for position === 'x'
-        public axisModel: IAxisModel
-    ) {
-        super(position, chartsController, chartController, axisModel);
-    }
-
-    animationController = new AnimationController();
-
-    @observable animationSubdivisionOffset: number;
-    @observable animationSubdivisionScale: number;
-
-    get majorSubdivison() {
-        return this.position === "x"
-            ? this.chartsController.viewOptions.axesLines.majorSubdivision
-                  .horizontal
-            : this.chartsController.viewOptions.axesLines.majorSubdivision
-                  .vertical;
-    }
-
-    @computed
-    get subdivisionOffset() {
-        if (
-            this.chartsController.mode === "preview" ||
-            this.axisModel.fixed.zoomMode === "default"
-        ) {
-            return this.axisModel.defaultSubdivisionOffset !== undefined
-                ? this.axisModel.defaultSubdivisionOffset
-                : calcSubdivisionScaleAndOffset(
-                      this.axisModel.defaultFrom,
-                      this.axisModel.defaultTo,
-                      this.majorSubdivison
-                  ).offset;
-        }
-
-        if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(
-                this.minValue,
-                this.maxValue,
-                this.majorSubdivison
-            ).offset;
-        }
-
-        return this.axisModel.fixed.subdivisionOffset;
-    }
-
-    @computed
-    get subdivisionScale() {
-        if (
-            this.chartsController.mode === "preview" ||
-            this.axisModel.fixed.zoomMode === "default"
-        ) {
-            return this.axisModel.defaultSubdivisionScale !== undefined
-                ? this.axisModel.defaultSubdivisionScale
-                : calcSubdivisionScaleAndOffset(
-                      this.axisModel.defaultFrom,
-                      this.axisModel.defaultTo,
-                      this.majorSubdivison
-                  ).scale;
-        }
-
-        if (this.axisModel.fixed.zoomMode === "all") {
-            return calcSubdivisionScaleAndOffset(
-                this.minValue,
-                this.maxValue,
-                this.majorSubdivison
-            ).scale;
-        }
-
-        return this.axisModel.fixed.subdivisonScale;
-    }
-
-    @computed
-    get from() {
-        if (this.isDigital) {
-            return 0;
-        }
-
-        if (this.isAnimationActive) {
-            return this.animationSubdivisionOffset;
-        }
-
-        return this.subdivisionOffset;
-    }
-
-    @computed
-    get to() {
-        if (this.isDigital) {
-            return 1.0;
-        }
-
-        if (this.isAnimationActive) {
-            return (
-                this.animationSubdivisionOffset +
-                this.animationSubdivisionScale * this.majorSubdivison
-            );
-        }
-
-        return (
-            this.subdivisionOffset +
-            this.subdivisionScale * this.majorSubdivison
-        );
-    }
-
-    @computed
-    get minValue(): number {
-        const minValue = this._minValue;
-        if (
-            this.chartsController.mode === "preview" ||
-            this.axisModel.fixed.zoomMode === "all"
-        ) {
-            return minValue;
-        }
-        return Math.min(minValue, this.from);
-    }
-
-    @computed
-    get maxValue(): number {
-        const maxValue = super._maxValue;
-        if (
-            this.chartsController.mode === "preview" ||
-            this.axisModel.fixed.zoomMode === "all"
-        ) {
-            return maxValue;
-        }
-        return Math.max(maxValue, this.to);
-    }
-
-    @computed
-    get ticks() {
-        const minLabelPx =
-            this.position === "x"
-                ? CONF_X_AXIS_MIN_TICK_LABEL_WIDTH
-                : CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH;
-
-        let lines: ITick[] = [];
-
-        let n =
-            this.position === "x"
-                ? this.chartsController.viewOptions.axesLines.majorSubdivision
-                      .horizontal
-                : this.chartsController.viewOptions.axesLines.majorSubdivision
-                      .vertical;
-
-        let m =
-            this.position === "x"
-                ? this.chartsController.viewOptions.axesLines.minorSubdivision
-                      .horizontal
-                : this.chartsController.viewOptions.axesLines.minorSubdivision
-                      .vertical;
-
-        let minorSubdivision = (this.to - this.from) / (m * n);
-
-        let visibleLabelPx = 0;
-
-        let majorLineColor = globalViewOptions.blackBackground
-            ? CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_BLACK_BACKGROUND
-            : CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_WHITE_BACKGROUND;
-        let minorLineColor = globalViewOptions.blackBackground
-            ? CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND
-            : CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND;
-
-        let majorLineTextColor = globalViewOptions.blackBackground
-            ? CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND
-            : CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND;
-        let minorLineTextColor = globalViewOptions.blackBackground
-            ? CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND
-            : CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND;
-
-        for (let i = 0; i <= n * m; i++) {
-            const value = this.from + i * minorSubdivision;
-
-            let isMajorLine = i % m === 0;
-
-            let px = Math.round(this.valueToPx(value));
-
-            let isLabelVisible = false;
-            if (isMajorLine) {
-                if (this.position === "x") {
-                    if (i === 0 || i === n * m) {
-                        isLabelVisible = true;
-                    } else {
-                        if (
-                            px - visibleLabelPx >= minLabelPx &&
-                            Math.round(this.valueToPx(this.to)) - px >=
-                                minLabelPx
-                        ) {
-                            isLabelVisible = true;
-                        }
-                    }
-
-                    if (isLabelVisible) {
-                        visibleLabelPx = px;
-                    }
-                } else {
-                    isLabelVisible = true;
-                }
-            }
-
-            lines.push({
-                px,
-                value: value,
-                label: isLabelVisible ? this.unit.formatValue(value) : "",
-                color: isMajorLine ? majorLineColor : minorLineColor,
-                textColor: isMajorLine
-                    ? majorLineTextColor
-                    : minorLineTextColor,
-                isMajorLine: isMajorLine,
-                allowSnapTo: true,
-                step: undefined
-            });
-        }
-
-        return lines;
-    }
-
-    panByDirection(direction: number) {
-        this.panByDistance(direction * this.subdivisionScale);
-    }
-
-    panTo(newFrom: number) {
-        //newFrom = roundNumberWithMaxNumberOfDecimalDigits(newFrom, 2);
-        this.axisModel.fixed.subdivisionOffset = newFrom;
-        this.axisModel.fixed.subdivisonScale = this.subdivisionScale;
-        this.axisModel.fixed.zoomMode = "custom";
-    }
-
-    zoomAll() {
-        this.animate(() => (this.axisModel.fixed.zoomMode = "all"));
-    }
-
-    zoomDefault() {
-        this.animate(() => (this.axisModel.fixed.zoomMode = "default"));
-    }
-
-    @bind
-    zoomIn() {
-        if (!this.zoomInEnabled) {
-            return;
-        }
-
-        const c = (this.to + this.from) / 2;
-        const scale = scaleZoomIn(this.subdivisionScale);
-        const offset = c - (scale * this.majorSubdivison) / 2;
-
-        this.animate(() => {
-            this.axisModel.fixed.subdivisonScale = scale;
-            this.axisModel.fixed.subdivisionOffset = offset;
-            this.axisModel.fixed.zoomMode = "custom";
-        });
-    }
-
-    @bind
-    zoomOut() {
-        if (!this.zoomOutEnabled) {
-            return;
-        }
-
-        const c = (this.to + this.from) / 2;
-        const scale = scaleZoomOut(this.subdivisionScale);
-        const offset = c - (scale * this.majorSubdivison) / 2;
-
-        this.animate(() => {
-            this.axisModel.fixed.subdivisonScale = scale;
-            this.axisModel.fixed.subdivisionOffset = offset;
-            this.axisModel.fixed.zoomMode = "custom";
-        });
-    }
-
-    zoom(from: number, to: number) {
-        if (to - from < this.distance) {
-            if (!this.zoomInEnabled) {
-                return;
-            }
-        } else {
-            if (!this.zoomOutEnabled) {
-                return;
-            }
-        }
-
-        const result = calcSubdivisionScaleAndOffset(
-            from,
-            to,
-            this.majorSubdivison
-        );
-
-        this.animate(() => {
-            this.axisModel.fixed.subdivisonScale = result.scale;
-            this.axisModel.fixed.subdivisionOffset = result.offset;
-            this.axisModel.fixed.zoomMode = "custom";
-        });
-    }
-
-    zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean) {
-        if (zoomIn) {
-            if (!this.zoomInEnabled) {
-                return;
-            }
-        } else {
-            if (!this.zoomOutEnabled) {
-                return;
-            }
-        }
-
-        let newScale: number;
-        if (zoomIn) {
-            newScale = scaleZoomIn(this.subdivisionScale);
-        } else {
-            newScale = scaleZoomOut(this.subdivisionScale);
-        }
-
-        if (newScale !== this.subdivisionScale) {
-            let fixedOffset =
-                this.subdivisionOffset +
-                ((this.subdivisionScale - newScale) *
-                    this.majorSubdivison *
-                    pivotPx) /
-                    this.distancePx;
-
-            //fixedOffset = Math.floor(fixedOffset / newScale) * newScale;
-            //fixedOffset = roundNumberWithMaxNumberOfDecimalDigits(fixedOffset, 2);
-
-            this.animate(() => {
-                this.axisModel.fixed.subdivisionOffset = fixedOffset;
-                this.axisModel.fixed.subdivisonScale = newScale;
-                this.axisModel.fixed.zoomMode = "custom";
-            });
-        }
-    }
-
-    @action
-    animate(set: () => void) {
-        if (!globalViewOptions.enableZoomAnimations) {
-            set();
-            return;
-        }
-
-        this.animationController.finish();
-
-        const oldOffset = this.subdivisionOffset;
-        const oldScale = this.subdivisionScale;
-
-        this.isAnimationActive = true;
-        this.animationSubdivisionOffset = oldOffset;
-        this.animationSubdivisionScale = oldScale;
-
-        set();
-
-        const newOffset = this.subdivisionOffset;
-        const newScale = this.subdivisionScale;
-
-        this.animationController.animate(
-            CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION,
-            {
-                step: action((t: number) => {
-                    if (t === 1) {
-                        this.isAnimationActive = false;
-                    } else {
-                        this.animationSubdivisionOffset =
-                            oldOffset + t * (newOffset - oldOffset);
-                        this.animationSubdivisionScale =
-                            oldScale + t * (newScale - oldScale);
-                    }
-                })
-            }
-        );
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1680,453 +515,11 @@ export interface IViewOptions {
     setShowZoomButtons(value: boolean): void;
 }
 
-export class GlobalViewOptions {
-    static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
-
-    @observable enableZoomAnimations: boolean = true;
-    @observable blackBackground: boolean = false;
-    @observable renderAlgorithm: WaveformRenderAlgorithm = "minmax";
-    @observable showSampledData: boolean = false;
-
-    constructor() {
-        const globalViewOptionsJSON = localStorage.getItem(
-            GlobalViewOptions.LOCAL_STORAGE_ITEM_ID
-        );
-        if (globalViewOptionsJSON) {
-            try {
-                const globakViewOptionsJS = JSON.parse(globalViewOptionsJSON);
-                runInAction(() => Object.assign(this, globakViewOptionsJS));
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        autorun(() => {
-            localStorage.setItem(
-                GlobalViewOptions.LOCAL_STORAGE_ITEM_ID,
-                JSON.stringify(toJS(this))
-            );
-        });
-    }
-}
-
-export const globalViewOptions = new GlobalViewOptions();
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface ChartBookmark {
     value: number;
     text: string;
-}
-
-export abstract class ChartsController {
-    constructor(
-        public mode: ChartMode,
-        private xAxisModel: IAxisModel,
-        public viewOptions: IViewOptions
-    ) {}
-
-    chartControllers: ChartController[];
-
-    @computed
-    get xAxisController() {
-        if (this.viewOptions.axesLines.type === "dynamic") {
-            return new DynamicAxisController(
-                "x",
-                this,
-                undefined,
-                this.xAxisModel
-            );
-        } else {
-            return new FixedAxisController(
-                "x",
-                this,
-                undefined,
-                this.xAxisModel
-            );
-        }
-    }
-
-    @computed
-    get yAxisOnRightSideExists() {
-        return this.chartControllers.find(
-            chartController => !!chartController.yAxisControllerOnRightSide
-        );
-    }
-
-    @observable chartViewWidth: number | undefined;
-    @observable chartViewHeight: number | undefined;
-
-    @computed
-    get xAxisLabelTextsHeight() {
-        return Math.max(
-            CONF_MIN_X_AXIS_BAND_HEIGHT,
-            this.xAxisController.labelTextsHeight
-        );
-    }
-
-    @computed
-    get yAxisLabelTextsWidth() {
-        let maxLabelTextsWidth = 0;
-        for (let i = 0; i < this.chartControllers.length; i++) {
-            const chartController = this.chartControllers[i];
-            if (
-                chartController.yAxisController.labelTextsWidth >
-                maxLabelTextsWidth
-            ) {
-                maxLabelTextsWidth =
-                    chartController.yAxisController.labelTextsWidth;
-            }
-            if (
-                chartController.yAxisControllerOnRightSide &&
-                chartController.yAxisControllerOnRightSide.labelTextsWidth >
-                    maxLabelTextsWidth
-            ) {
-                maxLabelTextsWidth =
-                    chartController.yAxisControllerOnRightSide.labelTextsWidth;
-            }
-        }
-
-        if (this.mode === "preview") {
-            return maxLabelTextsWidth;
-        }
-
-        return Math.max(
-            CONF_MIN_Y_SCALE_LABELS_WIDTH,
-            maxLabelTextsWidth + CONF_LABEL_TICK_GAP_HORZ
-        );
-    }
-
-    @computed
-    get xAxisHeight() {
-        let xAxisHeight = SCROLL_BAR_SIZE;
-        if (
-            this.viewOptions.showZoomButtons &&
-            this.viewOptions.showAxisLabels
-        ) {
-            xAxisHeight += Math.max(ZOOM_ICON_SIZE, this.xAxisLabelTextsHeight);
-        } else if (this.viewOptions.showZoomButtons) {
-            xAxisHeight += ZOOM_ICON_SIZE;
-        } else if (this.viewOptions.showAxisLabels) {
-            xAxisHeight += this.xAxisLabelTextsHeight;
-        }
-        return xAxisHeight;
-    }
-
-    @computed
-    get minLeftMargin() {
-        let margin = SCROLL_BAR_SIZE;
-
-        if (
-            this.viewOptions.showZoomButtons &&
-            this.viewOptions.showAxisLabels
-        ) {
-            margin += Math.max(ZOOM_ICON_SIZE, this.yAxisLabelTextsWidth);
-        } else if (this.viewOptions.showZoomButtons) {
-            margin += ZOOM_ICON_SIZE;
-        } else if (this.viewOptions.showAxisLabels) {
-            margin += this.yAxisLabelTextsWidth;
-        }
-
-        return margin;
-    }
-
-    @computed
-    get minRightMargin() {
-        let margin = SCROLL_BAR_SIZE;
-
-        if (this.yAxisOnRightSideExists) {
-            if (
-                this.viewOptions.showZoomButtons &&
-                this.viewOptions.showAxisLabels
-            ) {
-                margin += Math.max(ZOOM_ICON_SIZE, this.yAxisLabelTextsWidth);
-            } else if (this.viewOptions.showZoomButtons) {
-                margin += ZOOM_ICON_SIZE;
-            } else if (this.viewOptions.showAxisLabels) {
-                margin += this.yAxisLabelTextsWidth;
-            }
-        }
-
-        return margin + 1;
-    }
-
-    @computed
-    get minTopMargin() {
-        return CONF_LABEL_TICK_GAP_VERT;
-    }
-
-    @computed
-    get minBottomMargin() {
-        return CONF_LABEL_TICK_GAP_VERT;
-    }
-
-    @computed
-    get maxChartWidth() {
-        return this.chartViewWidth
-            ? Math.max(
-                  this.chartViewWidth -
-                      this.minLeftMargin -
-                      this.minRightMargin,
-                  1
-              )
-            : 1;
-    }
-    @computed
-    get maxChartHeight() {
-        return this.chartViewHeight
-            ? Math.max(
-                  this.chartViewHeight -
-                      this.minTopMargin -
-                      this.minBottomMargin,
-                  1
-              )
-            : 1;
-    }
-
-    @computed
-    get chartWidth() {
-        if (this.viewOptions.axesLines.type === "dynamic") {
-            return this.maxChartWidth;
-        }
-
-        if (
-            this.maxChartWidth /
-                this.viewOptions.axesLines.majorSubdivision.horizontal <
-            this.maxChartHeight /
-                this.viewOptions.axesLines.majorSubdivision.vertical
-        ) {
-            return this.maxChartWidth;
-        }
-
-        return (
-            (this.viewOptions.axesLines.majorSubdivision.horizontal *
-                this.maxChartHeight) /
-            this.viewOptions.axesLines.majorSubdivision.vertical
-        );
-    }
-
-    @computed
-    get chartHeight() {
-        if (this.viewOptions.axesLines.type === "dynamic") {
-            return this.maxChartHeight;
-        }
-
-        if (
-            this.maxChartWidth /
-                this.viewOptions.axesLines.majorSubdivision.horizontal <
-            this.maxChartHeight /
-                this.viewOptions.axesLines.majorSubdivision.vertical
-        ) {
-            return (
-                (this.viewOptions.axesLines.majorSubdivision.vertical *
-                    this.maxChartWidth) /
-                this.viewOptions.axesLines.majorSubdivision.horizontal
-            );
-        }
-
-        return this.maxChartHeight;
-    }
-
-    @computed
-    get leftMargin() {
-        if (this.chartWidth === this.maxChartWidth) {
-            return this.minLeftMargin;
-        }
-        return (
-            this.minLeftMargin +
-            Math.round((this.maxChartWidth - this.chartWidth) / 2)
-        );
-    }
-
-    @computed
-    get rightMargin() {
-        if (this.chartWidth === this.maxChartWidth) {
-            return this.minRightMargin;
-        }
-        return (
-            this.minRightMargin +
-            (this.maxChartWidth - this.chartWidth) -
-            Math.round((this.maxChartWidth - this.chartWidth) / 2)
-        );
-    }
-
-    @computed
-    get topMargin() {
-        if (this.chartHeight === this.maxChartHeight) {
-            return this.minTopMargin;
-        }
-        return (
-            this.minTopMargin +
-            Math.round((this.maxChartHeight - this.chartHeight) / 2)
-        );
-    }
-
-    @computed
-    get bottomMargin() {
-        if (this.chartHeight === this.maxChartHeight) {
-            return this.minBottomMargin;
-        }
-        return (
-            this.minBottomMargin +
-            (this.maxChartHeight - this.chartHeight) -
-            Math.round((this.maxChartHeight - this.chartHeight) / 2)
-        );
-    }
-
-    @computed
-    get chartLeft() {
-        return this.leftMargin + 0.5;
-    }
-
-    @computed
-    get chartTop() {
-        return this.topMargin + 0.5;
-    }
-
-    @computed
-    get chartRight() {
-        return this.chartLeft + this.chartWidth;
-    }
-
-    @computed
-    get chartBottom() {
-        return this.chartTop + this.chartHeight;
-    }
-
-    @computed
-    get minValue() {
-        return this.chartControllers.length > 0
-            ? Math.min(
-                  ...this.chartControllers.map(
-                      chartController => chartController.minValue.x
-                  )
-              )
-            : 0;
-    }
-
-    @computed
-    get maxValue() {
-        return this.chartControllers.length > 0
-            ? Math.max(
-                  ...this.chartControllers.map(
-                      chartController => chartController.maxValue.x
-                  )
-              )
-            : 1;
-    }
-
-    @computed
-    get isZoomAllEnabled() {
-        return (
-            this.xAxisController.from != this.minValue ||
-            this.xAxisController.to != this.maxValue ||
-            this.chartControllers.find(chartController => {
-                return (
-                    chartController.yAxisController.from !=
-                        chartController.yAxisController.minValue ||
-                    chartController.yAxisController.to !=
-                        chartController.yAxisController.maxValue ||
-                    (chartController.yAxisControllerOnRightSide &&
-                        (chartController.yAxisController.from !=
-                            chartController.yAxisController.minValue ||
-                            chartController.yAxisController.to !=
-                                chartController.yAxisController.maxValue))
-                );
-            })
-        );
-    }
-
-    get areZoomButtonsVisible() {
-        return this.mode !== "preview" && this.viewOptions.showZoomButtons;
-    }
-
-    @action.bound
-    zoomAll() {
-        this.xAxisController.zoomAll();
-        this.chartControllers.forEach(chartController =>
-            chartController.zoomAll()
-        );
-    }
-
-    @action.bound
-    zoomDefault() {
-        this.xAxisController.zoomDefault();
-        this.chartControllers.forEach(chartController =>
-            chartController.zoomDefault()
-        );
-    }
-
-    abstract get chartViewOptionsProps(): ChartViewOptionsProps;
-
-    get supportRulers() {
-        return false;
-    }
-
-    get bookmarks(): ChartBookmark[] | undefined {
-        return undefined;
-    }
-
-    @computed get lineControllers() {
-        const lineControllers: ILineController[] = [];
-
-        this.chartControllers.forEach(chartController => {
-            chartController.lineControllers.forEach(lineController =>
-                lineControllers.push(lineController)
-            );
-        });
-
-        return lineControllers;
-    }
-
-    rulersController: RulersController;
-    measurementsController: MeasurementsController;
-
-    createRulersController(rulersModel: RulersModel) {
-        if (this.supportRulers && this.mode !== "preview") {
-            this.rulersController = new RulersController(this, rulersModel);
-        }
-    }
-
-    createMeasurementsController(measurementsModel: MeasurementsModel) {
-        if (this.supportRulers && this.mode !== "preview") {
-            if (this.measurementsController) {
-                this.measurementsController.destroy();
-            }
-            this.measurementsController = new MeasurementsController(
-                this,
-                measurementsModel
-            );
-        }
-    }
-
-    destroy() {
-        if (this.measurementsController) {
-            this.measurementsController.destroy();
-        }
-    }
-
-    @observable selectedBookmark = -1;
-
-    @action
-    selectBookmark(index: number) {
-        this.selectedBookmark = index;
-
-        if (
-            this.bookmarks &&
-            this.selectedBookmark >= 0 &&
-            this.selectedBookmark < this.bookmarks.length
-        ) {
-            const value = this.bookmarks[this.selectedBookmark].value;
-            let from = this.xAxisController.from;
-            let to = this.xAxisController.to;
-            if (!(value >= from && value < to)) {
-                from = value - this.xAxisController.distance / 2;
-                to = from + this.xAxisController.distance;
-                this.xAxisController.zoom(from, to);
-            }
-        }
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2534,7 +927,7 @@ class AxisScrollBar extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class AxisView extends React.Component<
+export class AxisView extends React.Component<
     {
         axisController: AxisController;
     },
@@ -3730,7 +2123,7 @@ function Arrow() {
     );
 }
 
-function HelpView(props: any) {
+export function HelpView(props: any) {
     return (
         <div className="EezStudio_HelpView">
             <table>
@@ -3832,17 +2225,1041 @@ function HelpView(props: any) {
     );
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-interface ChartsViewInterface {
-    chartsController: ChartsController;
-    className?: string;
-    tabIndex?: number;
-    sideDockAvailable?: boolean;
+interface IAnimation {
+    step(t: number): void;
 }
 
+export class AnimationController {
+    animationState:
+        | {
+              duration: number;
+              animation: IAnimation;
+              startTime: number;
+          }
+        | undefined;
+
+    animate(duration: number, animation: IAnimation) {
+        this.finish();
+
+        this.animationState = {
+            duration,
+            animation,
+            startTime: new Date().getTime()
+        };
+    }
+
+    finish() {
+        if (this.animationState) {
+            this.animationState.animation.step(1);
+            this.animationState = undefined;
+        }
+    }
+
+    frameAnimation() {
+        if (this.animationState) {
+            let t = clamp(
+                (new Date().getTime() - this.animationState.startTime) /
+                    this.animationState.duration,
+                0,
+                1
+            );
+            this.animationState.animation.step(t);
+            if (t === 1) {
+                this.animationState = undefined;
+            }
+        }
+    }
+}
+
+export function getAxisController(chartsController: ChartsController) {
+    if (chartsController.viewOptions.axesLines.type === "dynamic") {
+        return new DynamicAxisController(
+            "x",
+            chartsController,
+            undefined,
+            chartsController.xAxisModel
+        );
+    } else {
+        return new FixedAxisController(
+            "x",
+            chartsController,
+            undefined,
+            chartsController.xAxisModel
+        );
+    }
+}
+
+export abstract class AxisController {
+    constructor(
+        public position: "x" | "y" | "yRight",
+        public chartsController: ChartsController,
+        public chartController: ChartController | undefined,
+        public axisModel: IAxisModel
+    ) {}
+
+    get unit() {
+        return this.axisModel.unit;
+    }
+
+    @observable labelTextsWidth: number = 0;
+    @observable labelTextsHeight: number = 0;
+
+    @observable isAnimationActive: boolean;
+    animationController = new AnimationController();
+
+    isDigital = false;
+
+    get logarithmic() {
+        return this.axisModel.logarithmic;
+    }
+
+    abstract get from(): number;
+    abstract get to(): number;
+
+    @computed
+    get isScrollBarEnabled() {
+        return (
+            (this.from > this.minValue || this.to < this.maxValue) &&
+            this.range != 0
+        );
+    }
+
+    get _minValue() {
+        return this.position === "x"
+            ? this.chartsController.minValue
+            : this.chartController!.minValue[this.position];
+    }
+
+    @computed
+    get minValue() {
+        return this._minValue;
+    }
+
+    get _maxValue() {
+        return this.position === "x"
+            ? this.chartsController.maxValue
+            : this.chartController!.maxValue[this.position];
+    }
+
+    @computed
+    get maxValue() {
+        return this._maxValue;
+    }
+
+    @computed
+    get range() {
+        return this.maxValue - this.minValue;
+    }
+
+    @computed
+    get distancePx() {
+        return this.position === "x"
+            ? this.chartsController.chartWidth
+            : this.chartsController.chartHeight;
+    }
+
+    @computed
+    get distance() {
+        return this.to - this.from || 1;
+    }
+
+    @computed
+    get scale() {
+        return this.distancePx / this.distance;
+    }
+
+    @computed
+    get minScale() {
+        return 1e-15;
+    }
+
+    @computed
+    get maxScale() {
+        return 1e15;
+    }
+
+    toLogScale(value: number) {
+        value = Math.pow(
+            10,
+            (value * Math.log10(this.maxValue)) / this.maxValue
+        );
+        if (value < this.minValue) {
+            value = this.minValue;
+        } else if (value > this.maxValue) {
+            value = this.maxValue;
+        }
+        return value;
+    }
+
+    fromLogScale(value: number) {
+        value = (Math.log10(value) * this.maxValue) / Math.log10(this.maxValue);
+        if (value < this.minValue) {
+            value = this.minValue;
+        } else if (value > this.maxValue) {
+            value = this.maxValue;
+        }
+        return value;
+    }
+
+    pxToLinearValue(px: number) {
+        return this.from + px / this.scale;
+    }
+
+    pxToValue(px: number) {
+        if (this.axisModel.logarithmic) {
+            return this.toLogScale(this.pxToLinearValue(px));
+        } else {
+            return this.pxToLinearValue(px);
+        }
+    }
+
+    linearValueToPx(value: number) {
+        return (value - this.from) * this.scale;
+    }
+
+    valueToPx(value: number) {
+        if (this.axisModel.logarithmic) {
+            return this.linearValueToPx(this.fromLogScale(value));
+        } else {
+            return this.linearValueToPx(value);
+        }
+    }
+
+    abstract get ticks(): ITick[];
+
+    panByDistanceInPx(distanceInPx: number) {
+        return this.panByDistance(distanceInPx / this.scale);
+    }
+
+    panByDistance(distance: number) {
+        this.panTo(this.from + distance);
+    }
+
+    abstract panByDirection(direction: number): void;
+
+    abstract panTo(to: number): void;
+
+    valueToPoint(timeValue: { time: number; value: number }) {
+        return {
+            x: this.chartsController.xAxisController.valueToPx(timeValue.time),
+            y: this.valueToPx(timeValue.value)
+        };
+    }
+
+    pointToValue(point: Point) {
+        return {
+            time: this.chartsController.xAxisController.pxToValue(point.x),
+            value: this.pxToValue(point.y)
+        };
+    }
+
+    abstract zoomAll(): void;
+
+    abstract zoomDefault(): void;
+
+    @computed
+    get zoomInEnabled() {
+        return this.scale < this.maxScale;
+    }
+
+    abstract zoomIn(): void;
+
+    @computed
+    get zoomOutEnabled() {
+        return this.scale > this.minScale;
+    }
+
+    abstract zoomOut(): void;
+
+    abstract zoom(from: number, to: number): void;
+
+    abstract zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean): void;
+
+    pageUp() {
+        this.panTo(this.from + this.distance / 2);
+    }
+
+    pageDown() {
+        this.panTo(this.from - this.distance / 2);
+    }
+
+    home() {
+        this.panTo(this.minValue);
+    }
+
+    end() {
+        this.panTo(this.maxValue - this.distance);
+    }
+
+    get numSamples() {
+        let numSamples = 0;
+        for (let i = 0; i < this.chartsController.lineControllers.length; ++i) {
+            let waveformModel =
+                this.chartsController.lineControllers[i].getWaveformModel();
+            if (waveformModel && waveformModel.length > numSamples) {
+                numSamples = waveformModel.length;
+            }
+        }
+        return numSamples;
+    }
+}
+
+export abstract class ChartsController {
+    constructor(
+        public mode: ChartMode,
+        public xAxisModel: IAxisModel,
+        public viewOptions: IViewOptions
+    ) {}
+
+    chartControllers: ChartController[];
+
+    @computed
+    get xAxisController() {
+        return getAxisController(this);
+    }
+
+    @computed
+    get yAxisOnRightSideExists() {
+        return this.chartControllers.find(
+            chartController => !!chartController.yAxisControllerOnRightSide
+        );
+    }
+
+    @observable chartViewWidth: number | undefined;
+    @observable chartViewHeight: number | undefined;
+
+    @computed
+    get xAxisLabelTextsHeight() {
+        return Math.max(
+            CONF_MIN_X_AXIS_BAND_HEIGHT,
+            this.xAxisController.labelTextsHeight
+        );
+    }
+
+    @computed
+    get yAxisLabelTextsWidth() {
+        let maxLabelTextsWidth = 0;
+        for (let i = 0; i < this.chartControllers.length; i++) {
+            const chartController = this.chartControllers[i];
+            if (
+                chartController.yAxisController.labelTextsWidth >
+                maxLabelTextsWidth
+            ) {
+                maxLabelTextsWidth =
+                    chartController.yAxisController.labelTextsWidth;
+            }
+            if (
+                chartController.yAxisControllerOnRightSide &&
+                chartController.yAxisControllerOnRightSide.labelTextsWidth >
+                    maxLabelTextsWidth
+            ) {
+                maxLabelTextsWidth =
+                    chartController.yAxisControllerOnRightSide.labelTextsWidth;
+            }
+        }
+
+        if (this.mode === "preview") {
+            return maxLabelTextsWidth;
+        }
+
+        return Math.max(
+            CONF_MIN_Y_SCALE_LABELS_WIDTH,
+            maxLabelTextsWidth + CONF_LABEL_TICK_GAP_HORZ
+        );
+    }
+
+    @computed
+    get xAxisHeight() {
+        let xAxisHeight = SCROLL_BAR_SIZE;
+        if (
+            this.viewOptions.showZoomButtons &&
+            this.viewOptions.showAxisLabels
+        ) {
+            xAxisHeight += Math.max(ZOOM_ICON_SIZE, this.xAxisLabelTextsHeight);
+        } else if (this.viewOptions.showZoomButtons) {
+            xAxisHeight += ZOOM_ICON_SIZE;
+        } else if (this.viewOptions.showAxisLabels) {
+            xAxisHeight += this.xAxisLabelTextsHeight;
+        }
+        return xAxisHeight;
+    }
+
+    @computed
+    get minLeftMargin() {
+        let margin = SCROLL_BAR_SIZE;
+
+        if (
+            this.viewOptions.showZoomButtons &&
+            this.viewOptions.showAxisLabels
+        ) {
+            margin += Math.max(ZOOM_ICON_SIZE, this.yAxisLabelTextsWidth);
+        } else if (this.viewOptions.showZoomButtons) {
+            margin += ZOOM_ICON_SIZE;
+        } else if (this.viewOptions.showAxisLabels) {
+            margin += this.yAxisLabelTextsWidth;
+        }
+
+        return margin;
+    }
+
+    @computed
+    get minRightMargin() {
+        let margin = SCROLL_BAR_SIZE;
+
+        if (this.yAxisOnRightSideExists) {
+            if (
+                this.viewOptions.showZoomButtons &&
+                this.viewOptions.showAxisLabels
+            ) {
+                margin += Math.max(ZOOM_ICON_SIZE, this.yAxisLabelTextsWidth);
+            } else if (this.viewOptions.showZoomButtons) {
+                margin += ZOOM_ICON_SIZE;
+            } else if (this.viewOptions.showAxisLabels) {
+                margin += this.yAxisLabelTextsWidth;
+            }
+        }
+
+        return margin + 1;
+    }
+
+    @computed
+    get minTopMargin() {
+        return CONF_LABEL_TICK_GAP_VERT;
+    }
+
+    @computed
+    get minBottomMargin() {
+        return CONF_LABEL_TICK_GAP_VERT;
+    }
+
+    @computed
+    get maxChartWidth() {
+        return this.chartViewWidth
+            ? Math.max(
+                  this.chartViewWidth -
+                      this.minLeftMargin -
+                      this.minRightMargin,
+                  1
+              )
+            : 1;
+    }
+    @computed
+    get maxChartHeight() {
+        return this.chartViewHeight
+            ? Math.max(
+                  this.chartViewHeight -
+                      this.minTopMargin -
+                      this.minBottomMargin,
+                  1
+              )
+            : 1;
+    }
+
+    @computed
+    get chartWidth() {
+        if (this.viewOptions.axesLines.type === "dynamic") {
+            return this.maxChartWidth;
+        }
+
+        if (
+            this.maxChartWidth /
+                this.viewOptions.axesLines.majorSubdivision.horizontal <
+            this.maxChartHeight /
+                this.viewOptions.axesLines.majorSubdivision.vertical
+        ) {
+            return this.maxChartWidth;
+        }
+
+        return (
+            (this.viewOptions.axesLines.majorSubdivision.horizontal *
+                this.maxChartHeight) /
+            this.viewOptions.axesLines.majorSubdivision.vertical
+        );
+    }
+
+    @computed
+    get chartHeight() {
+        if (this.viewOptions.axesLines.type === "dynamic") {
+            return this.maxChartHeight;
+        }
+
+        if (
+            this.maxChartWidth /
+                this.viewOptions.axesLines.majorSubdivision.horizontal <
+            this.maxChartHeight /
+                this.viewOptions.axesLines.majorSubdivision.vertical
+        ) {
+            return (
+                (this.viewOptions.axesLines.majorSubdivision.vertical *
+                    this.maxChartWidth) /
+                this.viewOptions.axesLines.majorSubdivision.horizontal
+            );
+        }
+
+        return this.maxChartHeight;
+    }
+
+    @computed
+    get leftMargin() {
+        if (this.chartWidth === this.maxChartWidth) {
+            return this.minLeftMargin;
+        }
+        return (
+            this.minLeftMargin +
+            Math.round((this.maxChartWidth - this.chartWidth) / 2)
+        );
+    }
+
+    @computed
+    get rightMargin() {
+        if (this.chartWidth === this.maxChartWidth) {
+            return this.minRightMargin;
+        }
+        return (
+            this.minRightMargin +
+            (this.maxChartWidth - this.chartWidth) -
+            Math.round((this.maxChartWidth - this.chartWidth) / 2)
+        );
+    }
+
+    @computed
+    get topMargin() {
+        if (this.chartHeight === this.maxChartHeight) {
+            return this.minTopMargin;
+        }
+        return (
+            this.minTopMargin +
+            Math.round((this.maxChartHeight - this.chartHeight) / 2)
+        );
+    }
+
+    @computed
+    get bottomMargin() {
+        if (this.chartHeight === this.maxChartHeight) {
+            return this.minBottomMargin;
+        }
+        return (
+            this.minBottomMargin +
+            (this.maxChartHeight - this.chartHeight) -
+            Math.round((this.maxChartHeight - this.chartHeight) / 2)
+        );
+    }
+
+    @computed
+    get chartLeft() {
+        return this.leftMargin + 0.5;
+    }
+
+    @computed
+    get chartTop() {
+        return this.topMargin + 0.5;
+    }
+
+    @computed
+    get chartRight() {
+        return this.chartLeft + this.chartWidth;
+    }
+
+    @computed
+    get chartBottom() {
+        return this.chartTop + this.chartHeight;
+    }
+
+    @computed
+    get minValue() {
+        return this.chartControllers.length > 0
+            ? Math.min(
+                  ...this.chartControllers.map(
+                      chartController => chartController.minValue.x
+                  )
+              )
+            : 0;
+    }
+
+    @computed
+    get maxValue() {
+        return this.chartControllers.length > 0
+            ? Math.max(
+                  ...this.chartControllers.map(
+                      chartController => chartController.maxValue.x
+                  )
+              )
+            : 1;
+    }
+
+    @computed
+    get isZoomAllEnabled() {
+        return (
+            this.xAxisController.from != this.minValue ||
+            this.xAxisController.to != this.maxValue ||
+            this.chartControllers.find(chartController => {
+                return (
+                    chartController.yAxisController.from !=
+                        chartController.yAxisController.minValue ||
+                    chartController.yAxisController.to !=
+                        chartController.yAxisController.maxValue ||
+                    (chartController.yAxisControllerOnRightSide &&
+                        (chartController.yAxisController.from !=
+                            chartController.yAxisController.minValue ||
+                            chartController.yAxisController.to !=
+                                chartController.yAxisController.maxValue))
+                );
+            })
+        );
+    }
+
+    get areZoomButtonsVisible() {
+        return this.mode !== "preview" && this.viewOptions.showZoomButtons;
+    }
+
+    @action.bound
+    zoomAll() {
+        this.xAxisController.zoomAll();
+        this.chartControllers.forEach(chartController =>
+            chartController.zoomAll()
+        );
+    }
+
+    @action.bound
+    zoomDefault() {
+        this.xAxisController.zoomDefault();
+        this.chartControllers.forEach(chartController =>
+            chartController.zoomDefault()
+        );
+    }
+
+    abstract get chartViewOptionsProps(): ChartViewOptionsProps;
+
+    get supportRulers() {
+        return false;
+    }
+
+    get bookmarks(): ChartBookmark[] | undefined {
+        return undefined;
+    }
+
+    @computed get lineControllers() {
+        const lineControllers: ILineController[] = [];
+
+        this.chartControllers.forEach(chartController => {
+            chartController.lineControllers.forEach(lineController =>
+                lineControllers.push(lineController)
+            );
+        });
+
+        return lineControllers;
+    }
+
+    rulersController: RulersController;
+    measurementsController: MeasurementsController;
+
+    createRulersController(rulersModel: RulersModel) {
+        if (this.supportRulers && this.mode !== "preview") {
+            this.rulersController = new RulersController(this, rulersModel);
+        }
+    }
+
+    createMeasurementsController(measurementsModel: MeasurementsModel) {
+        if (this.supportRulers && this.mode !== "preview") {
+            if (this.measurementsController) {
+                this.measurementsController.destroy();
+            }
+            this.measurementsController = new MeasurementsController(
+                this,
+                measurementsModel
+            );
+        }
+    }
+
+    destroy() {
+        if (this.measurementsController) {
+            this.measurementsController.destroy();
+        }
+    }
+
+    @observable selectedBookmark = -1;
+
+    @action
+    selectBookmark(index: number) {
+        this.selectedBookmark = index;
+
+        if (
+            this.bookmarks &&
+            this.selectedBookmark >= 0 &&
+            this.selectedBookmark < this.bookmarks.length
+        ) {
+            const value = this.bookmarks[this.selectedBookmark].value;
+            let from = this.xAxisController.from;
+            let to = this.xAxisController.to;
+            if (!(value >= from && value < to)) {
+                from = value - this.xAxisController.distance / 2;
+                to = from + this.xAxisController.distance;
+                this.xAxisController.zoom(from, to);
+            }
+        }
+    }
+
+    isMultiWaveformChartsController = false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE = 1000000;
+
+////////////////////////////////////////////////////////////////////////////////
+
+let calculatingToastId: any;
+
+const Fade = cssTransition({
+    enter: "fadeIn",
+    exit: "fadeOut"
+});
+
+export function showCalculating() {
+    if (!calculatingToastId) {
+        calculatingToastId = notification.info("Calculating...", {
+            transition: Fade,
+            closeButton: false,
+            position: "top-center"
+        });
+    }
+}
+
+export function hideCalculating() {
+    if (calculatingToastId) {
+        notification.dismiss(calculatingToastId);
+        calculatingToastId = undefined;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class MeasurementsController {
+    dispose1: any;
+    dispose2: any;
+    dispose3: any;
+
+    constructor(
+        public chartsController: ChartsController,
+        public measurementsModel: MeasurementsModel
+    ) {
+        this.dispose1 = reaction(
+            () => toJS(this.measurementsModel.measurements),
+            () => {
+                const measurements = this.measurementsModel.measurements.map(
+                    measurementDefinition => {
+                        // reuse existing Measurement object if exists
+                        const measurement = this.measurements.find(
+                            measurement =>
+                                measurementDefinition.measurementId ===
+                                measurement.measurementId
+                        );
+                        if (measurement) {
+                            return measurement;
+                        }
+
+                        // create a new Measurement object
+                        return new Measurement(
+                            this,
+                            measurementDefinition,
+                            measurementFunctions
+                                .get()
+                                .get(
+                                    measurementDefinition.measurementFunctionId
+                                )
+                        );
+                    }
+                );
+
+                this.measurements = measurements;
+            }
+        );
+
+        this.measurements = this.measurementsModel.measurements.map(
+            measurementDefinition =>
+                new Measurement(
+                    this,
+                    measurementDefinition,
+                    measurementFunctions
+                        .get()
+                        .get(measurementDefinition.measurementFunctionId)
+                )
+        );
+
+        //////////
+        this.dispose2 = autorun(() => {
+            let newChartPanelsViewState: string | undefined;
+
+            if (this.chartMeasurements.length > 0) {
+                let content;
+                try {
+                    content = JSON.parse(
+                        this.measurementsModel.chartPanelsViewState!
+                    );
+                } catch (err) {
+                    content = undefined;
+                }
+
+                if (content) {
+                    const goldenLayout: any = new GoldenLayout(
+                        { content },
+                        document.createElement("div")
+                    );
+                    goldenLayout.registerComponent(
+                        "MeasurementValue",
+                        function () {}
+                    );
+                    goldenLayout.init();
+
+                    const existingChartMeasurementIds = goldenLayout.root
+                        .getItemsByType("component")
+                        .map((contentItem: any) => contentItem.config.id);
+
+                    const chartMeasurementIds = this.chartMeasurements.map(
+                        measurement => measurement.measurementId
+                    );
+
+                    const removed = _difference(
+                        existingChartMeasurementIds,
+                        chartMeasurementIds
+                    );
+                    const added = _difference(
+                        chartMeasurementIds,
+                        existingChartMeasurementIds
+                    );
+
+                    removed.forEach(id => {
+                        const item = goldenLayout.root.getItemsById(id)[0];
+                        if (item.parent.type === "stack") {
+                            item.parent.setActiveContentItem(item);
+                        }
+                        item.remove();
+                    });
+
+                    added.forEach(id => {
+                        const measurement = this.findMeasurementById(id);
+
+                        if (!goldenLayout.root.contentItems[0]) {
+                            goldenLayout.root.addChild({
+                                type: "stack",
+                                content: []
+                            });
+                        }
+
+                        goldenLayout.root.contentItems[0].addChild(
+                            measurement!.chartPanelConfiguration,
+                            goldenLayout.root
+                        );
+                    });
+
+                    goldenLayout.root
+                        .getItemsByType("component")
+                        .map((contentItem: any) => {
+                            const measurement = this.findMeasurementById(
+                                contentItem.config.id
+                            );
+                            contentItem.setTitle(measurement!.chartPanelTitle);
+                        });
+
+                    newChartPanelsViewState = JSON.stringify(
+                        goldenLayout.config.content
+                    );
+                } else {
+                    newChartPanelsViewState = JSON.stringify(
+                        this.defaultChartPanelViewState
+                    );
+                }
+            } else {
+                newChartPanelsViewState = undefined;
+            }
+
+            if (newChartPanelsViewState != this.chartPanelsViewState) {
+                runInAction(() => {
+                    this.chartPanelsViewState = newChartPanelsViewState;
+                    this.measurementsModel.chartPanelsViewState =
+                        newChartPanelsViewState;
+                });
+            }
+        });
+
+        if (this.measurementsModel.chartPanelsViewState) {
+            this.chartPanelsViewState =
+                this.measurementsModel.chartPanelsViewState;
+        } else {
+            this.chartPanelsViewState = JSON.stringify(
+                this.defaultChartPanelViewState
+            );
+        }
+
+        // mark dirty all chart measurements when measurement interval changes
+        this.dispose3 = reaction(
+            () => ({
+                isAnimationActive:
+                    this.chartsController.xAxisController.isAnimationActive,
+                measurementsInterval: this.calcMeasurementsInterval(),
+                measurements: this.measurementsModel.measurements
+            }),
+            ({ isAnimationActive, measurementsInterval, measurements }) => {
+                if (!isAnimationActive && measurements.length > 0) {
+                    if (
+                        !this.measurementsInterval ||
+                        measurementsInterval.x1 !=
+                            this.measurementsInterval.x1 ||
+                        measurementsInterval.x2 != this.measurementsInterval.x2
+                    ) {
+                        this.measurements.forEach(
+                            action(measurement => (measurement.dirty = true))
+                        );
+                    }
+                }
+            }
+        );
+    }
+
+    @observable measurements: Measurement[];
+    @observable measurementsInterval: { x1: number; x2: number } | undefined;
+
+    @computed get refreshRequired() {
+        return !!this.measurements.find(measurement => measurement.dirty);
+    }
+
+    timeoutId: any;
+
+    calcMeasurementsInterval() {
+        const rulersModel = this.chartsController.rulersController!.rulersModel;
+
+        let x1: number;
+        let x2: number;
+        if (rulersModel.xAxisRulersEnabled) {
+            if (rulersModel.x1 < rulersModel.x2) {
+                x1 = rulersModel.x1;
+                x2 = rulersModel.x2;
+            } else {
+                x1 = rulersModel.x2;
+                x2 = rulersModel.x1;
+            }
+        } else {
+            x1 = this.chartsController.xAxisController.from;
+            x2 = this.chartsController.xAxisController.to;
+        }
+
+        let numSamples = 0;
+
+        for (let i = 0; i < this.chartsController.lineControllers.length; ++i) {
+            const waveformModel =
+                this.chartsController.lineControllers[i].getWaveformModel();
+            if (waveformModel) {
+                numSamples = Math.max(
+                    numSamples,
+                    waveformModel.samplingRate * (x2 - x1)
+                );
+            }
+        }
+
+        return { x1, x2, numSamples };
+    }
+
+    startMeasurement(measurementsInterval: {
+        x1: number;
+        x2: number;
+        numSamples: number;
+    }) {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = undefined;
+        }
+
+        if (
+            measurementsInterval.numSamples >
+            CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE
+        ) {
+            showCalculating();
+            this.timeoutId = setTimeout(() => {
+                this.timeoutId = undefined;
+                runInAction(
+                    () => (this.measurementsInterval = measurementsInterval)
+                );
+                setTimeout(() => {
+                    hideCalculating();
+                }, 10);
+                this.refreshResults();
+            }, 150);
+        } else {
+            runInAction(
+                () => (this.measurementsInterval = measurementsInterval)
+            );
+            this.refreshResults();
+        }
+    }
+
+    @computed
+    get chartMeasurements() {
+        return this.measurements.filter(measurement => {
+            return (
+                measurement.measurementFunction &&
+                measurement.measurementFunction.resultType === "chart"
+            );
+        });
+    }
+
+    @computed
+    get isThereAnyMeasurementChart() {
+        return this.chartMeasurements.length > 0;
+    }
+
+    findMeasurementById(measurementId: string) {
+        return this.measurements.find(
+            measurement => measurement.measurementId === measurementId
+        );
+    }
+
+    @observable chartPanelsViewState: string | undefined;
+
+    get defaultChartPanelViewState() {
+        const charts = this.measurements.filter(
+            measurement => measurement.resultType === "chart"
+        );
+        if (charts.length === 0) {
+            return undefined;
+        }
+
+        return [
+            {
+                type: "stack",
+                content: charts.map(
+                    measurement => measurement.chartPanelConfiguration
+                )
+            }
+        ];
+    }
+
+    refreshResults() {
+        this.measurements.forEach(measurement => {
+            if (measurement.dirty) {
+                measurement.refreshResult();
+            }
+        });
+    }
+
+    destroy() {
+        this.dispose1();
+        this.dispose2();
+        this.dispose3();
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 @observer
-export class ChartsView extends React.Component<ChartsViewInterface, {}> {
+export class ChartsView extends React.Component<
+    {
+        chartsController: ChartsController;
+        className?: string;
+        tabIndex?: number;
+        sideDockAvailable?: boolean;
+    },
+    {}
+> {
     animationFrameRequestId: any;
     div: HTMLDivElement | null;
     sideDock: SideDock | null;
@@ -4205,5 +3622,5275 @@ export class ChartsView extends React.Component<ChartsViewInterface, {}> {
         } else {
             return div;
         }
+    }
+}
+
+@observer
+export class ChartMeasurements extends React.Component<{
+    measurementsController: MeasurementsController;
+}> {
+    dockablePanels: DockablePanels | null;
+
+    get measurementsModel() {
+        return this.props.measurementsController.measurementsModel;
+    }
+
+    @bind
+    registerComponents(factory: any) {
+        const measurementsController = this.props.measurementsController;
+
+        factory.registerComponent(
+            "MeasurementValue",
+            function (container: any, props: any) {
+                const measurement = measurementsController.findMeasurementById(
+                    props.measurementId
+                );
+                if (measurement) {
+                    const div: HTMLDivElement = container.getElement()[0];
+                    ReactDOM.render(
+                        <MeasurementValue
+                            measurement={measurement}
+                            inDockablePanel={true}
+                        />,
+                        div
+                    );
+                }
+            }
+        );
+    }
+
+    @computed
+    get defaultLayoutConfig() {
+        let content;
+        try {
+            content = JSON.parse(
+                this.props.measurementsController.chartPanelsViewState!
+            );
+        } catch (err) {
+            content = undefined;
+        }
+        return {
+            settings: DockablePanels.DEFAULT_SETTINGS,
+            dimensions: DockablePanels.DEFAULT_DIMENSIONS,
+            content
+        };
+    }
+
+    updateSize() {
+        if (this.dockablePanels) {
+            this.dockablePanels.updateSize();
+        }
+    }
+
+    debounceTimeout: any;
+
+    @bind
+    onStateChanged(state: any) {
+        const newStateContent = state.content;
+
+        if (this.debounceTimeout) {
+            clearTimeout(this.debounceTimeout);
+        }
+
+        this.debounceTimeout = setTimeout(() => {
+            this.debounceTimeout = undefined;
+
+            // workaround for the possible golden-layout BUG,
+            // make sure activeItemIndex is not out of bounds
+            const goldenLayout: any = new GoldenLayout(
+                {
+                    content: newStateContent
+                },
+                document.createElement("div")
+            );
+            goldenLayout.registerComponent("MeasurementValue", function () {});
+            goldenLayout.init();
+
+            goldenLayout.root
+                .getItemsByType("component")
+                .map((contentItem: any) => {
+                    const measurement =
+                        this.props.measurementsController.measurements.find(
+                            measurement =>
+                                measurement.measurementId ===
+                                contentItem.config.id
+                        );
+
+                    contentItem.setTitle(measurement?.chartPanelTitle || "");
+                });
+
+            goldenLayout.root
+                .getItemsByType("stack")
+                .map(
+                    (contentItem: any) =>
+                        (contentItem.config.activeItemIndex = Math.min(
+                            contentItem.config.activeItemIndex,
+                            contentItem.config.content.length - 1
+                        ))
+                );
+
+            const chartPanelsViewState = JSON.stringify(
+                goldenLayout.config.content
+            );
+
+            runInAction(
+                () =>
+                    (this.measurementsModel.chartPanelsViewState =
+                        chartPanelsViewState)
+            );
+        }, 1000);
+    }
+
+    render() {
+        return (
+            <DockablePanels
+                ref={ref => (this.dockablePanels = ref)}
+                defaultLayoutConfig={this.defaultLayoutConfig}
+                registerComponents={this.registerComponents}
+                onStateChanged={this.onStateChanged}
+            />
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class DynamicAxisController extends AxisController {
+    constructor(
+        public position: "x" | "y" | "yRight",
+        public chartsController: ChartsController,
+        public chartController: ChartController | undefined,
+        public axisModel: IAxisModel
+    ) {
+        super(position, chartsController, chartController, axisModel);
+    }
+
+    @observable animationFrom: number;
+    @observable animationTo: number;
+
+    @computed
+    get from() {
+        if (this.isDigital) {
+            return 0;
+        }
+
+        if (this.chartsController.mode === "preview") {
+            return this.minValue;
+        }
+
+        if (this.isAnimationActive) {
+            return this.animationFrom;
+        }
+
+        if (this.axisModel.dynamic.zoomMode === "all") {
+            return this.minValue;
+        }
+
+        if (this.axisModel.dynamic.zoomMode === "default") {
+            return this.axisModel.defaultFrom;
+        }
+
+        return this.axisModel.dynamic.from;
+    }
+
+    set from(value: number) {
+        this.axisModel.dynamic.zoomMode = "custom";
+        this.axisModel.dynamic.from = value;
+    }
+
+    @computed
+    get to() {
+        if (this.isDigital) {
+            return 1.0;
+        }
+
+        if (this.chartsController.mode === "preview") {
+            return this.maxValue;
+        }
+
+        if (this.isAnimationActive) {
+            return this.animationTo;
+        }
+
+        if (this.axisModel.dynamic.zoomMode === "all") {
+            return this.maxValue;
+        }
+
+        if (this.axisModel.dynamic.zoomMode === "default") {
+            return this.axisModel.defaultTo;
+        }
+
+        return this.axisModel.dynamic.to;
+    }
+
+    set to(value: number) {
+        this.axisModel.dynamic.zoomMode = "custom";
+        this.axisModel.dynamic.to = value;
+    }
+
+    @computed
+    get steps() {
+        let steps;
+
+        if (this.chartsController.viewOptions.axesLines.steps) {
+            if (this.position === "x") {
+                steps = this.chartsController.viewOptions.axesLines.steps.x;
+            } else if (
+                Array.isArray(
+                    this.chartsController.viewOptions.axesLines.steps.y
+                )
+            ) {
+                steps =
+                    this.chartsController.viewOptions.axesLines.steps.y.find(
+                        (vale: number[], i: number) =>
+                            this.chartsController.chartControllers[i] ===
+                            this.chartController
+                    );
+            }
+        }
+
+        if (!steps || steps.length === 0) {
+            steps = this.unit.units;
+        }
+
+        return steps;
+    }
+
+    @computed
+    get ticks() {
+        const { from, to, scale, steps } = this;
+
+        const minDistanceInPx = CONF_AXIS_MIN_TICK_DISTANCE;
+        const maxDistanceInPx = CONF_AXIS_MAX_TICK_DISTANCE;
+        const minColorOpacity = CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY;
+        const maxColorOpacity = CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY;
+        const minTextColorOpacity =
+            CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY;
+        const maxTextColorOpacity =
+            CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY;
+
+        const minLabelPx =
+            this.position === "x"
+                ? CONF_X_AXIS_MIN_TICK_LABEL_WIDTH
+                : CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH;
+
+        let ticks: ITick[] = new Array();
+
+        let self = this;
+
+        function addLogarithmicLines(from: number, to: number, iStep: number) {
+            const step = steps[iStep];
+
+            let fromValue = Math.ceil(from / step) * step;
+            let toValue = Math.floor(to / step) * step;
+
+            let unitPx =
+                self.valueToPx(fromValue) - self.valueToPx(fromValue - step);
+            if (unitPx < minDistanceInPx) {
+                return;
+            }
+
+            let lastValue = from;
+
+            for (let value = fromValue; value <= toValue; value += step) {
+                let px = self.valueToPx(value);
+
+                let opacity = clamp(
+                    minColorOpacity +
+                        ((maxColorOpacity - minColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minColorOpacity,
+                    maxColorOpacity
+                );
+
+                let textOpacity = clamp(
+                    minTextColorOpacity +
+                        ((maxTextColorOpacity - minTextColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minTextColorOpacity,
+                    maxTextColorOpacity
+                );
+
+                ticks.push({
+                    px,
+                    value,
+                    label: "",
+                    color: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
+                    textColor: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${textOpacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${textOpacity})`,
+                    allowSnapTo: true,
+                    step
+                });
+
+                if (iStep > 0) {
+                    addLogarithmicLines(lastValue, value, iStep - 1);
+                }
+
+                lastValue = value;
+            }
+
+            if (iStep > 0) {
+                addLogarithmicLines(lastValue, to, iStep - 1);
+            }
+        }
+
+        function addLinearLines(from: number, to: number, iStep: number) {
+            if (from >= to) {
+                return;
+            }
+
+            const step = steps[iStep];
+
+            let unitPx = step * scale;
+            if (unitPx < minDistanceInPx) {
+                return;
+            }
+
+            let fromValue = Math.ceil(from / step) * step;
+            let toValue = Math.floor(to / step) * step;
+
+            let lastValue = from;
+
+            for (let value = fromValue; value <= toValue; value += step) {
+                let px = self.valueToPx(value);
+
+                let opacity = clamp(
+                    minColorOpacity +
+                        ((maxColorOpacity - minColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minColorOpacity,
+                    maxColorOpacity
+                );
+
+                let textOpacity = clamp(
+                    minTextColorOpacity +
+                        ((maxTextColorOpacity - minTextColorOpacity) *
+                            (unitPx - minDistanceInPx)) /
+                            (maxDistanceInPx - minDistanceInPx),
+                    minTextColorOpacity,
+                    maxTextColorOpacity
+                );
+
+                let label =
+                    unitPx >= minLabelPx
+                        ? self.unit.formatValue(
+                              self.axisModel.semiLogarithmic
+                                  ? Math.pow(
+                                        10,
+                                        value + self.axisModel.semiLogarithmic.a
+                                    ) + self.axisModel.semiLogarithmic.b
+                                  : value,
+                              4
+                          )
+                        : "";
+
+                ticks.push({
+                    px,
+                    value,
+                    label: label,
+                    color: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${opacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${opacity})`,
+                    textColor: globalViewOptions.blackBackground
+                        ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${textOpacity})`
+                        : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${textOpacity})`,
+                    allowSnapTo: true,
+                    step
+                });
+
+                if (iStep > 0) {
+                    addLinearLines(lastValue, value, iStep - 1);
+                }
+
+                lastValue = value;
+            }
+
+            if (iStep > 0) {
+                addLinearLines(lastValue, to, iStep - 1);
+            }
+        }
+
+        if (this.logarithmic) {
+            addLogarithmicLines(
+                this.pxToValue(this.linearValueToPx(from)),
+                this.pxToValue(this.linearValueToPx(to)),
+                steps.length - 1
+            );
+        } else {
+            addLinearLines(from, to, steps.length - 1);
+        }
+
+        if (ticks.length === 0 && !this.logarithmic) {
+            // no tick lines, at least add lines for "from" and "to"
+            let from = Math.ceil(this.from / this.steps[0]) * this.steps[0];
+            ticks.push({
+                px: this.valueToPx(from),
+                value: from,
+                label: this.unit.formatValue(from),
+                color: globalViewOptions.blackBackground
+                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
+                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
+                textColor: globalViewOptions.blackBackground
+                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${maxTextColorOpacity})`
+                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${maxTextColorOpacity})`,
+                allowSnapTo: false,
+                step: undefined
+            });
+
+            let to = Math.floor(this.to / this.steps[0]) * this.steps[0];
+            ticks.push({
+                px: this.valueToPx(to),
+                value: to,
+                label: this.unit.formatValue(to),
+                color: globalViewOptions.blackBackground
+                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND}, ${maxColorOpacity})`
+                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND}, ${maxColorOpacity})`,
+                textColor: globalViewOptions.blackBackground
+                    ? `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND}, ${maxTextColorOpacity})`
+                    : `rgba(${CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND}, ${maxTextColorOpacity})`,
+                allowSnapTo: false,
+                step: undefined
+            });
+        } else if (this.logarithmic) {
+            ticks = ticks.sort((a, b) => a.px - b.px);
+
+            // set labels from the largest magnitude to the smallest
+            for (let iStep = steps.length - 1; iStep >= 0; iStep--) {
+                let step = steps[iStep];
+                for (let iTick = 0; iTick < ticks.length; ++iTick) {
+                    const tick = ticks[iTick];
+                    if (tick.step === step) {
+                        let foundTooCloseLabel = false;
+
+                        // test if there is a label on the left that is too close to this tick
+                        for (
+                            let i = iTick - 1;
+                            i >= 0 && tick.px - ticks[i].px < minLabelPx;
+                            i--
+                        ) {
+                            if (ticks[i].label) {
+                                foundTooCloseLabel = true;
+                                break;
+                            }
+                        }
+                        if (foundTooCloseLabel) {
+                            continue;
+                        }
+
+                        // test if there is a label on the right that is too close to this tick
+                        for (
+                            let i = iTick + 1;
+                            i < ticks.length &&
+                            ticks[i].px - tick.px < minLabelPx;
+                            i++
+                        ) {
+                            if (ticks[i].label) {
+                                foundTooCloseLabel = true;
+                                break;
+                            }
+                        }
+                        if (foundTooCloseLabel) {
+                            continue;
+                        }
+
+                        tick.label = this.unit.formatValue(tick.value);
+                    }
+                }
+            }
+        }
+
+        // remove duplicates, i.e. ticks with the same label
+        ticks = _uniqWith(ticks, (a, b) =>
+            a.label ? a.label === b.label : false
+        );
+
+        return ticks;
+    }
+
+    @computed
+    get maxScale() {
+        return this.axisModel.maxScale !== undefined
+            ? this.axisModel.maxScale
+            : 1e15;
+    }
+
+    panByDirection(direction: number) {
+        this.panByDistance(direction * CONF_PAN_STEP * this.distance);
+    }
+
+    panTo(newFrom: number) {
+        const distance = this.distance;
+        this.from = newFrom;
+        this.to = this.from + distance;
+    }
+
+    zoomAll() {
+        this.animate(() => (this.axisModel.dynamic.zoomMode = "all"));
+    }
+
+    zoomDefault() {
+        this.animate(() => (this.axisModel.dynamic.zoomMode = "default"));
+    }
+
+    @bind
+    zoomIn() {
+        if (!this.zoomInEnabled) {
+            return;
+        }
+
+        const c = (this.to + this.from) / 2;
+        const newDistance = this.distance / CONF_ZOOM_STEP;
+
+        this.zoom(c - newDistance / 2, c + newDistance / 2);
+    }
+
+    @bind
+    zoomOut() {
+        if (!this.zoomOutEnabled) {
+            return;
+        }
+
+        const c = (this.to + this.from) / 2;
+        const newDistance = this.distance * CONF_ZOOM_STEP;
+
+        this.zoom(c - newDistance / 2, c + newDistance / 2);
+    }
+
+    zoom(from: number, to: number) {
+        this.animate(() => {
+            this.from = from;
+            this.to = to;
+        });
+    }
+
+    zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean) {
+        if (zoomIn) {
+            if (!this.zoomInEnabled) {
+                return;
+            }
+        } else {
+            if (!this.zoomOutEnabled) {
+                return;
+            }
+        }
+
+        let distance = zoomIn
+            ? this.distance / CONF_ZOOM_STEP
+            : this.distance * CONF_ZOOM_STEP;
+
+        let from =
+            this.from +
+            ((this.distance - distance) * pivotPx) / this.distancePx;
+        let to = from + distance;
+
+        this.animate(() => {
+            this.from = from;
+            this.to = to;
+        });
+    }
+
+    @action
+    animate(set: () => void) {
+        if (!globalViewOptions.enableZoomAnimations) {
+            set();
+            return;
+        }
+
+        this.animationController.finish();
+
+        const oldFrom = this.from;
+        const oldTo = this.to;
+
+        this.animationFrom = oldFrom;
+        this.animationTo = oldTo;
+        this.isAnimationActive = true;
+
+        set();
+
+        const newFrom = this.from;
+        const newTo = this.to;
+
+        this.animationController.animate(
+            CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION,
+            {
+                step: action((t: number) => {
+                    if (t === 1) {
+                        this.isAnimationActive = false;
+                    } else {
+                        this.animationFrom = oldFrom + t * (newFrom - oldFrom);
+                        this.animationTo = oldTo + t * (newTo - oldTo);
+                    }
+                })
+            }
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const MIN_FIXED_SCALE_POWER = -15;
+const MAX_FIXED_SCALE_POWER = 15;
+
+function calcSubdivisionScaleAndOffset(
+    from: number,
+    to: number,
+    subdivision: number
+) {
+    // first try heuristic to find nice round numbers
+    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
+        for (let k = 1; k < 10.0; k += 0.01) {
+            const scale = k * Math.pow(10, i);
+            const offset = Math.floor(from / scale) * scale;
+            const range = scale * subdivision;
+            if (offset + range >= to) {
+                return {
+                    scale,
+                    offset
+                };
+            }
+        }
+    }
+
+    const scale = (to - from) / subdivision;
+    const offset = from;
+
+    return {
+        scale,
+        offset
+    };
+}
+
+function scaleZoomIn(currentScale: number) {
+    for (let i = MAX_FIXED_SCALE_POWER; i >= MIN_FIXED_SCALE_POWER; i--) {
+        for (let k = 9; k >= 1; k--) {
+            const scale = k * Math.pow(10, i);
+            if (scale < currentScale) {
+                return scale;
+            }
+        }
+    }
+
+    return currentScale;
+}
+
+function scaleZoomOut(currentScale: number) {
+    for (let i = MIN_FIXED_SCALE_POWER; i <= MAX_FIXED_SCALE_POWER; i++) {
+        for (let k = 1; k <= 9; k++) {
+            const scale = k * Math.pow(10, i);
+            if (scale > currentScale) {
+                return scale;
+            }
+        }
+    }
+
+    return currentScale;
+}
+
+export class FixedAxisController extends AxisController {
+    constructor(
+        public position: "x" | "y" | "yRight",
+        public chartsController: ChartsController,
+        public chartController: ChartController | undefined,
+        public axisModel: IAxisModel
+    ) {
+        super(position, chartsController, chartController, axisModel);
+    }
+
+    animationController = new AnimationController();
+
+    @observable animationSubdivisionOffset: number;
+    @observable animationSubdivisionScale: number;
+
+    get majorSubdivison() {
+        return this.position === "x"
+            ? this.chartsController.viewOptions.axesLines.majorSubdivision
+                  .horizontal
+            : this.chartsController.viewOptions.axesLines.majorSubdivision
+                  .vertical;
+    }
+
+    @computed
+    get subdivisionOffset() {
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "default"
+        ) {
+            return this.axisModel.defaultSubdivisionOffset !== undefined
+                ? this.axisModel.defaultSubdivisionOffset
+                : calcSubdivisionScaleAndOffset(
+                      this.axisModel.defaultFrom,
+                      this.axisModel.defaultTo,
+                      this.majorSubdivison
+                  ).offset;
+        }
+
+        if (this.axisModel.fixed.zoomMode === "all") {
+            return calcSubdivisionScaleAndOffset(
+                this.minValue,
+                this.maxValue,
+                this.majorSubdivison
+            ).offset;
+        }
+
+        return this.axisModel.fixed.subdivisionOffset;
+    }
+
+    @computed
+    get subdivisionScale() {
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "default"
+        ) {
+            return this.axisModel.defaultSubdivisionScale !== undefined
+                ? this.axisModel.defaultSubdivisionScale
+                : calcSubdivisionScaleAndOffset(
+                      this.axisModel.defaultFrom,
+                      this.axisModel.defaultTo,
+                      this.majorSubdivison
+                  ).scale;
+        }
+
+        if (this.axisModel.fixed.zoomMode === "all") {
+            return calcSubdivisionScaleAndOffset(
+                this.minValue,
+                this.maxValue,
+                this.majorSubdivison
+            ).scale;
+        }
+
+        return this.axisModel.fixed.subdivisonScale;
+    }
+
+    @computed
+    get from() {
+        if (this.isDigital) {
+            return 0;
+        }
+
+        if (this.isAnimationActive) {
+            return this.animationSubdivisionOffset;
+        }
+
+        return this.subdivisionOffset;
+    }
+
+    @computed
+    get to() {
+        if (this.isDigital) {
+            return 1.0;
+        }
+
+        if (this.isAnimationActive) {
+            return (
+                this.animationSubdivisionOffset +
+                this.animationSubdivisionScale * this.majorSubdivison
+            );
+        }
+
+        return (
+            this.subdivisionOffset +
+            this.subdivisionScale * this.majorSubdivison
+        );
+    }
+
+    @computed
+    get minValue(): number {
+        const minValue = this._minValue;
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "all"
+        ) {
+            return minValue;
+        }
+        return Math.min(minValue, this.from);
+    }
+
+    @computed
+    get maxValue(): number {
+        const maxValue = super._maxValue;
+        if (
+            this.chartsController.mode === "preview" ||
+            this.axisModel.fixed.zoomMode === "all"
+        ) {
+            return maxValue;
+        }
+        return Math.max(maxValue, this.to);
+    }
+
+    @computed
+    get ticks() {
+        const minLabelPx =
+            this.position === "x"
+                ? CONF_X_AXIS_MIN_TICK_LABEL_WIDTH
+                : CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH;
+
+        let lines: ITick[] = [];
+
+        let n =
+            this.position === "x"
+                ? this.chartsController.viewOptions.axesLines.majorSubdivision
+                      .horizontal
+                : this.chartsController.viewOptions.axesLines.majorSubdivision
+                      .vertical;
+
+        let m =
+            this.position === "x"
+                ? this.chartsController.viewOptions.axesLines.minorSubdivision
+                      .horizontal
+                : this.chartsController.viewOptions.axesLines.minorSubdivision
+                      .vertical;
+
+        let minorSubdivision = (this.to - this.from) / (m * n);
+
+        let visibleLabelPx = 0;
+
+        let majorLineColor = globalViewOptions.blackBackground
+            ? CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_BLACK_BACKGROUND
+            : CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_WHITE_BACKGROUND;
+        let minorLineColor = globalViewOptions.blackBackground
+            ? CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND
+            : CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND;
+
+        let majorLineTextColor = globalViewOptions.blackBackground
+            ? CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND
+            : CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND;
+        let minorLineTextColor = globalViewOptions.blackBackground
+            ? CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND
+            : CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND;
+
+        for (let i = 0; i <= n * m; i++) {
+            const value = this.from + i * minorSubdivision;
+
+            let isMajorLine = i % m === 0;
+
+            let px = Math.round(this.valueToPx(value));
+
+            let isLabelVisible = false;
+            if (isMajorLine) {
+                if (this.position === "x") {
+                    if (i === 0 || i === n * m) {
+                        isLabelVisible = true;
+                    } else {
+                        if (
+                            px - visibleLabelPx >= minLabelPx &&
+                            Math.round(this.valueToPx(this.to)) - px >=
+                                minLabelPx
+                        ) {
+                            isLabelVisible = true;
+                        }
+                    }
+
+                    if (isLabelVisible) {
+                        visibleLabelPx = px;
+                    }
+                } else {
+                    isLabelVisible = true;
+                }
+            }
+
+            lines.push({
+                px,
+                value: value,
+                label: isLabelVisible ? this.unit.formatValue(value) : "",
+                color: isMajorLine ? majorLineColor : minorLineColor,
+                textColor: isMajorLine
+                    ? majorLineTextColor
+                    : minorLineTextColor,
+                isMajorLine: isMajorLine,
+                allowSnapTo: true,
+                step: undefined
+            });
+        }
+
+        return lines;
+    }
+
+    panByDirection(direction: number) {
+        this.panByDistance(direction * this.subdivisionScale);
+    }
+
+    panTo(newFrom: number) {
+        //newFrom = roundNumberWithMaxNumberOfDecimalDigits(newFrom, 2);
+        this.axisModel.fixed.subdivisionOffset = newFrom;
+        this.axisModel.fixed.subdivisonScale = this.subdivisionScale;
+        this.axisModel.fixed.zoomMode = "custom";
+    }
+
+    zoomAll() {
+        this.animate(() => (this.axisModel.fixed.zoomMode = "all"));
+    }
+
+    zoomDefault() {
+        this.animate(() => (this.axisModel.fixed.zoomMode = "default"));
+    }
+
+    @bind
+    zoomIn() {
+        if (!this.zoomInEnabled) {
+            return;
+        }
+
+        const c = (this.to + this.from) / 2;
+        const scale = scaleZoomIn(this.subdivisionScale);
+        const offset = c - (scale * this.majorSubdivison) / 2;
+
+        this.animate(() => {
+            this.axisModel.fixed.subdivisonScale = scale;
+            this.axisModel.fixed.subdivisionOffset = offset;
+            this.axisModel.fixed.zoomMode = "custom";
+        });
+    }
+
+    @bind
+    zoomOut() {
+        if (!this.zoomOutEnabled) {
+            return;
+        }
+
+        const c = (this.to + this.from) / 2;
+        const scale = scaleZoomOut(this.subdivisionScale);
+        const offset = c - (scale * this.majorSubdivison) / 2;
+
+        this.animate(() => {
+            this.axisModel.fixed.subdivisonScale = scale;
+            this.axisModel.fixed.subdivisionOffset = offset;
+            this.axisModel.fixed.zoomMode = "custom";
+        });
+    }
+
+    zoom(from: number, to: number) {
+        if (to - from < this.distance) {
+            if (!this.zoomInEnabled) {
+                return;
+            }
+        } else {
+            if (!this.zoomOutEnabled) {
+                return;
+            }
+        }
+
+        const result = calcSubdivisionScaleAndOffset(
+            from,
+            to,
+            this.majorSubdivison
+        );
+
+        this.animate(() => {
+            this.axisModel.fixed.subdivisonScale = result.scale;
+            this.axisModel.fixed.subdivisionOffset = result.offset;
+            this.axisModel.fixed.zoomMode = "custom";
+        });
+    }
+
+    zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean) {
+        if (zoomIn) {
+            if (!this.zoomInEnabled) {
+                return;
+            }
+        } else {
+            if (!this.zoomOutEnabled) {
+                return;
+            }
+        }
+
+        let newScale: number;
+        if (zoomIn) {
+            newScale = scaleZoomIn(this.subdivisionScale);
+        } else {
+            newScale = scaleZoomOut(this.subdivisionScale);
+        }
+
+        if (newScale !== this.subdivisionScale) {
+            let fixedOffset =
+                this.subdivisionOffset +
+                ((this.subdivisionScale - newScale) *
+                    this.majorSubdivison *
+                    pivotPx) /
+                    this.distancePx;
+
+            //fixedOffset = Math.floor(fixedOffset / newScale) * newScale;
+            //fixedOffset = roundNumberWithMaxNumberOfDecimalDigits(fixedOffset, 2);
+            this.animate(() => {
+                this.axisModel.fixed.subdivisionOffset = fixedOffset;
+                this.axisModel.fixed.subdivisonScale = newScale;
+                this.axisModel.fixed.zoomMode = "custom";
+            });
+        }
+    }
+
+    @action
+    animate(set: () => void) {
+        if (!globalViewOptions.enableZoomAnimations) {
+            set();
+            return;
+        }
+
+        this.animationController.finish();
+
+        const oldOffset = this.subdivisionOffset;
+        const oldScale = this.subdivisionScale;
+
+        this.isAnimationActive = true;
+        this.animationSubdivisionOffset = oldOffset;
+        this.animationSubdivisionScale = oldScale;
+
+        set();
+
+        const newOffset = this.subdivisionOffset;
+        const newScale = this.subdivisionScale;
+
+        this.animationController.animate(
+            CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION,
+            {
+                step: action((t: number) => {
+                    if (t === 1) {
+                        this.isAnimationActive = false;
+                    } else {
+                        this.animationSubdivisionOffset =
+                            oldOffset + t * (newOffset - oldOffset);
+                        this.animationSubdivisionScale =
+                            oldScale + t * (newScale - oldScale);
+                    }
+                })
+            }
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getNearestValuePoint(
+    point: Point,
+    xAxisController: AxisController,
+    yAxisController: AxisController,
+    waveform: IWaveform
+): Point {
+    let i1 = Math.floor(
+        xAxisController.pxToValue(point.x - 0.5) * waveform.samplingRate
+    );
+    let i2 = Math.ceil(
+        xAxisController.pxToValue(point.x + 0.5) * waveform.samplingRate
+    );
+    if (i2 - i1 > 1) {
+        // find max value for logarithmic unit
+        let min = waveform.value(i1);
+        let max = waveform.value(i1);
+        for (let i = i1 + 1; i <= i2; ++i) {
+            const value = waveform.value(i);
+            if (value > max) {
+                max = value;
+            } else if (value < min) {
+                min = value;
+            }
+        }
+
+        let xValue = xAxisController.pxToValue(point.x);
+        let yValue = yAxisController.pxToValue(point.y);
+        if (Math.abs(min - yValue) < Math.abs(max - yValue)) {
+            return {
+                x: xValue,
+                y: min
+            };
+        } else {
+            return {
+                x: xValue,
+                y: max
+            };
+        }
+    } else {
+        let i = Math.round(
+            xAxisController.pxToValue(point.x) * waveform.samplingRate
+        );
+        if (i > waveform.length) {
+            return {
+                x: NaN,
+                y: NaN
+            };
+        }
+        return {
+            x: i / waveform.samplingRate,
+            y: waveform.value(i)
+        };
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GenericChartWaveform implements IWaveform {
+    constructor(private chartData: IChart) {
+        this.xAxes = {
+            unit: UNITS[this.chartData.xAxes.unit],
+            logarithmic: chartData.xAxes.logarithmic
+        };
+
+        let min = chartData.yAxes.minValue;
+        let max = chartData.yAxes.maxValue;
+
+        if (min === undefined && max === undefined) {
+            min = this.chartData.data[0];
+            max = this.chartData.data[0];
+            for (let i = 1; i < this.chartData.data.length; ++i) {
+                min = Math.min(min, this.chartData.data[i]);
+                max = Math.max(max, this.chartData.data[i]);
+            }
+            const d = (max - min) * 0.1;
+            min -= d;
+            max += d;
+        } else if (min === undefined) {
+            min = this.chartData.data[0];
+            for (let i = 1; i < this.chartData.data.length; ++i) {
+                min = Math.min(min, this.chartData.data[i]);
+            }
+            const d = (max! - min) * 0.1;
+            min -= d;
+        } else if (max === undefined) {
+            max = this.chartData.data[0];
+            for (let i = 1; i < this.chartData.data.length; ++i) {
+                max = Math.max(max, this.chartData.data[i]);
+            }
+            const d = (max - min) * 0.1;
+            max += d;
+        }
+
+        this.yAxes = {
+            minValue: min!,
+            maxValue: max!,
+            unit: UNITS[this.chartData.yAxes.unit]
+        };
+    }
+
+    format = WaveformFormat.JS_NUMBERS;
+
+    get values() {
+        return this.chartData.data;
+    }
+
+    get length() {
+        return this.chartData.data.length;
+    }
+
+    value(i: number) {
+        return this.chartData.data[i];
+    }
+
+    waveformData(i: number) {
+        return this.chartData.data[i];
+    }
+
+    dlog?: IWaveformDlogParams;
+
+    offset = 0;
+    scale = 1;
+
+    get samplingRate() {
+        return this.chartData.samplingRate;
+    }
+
+    xAxes: {
+        unit: IUnit;
+        logarithmic?: boolean;
+    };
+
+    yAxes: {
+        minValue: number;
+        maxValue: number;
+        unit: IUnit;
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GenericChartXAxisModel implements IAxisModel {
+    constructor(private data: GenericChartWaveform) {}
+
+    @computed
+    get unit() {
+        return this.data.xAxes.unit;
+    }
+
+    chartsController: ChartsController;
+
+    get minValue() {
+        return 0;
+    }
+
+    get maxValue() {
+        return (this.data.length - 1) / this.data.samplingRate;
+    }
+
+    get defaultFrom() {
+        return 0;
+    }
+
+    get defaultTo() {
+        return this.maxValue;
+    }
+
+    get minScale() {
+        return 1e-15;
+    }
+
+    get maxScale() {
+        return 1e15;
+    }
+
+    @observable dynamic: {
+        zoomMode: ZoomMode;
+        from: number;
+        to: number;
+    } = {
+        zoomMode: "default",
+        from: 0,
+        to: 0
+    };
+
+    @observable fixed: {
+        zoomMode: ZoomMode;
+        subdivisionOffset: number;
+        subdivisonScale: number;
+    } = {
+        zoomMode: "default",
+        subdivisionOffset: 0,
+        subdivisonScale: 0
+    };
+
+    get defaultSubdivisionOffset() {
+        return 0;
+    }
+
+    get defaultSubdivisionScale() {
+        return 1;
+    }
+
+    label: "";
+    color: "";
+    colorInverse: "";
+
+    get logarithmic() {
+        return this.data.xAxes.logarithmic;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GenericChartYAxisModel implements IAxisModel {
+    constructor(private data: GenericChartWaveform) {}
+
+    @computed
+    get minValue() {
+        return this.data.yAxes.minValue;
+    }
+
+    @computed
+    get maxValue() {
+        return this.data.yAxes.maxValue;
+    }
+
+    @computed
+    get defaultFrom() {
+        return this.data.yAxes.minValue;
+    }
+
+    @computed
+    get defaultTo() {
+        return this.data.yAxes.maxValue;
+    }
+
+    @computed
+    get unit() {
+        return this.data.yAxes.unit;
+    }
+
+    @observable dynamic: {
+        zoomMode: ZoomMode;
+        from: number;
+        to: number;
+    } = {
+        zoomMode: "default",
+        from: 0,
+        to: 0
+    };
+
+    @observable fixed: {
+        zoomMode: ZoomMode;
+        subdivisionOffset: number;
+        subdivisonScale: number;
+    } = {
+        zoomMode: "default",
+        subdivisionOffset: 0,
+        subdivisonScale: 0
+    };
+
+    get defaultSubdivisionOffset(): number | undefined {
+        return 0;
+    }
+
+    get defaultSubdivisionScale() {
+        return 1;
+    }
+
+    get label() {
+        return "";
+    }
+
+    get color() {
+        return "red";
+    }
+
+    get colorInverse() {
+        return "green";
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GenericChartViewOptions implements IViewOptions {
+    constructor(props?: any) {
+        if (props) {
+            Object.assign(this, props);
+        }
+    }
+
+    @observable axesLines: IViewOptionsAxesLines = {
+        type: "dynamic",
+        steps: {
+            x: [],
+            y: []
+        },
+        majorSubdivision: {
+            horizontal: 24,
+            vertical: 8
+        },
+        minorSubdivision: {
+            horizontal: 5,
+            vertical: 5
+        },
+        snapToGrid: true,
+        defaultZoomMode: "default"
+    };
+
+    @observable showAxisLabels: boolean = true;
+    @observable showZoomButtons: boolean = true;
+
+    setAxesLinesType(type: IViewOptionsAxesLinesType) {
+        this.axesLines.type = type;
+    }
+
+    setAxesLinesMajorSubdivisionHorizontal(value: number) {
+        this.axesLines.majorSubdivision.horizontal = value;
+    }
+
+    setAxesLinesMajorSubdivisionVertical(value: number) {
+        this.axesLines.majorSubdivision.vertical = value;
+    }
+
+    setAxesLinesMinorSubdivisionHorizontal(value: number) {
+        this.axesLines.minorSubdivision.horizontal = value;
+    }
+
+    setAxesLinesMinorSubdivisionVertical(value: number) {
+        this.axesLines.minorSubdivision.vertical = value;
+    }
+
+    setAxesLinesStepsX(steps: number[]) {
+        this.axesLines.steps.x = steps;
+    }
+
+    setAxesLinesStepsY(index: number, steps: number[]): void {
+        this.axesLines.steps.y[index] = steps;
+    }
+
+    setAxesLinesSnapToGrid(value: boolean): void {
+        this.axesLines.snapToGrid = value;
+    }
+
+    setShowAxisLabels(value: boolean) {
+        this.showAxisLabels = value;
+    }
+
+    setShowZoomButtons(value: boolean) {
+        this.showZoomButtons = value;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class GenericChart extends React.Component<{
+    chart: IChart;
+    className?: string;
+}> {
+    render() {
+        const waveform = new GenericChartWaveform(this.props.chart);
+        const xAxisModel = new GenericChartXAxisModel(waveform);
+        const yAxisModel = new GenericChartYAxisModel(waveform);
+        const viewOptions = new GenericChartViewOptions();
+
+        const chartsController = new GenericChartChartsController(
+            waveform,
+            "interactive",
+            xAxisModel,
+            viewOptions
+        );
+
+        xAxisModel.chartsController = chartsController;
+
+        const chartController = new ChartController(chartsController, "TODO");
+
+        chartsController.chartControllers = [chartController];
+
+        chartController.createYAxisController(yAxisModel);
+
+        chartController.lineControllers.push(
+            new GenericChartLineController(
+                "TODO",
+                waveform,
+                chartController.yAxisController
+            )
+        );
+
+        return (
+            <ChartsView
+                chartsController={chartsController}
+                className={this.props.className}
+                sideDockAvailable={false}
+            />
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GenericChartChartsController extends ChartsController {
+    constructor(
+        public data: GenericChartWaveform,
+        mode: ChartMode,
+        xAxisModel: IAxisModel,
+        viewOptions: IViewOptions
+    ) {
+        super(mode, xAxisModel, viewOptions);
+    }
+
+    get chartViewOptionsProps() {
+        return {
+            showRenderAlgorithm: true,
+            showShowSampledDataOption: false
+        };
+    }
+
+    get supportRulers() {
+        return false;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GenericChartLineController extends LineController {
+    constructor(
+        public id: string,
+        public waveform: GenericChartWaveform,
+        yAxisController: AxisController
+    ) {
+        super(id, yAxisController);
+    }
+
+    @computed
+    get yMin(): number {
+        return this.yAxisController.axisModel.minValue;
+    }
+
+    @computed
+    get yMax(): number {
+        return this.yAxisController.axisModel.maxValue;
+    }
+
+    getNearestValuePoint(point: Point): Point {
+        return getNearestValuePoint(
+            point,
+            this.xAxisController,
+            this.yAxisController,
+            this.waveform
+        );
+    }
+
+    render(): JSX.Element {
+        return <WaveformLineView key={this.id} waveformLineController={this} />;
+    }
+
+    getWaveformModel() {
+        return null;
+    }
+}
+
+export class Measurement {
+    constructor(
+        public measurementsController: MeasurementsController,
+        public measurementDefinition: IMeasurementDefinition,
+        public measurementFunction: IMeasurementFunction | undefined
+    ) {}
+
+    @observable dirty = true;
+
+    get measurementId() {
+        return this.measurementDefinition.measurementId;
+    }
+
+    get namePrefix() {
+        return (
+            (this.measurementFunction && this.measurementFunction.name) ||
+            this.measurementDefinition.measurementFunctionId
+        );
+    }
+
+    @computed
+    get name() {
+        const namePrefix = this.namePrefix;
+
+        let samePrefixBeforeCounter = 0;
+
+        const measurements = this.measurementsController.measurements;
+
+        let i;
+        for (i = 0; i < measurements.length && measurements[i] !== this; ++i) {
+            if (measurements[i].namePrefix === namePrefix) {
+                samePrefixBeforeCounter++;
+            }
+        }
+
+        if (i < measurements.length) {
+            for (
+                ++i;
+                i < measurements.length &&
+                measurements[i].namePrefix !== namePrefix;
+                ++i
+            ) {}
+        }
+
+        if (samePrefixBeforeCounter === 0 && i === measurements.length) {
+            // no measurement with the same namePrefix found
+            return namePrefix;
+        }
+
+        return `${namePrefix} ${samePrefixBeforeCounter + 1}`;
+    }
+
+    get arity() {
+        return (
+            (this.measurementFunction && this.measurementFunction.arity) || 1
+        );
+    }
+
+    get parametersDescription() {
+        return (
+            this.measurementFunction &&
+            this.measurementFunction.parametersDescription
+        );
+    }
+
+    get parameters() {
+        if (this.measurementDefinition.parameters) {
+            return this.measurementDefinition.parameters;
+        }
+
+        const parameters: any = {};
+
+        if (this.parametersDescription) {
+            this.parametersDescription.forEach(parameter => {
+                if (parameter.defaultValue) {
+                    parameters[parameter.name] = parameter.defaultValue;
+                }
+            });
+        }
+
+        return parameters;
+    }
+
+    set parameters(value: any) {
+        runInAction(() => (this.measurementDefinition.parameters = value));
+    }
+
+    get resultType() {
+        return (
+            (this.measurementFunction && this.measurementFunction.resultType) ||
+            "value"
+        );
+    }
+
+    get script() {
+        return this.measurementFunction && this.measurementFunction.script;
+    }
+
+    get chartIndex() {
+        return this.measurementDefinition.chartIndex || 0;
+    }
+
+    set chartIndex(value: number) {
+        runInAction(() => (this.measurementDefinition.chartIndex = value));
+    }
+
+    get chartIndexes() {
+        if (this.measurementDefinition.chartIndexes) {
+            return this.measurementDefinition.chartIndexes;
+        }
+        return _range(this.arity);
+    }
+
+    set chartIndexes(value: number[]) {
+        runInAction(() => (this.measurementDefinition.chartIndexes = value));
+    }
+
+    getChartTask(
+        chartIndex: number
+    ): ISingleInputMeasurementTaskSpecification | null {
+        if (!this.script) {
+            return null;
+        }
+
+        const lineController =
+            this.measurementsController.chartsController.lineControllers[
+                chartIndex
+            ];
+        const waveformModel =
+            lineController && lineController.getWaveformModel();
+
+        if (!waveformModel) {
+            return null;
+        }
+
+        const length: number = waveformModel.length;
+
+        if (length === 0) {
+            return null;
+        }
+
+        function xAxisValueToIndex(value: number) {
+            return value * waveformModel!.samplingRate;
+        }
+
+        const { x1, x2 } = this.measurementsController.measurementsInterval!;
+
+        let xStartValue: number = x1;
+        let a: number = clamp(
+            Math.floor(xAxisValueToIndex(x1)),
+            0,
+            waveformModel.length
+        );
+        let b: number = clamp(
+            Math.ceil(xAxisValueToIndex(x2)),
+            0,
+            waveformModel.length - 1
+        );
+
+        const xNumSamples = b - a + 1;
+        if (xNumSamples <= 0) {
+            return null;
+        }
+
+        return {
+            xStartValue: xStartValue,
+            xStartIndex: a,
+            xNumSamples,
+
+            format: waveformModel.format,
+            values: waveformModel.values,
+            offset: waveformModel.offset,
+            scale: waveformModel.scale,
+
+            dlog: waveformModel.dlog,
+
+            samplingRate: waveformModel.samplingRate,
+            valueUnit: waveformModel.valueUnit
+        };
+    }
+
+    getMeasureTaskForSingleInput(
+        taskSpec: ISingleInputMeasurementTaskSpecification
+    ) {
+        const accessor = {
+            format: taskSpec.format,
+            values: taskSpec.values,
+            offset: taskSpec.offset,
+            scale: taskSpec.scale,
+            dlog: taskSpec.dlog,
+            length: 0,
+            value: (value: number) => 0,
+            waveformData: (value: number) => 0
+        };
+
+        initValuesAccesor(accessor, true);
+
+        return {
+            values: taskSpec.values,
+            xStartValue: taskSpec.xStartValue,
+            xStartIndex: taskSpec.xStartIndex,
+            xNumSamples: taskSpec.xNumSamples,
+            samplingRate: taskSpec.samplingRate,
+            getSampleValueAtIndex: accessor.value,
+            valueUnit: taskSpec.valueUnit,
+            inputs: [],
+            parameters: this.parameters,
+            result: null
+        };
+    }
+
+    getMeasureTaskForMultipleInputs(
+        taskSpec: IMultiInputMeasurementTaskSpecification
+    ) {
+        const inputs = taskSpec.inputs.map(input => {
+            const accessor = {
+                format: input.format,
+                values: input.values,
+                offset: input.offset,
+                scale: input.scale,
+                dlog: input.dlog,
+                length: 0,
+                value: (value: number) => 0,
+                waveformData: (value: number) => 0
+            };
+
+            initValuesAccesor(accessor, true);
+
+            return {
+                values: input.values,
+                samplingRate: input.samplingRate,
+                getSampleValueAtIndex: accessor.value,
+                valueUnit: input.valueUnit
+            };
+        });
+
+        return {
+            values: null,
+            xStartValue: taskSpec.xStartValue,
+            xStartIndex: taskSpec.xStartIndex,
+            xNumSamples: taskSpec.xNumSamples,
+            samplingRate: taskSpec.inputs[0].samplingRate,
+            getSampleValueAtIndex: inputs[0].getSampleValueAtIndex,
+            valueUnit: inputs[0].valueUnit,
+            inputs,
+            parameters: this.parameters,
+            result: null
+        };
+    }
+
+    get task(): IMeasureTask | null {
+        if (!this.script) {
+            return null;
+        }
+
+        if (this.arity === 1) {
+            const singleInputTaskSpec = this.getChartTask(this.chartIndex);
+            if (!singleInputTaskSpec) {
+                return null;
+            }
+            return this.getMeasureTaskForSingleInput(singleInputTaskSpec);
+        }
+
+        const tasks = this.chartIndexes
+            .map(chartIndex => this.getChartTask(chartIndex))
+            .filter(task => task) as ISingleInputMeasurementTaskSpecification[];
+
+        if (tasks.length < this.arity) {
+            return null;
+        }
+
+        const task = tasks[0];
+        let xStartValue = task.xStartValue;
+        let xStartIndex = task.xStartIndex;
+        let xEndIndex = task.xStartIndex + task.xNumSamples;
+
+        for (let i = 1; i < tasks.length; ++i) {
+            const task = tasks[i];
+
+            if (task.xStartIndex > xStartIndex) {
+                xStartIndex = task.xStartIndex;
+            }
+
+            if (task.xStartIndex + task.xNumSamples < xEndIndex) {
+                xEndIndex = task.xStartIndex + task.xNumSamples;
+            }
+        }
+
+        const xNumSamples = xEndIndex - xStartIndex;
+        if (xNumSamples <= 0) {
+            return null;
+        }
+
+        return this.getMeasureTaskForMultipleInputs({
+            xStartValue,
+            xStartIndex,
+            xNumSamples,
+
+            inputs: tasks.map(task => ({
+                format: task.format,
+                values: task.values,
+                offset: task.offset,
+                scale: task.scale,
+                samplingRate: task.samplingRate,
+                valueUnit: task.valueUnit,
+                dlog: task.dlog,
+                getSampleValueAtIndex: (index: number) => 0
+            }))
+        });
+    }
+
+    @observable result: {
+        result: number | string | IChart | null;
+        resultUnit?: keyof typeof UNITS | undefined;
+    } | null = null;
+
+    refreshResult() {
+        if (!this.script) {
+            return;
+        }
+
+        if (!this.measurementsController.measurementsInterval) {
+            return;
+        }
+
+        const task = this.task;
+        if (!task) {
+            return;
+        }
+
+        let measureFunction: (task: IMeasureTask) => void;
+        measureFunction = (require(this.script) as any).default;
+        measureFunction(task);
+
+        runInAction(() => {
+            this.result = task;
+            this.dirty = false;
+        });
+    }
+
+    get chartPanelTitle() {
+        const lineControllers =
+            this.measurementsController.chartsController.lineControllers;
+        if (lineControllers.length > 1) {
+            if (this.arity === 1) {
+                const lineController = lineControllers[this.chartIndex];
+                if (lineController) {
+                    return `${this.name} (${lineController.label})`;
+                }
+            } else {
+                return `${this.name} (${this.chartIndexes
+                    .map(chartIndex => {
+                        const lineController = lineControllers[chartIndex];
+                        return lineController ? lineController.label : "";
+                    })
+                    .join(", ")})`;
+            }
+        }
+
+        return this.name;
+    }
+
+    get chartPanelConfiguration() {
+        return {
+            type: "component",
+            componentName: "MeasurementValue",
+            id: this.measurementId,
+            componentState: {
+                measurementId: this.measurementId
+            },
+            title: this.chartPanelTitle,
+            isClosable: false
+        };
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IMeasurementDefinition {
+    measurementId: string;
+    measurementFunctionId: string;
+    chartIndex?: number;
+    chartIndexes?: number[];
+    parameters?: any;
+}
+
+interface IInput {
+    format: WaveformFormat;
+    values: any;
+    offset: number;
+    scale: number;
+
+    dlog?: IWaveformDlogParams;
+
+    samplingRate: number;
+    valueUnit: keyof typeof UNITS;
+}
+
+export interface ISingleInputMeasurementTaskSpecification extends IInput {
+    xStartValue: number;
+    xStartIndex: number;
+    xNumSamples: number;
+}
+
+export interface IMultiInputMeasurementTaskSpecification {
+    xStartValue: number;
+    xStartIndex: number;
+    xNumSamples: number;
+
+    inputs: IInput[];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class MeasurementsModel {
+    @observable measurements: IMeasurementDefinition[] = [];
+    @observable chartPanelsViewState: string | undefined;
+
+    constructor(props?: {
+        measurements?: (string | IMeasurementDefinition)[];
+        chartPanelsViewState?: string;
+    }) {
+        if (props) {
+            if (props.measurements) {
+                this.measurements = props.measurements.map(measurement => {
+                    if (typeof measurement === "string") {
+                        return {
+                            measurementId: guid(),
+                            measurementFunctionId: measurement
+                        };
+                    } else {
+                        return measurement;
+                    }
+                });
+            }
+
+            if (props.chartPanelsViewState) {
+                this.chartPanelsViewState = props.chartPanelsViewState;
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+class MeasurementInputField extends FieldComponent {
+    render() {
+        const measurement = this.props.dialogContext as Measurement;
+        const inputIndex = parseInt(
+            this.props.fieldProperties.name.slice(INPUT_FILED_NAME.length)
+        );
+        return (
+            <select
+                className="form-control"
+                title="Chart rendering algorithm"
+                value={
+                    measurement.arity === 1
+                        ? measurement.chartIndex
+                        : measurement.chartIndexes[inputIndex]
+                }
+                onChange={action(
+                    (event: React.ChangeEvent<HTMLSelectElement>) => {
+                        const newChartIndex = parseInt(event.target.value);
+
+                        if (measurement.arity === 1) {
+                            measurement.chartIndex = newChartIndex;
+                        } else {
+                            const newChartIndexes =
+                                measurement.chartIndexes.slice();
+                            newChartIndexes[inputIndex] = newChartIndex;
+                            measurement.chartIndexes = newChartIndexes;
+                        }
+                        measurement.dirty = true;
+                    }
+                )}
+            >
+                {measurement.measurementsController.chartsController.lineControllers.map(
+                    (
+                        lineController: ILineController,
+                        lineControllerIndex: number
+                    ) => (
+                        <option
+                            key={lineControllerIndex.toString()}
+                            value={lineControllerIndex}
+                        >
+                            {lineController.label}
+                        </option>
+                    )
+                )}
+            </select>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const INPUT_FILED_NAME = "___input___";
+const RESULT_FILED_NAME = "___result___";
+
+@observer
+class MeasurementComponent extends React.Component<{
+    measurement: Measurement;
+}> {
+    get numCharts() {
+        return this.props.measurement.measurementsController.chartsController
+            .lineControllers.length;
+    }
+
+    get isResultVisible() {
+        return this.props.measurement.resultType !== "chart";
+    }
+
+    get deleteAction() {
+        const measurement = this.props.measurement;
+        const measurements =
+            measurement.measurementsController.measurementsModel.measurements;
+        const index = measurements.indexOf(measurement.measurementDefinition);
+        return (
+            <IconAction
+                icon="material:delete"
+                iconSize={16}
+                title="Remove measurement"
+                style={{ color: "#333" }}
+                onClick={() => {
+                    runInAction(() => {
+                        measurements.splice(index, 1);
+                    });
+                }}
+            />
+        );
+    }
+
+    get dialogDefinition() {
+        const { measurement } = this.props;
+
+        let fields: IFieldProperties[] = [];
+
+        if (this.numCharts > 1) {
+            fields = fields.concat(
+                _range(measurement.arity).map(inputIndex => {
+                    return {
+                        name: `${INPUT_FILED_NAME}${inputIndex}`,
+                        displayName:
+                            measurement.arity === 1
+                                ? "Input"
+                                : `Input ${inputIndex + 1}`,
+                        type: MeasurementInputField
+                    } as IFieldProperties;
+                })
+            );
+        }
+
+        if (measurement.parametersDescription) {
+            fields = fields.concat(measurement.parametersDescription);
+        }
+
+        if (this.isResultVisible) {
+            fields.push({
+                name: RESULT_FILED_NAME,
+                displayName: "Result",
+                type: MeasurementResultField,
+                enclosureClassName:
+                    "EezStudio_MeasurementsSideDockView_MeasurementResult_Enclosure"
+            });
+        }
+
+        return {
+            fields
+        };
+    }
+
+    get dialogValues() {
+        return this.props.measurement.parameters;
+    }
+
+    @action.bound
+    onValueChange(name: string, value: string) {
+        this.props.measurement.parameters = Object.assign(
+            {},
+            this.props.measurement.parameters,
+            {
+                [name]: value
+            }
+        );
+        this.props.measurement.dirty = true;
+    }
+
+    @observable operationInProgress = false;
+
+    async getCsv() {
+        const result = this.props.measurement.result!.result as IChart;
+        const data = result.data;
+        const samplingRate = result.samplingRate;
+        const xUnit = UNITS[result.xAxes.unit];
+        const yUnit = UNITS[result.yAxes.unit];
+
+        const locale = getLocale();
+
+        // determine CSV separator depending of locale usage of ","
+        let separator;
+        if ((0.1).toLocaleString(locale).indexOf(",") != -1) {
+            separator = ";";
+        } else {
+            separator = ",";
+        }
+
+        const numberFormat = new Intl.NumberFormat(locale, {
+            useGrouping: false,
+            maximumFractionDigits: 9
+        });
+
+        const CHUNK = 100000;
+
+        let progressToastId: string | number = 0;
+
+        if (data.length > CHUNK) {
+            progressToastId = notification.info("Exporting to CSV ...", {
+                autoClose: false,
+                closeButton: false,
+                closeOnClick: false,
+                hideProgressBar: false,
+                progressStyle: {
+                    transition: "none"
+                }
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+
+        let csv = `[${xUnit.unitSymbol}]${separator}[${yUnit.unitSymbol}]\n`;
+        for (let i = 0; i < data.length; i++) {
+            csv += `${numberFormat.format(
+                i / samplingRate
+            )}${separator}${numberFormat.format(data[i])}\n`;
+
+            if (data.length > CHUNK) {
+                if (i > 0 && i % CHUNK === 0) {
+                    const progress = i / data.length;
+
+                    notification.update(progressToastId, {
+                        progress
+                    });
+
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+        }
+
+        if (data.length > CHUNK) {
+            notification.dismiss(progressToastId);
+        }
+
+        return csv;
+    }
+
+    @bind
+    async onSaveAsCsv() {
+        if (this.operationInProgress) {
+            return;
+        }
+
+        runInAction(() => (this.operationInProgress = true));
+
+        const csv = await this.getCsv();
+        if (csv) {
+            let options: SaveDialogOptions = {
+                filters: [
+                    {
+                        name: "CSV Files",
+                        extensions: ["csv"]
+                    },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            };
+
+            const result = await EEZStudio.remote.dialog.showSaveDialog(
+                EEZStudio.remote.getCurrentWindow(),
+                options
+            );
+
+            let filePath = result.filePath;
+            if (filePath) {
+                if (!filePath.toLowerCase().endsWith(".csv")) {
+                    filePath += ".csv";
+                }
+
+                try {
+                    await writeBinaryData(filePath, csv);
+                    notification.success(`Saved as "${filePath}"`);
+                } catch (err) {
+                    console.error(err);
+                    notification.error(err.toString());
+                }
+            }
+        } else {
+            notification.error(`Failed to export to CSV!`);
+        }
+
+        runInAction(() => (this.operationInProgress = false));
+    }
+
+    @bind
+    async onCopy() {
+        if (this.operationInProgress) {
+            return;
+        }
+
+        runInAction(() => (this.operationInProgress = true));
+
+        if (this.props.measurement.resultType === "chart") {
+            const csv = await this.getCsv();
+            if (csv) {
+                clipboard.writeText(csv);
+                notification.success("CSV copied to the clipboard");
+            } else {
+                notification.error(`Failed to export to CSV!`);
+            }
+        } else {
+            const measurementResult = this.props.measurement.result!;
+
+            let text;
+            if (typeof measurementResult.result === "string") {
+                text = measurementResult.result;
+            } else if (typeof measurementResult.result === "number") {
+                let unit;
+                if (measurementResult.resultUnit) {
+                    unit = UNITS[measurementResult.resultUnit];
+                }
+
+                if (!unit) {
+                    const lineController =
+                        this.props.measurement.measurementsController
+                            .chartsController.lineControllers[
+                            this.props.measurement.chartIndex
+                        ];
+                    unit = lineController
+                        ? lineController.yAxisController.unit
+                        : UNKNOWN_UNIT;
+                }
+
+                text = unit.formatValue(measurementResult.result, 4);
+            }
+
+            if (text) {
+                clipboard.writeText(text);
+                notification.success("Value copied to the clipboard");
+            } else {
+                notification.error(`Failed to copy value to clipboard!`);
+            }
+        }
+
+        runInAction(() => (this.operationInProgress = false));
+    }
+
+    render() {
+        const { measurement } = this.props;
+
+        let content;
+
+        if (
+            this.numCharts > 1 ||
+            this.props.measurement.parametersDescription
+        ) {
+            content = (
+                <td width="100%">
+                    <GenericDialog
+                        dialogDefinition={this.dialogDefinition}
+                        dialogContext={measurement}
+                        values={this.dialogValues}
+                        embedded={true}
+                        onValueChange={this.onValueChange}
+                    />
+                </td>
+            );
+        } else {
+            // simplify in case of single chart and no measurement function parameters
+            content = (
+                <td width="100%">
+                    {this.isResultVisible && (
+                        <MeasurementValue
+                            measurement={this.props.measurement}
+                        />
+                    )}
+                </td>
+            );
+        }
+
+        return (
+            <React.Fragment>
+                <tr key={measurement.measurementId}>
+                    <td>{measurement.name}</td>
+                    {content}
+                    <td style={{ paddingRight: 20 }}>
+                        <div className="EezStudio_ActionsContainer">
+                            <IconAction
+                                icon="material:content_copy"
+                                iconSize={16}
+                                title="Copy to clipboard"
+                                onClick={this.onCopy}
+                                enabled={
+                                    !this.operationInProgress &&
+                                    !!measurement.result
+                                }
+                            />
+                            <IconAction
+                                icon="material:save"
+                                iconSize={16}
+                                title="Save as CSV file"
+                                onClick={this.onSaveAsCsv}
+                                overlayText={"CSV"}
+                                enabled={
+                                    !this.operationInProgress &&
+                                    !!measurement.result &&
+                                    measurement.resultType == "chart"
+                                }
+                                style={{
+                                    marginBottom: 10
+                                }}
+                            />
+                            {this.deleteAction}
+                        </div>
+                    </td>
+                </tr>
+            </React.Fragment>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class MeasurementsDockView extends React.Component<{
+    measurementsController: MeasurementsController;
+}> {
+    get measurementsModel() {
+        return this.props.measurementsController.measurementsModel;
+    }
+
+    get numCharts() {
+        return this.props.measurementsController.chartsController
+            .chartControllers.length;
+    }
+
+    @computed
+    get availableMeasurements() {
+        const availableMeasurements = [];
+        for (const [
+            measurementFunctionId,
+            measurementFunction
+        ] of measurementFunctions.get()) {
+            if ((measurementFunction.arity || 1) > this.numCharts) {
+                continue;
+            }
+
+            if (
+                !measurementFunction.parametersDescription &&
+                this.numCharts === 1 &&
+                this.measurementsModel.measurements.find(
+                    measurement =>
+                        measurement.measurementFunctionId ===
+                        measurementFunctionId
+                )
+            ) {
+                continue;
+            }
+
+            availableMeasurements.push(measurementFunction);
+        }
+        return availableMeasurements
+            .sort((a, b) => stringCompare(a.name, b.name))
+            .map(a => a.id);
+    }
+
+    render() {
+        return (
+            <div className="EezStudio_MeasurementsDockViewContainer">
+                {this.props.measurementsController.refreshRequired && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                            this.props.measurementsController.startMeasurement(
+                                this.props.measurementsController.calcMeasurementsInterval()
+                            );
+                        }}
+                    >
+                        Refresh
+                    </button>
+                )}
+                <div>
+                    <table>
+                        <tbody>
+                            {_map(
+                                this.props.measurementsController.measurements,
+                                measurement => (
+                                    <MeasurementComponent
+                                        key={measurement.measurementId}
+                                        measurement={measurement}
+                                    />
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                {this.availableMeasurements.length > 0 && (
+                    <div className="dropdown">
+                        <button
+                            className="btn btn-sm btn-secondary dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                        >
+                            Add Measurement
+                        </button>
+                        <div className="dropdown-menu">
+                            {_map(
+                                this.availableMeasurements,
+                                measurementFunctionId => {
+                                    return (
+                                        <a
+                                            key={measurementFunctionId}
+                                            className="dropdown-item"
+                                            href="#"
+                                            onClick={action(() => {
+                                                this.measurementsModel.measurements.push(
+                                                    {
+                                                        measurementId: guid(),
+                                                        measurementFunctionId
+                                                    }
+                                                );
+                                            })}
+                                        >
+                                            {
+                                                measurementFunctions
+                                                    .get()
+                                                    .get(measurementFunctionId)!
+                                                    .name
+                                            }
+                                        </a>
+                                    );
+                                }
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class MeasurementValue extends React.Component<{
+    measurement: Measurement;
+    inDockablePanel?: boolean;
+}> {
+    render() {
+        if (!this.props.measurement.script) {
+            return "?";
+        }
+
+        const measurementResult = this.props.measurement.result;
+
+        if (measurementResult == null || measurementResult.result == null) {
+            if (this.props.inDockablePanel) {
+                return null;
+            }
+            return (
+                <input
+                    type="text"
+                    className="form-control"
+                    value={""}
+                    readOnly={true}
+                />
+            );
+        }
+
+        if (typeof measurementResult.result === "string") {
+            return measurementResult.result;
+        }
+
+        if (typeof measurementResult.result === "number") {
+            let unit;
+            if (measurementResult.resultUnit) {
+                unit = UNITS[measurementResult.resultUnit];
+            }
+
+            if (!unit) {
+                const lineController =
+                    this.props.measurement.measurementsController
+                        .chartsController.lineControllers[
+                        this.props.measurement.chartIndex
+                    ];
+                unit = lineController
+                    ? lineController.yAxisController.unit
+                    : UNKNOWN_UNIT;
+            }
+
+            const strValue = unit.formatValue(measurementResult.result, 4);
+
+            return (
+                <input
+                    type="text"
+                    className="form-control"
+                    value={strValue}
+                    readOnly={true}
+                />
+            );
+        }
+
+        return (
+            <div className="EezStudio_MeasurementChartContainer">
+                <GenericChart chart={measurementResult.result} />
+            </div>
+        );
+    }
+}
+
+@observer
+export class MeasurementResultField extends FieldComponent {
+    render() {
+        const measurement = this.props.dialogContext;
+        return <MeasurementValue measurement={measurement} />;
+    }
+}
+
+export class GlobalViewOptions {
+    static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
+
+    @observable enableZoomAnimations: boolean = true;
+    @observable blackBackground: boolean = false;
+    @observable renderAlgorithm: WaveformRenderAlgorithm = "minmax";
+    @observable showSampledData: boolean = false;
+
+    constructor() {
+        const globalViewOptionsJSON = localStorage.getItem(
+            GlobalViewOptions.LOCAL_STORAGE_ITEM_ID
+        );
+        if (globalViewOptionsJSON) {
+            try {
+                const globakViewOptionsJS = JSON.parse(globalViewOptionsJSON);
+                runInAction(() => Object.assign(this, globakViewOptionsJS));
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        autorun(() => {
+            localStorage.setItem(
+                GlobalViewOptions.LOCAL_STORAGE_ITEM_ID,
+                JSON.stringify(toJS(this))
+            );
+        });
+    }
+}
+
+export const globalViewOptions = new GlobalViewOptions();
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const measurementFunctions = computed(() => {
+    const allFunctions = new Map<string, IMeasurementFunction>();
+
+    function loadMeasurementFunctions(
+        extensionFolderPath: string,
+        functions: IMeasurementFunction[]
+    ) {
+        functions.forEach((extensionMeasurementFunction: any) => {
+            allFunctions.set(
+                extensionMeasurementFunction.id,
+                Object.assign({}, extensionMeasurementFunction, {
+                    script:
+                        extensionFolderPath +
+                        "/" +
+                        extensionMeasurementFunction.script
+                })
+            );
+        });
+    }
+
+    extensions.forEach(extension => {
+        if (extension.measurementFunctions) {
+            loadMeasurementFunctions(
+                extension.installationFolderPath!,
+                extension.measurementFunctions
+            );
+        }
+    });
+
+    return allFunctions;
+});
+
+export interface WaveformModel {
+    format: WaveformFormat;
+    values: any;
+    offset: number;
+    scale: number;
+
+    dlog?: IWaveformDlogParams;
+
+    length: number;
+    value: (index: number) => number;
+
+    samplingRate: number;
+    valueUnit: keyof typeof UNITS;
+
+    rulers?: RulersModel;
+    measurements?: MeasurementsModel;
+}
+
+const CONF_SINGLE_STEP_TIMEOUT = 1000 / 30;
+
+////////////////////////////////////////////////////////////////////////////////
+
+function clamp(value: number, min: number, max: number) {
+    if (value < min) {
+        return min;
+    }
+    if (value > max) {
+        return max;
+    }
+    return value;
+}
+
+function addAlphaToColor(color: string, alpha: number) {
+    return tinycolor(color).setAlpha(alpha).toRgbString();
+}
+
+function genRandomOffsets(K: number) {
+    let offsets = new Array(K);
+    for (let i = 0; i < K; i++) {
+        offsets[i] = i;
+    }
+    for (let i = 0; i < K; i++) {
+        let a = Math.floor(Math.random() * K);
+        let b = Math.floor(Math.random() * K);
+        let temp = offsets[a];
+        offsets[a] = offsets[b];
+        offsets[b] = temp;
+    }
+    return offsets;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IWaveformDlogParams {
+    dataType: DataType;
+    dataOffset: number;
+    dataContainsSampleValidityBit: boolean;
+    columnDataIndex: number;
+    numBytesPerRow: number;
+    bitMask: number;
+    logOffset?: number;
+    transformOffset: number;
+    transformScale: number;
+}
+
+export interface IWaveform {
+    format: any;
+    values: any;
+    offset: number;
+    scale: number;
+
+    dlog?: IWaveformDlogParams;
+
+    length: number;
+    value: (i: number) => number;
+    waveformData: (i: number) => number;
+
+    samplingRate: number;
+}
+
+interface IAxisController {
+    from: number;
+    to: number;
+    range: number;
+    scale: number;
+    valueToPx(value: number): number;
+    pxToValue(value: number): number;
+    linearValueToPx(value: number): number;
+    logarithmic?: boolean;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type WaveformRenderAlgorithm = "avg" | "minmax" | "gradually";
+
+export interface IWaveformRenderJobSpecification {
+    renderAlgorithm: string;
+    waveform: IWaveform;
+    xAxisController: IAxisController;
+    yAxisController: IAxisController;
+    xFromValue: number;
+    xToValue: number;
+    yFromValue: number;
+    yToValue: number;
+    strokeColor: string;
+    label?: string;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface IContinuation {
+    isDone?: boolean;
+    xLabel?: number;
+    yLabel?: number;
+}
+
+interface IAverageContinuation extends IContinuation {
+    offsets: number[];
+    offset: number;
+    commitAlways: boolean;
+}
+
+interface IMinMaxContinuation extends IContinuation {
+    offsets: number[];
+    offset: number;
+    commitAlways: boolean;
+}
+
+interface IGraduallyContinuation extends IContinuation {
+    a: number;
+    b: number;
+    K: number;
+    offsets: number[];
+    offset: number;
+    commitAlways: boolean;
+}
+
+interface ILogarithmicContinuation extends IContinuation {
+    i: number;
+    b: number;
+    K: number;
+
+    points: {
+        x: number;
+        y: number;
+    }[];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function renderWaveformPath(
+    canvas: HTMLCanvasElement,
+    job: IWaveformRenderJobSpecification,
+    continuation: any
+) {
+    const { waveform, xAxisController, yAxisController, strokeColor, label } =
+        job;
+
+    let xFromPx = xAxisController.valueToPx(xAxisController.from);
+    let xToPx = xAxisController.valueToPx(xAxisController.to);
+
+    let xLabel = continuation ? continuation.xLabel : undefined;
+    let yLabel = continuation ? continuation.yLabel : undefined;
+
+    function xAxisPxToIndex(px: number) {
+        return xAxisController.pxToValue(px) * waveform.samplingRate;
+    }
+
+    function renderSparse() {
+        let a = Math.max(Math.floor(xAxisPxToIndex(xFromPx)) - 1, 0);
+        let b = Math.min(
+            Math.ceil(xAxisPxToIndex(xToPx)) + 1,
+            waveform.length - 1
+        );
+
+        ctx.fillStyle = strokeColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 0.4;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let r = Math.max(
+            1,
+            Math.min(4, 0.75 / Math.sqrt(xAxisPxToIndex(1) - xAxisPxToIndex(0)))
+        );
+
+        // let y0 = Math.round(canvas.height - yAxisController.valueToPx(0));
+
+        let xPrev = 0;
+        let yPrev = 0;
+
+        for (let i = a; i <= b; i++) {
+            let x = Math.round(
+                xAxisController.valueToPx(
+                    (i * xAxisController.range) / (waveform.length - 1)
+                )
+            );
+            let y = Math.round(
+                canvas.height - yAxisController.valueToPx(waveform.value(i))
+            );
+
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, 2 * Math.PI);
+            ctx.fill();
+
+            if (!label) {
+                // draw vertical line to y-axis 0
+                // if (r > 1.2) {
+                //     ctx.beginPath();
+                //     ctx.moveTo(x, y);
+                //     ctx.lineTo(x, y0);
+                //     ctx.stroke();
+                // }
+            }
+
+            if (i > a) {
+                ctx.beginPath();
+                ctx.moveTo(xPrev, yPrev);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+
+            xPrev = x;
+            yPrev = y;
+
+            if (xLabel == undefined || x > xLabel) {
+                xLabel = x;
+                yLabel = y;
+            }
+        }
+    }
+
+    function renderAverage(
+        continuation: IAverageContinuation | undefined
+    ): IAverageContinuation | undefined {
+        function valueAt(x: number) {
+            let a = xAxisPxToIndex(x);
+            let b = xAxisPxToIndex(x + 1);
+
+            a = clamp(a, 0, waveform.length);
+            b = clamp(b, 0, waveform.length);
+
+            if (a >= b) {
+                return NaN;
+            }
+
+            let aa = Math.ceil(a);
+            let ad = aa - a;
+            let y = waveform.value(Math.floor(a)) * ad;
+            let c = ad;
+            a = aa;
+
+            let bb = Math.floor(b);
+            let bd = b - bb;
+            y += waveform.value(bb) * bd;
+            c += bd;
+            b = bb;
+
+            for (let i = a; i < b; i++) {
+                y += waveform.value(i);
+                c++;
+            }
+
+            y /= c;
+
+            y = yAxisController.valueToPx(y);
+
+            return y;
+        }
+
+        xFromPx = Math.round(xFromPx);
+        xToPx = Math.round(xToPx);
+
+        const N = xToPx - xFromPx;
+
+        let offsets: number[];
+        let offset: number;
+        if (continuation) {
+            offsets = continuation.offsets;
+            offset = continuation.offset;
+        } else {
+            ctx.fillStyle = strokeColor;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            offsets = genRandomOffsets(N);
+            offset = 0;
+        }
+
+        let startTime = new Date().getTime();
+
+        for (; offset < N; offset++) {
+            if (new Date().getTime() - startTime > CONF_SINGLE_STEP_TIMEOUT) {
+                return {
+                    offsets,
+                    offset,
+                    commitAlways: false
+                };
+            }
+
+            const x = xFromPx + offsets[offset];
+            const y = valueAt(x);
+            if (isFinite(y)) {
+                ctx.beginPath();
+                ctx.arc(x, canvas.height - y, 1, 0, 2 * Math.PI);
+                ctx.fill();
+
+                if (xLabel == undefined || x > xLabel) {
+                    xLabel = x;
+                    yLabel = canvas.height - y;
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    function renderMinMax(
+        continuation: IMinMaxContinuation | undefined
+    ): IMinMaxContinuation | undefined {
+        function valueAt(x: number, result: number[]) {
+            let a = Math.floor(xAxisPxToIndex(x));
+            let b = Math.ceil(xAxisPxToIndex(x + 1));
+
+            a = clamp(a, 0, waveform.length);
+            b = clamp(b, 0, waveform.length);
+            if (a >= b) {
+                return false;
+            }
+
+            let min = Number.MAX_VALUE;
+            let max = -Number.MAX_VALUE;
+            for (let i = a; i < b; i++) {
+                const y = waveform.value(i);
+                if (y < min) {
+                    min = y;
+                }
+                if (y > max) {
+                    max = y;
+                }
+            }
+
+            if (min > max) {
+                return false;
+            }
+
+            result[0] = yAxisController.valueToPx(min);
+            result[1] = yAxisController.valueToPx(max);
+            return true;
+        }
+
+        xFromPx = Math.round(xFromPx);
+        xToPx = Math.round(xToPx);
+
+        const N = xToPx - xFromPx;
+
+        let offsets: number[];
+        let offset: number;
+        if (continuation) {
+            offsets = continuation.offsets;
+            offset = continuation.offset;
+        } else {
+            ctx.strokeStyle = strokeColor;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            offsets = genRandomOffsets(N);
+            offset = 0;
+        }
+
+        let result = [0, 0];
+
+        let startTime = new Date().getTime();
+
+        for (; offset < N; offset++) {
+            if (new Date().getTime() - startTime > CONF_SINGLE_STEP_TIMEOUT) {
+                return {
+                    offsets,
+                    offset,
+                    commitAlways: false
+                };
+            }
+
+            const x = xFromPx + offsets[offset] + 0.5;
+
+            if (valueAt(x, result)) {
+                if (result[1] - result[0] < 1) {
+                    result[1] = result[0] + 1;
+                }
+                ctx.beginPath();
+                ctx.moveTo(x, canvas.height - result[0]);
+                ctx.lineTo(x, canvas.height - result[1]);
+                ctx.stroke();
+
+                if (xLabel == undefined || x > xLabel) {
+                    xLabel = x;
+                    yLabel =
+                        (canvas.height -
+                            result[0] +
+                            canvas.height -
+                            result[1]) /
+                        2;
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    function renderGradually(
+        continuation: IGraduallyContinuation
+    ): IGraduallyContinuation | undefined {
+        function init(): boolean {
+            let a = Math.round(xAxisPxToIndex(xFromPx));
+            let b = Math.round(xAxisPxToIndex(xToPx));
+
+            a = clamp(a, 0, waveform.length);
+            b = clamp(b, 0, waveform.length);
+
+            if (a >= b) {
+                return false;
+            }
+
+            let K = Math.floor((b - a) / canvas.width);
+            if (K === 0) {
+                K = 1;
+            }
+
+            const offsets = genRandomOffsets(K);
+            const offset = 0;
+
+            let minAlpha = 0.4;
+            let maxAlpha = 1;
+            let alpha = minAlpha + (maxAlpha - minAlpha) / K;
+
+            ctx.fillStyle = addAlphaToColor(strokeColor, alpha);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            continuation = { a, b, K, offsets, offset, commitAlways: true };
+            return true;
+        }
+
+        function renderStep(a: number, b: number, K: number, offset: number) {
+            for (let i = a + offset; i < b; i += K) {
+                let x = Math.round(
+                    xAxisController.valueToPx(
+                        (i * xAxisController.range) / waveform.length
+                    )
+                );
+                let y = yAxisController.valueToPx(waveform.value(i));
+                if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+                    ctx.fillRect(x - 1, canvas.height - y - 1, 2, 2);
+
+                    if (xLabel == undefined || x > xLabel) {
+                        xLabel = x;
+                        yLabel = canvas.height - y;
+                    }
+                }
+            }
+        }
+
+        if (!continuation && !init()) {
+            return undefined;
+        }
+
+        renderStep(
+            continuation.a,
+            continuation.b,
+            continuation.K,
+            continuation.offsets[continuation.offset]
+        );
+
+        if (++continuation.offset < continuation.K) {
+            return continuation;
+        }
+
+        return undefined;
+    }
+
+    function renderLogarithmic(
+        continuation: ILogarithmicContinuation
+    ): ILogarithmicContinuation | undefined {
+        let xFromPx = Math.floor(
+            xAxisController.linearValueToPx(xAxisController.from)
+        );
+        let xToPx = Math.ceil(
+            xAxisController.linearValueToPx(xAxisController.to)
+        );
+
+        function init(): boolean {
+            let a = Math.floor(xAxisPxToIndex(xFromPx)) - 1;
+            let b = Math.ceil(xAxisPxToIndex(xToPx)) + 1;
+
+            a = clamp(a, 0, waveform.length);
+            b = clamp(b, 0, waveform.length);
+
+            if (a >= b) {
+                return false;
+            }
+
+            let K = 50000;
+
+            continuation = {
+                i: a,
+                b,
+                K,
+                points: [],
+                isDone: false
+            };
+            return true;
+        }
+
+        function renderStep(continuation: ILogarithmicContinuation) {
+            const { points, b, K } = continuation;
+
+            let i = continuation.i;
+            const iEnd = Math.min(i + K, b);
+            for (; i < iEnd; ++i) {
+                let x = Math.round(
+                    xAxisController.valueToPx(i / waveform.samplingRate)
+                );
+                let y = Math.round(
+                    canvas.height - yAxisController.valueToPx(waveform.value(i))
+                );
+
+                if (points.length === 0 || points[points.length - 1].x !== x) {
+                    points.push({
+                        x,
+                        y
+                    });
+                } else {
+                    if (y < points[points.length - 1].y) {
+                        points[points.length - 1].y = y;
+                    }
+                }
+            }
+            continuation.i = i;
+            if (i === b) {
+                continuation.isDone = true;
+            }
+
+            ctx.fillStyle = strokeColor;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (points.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (i = 1; i < points.length; ++i) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.stroke();
+            }
+
+            let R = 1.5;
+            for (i = 0; i < points.length; ++i) {
+                if (
+                    (i === 0 || points[i].x - points[i - 1].x > 2 * R) &&
+                    (i === points.length - 1 ||
+                        points[i + 1].x - points[i].x > 2 * R)
+                ) {
+                    ctx.beginPath();
+                    ctx.arc(points[i].x, points[i].y, R, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        }
+
+        if (!continuation && !init()) {
+            return undefined;
+        }
+
+        renderStep(continuation);
+
+        if (!continuation.isDone) {
+            return continuation;
+        }
+
+        return undefined;
+    }
+
+    var ctx = canvas.getContext("2d")!;
+
+    if (job.xAxisController.logarithmic) {
+        continuation = renderLogarithmic(continuation);
+    } else if (xAxisPxToIndex(1) - xAxisPxToIndex(0) < 1) {
+        continuation = renderSparse();
+    } else if (job.renderAlgorithm === "minmax") {
+        continuation = renderMinMax(continuation);
+    } else if (job.renderAlgorithm === "avg") {
+        continuation = renderAverage(continuation);
+    } else {
+        continuation = renderGradually(continuation);
+    }
+
+    if (continuation) {
+        continuation.xLabel = xLabel;
+        continuation.yLabel = yLabel;
+        return continuation;
+    }
+
+    // draw label
+    if (label && xLabel != undefined && yLabel != undefined) {
+        const FONT_SIZE = 14;
+        const HORZ_PADDING = 4;
+        const VERT_PADDING = 4;
+
+        ctx.font = `${FONT_SIZE}px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"`;
+
+        const width =
+            Math.ceil(ctx.measureText(label).width) + 2 * HORZ_PADDING;
+        const height = FONT_SIZE + 2 * VERT_PADDING;
+
+        xLabel = Math.round(xLabel - width);
+        yLabel = Math.round(yLabel - height);
+
+        if (xLabel < 0) {
+            xLabel = 0;
+        } else if (xLabel + width > canvas.width) {
+            xLabel = canvas.width - width;
+        }
+
+        if (yLabel < 0) {
+            yLabel = 0;
+        } else if (yLabel + height > canvas.height) {
+            yLabel = canvas.height - height;
+        }
+
+        xLabel += 0.5;
+        yLabel += 0.5;
+
+        ctx.fillStyle = strokeColor;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText(label, xLabel + HORZ_PADDING, yLabel + VERT_PADDING);
+    }
+
+    return undefined;
+}
+
+export enum WaveformFormat {
+    UNKNOWN,
+    FLOATS_32BIT,
+    RIGOL_BYTE,
+    RIGOL_WORD,
+    CSV_STRING,
+    EEZ_DLOG,
+    EEZ_DLOG_LOGARITHMIC,
+    JS_NUMBERS,
+    FLOATS_64BIT
+}
+
+function getCsvValues(valuesArray: any) {
+    var values = new Buffer(valuesArray.buffer || []).toString("binary");
+
+    if (!values || !values.split) {
+        return [];
+    }
+    let lines = values
+        .split("\n")
+        .map(line => line.split(",").map(value => parseFloat(value)));
+    if (lines.length === 1) {
+        return lines[0];
+    }
+    return lines.map(line => line[0]);
+}
+
+const buffer = Buffer.allocUnsafe(8);
+
+function readUInt8(data: any, i: number) {
+    buffer[0] = data[i];
+    return buffer.readUInt8(0);
+}
+
+function readInt16BE(data: any, i: number) {
+    buffer[0] = data[i];
+    buffer[1] = data[i + 1];
+    return buffer.readInt16BE(0);
+}
+
+function readInt24BE(data: any, i: number) {
+    buffer[0] = data[i];
+    buffer[1] = data[i + 1];
+    buffer[2] = data[i + 2];
+    buffer[3] = 0;
+    return buffer.readInt32BE(0) >> 8;
+}
+
+function readFloat(data: any, i: number) {
+    buffer[0] = data[i];
+    buffer[1] = data[i + 1];
+    buffer[2] = data[i + 2];
+    buffer[3] = data[i + 3];
+    return buffer.readFloatLE(0);
+}
+
+function readDouble(data: any, i: number) {
+    buffer[0] = data[i];
+    buffer[1] = data[i + 1];
+    buffer[2] = data[i + 2];
+    buffer[3] = data[i + 3];
+    buffer[4] = data[i + 4];
+    buffer[5] = data[i + 5];
+    buffer[6] = data[i + 6];
+    buffer[7] = data[i + 7];
+    return buffer.readDoubleLE(0);
+}
+
+export function initValuesAccesor(
+    object: {
+        // input
+        format: WaveformFormat;
+        values: any;
+        offset: number;
+        scale: number;
+
+        dlog?: IWaveformDlogParams;
+
+        // output
+        length: number;
+        value(value: number): number;
+        waveformData(value: number): number;
+    },
+    disableNaNs: boolean = false
+) {
+    const values = object.values || [];
+    const format = object.format;
+    const offset = object.offset;
+    const scale = object.scale;
+
+    let length: number;
+    let value: (value: number) => number;
+    let waveformData: (value: number) => number;
+
+    if (format === WaveformFormat.FLOATS_32BIT) {
+        length = Math.floor(values.length / 4);
+        value = (index: number) => {
+            return offset + readFloat(values, 4 * index) * scale;
+        };
+        waveformData = value;
+    } else if (format === WaveformFormat.FLOATS_64BIT) {
+        length = Math.floor(values.length / 8);
+        value = (index: number) => {
+            return offset + readDouble(values, 8 * index) * scale;
+        };
+        waveformData = value;
+    } else if (format === WaveformFormat.RIGOL_BYTE) {
+        length = values.length;
+        waveformData = (index: number) => {
+            return values[index];
+        };
+        value = (index: number) => {
+            return offset + waveformData(index) * scale;
+        };
+    } else if (format === WaveformFormat.RIGOL_WORD) {
+        length = Math.floor(values.length / 2);
+        waveformData = (index: number) => {
+            return values[index];
+        };
+        value = (index: number) => {
+            return offset + waveformData(index) * scale;
+        };
+    } else if (format === WaveformFormat.CSV_STRING) {
+        const csvValues = getCsvValues(values);
+        length = csvValues.length;
+        value = (index: number) => {
+            return offset + csvValues[index] * scale;
+        };
+        waveformData = value;
+    } else if (
+        format === WaveformFormat.EEZ_DLOG ||
+        format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
+    ) {
+        length = object.length;
+        if (length === undefined) {
+            length = values.length;
+        }
+
+        const {
+            dataType,
+            dataContainsSampleValidityBit,
+            dataOffset,
+            columnDataIndex,
+            numBytesPerRow,
+            bitMask,
+            logOffset,
+            transformOffset,
+            transformScale
+        } = object.dlog!;
+
+        value = (index: number) => {
+            let rowOffset = dataOffset + index * numBytesPerRow;
+
+            let value;
+
+            if (
+                !dataContainsSampleValidityBit ||
+                readUInt8(values, rowOffset) & 0x80
+            ) {
+                rowOffset += columnDataIndex;
+
+                if (dataType == DataType.DATA_TYPE_BIT) {
+                    value = readUInt8(values, rowOffset) & bitMask ? 1.0 : 0.0;
+                } else if (dataType == DataType.DATA_TYPE_INT16_BE) {
+                    value =
+                        transformOffset +
+                        transformScale * readInt16BE(values, rowOffset);
+                } else if (dataType == DataType.DATA_TYPE_INT24_BE) {
+                    value =
+                        transformOffset +
+                        transformScale * readInt24BE(values, rowOffset);
+                } else if (dataType == DataType.DATA_TYPE_FLOAT) {
+                    value = readFloat(values, rowOffset);
+                } else {
+                    console.error("Unknown data type", dataType);
+                    value = NaN;
+                }
+            } else {
+                value = NaN;
+            }
+
+            if (format === WaveformFormat.EEZ_DLOG_LOGARITHMIC) {
+                return Math.log10(logOffset! + value);
+            } else {
+                return offset + value * scale;
+            }
+        };
+
+        waveformData = value;
+    } else if (format === WaveformFormat.JS_NUMBERS) {
+        length = object.length;
+        value = (index: number) => {
+            return values[offset + index * scale];
+        };
+        waveformData = value;
+    } else {
+        return;
+    }
+
+    object.length = length;
+
+    if (format === WaveformFormat.EEZ_DLOG && disableNaNs) {
+        object.value = (index: number) => {
+            let x = value(index);
+            if (!isNaN(x)) {
+                return x;
+            }
+
+            // find first non NaN on left or right
+            const nLeft = index;
+            const nRight = length - index - 1;
+
+            const n = Math.min(nLeft, nRight);
+
+            let k;
+            for (k = 1; k <= n; ++k) {
+                // check left
+                x = value(index - k);
+                if (!isNaN(x)) {
+                    return x;
+                }
+
+                // check right
+                x = value(index + k);
+                if (!isNaN(x)) {
+                    return x;
+                }
+            }
+
+            if (nLeft > nRight) {
+                index -= k;
+                for (; index >= 0; --index) {
+                    // check left
+                    x = value(index);
+                    if (!isNaN(x)) {
+                        return x;
+                    }
+                }
+            } else if (nLeft < nRight) {
+                index += k;
+                for (; index < length; ++index) {
+                    // check right
+                    x = value(index);
+                    if (!isNaN(x)) {
+                        return x;
+                    }
+                }
+            }
+
+            // give up
+            return NaN;
+        };
+    } else {
+        object.value = value;
+    }
+
+    object.waveformData = waveformData;
+}
+
+@observer
+export class BookmarkView extends React.Component<{
+    chartsController: ChartsController;
+    index: number;
+    bookmark: ChartBookmark;
+    selected: boolean;
+    onClick: () => void;
+}> {
+    render() {
+        const { chartsController, index, bookmark, selected, onClick } =
+            this.props;
+
+        let className = classNames({
+            selected
+        });
+
+        const xAxisController = chartsController.xAxisController;
+        const time = bookmark.value;
+
+        const timeStr = xAxisController.axisModel.unit.formatValue(
+            xAxisController.axisModel.semiLogarithmic
+                ? Math.pow(
+                      10,
+                      time + xAxisController.axisModel.semiLogarithmic.a
+                  ) + xAxisController.axisModel.semiLogarithmic.b
+                : time,
+            4
+        );
+
+        return (
+            <tr className={className} onClick={onClick}>
+                <td>{index}.</td>
+                <td>{timeStr}</td>
+                <td>{bookmark.text}</td>
+            </tr>
+        );
+    }
+}
+
+@observer
+export class BookmarksView extends React.Component<{
+    chartsController: ChartsController;
+}> {
+    div: HTMLElement;
+
+    ensureVisible() {
+        const selectedRow = $(this.div).find("tr.selected")[0];
+        if (selectedRow) {
+            scrollIntoViewIfNeeded(selectedRow);
+        }
+    }
+
+    componentDidMount() {
+        this.ensureVisible();
+    }
+
+    componentDidUpdate() {
+        this.ensureVisible();
+    }
+
+    render() {
+        const { chartsController } = this.props;
+
+        if (!chartsController.bookmarks) {
+            return null;
+        }
+
+        return (
+            <div
+                className="EezStudio_BookmarksTableContainer"
+                ref={ref => (this.div = ref!)}
+            >
+                <table>
+                    <tbody>
+                        {chartsController.bookmarks.map((bookmark, i) => (
+                            <BookmarkView
+                                key={i}
+                                chartsController={chartsController}
+                                index={i + 1}
+                                bookmark={bookmark}
+                                selected={
+                                    i == chartsController.selectedBookmark
+                                }
+                                onClick={() =>
+                                    chartsController.selectBookmark(i)
+                                }
+                            />
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+}
+
+export class RulersModel {
+    @observable xAxisRulersEnabled: boolean = false;
+    @observable x1: number = 0;
+    @observable x2: number = 0;
+    @observable yAxisRulersEnabled: boolean[] = [];
+    @observable y1: number[] = [];
+    @observable y2: number[] = [];
+    @observable pauseDbUpdate?: boolean = false;
+
+    constructor(props: any) {
+        if (props) {
+            if (!Array.isArray(props.yAxisRulersEnabled)) {
+                props.yAxisRulersEnabled = [props.yAxisRulersEnabled];
+                props.y1 = [props.y1];
+                props.y2 = [props.y2];
+            }
+
+            Object.assign(this, props);
+        }
+    }
+
+    initYRulers(numCharts: number) {
+        for (let chartIndex = 0; chartIndex < numCharts; chartIndex++) {
+            if (
+                chartIndex >= this.yAxisRulersEnabled.length ||
+                this.yAxisRulersEnabled[chartIndex] === undefined
+            ) {
+                this.yAxisRulersEnabled[chartIndex] = false;
+                this.y1[chartIndex] = 0;
+                this.y2[chartIndex] = 0;
+            }
+        }
+    }
+}
+
+class DragXRulerMouseHandler implements MouseHandler {
+    cursor = "ew-resize";
+    xStart: number;
+    x1: number;
+    dx: number;
+
+    constructor(
+        private rulersController: RulersController,
+        private whichRuller: "x1" | "x2" | "both" | "none"
+    ) {}
+
+    get xAxisController() {
+        return this.rulersController.chartsController.xAxisController;
+    }
+
+    @action
+    down(point: SVGPoint, event: PointerEvent) {
+        this.rulersController.rulersModel.pauseDbUpdate = true;
+
+        this.xStart = this.xAxisController.pxToValue(point.x);
+
+        if (this.whichRuller === "none") {
+            let x = getSnapToValue(event, this.xStart, this.xAxisController);
+            x = this.rulersController.snapToSample(x);
+
+            this.rulersController.rulersModel.x1 = x;
+            this.rulersController.rulersModel.x2 = x;
+        }
+
+        this.x1 = this.rulersController.rulersModel.x1;
+        this.dx =
+            this.rulersController.rulersModel.x2 -
+            this.rulersController.rulersModel.x1;
+    }
+
+    @action
+    move(point: SVGPoint, event: PointerEvent) {
+        let x = this.xAxisController.pxToValue(point.x);
+        if (this.whichRuller === "both") {
+            x = getSnapToValue(
+                event,
+                this.x1 + x - this.xStart,
+                this.xAxisController
+            );
+            x = this.rulersController.snapToSample(x);
+
+            if (x < this.xAxisController.minValue) {
+                x = this.xAxisController.minValue;
+            }
+
+            if (x + this.dx < this.xAxisController.minValue) {
+                x = this.xAxisController.minValue - this.dx;
+            }
+
+            if (x > this.xAxisController.maxValue) {
+                x = this.xAxisController.maxValue;
+            }
+
+            if (x + this.dx > this.xAxisController.maxValue) {
+                x = this.xAxisController.maxValue - this.dx;
+            }
+
+            this.rulersController.rulersModel.x1 = x;
+            this.rulersController.rulersModel.x2 = x + this.dx;
+        } else {
+            x = getSnapToValue(event, x, this.xAxisController);
+            x = this.rulersController.snapToSample(x);
+
+            if (x < this.xAxisController.minValue) {
+                x = this.xAxisController.minValue;
+            } else if (x > this.xAxisController.maxValue) {
+                x = this.xAxisController.maxValue;
+            }
+
+            if (this.whichRuller === "x1") {
+                this.rulersController.rulersModel.x1 = x;
+            } else {
+                this.rulersController.rulersModel.x2 = x;
+            }
+
+            if (
+                this.rulersController.rulersModel.x1 >
+                this.rulersController.rulersModel.x2
+            ) {
+                const temp = this.rulersController.rulersModel.x2;
+                this.rulersController.rulersModel.x2 =
+                    this.rulersController.rulersModel.x1;
+                this.rulersController.rulersModel.x1 = temp;
+
+                this.whichRuller = this.whichRuller === "x1" ? "x2" : "x1";
+            }
+        }
+    }
+
+    @action
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ) {
+        this.rulersController.rulersModel.pauseDbUpdate = false;
+    }
+
+    updateCursor(event: PointerEvent | undefined, cursor: ICursor) {
+        cursor.visible = false;
+    }
+
+    render() {
+        return null;
+    }
+}
+
+class DragYRulerMouseHandler implements MouseHandler {
+    chartIndex: number;
+
+    cursor = "ns-resize";
+    yStart: number;
+    y1: number;
+    dy: number;
+
+    constructor(
+        private chartView: ChartView,
+        private whichRuller: "y1" | "y2" | "both" | "none"
+    ) {
+        this.chartIndex = chartView.props.chartController.chartIndex;
+    }
+
+    get rulersController() {
+        return this.chartView.props.chartController.chartsController
+            .rulersController;
+    }
+
+    get rulersModel() {
+        return this.rulersController.rulersModel;
+    }
+
+    get yAxisController() {
+        return this.chartView.props.chartController.yAxisController;
+    }
+
+    @action
+    down(point: SVGPoint, event: PointerEvent) {
+        this.rulersModel.pauseDbUpdate = true;
+
+        this.yStart = this.yAxisController.pxToValue(point.y);
+
+        if (this.whichRuller === "none") {
+            let y = this.yAxisController.pxToValue(point.y);
+            y = getSnapToValue(event, y, this.yAxisController);
+
+            this.rulersModel.y1[this.chartIndex] = y;
+            this.rulersModel.y2[this.chartIndex] = y;
+        }
+
+        this.y1 = this.rulersModel.y1[this.chartIndex];
+        this.dy =
+            this.rulersModel.y2[this.chartIndex] -
+            this.rulersModel.y1[this.chartIndex];
+    }
+
+    @action
+    move(point: SVGPoint, event: PointerEvent) {
+        let y = this.yAxisController.pxToValue(point.y);
+        if (this.whichRuller === "both") {
+            y = getSnapToValue(
+                event,
+                this.y1 + y - this.yStart,
+                this.yAxisController
+            );
+
+            if (y < this.yAxisController.minValue) {
+                y = this.yAxisController.minValue;
+            }
+
+            if (y + this.dy < this.yAxisController.minValue) {
+                y = this.yAxisController.minValue - this.dy;
+            }
+
+            if (y > this.yAxisController.maxValue) {
+                y = this.yAxisController.maxValue;
+            }
+
+            if (y + this.dy > this.yAxisController.maxValue) {
+                y = this.yAxisController.maxValue - this.dy;
+            }
+
+            this.rulersModel.y1[this.chartIndex] = y;
+            this.rulersModel.y2[this.chartIndex] = y + this.dy;
+        } else {
+            y = getSnapToValue(event, y, this.yAxisController);
+
+            if (y < this.yAxisController.minValue) {
+                y = this.yAxisController.minValue;
+            } else if (y > this.yAxisController.maxValue) {
+                y = this.yAxisController.maxValue;
+            }
+
+            if (this.whichRuller === "y1") {
+                this.rulersModel.y1[this.chartIndex] = y;
+            } else {
+                this.rulersModel.y2[this.chartIndex] = y;
+            }
+        }
+    }
+
+    @action
+    up(
+        point: SVGPoint | undefined,
+        event: PointerEvent | undefined,
+        cancel: boolean
+    ) {
+        this.rulersModel.pauseDbUpdate = false;
+    }
+
+    updateCursor(event: PointerEvent | undefined, cursor: ICursor) {
+        cursor.visible = false;
+    }
+
+    render() {
+        return null;
+    }
+}
+
+export class RulersController {
+    constructor(
+        public chartsController: ChartsController,
+        public rulersModel: RulersModel
+    ) {}
+
+    @computed
+    get x1() {
+        return (
+            Math.round(
+                this.chartsController.chartLeft +
+                    this.chartsController.xAxisController.valueToPx(
+                        this.rulersModel.x1
+                    )
+            ) + 0.5
+        );
+    }
+
+    @computed
+    get x2() {
+        return (
+            Math.round(
+                this.chartsController.chartLeft +
+                    this.chartsController.xAxisController.valueToPx(
+                        this.rulersModel.x2
+                    )
+            ) + 0.5
+        );
+    }
+
+    getY1(chartIndex: number) {
+        return (
+            Math.round(
+                this.chartsController.chartBottom -
+                    this.chartsController.chartControllers[
+                        chartIndex
+                    ].yAxisController.valueToPx(this.rulersModel.y1[chartIndex])
+            ) + 0.5
+        );
+    }
+
+    getY2(chartIndex: number) {
+        return (
+            Math.round(
+                this.chartsController.chartBottom -
+                    this.chartsController.chartControllers[
+                        chartIndex
+                    ].yAxisController.valueToPx(this.rulersModel.y2[chartIndex])
+            ) + 0.5
+        );
+    }
+
+    onDragStart(
+        chartView: ChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined {
+        if (closestByClass(event.target, "EezStudio_ChartRuler_x1rect")) {
+            return new DragXRulerMouseHandler(this, "x1");
+        }
+
+        if (closestByClass(event.target, "EezStudio_ChartRuler_x2rect")) {
+            return new DragXRulerMouseHandler(this, "x2");
+        }
+
+        if (closestByClass(event.target, "EezStudio_ChartRuler_y1rect")) {
+            return new DragYRulerMouseHandler(chartView, "y1");
+        }
+
+        if (closestByClass(event.target, "EezStudio_ChartRuler_y2rect")) {
+            return new DragYRulerMouseHandler(chartView, "y2");
+        }
+
+        if (closestByClass(event.target, "EezStudio_ChartRuler_xrect")) {
+            return new DragXRulerMouseHandler(this, "both");
+        }
+
+        if (closestByClass(event.target, "EezStudio_ChartRuler_yrect")) {
+            return new DragYRulerMouseHandler(chartView, "both");
+        }
+
+        if (this.rulersModel.xAxisRulersEnabled) {
+            return new DragXRulerMouseHandler(this, "none");
+        } else if (
+            chartView.props.chartController.chartIndex <
+                this.rulersModel.yAxisRulersEnabled.length &&
+            this.rulersModel.yAxisRulersEnabled[
+                chartView.props.chartController.chartIndex
+            ]
+        ) {
+            return new DragYRulerMouseHandler(chartView, "none");
+        }
+
+        return undefined;
+    }
+
+    static LINE_WIDTH = 2;
+    static BAND_WIDTH = 8;
+
+    @computed
+    get color() {
+        return globalViewOptions.blackBackground ? "#d4e5f3" : "#337BB7";
+    }
+
+    @computed
+    get fillOpacity() {
+        return globalViewOptions.blackBackground ? 0.2 : 0.1;
+    }
+
+    renderXRulersRect(chartView: ChartView) {
+        if (!this.rulersModel.xAxisRulersEnabled) {
+            return null;
+        }
+
+        let x1 = this.x1;
+        let x2 = this.x2;
+        if (x1 > x2) {
+            const temp = x1;
+            x1 = x2;
+            x2 = temp;
+        }
+
+        const y1 = this.chartsController.chartTop;
+        const y2 = this.chartsController.chartBottom;
+
+        return (
+            <g clipPath={`url(#${chartView.clipId})`}>
+                <rect
+                    className="EezStudio_ChartRuler_xrect"
+                    x={x1}
+                    y={y1}
+                    width={x2 - x1}
+                    height={y2 - y1}
+                    fillOpacity={this.fillOpacity}
+                    fill={this.color}
+                    style={{ cursor: "move" }}
+                />
+            </g>
+        );
+    }
+
+    renderXRulersLines(chartView: ChartView) {
+        if (!this.rulersModel.xAxisRulersEnabled) {
+            return null;
+        }
+
+        const x1 = this.x1;
+        const x2 = this.x2;
+
+        const y1 = this.chartsController.chartTop;
+        const y2 = this.chartsController.chartBottom;
+
+        return (
+            <g clipPath={`url(#${chartView.clipId})`}>
+                <line
+                    x1={x1}
+                    y1={y1}
+                    x2={x1}
+                    y2={y2}
+                    stroke={this.color}
+                    strokeWidth={RulersController.LINE_WIDTH}
+                />
+                <rect
+                    className="EezStudio_ChartRuler_x1rect"
+                    x={x1 - RulersController.BAND_WIDTH / 2}
+                    y={y1}
+                    width={RulersController.BAND_WIDTH}
+                    height={y2 - y1}
+                    fillOpacity={0}
+                    style={{ cursor: "ew-resize" }}
+                />
+
+                <line
+                    x1={x2}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke={this.color}
+                    strokeWidth={RulersController.LINE_WIDTH}
+                />
+                <rect
+                    className="EezStudio_ChartRuler_x2rect"
+                    x={x2 - RulersController.BAND_WIDTH / 2}
+                    y={y1}
+                    width={RulersController.BAND_WIDTH}
+                    height={y2 - y1}
+                    fillOpacity={0}
+                    style={{ cursor: "ew-resize" }}
+                />
+            </g>
+        );
+    }
+
+    renderYRulersRect(chartView: ChartView) {
+        const chartIndex = chartView.props.chartController.chartIndex;
+
+        if (
+            chartIndex >= this.rulersModel.yAxisRulersEnabled.length ||
+            !this.rulersModel.yAxisRulersEnabled[chartIndex]
+        ) {
+            return null;
+        }
+
+        let y1 = this.getY1(chartIndex);
+        let y2 = this.getY2(chartIndex);
+        if (y1 < y2) {
+            const temp = y1;
+            y1 = y2;
+            y2 = temp;
+        }
+
+        const x1 = this.chartsController.chartLeft;
+        const x2 = this.chartsController.chartRight;
+
+        return (
+            <g clipPath={`url(#${chartView.clipId})`}>
+                <rect
+                    className="EezStudio_ChartRuler_yrect"
+                    x={x1}
+                    y={y2}
+                    width={x2 - x1}
+                    height={y1 - y2}
+                    fillOpacity={this.fillOpacity}
+                    fill={this.color}
+                    style={{ cursor: "move" }}
+                />
+            </g>
+        );
+    }
+
+    renderYRulersLines(chartView: ChartView) {
+        const chartIndex = chartView.props.chartController.chartIndex;
+
+        if (
+            chartIndex >= this.rulersModel.yAxisRulersEnabled.length ||
+            !this.rulersModel.yAxisRulersEnabled[chartIndex]
+        ) {
+            return null;
+        }
+
+        const y1 = this.getY1(chartIndex);
+        const y2 = this.getY2(chartIndex);
+
+        const x1 = this.chartsController.chartLeft;
+        const x2 = this.chartsController.chartRight;
+
+        return (
+            <g clipPath={`url(#${chartView.clipId})`}>
+                <line
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y1}
+                    stroke={this.color}
+                    strokeWidth={RulersController.LINE_WIDTH}
+                />
+                <rect
+                    className="EezStudio_ChartRuler_y1rect"
+                    x={x1}
+                    y={y1 - RulersController.BAND_WIDTH / 2}
+                    width={x2 - x1}
+                    height={RulersController.BAND_WIDTH}
+                    fillOpacity={0}
+                    style={{ cursor: "ns-resize" }}
+                />
+
+                <line
+                    x1={x1}
+                    y1={y2}
+                    x2={x2}
+                    y2={y2}
+                    stroke={this.color}
+                    strokeWidth={RulersController.LINE_WIDTH}
+                />
+                <rect
+                    className="EezStudio_ChartRuler_y2rect"
+                    x={x1}
+                    y={y2 - RulersController.BAND_WIDTH / 2}
+                    width={x2 - x1}
+                    height={RulersController.BAND_WIDTH}
+                    fillOpacity={0}
+                    style={{ cursor: "ns-resize" }}
+                />
+            </g>
+        );
+    }
+
+    render(chartView: ChartView) {
+        return (
+            <React.Fragment>
+                {this.renderYRulersRect(chartView)}
+                {this.renderXRulersRect(chartView)}
+                {this.renderYRulersLines(chartView)}
+                {this.renderXRulersLines(chartView)}
+            </React.Fragment>
+        );
+    }
+
+    snapToSample(x: number) {
+        x =
+            (x / this.chartsController.xAxisController.range) *
+            (this.chartsController.xAxisController.numSamples - 1);
+        return (
+            (Math.round(x) * this.chartsController.xAxisController.range) /
+            (this.chartsController.xAxisController.numSamples - 1)
+        );
+    }
+}
+
+interface RulersDockViewProps {
+    chartsController: ChartsController;
+}
+
+@observer
+export class RulersDockView extends React.Component<RulersDockViewProps> {
+    @observable x1: string;
+    @observable x1Error: boolean;
+    @observable x2: string;
+    @observable x2Error: boolean;
+    @observable y1: string[] = [];
+    @observable y1Error: boolean[] = [];
+    @observable y2: string[] = [];
+    @observable y2Error: boolean[] = [];
+
+    outsideChangeInXRulersSubscriptionDisposer: any;
+    outsideChangeInYRulersSubscriptionDisposer: any;
+
+    isInsideChange: boolean = false;
+
+    constructor(props: RulersDockViewProps) {
+        super(props);
+
+        this.subscribeToOutsideModelChanges();
+    }
+
+    UNSAFE_componentWillReceiveProps(props: RulersDockViewProps) {
+        this.subscribeToOutsideModelChanges();
+    }
+
+    @action
+    subscribeToOutsideModelChanges() {
+        if (this.outsideChangeInXRulersSubscriptionDisposer) {
+            this.outsideChangeInXRulersSubscriptionDisposer();
+        }
+
+        this.outsideChangeInXRulersSubscriptionDisposer = autorun(() => {
+            const x1 =
+                this.props.chartsController.xAxisController.unit.formatValue(
+                    this.rulersModel.x1,
+                    10
+                );
+            const x2 =
+                this.props.chartsController.xAxisController.unit.formatValue(
+                    this.rulersModel.x2,
+                    10
+                );
+            if (!this.isInsideChange) {
+                runInAction(() => {
+                    this.x1 = x1;
+                    this.x1Error = false;
+                    this.x2 = x2;
+                    this.x2Error = false;
+                });
+            }
+        });
+
+        if (this.outsideChangeInYRulersSubscriptionDisposer) {
+            this.outsideChangeInYRulersSubscriptionDisposer();
+        }
+
+        this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
+            for (
+                let i = 0;
+                i < this.props.chartsController.chartControllers.length;
+                ++i
+            ) {
+                const chartController =
+                    this.props.chartsController.chartControllers[i];
+                if (
+                    i < this.rulersModel.yAxisRulersEnabled.length &&
+                    this.rulersModel.yAxisRulersEnabled[i] &&
+                    !this.isInsideChange
+                ) {
+                    const y1 = chartController.yAxisController.unit.formatValue(
+                        this.rulersModel.y1[i],
+                        4
+                    );
+                    const y2 = chartController.yAxisController.unit.formatValue(
+                        this.rulersModel.y2[i],
+                        4
+                    );
+
+                    runInAction(() => {
+                        this.y1[i] = y1;
+                        this.y1Error[i] = false;
+                        this.y2[i] = y2;
+                        this.y2Error[i] = false;
+                    });
+                }
+            }
+        });
+    }
+
+    get rulersController() {
+        return this.props.chartsController.rulersController;
+    }
+
+    get rulersModel() {
+        return this.rulersController.rulersModel!;
+    }
+
+    validateXRange() {
+        const xAxisController = this.props.chartsController.xAxisController;
+
+        const x1 = xAxisController.unit.parseValue(this.x1);
+        this.x1Error =
+            x1 == null ||
+            x1 < xAxisController.minValue ||
+            x1 > xAxisController.maxValue;
+
+        const x2 = xAxisController.unit.parseValue(this.x2);
+        this.x2Error =
+            x2 == null ||
+            x2 < xAxisController.minValue ||
+            x2 > xAxisController.maxValue;
+
+        if (this.x1Error || this.x2Error) {
+            return;
+        }
+
+        this.rulersModel.x1 = x1!;
+        this.rulersModel.x2 = x2!;
+    }
+
+    @action.bound
+    enableXAxisRulers(checked: boolean) {
+        if (checked) {
+            this.rulersModel.xAxisRulersEnabled = true;
+
+            const xAxisController = this.props.chartsController.xAxisController;
+
+            this.rulersModel.x1 = this.rulersController.snapToSample(
+                xAxisController.from + 0.1 * xAxisController.distance
+            );
+
+            this.rulersModel.x2 = this.rulersController.snapToSample(
+                xAxisController.to - 0.1 * xAxisController.distance
+            );
+        } else {
+            this.rulersModel.xAxisRulersEnabled = false;
+        }
+    }
+
+    @bind
+    setX1(event: React.ChangeEvent<HTMLInputElement>) {
+        this.isInsideChange = true;
+        runInAction(() => {
+            this.x1 = event.target.value;
+            this.validateXRange();
+        });
+        this.isInsideChange = false;
+    }
+
+    @bind
+    setX2(event: React.ChangeEvent<HTMLInputElement>) {
+        this.isInsideChange = true;
+        runInAction(() => {
+            this.x2 = event.target.value;
+            this.validateXRange();
+        });
+        this.isInsideChange = false;
+    }
+
+    @bind
+    zoomToFitXRulers() {
+        let x1;
+        let x2;
+        if (this.rulersModel.x1 < this.rulersModel.x2) {
+            x1 = this.rulersModel.x1;
+            x2 = this.rulersModel.x2;
+        } else {
+            x1 = this.rulersModel.x2;
+            x2 = this.rulersModel.x1;
+        }
+
+        const dx = x2 - x1;
+        this.props.chartsController.xAxisController.zoom(
+            x1 - 0.05 * dx,
+            x2 + 0.05 * dx
+        );
+    }
+
+    validateYRange(chartIndex: number) {
+        const yAxisController =
+            this.props.chartsController.chartControllers[chartIndex]
+                .yAxisController;
+
+        const y1 = yAxisController.unit.parseValue(this.y1[chartIndex]);
+        this.y1Error[chartIndex] =
+            y1 == null ||
+            y1 < yAxisController.minValue ||
+            y1 > yAxisController.maxValue;
+
+        const y2 = yAxisController.unit.parseValue(this.y2[chartIndex]);
+        this.y2Error[chartIndex] =
+            y2 == null ||
+            y2 < yAxisController.minValue ||
+            y2 > yAxisController.maxValue;
+
+        if (this.y1Error[chartIndex] || this.y2Error[chartIndex]) {
+            return;
+        }
+
+        this.rulersModel.y1[chartIndex] = y1!;
+        this.rulersModel.y2[chartIndex] = y2!;
+    }
+
+    @action.bound
+    enableYAxisRulers(chartIndex: number, checked: boolean) {
+        if (checked) {
+            this.rulersModel.yAxisRulersEnabled[chartIndex] = true;
+
+            const yAxisController =
+                this.props.chartsController.chartControllers[chartIndex]
+                    .yAxisController;
+
+            this.rulersModel.y1[chartIndex] =
+                yAxisController.from + 0.1 * yAxisController.distance;
+            this.rulersModel.y2[chartIndex] =
+                yAxisController.to - 0.1 * yAxisController.distance;
+        } else {
+            this.rulersModel.yAxisRulersEnabled[chartIndex] = false;
+        }
+    }
+
+    @bind
+    setY1(chartIndex: number, event: React.ChangeEvent<HTMLInputElement>) {
+        this.isInsideChange = true;
+        runInAction(() => {
+            this.y1[chartIndex] = event.target.value;
+            this.validateYRange(chartIndex);
+        });
+        this.isInsideChange = false;
+    }
+
+    @bind
+    setY2(chartIndex: number, event: React.ChangeEvent<HTMLInputElement>) {
+        this.isInsideChange = true;
+        runInAction(() => {
+            this.y2[chartIndex] = event.target.value;
+            this.validateYRange(chartIndex);
+        });
+        this.isInsideChange = false;
+    }
+
+    @bind
+    zoomToFitYRulers(chartIndex: number) {
+        let y1;
+        let y2;
+        if (this.rulersModel.y1[chartIndex] < this.rulersModel.y2[chartIndex]) {
+            y1 = this.rulersModel.y1[chartIndex];
+            y2 = this.rulersModel.y2[chartIndex];
+        } else {
+            y1 = this.rulersModel.y2[chartIndex];
+            y2 = this.rulersModel.y1[chartIndex];
+        }
+
+        const dy = y2 - y1;
+        this.props.chartsController.chartControllers[
+            chartIndex
+        ].yAxisController.zoom(y1 - 0.05 * dy, y2 + 0.05 * dy);
+    }
+
+    render() {
+        return (
+            <div className="EezStudio_SideDockViewContainer">
+                <div className="EezStudio_AxisRulersProperties">
+                    <div className="EezStudio_SideDockView_PropertyLabel">
+                        <Checkbox
+                            checked={this.rulersModel.xAxisRulersEnabled}
+                            onChange={this.enableXAxisRulers}
+                        >
+                            Enable X axis rulers
+                        </Checkbox>
+                    </div>
+                    {this.rulersModel.xAxisRulersEnabled && (
+                        <div className="EezStudio_SideDockView_Property">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td>X1</td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                className={classNames(
+                                                    "form-control",
+                                                    {
+                                                        error: this.x1Error
+                                                    }
+                                                )}
+                                                value={this.x1}
+                                                onChange={this.setX1}
+                                            />
+                                        </td>
+                                        <td>X2</td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                className={classNames(
+                                                    "form-control",
+                                                    {
+                                                        error: this.x2Error
+                                                    }
+                                                )}
+                                                value={this.x2}
+                                                onChange={this.setX2}
+                                            />
+                                        </td>
+                                        <td>&Delta;X</td>
+                                        <td>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={this.props.chartsController.xAxisController.unit.formatValue(
+                                                    this.rulersModel.x2 -
+                                                        this.rulersModel.x1,
+                                                    10
+                                                )}
+                                                readOnly={true}
+                                            />
+                                        </td>
+                                        <td />
+                                        <td style={{ textAlign: "left" }}>
+                                            <IconAction
+                                                icon="material:search"
+                                                onClick={this.zoomToFitXRulers}
+                                                title="Zoom chart to fit both x1 and x2"
+                                            />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+                {_range(
+                    this.props.chartsController.chartControllers.length
+                ).map(chartIndex => (
+                    <div
+                        key={chartIndex}
+                        className="EezStudio_AxisRulersProperties"
+                    >
+                        <div className="EezStudio_SideDockView_PropertyLabel">
+                            <Checkbox
+                                checked={
+                                    chartIndex <
+                                        this.rulersModel.yAxisRulersEnabled
+                                            .length &&
+                                    this.rulersModel.yAxisRulersEnabled[
+                                        chartIndex
+                                    ]
+                                }
+                                onChange={(checked: boolean) =>
+                                    this.enableYAxisRulers(chartIndex, checked)
+                                }
+                            >
+                                Enable{" "}
+                                {this.props.chartsController.chartControllers
+                                    .length > 1
+                                    ? `"${this.props.chartsController.chartControllers[chartIndex].yAxisController.axisModel.label}" `
+                                    : ""}
+                                Y axis rulers
+                            </Checkbox>
+                        </div>
+                        {chartIndex <
+                            this.rulersModel.yAxisRulersEnabled.length &&
+                            this.rulersModel.yAxisRulersEnabled[chartIndex] && (
+                                <div className="EezStudio_SideDockView_Property">
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td>Y1</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        className={classNames(
+                                                            "form-control",
+                                                            {
+                                                                error: this
+                                                                    .y1Error[
+                                                                    chartIndex
+                                                                ]
+                                                            }
+                                                        )}
+                                                        value={
+                                                            this.y1[chartIndex]
+                                                        }
+                                                        onChange={event =>
+                                                            this.setY1(
+                                                                chartIndex,
+                                                                event
+                                                            )
+                                                        }
+                                                    />
+                                                </td>
+                                                <td>Y2</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        className={classNames(
+                                                            "form-control",
+                                                            {
+                                                                error: this
+                                                                    .y2Error[
+                                                                    chartIndex
+                                                                ]
+                                                            }
+                                                        )}
+                                                        value={
+                                                            this.y2[chartIndex]
+                                                        }
+                                                        onChange={event =>
+                                                            this.setY2(
+                                                                chartIndex,
+                                                                event
+                                                            )
+                                                        }
+                                                    />
+                                                </td>
+                                                <td>&Delta;Y</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        value={this.props.chartsController.chartControllers[
+                                                            chartIndex
+                                                        ].yAxisController.unit.formatValue(
+                                                            this.rulersModel.y2[
+                                                                chartIndex
+                                                            ] -
+                                                                this.rulersModel
+                                                                    .y1[
+                                                                    chartIndex
+                                                                ],
+                                                            4
+                                                        )}
+                                                        readOnly={true}
+                                                    />
+                                                </td>
+                                                <td />
+                                                <td
+                                                    style={{
+                                                        textAlign: "left"
+                                                    }}
+                                                >
+                                                    <IconAction
+                                                        icon="material:search"
+                                                        onClick={() =>
+                                                            this.zoomToFitYRulers(
+                                                                chartIndex
+                                                            )
+                                                        }
+                                                        title="Zoom chart to fit both y1 and y2"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                    </div>
+                ))}
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface DynamicSubdivisionOptionsProps {
+    chartsController: ChartsController;
+}
+
+@observer
+class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOptionsProps> {
+    @observable xAxisSteps: string;
+    @observable xAxisStepsError: boolean;
+    @observable yAxisSteps: string[];
+    @observable yAxisStepsError: boolean[];
+
+    constructor(props: DynamicSubdivisionOptionsProps) {
+        super(props);
+
+        this.loadProps(this.props);
+    }
+
+    UNSAFE_componentWillReceiveProps(props: DynamicSubdivisionOptionsProps) {
+        this.loadProps(props);
+    }
+
+    @action
+    loadProps(props: DynamicSubdivisionOptionsProps) {
+        const chartsController = props.chartsController;
+        const viewOptions = chartsController.viewOptions;
+
+        const xSteps =
+            viewOptions.axesLines.steps && viewOptions.axesLines.steps.x;
+        this.xAxisSteps = xSteps
+            ? xSteps
+                  .map(step =>
+                      chartsController.xAxisController.unit.formatValue(step)
+                  )
+                  .join(", ")
+            : "";
+
+        this.yAxisSteps = chartsController.chartControllers.map(
+            (chartController: ChartController, i: number) => {
+                const ySteps =
+                    viewOptions.axesLines.steps &&
+                    i < viewOptions.axesLines.steps.y.length &&
+                    viewOptions.axesLines.steps.y[i];
+                return ySteps
+                    ? ySteps
+                          .map(step =>
+                              chartsController.chartControllers[
+                                  i
+                              ].yAxisController.unit.formatValue(step)
+                          )
+                          .join(", ")
+                    : "";
+            }
+        );
+        this.yAxisStepsError = this.yAxisSteps.map(x => false);
+    }
+
+    render() {
+        const chartsController = this.props.chartsController;
+        const viewOptions = chartsController.viewOptions;
+
+        const yAxisSteps = chartsController.chartControllers
+            .filter(
+                chartController => !chartController.yAxisController.isDigital
+            )
+            .map((chartController: ChartController, i: number) => {
+                const yAxisController = chartController.yAxisController;
+
+                return (
+                    <tr key={i}>
+                        <td>{yAxisController.axisModel.label}</td>
+                        <td>
+                            <input
+                                type="text"
+                                className={classNames("form-control", {
+                                    error: this.yAxisStepsError[i]
+                                })}
+                                value={this.yAxisSteps[i]}
+                                onChange={action(
+                                    (
+                                        event: React.ChangeEvent<HTMLInputElement>
+                                    ) => {
+                                        this.yAxisSteps[i] = event.target.value;
+
+                                        const steps = event.target.value
+                                            .split(",")
+                                            .map(value =>
+                                                yAxisController.unit.parseValue(
+                                                    value
+                                                )
+                                            );
+
+                                        if (
+                                            steps.length === 0 ||
+                                            !steps.every(
+                                                step =>
+                                                    step != null &&
+                                                    step >=
+                                                        yAxisController.unit
+                                                            .units[0]
+                                            )
+                                        ) {
+                                            this.yAxisStepsError[i] = true;
+                                        } else {
+                                            this.yAxisStepsError[i] = false;
+                                            steps.sort();
+                                            viewOptions.setAxesLinesStepsY(
+                                                i,
+                                                steps as number[]
+                                            );
+                                        }
+                                    }
+                                )}
+                            />
+                        </td>
+                    </tr>
+                );
+            });
+
+        return (
+            <div className="EezStudio_ChartViewOptions_DynamicAxisLines_Properties">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td />
+                            <td>Steps</td>
+                        </tr>
+                        <tr>
+                            <td>Time</td>
+                            <td>
+                                <input
+                                    type="text"
+                                    className={classNames("form-control", {
+                                        error: this.xAxisStepsError
+                                    })}
+                                    value={this.xAxisSteps}
+                                    onChange={action(
+                                        (
+                                            event: React.ChangeEvent<HTMLInputElement>
+                                        ) => {
+                                            this.xAxisSteps =
+                                                event.target.value;
+
+                                            const steps = event.target.value
+                                                .split(",")
+                                                .map(value =>
+                                                    chartsController.xAxisController.unit.parseValue(
+                                                        value
+                                                    )
+                                                )
+                                                .sort();
+
+                                            if (
+                                                steps.length === 0 ||
+                                                !steps.every(
+                                                    step =>
+                                                        step != null &&
+                                                        step >=
+                                                            chartsController
+                                                                .xAxisController
+                                                                .unit.units[0]
+                                                )
+                                            ) {
+                                                this.xAxisStepsError = true;
+                                            } else {
+                                                this.xAxisStepsError = false;
+                                                steps.sort();
+                                                viewOptions.setAxesLinesStepsX(
+                                                    steps as number[]
+                                                );
+                                            }
+                                        }
+                                    )}
+                                />
+                            </td>
+                        </tr>
+                        {yAxisSteps}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface FixedSubdivisionOptionsProps {
+    chartsController: ChartsController;
+}
+
+@observer
+class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsProps> {
+    @observable majorSubdivisionHorizontal: number;
+    @observable majorSubdivisionVertical: number;
+    @observable minorSubdivisionHorizontal: number;
+    @observable minorSubdivisionVertical: number;
+    @observable majorSubdivisionHorizontalError: boolean;
+
+    constructor(props: FixedSubdivisionOptionsProps) {
+        super(props);
+
+        this.loadProps(this.props);
+    }
+
+    UNSAFE_componentWillReceiveProps(props: FixedSubdivisionOptionsProps) {
+        this.loadProps(props);
+    }
+
+    @action
+    loadProps(props: FixedSubdivisionOptionsProps) {
+        const axesLines = props.chartsController.viewOptions.axesLines;
+
+        this.majorSubdivisionHorizontal = axesLines.majorSubdivision.horizontal;
+        this.majorSubdivisionVertical = axesLines.majorSubdivision.vertical;
+        this.minorSubdivisionHorizontal = axesLines.minorSubdivision.horizontal;
+        this.minorSubdivisionVertical = axesLines.minorSubdivision.vertical;
+    }
+
+    render() {
+        const viewOptions = this.props.chartsController.viewOptions;
+
+        return (
+            <div className="EezStudio_ChartViewOptions_FixedAxisLines_Properties">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td />
+                            <td>X axis</td>
+                            <td />
+                            <td>Y axis</td>
+                        </tr>
+                        <tr>
+                            <td>Major</td>
+                            <td>
+                                <input
+                                    type="number"
+                                    min={2}
+                                    max={100}
+                                    className={classNames("form-control", {
+                                        error: this
+                                            .majorSubdivisionHorizontalError
+                                    })}
+                                    value={this.majorSubdivisionHorizontal}
+                                    onChange={action((event: any) => {
+                                        this.majorSubdivisionHorizontal =
+                                            event.target.value;
+
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
+
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 100
+                                        ) {
+                                            this.majorSubdivisionHorizontalError =
+                                                true;
+                                        } else {
+                                            this.majorSubdivisionHorizontalError =
+                                                false;
+                                            viewOptions.setAxesLinesMajorSubdivisionHorizontal(
+                                                value
+                                            );
+                                        }
+                                    })}
+                                />
+                            </td>
+                            <td>by</td>
+                            <td>
+                                <input
+                                    type="number"
+                                    min={2}
+                                    max={100}
+                                    className="form-control"
+                                    value={this.majorSubdivisionVertical}
+                                    onChange={action((event: any) => {
+                                        this.majorSubdivisionVertical =
+                                            event.target.value;
+
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
+
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 100
+                                        ) {
+                                        } else {
+                                            viewOptions.setAxesLinesMajorSubdivisionVertical(
+                                                value
+                                            );
+                                        }
+                                    })}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Minor</td>
+                            <td>
+                                <input
+                                    type="number"
+                                    min={2}
+                                    max={10}
+                                    className="form-control"
+                                    value={this.minorSubdivisionHorizontal}
+                                    onChange={action((event: any) => {
+                                        this.minorSubdivisionHorizontal =
+                                            event.target.value;
+
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
+
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 10
+                                        ) {
+                                        } else {
+                                            viewOptions.setAxesLinesMinorSubdivisionHorizontal(
+                                                value
+                                            );
+                                        }
+                                    })}
+                                />
+                            </td>
+                            <td>by</td>
+                            <td>
+                                <input
+                                    type="number"
+                                    min={2}
+                                    max={10}
+                                    className="form-control"
+                                    value={this.minorSubdivisionVertical}
+                                    onChange={action((event: any) => {
+                                        this.minorSubdivisionVertical =
+                                            event.target.value;
+
+                                        const value = parseInt(
+                                            event.target.value
+                                        );
+
+                                        if (
+                                            isNaN(value) ||
+                                            value < 2 ||
+                                            value > 10
+                                        ) {
+                                        } else {
+                                            viewOptions.setAxesLinesMinorSubdivisionVertical(
+                                                value
+                                            );
+                                        }
+                                    })}
+                                />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface ChartViewOptionsProps {
+    showRenderAlgorithm: boolean;
+    showShowSampledDataOption: boolean;
+}
+
+@observer
+export class ChartViewOptions extends React.Component<
+    ChartViewOptionsProps & {
+        chartsController: ChartsController;
+    }
+> {
+    render() {
+        const chartsController = this.props.chartsController;
+        const viewOptions = chartsController.viewOptions;
+
+        return (
+            <div className="EezStudio_ChartViewOptionsContainer">
+                <div>
+                    <div className="EezStudio_SideDockView_PropertyLabel">
+                        Axes lines subdivision:
+                    </div>
+                    <div className="EezStudio_SideDockView_Property">
+                        <Radio
+                            checked={viewOptions.axesLines.type === "dynamic"}
+                            onChange={action(() =>
+                                viewOptions.setAxesLinesType("dynamic")
+                            )}
+                        >
+                            Dynamic
+                        </Radio>
+                        {viewOptions.axesLines.type === "dynamic" && (
+                            <DynamicSubdivisionOptions
+                                chartsController={chartsController}
+                            />
+                        )}
+                        <Radio
+                            checked={viewOptions.axesLines.type === "fixed"}
+                            onChange={action(() =>
+                                viewOptions.setAxesLinesType("fixed")
+                            )}
+                        >
+                            Fixed
+                        </Radio>
+                        {viewOptions.axesLines.type === "fixed" && (
+                            <FixedSubdivisionOptions
+                                chartsController={chartsController}
+                            />
+                        )}
+                    </div>
+                    <div className="EezStudio_SideDockView_PropertyLabel">
+                        <Checkbox
+                            checked={viewOptions.axesLines.snapToGrid}
+                            onChange={action((checked: boolean) => {
+                                viewOptions.setAxesLinesSnapToGrid(checked);
+                            })}
+                        >
+                            Snap to grid
+                        </Checkbox>
+                    </div>
+                </div>
+                {this.props.showRenderAlgorithm && (
+                    <div>
+                        <div className="EezStudio_SideDockView_PropertyLabel">
+                            Rendering algorithm:
+                        </div>
+                        <div className="EezStudio_SideDockView_Property">
+                            <select
+                                className="form-control"
+                                title="Chart rendering algorithm"
+                                value={globalViewOptions.renderAlgorithm}
+                                onChange={action(
+                                    (
+                                        event: React.ChangeEvent<HTMLSelectElement>
+                                    ) =>
+                                        (globalViewOptions.renderAlgorithm =
+                                            event.target
+                                                .value as WaveformRenderAlgorithm)
+                                )}
+                            >
+                                <option value="avg">Average</option>
+                                <option value="minmax">Min-max</option>
+                                <option value="gradually">Gradually</option>
+                            </select>
+                        </div>
+                    </div>
+                )}
+                <div>
+                    <div>
+                        <Checkbox
+                            checked={viewOptions.showAxisLabels}
+                            onChange={action((checked: boolean) => {
+                                viewOptions.setShowAxisLabels(checked);
+                            })}
+                        >
+                            Show axis labels
+                        </Checkbox>
+                    </div>
+                    <div>
+                        <Checkbox
+                            checked={viewOptions.showZoomButtons}
+                            onChange={action((checked: boolean) => {
+                                viewOptions.setShowZoomButtons(checked);
+                            })}
+                        >
+                            Show zoom in/out buttons
+                        </Checkbox>
+                    </div>
+                    <div className="EezStudio_GlobalOptionsContainer">
+                        Global options:
+                    </div>
+                    <div>
+                        <Checkbox
+                            checked={globalViewOptions.enableZoomAnimations}
+                            onChange={action((checked: boolean) => {
+                                globalViewOptions.enableZoomAnimations =
+                                    checked;
+                            })}
+                        >
+                            Enable zoom in/out animations
+                        </Checkbox>
+                    </div>
+                    <div>
+                        <Checkbox
+                            checked={globalViewOptions.blackBackground}
+                            onChange={action((checked: boolean) => {
+                                globalViewOptions.blackBackground = checked;
+                            })}
+                        >
+                            Black background
+                        </Checkbox>
+                    </div>
+                    {this.props.showShowSampledDataOption && (
+                        <div>
+                            <Checkbox
+                                checked={globalViewOptions.showSampledData}
+                                onChange={action(
+                                    (checked: boolean) =>
+                                        (globalViewOptions.showSampledData =
+                                            checked)
+                                )}
+                            >
+                                Show sampled data
+                            </Checkbox>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface IWaveformLineController extends ILineController {
+    waveform: IWaveform;
+}
+
+interface WaveformLineViewProperties {
+    waveformLineController: IWaveformLineController;
+    label?: string;
+}
+
+@observer
+export class WaveformLineView extends React.Component<WaveformLineViewProperties> {
+    @observable waveformLineController = this.props.waveformLineController;
+
+    nextJob: IWaveformRenderJobSpecification | undefined;
+    canvas: HTMLCanvasElement | undefined;
+    @observable chartImage: string | undefined;
+    continuation: any;
+    requestAnimationFrameId: any;
+
+    @computed
+    get waveformRenderJobSpecification():
+        | IWaveformRenderJobSpecification
+        | undefined {
+        const yAxisController = this.waveformLineController.yAxisController;
+        const chartsController = yAxisController.chartsController;
+        const xAxisController = chartsController.xAxisController;
+        const waveform = this.waveformLineController.waveform;
+
+        if (chartsController.chartWidth < 1 || !waveform.length) {
+            return undefined;
+        }
+
+        return {
+            renderAlgorithm: globalViewOptions.renderAlgorithm,
+            waveform,
+            xAxisController,
+            yAxisController,
+            xFromValue: xAxisController.from,
+            xToValue: xAxisController.to,
+            yFromValue: yAxisController.from,
+            yToValue: yAxisController.to,
+            strokeColor: globalViewOptions.blackBackground
+                ? yAxisController.axisModel.color
+                : yAxisController.axisModel.colorInverse,
+            label:
+                yAxisController.chartController!.lineControllers.length > 1 &&
+                chartsController.mode !== "preview"
+                    ? this.props.label
+                    : undefined
+        };
+    }
+
+    @action
+    UNSAFE_componentWillReceiveProps(nextProps: WaveformLineViewProperties) {
+        this.waveformLineController = nextProps.waveformLineController;
+    }
+
+    componentDidMount() {
+        this.draw();
+    }
+
+    componentDidUpdate() {
+        this.draw();
+    }
+
+    @action.bound
+    drawStep() {
+        if (!this.canvas) {
+            const chartsController =
+                this.props.waveformLineController.yAxisController
+                    .chartsController;
+            this.canvas = document.createElement("canvas");
+            this.canvas.width = Math.floor(chartsController.chartWidth);
+            this.canvas.height = Math.floor(chartsController.chartHeight);
+        }
+
+        this.continuation = renderWaveformPath(
+            this.canvas,
+            this.nextJob!,
+            this.continuation
+        );
+        if (this.continuation) {
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.drawStep
+            );
+        } else {
+            this.requestAnimationFrameId = undefined;
+            this.chartImage = this.canvas.toDataURL();
+            this.canvas = undefined;
+        }
+    }
+
+    draw() {
+        if (this.nextJob != this.waveformRenderJobSpecification) {
+            if (this.requestAnimationFrameId) {
+                window.cancelAnimationFrame(this.requestAnimationFrameId);
+                this.requestAnimationFrameId = undefined;
+            }
+
+            this.nextJob = this.waveformRenderJobSpecification;
+            this.continuation = undefined;
+            this.drawStep();
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.requestAnimationFrameId) {
+            window.cancelAnimationFrame(this.requestAnimationFrameId);
+        }
+    }
+
+    render() {
+        if (!this.waveformRenderJobSpecification) {
+            return null;
+        }
+        const chartsController =
+            this.props.waveformLineController.yAxisController.chartsController;
+
+        return (
+            <image
+                x={Math.floor(chartsController.chartLeft)}
+                y={Math.floor(chartsController.chartTop)}
+                width={Math.floor(chartsController.chartWidth)}
+                height={Math.floor(chartsController.chartHeight)}
+                href={this.chartImage}
+            />
+        );
     }
 }

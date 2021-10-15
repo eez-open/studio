@@ -16,8 +16,6 @@ import { SearchInput } from "eez-studio-ui/search-input";
 import {
     IEezObject,
     NavigationComponentProps,
-    objectToString,
-    isPartOfNavigation,
     NavigationComponent
 } from "project-editor/core/object";
 import {
@@ -30,7 +28,9 @@ import {
     deleteItem,
     canAdd,
     canDelete,
-    IPanel
+    IPanel,
+    objectToString,
+    isPartOfNavigation
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { List } from "project-editor/components/List";

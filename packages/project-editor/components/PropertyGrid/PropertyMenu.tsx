@@ -3,11 +3,11 @@ import { observer } from "mobx-react";
 import { bind } from "bind-decorator";
 import classNames from "classnames";
 import { humanize } from "eez-studio-shared/string";
+import { PropertyProps } from "project-editor/core/object";
 import {
-    objectToString,
-    PropertyProps,
-    getPropertySourceInfo
-} from "project-editor/core/object";
+    getPropertySourceInfo,
+    objectToString
+} from "project-editor/core/store";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 

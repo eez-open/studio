@@ -5,13 +5,19 @@ import ReactDOM from "react-dom";
 import { configure } from "mobx";
 import { observer } from "mobx-react";
 
+import { loadExtensions } from "eez-studio-shared/extensions/extensions";
+
 import * as notification from "eez-studio-ui/notification";
+import { showAboutBox } from "eez-studio-ui/about-box";
+
+import type * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
 import { loadTabs, tabs } from "home/tabs-store";
+import { settingsController } from "home/settings";
+import { App } from "home/app";
 
-import * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
-import { settingsController } from "./settings";
+import "home/settings";
 
 configure({ enforceActions: "observed" });
 
@@ -68,7 +74,6 @@ EEZStudio.electron.ipcRenderer.on(
 );
 
 EEZStudio.electron.ipcRenderer.on("show-about-box", async () => {
-    const { showAboutBox } = await import("eez-studio-ui/about-box");
     showAboutBox();
 });
 
@@ -122,14 +127,10 @@ class Main extends React.Component {
 }
 
 async function main() {
-    const { loadExtensions } = await import(
-        "eez-studio-shared/extensions/extensions"
-    );
     await loadExtensions();
 
     loadTabs();
 
-    const { App } = await import("home/app");
     ReactDOM.render(
         <Main>
             <App />

@@ -2,13 +2,13 @@ import React from "react";
 import { action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { objectToString } from "project-editor/core/object";
 import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { getObjectTypeClassFromType } from "project-editor/features/variable/value-type";
 import { PageTabState } from "project-editor/features/page/PagesNavigation";
+import { objectToString } from "project-editor/core/store";
 
 @observer
 export class Toolbar extends React.Component {
@@ -20,8 +20,8 @@ export class Toolbar extends React.Component {
             <nav className="navbar justify-content-between EezStudio_ToolbarNav">
                 <Controls />
 
-                {this.context.isDashboardProject ||
-                this.context.isAppletProject ? (
+                {this.context.project.isDashboardProject ||
+                this.context.project.isAppletProject ? (
                     <RunEditSwitchControls />
                 ) : (
                     <div />
@@ -87,8 +87,8 @@ class Controls extends React.Component {
 
     get isBuildConfigurationSelectorVisible() {
         return (
-            !this.context.isDashboardProject &&
-            !this.context.isAppletProject &&
+            !this.context.project.isDashboardProject &&
+            !this.context.project.isAppletProject &&
             (this.context.project.pages ||
                 this.context.project.actions ||
                 (this.context.project.variables &&
@@ -179,19 +179,19 @@ class Controls extends React.Component {
                     )}
 
                 {!this.context.project._DocumentStore.runtime &&
-                    !this.context.isDashboardProject && (
+                    !this.context.project.isDashboardProject && (
                         <div className="btn-group" role="group">
                             <IconAction
                                 title="Check"
                                 icon="material:check"
                                 onClick={() => this.context.check()}
-                                enabled={this.context.project.fullyLoaded}
+                                enabled={this.context.project._fullyLoaded}
                             />
                             <IconAction
                                 title="Build"
                                 icon="material:build"
                                 onClick={() => this.context.build()}
-                                enabled={this.context.project.fullyLoaded}
+                                enabled={this.context.project._fullyLoaded}
                             />
                         </div>
                     )}

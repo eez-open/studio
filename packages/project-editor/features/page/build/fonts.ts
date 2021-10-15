@@ -1,5 +1,8 @@
-import { Font } from "project-editor/features/font/font";
-import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
+import type { Font } from "project-editor/features/font/font";
+import type {
+    Assets,
+    DataBuffer
+} from "project-editor/features/page/build/assets";
 import * as projectBuild from "project-editor/project/build";
 
 export function buildGuiFontsEnum(assets: Assets) {

@@ -17,42 +17,49 @@ import { log } from "eez-studio-shared/activity-log";
 import { readBinaryFile } from "eez-studio-shared/util-electron";
 
 import {
-    AxisController,
     ChartController,
     ChartMode,
-    ChartsController,
     IAxisModel,
     ZoomMode,
     LineController
 } from "eez-studio-ui/chart/chart";
-import { RulersModel } from "eez-studio-ui/chart/rulers";
-import { MeasurementsModel } from "eez-studio-ui/chart/measurements";
-import { IWaveform } from "eez-studio-ui/chart/render";
-import { WaveformFormat, initValuesAccesor } from "eez-studio-ui/chart/buffer";
-import { getNearestValuePoint } from "eez-studio-ui/chart/generic-chart";
-import { WaveformModel } from "eez-studio-ui/chart/waveform";
+import {
+    AxisController,
+    ChartsController,
+    RulersModel,
+    MeasurementsModel,
+    IWaveform,
+    WaveformFormat,
+    initValuesAccesor,
+    getNearestValuePoint,
+    WaveformModel,
+    WaveformLineView
+} from "eez-studio-ui/chart/chart";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { MIME_EEZ_DLOG } from "instrument/connection/file-type";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
 
-import { ViewOptions } from "instrument/window/waveform/generic";
+import { ViewOptions } from "instrument/window/waveform/ViewOptions";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
-import { WaveformLineView } from "instrument/window/waveform/line-view";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 
 import {
-    DataType,
     Unit,
     IDlog,
     IDlogYAxis,
     decodeDlog,
     ScaleType
 } from "instrument/window/waveform/dlog-file";
-import { dlogUnitToStudioUnit } from "instrument/connection/file-type-utils";
+import { DataType } from "instrument/window/waveform/DataType";
+import {
+    convertDlogToCsv,
+    dlogUnitToStudioUnit
+} from "instrument/connection/file-type-utils";
+import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -748,7 +755,10 @@ export class DlogWaveform extends FileHistoryItem {
 
     chartsController: ChartsController;
 
-    createChartsController(mode: ChartMode): ChartsController {
+    createChartsController(
+        displayOption: ChartsDisplayOption,
+        mode: ChartMode
+    ): ChartsController {
         if (
             this.chartsController &&
             this.chartsController.mode === mode &&
@@ -795,6 +805,8 @@ export class DlogWaveform extends FileHistoryItem {
         );
     }
 
+    openConfigurationDialog = undefined;
+
     get xAxisDefaultSubdivisionOffset(): number | undefined {
         return undefined;
     }
@@ -815,6 +827,12 @@ export class DlogWaveform extends FileHistoryItem {
     get previewElement() {
         return <ChartPreview data={this} />;
     }
+
+    isZoomable: false;
+
+    convertToCsv = async () => {
+        return convertDlogToCsv(this.data);
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////

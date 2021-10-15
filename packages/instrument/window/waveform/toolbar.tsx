@@ -6,23 +6,23 @@ import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 import { ChartsController } from "eez-studio-ui/chart/chart";
 
-import { Waveform } from "instrument/window/waveform/generic";
-import { MultiWaveform } from "instrument/window/waveform/multi";
-import { DlogWaveform } from "instrument/window/waveform/dlog";
-
 ////////////////////////////////////////////////////////////////////////////////
+
+interface IWaveform {
+    openConfigurationDialog?: () => void;
+}
 
 @observer
 export class WaveformToolbar extends React.Component<
     {
         chartsController: ChartsController;
-        waveform: Waveform | MultiWaveform | DlogWaveform;
+        waveform: IWaveform;
     },
     {}
 > {
     @bind
     configureChart() {
-        if (!(this.props.waveform instanceof DlogWaveform)) {
+        if (this.props.waveform.openConfigurationDialog) {
             this.props.waveform.openConfigurationDialog();
         }
     }
@@ -31,7 +31,7 @@ export class WaveformToolbar extends React.Component<
         return (
             <React.Fragment>
                 <Toolbar>
-                    {!(this.props.waveform instanceof DlogWaveform) && (
+                    {this.props.waveform.openConfigurationDialog && (
                         <ButtonAction
                             text="Configure"
                             className="btn-primary"

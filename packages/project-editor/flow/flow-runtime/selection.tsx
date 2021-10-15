@@ -1,14 +1,15 @@
 import React from "react";
 import { observer } from "mobx-react";
 import { computed } from "mobx";
+import classNames from "classnames";
 
 import { Rect, rectExpand } from "eez-studio-shared/geometry";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { IMouseHandler } from "project-editor/flow/flow-editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
-import { ConnectionLine, Flow } from "project-editor/flow/flow";
-import classNames from "classnames";
+import type { ConnectionLine } from "project-editor/flow/flow";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,8 +62,9 @@ export class Selection extends React.Component<
         return this.props.context.viewState.selectedObjects.filter(
             selectedObject =>
                 !(
-                    selectedObject.object instanceof Flow ||
-                    selectedObject.object instanceof ConnectionLine
+                    selectedObject.object instanceof ProjectEditor.FlowClass ||
+                    selectedObject.object instanceof
+                        ProjectEditor.ConnectionLineClass
                 )
         );
     }
@@ -78,7 +80,8 @@ export class Selection extends React.Component<
         const connectionLines =
             this.props.context.viewState.selectedObjects.filter(
                 selectedObject =>
-                    selectedObject.object instanceof ConnectionLine
+                    selectedObject.object instanceof
+                    ProjectEditor.ConnectionLineClass
             );
 
         if (connectionLines.length == 1) {

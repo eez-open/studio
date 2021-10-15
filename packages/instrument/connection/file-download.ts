@@ -5,10 +5,13 @@ import {
     IActivityLogEntry
 } from "eez-studio-shared/activity-log";
 
-import { FileState } from "instrument/connection/file-state";
+import type { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";
-import { Connection } from "instrument/connection/connection";
-import { detectFileType, convertBmpToPng } from "instrument/connection/file-type";
+import type { Connection } from "instrument/connection/connection";
+import {
+    detectFileType,
+    convertBmpToPng
+} from "instrument/connection/file-type";
 
 const CONF_FILE_TRANSFER_TIMEOUT_FOR_ARBITRARY_BLOCK_MS = 2500;
 
@@ -26,7 +29,11 @@ export class FileDownload extends FileTransfer {
 
     isQuery = true;
 
-    constructor(connection: Connection, data: string, private arbitraryBlock?: boolean) {
+    constructor(
+        connection: Connection,
+        data: string,
+        private arbitraryBlock?: boolean
+    ) {
         super(connection);
 
         this.data = data;
@@ -127,7 +134,8 @@ export class FileDownload extends FileTransfer {
                         let followLength = parseInt(this.data.substr(2, n));
                         if (isNaN(followLength)) {
                             this.state = "error";
-                            this.error = "Expected the number of data bytes to follow";
+                            this.error =
+                                "Expected the number of data bytes to follow";
                         } else {
                             this.expectedDataLength = followLength;
                             this.data = this.data.substr(2 + n);
@@ -141,7 +149,9 @@ export class FileDownload extends FileTransfer {
         if (this.state === "progress") {
             if (this.data.length >= this.expectedDataLength) {
                 if (this.data.length > this.expectedDataLength) {
-                    this.dataSurplus = this.data.substr(this.expectedDataLength);
+                    this.dataSurplus = this.data.substr(
+                        this.expectedDataLength
+                    );
                     let i = this.dataSurplus.indexOf("\n");
                     if (i !== -1) {
                         this.dataSurplus = this.dataSurplus.substr(i + 1);
@@ -180,7 +190,9 @@ export class FileDownload extends FileTransfer {
                         });
                 } else {
                     if (fileType.comment) {
-                        this.note = JSON.stringify([{ insert: fileType.comment }]);
+                        this.note = JSON.stringify([
+                            { insert: fileType.comment }
+                        ]);
                         delete fileType.comment;
                     }
 

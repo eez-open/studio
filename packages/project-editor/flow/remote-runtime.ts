@@ -6,7 +6,6 @@ import { Connection, getConnection } from "instrument/window/connection";
 import { InstrumentObject } from "instrument/instrument-object";
 import { ConnectionParameters } from "instrument/connection/interface";
 import { AssetsMap } from "project-editor/features/page/build/assets";
-import { getObjectFromStringPath } from "project-editor/core/object";
 import { action, observable, runInAction } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Component, Widget } from "project-editor/flow/component";
@@ -25,6 +24,9 @@ import {
     RuntimeBase
 } from "project-editor/flow/runtime";
 import { DocumentStoreClass } from "project-editor/core/store";
+
+import net from "net";
+import { getObjectFromStringPath } from "project-editor/core/store";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -459,8 +461,6 @@ class DebuggerConnection {
     constructor(private runtime: RemoteRuntime) {}
 
     async start(connectionParameters: ConnectionParameters) {
-        const net = await import("net");
-
         this.socket = new net.Socket();
 
         this.socket.setEncoding("binary");
@@ -517,7 +517,7 @@ class DebuggerConnection {
     }
 
     async stop() {
-        const os = await import("os");
+        const os = require("os");
 
         if (os.platform() == "win32") {
             this.destroy();

@@ -3,11 +3,11 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import { IActivityLogEntry } from "eez-studio-shared/activity-log";
+import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { Icon } from "eez-studio-ui/icon";
 
-import { IAppStore } from "instrument/window/history/history";
+import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
 ////////////////////////////////////////////////////////////////////////////////

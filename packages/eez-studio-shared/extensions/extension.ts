@@ -1,15 +1,15 @@
-import { UNITS } from "eez-studio-shared/units";
-import { IStore } from "eez-studio-shared/store";
-import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
+import type { UNITS } from "eez-studio-shared/units";
+import type { IStore } from "eez-studio-shared/store";
+import type { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
 
-import { IShortcut } from "shortcuts/interfaces";
+import type { IShortcut } from "shortcuts/interfaces";
 
-import { IFieldProperties } from "eez-studio-ui/generic-dialog";
+import type { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
-export { IFieldProperties } from "eez-studio-ui/generic-dialog";
+export type { IFieldProperties } from "eez-studio-ui/generic-dialog";
 
 import type { IEezStudio } from "eez-studio-types";
-import { IHomeTab } from "home/tabs-store";
+import type { IHomeTab } from "home/tabs-store";
 
 export interface IEditor {
     onCreate(): void;

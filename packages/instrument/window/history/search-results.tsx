@@ -11,9 +11,8 @@ import {
 import { Loader } from "eez-studio-ui/loader";
 import { ButtonAction } from "eez-studio-ui/action";
 
-import { History, SearchResult } from "instrument/window/history/history";
-import { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
-import { instruments } from "instrument/instrument-object";
+import type { History, SearchResult } from "instrument/window/history/history";
+import type { IActivityLogEntry } from "eez-studio-shared/activity-log-interfaces";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 
 @observer
@@ -22,27 +21,8 @@ export class SearchResultComponent extends React.Component<{
     searchResult: SearchResult;
 }> {
     getLogEntryInfo(logEntry: IActivityLogEntry) {
-        let type;
-        if (logEntry.type === "activity-log/note") {
-            type = "instrument";
-        } else {
-            let i = logEntry.type.indexOf("/");
-            if (i !== -1) {
-                type = logEntry.type.substring(0, i);
-            } else {
-                type = logEntry.type;
-            }
-        }
-
-        if (type == "instrument") {
-            const instrument = instruments.get(logEntry.oid);
-            if (instrument && instrument.extension) {
-                const historyItem = createHistoryItem(logEntry);
-                return historyItem.info;
-            }
-        }
-
-        return undefined;
+        const historyItem = createHistoryItem(logEntry);
+        return historyItem.info;
     }
 
     render() {

@@ -1,5 +1,4 @@
 import { observable, runInAction, autorun } from "mobx";
-import path from "path";
 
 import {
     isDev,
@@ -13,7 +12,8 @@ import * as notification from "eez-studio-ui/notification";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
 
-import { tabs } from "home/tabs-store";
+import { sourceRootDir } from "eez-studio-shared/util";
+import { firstTime } from "home/first-time";
 
 export const DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL =
     "https://github.com/eez-open/studio-extensions/raw/master/build/catalog-version.json";
@@ -42,9 +42,9 @@ class ExtensionsCatalog {
             .then(catalogVersion => {
                 runInAction(() => (this.catalogVersion = catalogVersion));
 
-                if (tabs.firstTime) {
+                if (firstTime.get()) {
                     const dispose = autorun(() => {
-                        if (!tabs.firstTime) {
+                        if (!firstTime.get()) {
                             dispose();
                             this.checkNewVersionOfCatalog();
                         }
@@ -66,9 +66,7 @@ class ExtensionsCatalog {
         let catalogPath = this.catalogPath;
         if (!(await fileExists(catalogPath))) {
             if (isDev) {
-                catalogPath = path.resolve(
-                    `${__dirname}/../../../resources/catalog.json`
-                );
+                catalogPath = `${sourceRootDir()}/../resources/catalog.json`;
             } else {
                 catalogPath = process.resourcesPath! + "/catalog.json";
             }
@@ -94,9 +92,7 @@ class ExtensionsCatalog {
 
         if (!catalogVersion) {
             if (isDev) {
-                catalogVersionPath = path.resolve(
-                    `${__dirname}/../../../resources/catalog-version.json`
-                );
+                catalogVersionPath = `${sourceRootDir()}/../resources/catalog-version.json`;
             } else {
                 catalogVersionPath =
                     process.resourcesPath! + "/catalog-version.json";

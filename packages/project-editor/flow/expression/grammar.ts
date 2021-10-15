@@ -3,10 +3,11 @@ import { resolve } from "path";
 import peggy from "peggy";
 
 import { isDev } from "eez-studio-shared/util-electron";
+import { sourceRootDir } from "eez-studio-shared/util";
 
 const expressionParserGrammar = readFileSync(
     isDev
-        ? resolve(`${__dirname}/../../../../resources/expression-grammar.pegjs`)
+        ? resolve(`${sourceRootDir()}/../resources/expression-grammar.pegjs`)
         : process.resourcesPath! + "/expression-grammar.pegjs",
     "utf8"
 );

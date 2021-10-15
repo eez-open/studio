@@ -8,27 +8,28 @@ import {
 import { _map } from "eez-studio-shared/algorithm";
 import { underscore } from "eez-studio-shared/string";
 
-import {
-    getProjectFeatures,
-    BuildResult
-} from "project-editor/core/extensions";
+import type { BuildResult } from "project-editor/core/extensions";
 import {
     IEezObject,
-    isArray,
     getProperty,
     IMessage,
-    getArrayAndObjectProperties,
     getPropertyInfo,
-    getClassInfo
+    MessageType
 } from "project-editor/core/object";
-import { Section, Type } from "project-editor/core/output";
-import { DocumentStoreClass } from "project-editor/core/store";
+import {
+    DocumentStoreClass,
+    isArray,
+    getArrayAndObjectProperties,
+    getClassInfo,
+    Section
+} from "project-editor/core/store";
 
-import { BuildConfiguration, getProject } from "project-editor/project/project";
+import type { BuildConfiguration } from "project-editor/project/project";
 import {
     extensionDefinitionAnythingToBuild,
     extensionDefinitionBuild
 } from "project-editor/features/extension-definitions/build";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +55,7 @@ export function getName<
     if (typeof objectOrName == "string") {
         name = objectOrName;
     } else {
-        const project = getProject(objectOrName);
+        const project = ProjectEditor.getProject(objectOrName);
         name = project.namespace
             ? project.namespace + "_" + objectOrName.name
             : objectOrName.name;
@@ -123,7 +124,7 @@ function showCheckResult(DocumentStore: DocumentStoreClass) {
 
     checkResultMassage += " detected";
 
-    OutputSections.write(Section.OUTPUT, Type.INFO, checkResultMassage);
+    OutputSections.write(Section.OUTPUT, MessageType.INFO, checkResultMassage);
 }
 
 class BuildException {
@@ -142,7 +143,7 @@ async function getBuildResults(
 
     let buildResults: BuildResult[] = [];
 
-    let projectFeatures = getProjectFeatures();
+    let projectFeatures = ProjectEditor.extensions;
     for (let projectFeature of projectFeatures) {
         if (
             projectFeature.eezStudioExtension.implementation.projectFeature
@@ -219,7 +220,7 @@ async function generateFile(
 
             DocumentStore.outputSectionsStore.write(
                 Section.OUTPUT,
-                Type.INFO,
+                MessageType.INFO,
                 `File "${filePath}.map" builded`
             );
         }
@@ -227,7 +228,7 @@ async function generateFile(
 
     DocumentStore.outputSectionsStore.write(
         Section.OUTPUT,
-        Type.INFO,
+        MessageType.INFO,
         `File "${filePath}" builded`
     );
 
@@ -257,7 +258,7 @@ async function generateFiles(
             destinationFolderPath +
                 "/" +
                 path.basename(DocumentStore.filePath, ".eez-project") +
-                (DocumentStore.isAppletProject ? ".app" : ".res")
+                (DocumentStore.project.isAppletProject ? ".app" : ".res")
         );
     } else {
         const build = DocumentStore.project.settings.build;
@@ -330,7 +331,11 @@ export async function build(
     OutputSections.clear(Section.OUTPUT);
 
     if (!anythingToBuild(DocumentStore)) {
-        OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+        OutputSections.write(
+            Section.OUTPUT,
+            MessageType.INFO,
+            `Nothing to build!`
+        );
         return undefined;
     }
 
@@ -370,7 +375,7 @@ export async function build(
                 .configurations) {
                 OutputSections.write(
                     Section.OUTPUT,
-                    Type.INFO,
+                    MessageType.INFO,
                     `Building ${configuration.name} configuration`
                 );
                 configurationBuildResuts[configuration.name] =
@@ -387,7 +392,7 @@ export async function build(
             if (selectedBuildConfiguration) {
                 OutputSections.write(
                     Section.OUTPUT,
-                    Type.INFO,
+                    MessageType.INFO,
                     `Building ${selectedBuildConfiguration.name} configuration`
                 );
                 configurationBuildResuts[selectedBuildConfiguration.name] =
@@ -419,7 +424,7 @@ export async function build(
 
         OutputSections.write(
             Section.OUTPUT,
-            Type.INFO,
+            MessageType.INFO,
             `Build duration: ${
                 (new Date().getTime() - timeStart) / 1000
             } seconds`
@@ -427,21 +432,21 @@ export async function build(
 
         OutputSections.write(
             Section.OUTPUT,
-            Type.INFO,
+            MessageType.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
             OutputSections.write(
                 Section.OUTPUT,
-                Type.ERROR,
+                MessageType.ERROR,
                 err.message,
                 err.object
             );
         } else {
             OutputSections.write(
                 Section.OUTPUT,
-                Type.ERROR,
+                MessageType.ERROR,
                 `Module build error: ${err}`
             );
         }
@@ -463,7 +468,11 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
     OutputSections.clear(Section.OUTPUT);
 
     if (!extensionDefinitionAnythingToBuild(DocumentStore)) {
-        OutputSections.write(Section.OUTPUT, Type.INFO, `Nothing to build!`);
+        OutputSections.write(
+            Section.OUTPUT,
+            MessageType.INFO,
+            `Nothing to build!`
+        );
         return;
     }
 
@@ -487,7 +496,7 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
 
         OutputSections.write(
             Section.OUTPUT,
-            Type.INFO,
+            MessageType.INFO,
             `Build duration: ${
                 (new Date().getTime() - timeStart) / 1000
             } seconds`
@@ -495,21 +504,21 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
 
         OutputSections.write(
             Section.OUTPUT,
-            Type.INFO,
+            MessageType.INFO,
             `Build successfully finished at ${new Date().toLocaleString()}`
         );
     } catch (err) {
         if (err instanceof BuildException) {
             OutputSections.write(
                 Section.OUTPUT,
-                Type.ERROR,
+                MessageType.ERROR,
                 err.message,
                 err.object
             );
         } else {
             OutputSections.write(
                 Section.OUTPUT,
-                Type.ERROR,
+                MessageType.ERROR,
                 `Module build error: ${err}`
             );
         }
