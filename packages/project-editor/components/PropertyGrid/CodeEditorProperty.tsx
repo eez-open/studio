@@ -94,7 +94,6 @@ export class CodeEditorProperty extends React.Component<
                     minLines={2}
                     maxLines={50}
                     readOnly={readOnly}
-                    style={{ maxHeight: 400 }}
                 />
             </React.Fragment>
         );

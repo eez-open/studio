@@ -92,15 +92,29 @@ export function getVariableFlowValue(assets: Assets, variable: Variable) {
         type = FLOW_VALUE_TYPE_UNDEFINED;
     }
 
-    let value = evalConstantExpression(
-        assets.rootProject,
-        variable.defaultValue
-    );
+    try {
+        let value = evalConstantExpression(
+            assets.rootProject,
+            variable.defaultValue
+        );
 
-    return {
-        type,
-        value
-    };
+        return {
+            type,
+            value
+        };
+    } catch (err) {
+        assets.DocumentStore.outputSectionsStore.write(
+            Section.OUTPUT,
+            MessageType.ERROR,
+            err.toString(),
+            variable
+        );
+
+        return {
+            type,
+            value: null
+        };
+    }
 }
 
 export function buildConstantFlowValue(

@@ -21,7 +21,8 @@ import {
     getChildOfObject,
     getDocumentStore,
     Message,
-    propertyNotSetMessage
+    propertyNotSetMessage,
+    Section
 } from "project-editor/core/store";
 
 import type {
@@ -1044,11 +1045,21 @@ export class ConstantActionComponent extends ActionComponent {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        dataBuffer.writeUint16(
-            assets.getConstantIndex(
-                evalConstantExpression(assets.rootProject, this.value)
-            )
-        );
+        try {
+            dataBuffer.writeUint16(
+                assets.getConstantIndex(
+                    evalConstantExpression(assets.rootProject, this.value)
+                )
+            );
+        } catch (err) {
+            assets.DocumentStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                err.toString(),
+                getChildOfObject(this, "value")
+            );
+            dataBuffer.writeUint16(assets.getConstantIndex(null));
+        }
     }
 }
 

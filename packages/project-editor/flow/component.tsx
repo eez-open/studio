@@ -83,6 +83,7 @@ import {
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./flow-editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -1891,6 +1892,17 @@ export class Widget extends Component {
 
         if (flowContext.document.flow.object !== ProjectEditor.getFlow(this)) {
             return null;
+        }
+
+        // if this component is inside the list then show inputs and outputs
+        // only for the fist component ($index == 0)
+        if (flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)) {
+            const listIndex = flowContext.dataContext.get(
+                FLOW_ITERATOR_INDEX_VARIABLE
+            );
+            if (listIndex > 0) {
+                return null;
+            }
         }
 
         const inputs = this.inputs;

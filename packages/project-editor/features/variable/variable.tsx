@@ -269,10 +269,18 @@ export class DataContext implements IDataContext {
         this.localVariables = localVariables;
         if (this.localVariables) {
             this.localVariables.forEach(variable => {
-                this.runtimeValues.set(
-                    variable.name,
-                    evalConstantExpression(project, variable.defaultValue)
-                );
+                try {
+                    const value = evalConstantExpression(
+                        project,
+                        variable.defaultValue
+                    );
+                    this.runtimeValues.set(variable.name, value);
+                } catch (err) {
+                    if (project._DocumentStore.runtime) {
+                        throw err;
+                    }
+                    this.runtimeValues.set(variable.name, undefined);
+                }
             });
         }
 
@@ -284,10 +292,35 @@ export class DataContext implements IDataContext {
     initGlobalVariables() {
         if (this.project.variables) {
             this.project.variables.globalVariables.forEach(variable => {
-                this.runtimeValues.set(
-                    variable.name,
-                    evalConstantExpression(this.project, variable.defaultValue)
-                );
+                try {
+                    const value = evalConstantExpression(
+                        this.project,
+                        variable.defaultValue
+                    );
+                    this.runtimeValues.set(variable.name, value);
+                } catch (err) {
+                    if (this.project._DocumentStore.runtime) {
+                        throw err;
+                    }
+                    if (
+                        !this.project.isAppletProject &&
+                        !this.project.isDashboardProject
+                    ) {
+                        const value = this.project.allAssets.get(
+                            variable.defaultValue
+                        );
+                        if (value) {
+                            this.runtimeValues.set(variable.name, value);
+                        } else {
+                            this.runtimeValues.set(
+                                variable.name,
+                                variable.defaultValue
+                            );
+                        }
+                    } else {
+                        this.runtimeValues.set(variable.name, null);
+                    }
+                }
             });
         }
     }
@@ -309,6 +342,16 @@ export class DataContext implements IDataContext {
         value: any;
     } {
         if (variable) {
+            if (this.defaultValueOverrides) {
+                const value = this.defaultValueOverrides[variable.name];
+                if (value != undefined) {
+                    return {
+                        hasValue: true,
+                        value
+                    };
+                }
+            }
+
             if (this.runtimeValues.has(variable.name)) {
                 return {
                     hasValue: this.runtimeValues.has(variable.name),

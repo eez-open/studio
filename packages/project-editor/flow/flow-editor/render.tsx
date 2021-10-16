@@ -15,6 +15,7 @@ import type { Page } from "project-editor/features/page/page";
 import type { Component } from "project-editor/flow/component";
 
 import { strokeWidth } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,9 +207,16 @@ export const ComponentEnclosure = observer(
     }) => {
         const elRef = React.useRef<HTMLDivElement>(null);
 
+        let listIndex = 0;
+        if (flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)) {
+            listIndex = flowContext.dataContext.get(
+                FLOW_ITERATOR_INDEX_VARIABLE
+            );
+        }
+
         React.useEffect(() => {
             const el = elRef.current;
-            if (el) {
+            if (el && listIndex == 0) {
                 const geometry = calcComponentGeometry(
                     component,
                     el,
@@ -218,7 +226,7 @@ export const ComponentEnclosure = observer(
                     component.geometry = geometry;
                 });
             }
-        });
+        }, [listIndex]);
 
         const style: React.CSSProperties = {
             left: left ?? component.left,
@@ -232,7 +240,10 @@ export const ComponentEnclosure = observer(
             style.height = component.height;
         }
 
-        const dataFlowObjectId = getId(component);
+        let dataFlowObjectId = getId(component);
+        if (listIndex > 0) {
+            dataFlowObjectId = dataFlowObjectId + "-" + listIndex;
+        }
 
         style.overflow = "visible";
         component.styleHook(style, flowContext);

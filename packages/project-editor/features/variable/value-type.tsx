@@ -357,6 +357,9 @@ export const variableTypeProperty: PropertyInfo = {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function migrateType(objectJS: any) {
+    if (!objectJS.type) {
+        return;
+    }
     if (objectJS.type == "list") {
         objectJS.type = "array";
     } else if (objectJS.type.startsWith("custom:")) {

@@ -860,24 +860,28 @@ export class SelectWidget extends EmbeddedWidget {
     }
 
     getSelectedIndex(flowContext: IFlowContext) {
-        if (this.isInputProperty("data")) {
-            if (flowContext.flowState) {
-                let value = flowContext.flowState.getPropertyValue(
-                    this,
-                    "data"
-                );
+        let index: number;
 
-                if (typeof value === "boolean") {
-                    return value ? 1 : 0;
+        if (flowContext.flowState) {
+            try {
+                index = evalExpression(flowContext, this, this.data!);
+
+                if (typeof index === "number") {
+                    // pass
+                } else if (typeof index === "boolean") {
+                    index = index ? 1 : 0;
+                } else {
+                    index = 0;
                 }
 
-                if (typeof value === "number") {
-                    return value;
-                }
+                return index;
+
+                return index;
+            } catch (err) {
+                console.error(err);
+                return -1;
             }
-        }
-
-        if (!flowContext.flowState) {
+        } else {
             const selectedObjects = flowContext.viewState.selectedObjects;
 
             for (let i = 0; i < this.widgets.length; ++i) {
@@ -897,41 +901,30 @@ export class SelectWidget extends EmbeddedWidget {
             ) {
                 return this._lastSelectedIndexInSelectWidget;
             }
-        }
 
-        if (this.data) {
-            let index: number;
-            if (flowContext.DocumentStore.project.isAppletProject) {
-                let indexValue;
-                try {
-                    indexValue = evalExpression(flowContext, this, this.data);
-                } catch (err) {
-                    console.error(err);
-                    indexValue = 0;
-                }
-                if (typeof indexValue === "number") {
-                    index = indexValue;
-                } else if (typeof indexValue === "boolean") {
-                    index = indexValue ? 1 : 0;
+            try {
+                index = evalExpression(flowContext, this, this.data!);
+
+                if (typeof index === "number") {
+                    // pass
+                } else if (typeof index === "boolean") {
+                    index = index ? 1 : 0;
                 } else {
                     index = 0;
                 }
-            } else {
-                index = flowContext.dataContext.getEnumValue(this.data);
-            }
-            if (index >= 0 && index < this.widgets.length) {
-                return index;
-            }
-        }
 
-        if (!flowContext.flowState) {
+                return index;
+            } catch (err) {
+                console.error(err);
+            }
+
             if (this.widgets.length > 0) {
                 this._lastSelectedIndexInSelectWidget = 0;
                 return 0;
             }
-        }
 
-        return -1;
+            return -1;
+        }
     }
 
     render(flowContext: IFlowContext) {
@@ -1716,7 +1709,12 @@ export class TextWidget extends EmbeddedWidget {
                     flowContext.DocumentStore.project.isDashboardProject ||
                     flowContext.DocumentStore.project.isAppletProject
                 ) {
-                    return <span className="expression">{this.data}</span>;
+                    return (
+                        <>
+                            <span className="expression">{this.data}</span>
+                            {super.render(flowContext)}
+                        </>
+                    );
                 } else {
                     text = flowContext.dataContext.get(this.data) ?? "";
                 }

@@ -190,14 +190,8 @@ export function evalConstantExpression(project: Project, expression: string) {
     } else if (typeof expression == "number") {
         value = expression;
     } else {
-        let rootNode;
-        try {
-            rootNode = expressionParser.parse(expression);
-            value = evalConstantExpressionNode(project, rootNode);
-        } catch (err) {
-            console.error(err);
-            value = null;
-        }
+        let rootNode = expressionParser.parse(expression);
+        value = evalConstantExpressionNode(project, rootNode);
     }
 
     return value;
