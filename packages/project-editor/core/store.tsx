@@ -1877,6 +1877,14 @@ export class DocumentStoreClass {
         project?: Project,
         uiState?: Project
     ) {
+        if (!project) {
+            this.project.settings.general.imports.forEach(importDirective => {
+                if (importDirective.project) {
+                    importDirective.project._DocumentStore.unmount();
+                }
+            });
+        }
+
         this.filePath = projectFilePath;
 
         if (project) {

@@ -854,16 +854,12 @@ export class Style extends EezObject {
         }
     };
 
-    @computed({
-        keepAlive: true
-    })
+    @computed
     get fontName(): string {
         return getStyleProperty(this, "font");
     }
 
-    @computed({
-        keepAlive: true
-    })
+    @computed
     get fontObject(): Font | undefined {
         if (this.font) {
             return findFont(ProjectEditor.getProject(this), this.font);
