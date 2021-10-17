@@ -1,9 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { observable, action } from "mobx";
 import classNames from "classnames";
-import { DndProvider, useDrag, useDrop, DropTargetMonitor } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
 import { XYCoord } from "dnd-core";
 
 import { Loader } from "eez-studio-ui/loader";
@@ -327,30 +325,17 @@ export class TabsView extends React.Component<{
     addTabAttention?: boolean;
     moveTab?: (dragIndex: number, hoverIndex: number) => void;
 }> {
-    ref = React.createRef<HTMLDivElement>();
-
-    @observable el: HTMLDivElement | null = null;
-
-    @action
-    componentDidMount() {
-        this.el = this.ref.current;
-    }
-
     render() {
         return (
-            <div className="EezStudio_TabsView" ref={this.ref}>
-                {this.el && (
-                    <DndProvider backend={HTML5Backend}>
-                        {this.props.tabs.map((tab, index) => (
-                            <TabView
-                                key={tab.id}
-                                tab={tab}
-                                index={index}
-                                moveTab={this.props.moveTab}
-                            />
-                        ))}
-                    </DndProvider>
-                )}
+            <div className="EezStudio_TabsView">
+                {this.props.tabs.map((tab, index) => (
+                    <TabView
+                        key={tab.id}
+                        tab={tab}
+                        index={index}
+                        moveTab={this.props.moveTab}
+                    />
+                ))}
                 {this.props.addTabPopup && (
                     <AddTabButton
                         popup={this.props.addTabPopup}

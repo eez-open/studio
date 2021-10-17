@@ -42,7 +42,7 @@ export function handleDragAndDrop() {
                     if (
                         handleDragAndDropFile &&
                         (await handleDragAndDropFile(file.path, {
-                            activeTab: tabs.activeTab
+                            activeTab: tabs.activeTab!
                         }))
                     ) {
                         break;

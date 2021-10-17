@@ -415,7 +415,7 @@ export class ProjectEditorTab implements IHomeTab {
     loading: boolean = false;
 
     @observable
-    DocumentStore: DocumentStoreClass;
+    DocumentStore: DocumentStoreClass | undefined;
 
     ProjectContext: React.Context<DocumentStoreClass>;
     ProjectEditor: typeof ProjectEditorModule.ProjectEditor;
@@ -618,6 +618,7 @@ export class ProjectEditorTab implements IHomeTab {
                 this.tabs.removeTab(this);
                 this.DocumentStore.changeProject(undefined);
             }
+            this.DocumentStore = undefined;
         }
     }
 
@@ -654,7 +655,7 @@ interface ISavedTab {
 
 class Tabs {
     @observable tabs: IHomeTab[] = [];
-    @observable activeTab: IHomeTab;
+    @observable activeTab: IHomeTab | undefined;
 
     constructor() {
         loadPreinstalledExtension("instrument").then(async () => {
@@ -685,7 +686,7 @@ class Tabs {
                     }
 
                     if (this.tabs.length == 0) {
-                        this.openTabById("workbench", true);
+                        //this.openTabById("workbench", true);
                     }
                 }
             }
@@ -873,17 +874,19 @@ class Tabs {
             const tab = this.tabs[tabIndex];
             this.tabs.splice(tabIndex, 1);
             if (tab.active) {
-                if (tabIndex === this.tabs.length) {
-                    this.makeActive(this.tabs[tabIndex - 1]);
-                } else {
+                if (tabIndex >= this.tabs.length) {
+                    this.makeActive(this.tabs[this.tabs.length - 1]);
+                } else if (this.tabs.length > 0) {
                     this.makeActive(this.tabs[tabIndex]);
+                } else {
+                    this.makeActive(undefined);
                 }
             }
         }
     }
 
     @action
-    makeActive(tab: IHomeTab) {
+    makeActive(tab: IHomeTab | undefined) {
         if (this.activeTab) {
             this.activeTab.active = false;
         }

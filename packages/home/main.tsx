@@ -4,6 +4,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { configure } from "mobx";
 import { observer } from "mobx-react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { loadExtensions } from "eez-studio-shared/extensions/extensions";
 
@@ -118,10 +120,10 @@ EEZStudio.electron.ipcRenderer.on("command-palette", () => {
 class Main extends React.Component {
     render() {
         return (
-            <>
+            <DndProvider backend={HTML5Backend}>
                 {this.props.children}
                 {notification.container}
-            </>
+            </DndProvider>
         );
     }
 }
