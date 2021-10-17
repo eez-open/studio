@@ -1,3 +1,4 @@
+import fs from "fs";
 import { action, computed, observable, runInAction, toJS } from "mobx";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { findAction } from "project-editor/features/action/action";
@@ -349,27 +350,21 @@ export class LocalRuntime extends RuntimeBase {
             return;
         }
 
-        const fs = EEZStudio.remote.require("fs");
-
-        return new Promise<void>(resolve => {
-            fs.readFile(filePath, "utf8", (err: any, data: string) => {
-                if (err) {
-                    notification.error(
-                        "Failed to load previous runtime settings!"
-                    );
-                } else {
-                    runInAction(() => {
-                        try {
-                            this.settings = JSON.parse(data);
-                        } catch (err) {
-                            console.error(err);
-                            this.settings = {};
-                        }
-                    });
+        try {
+            const data = await fs.promises.readFile(filePath, "utf8");
+            runInAction(() => {
+                try {
+                    this.settings = JSON.parse(data);
+                } catch (err) {
+                    console.error(err);
+                    this.settings = {};
                 }
-                resolve();
             });
-        });
+        } catch (err) {
+            notification.error(
+                "Failed to load previous runtime settings: " + err
+            );
+        }
     }
 
     async saveSettings() {
@@ -384,25 +379,15 @@ export class LocalRuntime extends RuntimeBase {
 
         await this.savePersistentVariables();
 
-        const fs = EEZStudio.remote.require("fs");
-
-        return new Promise<void>(resolve => {
-            fs.writeFile(
-                this.getSettingsFilePath(),
+        try {
+            await fs.promises.writeFile(
+                filePath,
                 JSON.stringify(toJS(this.settings), undefined, "  "),
-                "utf8",
-                (err: any) => {
-                    if (err) {
-                        // TODO
-                        console.error(err);
-                    } else {
-                        console.log("Runtime settings saved");
-                    }
-
-                    resolve();
-                }
+                "utf8"
             );
-        });
+        } catch (err) {
+            notification.error("Failed to save runtime settings: " + err);
+        }
     }
 
     selectQueueTask(queueTask: QueueTask | undefined) {

@@ -76,9 +76,7 @@ class Controls extends React.Component {
     });
 
     get pageTabState() {
-        const editorState =
-            this.context.project._DocumentStore.editorsStore.activeEditor
-                ?.state;
+        const editorState = this.context.editorsStore.activeEditor?.state;
         if (editorState instanceof PageTabState) {
             return editorState as PageTabState;
         }
@@ -122,7 +120,7 @@ class Controls extends React.Component {
                     display: "flex"
                 }}
             >
-                {!this.context.project._DocumentStore.runtime && (
+                {!this.context.runtime && (
                     <div className="btn-group" role="group">
                         <IconAction
                             title="Save"
@@ -133,7 +131,7 @@ class Controls extends React.Component {
                     </div>
                 )}
 
-                {!this.context.project._DocumentStore.runtime && (
+                {!this.context.runtime && (
                     <div className="btn-group" role="group">
                         <IconAction
                             title={
@@ -158,7 +156,7 @@ class Controls extends React.Component {
                     </div>
                 )}
 
-                {!this.context.project._DocumentStore.runtime &&
+                {!this.context.runtime &&
                     this.isBuildConfigurationSelectorVisible && (
                         <div className="btn-group">
                             <select
@@ -178,7 +176,7 @@ class Controls extends React.Component {
                         </div>
                     )}
 
-                {!this.context.project._DocumentStore.runtime &&
+                {!this.context.runtime &&
                     !this.context.project.isDashboardProject && (
                         <div className="btn-group" role="group">
                             <IconAction
