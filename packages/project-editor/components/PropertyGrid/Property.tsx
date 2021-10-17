@@ -67,14 +67,17 @@ export class Property extends React.Component<PropertyProps> {
     }
 
     @action
-    UNSAFE_componentWillReceiveProps(props: PropertyProps) {
-        const getPropertyValueResult = getPropertyValue(
-            this.props.objects,
-            this.props.propertyInfo
-        );
-        this._value = getPropertyValueResult
-            ? getPropertyValueResult.value
-            : undefined;
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            const getPropertyValueResult = getPropertyValue(
+                this.props.objects,
+                this.props.propertyInfo
+            );
+            this._value = getPropertyValueResult
+                ? getPropertyValueResult.value
+                : undefined;
+        }
+        this.resizeTextArea();
     }
 
     componentDidMount() {
@@ -89,10 +92,6 @@ export class Property extends React.Component<PropertyProps> {
             });
         }
 
-        this.resizeTextArea();
-    }
-
-    componentDidUpdate() {
         this.resizeTextArea();
     }
 

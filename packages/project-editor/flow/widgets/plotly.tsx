@@ -176,6 +176,8 @@ function removeChart(el: HTMLElement) {
         updateQueue.splice(updateQueue.indexOf(el), 1);
     }
 
+    Plotly().purge(el);
+
     if (charts.size === 0) {
         if (doUpdateChartTimeoutId) {
             clearTimeout(doUpdateChartTimeoutId);
@@ -289,6 +291,8 @@ const LineChartElement = observer(
                                 }
                             }
                         );
+                    } else {
+                        removeChart(el);
                     }
                 })();
             }
@@ -542,6 +546,8 @@ const GaugeElement = observer(
                                 updateGauge(el, inputData);
                             }
                         );
+                    } else {
+                        removeChart(el);
                     }
                 })();
             }
@@ -549,6 +555,9 @@ const GaugeElement = observer(
             return () => {
                 if (disposeReaction) {
                     disposeReaction();
+                }
+                if (el) {
+                    removeChart(el);
                 }
                 disposed = true;
             };

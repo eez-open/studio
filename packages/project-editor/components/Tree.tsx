@@ -200,10 +200,12 @@ export class Tree extends React.Component<TreeProps, {}> {
         return this.props.treeAdapter.allRows;
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps: TreeProps) {
-        this.setState({
-            dropItem: undefined
-        });
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.setState({
+                dropItem: undefined
+            });
+        }
     }
 
     onSelect(objectId: string) {

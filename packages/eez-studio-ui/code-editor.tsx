@@ -1,15 +1,13 @@
 import React from "react";
-import { bind } from "bind-decorator";
+import classNames from "classnames";
 
 import { guid } from "eez-studio-shared/guid";
 
 import { PropertyEnclosure } from "eez-studio-ui/properties";
 
-////////////////////////////////////////////////////////////////////////////////
-
-import { addScript } from "eez-studio-shared/dom";
-import classNames from "classnames";
 import { settingsController } from "home/settings";
+
+////////////////////////////////////////////////////////////////////////////////
 
 function createEditor(
     element: HTMLElement,
@@ -21,65 +19,43 @@ function createEditor(
     minLines?: number,
     maxLines?: number
 ) {
-    return new Promise(resolve => {
-        function aceReady() {
-            const editor = ace.edit(element);
+    const editor = ace.edit(element);
 
-            editor.getSession().setUseWorker(false);
-            editor.getSession().setMode("ace/mode/" + mode);
-            editor.setShowPrintMargin(false);
+    editor.getSession().setUseWorker(false);
+    editor.getSession().setMode("ace/mode/" + mode);
+    editor.setShowPrintMargin(false);
 
-            if (minLines !== undefined) {
-                editor.setOptions({
-                    minLines
-                });
-            }
+    if (minLines !== undefined) {
+        editor.setOptions({
+            minLines
+        });
+    }
 
-            if (maxLines !== undefined) {
-                editor.setOptions({
-                    maxLines
-                });
-            }
+    if (maxLines !== undefined) {
+        editor.setOptions({
+            maxLines
+        });
+    }
 
-            if (settingsController.isDarkTheme) {
-                editor.setTheme("ace/theme/dracula");
-            } else {
-                editor.setTheme("ace/theme/github");
-            }
+    if (settingsController.isDarkTheme) {
+        editor.setTheme("ace/theme/dracula");
+    } else {
+        editor.setTheme("ace/theme/github");
+    }
 
-            editor.setReadOnly(readOnly);
-            if (readOnly) {
-                editor.renderer.$cursorLayer.element.style.opacity = 0;
-                editor.container.style.opacity = 0.6;
-            } else {
-                editor.renderer.$cursorLayer.element.style.opacity = 1;
-                editor.container.style.opacity = 1;
-            }
-            editor.setValue(value || "");
-            editor.getSession().getUndoManager().reset();
-            editor.selection.moveTo(lineNumber - 1, columnNumber - 1);
+    editor.setReadOnly(readOnly);
+    if (readOnly) {
+        editor.renderer.$cursorLayer.element.style.opacity = 0;
+        editor.container.style.opacity = 0.6;
+    } else {
+        editor.renderer.$cursorLayer.element.style.opacity = 1;
+        editor.container.style.opacity = 1;
+    }
+    editor.setValue(value || "");
+    editor.getSession().getUndoManager().reset();
+    editor.selection.moveTo(lineNumber - 1, columnNumber - 1);
 
-            resolve(editor);
-        }
-
-        if ((window as any).ace) {
-            aceReady();
-        } else {
-            addScript("../../libs/brace-0.11.1/index.js").then(() => {
-                Promise.all([
-                    addScript("../../libs/brace-0.11.1/mode/c_cpp.js"),
-                    addScript("../../libs/brace-0.11.1/mode/css.js"),
-                    addScript("../../libs/brace-0.11.1/mode/json.js"),
-                    addScript("../../libs/brace-0.11.1/mode/javascript.js"),
-                    addScript("../../libs/brace-0.11.1/mode/python.js"),
-                    addScript("../../libs/brace-0.11.1/mode/scpi.js"),
-                    addScript("../../libs/brace-0.11.1/theme/github.js"),
-                    addScript("../../libs/brace-0.11.1/theme/dracula.js"),
-                    addScript("../../libs/brace-0.11.1/ext/searchbox.js")
-                ]).then(aceReady);
-            });
-        }
-    });
+    return editor;
 }
 
 function resizeEditor(editor: any) {
@@ -108,6 +84,10 @@ function redo(editor: any) {
 
 function onEditorEvent(editor: any, eventName: string, handler: any) {
     editor.on(eventName, handler);
+}
+
+function offEditorEvent(editor: any, eventName: string, handler: any) {
+    editor.off(eventName, handler);
 }
 
 function destroyEditor(editor: any) {
@@ -145,16 +125,15 @@ interface CodeEditorProps {
     maxLines?: number;
 }
 
-export class CodeEditor extends React.Component<CodeEditorProps, {}> {
-    element: HTMLElement;
+export class CodeEditor extends React.Component<CodeEditorProps> {
+    elementRef = React.createRef<HTMLDivElement>();
     editor: any;
-    promise: Promise<any> = new Promise<void>(resolve => resolve());
 
-    resize() {
+    resize = () => {
         if (this.editor) {
             resizeEditor(this.editor);
         }
-    }
+    };
 
     insertText(text: string) {
         if (this.editor) {
@@ -182,74 +161,75 @@ export class CodeEditor extends React.Component<CodeEditorProps, {}> {
         openSearchbox(this.editor);
     }
 
-    @bind
-    onChange(event: any) {
+    onChange = (event: any) => {
         this.props.onChange(this.editor.getValue());
+    };
+
+    createEditor(props: CodeEditorProps) {
+        this.editor = createEditor(
+            this.elementRef.current!,
+            props.value,
+            props.readOnly || false,
+            props.mode,
+            props.lineNumber || 1,
+            props.columnNumber || 1,
+            props.minLines,
+            props.maxLines
+        );
+
+        onEditorEvent(this.editor, "change", this.onChange);
+
+        if (props.onFocus) {
+            onEditorEvent(this.editor, "focus", props.onFocus);
+        }
+
+        if (props.onBlur) {
+            onEditorEvent(this.editor, "blur", props.onBlur);
+        }
+
+        setTimeout(this.resize);
+    }
+
+    destroyEditor(props: CodeEditorProps) {
+        if (this.editor) {
+            offEditorEvent(this.editor, "change", this.onChange);
+
+            if (props.onFocus) {
+                offEditorEvent(this.editor, "focus", props.onFocus);
+            }
+
+            if (props.onBlur) {
+                offEditorEvent(this.editor, "blur", props.onBlur);
+            }
+
+            destroyEditor(this.editor);
+            this.editor = undefined;
+        }
     }
 
     componentDidMount() {
-        this.promise = this.promise.then(() =>
-            createEditor(
-                this.element,
-                this.props.value,
-                this.props.readOnly || false,
-                this.props.mode,
-                this.props.lineNumber || 1,
-                this.props.columnNumber || 1,
-                this.props.minLines,
-                this.props.maxLines
-            ).then((editor: any) => {
-                this.editor = editor;
+        this.createEditor(this.props);
+    }
 
-                onEditorEvent(this.editor, "change", this.onChange);
-
-                if (this.props.onFocus) {
-                    onEditorEvent(this.editor, "focus", this.props.onFocus);
-                }
-
-                if (this.props.onBlur) {
-                    onEditorEvent(this.editor, "blur", this.props.onBlur);
-                }
-
-                setTimeout(() => {
-                    if (this.editor) {
-                        resizeEditor(this.editor);
-                    }
-                }, 0);
-            })
-        );
+    componentDidUpdate(prevProps: any) {
+        if (
+            this.props.value !== this.editor.getValue() ||
+            this.props.readOnly !== prevProps.readOnly ||
+            this.props.mode !== prevProps.mode
+        ) {
+            this.destroyEditor(prevProps);
+            this.createEditor(this.props);
+        }
     }
 
     componentWillUnmount() {
-        this.promise = this.promise.then(() => {
-            if (this.editor) {
-                destroyEditor(this.editor);
-                this.editor = undefined;
-            }
-        });
-    }
-
-    shouldComponentUpdate(nextProps: CodeEditorProps) {
-        return (
-            !this.editor ||
-            nextProps.value !== this.editor.getValue() ||
-            nextProps.readOnly !== this.props.readOnly ||
-            nextProps.mode !== this.props.mode
-        );
-    }
-
-    UNSAFE_componentWillUpdate(nextProps: any, nextState: any) {
-        this.componentWillUnmount();
-    }
-
-    componentDidUpdate(prevProps: any, prevState: any) {
-        this.componentDidMount();
+        this.destroyEditor(this.props);
     }
 
     render() {
         return (
             <div
-                ref={(ref: any) => (this.element = ref!)}
+                ref={this.elementRef}
                 className={classNames(
                     "EezStudio_CodeEditor",
                     this.props.className

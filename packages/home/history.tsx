@@ -115,8 +115,10 @@ export class HistorySection extends React.Component<{
         this.appStore = getAppStore(props.oids);
     }
 
-    UNSAFE_componentWillReceiveProps(props: any) {
-        this.appStore = getAppStore(props.oids);
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.appStore = getAppStore(this.props.oids);
+        }
     }
 
     render() {

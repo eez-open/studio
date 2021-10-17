@@ -47,8 +47,10 @@ export class PropertiesComponent extends React.Component<
     }
 
     @action
-    UNSAFE_componentWillReceiveProps(props: PropertiesComponentProps) {
-        this.value = this.getValue(props);
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.value = this.getValue(this.props);
+        }
     }
 
     @bind

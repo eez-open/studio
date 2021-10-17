@@ -66,8 +66,10 @@ export class Table extends React.Component<ITableProps> {
         );
     }
 
-    UNSAFE_componentWillReceiveProps(props: ITableProps) {
-        this.updateSortOrder(props);
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.updateSortOrder(this.props);
+        }
     }
 
     @action

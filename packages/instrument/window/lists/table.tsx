@@ -483,8 +483,10 @@ class Cell extends React.Component<CellProps, {}> {
     }
 
     @action
-    UNSAFE_componentWillReceiveProps(props: CellProps) {
-        this.value = Cell.getValue(props);
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.value = Cell.getValue(this.props);
+        }
     }
 
     @bind
@@ -813,8 +815,10 @@ export class TableDetailsView extends React.Component<
     }
 
     @action
-    UNSAFE_componentWillReceiveProps(nextProps: TableDetailsViewProps) {
-        this.list = nextProps.list;
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.list = this.props.list;
+        }
     }
 
     @action.bound

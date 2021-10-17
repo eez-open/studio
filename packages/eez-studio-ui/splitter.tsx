@@ -60,8 +60,10 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         }
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps: SplitterProps) {
-        this.calcSizes(nextProps);
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.calcSizes(this.props);
+        }
     }
 
     componentWillUnmount() {

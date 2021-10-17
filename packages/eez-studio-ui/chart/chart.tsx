@@ -7802,8 +7802,10 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.subscribeToOutsideModelChanges();
     }
 
-    UNSAFE_componentWillReceiveProps(props: RulersDockViewProps) {
-        this.subscribeToOutsideModelChanges();
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.subscribeToOutsideModelChanges();
+        }
     }
 
     @action
@@ -8263,8 +8265,10 @@ class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOption
         this.loadProps(this.props);
     }
 
-    UNSAFE_componentWillReceiveProps(props: DynamicSubdivisionOptionsProps) {
-        this.loadProps(props);
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.loadProps(this.props);
+        }
     }
 
     @action
@@ -8449,8 +8453,10 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
         this.loadProps(this.props);
     }
 
-    UNSAFE_componentWillReceiveProps(props: FixedSubdivisionOptionsProps) {
-        this.loadProps(props);
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.loadProps(this.props);
+        }
     }
 
     @action
@@ -8817,16 +8823,14 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
         };
     }
 
-    @action
-    UNSAFE_componentWillReceiveProps(nextProps: WaveformLineViewProperties) {
-        this.waveformLineController = nextProps.waveformLineController;
-    }
-
-    componentDidMount() {
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.waveformLineController = this.props.waveformLineController;
+        }
         this.draw();
     }
 
-    componentDidUpdate() {
+    componentDidMount() {
         this.draw();
     }
 

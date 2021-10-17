@@ -1723,8 +1723,10 @@ export class EnvelopeDetailsView extends React.Component<
     }
 
     @action
-    UNSAFE_componentWillReceiveProps(nextProps: EnvelopeDetailsViewProps) {
-        this.list = nextProps.list;
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.list = this.props.list;
+        }
     }
 
     render() {

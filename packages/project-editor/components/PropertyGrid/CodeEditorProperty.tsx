@@ -11,10 +11,13 @@ import { getPropertyValue } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type CodeEditorPropertyProps = PropertyProps & {
+    mode: CodeEditorMode;
+    showLabel?: boolean;
+};
+
 @observer
-export class CodeEditorProperty extends React.Component<
-    PropertyProps & { mode: CodeEditorMode; showLabel?: boolean }
-> {
+export class CodeEditorProperty extends React.Component<CodeEditorPropertyProps> {
     @observable value: string = this.getValue();
 
     editor: CodeEditor;
@@ -48,8 +51,10 @@ export class CodeEditorProperty extends React.Component<
     }
 
     @action
-    UNSAFE_componentWillReceiveProps(props: PropertyProps) {
-        this.value = this.getValue(props);
+    componentDidUpdate(prevProps: CodeEditorPropertyProps) {
+        if (this.props != prevProps) {
+            this.value = this.getValue(this.props);
+        }
     }
 
     @action.bound

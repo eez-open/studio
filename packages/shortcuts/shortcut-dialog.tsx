@@ -287,8 +287,10 @@ class ShortcutDialog extends React.Component<ShortcutDialogProps, {}> {
         }
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps: ShortcutDialogProps) {
-        this.codeError = nextProps.codeError;
+    componentDidUpdate(prevProps: any) {
+        if (this.props != prevProps) {
+            this.codeError = this.props.codeError;
+        }
     }
 
     render() {

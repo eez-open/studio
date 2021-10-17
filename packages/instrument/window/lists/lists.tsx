@@ -234,7 +234,7 @@ export class DetailsView extends React.Component<
         return (
             <VerticalHeaderWithBody>
                 {(description || modifiedAtStr) && (
-                    <Header className="EezStudio_PanelHeader">
+                    <Header className="EezStudio_PanelHeader EezStudio_ListHeader">
                         <Icon icon="material:comment" />{" "}
                         <span className="">{description}</span>{" "}
                         {modifiedAtStr && (

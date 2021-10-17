@@ -325,14 +325,12 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         this.lastItemInTheCenterId = undefined;
     }
 
-    UNSAFE_(props: HistoryListComponentProps) {
-        if (props.history !== this.props.history) {
+    componentDidUpdate(prevProps: any) {
+        if (this.props.history != prevProps.history) {
             this.fromBottom = undefined;
             this.fromTop = 0;
         }
-    }
 
-    componentDidUpdate() {
         // // make sure scroll bar is recalculated after render
         // $(this.div).css("overflow", "hidden");
         // setTimeout(() => {
