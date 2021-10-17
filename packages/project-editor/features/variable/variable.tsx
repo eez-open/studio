@@ -786,7 +786,7 @@ export class Structure extends EezObject {
         )
     };
 
-    @computed({ keepAlive: false })
+    @computed({ keepAlive: true })
     get fieldsMap() {
         const fieldsMap = new Map<string, StructureField>();
         this.fields.forEach(field => fieldsMap.set(field.name, field));
@@ -994,7 +994,7 @@ export class ProjectVariables extends EezObject {
         }
     };
 
-    @computed({ keepAlive: false }) get enumsMap() {
+    @computed({ keepAlive: true }) get enumsMap() {
         const map = new Map<string, Enum>();
         for (const enumDef of this.enums) {
             map.set(enumDef.name, enumDef);
@@ -1002,7 +1002,7 @@ export class ProjectVariables extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: false }) get structsMap() {
+    @computed({ keepAlive: true }) get structsMap() {
         const map = new Map<string, Structure>();
         for (const structure of this.structures) {
             map.set(structure.name, structure);

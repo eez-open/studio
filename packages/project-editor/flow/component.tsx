@@ -1302,7 +1302,7 @@ export class Component extends EezObject {
         return outputs;
     }
 
-    @computed({ keepAlive: false })
+    @computed({ keepAlive: true })
     get buildInputs() {
         const flow = ProjectEditor.getFlow(this);
         return this.inputs.filter(
@@ -1316,7 +1316,7 @@ export class Component extends EezObject {
         );
     }
 
-    @computed({ keepAlive: false })
+    @computed({ keepAlive: true })
     get buildOutputs() {
         const outputs: { name: string; type: "output" | "property" }[] = [];
 
