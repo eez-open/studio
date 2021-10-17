@@ -854,16 +854,12 @@ export class Style extends EezObject {
         }
     };
 
-    @computed({
-        keepAlive: true
-    })
+    @computed
     get fontName(): string {
         return getStyleProperty(this, "font");
     }
 
-    @computed({
-        keepAlive: true
-    })
+    @computed
     get fontObject(): Font | undefined {
         if (this.font) {
             return findFont(ProjectEditor.getProject(this), this.font);
@@ -1036,168 +1032,168 @@ export class Style extends EezObject {
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get borderSizeProperty(): string {
         return getStyleProperty(this, "borderSize");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get borderSizeRect() {
         return Style.getRect(this.borderSizeProperty).rect;
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get borderRadiusProperty(): number {
         return getStyleProperty(this, "borderRadius");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get alignHorizontalProperty(): string {
         return getStyleProperty(this, "alignHorizontal");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get alignVerticalProperty(): string {
         return getStyleProperty(this, "alignVertical");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get colorProperty(): string {
         return getStyleProperty(this, "color");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get color16(): number {
         return strToColor16(this.colorProperty);
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get backgroundColorProperty(): string {
         return getStyleProperty(this, "backgroundColor");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get backgroundColor16(): number {
         return strToColor16(this.backgroundColorProperty);
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get activeColorProperty(): string {
         return getStyleProperty(this, "activeColor");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get activeColor16(): number {
         return strToColor16(this.activeColorProperty);
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get activeBackgroundColorProperty(): string {
         return getStyleProperty(this, "activeBackgroundColor");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get activeBackgroundColor16(): number {
         return strToColor16(this.activeBackgroundColorProperty);
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get focusColorProperty(): string {
         return getStyleProperty(this, "focusColor");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get focusColor16(): number {
         return strToColor16(this.focusColorProperty);
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get focusBackgroundColorProperty(): string {
         return getStyleProperty(this, "focusBackgroundColor");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get focusBackgroundColor16(): number {
         return strToColor16(this.focusBackgroundColorProperty);
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get borderColorProperty(): string {
         return getStyleProperty(this, "borderColor");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get borderColor16(): number {
         return strToColor16(this.borderColorProperty);
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get paddingProperty(): string {
         return getStyleProperty(this, "padding");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get paddingRect() {
         return Style.getRect(this.paddingProperty).rect;
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get marginProperty(): string {
         return getStyleProperty(this, "margin");
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get marginRect() {
         return Style.getRect(this.marginProperty).rect;
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get opacityProperty(): number {
         const opacity = getStyleProperty(this, "opacity");
@@ -1208,7 +1204,7 @@ export class Style extends EezObject {
     }
 
     @computed({
-        keepAlive: true
+        keepAlive: false
     })
     get blinkProperty(): number {
         return getStyleProperty(this, "blink");

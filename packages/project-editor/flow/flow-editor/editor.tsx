@@ -549,8 +549,6 @@ export class Canvas extends React.Component<{
             };
 
             this.mouseHandler.move(this.props.flowContext, event);
-        } else {
-            console.log("trt");
         }
     }
 

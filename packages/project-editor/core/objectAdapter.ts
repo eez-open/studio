@@ -224,9 +224,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         return getId(this.object);
     }
 
-    @computed({
-        keepAlive: true
-    })
+    @computed
     get children(): TreeObjectAdapterChildren {
         if (isArray(this.object)) {
             return this.object.map(child => this.transformer(child));

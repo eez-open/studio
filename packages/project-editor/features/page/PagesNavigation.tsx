@@ -209,9 +209,7 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
         super(page);
     }
 
-    @computed({
-        keepAlive: true
-    })
+    @computed
     get children(): TreeObjectAdapterChildren {
         if (this.frontFace) {
             return this.page.components

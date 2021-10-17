@@ -530,7 +530,7 @@ export class ImportDirective {
         await DocumentStore.loadExternalProject(this.projectAbsoluteFilePath);
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get project(): Project | undefined {
         const DocumentStore = getDocumentStore(this);
 
@@ -1029,7 +1029,7 @@ export class Project extends EezObject {
         );
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get masterProject(): Project | undefined {
         return this.settings.general.masterProject
             ? this._DocumentStore.externalProjects.get(
@@ -1038,7 +1038,7 @@ export class Project extends EezObject {
             : undefined;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get allAssetsMaps() {
         return [
             {
@@ -1057,7 +1057,7 @@ export class Project extends EezObject {
         ];
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get assetCollectionPaths() {
         const assetCollectionPaths = new Set<string>();
         this._DocumentStore.project.allAssetsMaps.forEach(assetsMap =>
@@ -1066,7 +1066,7 @@ export class Project extends EezObject {
         return assetCollectionPaths;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get localAssets() {
         const buildAssets = new BuildAssetsMap();
 
@@ -1081,7 +1081,7 @@ export class Project extends EezObject {
         return buildAssets.assets;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get importedAssets() {
         const buildAssets = new BuildAssetsMap();
 
@@ -1109,7 +1109,7 @@ export class Project extends EezObject {
         return buildAssets.assets;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get masterAssets() {
         const buildAssets = new BuildAssetsMap();
 
@@ -1128,7 +1128,7 @@ export class Project extends EezObject {
         return buildAssets.assets;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get allAssets() {
         return new Map([
             ...this.localAssets,
@@ -1157,14 +1157,14 @@ export class Project extends EezObject {
         }
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get pagesMap() {
         const map = new Map<String, Page>();
         this.pages.forEach(page => map.set(page.name, page));
         return map;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get stylesMap() {
         const map = new Map<String, Style>();
         if (this.styles) {
@@ -1173,7 +1173,7 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get allStyleIdToStyleMap() {
         const map = new Map<number, Style[]>();
 
@@ -1201,7 +1201,7 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get fontsMap() {
         const map = new Map<String, Font>();
         if (this.fonts) {
@@ -1210,7 +1210,7 @@ export class Project extends EezObject {
         return map;
     }
 
-    @computed({ keepAlive: true })
+    @computed({ keepAlive: false })
     get bitmapsMap() {
         const map = new Map<String, Bitmap>();
         if (this.bitmaps) {
