@@ -195,26 +195,32 @@ class AppComponent extends React.Component {
                     )}
                 </Header>
                 <Body>
-                    {tabs.tabs.map(tab => (
-                        <div
-                            className="EezStudio_TabContainer"
-                            key={tab.id}
-                            style={{
-                                visibility:
-                                    tab === tabs.activeTab
-                                        ? "visible"
-                                        : "hidden",
-                                zIndex: tab === tabs.activeTab ? 1 : 0
-                            }}
-                        >
-                            {tab.active ? tab.render() : null}
-                        </div>
-                    ))}
+                    <Tabs />
                 </Body>
             </VerticalHeaderWithBody>
         );
     }
 }
+
+@observer
+class Tabs extends React.Component {
+    render() {
+        return tabs.tabs.map(tab => (
+            <div
+                className="EezStudio_TabContainer"
+                key={tab.id}
+                style={{
+                    visibility: tab === tabs.activeTab ? "visible" : "hidden",
+                    zIndex: tab === tabs.activeTab ? 1 : 0
+                }}
+            >
+                {tab.active ? tab.render() : null}
+            </div>
+        ));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 //export const App = DragDropContext(HTML5Backend)(AppComponent);
 export const App = AppComponent;

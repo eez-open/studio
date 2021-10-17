@@ -1720,14 +1720,7 @@ export class DocumentStoreClass {
                     getUIStateFilePath(this.filePath),
                     JSON.stringify(this.uiStateStore.toJS, undefined, 2),
                     "utf8",
-                    (err: any) => {
-                        if (err) {
-                            console.error(err);
-                        } else {
-                            console.log("UI state saved");
-                        }
-                        resolve();
-                    }
+                    resolve
                 );
             }
         });
@@ -3608,7 +3601,7 @@ export function insertObjectAfter(object: IEezObject, objectToInsert: any) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let CurrentDocumentStore: DocumentStoreClass;
+let CurrentDocumentStore: DocumentStoreClass | undefined;
 
 function loadArrayObject(
     arrayObject: any,
@@ -3618,9 +3611,9 @@ function loadArrayObject(
     const eezArray: EezObject[] = observable([]);
 
     setId(
-        CurrentDocumentStore.objects,
+        CurrentDocumentStore!.objects,
         eezArray,
-        CurrentDocumentStore.getChildId()
+        CurrentDocumentStore!.getChildId()
     );
     setParent(eezArray, parent);
     setKey(eezArray, propertyInfo.name);
@@ -3643,7 +3636,9 @@ export function loadObject(
     key?: string
 ): IEezObject {
     CurrentDocumentStore = DocumentStore;
-    return loadObjectInternal(parent, jsObjectOrString, aClass, key);
+    const result = loadObjectInternal(parent, jsObjectOrString, aClass, key);
+    CurrentDocumentStore = undefined;
+    return result;
 }
 
 function loadObjectInternal(
@@ -3680,9 +3675,9 @@ function loadObjectInternal(
     const classInfo = getClassInfo(object);
 
     setId(
-        CurrentDocumentStore.objects,
+        CurrentDocumentStore!.objects,
         object,
-        CurrentDocumentStore.getChildId()
+        CurrentDocumentStore!.getChildId()
     );
     setParent(object, parent as IEezObject);
 

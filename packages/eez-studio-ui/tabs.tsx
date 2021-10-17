@@ -2,7 +2,14 @@ import React from "react";
 import { observer } from "mobx-react";
 import { observable, action } from "mobx";
 import classNames from "classnames";
-import { DndProvider, useDrag, useDrop, DropTargetMonitor } from "react-dnd";
+import {
+    DndProvider,
+    useDrag,
+    useDrop,
+    /*DragSource,
+    DropTarget,*/
+    DropTargetMonitor
+} from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { XYCoord } from "dnd-core";
 
@@ -253,6 +260,145 @@ export const TabView: React.FC<TabViewProps> = observer(
         );
     }
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+// class TabView2 extends React.Component<TabViewProps> {
+//     onMouseUp = (e: React.MouseEvent<HTMLElement>) => {
+//         if (e.button === 1) {
+//             const tab = this.props.tab;
+//             if (tab.close) {
+//                 tab.close();
+//             }
+//         }
+//     };
+
+//     onMouseDown = () => {
+//         const tab = this.props.tab;
+//         tab.makeActive();
+//     };
+
+//     onContextMenu = (event: React.MouseEvent) => {
+//         event.preventDefault();
+
+//         const menu = new Menu();
+
+//         const tab = this.props.tab;
+
+//         if (tab.openInWindow) {
+//             menu.append(
+//                 new MenuItem({
+//                     label: "Open in New Window",
+//                     click: () => tab.openInWindow!()
+//                 })
+//             );
+//         }
+
+//         if (tab.close) {
+//             menu.append(
+//                 new MenuItem({
+//                     label: "Close",
+//                     click: () => tab.close!()
+//                 })
+//             );
+//         }
+
+//         if (menu.items.length > 0) {
+//             menu.popup({});
+//         }
+//     };
+
+//     onDoubleClick = () => {
+//         const tab = this.props.tab;
+//         if (tab.makePermanent) {
+//             tab.makePermanent();
+//         }
+//     };
+
+//     onClose = (e: any) => {
+//         e.stopPropagation();
+//         const tab = this.props.tab;
+//         if (tab.close) {
+//             tab.close();
+//         }
+//     };
+
+//     render() {
+//         const { tab, index, moveTab } = this.props;
+
+//         let className = classNames("EezStudio_Tab", {
+//             active: tab.active,
+//             permanent: tab.permanent
+//         });
+
+//         let closeIcon: JSX.Element | undefined;
+//         if (tab.close) {
+//             closeIcon = (
+//                 <i
+//                     className="close material-icons"
+//                     onClick={this.onClose}
+//                     title="Close tab"
+//                 >
+//                     close
+//                 </i>
+//             );
+//         }
+
+//         let icon;
+//         if (typeof tab.icon == "string") {
+//             icon = <Icon icon={tab.icon} />;
+//         } else {
+//             icon = tab.icon;
+//         }
+
+//         let title;
+//         if (typeof tab.title === "string") {
+//             title = (
+//                 <>
+//                     {icon}
+//                     <span className="title" title={tab.title}>
+//                         {tab.title}
+//                     </span>
+//                 </>
+//             );
+//         } else {
+//             title = (
+//                 <>
+//                     {icon}
+//                     {tab.title}
+//                 </>
+//             );
+//         }
+
+//         const opacity = isDragging ? 0 : 1;
+
+//         return (
+//             <div
+//                 ref={ref}
+//                 className={className}
+//                 onMouseDown={this.onMouseDown}
+//                 onMouseUp={this.onMouseUp}
+//                 onContextMenu={this.onContextMenu}
+//                 onDoubleClick={this.onDoubleClick}
+//                 title={tab.tooltipTitle}
+//                 style={{ opacity }}
+//                 data-handler-id={handlerId}
+//             >
+//                 <div>
+//                     {title}
+//                     {tab.loading && (
+//                         <Loader size={24} style={{ marginLeft: 10 }} />
+//                     )}
+//                     {closeIcon}
+//                 </div>
+//             </div>
+//         );
+//     }
+// }
+
+// const TabView3 = DragSource(ItemTypes.TAB, undefined, (monitor: any) => ({
+//     isDragging: monitor.isDragging()
+// }))(TabView2);
 
 ////////////////////////////////////////////////////////////////////////////////
 
