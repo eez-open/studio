@@ -16,14 +16,24 @@ import type { Component } from "project-editor/flow/component";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-export function getObjectBoundingRect(object: ITreeObjectAdapter) {
-    const widget = object.object as Component;
-    return {
-        left: widget.absolutePositionPoint?.x ?? widget.left,
-        top: widget.absolutePositionPoint?.y ?? widget.top,
-        width: object.rect.width,
-        height: object.rect.height
-    };
+export function getObjectBoundingRect(objectAdapter: ITreeObjectAdapter) {
+    const object = objectAdapter.object;
+    if (object instanceof ProjectEditor.ConnectionLineClass) {
+        return {
+            left: object.sourcePosition.x,
+            top: object.sourcePosition.y,
+            width: object.targetPosition.x - object.sourcePosition.x,
+            height: object.targetPosition.y - object.sourcePosition.y
+        };
+    } else {
+        const widget = object as Component;
+        return {
+            left: widget.absolutePositionPoint?.x ?? widget.left,
+            top: widget.absolutePositionPoint?.y ?? widget.top,
+            width: objectAdapter.rect.width,
+            height: objectAdapter.rect.height
+        };
+    }
 }
 
 export function getSelectedObjectsBoundingRect(viewState: IViewState) {

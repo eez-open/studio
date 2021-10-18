@@ -119,6 +119,18 @@ export class StartActionComponent extends ActionComponent {
         ),
         componentHeaderColor: "#74c8ce"
     });
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            }
+        ];
+    }
 }
 
 registerClass("StartActionComponent", StartActionComponent);
@@ -139,6 +151,18 @@ export class EndActionComponent extends ActionComponent {
         ),
         componentHeaderColor: "#74c8ce"
     });
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
 
     async execute(flowState: FlowState) {
         if (flowState.parentFlowState && flowState.component) {
@@ -195,6 +219,18 @@ export class InputActionComponent extends ActionComponent {
 
     @observable name: string;
 
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const flow = getFlow(this);
         dataBuffer.writeUint8(flow.inputComponents.indexOf(this));
@@ -242,6 +278,18 @@ export class OutputActionComponent extends ActionComponent {
     });
 
     @observable name: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
 
     async execute(flowState: FlowState) {
         const componentState = flowState.getComponentState(this);
@@ -307,14 +355,34 @@ export class GetVariableActionComponent extends ActionComponent {
 
     @observable variable: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "variable",
                 displayName: (component: GetVariableActionComponent) =>
                     component.variable,
-                type: "any"
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -372,12 +440,32 @@ export class EvalExprActionComponent extends ActionComponent {
 
     @observable expression: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null",
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "result",
-                type: "any"
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -463,15 +551,31 @@ export class EvalJSExprActionComponent extends ActionComponent {
     }
 
     getInputs() {
-        return [...super.getInputs()];
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "result",
-                type: "any"
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -559,6 +663,30 @@ export class SetVariableActionComponent extends ActionComponent {
 
     @observable variable: string;
     @observable value: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.isInputProperty("value")) {
@@ -678,14 +806,34 @@ export class SwitchActionComponent extends ActionComponent {
 
     @observable tests: SwitchTest[];
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
             ...this.tests
                 .filter(test => !!test.outputName)
                 .map(test => ({
                     name: test.outputName,
-                    type: "null" as ValueType
+                    type: "null" as ValueType,
+                    isSequenceOutput: true,
+                    isOptionalOutput: false
                 }))
         ];
     }
@@ -813,18 +961,32 @@ export class CompareActionComponent extends ActionComponent {
     @observable C: string;
     @observable operator: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "True",
                 type: "null",
-                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
+                isSequenceOutput: true,
+                isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
                 type: "null",
-                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
+                isSequenceOutput: true,
+                isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             }
         ];
     }
@@ -945,6 +1107,18 @@ export class IsTrueActionComponent extends ActionComponent {
 
     @observable value: any;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
@@ -952,13 +1126,15 @@ export class IsTrueActionComponent extends ActionComponent {
                 name: "True",
                 displayName: "Yes",
                 type: "null",
-                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
+                isSequenceOutput: true,
+                isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             },
             {
                 name: "False",
                 displayName: "No",
                 type: "null",
-                isOutputOptional: outputIsOptionalIfAtLeastOneOutputExists
+                isSequenceOutput: true,
+                isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
             }
         ];
     }
@@ -1028,13 +1204,33 @@ export class ConstantActionComponent extends ActionComponent {
 
     @observable value: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "value",
                 displayName: this.value,
-                type: "any"
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -1082,7 +1278,9 @@ export class DateNowActionComponent extends ActionComponent {
             ...super.getOutputs(),
             {
                 name: "value",
-                type: "date"
+                type: "date",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -1119,12 +1317,32 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     @observable key: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            },
+            {
                 name: "value",
-                type: "any"
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -1190,6 +1408,30 @@ export class WriteSettingsActionComponent extends ActionComponent {
     @observable key: string;
     @observable value: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
     async execute(flowState: FlowState) {
         let key = flowState.evalExpression(this, this.key);
         let value = flowState.evalExpression(this, this.value);
@@ -1239,6 +1481,30 @@ export class LogActionComponent extends ActionComponent {
     });
 
     @observable value: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
 
     async execute(flowState: FlowState) {
         const value = flowState.evalExpression(this, this.value);
@@ -1332,42 +1598,67 @@ export class CallActionActionComponent extends ActionComponent {
     @observable action: string;
 
     getInputs(): ComponentInput[] {
+        let inputs: ComponentInput[];
+
         const action = findAction(getProject(this), this.action);
-        if (!action) {
-            return super.getInputs();
+        if (action) {
+            inputs = action.inputComponents.map(
+                (inputActionComponent: InputActionComponent) => ({
+                    name: inputActionComponent.wireID,
+                    displayName: inputActionComponent.name
+                        ? inputActionComponent.name
+                        : NOT_NAMED_LABEL,
+                    type: "any",
+                    isSequenceInput: false,
+                    isOptionalInput: false
+                })
+            );
+        } else {
+            inputs = [];
         }
 
-        const inputs: ComponentInput[] = action.inputComponents.map(
-            (inputActionComponent: InputActionComponent) => ({
-                name: inputActionComponent.wireID,
-                displayName: inputActionComponent.name
-                    ? inputActionComponent.name
-                    : NOT_NAMED_LABEL,
-                type: "any"
-            })
-        );
-
-        return [...super.getInputs(), ...inputs];
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            ...inputs
+        ];
     }
 
     getOutputs() {
+        let outputs: ComponentOutput[];
+
         const action = findAction(getProject(this), this.action);
-        if (!action) {
-            return super.getOutputs();
+        if (action) {
+            outputs = action.outputComponents.map(
+                (outputActionComponent: OutputActionComponent) => ({
+                    name: outputActionComponent.wireID,
+                    displayName: outputActionComponent.name
+                        ? outputActionComponent.name
+                        : NOT_NAMED_LABEL,
+                    type: "any",
+                    isSequenceOutput: false,
+                    isOptionalOutput: true
+                })
+            );
+        } else {
+            outputs = [];
         }
 
-        const outputs: ComponentOutput[] = action.outputComponents.map(
-            (outputActionComponent: OutputActionComponent) => ({
-                name: outputActionComponent.wireID,
-                displayName: outputActionComponent.name
-                    ? outputActionComponent.name
-                    : NOT_NAMED_LABEL,
-                type: "any",
-                isOutputOptional: true
-            })
-        );
-
-        return [...super.getOutputs(), ...outputs];
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...outputs
+        ];
     }
 
     async execute(flowState: FlowState) {
@@ -1479,6 +1770,30 @@ export class DelayActionComponent extends ActionComponent {
 
     @observable milliseconds: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
@@ -1523,6 +1838,18 @@ export class ErrorActionComponent extends ActionComponent {
 
     @observable message: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
     getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.isInputProperty("message")) {
             return null;
@@ -1561,8 +1888,16 @@ export class CatchErrorActionComponent extends ActionComponent {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "Message",
-                type: "string"
+                type: "string",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -1622,12 +1957,32 @@ export class CounterActionComponent extends ActionComponent {
 
     @observable countValue: number;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            },
+            {
                 name: "done",
-                type: "null"
+                type: "null",
+                isSequenceOutput: true,
+                isOptionalOutput: true
             }
         ];
     }
@@ -1739,12 +2094,38 @@ export class LoopActionComponent extends ActionComponent {
     @observable to: string;
     @observable step: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "start",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            {
+                name: "next",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            },
+            {
                 name: "done",
-                type: "null"
+                type: "null",
+                isSequenceOutput: true,
+                isOptionalOutput: true
             }
         ];
     }
@@ -1770,6 +2151,13 @@ export class LoopActionComponent extends ActionComponent {
     async execute(flowState: FlowState) {
         let runningState =
             flowState.getComponentRunningState<LoopRunningState>(this);
+
+        const componentState = flowState.getComponentState(this);
+        if (componentState.inputsData.has("start")) {
+            runningState = undefined;
+        } else {
+            runningState = componentState.runningState;
+        }
 
         if (!runningState) {
             runningState = new LoopRunningState(
@@ -1821,6 +2209,30 @@ export class ShowPageActionComponent extends ActionComponent {
     });
 
     @observable page: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (

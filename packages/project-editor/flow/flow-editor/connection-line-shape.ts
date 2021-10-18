@@ -6,12 +6,9 @@ export function getConnectionLineShape(
     context: IFlowContext,
     connectionLine: ConnectionLine
 ) {
-    if (!connectionLine.sourcePosition || !connectionLine.targetPosition) {
-        return undefined;
-    }
-
     let sourcePositionX = connectionLine.sourcePosition.x;
     let sourcePositionY = connectionLine.sourcePosition.y;
+
     let targetPositionX = connectionLine.targetPosition.x;
     let targetPositionY = connectionLine.targetPosition.y;
 

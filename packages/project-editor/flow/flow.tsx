@@ -1,6 +1,5 @@
 import React from "react";
 import { guid } from "eez-studio-shared/guid";
-import { humanize } from "eez-studio-shared/string";
 import { action, computed, observable, runInAction } from "mobx";
 import {
     ClassInfo,
@@ -9,6 +8,7 @@ import {
     IEditorState,
     IEezObject,
     isSubclassOf,
+    MessageType,
     PropertyInfo,
     PropertyType,
     registerClass,
@@ -18,9 +18,15 @@ import { visitObjects } from "project-editor/core/search";
 import {
     getDocumentStore,
     objectToClipboardData,
-    getLabel
+    getLabel,
+    Message
 } from "project-editor/core/store";
-import { Component, Widget } from "project-editor/flow/component";
+import {
+    Component,
+    getInputDisplayName,
+    getOutputDisplayName,
+    Widget
+} from "project-editor/flow/component";
 import type {
     IFlowContext,
     IFlowState
@@ -51,15 +57,31 @@ export class ConnectionLine extends EezObject {
 
     static classInfo: ClassInfo = {
         label: (connectionLine: ConnectionLine) => {
-            return `${
-                connectionLine.sourceComponent
-                    ? getLabel(connectionLine.sourceComponent)
-                    : "UNKNOWN"
-            }@${humanize(connectionLine.output)} ➝ ${
-                connectionLine.targetComponent
-                    ? getLabel(connectionLine.targetComponent)
-                    : "UNKNOWN"
-            }@${humanize(connectionLine.input)}`;
+            const source = connectionLine.sourceComponent
+                ? getLabel(connectionLine.sourceComponent)
+                : "UNKNOWN";
+
+            const from =
+                connectionLine.output == "@seqout"
+                    ? source
+                    : `${source}@${getOutputDisplayName(
+                          connectionLine.sourceComponent,
+                          connectionLine.output
+                      )}`;
+
+            const target = connectionLine.targetComponent
+                ? getLabel(connectionLine.targetComponent)
+                : "UNKNOWN";
+
+            const to =
+                connectionLine.input == "@seqin"
+                    ? target
+                    : `${target}@${getInputDisplayName(
+                          connectionLine.targetComponent,
+                          connectionLine.input
+                      )}`;
+
+            return `${from} ➝ ${to}`;
         },
 
         properties: [
@@ -103,7 +125,7 @@ export class ConnectionLine extends EezObject {
         return page.wiredComponents.get(this.target);
     }
 
-    @computed get sourcePosition() {
+    @computed get _sourcePosition() {
         if (!(this.sourceComponent && this.sourceComponent._geometry)) {
             return undefined;
         }
@@ -124,7 +146,7 @@ export class ConnectionLine extends EezObject {
         };
     }
 
-    @computed get targetPosition() {
+    @computed get _targetPosition() {
         if (!(this.targetComponent && this.targetComponent._geometry)) {
             return undefined;
         }
@@ -141,6 +163,46 @@ export class ConnectionLine extends EezObject {
                 this.targetComponent.absolutePositionPoint.y +
                 inputGeometry.position.y
         };
+    }
+
+    @computed get sourceAndTargetPositions() {
+        let sourcePositionX = 0;
+        let sourcePositionY = 0;
+        let targetPositionX = 100;
+        let targetPositionY = 100;
+
+        if (this._sourcePosition) {
+            sourcePositionX = this._sourcePosition.x;
+            sourcePositionY = this._sourcePosition.y;
+        }
+
+        if (this._targetPosition) {
+            targetPositionX = this._targetPosition.x;
+            targetPositionY = this._targetPosition.y;
+        }
+
+        if (this._sourcePosition && !this._targetPosition) {
+            targetPositionX = sourcePositionX + 20;
+            targetPositionY = sourcePositionY + 20;
+        }
+
+        if (!this._sourcePosition && this._targetPosition) {
+            sourcePositionX = targetPositionX - 20;
+            sourcePositionY = targetPositionY - 20;
+        }
+
+        return {
+            sourcePosition: { x: sourcePositionX, y: sourcePositionY },
+            targetPosition: { x: targetPositionX, y: targetPositionY }
+        };
+    }
+
+    @computed get sourcePosition() {
+        return this.sourceAndTargetPositions.sourcePosition;
+    }
+
+    @computed get targetPosition() {
+        return this.sourceAndTargetPositions.targetPosition;
     }
 
     @computed get sourceRect() {
@@ -287,6 +349,83 @@ export abstract class Flow extends EezObject {
                     }
                 }
             }
+        },
+
+        check: (flow: Flow) => {
+            let messages: Message[] = [];
+
+            flow.connectionLines.forEach(connectionLine => {
+                if (
+                    !connectionLine.sourceComponent &&
+                    !connectionLine.targetComponent
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Connection line ${getLabel(
+                                connectionLine
+                            )}: no source and target component`,
+                            connectionLine
+                        )
+                    );
+                } else if (!connectionLine.sourceComponent) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Connection line ${getLabel(
+                                connectionLine
+                            )}: no source component`,
+                            connectionLine
+                        )
+                    );
+                } else if (!connectionLine.targetComponent) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Connection line ${getLabel(
+                                connectionLine
+                            )}: no target component`,
+                            connectionLine
+                        )
+                    );
+                } else {
+                    if (
+                        !connectionLine.sourceComponent.outputs.find(
+                            componentOutput =>
+                                componentOutput.name == connectionLine.output
+                        )
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Connection line ${getLabel(
+                                    connectionLine
+                                )}: no source component output`,
+                                connectionLine
+                            )
+                        );
+                    }
+
+                    if (
+                        !connectionLine.targetComponent.inputs.find(
+                            componentInput =>
+                                componentInput.name == connectionLine.input
+                        )
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Connection line ${getLabel(
+                                    connectionLine
+                                )}: no target component input`,
+                                connectionLine
+                            )
+                        );
+                    }
+                }
+            });
+
+            return messages;
         }
     };
 

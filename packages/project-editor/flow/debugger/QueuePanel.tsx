@@ -4,9 +4,7 @@ import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
-import { RightArrow } from "project-editor/flow/action-components";
 import { IconAction } from "eez-studio-ui/action";
-import { getInputName, getOutputName } from "./logs";
 import { MaximizeIcon } from "./Icons";
 import { getLabel } from "project-editor/core/store";
 
@@ -122,23 +120,7 @@ class QueueList extends React.Component<{ runtime: RuntimeBase }> {
                 queueTask.connectionLine.sourceComponent &&
                 queueTask.connectionLine.targetComponent
             ) {
-                return (
-                    <div>
-                        {`${getLabel(
-                            queueTask.connectionLine.sourceComponent
-                        )}:${getOutputName(
-                            queueTask.connectionLine.sourceComponent,
-                            queueTask.connectionLine.output
-                        )}`}
-                        <RightArrow />{" "}
-                        {`${getLabel(
-                            queueTask.connectionLine.targetComponent
-                        )}:${getInputName(
-                            queueTask.connectionLine.targetComponent,
-                            queueTask.connectionLine.input
-                        )}`}
-                    </div>
-                );
+                return <div>{getLabel(queueTask.connectionLine)}</div>;
             } else {
                 return <div>{getLabel(queueTask.component)}</div>;
             }

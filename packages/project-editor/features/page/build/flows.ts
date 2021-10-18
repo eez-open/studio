@@ -20,10 +20,7 @@ import {
     Section
 } from "project-editor/core/store";
 import { visitObjects } from "project-editor/core/search";
-import {
-    CommentActionComponent,
-    OutputActionComponent
-} from "project-editor/flow/action-components";
+import { CommentActionComponent } from "project-editor/flow/action-components";
 import {
     buildExpression,
     operationIndexes
@@ -194,17 +191,10 @@ function buildComponent(
 
             dataBuffer.writeUint16(targetComponentIndex);
             dataBuffer.writeUint16(targetInputIndex);
-            dataBuffer.writeUint8(
-                connectionLine.input == "@seqin" &&
-                    !(
-                        connectionLine.targetComponent instanceof
-                        OutputActionComponent
-                    )
-                    ? 1
-                    : 0
-            );
-            dataBuffer.writeUint8(0);
         });
+
+        // isSeqOut
+        dataBuffer.writeUint32(output.name === "@seqout" ? 1 : 0);
 
         assets.map.flows[flowIndex].components[componentIndex].outputs.push({
             outputName: output.name,
@@ -278,8 +268,25 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
         8
     );
 
-    // widgetDataItems
     const flowState = assets.getFlowState(flow);
+
+    dataBuffer.writeFutureArray(() =>
+        dataBuffer.writeArray(flowState.commponentInputs, componentInput => {
+            const COMPONENT_INPUT_FLAG_IS_ACTION = 1 << 0;
+            const COMPONENT_INPUT_FLAG_IS_OPTIONAL = 1 << 1;
+
+            dataBuffer.writeUint8(
+                (componentInput.isSequenceInput
+                    ? COMPONENT_INPUT_FLAG_IS_ACTION
+                    : 0) |
+                    (componentInput.isOptionalInput
+                        ? COMPONENT_INPUT_FLAG_IS_OPTIONAL
+                        : 0)
+            );
+        })
+    );
+
+    // widgetDataItems
     const widgetDataItems = [...flowState.flowWidgetDataIndexes.keys()];
     dataBuffer.writeArray(widgetDataItems, (_, i) => {
         const componentPropertyValue =
@@ -318,15 +325,6 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
             dataBuffer.writeInt16(-1);
         }
     });
-
-    // nInputValues
-    dataBuffer.writeFutureValue(
-        () => dataBuffer.writeUint16(0),
-        () =>
-            dataBuffer.writeUint16(
-                assets.getFlowState(flow).componentInputIndexes.size
-            )
-    );
 }
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {

@@ -38,7 +38,8 @@ import {
     getLabel,
     findPropertyByNameInObject,
     getAncestorOfType,
-    Message
+    Message,
+    propertyNotSetMessage
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/store";
 import {
@@ -264,17 +265,22 @@ export function outputIsOptionalIfAtLeastOneOutputExists(
     return false;
 }
 
+function isComponentInputOptional(
+    component: Component,
+    componentInput: ComponentInput
+) {
+    return typeof componentInput.isOptionalInput == "boolean"
+        ? componentInput.isOptionalInput
+        : componentInput.isOptionalInput(component, componentInput);
+}
+
 function isComponentOutputOptional(
     component: Component,
     componentOutput: ComponentOutput
 ) {
-    if (componentOutput.isOutputOptional == undefined) {
-        return false;
-    }
-
-    return typeof componentOutput.isOutputOptional == "boolean"
-        ? componentOutput.isOutputOptional
-        : componentOutput.isOutputOptional(component, componentOutput);
+    return typeof componentOutput.isOptionalOutput == "boolean"
+        ? componentOutput.isOptionalOutput
+        : componentOutput.isOptionalOutput(component, componentOutput);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -553,26 +559,38 @@ export function componentOutputUnique(
 export interface ComponentInput {
     name: string;
     type: ValueType;
+    isSequenceInput: boolean;
+    isOptionalInput:
+        | boolean
+        | ((component: Component, componentInput: ComponentInput) => boolean);
 
-    displayName?: string;
+    displayName?:
+        | ((component: Component, componentInput: ComponentInput) => string)
+        | string;
 }
 
 export interface ComponentOutput {
     name: string;
     type: ValueType;
+    isSequenceOutput: boolean;
+    isOptionalOutput:
+        | boolean
+        | ((component: Component, componentOutput: ComponentOutput) => boolean);
 
     displayName?:
         | ((component: Component, componentOutput: ComponentOutput) => string)
         | string;
-
-    isOutputOptional?:
-        | boolean
-        | ((component: Component, componentOutput: ComponentOutput) => boolean);
 }
 
 export class CustomInput extends EezObject implements ComponentInput {
     @observable name: string;
     @observable type: ValueType;
+    get isSequenceInput() {
+        return false;
+    }
+    get isOptionalInput() {
+        return false;
+    }
 
     static classInfo: ClassInfo = {
         properties: [
@@ -658,6 +676,12 @@ export class CustomInput extends EezObject implements ComponentInput {
 export class CustomOutput extends EezObject implements ComponentOutput {
     @observable name: string;
     @observable type: ValueType;
+    get isSequenceOutput() {
+        return false;
+    }
+    get isOptionalOutput() {
+        return false;
+    }
 
     static classInfo: ClassInfo = {
         properties: [
@@ -741,17 +765,66 @@ export class CustomOutput extends EezObject implements ComponentOutput {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getDisplayName(
-    component: Component,
-    inputOrOutput: ComponentInput | ComponentOutput
-) {
-    if (inputOrOutput.displayName) {
-        if (typeof inputOrOutput.displayName === "string") {
-            return inputOrOutput.displayName;
+export function getInputDisplayName(
+    component: Component | undefined,
+    componentInput: ComponentInput | string
+): string {
+    if (typeof componentInput == "string") {
+        if (componentInput == "@seqin") {
+            return "seqin";
         }
-        return inputOrOutput.displayName(component, inputOrOutput);
+        if (component) {
+            const input = component.inputs.find(
+                input => input.name == componentInput
+            );
+            if (input) {
+                return getInputDisplayName(component, input);
+            }
+        }
+        return componentInput;
+    } else if (componentInput.displayName) {
+        if (typeof componentInput.displayName === "string") {
+            return componentInput.displayName;
+        }
+        if (component) {
+            return componentInput.displayName(component, componentInput);
+        }
     }
-    return inputOrOutput.name;
+    if (componentInput.name == "@seqin") {
+        return "seqin";
+    }
+    return componentInput.name;
+}
+
+export function getOutputDisplayName(
+    component: Component | undefined,
+    componentOutput: ComponentOutput | string
+): string {
+    if (typeof componentOutput == "string") {
+        if (componentOutput == "@seqout") {
+            return "seqout";
+        }
+        if (component) {
+            const output = component.outputs.find(
+                output => output.name == componentOutput
+            );
+            if (output) {
+                return getOutputDisplayName(component, output);
+            }
+        }
+        return componentOutput;
+    } else if (componentOutput.displayName) {
+        if (typeof componentOutput.displayName === "string") {
+            return componentOutput.displayName;
+        }
+        if (component) {
+            return componentOutput.displayName(component, componentOutput);
+        }
+    }
+    if (componentOutput.name == "@seqout") {
+        return "seqout";
+    }
+    return componentOutput.name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1036,12 +1109,12 @@ export class Component extends EezObject {
 
             component.inputs.forEach(componentInput => {
                 if (
-                    componentInput.name != "@seqin" &&
                     !ProjectEditor.getFlow(component).connectionLines.find(
                         connectionLine =>
                             connectionLine.targetComponent === component &&
                             connectionLine.input === componentInput.name
-                    )
+                    ) &&
+                    !isComponentInputOptional(component, componentInput)
                 ) {
                     messages.push(
                         new Message(
@@ -1060,7 +1133,6 @@ export class Component extends EezObject {
                 ProjectEditor.getFlow(component).connectionLines;
             component.outputs.forEach(componentOutput => {
                 if (
-                    componentOutput.name != "@seqout" &&
                     !connectionLines.find(
                         connectionLine =>
                             connectionLine.sourceComponent === component &&
@@ -1112,6 +1184,16 @@ export class Component extends EezObject {
                                     )
                                 );
                             }
+                        } else if (
+                            !(component instanceof ProjectEditor.WidgetClass) &&
+                            !isPropertyHidden(component, propertyInfo)
+                        ) {
+                            messages.push(
+                                propertyNotSetMessage(
+                                    component,
+                                    propertyInfo.name
+                                )
+                            );
                         }
                     } else if (
                         isFlowProperty(
@@ -1140,6 +1222,16 @@ export class Component extends EezObject {
                                     )
                                 );
                             }
+                        } else if (
+                            !(component instanceof ProjectEditor.WidgetClass) &&
+                            !isPropertyHidden(component, propertyInfo)
+                        ) {
+                            messages.push(
+                                propertyNotSetMessage(
+                                    component,
+                                    propertyInfo.name
+                                )
+                            );
                         }
                     }
                 }
@@ -1283,7 +1375,9 @@ export class Component extends EezObject {
                 ) as PropertyInfo[]
         ).map(propertyInfo => ({
             name: propertyInfo.name,
-            type: propertyInfo.expressionType ?? "any"
+            type: propertyInfo.expressionType ?? "any",
+            isOptionalOutput: false,
+            isSequenceOutput: false
         }));
 
         const outputs: ComponentOutput[] = [
@@ -1295,7 +1389,9 @@ export class Component extends EezObject {
             outputs.push({
                 name: "@error",
                 displayName: "@Error",
-                type: "string"
+                type: "string",
+                isOptionalOutput: false,
+                isSequenceOutput: false
             });
         }
 
@@ -1922,7 +2018,7 @@ export class Widget extends Component {
                             className={classNames({
                                 seq: input.name === "@seqin"
                             })}
-                            title={getDisplayName(this, input)}
+                            title={getInputDisplayName(this, input)}
                         ></div>
                     ))}
                 </div>
@@ -1934,7 +2030,7 @@ export class Widget extends Component {
                             className={classNames({
                                 seq: output.name === "@seqout"
                             })}
-                            title={getDisplayName(this, output)}
+                            title={getOutputDisplayName(this, output)}
                         ></div>
                     ))}
                 </div>
@@ -1951,34 +2047,117 @@ export class Widget extends Component {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function ComponentInputSpan({
+    componentInput
+}: {
+    componentInput: ComponentInput;
+}) {
+    const className = classNames(
+        "input",
+        componentInput.isSequenceInput ? "seq-connection" : "data-connection",
+        {
+            optional: componentInput.isOptionalInput
+        }
+    );
+    return (
+        <span
+            className={className}
+            data-connection-input-id={componentInput.name}
+        ></span>
+    );
+}
+
+function ComponentOutputSpan({
+    componentOutput
+}: {
+    componentOutput: ComponentOutput;
+}) {
+    const className = classNames(
+        "output",
+        componentOutput.isSequenceOutput ? "seq-connection" : "data-connection",
+        {
+            optional: componentOutput.isOptionalOutput
+        }
+    );
+    return (
+        <span
+            className={className}
+            data-connection-output-id={componentOutput.name}
+        ></span>
+    );
+}
+
 function renderActionComponent(
     actionNode: ActionComponent,
     flowContext: IFlowContext
 ) {
     const classInfo = getClassInfo(actionNode);
 
-    const inputs = actionNode.inputs.filter(input => input.name != "@seqin");
-    const hasSeqIn = !(
-        actionNode.type == "StartActionComponent" ||
-        actionNode.type == "InputActionComponent" ||
-        actionNode.type == "ConstantActionComponent" ||
-        actionNode.type == "CommentActionComponent" ||
-        actionNode.type == "CatchErrorActionComponent"
-    );
+    //
+    let seqInputIndex = -1;
+    for (let i = 0; i < actionNode.inputs.length; i++) {
+        const input = actionNode.inputs[i];
+        if (input.isSequenceInput && input.name == "@seqin") {
+            if (seqInputIndex === -1) {
+                seqInputIndex = i;
+            } else {
+                seqInputIndex = -1;
+                break;
+            }
+        }
+    }
 
-    let outputs = actionNode.outputs.filter(output => output.name != "@seqout");
-    const hasSeqOut = !(
-        actionNode.type == "EndActionComponent" ||
-        actionNode.type == "OutputActionComponent" ||
-        actionNode.type == "ConstantActionComponent" ||
-        actionNode.type == "CommentActionComponent" ||
-        actionNode.type == "ErrorActionComponent"
-    );
+    let inputs: ComponentInput[];
+    if (seqInputIndex != -1) {
+        inputs = [
+            ...actionNode.inputs.slice(0, seqInputIndex),
+            ...actionNode.inputs.slice(seqInputIndex + 1)
+        ];
+    } else {
+        inputs = actionNode.inputs;
+    }
+
+    //
+    let errorOutputIndex = -1;
+    let seqOutputIndex = -1;
+    let i;
+    for (i = 0; i < actionNode.outputs.length; i++) {
+        const output = actionNode.outputs[i];
+        if (output.name === "@error") {
+            errorOutputIndex = i;
+        } else if (output.isSequenceOutput && output.name == "@seqout") {
+            if (seqOutputIndex === -1) {
+                seqOutputIndex = i;
+            } else {
+                seqOutputIndex = -1;
+                break;
+            }
+        }
+    }
+    for (; i < actionNode.outputs.length; i++) {
+        const output = actionNode.outputs[i];
+        if (output.name === "@error") {
+            errorOutputIndex = i;
+        }
+    }
+
+    let outputs: ComponentOutput[];
+    if (seqOutputIndex != -1) {
+        outputs = [
+            ...actionNode.outputs.slice(0, seqOutputIndex),
+            ...actionNode.outputs.slice(seqOutputIndex + 1)
+        ];
+    } else {
+        outputs = actionNode.outputs;
+    }
 
     // move @error output to end
-    let i = outputs.findIndex(output => output.name === "@error");
-    if (i !== -1) {
-        outputs = [...outputs.slice(0, i), ...outputs.slice(i + 1), outputs[i]];
+    if (errorOutputIndex !== -1) {
+        outputs = [
+            ...outputs.slice(0, errorOutputIndex),
+            ...outputs.slice(errorOutputIndex + 1),
+            outputs[errorOutputIndex]
+        ];
     }
 
     let titleStyle: React.CSSProperties | undefined;
@@ -1991,21 +2170,19 @@ function renderActionComponent(
     return (
         <>
             <div className="title-enclosure">
-                {hasSeqIn && (
-                    <span
-                        className="seq-connection input"
-                        data-connection-input-id={"@seqin"}
-                    ></span>
+                {seqInputIndex != -1 && (
+                    <ComponentInputSpan
+                        componentInput={actionNode.inputs[seqInputIndex]}
+                    />
                 )}
                 <div className="title" style={titleStyle}>
                     <span className="title-image">{classInfo.icon}</span>
                     <span className="title-text">{getLabel(actionNode)}</span>
                 </div>
-                {hasSeqOut && (
-                    <span
-                        className="seq-connection output"
-                        data-connection-output-id={"@seqout"}
-                    ></span>
+                {seqOutputIndex != -1 && (
+                    <ComponentOutputSpan
+                        componentOutput={actionNode.outputs[seqOutputIndex]}
+                    />
                 )}
             </div>
             <div className="content">
@@ -2016,11 +2193,8 @@ function renderActionComponent(
                                 className="connection-input-label"
                                 key={input.name}
                             >
-                                <span
-                                    className="data-connection input"
-                                    data-connection-input-id={input.name}
-                                ></span>
-                                {getDisplayName(actionNode, input)}
+                                <ComponentInputSpan componentInput={input} />
+                                {getInputDisplayName(actionNode, input)}
                             </div>
                         ))}
                     </div>
@@ -2038,11 +2212,8 @@ function renderActionComponent(
                                     }
                                 )}
                             >
-                                {getDisplayName(actionNode, output)}
-                                <span
-                                    className="data-connection output"
-                                    data-connection-output-id={output.name}
-                                ></span>
+                                {getOutputDisplayName(actionNode, output)}
+                                <ComponentOutputSpan componentOutput={output} />
                             </div>
                         ))}
                     </div>
@@ -2058,26 +2229,6 @@ export class ActionComponent extends Component {
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: []
     });
-
-    getInputs(): ComponentInput[] {
-        return [
-            {
-                name: "@seqin",
-                type: "null"
-            },
-            ...super.getInputs()
-        ];
-    }
-
-    getOutputs(): ComponentOutput[] {
-        return [
-            {
-                name: "@seqout",
-                type: "null"
-            },
-            ...super.getOutputs()
-        ];
-    }
 
     get autoSize(): AutoSize {
         return "both";
@@ -2138,7 +2289,9 @@ export class NotFoundComponent extends ActionComponent {
             )
             .map(connectionLine => ({
                 name: connectionLine.input,
-                type: "any"
+                type: "any",
+                isSequenceInput: false,
+                isOptionalInput: true
             }));
     }
 
@@ -2149,7 +2302,9 @@ export class NotFoundComponent extends ActionComponent {
             )
             .map(connectionLine => ({
                 name: connectionLine.output,
-                type: "any"
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: true
             }));
     }
 

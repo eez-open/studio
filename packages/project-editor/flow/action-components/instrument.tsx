@@ -32,7 +32,10 @@ import {
     buildAssignableExpression
 } from "project-editor/flow/expression/expression";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
-import { ObjectType } from "project-editor/features/variable/value-type";
+import {
+    ObjectType,
+    ValueType
+} from "project-editor/features/variable/value-type";
 import type {
     IDataContext,
     IVariable
@@ -981,6 +984,30 @@ export class SCPIActionComponent extends ActionComponent {
     @observable instrument: string;
     @observable scpi: string;
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
     async execute(flowState: FlowState) {
         const instrument = flowState.evalExpression(this, this.instrument);
         if (!instrument) {
@@ -1263,12 +1290,32 @@ export class SelectInstrumentActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "instrument",
-                type: "object:Instrument"
+                type: "object:Instrument",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -1322,12 +1369,32 @@ export class GetInstrumentActionComponent extends ActionComponent {
         componentPaletteGroupName: "Instrument"
     });
 
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "instrument",
-                type: "any"
+                type: "object:Instrument",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }
@@ -1376,6 +1443,30 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
     });
 
     @observable instrument: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
 
     async execute(flowState: FlowState) {
         const instrument = flowState.evalExpression(this, this.instrument);

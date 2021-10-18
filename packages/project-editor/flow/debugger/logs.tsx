@@ -5,52 +5,17 @@ import { guid } from "eez-studio-shared/guid";
 import { getLabel } from "project-editor/core/store";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import type { FlowState } from "project-editor/flow/runtime";
-import type { Component, Widget } from "project-editor/flow/component";
+import {
+    Component,
+    getInputDisplayName,
+    getOutputDisplayName,
+    Widget
+} from "project-editor/flow/component";
 import type { LogItemType } from "project-editor/flow/flow-interfaces";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const MAX_LOGS_ITEMS = 1000;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function getInputName(
-    component: Component | undefined,
-    inputName: string
-) {
-    if (component) {
-        const input = component.inputs.find(input => input.name == inputName);
-        if (input) {
-            if (input.displayName) {
-                if (typeof input.displayName === "string") {
-                    return input.displayName;
-                }
-            }
-            return input.name;
-        }
-    }
-    return inputName;
-}
-
-export function getOutputName(
-    component: Component | undefined,
-    outputName: string
-) {
-    if (component) {
-        const output = component.outputs.find(
-            output => output.name == outputName
-        );
-        if (output) {
-            if (output.displayName) {
-                if (typeof output.displayName === "string") {
-                    return output.displayName;
-                }
-            }
-            return output.name;
-        }
-    }
-    return outputName;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,11 +140,13 @@ export class OutputValueLogItem extends LogItem {
 
         return `Output value from [${
             this.output ||
-            getOutputName(
+            getOutputDisplayName(
                 this.connectionLine.sourceComponent,
                 this.connectionLine.output
             )
-        }] to [${getLabel(this.connectionLine.targetComponent!)}/${getInputName(
+        }] to [${getLabel(
+            this.connectionLine.targetComponent!
+        )}/${getInputDisplayName(
             this.connectionLine.targetComponent,
             this.connectionLine.input
         )}]: ${value}`;

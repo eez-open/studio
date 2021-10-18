@@ -30,7 +30,6 @@ import {
 import { attachCssToElement } from "eez-studio-shared/dom";
 import { Draggable } from "eez-studio-ui/draggable";
 import { IMouseHandler, PanMouseHandler } from "../flow-editor/mouse-handler";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -492,15 +491,9 @@ export class FlowViewer
     ensureSelectionVisible = () => {
         if (this.flowContext.viewState.selectedObjects.length > 0) {
             const selectedObjectRects =
-                this.flowContext.viewState.selectedObjects
-                    .filter(
-                        selectedObject =>
-                            selectedObject.object instanceof
-                            ProjectEditor.ComponentClass
-                    )
-                    .map(selectedObject =>
-                        getObjectBoundingRect(selectedObject)
-                    );
+                this.flowContext.viewState.selectedObjects.map(selectedObject =>
+                    getObjectBoundingRect(selectedObject)
+                );
 
             let selectionBoundingRectBuilder = new BoundingRectBuilder();
             for (let i = 0; i < selectedObjectRects.length; i++) {

@@ -23,7 +23,11 @@ import {
     findVariable
 } from "project-editor/features/variable/variable";
 import { Flow } from "project-editor/flow/flow";
-import { Component, Widget } from "project-editor/flow/component";
+import type {
+    Component,
+    ComponentInput,
+    Widget
+} from "project-editor/flow/component";
 
 import { buildGuiDocumentData } from "project-editor/features/page/build/pages";
 import { buildGuiStylesData } from "project-editor/features/page/build/styles";
@@ -62,7 +66,9 @@ export class Assets {
         {
             index: number;
             componentIndexes: Map<Component, number>;
+
             componentInputIndexes: Map<string, number>;
+            commponentInputs: ComponentInput[];
 
             flowWidgetDataIndexes: Map<string, number>;
             flowWidgetDataIndexToComponentPropertyValue: Map<
@@ -532,6 +538,7 @@ export class Assets {
                 index: this.flowStates.size,
                 componentIndexes: new Map<Component, number>(),
                 componentInputIndexes: new Map<string, number>(),
+                commponentInputs: [],
                 flowWidgetDataIndexes: new Map<string, number>(),
                 flowWidgetDataIndexToComponentPropertyValue: new Map<
                     number,
@@ -591,6 +598,9 @@ export class Assets {
         if (index == undefined) {
             index = flowState.componentInputIndexes.size;
             flowState.componentInputIndexes.set(path, index);
+            flowState.commponentInputs.push(
+                component.inputs.find(input => input.name == inputName)!
+            );
         }
         return index;
     }

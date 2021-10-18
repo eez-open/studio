@@ -4414,94 +4414,116 @@ button.EezStudio_Action {
     cursor: default;
 }
 
-.seq-connection {
-    @d: 4px;
+////////////////////////////////////////////////////////////////////////////////
 
-    &.input,
-    &.output {
-        position: absolute;
-        width: 29px;
-        height: 100%;
+.eez-action-component {
+    .seq-connection,
+    .data-connection {
+        @d: 6px;
 
-        &:before {
-            content: "";
+        &.input,
+        &.output {
             position: absolute;
-            display: block;
-            top: calc(50% - @d / 2);
-            width: @d;
-            height: @d;
-            //border-radius: @d / 2;
-            background-color: @seqConnectionLineColor;
+            width: 29px;
+            height: 100%;
+
+            &:before {
+                content: "";
+                position: absolute;
+                display: block;
+                top: calc(50% - @d / 2);
+                width: @d;
+                height: @d;
+                //border-radius: @d / 2;
+            }
+        }
+
+        &.input {
+            &:before {
+                left: -@d / 2;
+            }
+        }
+
+        &.output {
+            &:before {
+                right: -@d / 2;
+            }
         }
     }
 
-    &.input {
-        left: 0;
-        &:before {
-            left: -@d / 2;
+    .seq-connection {
+        &.input.optional,
+        &.output.optional {
+            &:before {
+                border: 1px solid @seqConnectionLineColor;
+            }
+        }
+
+        &.input:not(.optional),
+        &.output:not(.optional) {
+            &:before {
+                background-color: @seqConnectionLineColor;
+            }
+        }
+
+        &.input {
+            left: 0;
+        }
+
+        &.output {
+            right: 0;
         }
     }
 
-    &.output {
-        right: 0;
-        &:before {
-            right: -@d / 2;
+    .data-connection {
+        &.input.optional,
+        &.output.optional {
+            &:before {
+                border: 1px solid @connectionLineColor;
+            }
         }
-    }
-}
 
-.data-connection {
-    @d: 4px;
+        &.input:not(.optional),
+        &.output:not(.optional) {
+            &:before {
+                background-color: @connectionLineColor;
+            }
+        }
 
-    &.input,
-    &.output {
-        position: absolute;
-        width: 100%;
-        height: 100%;
+        &.input {
+            left: -2px;
+        }
 
-        &:before {
-            content: "";
-            position: absolute;
-            display: block;
-            top: calc(50% - @d / 2);
-            width: @d;
-            height: @d;
-            //border-radius: @d / 2;
-            background-color: @connectionLineColor;
+        &.output {
+            right: -2px;
         }
     }
 
-    &.input {
-        left: -2px;
-        &:before {
-            left: -@d / 2;
-        }
+    .connection-input-label,
+    .connection-output-label {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        padding: 2px 5px;
+        margin-bottom: 2px;
+
+        white-space: nowrap;
+
+        position: relative;
     }
 
-    &.output {
-        right: -2px;
-        &:before {
-            right: -@d / 2;
-        }
+    .connection-output-label {
+        justify-content: flex-end;
     }
-}
 
-.connection-input-label,
-.connection-output-label {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    [data-connection-output-id].error {
+        color: @errorColor;
+    }
 
-    padding: 2px 5px;
-    margin-bottom: 2px;
-
-    white-space: nowrap;
-
-    position: relative;
-}
-
-.connection-output-label {
-    justify-content: flex-end;
+    .title-enclosure {
+        min-width: 87px;
+    }
 }
 
 .eez-widget-component {
@@ -4556,16 +4578,6 @@ button.EezStudio_Action {
     [data-connection-input-id].seq,
     [data-connection-output-id].seq {
         background-color: @seqConnectionLineColor;
-    }
-}
-
-.eez-action-component {
-    [data-connection-output-id].error {
-        color: @errorColor;
-    }
-
-    .title-enclosure {
-        min-width: 87px;
     }
 }
 

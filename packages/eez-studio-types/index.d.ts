@@ -92,11 +92,27 @@ type ValueType =
 interface ComponentInput {
     name: string;
     type: ValueType;
+    isSequenceInput: boolean;
+    isOptionalInput:
+        | boolean
+        | ((component: Component, componentInput: ComponentInput) => boolean);
+
+    displayName?:
+        | ((component: Component, componentInput: ComponentInput) => string)
+        | string;
 }
 
 interface ComponentOutput {
     name: string;
     type: ValueType;
+    isSequenceOutput: boolean;
+    isOptionalOutput:
+        | boolean
+        | ((component: Component, componentOutput: ComponentOutput) => boolean);
+
+    displayName?:
+        | ((component: Component, componentOutput: ComponentOutput) => string)
+        | string;
 }
 
 declare class Component {

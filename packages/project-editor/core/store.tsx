@@ -295,7 +295,12 @@ class NavigationStore implements INavigationStore {
         }
     }
 
-    showObject(objectToShow: IEezObject) {
+    showObject(
+        objectToShow: IEezObject,
+        options?: {
+            selectInEditor?: boolean;
+        }
+    ) {
         this.setSelection([objectToShow]);
 
         for (
@@ -303,15 +308,24 @@ class NavigationStore implements INavigationStore {
             object;
             object = getParent(object)
         ) {
-            if (getEditorComponent(object)) {
+            const selectInEditor = !options || (options.selectInEditor ?? true);
+
+            if (selectInEditor && getEditorComponent(object)) {
                 const editor =
                     this.DocumentStore.editorsStore.openEditor(object);
-                if (editor && editor.state) {
-                    editor.state.selectObject(
-                        isValue(objectToShow)
-                            ? getParent(objectToShow)
-                            : objectToShow
-                    );
+                if (editor) {
+                    const editorState = editor.state;
+                    if (editorState) {
+                        setTimeout(
+                            () =>
+                                editorState.selectObject(
+                                    isValue(objectToShow)
+                                        ? getParent(objectToShow)
+                                        : objectToShow
+                                ),
+                            50
+                        );
+                    }
                 }
                 break;
             }

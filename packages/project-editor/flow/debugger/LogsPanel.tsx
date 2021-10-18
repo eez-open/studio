@@ -158,7 +158,9 @@ class LogItemRow extends React.Component<{
         if (objects.length > 0) {
             // navigate to the first object,
             // just to make sure that proper editor is opened
-            this.context.navigationStore.showObject(objects[0]);
+            this.context.navigationStore.showObject(objects[0], {
+                selectInEditor: false
+            });
 
             const editorState = this.context.editorsStore.activeEditor?.state;
             if (editorState instanceof FlowTabState) {

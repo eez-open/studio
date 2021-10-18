@@ -21,7 +21,7 @@ import {
 } from "project-editor/features/variable/value-type";
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import type { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
-import { getInputName } from "project-editor/flow/debugger/logs";
+import { getInputDisplayName } from "project-editor/flow/component";
 import { MaximizeIcon } from "./Icons";
 import { evalExpressionGetValueType } from "../expression/expression";
 import { IconAction } from "eez-studio-ui/action";
@@ -458,7 +458,7 @@ class WatchTable extends React.Component<{
             return observable({
                 id: input.name,
 
-                name: getInputName(componentState.component, input.name),
+                name: getInputDisplayName(componentState.component, input.name),
                 value: this.getValueLabel(value, null),
                 type: typeof value,
 

@@ -307,6 +307,10 @@ export abstract class RuntimeBase {
             connectionLine
         });
         flowState.numActiveComponents++;
+
+        if (this.state == State.PAUSED) {
+            this.showNextQueueTask();
+        }
     }
 
     removeQueueTasksForFlowState(flowState: FlowState) {
@@ -354,20 +358,24 @@ export abstract class RuntimeBase {
     showSelectedFlowState() {
         const flowState = this.selectedFlowState;
         if (flowState) {
-            this.DocumentStore.navigationStore.showObject(flowState.flow);
+            this.DocumentStore.navigationStore.showObject(flowState.flow, {
+                selectInEditor: false
+            });
 
             const editorState =
                 this.DocumentStore.editorsStore.activeEditor?.state;
             if (editorState instanceof FlowTabState) {
                 setTimeout(() => {
                     runInAction(() => (editorState.flowState = flowState));
-                }, 0);
+                }, 50);
             }
         }
     }
 
     showComponent(component: Component) {
-        this.DocumentStore.navigationStore.showObject(component);
+        this.DocumentStore.navigationStore.showObject(component, {
+            selectInEditor: false
+        });
 
         const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
         if (editorState instanceof FlowTabState) {
@@ -392,7 +400,9 @@ export abstract class RuntimeBase {
 
         // navigate to the first object,
         // just to make sure that proper editor is opened
-        this.DocumentStore.navigationStore.showObject(objects[0]);
+        this.DocumentStore.navigationStore.showObject(objects[0], {
+            selectInEditor: false
+        });
 
         const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
         if (editorState instanceof FlowTabState) {
@@ -552,7 +562,7 @@ export class FlowState {
         } else if (result.isFlowValue()) {
             runInAction(() => (result.object[result.name] = value));
         } else {
-            throw "";
+            throw "Not an assignable expression";
         }
     }
 
@@ -743,6 +753,31 @@ export class ComponentState {
         this.inputsData.set(input, inputData);
     }
 
+    get connectedSequenceInputsSet() {
+        const inputConnections = new Set<string>();
+        for (const connectionLine of this.flowState.flow.connectionLines) {
+            if (
+                connectionLine.targetComponent == this.component &&
+                this.sequenceInputs.find(
+                    input => input.name == connectionLine.input
+                )
+            ) {
+                inputConnections.add(connectionLine.input);
+            }
+        }
+        return inputConnections;
+    }
+
+    get sequenceInputs() {
+        return this.component.inputs.filter(input => input.isSequenceInput);
+    }
+
+    get mandatoryDataInputs() {
+        return this.component.inputs.filter(
+            input => !input.isSequenceInput && !input.isOptionalInput
+        );
+    }
+
     isReadyToRun() {
         if (getClassInfo(this.component).isFlowExecutableComponent === false) {
             return false;
@@ -756,21 +791,18 @@ export class ComponentState {
             return !!this.inputsData.get("message");
         }
 
+        // if there is any connected sequence input then at least one should be filled
         if (
-            this.flowState.flow.connectionLines.find(
-                connectionLine =>
-                    connectionLine.targetComponent == this.component &&
-                    connectionLine.input === "@seqin"
-            ) &&
-            !this.inputsData.has("@seqin")
+            this.connectedSequenceInputsSet.size > 0 &&
+            !this.sequenceInputs.find(input => this.inputsData.has(input.name))
         ) {
             return false;
         }
 
+        // all mandatory data inputs should be filled
         if (
-            this.component.inputs.find(
-                input =>
-                    input.name != "@seqin" && !this.inputsData.has(input.name)
+            this.mandatoryDataInputs.find(
+                input => !this.inputsData.has(input.name)
             )
         ) {
             return false;
@@ -914,7 +946,11 @@ export class ComponentState {
             this.flowState.propagateValue(this.component, "@seqout", null);
         }
 
-        this.inputsData.delete("@seqin");
+        this.component.inputs.forEach(input => {
+            if (input.isSequenceInput) {
+                this.inputsData.delete(input.name);
+            }
+        });
     }
 
     finish() {

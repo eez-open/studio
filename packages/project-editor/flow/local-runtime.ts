@@ -2,9 +2,7 @@ import fs from "fs";
 import { action, computed, observable, runInAction, toJS } from "mobx";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { findAction } from "project-editor/features/action/action";
-import { FlowTabState } from "project-editor/flow/flow";
 import { Component, Widget } from "project-editor/flow/component";
-import { IEezObject } from "project-editor/core/object";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { isWebStudio } from "eez-studio-shared/util-electron";
 import {
@@ -360,11 +358,7 @@ export class LocalRuntime extends RuntimeBase {
                     this.settings = {};
                 }
             });
-        } catch (err) {
-            notification.error(
-                "Failed to load previous runtime settings: " + err
-            );
-        }
+        } catch (err) {}
     }
 
     async saveSettings() {
@@ -387,67 +381,6 @@ export class LocalRuntime extends RuntimeBase {
             );
         } catch (err) {
             notification.error("Failed to save runtime settings: " + err);
-        }
-    }
-
-    selectQueueTask(queueTask: QueueTask | undefined) {
-        this.selectedQueueTask = queueTask;
-        if (queueTask) {
-            this.selectedFlowState = queueTask.flowState;
-            this.showSelectedFlowState();
-        }
-    }
-
-    showSelectedFlowState() {
-        const flowState = this.selectedFlowState;
-        if (flowState) {
-            this.DocumentStore.navigationStore.showObject(flowState.flow);
-
-            const editorState =
-                this.DocumentStore.editorsStore.activeEditor?.state;
-            if (editorState instanceof FlowTabState) {
-                setTimeout(() => {
-                    runInAction(() => (editorState.flowState = flowState));
-                }, 0);
-            }
-        }
-    }
-
-    showComponent(component: Component) {
-        this.DocumentStore.navigationStore.showObject(component);
-
-        const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
-        if (editorState instanceof FlowTabState) {
-            editorState.ensureSelectionVisible();
-        }
-    }
-
-    showQueueTask(queueTask: QueueTask) {
-        const objects: IEezObject[] = [];
-
-        if (
-            queueTask.connectionLine &&
-            queueTask.connectionLine.sourceComponent &&
-            queueTask.connectionLine.targetComponent
-        ) {
-            objects.push(queueTask.connectionLine.sourceComponent);
-            objects.push(queueTask.connectionLine);
-            objects.push(queueTask.connectionLine.targetComponent);
-        } else {
-            objects.push(queueTask.component);
-        }
-
-        // navigate to the first object,
-        // just to make sure that proper editor is opened
-        this.DocumentStore.navigationStore.showObject(objects[0]);
-
-        const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
-        if (editorState instanceof FlowTabState) {
-            // select other object in the same editor
-            editorState.selectObjects(objects);
-
-            // ensure objects are visible on the screen
-            editorState.ensureSelectionVisible();
         }
     }
 

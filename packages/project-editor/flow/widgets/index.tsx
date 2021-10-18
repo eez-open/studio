@@ -1156,7 +1156,9 @@ export class LayoutViewWidget extends EmbeddedWidget {
             .filter(component => component instanceof StartActionComponent)
             .map(() => ({
                 name: "@seqin",
-                type: "null"
+                type: "null",
+                isSequenceInput: true,
+                isOptionalInput: true
             }));
 
         const inputComponents: ComponentInput[] = page.components
@@ -1165,7 +1167,9 @@ export class LayoutViewWidget extends EmbeddedWidget {
             .map((inputActionComponent: InputActionComponent) => ({
                 name: inputActionComponent.wireID,
                 displayName: inputActionComponent.name,
-                type: "any"
+                type: "any",
+                isSequenceInput: false,
+                isOptionalInput: false
             }));
 
         return [...super.getInputs(), ...startComponents, ...inputComponents];
@@ -1181,7 +1185,9 @@ export class LayoutViewWidget extends EmbeddedWidget {
             .filter(component => component instanceof EndActionComponent)
             .map(() => ({
                 name: "@seqout",
-                type: "any"
+                type: "any",
+                isSequenceOutput: true,
+                isOptionalOutput: true
             }));
 
         const outputComponents: ComponentOutput[] = page.components
@@ -1190,7 +1196,9 @@ export class LayoutViewWidget extends EmbeddedWidget {
             .map((outputActionComponent: OutputActionComponent) => ({
                 name: outputActionComponent.wireID,
                 displayName: outputActionComponent.name,
-                type: "any"
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }));
 
         return [...super.getOutputs(), ...endComponents, ...outputComponents];
@@ -4872,7 +4880,9 @@ export class TextInputWidget extends Widget {
             ...super.getOutputs(),
             {
                 name: "value",
-                type: "string"
+                type: "string",
+                isSequenceOutput: false,
+                isOptionalOutput: false
             }
         ];
     }

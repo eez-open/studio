@@ -72,8 +72,8 @@ export function calcComponentGeometry(
     el: HTMLElement,
     flowContext: IFlowContext
 ): ComponentGeometry {
-    const dInput = component instanceof ProjectEditor.WidgetClass ? 2 : 4;
-    const dOutput = component instanceof ProjectEditor.WidgetClass ? 0 : 4;
+    const dInput = component instanceof ProjectEditor.WidgetClass ? 2 : 6;
+    const dOutput = component instanceof ProjectEditor.WidgetClass ? 0 : 6;
 
     const transform = flowContext.viewState.transform;
 
@@ -213,6 +213,20 @@ export const ComponentEnclosure = observer(
                 FLOW_ITERATOR_INDEX_VARIABLE
             );
         }
+
+        React.useEffect(() => {
+            const el = elRef.current;
+            if (el && listIndex == 0) {
+                const geometry = calcComponentGeometry(
+                    component,
+                    el,
+                    flowContext
+                );
+                runInAction(() => {
+                    component.geometry = geometry;
+                });
+            }
+        });
 
         React.useEffect(() => {
             const el = elRef.current;
