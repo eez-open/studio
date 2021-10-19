@@ -43,6 +43,7 @@ import type {
 
 import * as notification from "eez-studio-ui/notification";
 import { humanize } from "eez-studio-shared/string";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 // When passed quoted string as '"str"' it will return unquoted string as 'str'.
 // Returns undefined if passed value is not a valid string.
@@ -909,14 +910,17 @@ export class SCPIActionComponent extends ActionComponent {
                 {
                     name: "instrument",
                     type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (component: SCPIActionComponent) =>
+                        ProjectEditor.getProject(component).isAppletProject
                 },
                 "object:Instrument"
             ),
             {
                 name: "scpi",
                 type: PropertyType.MultilineText,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                monospaceFont: true
             }
         ],
         beforeLoadHook: (component: SCPIActionComponent, jsObject: any) => {

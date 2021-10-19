@@ -67,7 +67,6 @@ const NOT_NAMED_LABEL = "<not named>";
 export const LeftArrow = () => (
     <div style={{ marginTop: -2, padding: "0 8px" }}>
         <svg
-            xmlns="http://www.w3.org/2000/svg"
             width="20"
             height="20"
             viewBox="0 0 24 24"
@@ -87,7 +86,6 @@ export const LeftArrow = () => (
 
 export const RightArrow = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
         width="24"
         height="24"
         viewBox="0 0 24 24"
@@ -111,10 +109,7 @@ export class StartActionComponent extends ActionComponent {
         flowComponentId: 1001,
 
         icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 10.699999809265137 12"
-            >
+            <svg viewBox="0 0 10.699999809265137 12">
                 <path d="M.5 12c-.3 0-.5-.2-.5-.5V.5C0 .2.2 0 .5 0s.5.2.5.5v11c0 .3-.2.5-.5.5zm10.2-6L4 2v8l6.7-4z" />
             </svg>
         ),
@@ -143,10 +138,7 @@ export class EndActionComponent extends ActionComponent {
         flowComponentId: 1002,
 
         icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 10.699999809265137 12"
-            >
+            <svg viewBox="0 0 10.699999809265137 12">
                 <path d="M6.7 6L0 2v8l6.7-4zm3.5 6c-.3 0-.5-.2-.5-.5V.5c0-.3.2-.5.5-.5s.5.2.5.5v11c0 .3-.3.5-.5.5z" />
             </svg>
         ),
@@ -201,7 +193,6 @@ export class InputActionComponent extends ActionComponent {
         },
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
                 width="24"
                 height="24"
                 viewBox="0 0 24 24"
@@ -261,7 +252,6 @@ export class OutputActionComponent extends ActionComponent {
         },
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
                 width="24"
                 height="24"
                 viewBox="0 0 24 24"
@@ -321,101 +311,6 @@ registerClass("OutputActionComponent", OutputActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GetVariableActionComponent extends ActionComponent {
-    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: 1005,
-        properties: [
-            makeExpressionProperty(
-                {
-                    name: "variable",
-                    type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
-                },
-                "any"
-            )
-        ],
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M5 4c-2.5 5 -2.5 10 0 16m14 -16c2.5 5 2.5 10 0 16m-10 -11h1c1 0 1 1 2.016 3.527c.984 2.473 .984 3.473 1.984 3.473h1"></path>
-                <path d="M8 16c1.5 0 3 -2 4 -3.5s2.5 -3.5 4 -3.5"></path>
-            </svg>
-        ),
-        componentHeaderColor: "#A6BBCF"
-    });
-
-    @observable variable: string;
-
-    getInputs() {
-        return [
-            ...super.getInputs(),
-            {
-                name: "@seqin",
-                type: "null" as ValueType,
-                isSequenceInput: true,
-                isOptionalInput: true
-            }
-        ];
-    }
-
-    getOutputs(): ComponentOutput[] {
-        return [
-            ...super.getOutputs(),
-            {
-                name: "@seqout",
-                type: "null" as ValueType,
-                isSequenceOutput: true,
-                isOptionalOutput: true
-            },
-            {
-                name: "variable",
-                displayName: (component: GetVariableActionComponent) =>
-                    component.variable,
-                type: "any",
-                isSequenceOutput: false,
-                isOptionalOutput: false
-            }
-        ];
-    }
-
-    async execute(
-        flowState: FlowState,
-        dispose: (() => void) | undefined
-    ): Promise<(() => void) | undefined | boolean> {
-        let lastValue = flowState.evalExpression(this, this.variable);
-
-        flowState.propagateValue(this, "variable", lastValue);
-
-        if (dispose) {
-            return dispose;
-        }
-
-        return reaction(
-            () => flowState.evalExpression(this, this.variable),
-            value => {
-                if (value !== lastValue) {
-                    lastValue = value;
-                    flowState.propagateValue(this, "variable", value);
-                }
-            }
-        );
-    }
-}
-
-registerClass("GetVariableActionComponent", GetVariableActionComponent);
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class EvalExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: 1006,
@@ -432,7 +327,7 @@ export class EvalExprActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1664 1792">
+            <svg viewBox="0 0 1664 1792">
                 <path d="M384 1536q0-53-37.5-90.5T256 1408t-90.5 37.5T128 1536t37.5 90.5T256 1664t90.5-37.5T384 1536zm384 0q0-53-37.5-90.5T640 1408t-90.5 37.5T512 1536t37.5 90.5T640 1664t90.5-37.5T768 1536zm-384-384q0-53-37.5-90.5T256 1024t-90.5 37.5T128 1152t37.5 90.5T256 1280t90.5-37.5T384 1152zm768 384q0-53-37.5-90.5T1024 1408t-90.5 37.5T896 1536t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm-384-384q0-53-37.5-90.5T640 1024t-90.5 37.5T512 1152t37.5 90.5T640 1280t90.5-37.5T768 1152zM384 768q0-53-37.5-90.5T256 640t-90.5 37.5T128 768t37.5 90.5T256 896t90.5-37.5T384 768zm768 384q0-53-37.5-90.5T1024 1024t-90.5 37.5T896 1152t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zM768 768q0-53-37.5-90.5T640 640t-90.5 37.5T512 768t37.5 90.5T640 896t90.5-37.5T768 768zm768 768v-384q0-52-38-90t-90-38-90 38-38 90v384q0 52 38 90t90 38 90-38 38-90zm-384-768q0-53-37.5-90.5T1024 640t-90.5 37.5T896 768t37.5 90.5T1024 896t90.5-37.5T1152 768zm384-320V192q0-26-19-45t-45-19H192q-26 0-45 19t-19 45v256q0 26 19 45t45 19h1280q26 0 45-19t19-45zm0 320q0-53-37.5-90.5T1408 640t-90.5 37.5T1280 768t37.5 90.5T1408 896t90.5-37.5T1536 768zm128-640v1536q0 52-38 90t-90 38H128q-52 0-90-38t-38-90V128q0-52 38-90t90-38h1408q52 0 90 38t38 90z" />
             </svg>
         ),
@@ -499,7 +394,8 @@ export class EvalJSExprActionComponent extends ActionComponent {
             {
                 name: "expression",
                 type: PropertyType.MultilineText,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                monospaceFont: true
             }
         ],
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -645,9 +541,6 @@ export class SetVariableActionComponent extends ActionComponent {
         ],
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -718,6 +611,98 @@ registerClass("SetVariableActionComponent", SetVariableActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class WatchVariableActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1005,
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "variable",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
+        ],
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <circle cx="12" cy="12" r="2"></circle>
+                <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7"></path>
+            </svg>
+        ),
+        componentHeaderColor: "#A6BBCF"
+    });
+
+    @observable variable: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
+                name: "variable",
+                displayName: (component: WatchVariableActionComponent) =>
+                    component.variable,
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
+    async execute(
+        flowState: FlowState,
+        dispose: (() => void) | undefined
+    ): Promise<(() => void) | undefined | boolean> {
+        let lastValue = flowState.evalExpression(this, this.variable);
+
+        flowState.propagateValue(this, "variable", lastValue);
+
+        if (dispose) {
+            return dispose;
+        }
+
+        return reaction(
+            () => flowState.evalExpression(this, this.variable),
+            value => {
+                if (value !== lastValue) {
+                    lastValue = value;
+                    flowState.propagateValue(this, "variable", value);
+                }
+            }
+        );
+    }
+}
+
+registerClass("WatchVariableActionComponent", WatchVariableActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 class SwitchTest extends EezObject {
     @observable condition: string;
     @observable outputName: string;
@@ -777,9 +762,6 @@ export class SwitchActionComponent extends ActionComponent {
         ],
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -925,9 +907,6 @@ export class CompareActionComponent extends ActionComponent {
         ],
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -1075,9 +1054,6 @@ export class IsTrueActionComponent extends ActionComponent {
         ],
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -1183,9 +1159,6 @@ export class ConstantActionComponent extends ActionComponent {
         ],
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -1270,7 +1243,7 @@ registerClass("ConstantActionComponent", ConstantActionComponent);
 export class DateNowActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 40">
+            <svg viewBox="0 0 36 40">
                 <path d="M12 18H8v4h4v-4zm8 0h-4v4h4v-4zm8 0h-4v4h4v-4zm4-14h-2V0h-4v4H10V0H6v4H4C1.78 4 .02 5.8.02 8L0 36c0 2.2 1.78 4 4 4h28c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4zm0 32H4V14h28v22z" />
             </svg>
         ),
@@ -1312,7 +1285,7 @@ export class ReadSettingActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1179">
+            <svg viewBox="0 0 1100 1179">
                 <path d="M135 156L277 14q14-14 35-14t35 14l77 77-212 212-77-76q-14-15-14-36t14-35zm520 168l210-210q14-14 24.5-10t10.5 25l-2 599q-1 20-15.5 35T847 778l-597 1q-21 0-25-10.5t10-24.5l208-208-154-155 212-212zM50 879h1000q21 0 35.5 14.5T1100 929v250H0V929q0-21 14.5-35.5T50 879zm850 100v50h100v-50H900z" />
             </svg>
         ),
@@ -1402,7 +1375,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1200">
+            <svg viewBox="0 0 1100 1200">
                 <path d="M350 0l599 2q20 1 35 15.5T999 53l1 597q0 21-10.5 25T965 665L757 457 602 611 390 399l155-154L335 35q-14-14-10-24.5T350 0zm174 688l-76 77q-15 14-36 14t-35-14L235 623q-14-14-14-35t14-35l77-77zM50 900h1000q21 0 35.5 14.5T1100 950v250H0V950q0-21 14.5-35.5T50 900zm850 100v50h100v-50H900z" />
             </svg>
         ),
@@ -1476,7 +1449,7 @@ export class LogActionComponent extends ActionComponent {
             }
         },
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 448">
+            <svg viewBox="0 0 448 448">
                 <path d="M223.988 0C128.473 0 46.934 59.804 14.727 144h34.639c9.396-20.484 22.457-39.35 38.868-55.762C124.497 51.973 172.709 32 223.988 32c51.286 0 99.504 19.973 135.771 56.239C396.027 124.505 416 172.719 416 224c0 51.285-19.973 99.501-56.239 135.765C323.494 396.029 275.275 416 223.988 416c-51.281 0-99.493-19.971-135.755-56.234C71.821 343.354 58.76 324.486 49.362 304H14.725c32.206 84.201 113.746 144 209.264 144C347.703 448 448 347.715 448 224 448 100.298 347.703 0 223.988 0z" />
                 <path d="M174.863 291.883l22.627 22.627L288 224l-90.51-90.51-22.628 22.628L226.745 208H0v32h226.745z" />
             </svg>
@@ -1553,9 +1526,6 @@ export class CallActionActionComponent extends ActionComponent {
         },
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -1765,7 +1735,7 @@ export class DelayActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+            <svg viewBox="0 0 10 10">
                 <path d="M7.5 5.1c0 .3-.2.5-.5.5H5c-.3 0-.5-.2-.5-.5v-2c0-.3.2-.5.5-.5s.5.2.5.5v1.5H7c.2 0 .5.3.5.5zM10 5c0-2.8-2.2-5-5-5S0 2.2 0 5s2.2 5 5 5 5-2.2 5-5zM9 5c0 2.2-1.8 4-4 4S1 7.2 1 5s1.8-4 4-4 4 1.8 4 4z" />
             </svg>
         ),
@@ -1833,7 +1803,7 @@ export class ErrorActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+            <svg viewBox="0 0 40 40">
                 <path d="M18 26h4v4h-4zm0-16h4v12h-4zm1.99-10C8.94 0 0 8.95 0 20s8.94 20 19.99 20S40 31.05 40 20 31.04 0 19.99 0zM20 36c-8.84 0-16-7.16-16-16S11.16 4 20 4s16 7.16 16 16-7.16 16-16 16z" />
             </svg>
         ),
@@ -1881,7 +1851,7 @@ export class CatchErrorActionComponent extends ActionComponent {
         flowComponentId: 1016,
         properties: [],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+            <svg viewBox="0 0 40 40">
                 <path d="M20 0C8.96 0 0 8.95 0 20s8.96 20 20 20 20-8.95 20-20S31.04 0 20 0zm2 30h-4v-4h4v4zm0-8h-4V10h4v12z" />
             </svg>
         ),
@@ -1937,9 +1907,6 @@ export class CounterActionComponent extends ActionComponent {
         ],
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -2067,9 +2034,6 @@ export class LoopActionComponent extends ActionComponent {
         ],
         icon: (
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -2199,7 +2163,7 @@ export class ShowPageActionComponent extends ActionComponent {
             }
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+            <svg viewBox="0 0 36 36">
                 <path d="M0 20h16V0H0v20zm0 16h16V24H0v12zm20 0h16V16H20v20zm0-36v12h16V0H20z" />
             </svg>
         ),
@@ -2358,7 +2322,7 @@ export class CommentActionComponent extends ActionComponent {
             }
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 13.5">
+            <svg viewBox="0 0 14 13.5">
                 <path d="M13 0H1C.45 0 0 .45 0 1v8c0 .55.45 1 1 1h2v3.5L6.5 10H13c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm0 9H6l-2 2V9H1V1h12v8z" />
             </svg>
         ),
