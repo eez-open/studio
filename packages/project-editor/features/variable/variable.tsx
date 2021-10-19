@@ -180,10 +180,14 @@ export class Variable extends EezObject {
                 values: {},
                 dialogContext: ProjectEditor.getProject(parent)
             }).then(result => {
+                let persistent =
+                    !ProjectEditor.getFlow(parent) &&
+                    isObjectType(result.values.type);
                 return Promise.resolve({
                     name: result.values.name,
                     type: result.values.type,
-                    defaultValue: result.values.defaultValue
+                    defaultValue: result.values.defaultValue,
+                    persistent
                 });
             });
         },
