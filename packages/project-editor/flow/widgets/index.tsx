@@ -4833,7 +4833,7 @@ export class TextInputWidget extends Widget {
             makeExpressionProperty(
                 {
                     name: "value",
-                    type: PropertyType.String
+                    type: PropertyType.MultilineText
                 },
                 "string"
             )

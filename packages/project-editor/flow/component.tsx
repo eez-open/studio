@@ -74,6 +74,7 @@ import type {
 import {
     checkAssignableExpression,
     checkExpression,
+    evalConstantExpression,
     parseIdentifier
 } from "project-editor/flow/expression/expression";
 import {
@@ -1171,7 +1172,16 @@ export class Component extends EezObject {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
                             try {
-                                checkExpression(component, value, false);
+                                if (
+                                    propertyInfo.expressionIsConstant === true
+                                ) {
+                                    evalConstantExpression(
+                                        DocumentStore.project,
+                                        value
+                                    );
+                                } else {
+                                    checkExpression(component, value, false);
+                                }
                             } catch (err) {
                                 messages.push(
                                     new Message(

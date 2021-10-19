@@ -908,7 +908,7 @@ export class SCPIActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "instrument",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "object:Instrument"
@@ -1354,7 +1354,7 @@ export class GetInstrumentActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "id",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "string"
@@ -1417,7 +1417,7 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "instrument",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "object:Instrument"

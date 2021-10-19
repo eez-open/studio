@@ -193,6 +193,7 @@ export interface PropertyInfo {
               DocumentStore: DocumentStoreClass
           ) => "input" | "output" | "assignable");
     expressionType?: ValueType;
+    expressionIsConstant?: boolean;
     isOutputOptional?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);

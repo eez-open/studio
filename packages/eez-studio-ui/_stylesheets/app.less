@@ -3317,29 +3317,6 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_SetVariableBody {
-    display: flex;
-    align-items: baseline;
-    pre.single {
-        flex-grow: 1;
-        text-align: center;
-    }
-}
-
-.EezStudio_SwitchActionComponent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    white-space: nowrap;
-}
-
-.EezStudio_IsTrueActionComponent,
-.EezStudio_CompareActionComponent {
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-}
-
 .EezStudio_CommentActionComponent {
     background-color: #fff5c2;
     border-radius: 0;
@@ -3394,15 +3371,6 @@ button.EezStudio_Action {
             border: 1px solid @borderColor;
             padding-top: 3px;
         }
-    }
-}
-
-.EezStudio_LoopBody {
-    display: flex;
-    align-items: baseline;
-    pre.single {
-        flex-grow: 1;
-        text-align: center;
     }
 }
 
@@ -3640,10 +3608,23 @@ button.EezStudio_Action {
             }
 
             .body {
-                margin: 4px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                white-space: nowrap;
+
+                margin: 2px;
                 border: 1px solid @borderColor;
-                padding: 4px;
                 background-color: @componentBody;
+
+                pre {
+                    padding: 2px 5px 1px 5px;
+                    display: flex;
+                }
+
+                pre:not(:last-child) {
+                    border-bottom: 1px dotted @borderColor;
+                }
             }
 
             pre {
@@ -4501,19 +4482,31 @@ button.EezStudio_Action {
 
     .connection-input-label,
     .connection-output-label {
+        .output {
+            width: 100%;
+        }
+
         display: flex;
         flex-direction: row;
         align-items: center;
 
         padding: 2px 5px;
-        margin-bottom: 2px;
 
         white-space: nowrap;
 
         position: relative;
     }
 
+    .connection-input-label {
+        .input {
+            width: 100%;
+        }
+    }
+
     .connection-output-label {
+        &.output {
+            width: 100%;
+        }
         justify-content: flex-end;
     }
 

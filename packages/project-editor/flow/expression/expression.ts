@@ -1180,7 +1180,7 @@ function evalConstantExpressionNode(
         }
 
         if (node.type == "Identifier") {
-            throw `Can not evaulate during build`;
+            throw `Not a constant`;
         }
 
         if (node.type == "BinaryExpression") {

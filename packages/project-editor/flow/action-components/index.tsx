@@ -60,6 +60,7 @@ import {
 } from "project-editor/flow/expression/expression";
 import { calcComponentGeometry } from "project-editor/flow/flow-editor/render";
 import { ValueType } from "project-editor/features/variable/value-type";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -327,7 +328,7 @@ export class GetVariableActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "variable",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "any"
@@ -424,7 +425,7 @@ export class EvalExprActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "expression",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "any"
@@ -636,7 +637,7 @@ export class SetVariableActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "value",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "any"
@@ -689,22 +690,13 @@ export class SetVariableActionComponent extends ActionComponent {
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
-        if (this.isInputProperty("value")) {
-            return (
-                <div className="body EezStudio_SetVariableBody">
-                    <pre className="single">{this.variable}</pre>
-                </div>
-            );
-        }
         return (
-            <div className="body EezStudio_SetVariableBody">
-                <div>
-                    <pre>{this.variable}</pre>
-                </div>
-                <LeftArrow />
-                <div style={{ textAlign: "left" }}>
-                    <pre>{this.value}</pre>
-                </div>
+            <div className="body">
+                <pre>
+                    {this.variable}
+                    <LeftArrow />
+                    {this.value}
+                </pre>
             </div>
         );
     }
@@ -735,7 +727,7 @@ class SwitchTest extends EezObject {
             makeExpressionProperty(
                 {
                     name: "condition",
-                    type: PropertyType.String
+                    type: PropertyType.MultilineText
                 },
                 "boolean"
             ),
@@ -840,11 +832,9 @@ export class SwitchActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <div className="body EezStudio_SwitchActionComponent">
+            <div className="body">
                 {this.tests.map(test => (
-                    <div key={test.outputName}>
-                        {test.condition} <RightArrow /> {test.outputName}
-                    </div>
+                    <pre key={test.outputName}>{test.condition}</pre>
                 ))}
             </div>
         );
@@ -885,7 +875,7 @@ export class CompareActionComponent extends ActionComponent {
                 {
                     name: "A",
                     displayName: "A",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "any"
@@ -894,7 +884,7 @@ export class CompareActionComponent extends ActionComponent {
                 {
                     name: "B",
                     displayName: "B",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     hideInPropertyGrid: (object: CompareActionComponent) => {
                         return object.operator == "NOT";
@@ -906,7 +896,7 @@ export class CompareActionComponent extends ActionComponent {
                 {
                     name: "C",
                     displayName: "C",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     hideInPropertyGrid: (object: CompareActionComponent) => {
                         return object.operator !== "BETWEEN";
@@ -994,27 +984,33 @@ export class CompareActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         if (this.operator == "NOT") {
             return (
-                <div className="body EezStudio_CompareActionComponent">
-                    {" NOT "}
-                    {this.isInputProperty("A") ? "A" : this.A}
+                <div className="body">
+                    <pre>
+                        {" NOT "}
+                        {this.isInputProperty("A") ? "A" : this.A}
+                    </pre>
                 </div>
             );
         }
 
         if (this.operator == "BETWEEN") {
             return (
-                <div className="body EezStudio_CompareActionComponent">
-                    {this.isInputProperty("B") ? "B" : this.B} {" <= "}
-                    {this.isInputProperty("A") ? "A" : this.A} {" <= "}
-                    {this.isInputProperty("C") ? "C" : this.C}
+                <div className="body">
+                    <pre>
+                        {this.isInputProperty("B") ? "B" : this.B} {" <= "}
+                        {this.isInputProperty("A") ? "A" : this.A} {" <= "}
+                        {this.isInputProperty("C") ? "C" : this.C}
+                    </pre>
                 </div>
             );
         }
 
         return (
-            <div className="body EezStudio_CompareActionComponent">
-                {this.isInputProperty("A") ? "A" : this.A} {this.operator}{" "}
-                {this.isInputProperty("B") ? "B" : this.B}
+            <div className="body">
+                <pre>
+                    {this.isInputProperty("A") ? "A" : this.A} {this.operator}{" "}
+                    {this.isInputProperty("B") ? "B" : this.B}
+                </pre>
             </div>
         );
     }
@@ -1071,7 +1067,7 @@ export class IsTrueActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "value",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "boolean"
@@ -1148,8 +1144,8 @@ export class IsTrueActionComponent extends ActionComponent {
         }
 
         return (
-            <div className="body EezStudio_IsTrueActionComponent">
-                {this.value}
+            <div className="body">
+                <pre>{this.value}</pre>
             </div>
         );
     }
@@ -1175,11 +1171,15 @@ export class ConstantActionComponent extends ActionComponent {
         flowComponentId: 1011,
 
         properties: [
-            {
-                name: "value",
-                type: PropertyType.JSON,
-                propertyGridGroup: specificGroup
-            }
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    expressionIsConstant: true
+                },
+                "string"
+            )
         ],
         icon: (
             <svg
@@ -1236,7 +1236,11 @@ export class ConstantActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        flowState.propagateValue(this, "value", JSON.parse(this.value));
+        flowState.propagateValue(
+            this,
+            "value",
+            evalConstantExpression(ProjectEditor.getProject(this), this.value)
+        );
         return undefined;
     }
 
@@ -1301,7 +1305,7 @@ export class ReadSettingActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "key",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "string"
@@ -1383,7 +1387,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "key",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "string"
@@ -1391,7 +1395,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "value",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "any"
@@ -1451,7 +1455,7 @@ export class LogActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "value",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "string"
@@ -1754,7 +1758,7 @@ export class DelayActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "milliseconds",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "integer"
@@ -1822,7 +1826,7 @@ export class ErrorActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "message",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "string"
@@ -2031,7 +2035,7 @@ export class LoopActionComponent extends ActionComponent {
             makeAssignableExpressionProperty(
                 {
                     name: "variable",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "integer"
@@ -2039,7 +2043,7 @@ export class LoopActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "from",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "integer"
@@ -2047,7 +2051,7 @@ export class LoopActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "to",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "integer"
@@ -2055,7 +2059,7 @@ export class LoopActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "step",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "integer"
@@ -2132,18 +2136,12 @@ export class LoopActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <div className="body EezStudio_LoopBody">
-                <div>
-                    <pre>{this.variable}</pre>
-                </div>
-                <LeftArrow />
-                <div></div>
-                <div>
-                    <pre>
-                        [ {this.from} ... {this.to} &gt;
-                        {this.step !== "1" ? ` step ${this.step}` : ""}
-                    </pre>
-                </div>
+            <div className="body">
+                <pre>
+                    {this.variable} <LeftArrow />[ {this.from} ... {this.to}{" "}
+                    &gt;
+                    {this.step !== "1" ? ` step ${this.step}` : ""}
+                </pre>
             </div>
         );
     }
