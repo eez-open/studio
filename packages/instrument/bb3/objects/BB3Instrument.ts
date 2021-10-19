@@ -69,7 +69,10 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
         if (Array.isArray(req.response)) {
             let latestReleaseVersion: string | undefined = undefined;
             for (const release of req.response) {
-                if (typeof release.tag_name == "string") {
+                if (
+                    !release.prerelease &&
+                    typeof release.tag_name == "string"
+                ) {
                     if (
                         !latestReleaseVersion ||
                         compareVersions(
@@ -84,7 +87,9 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 
             if (latestReleaseVersion) {
                 runInAction(() => {
-                    bb3Instrument.mcu.allReleases = req.response;
+                    bb3Instrument.mcu.allReleases = req.response.filter(
+                        (release: any) => !release.prerelease
+                    );
                     bb3Instrument.mcu.latestFirmwareVersion =
                         latestReleaseVersion;
                 });
@@ -780,7 +785,7 @@ export class BB3Instrument {
                                     .defaultFileUploadInstructions,
                                 {
                                     sourceFilePath: filePaths[0],
-                                    destinationFileName: "o.s",
+                                    destinationFileName: "_o.s",
                                     destinationFolderPath: "/"
                                 }
                             );
@@ -791,6 +796,8 @@ export class BB3Instrument {
                                 reject
                             );
                         });
+
+                        connection.command(`:MMEM:MOVE "/_o.s", "/o.s"`);
 
                         notification.update(toastId, {
                             type: notification.INFO,
