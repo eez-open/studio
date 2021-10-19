@@ -261,10 +261,15 @@ class WatchTable extends React.Component<{
                         const elementValue = value[i];
                         const name = `[${i}]`;
                         const type = elementType ?? typeof elementValue;
+                        const valueLabel = this.getValueLabel(
+                            elementValue,
+                            type
+                        );
                         return observable({
                             id: name,
                             name,
-                            value: this.getValueLabel(elementValue, type),
+                            value: valueLabel,
+                            valueTitle: valueLabel,
                             type: type,
 
                             children: this.getValueChildren(elementValue, type),
@@ -297,14 +302,17 @@ class WatchTable extends React.Component<{
                             }
                         }
 
+                        const valueLabel = this.getValueLabel(
+                            propertyValue,
+                            fieldType
+                        );
+
                         children.push(
                             observable({
                                 id: name,
                                 name,
-                                value: this.getValueLabel(
-                                    propertyValue,
-                                    fieldType
-                                ),
+                                value: valueLabel,
+                                valueTitle: valueLabel,
                                 type: fieldType ?? typeof propertyValue,
 
                                 children: this.getValueChildren(
@@ -358,20 +366,12 @@ class WatchTable extends React.Component<{
                             type = "undefined";
                         }
 
-                        let valueTitle: string | undefined;
-                        if (
-                            typeof value == "string" ||
-                            typeof value == "number"
-                        ) {
-                            valueTitle = value.toString();
-                        }
-
                         return observable({
                             id: expression,
 
                             name: expression,
                             value,
-                            valueTitle,
+                            valueTitle: value,
                             type,
 
                             children: this.getValueChildren(value, type),
@@ -399,12 +399,14 @@ class WatchTable extends React.Component<{
             }
 
             const value = dataContext.get(variable.name);
+            const valueLabel = this.getValueLabel(value, variable.type);
 
             return observable({
                 id: variable.name,
 
                 name: variable.name,
-                value: this.getValueLabel(value, variable.type),
+                value: valueLabel,
+                valueTitle: valueLabel,
                 type: variable.type,
 
                 children: this.getValueChildren(value, variable.type),
@@ -455,11 +457,14 @@ class WatchTable extends React.Component<{
         return inputs.map(input => {
             let value = componentState.getInputValue(input.name);
 
+            let valueLabel = this.getValueLabel(value, null);
+
             return observable({
                 id: input.name,
 
                 name: getInputDisplayName(componentState.component, input.name),
-                value: this.getValueLabel(value, null),
+                value: valueLabel,
+                valueTitle: valueLabel,
                 type: typeof value,
 
                 children: this.getValueChildren(value, null),
