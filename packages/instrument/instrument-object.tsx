@@ -717,6 +717,8 @@ export class InstrumentObject {
     @action
     setLabel(label: string) {
         if (label !== this.label) {
+            this.label = label;
+
             beginTransaction("Change instrument label");
             store.updateObject({
                 id: this.id,
