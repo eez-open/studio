@@ -27,10 +27,7 @@ import {
     getOutputDisplayName,
     Widget
 } from "project-editor/flow/component";
-import type {
-    IFlowContext,
-    IFlowState
-} from "project-editor/flow/flow-interfaces";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/core/store";
 import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
@@ -713,21 +710,11 @@ export abstract class FlowTabState implements IEditorState {
 
     constructor(public flow: Flow) {}
 
-    @observable _flowState: IFlowState | undefined;
-
     @computed get flowState() {
-        if (this._flowState) {
-            return this._flowState;
-        }
-
         if (this.DocumentStore.runtime) {
             return this.DocumentStore.runtime.getFlowState(this.flow);
         }
         return undefined;
-    }
-
-    set flowState(flowState: IFlowState | undefined) {
-        runInAction(() => (this._flowState = flowState));
     }
 
     @computed get DocumentStore() {

@@ -274,6 +274,10 @@ export abstract class RuntimeBase {
     ////////////////////////////////////////
 
     getFlowState(flow: Flow) {
+        if (this.selectedFlowState?.flow == flow) {
+            return this.selectedFlowState;
+        }
+
         for (let flowState of this.flowStates) {
             if (flowState.flow === flow) {
                 return flowState;
@@ -347,6 +351,10 @@ export abstract class RuntimeBase {
         widget: Widget
     ): void;
 
+    selectFlowStateForFlow(flow: Flow) {
+        this.selectedFlowState = this.getFlowState(flow);
+    }
+
     selectQueueTask(queueTask: QueueTask | undefined) {
         this.selectedQueueTask = queueTask;
         if (queueTask) {
@@ -361,14 +369,6 @@ export abstract class RuntimeBase {
             this.DocumentStore.navigationStore.showObject(flowState.flow, {
                 selectInEditor: false
             });
-
-            const editorState =
-                this.DocumentStore.editorsStore.activeEditor?.state;
-            if (editorState instanceof FlowTabState) {
-                setTimeout(() => {
-                    runInAction(() => (editorState.flowState = flowState));
-                }, 50);
-            }
         }
     }
 

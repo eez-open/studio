@@ -303,31 +303,33 @@ class NavigationStore implements INavigationStore {
     ) {
         this.setSelection([objectToShow]);
 
-        for (
-            let object: IEezObject | undefined = objectToShow;
-            object;
-            object = getParent(object)
-        ) {
-            const selectInEditor = !options || (options.selectInEditor ?? true);
-
-            if (selectInEditor && getEditorComponent(object)) {
-                const editor =
-                    this.DocumentStore.editorsStore.openEditor(object);
-                if (editor) {
-                    const editorState = editor.state;
-                    if (editorState) {
-                        setTimeout(
-                            () =>
+        const selectInEditor = !options || (options.selectInEditor ?? true);
+        if (selectInEditor) {
+            for (
+                let object: IEezObject | undefined = objectToShow;
+                object;
+                object = getParent(object)
+            ) {
+                if (getEditorComponent(object)) {
+                    const editor =
+                        this.DocumentStore.editorsStore.openEditor(object);
+                    if (editor) {
+                        const editorState = editor.state;
+                        if (editorState) {
+                            setTimeout(() => {
                                 editorState.selectObject(
                                     isValue(objectToShow)
                                         ? getParent(objectToShow)
                                         : objectToShow
-                                ),
-                            50
-                        );
+                                );
+                                setTimeout(() => {
+                                    editorState.ensureSelectionVisible();
+                                }, 50);
+                            }, 50);
+                        }
                     }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -392,6 +394,12 @@ export class Editor implements IEditor {
     @action
     makeActive() {
         this.DocumentStore.editorsStore.activateEditor(this);
+        if (this.DocumentStore.runtime) {
+            const flow = ProjectEditor.getFlow(this.object);
+            if (flow) {
+                this.DocumentStore.runtime.selectFlowStateForFlow(flow);
+            }
+        }
     }
 
     @action

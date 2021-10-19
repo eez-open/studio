@@ -20,6 +20,7 @@ import {
     RuntimeBase
 } from "project-editor/flow/runtime";
 import { InputActionComponent } from "project-editor/flow/action-components";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -277,7 +278,10 @@ export class LocalRuntime extends RuntimeBase {
             return;
         }
 
-        const parentFlowState = flowContext.flowState! as FlowState;
+        const parentFlowState = findWidgetFlowState(this, widget);
+        if (!parentFlowState) {
+            return;
+        }
 
         const it = flowContext.dataContext.get(FLOW_ITERATOR_INDEX_VARIABLE);
 
@@ -391,4 +395,36 @@ export class LocalRuntime extends RuntimeBase {
     onBreakpointEnabled(component: Component) {}
 
     onBreakpointDisabled(component: Component) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function findWidgetFlowState(runtime: RuntimeBase, widget: Widget) {
+    const widgetFlow = ProjectEditor.getFlow(widget);
+
+    if (
+        runtime.selectedFlowState &&
+        !runtime.selectedFlowState.isFinished &&
+        runtime.selectedFlowState.flow == widgetFlow
+    ) {
+        return runtime.selectedFlowState;
+    }
+
+    function findInFlowStates(flowStates: FlowState[]): FlowState | undefined {
+        for (let i = 0; i < flowStates.length; i++) {
+            const flowState = flowStates[i];
+            if (!flowState.isFinished && flowState.flow == widgetFlow) {
+                return flowState;
+            }
+
+            const childFlowState = findInFlowStates(flowState.flowStates);
+            if (childFlowState) {
+                return childFlowState;
+            }
+        }
+
+        return undefined;
+    }
+
+    return findInFlowStates(runtime.flowStates);
 }

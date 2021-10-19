@@ -30,6 +30,8 @@ import { getObjectFromStringPath } from "project-editor/core/store";
 
 const DEBUGGER_TCP_PORT = 3333;
 
+const DEBUGGER_CONNECTION_TIMEOUT = 5000;
+
 enum MessagesToDebugger {
     MESSAGE_TO_DEBUGGER_STATE_CHANGED, // STATE
 
@@ -551,7 +553,7 @@ class DebuggerConnection {
                 this.runtime.stopRuntimeWithError(
                     "Debugger connection timeout"
                 );
-            }, 3000);
+            }, DEBUGGER_CONNECTION_TIMEOUT);
         } else if (this.runtime.isDebuggerActive) {
             this.runtime.stopRuntimeWithError("Debugger connection timeout");
         }

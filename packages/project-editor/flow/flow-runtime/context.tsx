@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, action, computed } from "mobx";
 
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
@@ -8,14 +8,14 @@ import type {
     IFlowContext,
     IEditorOptions,
     IResizeHandler,
-    IDataContext,
-    IFlowState
+    IDataContext
 } from "project-editor/flow/flow-interfaces";
 import { Transform } from "project-editor/flow/flow-editor/transform";
 
 import type { Component } from "project-editor/flow/component";
 import type { FlowTabState } from "project-editor/flow/flow";
 import { FlowDocument } from "project-editor/flow/flow-runtime/flow-document";
+import type { FlowState } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -108,7 +108,7 @@ export class RuntimeFlowContext implements IFlowContext {
     editorOptions: IEditorOptions = {};
     _dataContext: IDataContext;
 
-    @observable _flowState: IFlowState | undefined;
+    _flowState: FlowState;
 
     get DocumentStore() {
         return this.document.DocumentStore;
@@ -122,7 +122,7 @@ export class RuntimeFlowContext implements IFlowContext {
         return this.tabState.flow;
     }
 
-    get flowState() {
+    @computed get flowState() {
         return this._flowState || this.tabState.flowState;
     }
 
