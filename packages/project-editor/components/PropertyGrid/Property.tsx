@@ -26,6 +26,7 @@ import { ThemedColorInput } from "./ThemedColorInput";
 import { ArrayProperty } from "./ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "./EmbeddedPropertyGrid";
 import { objectToString } from "project-editor/core/store";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -306,7 +307,9 @@ export class Property extends React.Component<PropertyProps> {
             return (
                 <textarea
                     ref={(ref: any) => (this.textarea = ref)}
-                    className="form-control"
+                    className={classNames("form-control", {
+                        pre: propertyInfo.monospaceFont
+                    })}
                     value={this._value || ""}
                     onChange={this.onChange}
                     style={{ resize: "none" }}

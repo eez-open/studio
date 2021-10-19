@@ -50,6 +50,7 @@ interface PropertyInfo {
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     propertyGridGroup?: IPropertyGridGroupDefinition;
+    monospaceFont?: boolean;
 }
 
 interface ClassInfo {

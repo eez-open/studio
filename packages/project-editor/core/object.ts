@@ -197,6 +197,8 @@ export interface PropertyInfo {
     isOutputOptional?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+
+    monospaceFont?: boolean;
 }
 
 export interface NavigationComponentProps {
