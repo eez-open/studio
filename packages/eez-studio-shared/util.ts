@@ -375,5 +375,5 @@ export function remap(
 }
 
 export function sourceRootDir() {
-    return "c:/work/eez/studio/build";
+    return __dirname + "/..";
 }
