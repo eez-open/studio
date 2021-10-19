@@ -581,6 +581,10 @@ export class ProjectEditorTab implements IHomeTab {
         return this.title;
     }
 
+    get tooltipTitle() {
+        return this.filePath;
+    }
+
     get icon() {
         return <Icon icon="material:developer_board" />;
     }

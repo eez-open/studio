@@ -212,7 +212,10 @@ export const TabView: React.FC<TabViewProps> = observer(
             title = (
                 <>
                     {icon}
-                    <span className="title" title={tab.title}>
+                    <span
+                        className="title"
+                        title={tab.tooltipTitle || tab.title}
+                    >
                         {tab.title}
                     </span>
                 </>
