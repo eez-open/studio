@@ -2981,6 +2981,11 @@ button.EezStudio_Action {
                 & > td.embedded-property-cell {
                     padding-left: 10px;
                 }
+
+                textarea.pre {
+                    font-family: var(--bs-font-monospace);
+                    font-size: 0.875em;
+                }
             }
         }
     }
@@ -3318,16 +3323,21 @@ button.EezStudio_Action {
 }
 
 .EezStudio_CommentActionComponent {
-    background-color: #fff5c2;
-    border-radius: 0;
+    background-color: #fff5c2 !important;
+    border: 0 !important;
 
     .title-enclosure {
         overflow: hidden;
+
+        svg {
+            fill-opacity: 30%;
+        }
     }
 
     & > .content {
         width: 100%;
         height: 100%;
+        padding: 0 !important;
     }
 
     .EezStudio_TrixEditor {
@@ -3559,6 +3569,11 @@ button.EezStudio_Action {
                 border-top-left-radius: 3px;
                 border-top-right-radius: 3px;
 
+                &.empty-content {
+                    border-bottom-left-radius: 3px;
+                    border-bottom-right-radius: 3px;
+                }
+
                 span {
                     padding-left: 6px;
                 }
@@ -3592,6 +3607,10 @@ button.EezStudio_Action {
             display: flex;
             flex-direction: row;
 
+            &:not(.empty) {
+                padding: 3px;
+            }
+
             .inputs,
             .outputs {
                 padding: 2px;
@@ -3608,10 +3627,17 @@ button.EezStudio_Action {
             }
 
             .body {
+                > * {
+                    user-select: text;
+                }
+
+                box-shadow: @componentBodyShadow;
+                border-radius: 4px;
+
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                white-space: nowrap;
+                flex-wrap: nowrap;
 
                 margin: 2px;
                 border: 1px solid @borderColor;
@@ -3620,6 +3646,7 @@ button.EezStudio_Action {
                 pre {
                     padding: 2px 5px 1px 5px;
                     display: flex;
+                    flex-wrap: nowrap;
                 }
 
                 pre:not(:last-child) {
