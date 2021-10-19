@@ -80,7 +80,8 @@ import {
 import {
     variableTypeProperty,
     variableTypeUIProperty,
-    ValueType
+    ValueType,
+    VariableTypeFieldComponent
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./flow-editor/ComponentsPalette";
@@ -240,6 +241,9 @@ function getComponentClass(jsObject: any) {
     if (jsObject.type === "ScpiActionComponent") {
         jsObject.type = "SCPIActionComponent";
     }
+    if (jsObject.type === "GetVariableActionComponent") {
+        jsObject.type = "WatchVariableActionComponent";
+    }
     return getClassFromType(jsObject.type);
 }
 
@@ -353,7 +357,9 @@ export function makeExpressionProperty(
                     title: "Expression Builder",
                     width: 400,
                     height: 600
-                })
+                }),
+
+            monospaceFont: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -618,14 +624,20 @@ export class CustomInput extends EezObject implements ComponentInput {
                                 validators.required,
                                 componentInputUnique({}, parent)
                             ]
+                        },
+                        {
+                            name: "type",
+                            type: VariableTypeFieldComponent,
+                            validators: [validators.required]
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                dialogContext: ProjectEditor.getProject(parent)
             }).then(result => {
                 return Promise.resolve({
                     name: result.values.name,
-                    type: "string"
+                    type: result.values.type
                 });
             });
         },
@@ -709,13 +721,20 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                                 componentOutputUnique({}, parent),
                                 validators.unique({}, parent)
                             ]
+                        },
+                        {
+                            name: "type",
+                            type: VariableTypeFieldComponent,
+                            validators: [validators.required]
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                dialogContext: ProjectEditor.getProject(parent)
             }).then(result => {
                 return Promise.resolve({
-                    name: result.values.name
+                    name: result.values.name,
+                    type: result.values.type
                 });
             });
         },
@@ -2177,6 +2196,10 @@ function renderActionComponent(
         };
     }
 
+    const body = actionNode.getBody(flowContext);
+
+    const emptyContent = !body && !inputs.length && !outputs.length;
+
     return (
         <>
             <div className="title-enclosure">
@@ -2185,7 +2208,12 @@ function renderActionComponent(
                         componentInput={actionNode.inputs[seqInputIndex]}
                     />
                 )}
-                <div className="title" style={titleStyle}>
+                <div
+                    className={classNames("title", {
+                        "empty-content": emptyContent
+                    })}
+                    style={titleStyle}
+                >
                     <span className="title-image">{classInfo.icon}</span>
                     <span className="title-text">{getLabel(actionNode)}</span>
                 </div>
@@ -2195,40 +2223,46 @@ function renderActionComponent(
                     />
                 )}
             </div>
-            <div className="content">
-                {inputs.length > 0 && (
-                    <div className="inputs">
-                        {inputs.map(input => (
-                            <div
-                                className="connection-input-label"
-                                key={input.name}
-                            >
-                                <ComponentInputSpan componentInput={input} />
-                                {getInputDisplayName(actionNode, input)}
-                            </div>
-                        ))}
-                    </div>
-                )}
-                {actionNode.getBody(flowContext)}
-                {outputs.length > 0 && (
-                    <div className="outputs">
-                        {outputs.map(output => (
-                            <div
-                                key={output.name}
-                                className={classNames(
-                                    "connection-output-label",
-                                    {
-                                        error: output.name === "@error"
-                                    }
-                                )}
-                            >
-                                {getOutputDisplayName(actionNode, output)}
-                                <ComponentOutputSpan componentOutput={output} />
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+            {!emptyContent && (
+                <div className="content eez-flow-editor-capture-pointers">
+                    {inputs.length > 0 && (
+                        <div className="inputs">
+                            {inputs.map(input => (
+                                <div
+                                    className="connection-input-label"
+                                    key={input.name}
+                                >
+                                    <ComponentInputSpan
+                                        componentInput={input}
+                                    />
+                                    {getInputDisplayName(actionNode, input)}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {actionNode.getBody(flowContext)}
+                    {outputs.length > 0 && (
+                        <div className="outputs">
+                            {outputs.map(output => (
+                                <div
+                                    key={output.name}
+                                    className={classNames(
+                                        "connection-output-label",
+                                        {
+                                            error: output.name === "@error"
+                                        }
+                                    )}
+                                >
+                                    {getOutputDisplayName(actionNode, output)}
+                                    <ComponentOutputSpan
+                                        componentOutput={output}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </>
     );
 }
