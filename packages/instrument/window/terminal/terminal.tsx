@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { Splitter } from "eez-studio-ui/splitter";
 import { IconAction } from "eez-studio-ui/action";
@@ -244,10 +243,9 @@ export class Terminal extends React.Component<
     { appStore: InstrumentAppStore },
     {}
 > {
-    @bind
-    onSelectHistoryItemsCancel() {
+    onSelectHistoryItemsCancel = () => {
         this.props.appStore.selectHistoryItems(undefined);
-    }
+    };
 
     componentDidMount() {
         this.props.appStore.terminal = this;

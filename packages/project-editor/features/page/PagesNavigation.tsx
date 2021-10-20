@@ -1,7 +1,6 @@
 import React from "react";
 import { computed, action, runInAction, observable } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { _find } from "eez-studio-shared/algorithm";
 
@@ -51,10 +50,9 @@ export class PageEditor extends EditorComponent implements IPanel {
         return this.props.editor.state as PageTabState;
     }
 
-    @bind
-    focusHandler() {
+    focusHandler = () => {
         this.context.navigationStore.setSelectedPanel(this);
-    }
+    };
 
     @computed
     get treeAdapter() {
@@ -429,10 +427,9 @@ export class PagesNavigation extends NavigationComponent {
         return [];
     }
 
-    @bind
-    onFocus() {
+    onFocus = () => {
         this.context.navigationStore.setSelectedPanel(this);
-    }
+    };
 
     render() {
         const listNavigation = (

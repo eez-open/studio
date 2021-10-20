@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
+
 import classNames from "classnames";
 
 import { formatNumber } from "eez-studio-shared/util";
@@ -1701,21 +1701,19 @@ export class FontEditor
         this._selectedGlyph = glyph;
     }
 
-    @bind
-    onBrowseGlyph(glyph: Glyph) {
+    onBrowseGlyph = (glyph: Glyph) => {
         browseGlyph(glyph)
             .then(propertyValues => {
                 this.context.updateObject(glyph, propertyValues);
             })
             .catch(error => console.error(error));
-    }
+    };
 
-    @bind
-    onBrowseSelectedGlyph() {
+    onBrowseSelectedGlyph = () => {
         if (this.selectedGlyph) {
             this.onBrowseGlyph(this.selectedGlyph);
         }
-    }
+    };
 
     get selectedObject() {
         if (
@@ -1821,8 +1819,7 @@ export class FontEditor
         }
     }
 
-    @bind
-    async onCreateShadow() {
+    onCreateShadow = async () => {
         const result = await EEZStudio.remote.dialog.showOpenDialog(
             EEZStudio.remote.getCurrentWindow(),
             {
@@ -1955,15 +1952,13 @@ export class FontEditor
                 };
             });
         }
-    }
+    };
 
-    @bind
-    onFocus() {
+    onFocus = () => {
         this.context.navigationStore.setSelectedPanel(this);
-    }
+    };
 
-    @bind
-    onKeyDown(event: any) {
+    onKeyDown = (event: any) => {
         if (event.ctrlKey) {
             if (event.keyCode == "C".charCodeAt(0)) {
                 this.copySelection();
@@ -1971,7 +1966,7 @@ export class FontEditor
                 this.pasteSelection();
             }
         }
-    }
+    };
 
     render() {
         const font = this.props.font;

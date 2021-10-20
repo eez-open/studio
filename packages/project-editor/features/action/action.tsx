@@ -30,7 +30,7 @@ import {
     IPanel
 } from "project-editor/core/store";
 import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
-import { bind } from "bind-decorator";
+
 import {
     ITreeObjectAdapter,
     TreeAdapter,
@@ -136,10 +136,9 @@ export class ActionEditor extends EditorComponent implements IPanel {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @bind
-    focusHandler() {
+    focusHandler = () => {
         this.context.navigationStore.setSelectedPanel(this);
-    }
+    };
 
     @computed
     get treeAdapter() {
@@ -328,10 +327,9 @@ export class ActionsNavigation extends NavigationComponent {
         return [];
     }
 
-    @bind
-    onFocus() {
+    onFocus = () => {
         this.navigationStore.setSelectedPanel(this);
-    }
+    };
 
     render() {
         const listNavigation = (

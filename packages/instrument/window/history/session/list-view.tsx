@@ -2,7 +2,6 @@ import React from "react";
 import { computed, toJS } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -67,8 +66,7 @@ export class SessionListItem extends React.Component<
         }
     }
 
-    @bind
-    handleEditSessionName() {
+    handleEditSessionName = () => {
         showEditSessionNameDialog(this.message.sessionName || "", name => {
             let message = toJS(this.message);
             message.sessionName = name;
@@ -87,10 +85,9 @@ export class SessionListItem extends React.Component<
             );
             commitTransaction();
         });
-    }
+    };
 
-    @bind
-    handleDeleteSession() {
+    handleDeleteSession = () => {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Delete session");
 
@@ -125,12 +122,11 @@ export class SessionListItem extends React.Component<
 
             commitTransaction();
         });
-    }
+    };
 
-    @bind
-    onClick() {
+    onClick = () => {
         this.props.history.sessions.selectSession(this.props.session);
-    }
+    };
 
     render() {
         let className = classNames("EezStudio_SessionListItem", {
@@ -171,8 +167,7 @@ export class SessionList extends React.Component<{
     appStore: IAppStore;
     history: History;
 }> {
-    @bind
-    newSession() {
+    newSession = () => {
         showEditSessionNameDialog("", name => {
             beginTransaction("New session");
             log(
@@ -190,7 +185,7 @@ export class SessionList extends React.Component<{
             );
             commitTransaction();
         });
-    }
+    };
 
     render() {
         return (

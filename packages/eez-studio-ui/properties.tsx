@@ -2,7 +2,6 @@ import React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { formatBytes } from "eez-studio-shared/formatBytes";
 import { guid } from "eez-studio-shared/guid";
@@ -611,12 +610,11 @@ export class KeybindingProperty extends React.Component<
         );
     }
 
-    @bind
-    onDeleteKeybinding(event: any) {
+    onDeleteKeybinding = (event: any) => {
         event.preventDefault();
         event.stopPropagation();
         this.props.onChange("");
-    }
+    };
 
     render() {
         let id = this.props.id || guid();

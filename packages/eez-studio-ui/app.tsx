@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import {
     HorizontalHeaderWithBody,
@@ -43,12 +42,11 @@ export class AppRootComponent extends React.Component<
         return item.renderContent();
     }
 
-    @bind
-    selectNavigationItem(item: IRootNavigationItem) {
+    selectNavigationItem = (item: IRootNavigationItem) => {
         if (this.props.onSelectionChange) {
             this.props.onSelectionChange(item);
         }
-    }
+    };
 
     render() {
         let devTools;

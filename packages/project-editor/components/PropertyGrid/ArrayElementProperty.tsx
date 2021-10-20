@@ -1,7 +1,6 @@
 import React from "react";
 import { computed, observable, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import classNames from "classnames";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
@@ -38,8 +37,7 @@ class ArrayElementProperty extends React.Component<{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @bind
-    updateObject(propertyValues: Object) {
+    updateObject = (propertyValues: Object) => {
         let object = this.props.object;
         if (object) {
             if (isValue(object)) {
@@ -47,7 +45,7 @@ class ArrayElementProperty extends React.Component<{
             }
             this.context.updateObject(object, propertyValues);
         }
-    }
+    };
 
     render() {
         const { propertyInfo } = this.props;

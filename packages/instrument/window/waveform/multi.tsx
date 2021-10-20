@@ -8,7 +8,6 @@ import {
     toJS
 } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -465,8 +464,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
         );
     }
 
-    @bind
-    renderWaveformListNode(node: IListNode) {
+    renderWaveformListNode = (node: IListNode) => {
         let waveformLinkProperties =
             node.data as IJoinedWaveformLinkAndDefinitionProperties;
 
@@ -485,15 +483,14 @@ class MultiWaveformConfigurationDialog extends React.Component<
                 rightIconClassName="text-danger"
             />
         );
-    }
+    };
 
     @action.bound
     selectWaveform(node: IListNode) {
         this.selectedWaveform = node.data;
     }
 
-    @bind
-    async handleSubmit() {
+    handleSubmit = async () => {
         let anyError = false;
 
         for (let i = 0; i < this.waveforms.length; i++) {
@@ -608,7 +605,7 @@ class MultiWaveformConfigurationDialog extends React.Component<
         }
 
         return true;
-    }
+    };
 
     render() {
         return (

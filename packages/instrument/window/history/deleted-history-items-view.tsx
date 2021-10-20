@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
 import { SideDock, DockablePanels } from "eez-studio-ui/side-dock";
@@ -98,8 +97,7 @@ export class DeletedHistoryItemsView extends React.Component<{
     sideDock: SideDock | null;
     @observable searchText: string = "";
 
-    @bind
-    frameAnimation() {
+    frameAnimation = () => {
         if (this.sideDock) {
             this.sideDock.updateSize();
         }
@@ -107,7 +105,7 @@ export class DeletedHistoryItemsView extends React.Component<{
         this.animationFrameRequestId = window.requestAnimationFrame(
             this.frameAnimation
         );
-    }
+    };
 
     componentDidMount() {
         this.frameAnimation();
@@ -117,10 +115,9 @@ export class DeletedHistoryItemsView extends React.Component<{
         window.cancelAnimationFrame(this.animationFrameRequestId);
     }
 
-    @bind
-    onSelectHistoryItemsCancel() {
+    onSelectHistoryItemsCancel = () => {
         this.props.appStore.selectHistoryItems(undefined);
-    }
+    };
 
     @action.bound
     onSearchChange(event: any) {
@@ -128,8 +125,7 @@ export class DeletedHistoryItemsView extends React.Component<{
         this.props.appStore.deletedItemsHistory.search.search(this.searchText);
     }
 
-    @bind
-    registerComponents(factory: any) {
+    registerComponents = (factory: any) => {
         const appStore = this.props.appStore;
 
         factory.registerComponent(
@@ -167,7 +163,7 @@ export class DeletedHistoryItemsView extends React.Component<{
                 );
             }
         );
-    }
+    };
 
     get searchResultsComponent() {
         return {

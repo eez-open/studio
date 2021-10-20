@@ -1,7 +1,6 @@
 import React from "react";
 import { action, computed, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
@@ -141,8 +140,7 @@ export class Canvas extends React.Component<{
         }
     }
 
-    @bind
-    onWheel(event: WheelEvent) {
+    onWheel = (event: WheelEvent) => {
         if (event.buttons === 4) {
             // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
             return;
@@ -197,12 +195,11 @@ export class Canvas extends React.Component<{
 
         event.preventDefault();
         event.stopPropagation();
-    }
+    };
 
-    @bind
-    onContextMenu(event: React.MouseEvent) {
+    onContextMenu = (event: React.MouseEvent) => {
         event.preventDefault();
-    }
+    };
 
     createMouseHandler(event: MouseEvent) {
         const flowContext = this.props.flowContext;
@@ -255,8 +252,7 @@ export class Canvas extends React.Component<{
         }
     }
 
-    @bind
-    onDragMove(event: PointerEvent) {
+    onDragMove = (event: PointerEvent) => {
         if (this.mouseHandler) {
             this.mouseHandler.lastPointerEvent = {
                 clientX: event.clientX,
@@ -277,7 +273,7 @@ export class Canvas extends React.Component<{
 
             this.mouseHandler.move(this.props.flowContext, event);
         }
-    }
+    };
 
     @action.bound
     onDragEnd(event: PointerEvent) {
@@ -555,19 +551,17 @@ export class FlowViewer
 
     deleteSelection() {}
 
-    @bind
-    focusHander() {
+    focusHander = () => {
         this.context.navigationStore.setSelectedPanel(this);
-    }
+    };
 
     getDragComponent(event: React.DragEvent) {
         return undefined;
     }
 
-    @bind
-    onDoubleClick() {
+    onDoubleClick = () => {
         this.flowContext.viewState.resetTransform();
-    }
+    };
 
     static getDerivedStateFromError(error: any) {
         return { hasError: true };

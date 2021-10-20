@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import {
     VALIDATION_MESSAGE_REQUIRED,
@@ -192,16 +191,14 @@ export class CommandSyntax extends React.Component<
         return " " + finalValues.join(", ");
     }
 
-    @bind
-    copy() {
+    copy = () => {
         const commandParameters = this.validateParameters();
         if (commandParameters !== false) {
             this.props.copyCommand(this.props.commandSyntax, commandParameters);
         }
-    }
+    };
 
-    @bind
-    copyToScript() {
+    copyToScript = () => {
         const commandParameters = this.validateParameters();
         if (commandParameters !== false) {
             const command = this.props.commandSyntax.name + commandParameters;
@@ -211,7 +208,7 @@ export class CommandSyntax extends React.Component<
                 insertScpiCommandIntoCode(this.props.appStore, command);
             }
         }
-    }
+    };
 
     render() {
         return (
@@ -358,10 +355,9 @@ export class CommandsBrowser extends React.Component<
         }
     }
 
-    @bind
-    copyCommand(command: ICommandSyntax, commandParameters: string) {
+    copyCommand = (command: ICommandSyntax, commandParameters: string) => {
         this.props.host.command = makeItShort(command) + commandParameters;
-    }
+    };
 
     @action.bound
     onSearchChange(event: any) {

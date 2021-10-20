@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
+
 import classNames from "classnames";
 
 import {
@@ -68,8 +68,7 @@ export class PropertyGrid extends React.Component<{
         this.ensureHighlightedVisible();
     }
 
-    @bind
-    updateObject(propertyValues: Object) {
+    updateObject = (propertyValues: Object) => {
         const wasCombineCommands = this.context.undoManager.combineCommands;
         if (!wasCombineCommands) {
             this.context.undoManager.setCombineCommands(true);
@@ -85,7 +84,7 @@ export class PropertyGrid extends React.Component<{
         if (!wasCombineCommands) {
             this.context.undoManager.setCombineCommands(false);
         }
-    }
+    };
 
     render() {
         let objects = this.objects;

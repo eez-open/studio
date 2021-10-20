@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, reaction, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { Rect } from "eez-studio-shared/geometry";
 
@@ -264,8 +263,7 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         return (this.pinToEdge & PIN_TO_BOTTOM) !== 0;
     }
 
-    @bind
-    togglePinToLeft() {
+    togglePinToLeft = () => {
         if (!this.isPinToLeftAllowed) {
             return;
         }
@@ -277,10 +275,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                 fixSize: this.fixSize
             }
         });
-    }
+    };
 
-    @bind
-    togglePinToRight() {
+    togglePinToRight = () => {
         if (!this.isPinToRightAllowed) {
             return;
         }
@@ -292,10 +289,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                 fixSize: this.fixSize
             }
         });
-    }
+    };
 
-    @bind
-    togglePinToTop() {
+    togglePinToTop = () => {
         if (!this.isPinToTopAllowed) {
             return;
         }
@@ -307,10 +303,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                 fixSize: this.fixSize
             }
         });
-    }
+    };
 
-    @bind
-    togglePinToBottom() {
+    togglePinToBottom = () => {
         if (!this.isPinToBottomAllowed) {
             return;
         }
@@ -322,10 +317,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                 fixSize: this.fixSize
             }
         });
-    }
+    };
 
-    @bind
-    togglePinToAll() {
+    togglePinToAll = () => {
         const isPinToAll =
             this.isPinToLeft &&
             this.isPinToRight &&
@@ -339,10 +333,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                 fixSize: isPinToAll ? this.fixSize : 0
             }
         });
-    }
+    };
 
-    @bind
-    toggleFixWidth() {
+    toggleFixWidth = () => {
         if (!this.isFixWidthAllowed) {
             return;
         }
@@ -354,10 +347,9 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                     : this.fixSize | FIX_WIDTH
             }
         });
-    }
+    };
 
-    @bind
-    toggleFixHeight() {
+    toggleFixHeight = () => {
         if (!this.isFixHeightAllowed) {
             return;
         }
@@ -369,15 +361,14 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                     : this.fixSize | FIX_HEIGHT
             }
         });
-    }
+    };
 
     @computed
     get isFixAllAllowed() {
         return this.isFixWidthAllowed && this.isFixHeightAllowed;
     }
 
-    @bind
-    toggleFixAll() {
+    toggleFixAll = () => {
         if (!this.isFixAllAllowed) {
             return;
         }
@@ -390,7 +381,7 @@ export class ResizingProperty extends React.Component<PropertyProps> {
                         : FIX_WIDTH | FIX_HEIGHT
             }
         });
-    }
+    };
 
     // make sure animation is shown if properties are changed
     animateReactionDisposer: any;
@@ -509,8 +500,7 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         }
     }
 
-    @bind
-    startAnimation(interrupt: boolean) {
+    startAnimation = (interrupt: boolean) => {
         if (this.animationFrameHandle) {
             if (!interrupt) {
                 return;
@@ -537,7 +527,7 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         this.animationStart = new Date().getTime();
 
         this.animationFrameHandle = requestAnimationFrame(this.animationFrame);
-    }
+    };
 
     render() {
         const pinToLeft = (

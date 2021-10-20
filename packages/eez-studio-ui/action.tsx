@@ -1,7 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { Icon } from "eez-studio-ui/icon";
 
@@ -17,15 +16,14 @@ class Action extends React.Component<
     },
     {}
 > {
-    @bind
-    onClick(event: any) {
+    onClick = (event: any) => {
         event.target.blur();
         if (this.props.onClick) {
             event.stopPropagation();
             event.preventDefault();
             this.props.onClick(event);
         }
-    }
+    };
 
     render() {
         let className = classNames("EezStudio_Action", this.props.className, {
@@ -254,13 +252,12 @@ export class DropdownItem extends React.Component<
     },
     {}
 > {
-    @bind
-    onClick(event: any) {
+    onClick = (event: any) => {
         event.preventDefault();
         event.stopPropagation();
 
         this.props.onClick();
-    }
+    };
 
     render() {
         const { text } = this.props;

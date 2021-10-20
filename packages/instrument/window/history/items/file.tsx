@@ -2,7 +2,6 @@ import React from "react";
 import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { clipboard, nativeImage, SaveDialogOptions } from "electron";
-import { bind } from "bind-decorator";
 
 import {
     formatTransferSpeed,
@@ -134,8 +133,7 @@ class PdfPreview extends React.Component<{
         }
     }
 
-    @bind
-    bringToFocus() {
+    bringToFocus = () => {
         if (this.zoom && this.webView) {
             if (this.webView.isReady()) {
                 this.webView.focus();
@@ -143,7 +141,7 @@ class PdfPreview extends React.Component<{
                 setTimeout(this.bringToFocus);
             }
         }
-    }
+    };
 
     componentDidMount() {
         this.update();
@@ -201,22 +199,19 @@ export class FileHistoryItemComponent extends React.Component<
 > {
     setVisibleTimeoutId: any;
 
-    @bind
-    onAbortFileTransfer() {
+    onAbortFileTransfer = () => {
         this.props.appStore.instrument!.connection.abortLongOperation();
-    }
+    };
 
-    @bind
-    onAddNote() {
+    onAddNote = () => {
         showAddNoteDialog(note => {
             beginTransaction("Add file note");
             this.props.historyItem.note = note;
             commitTransaction();
         });
-    }
+    };
 
-    @bind
-    onEditNote() {
+    onEditNote = () => {
         showEditNoteDialog(this.props.historyItem.note!, note => {
             if (this.props.historyItem.note !== note) {
                 beginTransaction("Edit file note");
@@ -224,17 +219,15 @@ export class FileHistoryItemComponent extends React.Component<
                 commitTransaction();
             }
         });
-    }
+    };
 
-    @bind
-    onDeleteNote() {
+    onDeleteNote = () => {
         beginTransaction("Delete file note");
         this.props.historyItem.note = undefined;
         commitTransaction();
-    }
+    };
 
-    @bind
-    async onSave() {
+    onSave = async () => {
         let filters = [];
 
         let fileExtension = this.props.historyItem.fileExtension;
@@ -273,12 +266,11 @@ export class FileHistoryItemComponent extends React.Component<
             await writeBinaryData(filePath, this.props.historyItem.data);
             notification.success(`Saved as "${filePath}"`);
         }
-    }
+    };
 
     @observable onSaveAsCsvInProgress = false;
 
-    @bind
-    async onSaveAsCsv() {
+    onSaveAsCsv = async () => {
         const convertToCsv = this.props.historyItem.convertToCsv;
         if (!convertToCsv) {
             return;
@@ -334,10 +326,9 @@ export class FileHistoryItemComponent extends React.Component<
         }
 
         runInAction(() => (this.onSaveAsCsvInProgress = false));
-    }
+    };
 
-    @bind
-    onCopy() {
+    onCopy = () => {
         if (this.props.historyItem.isImage) {
             let image = nativeImage.createFromBuffer(
                 Buffer.from(this.props.historyItem.data, "binary")
@@ -348,7 +339,7 @@ export class FileHistoryItemComponent extends React.Component<
             clipboard.writeText(this.props.historyItem.data.toString());
             notification.success("Text copied to the clipboard");
         }
-    }
+    };
 
     getDirectionInfo() {
         if (this.props.historyItem.direction === "upload") {

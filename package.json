@@ -95,7 +95,6 @@
         "app-module-path": "^2.2.0",
         "archiver": "^2.1.1",
         "better-sqlite3": "^7.4.3",
-        "bind-decorator": "^1.0.11",
         "bootstrap": "^5.0.2",
         "bootstrap-dark-5": "^1.1.0",
         "chokidar": "^3.4.0",

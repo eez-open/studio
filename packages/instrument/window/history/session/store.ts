@@ -1,5 +1,4 @@
 import { observable, action, runInAction, autorun } from "mobx";
-import { bind } from "bind-decorator";
 
 import { dbQuery } from "eez-studio-shared/db-query";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -194,8 +193,7 @@ export class HistorySessions {
         }
     }
 
-    @bind
-    startNewSession() {
+    startNewSession = () => {
         if (!this.activeSession) {
             showEditSessionNameDialog("", name => {
                 if (!this.activeSession) {
@@ -221,7 +219,7 @@ export class HistorySessions {
                 }
             });
         }
-    }
+    };
 
     @action.bound
     closeActiveSession() {

@@ -2,7 +2,7 @@ import React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
+
 var sha256 = require("sha256");
 
 import { compareVersions, studioVersion } from "eez-studio-shared/util";
@@ -466,8 +466,7 @@ class MasterView extends React.Component {
         }
     }
 
-    @bind
-    async updateAll() {
+    updateAll = async () => {
         runInAction(() => (this.isUpdatingAll = true));
 
         const extensionsToUpdate = extensionsManagerStore.extensionNodes.map(
@@ -496,7 +495,7 @@ class MasterView extends React.Component {
         });
 
         runInAction(() => (this.isUpdatingAll = false));
-    }
+    };
 
     render() {
         return (
@@ -935,8 +934,7 @@ export class DetailsView extends React.Component {
         );
     }
 
-    @bind
-    async handleInstall() {
+    handleInstall = async () => {
         if (!this.extensionVersions) {
             return;
         }
@@ -967,10 +965,9 @@ export class DetailsView extends React.Component {
         if (extension) {
             extensionsManagerStore.selectExtensionById(extension.id);
         }
-    }
+    };
 
-    @bind
-    handleUninstall() {
+    handleUninstall = () => {
         if (!this.extensionVersions) {
             return;
         }
@@ -989,10 +986,9 @@ export class DetailsView extends React.Component {
             );
             extensionsManagerStore.selectExtensionById(extension.id);
         });
-    }
+    };
 
-    @bind
-    async handleExport() {
+    handleExport = async () => {
         if (!this.extensionVersions) {
             return;
         }
@@ -1030,10 +1026,9 @@ export class DetailsView extends React.Component {
                 notification.error(err.toString());
             }
         }
-    }
+    };
 
-    @bind
-    async handleChangeImage() {
+    handleChangeImage = async () => {
         if (!this.extensionVersions) {
             return;
         }
@@ -1057,7 +1052,7 @@ export class DetailsView extends React.Component {
         if (filePaths && filePaths[0]) {
             changeExtensionImage(extension, filePaths[0]);
         }
-    }
+    };
 
     static getFullDescription(extension: IExtension): React.ReactNode {
         let fullDescription;

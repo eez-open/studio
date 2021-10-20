@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import { isDark } from "eez-studio-shared/color";
 import { getProperty } from "project-editor/core/object";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -18,8 +17,7 @@ export class ThemedColorInput extends React.Component<{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @bind
-    onDragOver(event: React.DragEvent) {
+    onDragOver = (event: React.DragEvent) => {
         event.preventDefault();
         event.stopPropagation();
 
@@ -27,20 +25,18 @@ export class ThemedColorInput extends React.Component<{
         if (data && data.objectClassName === "Color" && data.object) {
             event.dataTransfer.dropEffect = "copy";
         }
-    }
+    };
 
-    @bind
-    onDrop(event: React.DragEvent) {
+    onDrop = (event: React.DragEvent) => {
         event.stopPropagation();
         event.preventDefault();
         var data = getEezStudioDataFromDragEvent(this.context, event);
         if (data && data.objectClassName === "Color" && data.object) {
             this.props.onChange(getProperty(data.object, "name"));
         }
-    }
+    };
 
-    @bind
-    async onChange(event: React.ChangeEvent<HTMLInputElement>) {
+    onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const color = event.target.value;
         // const color16bits = to16bitsColor(color);
         // if (!compareColors(color, color16bits)) {
@@ -50,7 +46,7 @@ export class ThemedColorInput extends React.Component<{
         //     );
         // }
         this.props.onChange(color);
-    }
+    };
 
     render() {
         const { value, readOnly } = this.props;

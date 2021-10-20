@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import classNames from "classnames";
 import {
     IEezObject,
@@ -14,10 +13,9 @@ export class GroupTitle extends React.Component<{
     group: IPropertyGridGroupDefinition;
     object: IEezObject;
 }> {
-    @bind
-    toggleCollapsed() {
+    toggleCollapsed = () => {
         groupCollapsedStore.toggleColapsed(this.props.group);
-    }
+    };
 
     render() {
         const { group } = this.props;

@@ -8,7 +8,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { _countBy } from "eez-studio-shared/algorithm";
 
@@ -176,8 +175,7 @@ class GroupRow implements IRow {
         selectedGroupId.set(this.id);
     }
 
-    @bind
-    editGroup() {
+    editGroup = () => {
         showDialog(
             <GroupDialog
                 groupsStore={this.props.groupsStore}
@@ -187,10 +185,9 @@ class GroupRow implements IRow {
                 }}
             />
         );
-    }
+    };
 
-    @bind
-    deleteGroup() {
+    deleteGroup = () => {
         confirm(
             "Are you sure?",
             this.props.numShortcuts > 0
@@ -200,17 +197,15 @@ class GroupRow implements IRow {
                 this.props.groupsStore.deleteGroup(this.props.group);
             }
         );
-    }
+    };
 
-    @bind
-    onClick() {
+    onClick = () => {
         this.selectGroup();
-    }
+    };
 
-    @bind
-    onDoubleClick() {
+    onDoubleClick = () => {
         this.editGroup();
-    }
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////

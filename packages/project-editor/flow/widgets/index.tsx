@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -962,10 +961,9 @@ registerClass("SelectWidget", SelectWidget);
 
 @observer
 class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
-    @bind
-    showLayout() {
+    showLayout = () => {
         (this.props.objects[0] as LayoutViewWidget).open();
-    }
+    };
 
     render() {
         if (this.props.objects.length > 1) {
@@ -2313,13 +2311,12 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
         return this.props.objects[0] as BitmapWidget;
     }
 
-    @bind
-    resizeToFitBitmap() {
+    resizeToFitBitmap = () => {
         getDocumentStore(this).updateObject(this.props.objects[0], {
             width: this.bitmapWidget.bitmapObject!.imageElement!.width,
             height: this.bitmapWidget.bitmapObject!.imageElement!.height
         });
-    }
+    };
 
     render() {
         if (this.props.readOnly) {

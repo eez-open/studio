@@ -7,7 +7,6 @@ import {
     IReactionDisposer
 } from "mobx";
 import { disposeOnUnmount, observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 import { Splitter } from "eez-studio-ui/splitter";
@@ -48,8 +47,7 @@ export class SortableTitle extends React.Component<{
     direction: SortDirectionType;
     onDirectionChanged: (direction: SortDirectionType) => void;
 }> {
-    @bind
-    onClicked() {
+    onClicked = () => {
         if (this.props.direction === "asc") {
             this.props.onDirectionChanged("desc");
         } else if (this.props.direction === "desc") {
@@ -57,7 +55,7 @@ export class SortableTitle extends React.Component<{
         } else {
             this.props.onDirectionChanged("asc");
         }
-    }
+    };
 
     render() {
         const { title, direction } = this.props;
@@ -210,8 +208,7 @@ export class ListNavigation
         return this.props.editable != false && navigationStore.editable;
     }
 
-    @bind
-    onDoubleClickItem(object: IEezObject) {
+    onDoubleClickItem = (object: IEezObject) => {
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
         } else if (
@@ -220,7 +217,7 @@ export class ListNavigation
         ) {
             this.context.editorsStore.activeEditor.makePermanent();
         }
-    }
+    };
 
     @computed
     get selectedObject() {

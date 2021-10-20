@@ -1,6 +1,5 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { bind } from "bind-decorator";
 
 import { CodeEditor } from "eez-studio-ui/code-editor";
 
@@ -16,22 +15,19 @@ export class BuildFileEditor extends React.Component<{
 
     codeEditor: CodeEditor;
 
-    @bind
-    onChange(value: string) {
+    onChange = (value: string) => {
         this.context.updateObject(this.props.buildFile, {
             template: value
         });
-    }
+    };
 
-    @bind
-    onFocus() {
+    onFocus = () => {
         this.context.undoManager.setCombineCommands(true);
-    }
+    };
 
-    @bind
-    onBlur() {
+    onBlur = () => {
         this.context.undoManager.setCombineCommands(false);
-    }
+    };
 
     componentDidMount() {
         this.codeEditor.resize();

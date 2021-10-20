@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, action, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
@@ -334,8 +333,7 @@ export class Canvas extends React.Component<{
         }
     }
 
-    @bind
-    onWheel(event: WheelEvent) {
+    onWheel = (event: WheelEvent) => {
         if (event.buttons === 4) {
             // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
             return;
@@ -398,16 +396,15 @@ export class Canvas extends React.Component<{
 
         event.preventDefault();
         event.stopPropagation();
-    }
+    };
 
     onDraggableWheel(event: WheelEvent) {
         this.onWheel(event);
     }
 
-    @bind
-    onContextMenu(event: React.MouseEvent) {
+    onContextMenu = (event: React.MouseEvent) => {
         event.preventDefault();
-    }
+    };
 
     createMouseHandler(event: MouseEvent) {
         const flowContext = this.props.flowContext;
@@ -528,8 +525,7 @@ export class Canvas extends React.Component<{
         }
     }
 
-    @bind
-    onDragMove(event: PointerEvent) {
+    onDragMove = (event: PointerEvent) => {
         if (this.mouseHandler) {
             this.mouseHandler.lastPointerEvent = {
                 clientX: event.clientX,
@@ -550,7 +546,7 @@ export class Canvas extends React.Component<{
 
             this.mouseHandler.move(this.props.flowContext, event);
         }
-    }
+    };
 
     @action.bound
     onDragEnd(event: PointerEvent) {
@@ -761,8 +757,7 @@ export class FlowEditor
         return flowContext;
     }
 
-    @bind
-    filterSnapLines(node: ITreeObjectAdapter) {
+    filterSnapLines = (node: ITreeObjectAdapter) => {
         const object = node.object;
 
         const selectedObjects = this.flowContext.viewState.selectedObjects;
@@ -783,7 +778,7 @@ export class FlowEditor
         }
 
         return false;
-    }
+    };
 
     disposeCSS: (() => void) | undefined;
 
@@ -891,10 +886,9 @@ export class FlowEditor
         this.props.tabState.widgetContainer.deleteSelection();
     }
 
-    @bind
-    focusHander() {
+    focusHander = () => {
         this.context.navigationStore.setSelectedPanel(this);
-    }
+    };
 
     getDragComponent(event: React.DragEvent) {
         if (
@@ -1004,8 +998,7 @@ export class FlowEditor
         }
     }
 
-    @bind
-    onKeyDown(event: React.KeyboardEvent) {
+    onKeyDown = (event: React.KeyboardEvent) => {
         if (
             closestBySelector(event.target, ".eez-flow-editor-capture-pointers")
         ) {
@@ -1054,7 +1047,7 @@ export class FlowEditor
             // end
             this.flowContext.viewState.moveSelection("end-x");
         }
-    }
+    };
 
     static getDerivedStateFromError(error: any) {
         return { hasError: true };

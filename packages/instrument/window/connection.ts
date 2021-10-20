@@ -1,5 +1,3 @@
-import { bind } from "bind-decorator";
-
 import type { InstrumentObject } from "instrument/instrument-object";
 
 import type { ConnectionParameters } from "instrument/connection/interface";
@@ -75,13 +73,12 @@ export class Connection {
         }
     }
 
-    @bind
-    handleConnect(connectionParameters: ConnectionParameters) {
+    handleConnect = (connectionParameters: ConnectionParameters) => {
         if (!connectionParameters && !this.instrument.lastConnection) {
             connectionParameters = this.instrument.defaultConnectionParameters;
         }
         this.instrument.connection.connect(connectionParameters);
-    }
+    };
 
     openConnectDialog() {
         showConnectionDialog(

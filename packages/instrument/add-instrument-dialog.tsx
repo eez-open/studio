@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
@@ -32,7 +31,9 @@ class AddInstrumentDialog extends React.Component<
             <ListItem
                 leftIcon={instrumentExtension.image}
                 leftIconSize={48}
-                label={instrumentExtension.displayName || instrumentExtension.name}
+                label={
+                    instrumentExtension.displayName || instrumentExtension.name
+                }
             />
         );
     }
@@ -42,7 +43,8 @@ class AddInstrumentDialog extends React.Component<
         return instrumentExtensions.get().map(instrumentExtension => ({
             id: instrumentExtension.id,
             data: instrumentExtension,
-            selected: instrumentExtension.id === this.selectedInstrumentExtension.id
+            selected:
+                instrumentExtension.id === this.selectedInstrumentExtension.id
         }));
     }
 
@@ -51,14 +53,13 @@ class AddInstrumentDialog extends React.Component<
         this.selectedInstrumentExtension = node.data;
     }
 
-    @bind
-    handleSubmit() {
+    handleSubmit = () => {
         if (this.selectedInstrumentExtension) {
             this.props.callback(this.selectedInstrumentExtension);
             return true;
         }
         return false;
-    }
+    };
 
     render() {
         return (
@@ -76,7 +77,9 @@ class AddInstrumentDialog extends React.Component<
     }
 }
 
-export function showAddInstrumentDialog(callback: (instrumentExtension: IExtension) => void) {
+export function showAddInstrumentDialog(
+    callback: (instrumentExtension: IExtension) => void
+) {
     if (instrumentExtensions.get().length > 0) {
         showDialog(<AddInstrumentDialog callback={callback} />);
     } else {

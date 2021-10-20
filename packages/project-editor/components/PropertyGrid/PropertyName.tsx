@@ -1,7 +1,6 @@
 import React from "react";
 import { observable } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import { Icon } from "eez-studio-ui/icon";
 import {
     PropertyProps,
@@ -16,13 +15,12 @@ import { isAnyPropertyModified } from "project-editor/core/store";
 export class PropertyName extends React.Component<PropertyProps> {
     @observable collapsed = true;
 
-    @bind
-    toggleCollapsed() {
+    toggleCollapsed = () => {
         propertyCollapsedStore.toggleColapsed(
             this.props.objects[0],
             this.props.propertyInfo
         );
-    }
+    };
 
     render() {
         const { objects, propertyInfo } = this.props;

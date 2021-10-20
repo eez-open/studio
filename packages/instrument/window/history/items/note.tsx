@@ -1,7 +1,6 @@
 import React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -27,8 +26,7 @@ export class NoteHistoryItemComponent extends React.Component<
     },
     {}
 > {
-    @bind
-    handleEditNote() {
+    handleEditNote = () => {
         showEditNoteDialog(this.props.historyItem.message, note => {
             beginTransaction("Edit note");
             logUpdate(
@@ -44,7 +42,7 @@ export class NoteHistoryItemComponent extends React.Component<
             );
             commitTransaction();
         });
-    }
+    };
 
     render() {
         return (

@@ -1,5 +1,3 @@
-import { bind } from "bind-decorator";
-
 import { closestBySelector } from "eez-studio-shared/dom";
 
 export const DRAGGABLE_OVERLAY_ELEMENT_ID = "eez-draggable-overlay-element";
@@ -46,8 +44,7 @@ export class Draggable {
         }
     }
 
-    @bind
-    onPointerDown(e: PointerEvent) {
+    onPointerDown = (e: PointerEvent) => {
         if (!this.element) {
             return;
         }
@@ -115,10 +112,9 @@ export class Draggable {
         } else {
             this.params = undefined;
         }
-    }
+    };
 
-    @bind
-    onPointerMove(e: PointerEvent) {
+    onPointerMove = (e: PointerEvent) => {
         if (this.dragging) {
             if (this.config.onDragMove) {
                 this.config.onDragMove(
@@ -133,37 +129,32 @@ export class Draggable {
                 this.config.onMove(e);
             }
         }
-    }
+    };
 
-    @bind
-    onPointerUp(e: PointerEvent) {
+    onPointerUp = (e: PointerEvent) => {
         this.finishDragging(e, false);
-    }
+    };
 
-    @bind
-    onPointerCancel(e: PointerEvent) {
+    onPointerCancel = (e: PointerEvent) => {
         this.finishDragging(e, true);
-    }
+    };
 
-    @bind
-    onWheel(e: WheelEvent) {
+    onWheel = (e: WheelEvent) => {
         if (this.config.onDraggableWheel) {
             this.config.onDraggableWheel(e);
         }
-    }
+    };
 
-    @bind
-    onKeyDown(e: KeyboardEvent) {
+    onKeyDown = (e: KeyboardEvent) => {
         if (e.keyCode == 27 /* ESC */) {
             e.preventDefault();
             e.stopPropagation();
 
             this.finishDragging(undefined, true);
         }
-    }
+    };
 
-    @bind
-    finishDragging(e: PointerEvent | undefined, cancel: boolean) {
+    finishDragging = (e: PointerEvent | undefined, cancel: boolean) => {
         if (!this.dragging) {
             return;
         }
@@ -191,5 +182,5 @@ export class Draggable {
         window.removeEventListener("keydown", this.onKeyDown);
 
         this.dragging = false;
-    }
+    };
 }

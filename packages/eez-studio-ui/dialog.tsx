@@ -3,7 +3,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
-import bind from "bind-decorator";
 import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
@@ -52,8 +51,7 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
         }
     }
 
-    @bind
-    onKeyPress(event: React.KeyboardEvent) {
+    onKeyPress = (event: React.KeyboardEvent) => {
         if (
             event.which == 13 &&
             !(event.target instanceof HTMLTextAreaElement)
@@ -61,7 +59,7 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
             event.preventDefault();
             this.props.onSubmit(event);
         }
-    }
+    };
 
     render() {
         const props = this.props;
@@ -225,8 +223,7 @@ export class Dialog extends React.Component<
         this.open = false;
     }
 
-    @bind
-    handleSubmit(event: any) {
+    handleSubmit = (event: any) => {
         event.preventDefault();
         event.stopPropagation();
 
@@ -244,16 +241,15 @@ export class Dialog extends React.Component<
                 this.closeDialog();
             }
         }
-    }
+    };
 
-    @bind
-    onCancel() {
+    onCancel = () => {
         if (this.props.onCancel) {
             this.props.onCancel();
         }
 
         this.closeDialog();
-    }
+    };
 
     render() {
         const buttons: IDialogButton[] = [];

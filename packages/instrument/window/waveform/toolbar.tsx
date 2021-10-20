@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
@@ -20,12 +19,11 @@ export class WaveformToolbar extends React.Component<
     },
     {}
 > {
-    @bind
-    configureChart() {
+    configureChart = () => {
         if (this.props.waveform.openConfigurationDialog) {
             this.props.waveform.openConfigurationDialog();
         }
-    }
+    };
 
     render() {
         return (

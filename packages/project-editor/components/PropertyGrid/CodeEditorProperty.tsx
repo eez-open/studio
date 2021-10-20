@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, action, runInAction, autorun } from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
-import { bind } from "bind-decorator";
 import { CodeEditor, CodeEditorMode } from "eez-studio-ui/code-editor";
 import {
     PropertyProps,
@@ -62,19 +61,17 @@ export class CodeEditorProperty extends React.Component<CodeEditorPropertyProps>
         this.value = value;
     }
 
-    @bind
-    onFocus() {
+    onFocus = () => {
         this.editor.resize();
-    }
+    };
 
-    @bind
-    onBlur() {
+    onBlur = () => {
         if (this.getValue() !== this.value) {
             this.props.updateObject({
                 [this.props.propertyInfo.name]: this.value
             });
         }
-    }
+    };
 
     render() {
         const { propertyInfo, showLabel, readOnly } = this.props;

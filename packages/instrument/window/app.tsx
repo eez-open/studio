@@ -1,7 +1,6 @@
 import React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { AppRootComponent } from "eez-studio-ui/app";
@@ -64,24 +63,21 @@ export class AppBar extends React.Component<
         return getConnection(this.props.appStore);
     }
 
-    @bind
-    handleConnectClick() {
+    handleConnectClick = () => {
         this.connection.openConnectDialog();
-    }
+    };
 
-    @bind
-    handleDisconnectClick() {
+    handleDisconnectClick = () => {
         this.instrument.connection.disconnect();
-    }
+    };
 
-    @bind
-    onEditInstrumentLabel() {
+    onEditInstrumentLabel = () => {
         showDialog(
             <EditInstrumentLabelDialog
                 instrument={this.props.appStore.instrument!}
             />
         );
-    }
+    };
 
     render() {
         let connectionStatus;
@@ -195,12 +191,11 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
         super(props);
     }
 
-    @bind
-    onSelectionChange(item: IInstrumentWindowNavigationItem) {
+    onSelectionChange = (item: IInstrumentWindowNavigationItem) => {
         this.props.appStore.navigationStore.changeMainNavigationSelectedItem(
             item
         );
-    }
+    };
 
     @computed
     get appBar() {

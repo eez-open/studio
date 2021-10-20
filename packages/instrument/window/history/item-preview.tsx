@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
@@ -40,18 +39,16 @@ class ZoomedPreview extends React.Component<{
         document.getElementById("EezStudio_ModalContent")!.removeChild(this.el);
     }
 
-    @bind
-    onContextMenu(event: React.MouseEvent<HTMLDivElement>) {
+    onContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
-    }
+    };
 
-    @bind
-    onKeyDown(event: KeyboardEvent) {
+    onKeyDown = (event: KeyboardEvent) => {
         if (this.props.enableUnzoomWithEsc && event.keyCode == 27) {
             this.props.toggleZoom(event as any);
         }
-    }
+    };
 
     render() {
         return ReactDOM.createPortal(
@@ -107,15 +104,14 @@ export class HistoryItemPreview extends React.Component<{
     toggleZoom: () => void;
     enableUnzoomWithEsc: boolean;
 }> {
-    @bind
-    toggleZoom(event: React.MouseEvent<HTMLElement>) {
+    toggleZoom = (event: React.MouseEvent<HTMLElement>) => {
         if (this.props.zoom || (!event.shiftKey && !event.ctrlKey)) {
             event.preventDefault();
             event.stopPropagation();
 
             this.props.toggleZoom();
         }
-    }
+    };
 
     render() {
         const className = classNames(

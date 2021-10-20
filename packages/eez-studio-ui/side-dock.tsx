@@ -2,7 +2,6 @@ import React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { Splitter } from "eez-studio-ui/splitter";
 import {
@@ -83,8 +82,7 @@ export class DockablePanels extends React.Component<{
         return this.goldenLayout.toConfig();
     }
 
-    @bind
-    onStateChanged() {
+    onStateChanged = () => {
         if (this.goldenLayout) {
             if (this.props.onStateChanged) {
                 this.props.onStateChanged(this.goldenLayout.toConfig());
@@ -95,7 +93,7 @@ export class DockablePanels extends React.Component<{
                 );
             }
         }
-    }
+    };
 
     updateSize() {
         if (this.goldenLayout) {

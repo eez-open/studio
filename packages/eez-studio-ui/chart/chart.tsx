@@ -14,7 +14,7 @@ import {
     toJS
 } from "mobx";
 import { observer } from "mobx-react";
-import bind from "bind-decorator";
+
 import classNames from "classnames";
 import { cssTransition } from "react-toastify";
 
@@ -553,8 +553,7 @@ class AxisLines extends React.Component<
     { axisController: AxisController },
     {}
 > {
-    @bind
-    line(tick: ITick, i: number) {
+    line = (tick: ITick, i: number) => {
         const { axisController } = this.props;
         const chartsController = this.props.axisController.chartsController;
 
@@ -586,7 +585,7 @@ class AxisLines extends React.Component<
                 stroke={tick.color}
             />
         );
-    }
+    };
 
     render() {
         const { axisController } = this.props;
@@ -1604,8 +1603,7 @@ class Cursor implements ICursor {
         }
     }
 
-    @bind
-    onPointerMove(event: PointerEvent) {
+    onPointerMove = (event: PointerEvent) => {
         if (
             event.target instanceof Element &&
             !$.contains(this.chartView.svg, event.target) &&
@@ -1614,7 +1612,7 @@ class Cursor implements ICursor {
         ) {
             this.hidePopover();
         }
-    }
+    };
 
     showPopover() {
         if (this.cursorElement) {
@@ -1876,8 +1874,7 @@ export class ChartView extends React.Component<
         this.cursor.onMouseEvent(event, this.mouseHandler);
     }
 
-    @bind
-    onDragMove(event: PointerEvent) {
+    onDragMove = (event: PointerEvent) => {
         if (this.mouseHandler) {
             if (event.buttons) {
                 let point = this.transformEventPoint(event);
@@ -1889,12 +1886,11 @@ export class ChartView extends React.Component<
         }
 
         this.cursor.onMouseEvent(event, this.mouseHandler);
-    }
+    };
 
-    @bind
-    onMove(event: PointerEvent) {
+    onMove = (event: PointerEvent) => {
         this.cursor.onMouseEvent(event, this.mouseHandler);
-    }
+    };
 
     @action.bound
     onDragEnd(event: PointerEvent, cancel: boolean) {
@@ -3297,8 +3293,7 @@ export class ChartsView extends React.Component<
         }
     }
 
-    @bind
-    frameAnimation() {
+    frameAnimation = () => {
         this.adjustSize();
 
         const chartsController = this.props.chartsController;
@@ -3323,7 +3318,7 @@ export class ChartsView extends React.Component<
         this.animationFrameRequestId = window.requestAnimationFrame(
             this.frameAnimation
         );
-    }
+    };
 
     setFocus() {
         if (this.div && this.props.tabIndex !== undefined) {
@@ -3357,8 +3352,7 @@ export class ChartsView extends React.Component<
         }
     }
 
-    @bind
-    registerComponents(factory: any) {
+    registerComponents = (factory: any) => {
         const chartsController = this.props.chartsController;
 
         factory.registerComponent(
@@ -3421,7 +3415,7 @@ export class ChartsView extends React.Component<
                 );
             }
         );
-    }
+    };
 
     get chartViewOptionsItem() {
         return {
@@ -3635,8 +3629,7 @@ export class ChartMeasurements extends React.Component<{
         return this.props.measurementsController.measurementsModel;
     }
 
-    @bind
-    registerComponents(factory: any) {
+    registerComponents = (factory: any) => {
         const measurementsController = this.props.measurementsController;
 
         factory.registerComponent(
@@ -3657,7 +3650,7 @@ export class ChartMeasurements extends React.Component<{
                 }
             }
         );
-    }
+    };
 
     @computed
     get defaultLayoutConfig() {
@@ -3684,8 +3677,7 @@ export class ChartMeasurements extends React.Component<{
 
     debounceTimeout: any;
 
-    @bind
-    onStateChanged(state: any) {
+    onStateChanged = (state: any) => {
         const newStateContent = state.content;
 
         if (this.debounceTimeout) {
@@ -3739,7 +3731,7 @@ export class ChartMeasurements extends React.Component<{
                         chartPanelsViewState)
             );
         }, 1000);
-    }
+    };
 
     render() {
         return (
@@ -4138,8 +4130,7 @@ export class DynamicAxisController extends AxisController {
         this.animate(() => (this.axisModel.dynamic.zoomMode = "default"));
     }
 
-    @bind
-    zoomIn() {
+    zoomIn = () => {
         if (!this.zoomInEnabled) {
             return;
         }
@@ -4148,10 +4139,9 @@ export class DynamicAxisController extends AxisController {
         const newDistance = this.distance / CONF_ZOOM_STEP;
 
         this.zoom(c - newDistance / 2, c + newDistance / 2);
-    }
+    };
 
-    @bind
-    zoomOut() {
+    zoomOut = () => {
         if (!this.zoomOutEnabled) {
             return;
         }
@@ -4160,7 +4150,7 @@ export class DynamicAxisController extends AxisController {
         const newDistance = this.distance * CONF_ZOOM_STEP;
 
         this.zoom(c - newDistance / 2, c + newDistance / 2);
-    }
+    };
 
     zoom(from: number, to: number) {
         this.animate(() => {
@@ -4530,8 +4520,7 @@ export class FixedAxisController extends AxisController {
         this.animate(() => (this.axisModel.fixed.zoomMode = "default"));
     }
 
-    @bind
-    zoomIn() {
+    zoomIn = () => {
         if (!this.zoomInEnabled) {
             return;
         }
@@ -4545,10 +4534,9 @@ export class FixedAxisController extends AxisController {
             this.axisModel.fixed.subdivisionOffset = offset;
             this.axisModel.fixed.zoomMode = "custom";
         });
-    }
+    };
 
-    @bind
-    zoomOut() {
+    zoomOut = () => {
         if (!this.zoomOutEnabled) {
             return;
         }
@@ -4562,7 +4550,7 @@ export class FixedAxisController extends AxisController {
             this.axisModel.fixed.subdivisionOffset = offset;
             this.axisModel.fixed.zoomMode = "custom";
         });
-    }
+    };
 
     zoom(from: number, to: number) {
         if (to - from < this.distance) {
@@ -5784,8 +5772,7 @@ class MeasurementComponent extends React.Component<{
         return csv;
     }
 
-    @bind
-    async onSaveAsCsv() {
+    onSaveAsCsv = async () => {
         if (this.operationInProgress) {
             return;
         }
@@ -5828,10 +5815,9 @@ class MeasurementComponent extends React.Component<{
         }
 
         runInAction(() => (this.operationInProgress = false));
-    }
+    };
 
-    @bind
-    async onCopy() {
+    onCopy = async () => {
         if (this.operationInProgress) {
             return;
         }
@@ -5881,7 +5867,7 @@ class MeasurementComponent extends React.Component<{
         }
 
         runInAction(() => (this.operationInProgress = false));
-    }
+    };
 
     render() {
         const { measurement } = this.props;
@@ -7922,28 +7908,25 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
     }
 
-    @bind
-    setX1(event: React.ChangeEvent<HTMLInputElement>) {
+    setX1 = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.isInsideChange = true;
         runInAction(() => {
             this.x1 = event.target.value;
             this.validateXRange();
         });
         this.isInsideChange = false;
-    }
+    };
 
-    @bind
-    setX2(event: React.ChangeEvent<HTMLInputElement>) {
+    setX2 = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.isInsideChange = true;
         runInAction(() => {
             this.x2 = event.target.value;
             this.validateXRange();
         });
         this.isInsideChange = false;
-    }
+    };
 
-    @bind
-    zoomToFitXRulers() {
+    zoomToFitXRulers = () => {
         let x1;
         let x2;
         if (this.rulersModel.x1 < this.rulersModel.x2) {
@@ -7959,7 +7942,7 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
             x1 - 0.05 * dx,
             x2 + 0.05 * dx
         );
-    }
+    };
 
     validateYRange(chartIndex: number) {
         const yAxisController =
@@ -8004,28 +7987,31 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         }
     }
 
-    @bind
-    setY1(chartIndex: number, event: React.ChangeEvent<HTMLInputElement>) {
+    setY1 = (
+        chartIndex: number,
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
         this.isInsideChange = true;
         runInAction(() => {
             this.y1[chartIndex] = event.target.value;
             this.validateYRange(chartIndex);
         });
         this.isInsideChange = false;
-    }
+    };
 
-    @bind
-    setY2(chartIndex: number, event: React.ChangeEvent<HTMLInputElement>) {
+    setY2 = (
+        chartIndex: number,
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
         this.isInsideChange = true;
         runInAction(() => {
             this.y2[chartIndex] = event.target.value;
             this.validateYRange(chartIndex);
         });
         this.isInsideChange = false;
-    }
+    };
 
-    @bind
-    zoomToFitYRulers(chartIndex: number) {
+    zoomToFitYRulers = (chartIndex: number) => {
         let y1;
         let y2;
         if (this.rulersModel.y1[chartIndex] < this.rulersModel.y2[chartIndex]) {
@@ -8040,7 +8026,7 @@ export class RulersDockView extends React.Component<RulersDockViewProps> {
         this.props.chartsController.chartControllers[
             chartIndex
         ].yAxisController.zoom(y1 - 0.05 * dy, y2 + 0.05 * dy);
-    }
+    };
 
     render() {
         return (

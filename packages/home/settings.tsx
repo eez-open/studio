@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import moment from "moment";
 import classNames from "classnames";
 
@@ -201,8 +200,7 @@ class SettingsController {
         }, 200);
     }
 
-    @bind
-    async createNewDatabase() {
+    createNewDatabase = async () => {
         const result = await EEZStudio.remote.dialog.showSaveDialog(
             EEZStudio.remote.getCurrentWindow(),
             {}
@@ -216,18 +214,16 @@ class SettingsController {
                 notification.error(error.toString());
             }
         }
-    }
+    };
 
-    @bind
-    showDatabasePathInFolder() {
+    showDatabasePathInFolder = () => {
         shell.showItemInFolder(this.databasePath);
-    }
+    };
 
-    @bind
-    restart() {
+    restart = () => {
         app.relaunch();
         app.exit();
-    }
+    };
 
     compactDatabase() {
         showDialog(<CompactDatabaseDialog />);

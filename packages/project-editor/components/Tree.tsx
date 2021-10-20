@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import classNames from "classnames";
 
 import { _filter, _map, _each } from "eez-studio-shared/algorithm";
@@ -215,8 +214,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         }
     }
 
-    @bind
-    onKeyDown(event: any) {
+    onKeyDown = (event: any) => {
         if (event.altKey) {
         } else if (event.shiftKey) {
         } else if (event.ctrlKey) {
@@ -308,7 +306,7 @@ export class Tree extends React.Component<TreeProps, {}> {
                 event.preventDefault();
             }
         }
-    }
+    };
 
     @action.bound
     onDragOver(event: React.DragEvent) {
@@ -579,30 +577,26 @@ export class Tree extends React.Component<TreeProps, {}> {
         }
     }
 
-    @bind
-    onRowDragStart(event: React.DragEvent<HTMLDivElement>) {
+    onRowDragStart = (event: React.DragEvent<HTMLDivElement>) => {
         event.stopPropagation();
         let item = this.props.treeAdapter.getItemFromId(
             $(event.target).attr("data-object-id")!
         );
         this.props.treeAdapter.draggableAdapter!.onDragStart(item!, event);
-    }
+    };
 
-    @bind
-    onRowDrag(event: any) {
+    onRowDrag = (event: any) => {
         let item = this.props.treeAdapter.getItemFromId(
             $(event.target).attr("data-object-id")!
         );
         this.props.treeAdapter.draggableAdapter!.onDrag(item!, event);
-    }
+    };
 
-    @bind
-    onRowDragEnd(event: any) {
+    onRowDragEnd = (event: any) => {
         this.props.treeAdapter.draggableAdapter!.onDragEnd(event);
-    }
+    };
 
-    @bind
-    onRowClick(event: React.MouseEvent<HTMLDivElement>) {
+    onRowClick = (event: React.MouseEvent<HTMLDivElement>) => {
         const $rowDiv = $(event.target).closest(".tree-row[data-object-id]");
         let item = this.props.treeAdapter.getItemFromId(
             $rowDiv.attr("data-object-id")!
@@ -664,10 +658,9 @@ export class Tree extends React.Component<TreeProps, {}> {
         } else {
             this.props.treeAdapter.selectItem(item);
         }
-    }
+    };
 
-    @bind
-    onRowMouseUp(event: React.MouseEvent<HTMLDivElement>) {
+    onRowMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
         if (event.button === 2) {
             event.preventDefault();
             event.stopPropagation();
@@ -687,10 +680,9 @@ export class Tree extends React.Component<TreeProps, {}> {
                 this.props.treeAdapter.showSelectionContextMenu();
             });
         }
-    }
+    };
 
-    @bind
-    onRowDoubleClick(event: any) {
+    onRowDoubleClick = (event: any) => {
         event.preventDefault();
         event.stopPropagation();
 
@@ -705,10 +697,9 @@ export class Tree extends React.Component<TreeProps, {}> {
         } else {
             this.props.treeAdapter.onDoubleClick(item);
         }
-    }
+    };
 
-    @bind
-    onRowToggleCollapse(event: any) {
+    onRowToggleCollapse = (event: any) => {
         event.preventDefault();
         event.stopPropagation();
 
@@ -718,7 +709,7 @@ export class Tree extends React.Component<TreeProps, {}> {
         )!;
         this.props.treeAdapter.selectItem(item);
         this.props.treeAdapter.collapsableAdapter!.toggleExpanded(item);
-    }
+    };
 
     onContextMenu(event: React.MouseEvent) {
         event.preventDefault();

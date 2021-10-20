@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, action, toJS } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { logGet, logUpdate } from "eez-studio-shared/activity-log";
 import {
@@ -78,8 +77,7 @@ class MasterView extends React.Component<
             }));
     }
 
-    @bind
-    addList() {
+    addList = () => {
         showGenericDialog({
             dialogDefinition: {
                 fields: [
@@ -166,10 +164,9 @@ class MasterView extends React.Component<
                 }, 10);
             })
             .catch(() => {});
-    }
+    };
 
-    @bind
-    removeList() {
+    removeList = () => {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Remove instrument list");
             this.props.appStore.instrumentListStore.deleteObject(
@@ -177,7 +174,7 @@ class MasterView extends React.Component<
             );
             commitTransaction();
         });
-    }
+    };
 
     render() {
         return (
@@ -428,8 +425,7 @@ export class ListsButtons extends React.Component<
         );
     }
 
-    @bind
-    async import() {
+    import = async () => {
         const result = await EEZStudio.remote.dialog.showOpenDialog(
             EEZStudio.remote.getCurrentWindow(),
             {
@@ -510,10 +506,9 @@ export class ListsButtons extends React.Component<
                 })
                 .catch(() => {});
         }
-    }
+    };
 
-    @bind
-    export() {
+    export = () => {
         if (this.selectedList) {
             saveTableListData(
                 this.props.appStore.instrument!,
@@ -521,7 +516,7 @@ export class ListsButtons extends React.Component<
                 this.selectedList.tableListData
             );
         }
-    }
+    };
 
     get numChannels(): number {
         const channels = this.props.appStore.instrument!.channelsProperty;
@@ -531,8 +526,7 @@ export class ListsButtons extends React.Component<
         return DEFAULT_INSTRUMENT_PROPERTIES.properties.channels!.length;
     }
 
-    @bind
-    async getList() {
+    getList = async () => {
         let channelIndex = await selectChannel(
             "Get list from channel:",
             this.numChannels
@@ -625,10 +619,9 @@ export class ListsButtons extends React.Component<
                 );
             })
             .catch(() => {});
-    }
+    };
 
-    @bind
-    async sendList() {
+    sendList = async () => {
         if (this.selectedList) {
             let channelIndex = await selectChannel(
                 "Send list to channel:",
@@ -651,7 +644,7 @@ export class ListsButtons extends React.Component<
                 notification.error(`Failed to send list: ${err.toString()}`);
             }
         }
-    }
+    };
 
     updateModifedAt() {
         const list = this.selectedList;

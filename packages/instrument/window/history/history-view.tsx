@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { observable, computed, action, keys } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { readBinaryFile } from "eez-studio-shared/util-electron";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -38,8 +37,7 @@ import {
 
 @observer
 export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
-    @bind
-    addNote() {
+    addNote = () => {
         showAddNoteDialog(note => {
             beginTransaction("Add note");
             log(
@@ -55,10 +53,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
             );
             commitTransaction();
         });
-    }
+    };
 
-    @bind
-    async attachFile() {
+    attachFile = async () => {
         const result = await EEZStudio.remote.dialog.showOpenDialog({
             properties: ["openFile", "multiSelections"],
             filters: [{ name: "All Files", extensions: ["*"] }]
@@ -142,10 +139,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                 commitTransaction();
             });
         }
-    }
+    };
 
-    @bind
-    addChart() {
+    addChart = () => {
         this.props.appStore.selectHistoryItems({
             historyItemType: "chart",
             message: "Select one or more waveform data items",
@@ -177,10 +173,9 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
                 commitTransaction();
             }
         });
-    }
+    };
 
-    @bind
-    generateChart() {
+    generateChart = () => {
         const numSamples = 128;
         const data = new Buffer(numSamples * 8);
         for (let i = 0; i < numSamples; ++i) {
@@ -223,7 +218,7 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
             }
         );
         commitTransaction();
-    }
+    };
 
     render() {
         const { appStore } = this.props;
@@ -353,8 +348,7 @@ export class HistoryView extends React.Component<{
 
     @observable searchText: string = "";
 
-    @bind
-    frameAnimation() {
+    frameAnimation = () => {
         if (this.sideDock) {
             this.sideDock.updateSize();
         }
@@ -362,7 +356,7 @@ export class HistoryView extends React.Component<{
         this.animationFrameRequestId = window.requestAnimationFrame(
             this.frameAnimation
         );
-    }
+    };
 
     componentDidMount() {
         this.frameAnimation();
@@ -380,15 +374,13 @@ export class HistoryView extends React.Component<{
         }
     }
 
-    @bind
-    onSelectHistoryItemsOk() {
+    onSelectHistoryItemsOk = () => {
         this.props.appStore.selectHistoryItemsSpecification!.onOk();
-    }
+    };
 
-    @bind
-    onSelectHistoryItemsCancel() {
+    onSelectHistoryItemsCancel = () => {
         this.props.appStore.selectHistoryItems(undefined);
-    }
+    };
 
     @action.bound
     onSearchChange(event: any) {
@@ -396,8 +388,7 @@ export class HistoryView extends React.Component<{
         this.props.appStore.history.search.search(this.searchText);
     }
 
-    @bind
-    registerComponents(factory: any) {
+    registerComponents = (factory: any) => {
         const appStore = this.props.appStore;
 
         factory.registerComponent(
@@ -480,7 +471,7 @@ export class HistoryView extends React.Component<{
                 );
             }
         );
-    }
+    };
 
     get searchResultsItem() {
         return {

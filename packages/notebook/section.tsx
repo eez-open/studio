@@ -1,15 +1,30 @@
 import React from "react";
-import { observable, computed, action, runInAction, values, toJS, autorun } from "mobx";
+import {
+    observable,
+    computed,
+    action,
+    runInAction,
+    values,
+    toJS,
+    autorun
+} from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { sendSimpleMessage } from "eez-studio-shared/util";
 
 import { Splitter } from "eez-studio-ui/splitter";
-import { VerticalHeaderWithBody, ToolbarHeader, Body } from "eez-studio-ui/header-with-body";
-import { IconAction, DropdownIconAction, DropdownItem } from "eez-studio-ui/action";
+import {
+    VerticalHeaderWithBody,
+    ToolbarHeader,
+    Body
+} from "eez-studio-ui/header-with-body";
+import {
+    IconAction,
+    DropdownIconAction,
+    DropdownItem
+} from "eez-studio-ui/action";
 import { List as ListComponent } from "eez-studio-ui/list";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -23,7 +38,10 @@ import {
     DeletedItemsHistory
 } from "instrument/window/history/history";
 import { Filters } from "instrument/window/history/filters";
-import { HistoryTools, HistoryView } from "instrument/window/history/history-view";
+import {
+    HistoryTools,
+    HistoryView
+} from "instrument/window/history/history-view";
 import {
     DeletedHistoryItemsTools,
     DeletedHistoryItemsView
@@ -51,13 +69,19 @@ class NotebooksHomeSectionStore {
 
     constructor() {
         autorun(() => {
-            if (this.selectedNotebook && !notebooks.get(this.selectedNotebook.id)) {
+            if (
+                this.selectedNotebook &&
+                !notebooks.get(this.selectedNotebook.id)
+            ) {
                 runInAction(() => {
                     this._selectedNotebook = undefined;
                 });
             }
 
-            if (this.appStore && this.appStore.deletedItemsHistory.deletedCount === 0) {
+            if (
+                this.appStore &&
+                this.appStore.deletedItemsHistory.deletedCount === 0
+            ) {
                 runInAction(() => {
                     this.showDeletedHistoryItems = false;
                 });
@@ -100,12 +124,12 @@ class MasterView extends React.Component {
                 data: notebook,
                 selected:
                     notebooksHomeSectionStore.selectedNotebook !== undefined &&
-                    notebook.id === notebooksHomeSectionStore.selectedNotebook.id
+                    notebook.id ===
+                        notebooksHomeSectionStore.selectedNotebook.id
             }));
     }
 
-    @bind
-    addNotebook() {
+    addNotebook = () => {
         showGenericDialog({
             dialogDefinition: {
                 fields: [
@@ -134,10 +158,13 @@ class MasterView extends React.Component {
                 commitTransaction();
 
                 setTimeout(() => {
-                    notebooksHomeSectionStore.selectedNotebook = notebooks.get(notebookId);
+                    notebooksHomeSectionStore.selectedNotebook =
+                        notebooks.get(notebookId);
 
                     setTimeout(() => {
-                        let element = document.querySelector(`.EezStudio_Notebook_${notebookId}`);
+                        let element = document.querySelector(
+                            `.EezStudio_Notebook_${notebookId}`
+                        );
                         if (element) {
                             element.scrollIntoView();
                         }
@@ -145,16 +172,18 @@ class MasterView extends React.Component {
                 }, 10);
             })
             .catch(() => {});
-    }
+    };
 
-    @bind
-    async importNotebook() {
+    importNotebook = async () => {
         const result = await EEZStudio.remote.dialog.showOpenDialog(
             EEZStudio.remote.getCurrentWindow(),
             {
                 properties: ["openFile"],
                 filters: [
-                    { name: "EEZ Notebook files", extensions: ["eez-notebook"] },
+                    {
+                        name: "EEZ Notebook files",
+                        extensions: ["eez-notebook"]
+                    },
                     { name: "All Files", extensions: ["*"] }
                 ]
             }
@@ -163,24 +192,21 @@ class MasterView extends React.Component {
         if (filePaths && filePaths[0]) {
             importNotebook(filePaths[0], { showNotebook: true });
         }
-    }
+    };
 
-    @bind
-    removeNotebook() {
+    removeNotebook = () => {
         confirm("Are you sure?", undefined, () => {
             beginTransaction("Remove notebook");
             deleteNotebook(toJS(notebooksHomeSectionStore.selectedNotebook!));
             commitTransaction();
         });
-    }
+    };
 
-    @bind
-    showDeletedNotebooks() {
+    showDeletedNotebooks = () => {
         showDeletedNotebooksDialog();
-    }
+    };
 
-    @bind
-    changeNotebookName() {
+    changeNotebookName = () => {
         showGenericDialog({
             dialogDefinition: {
                 fields: [
@@ -204,12 +230,16 @@ class MasterView extends React.Component {
             .then(result => {
                 beginTransaction("Rename notebook");
                 updateNotebook(
-                    Object.assign({}, notebooksHomeSectionStore.selectedNotebook, result.values)
+                    Object.assign(
+                        {},
+                        notebooksHomeSectionStore.selectedNotebook,
+                        result.values
+                    )
                 );
                 commitTransaction();
             })
             .catch(() => {});
-    }
+    };
 
     render() {
         return (
@@ -221,7 +251,10 @@ class MasterView extends React.Component {
                         iconSize={16}
                         title="Add notebook"
                     >
-                        <DropdownItem text="Add an empty notebook" onClick={this.addNotebook} />
+                        <DropdownItem
+                            text="Add an empty notebook"
+                            onClick={this.addNotebook}
+                        />
                         <DropdownItem
                             text="Import notebook from file"
                             onClick={this.importNotebook}
@@ -253,10 +286,13 @@ class MasterView extends React.Component {
                     <ListComponent
                         nodes={this.sortedNotebooks}
                         renderNode={node => (
-                            <div className={"EezStudio_Notebook_" + node.id}>{node.data.name}</div>
+                            <div className={"EezStudio_Notebook_" + node.id}>
+                                {node.data.name}
+                            </div>
                         )}
                         selectNode={node =>
-                            (notebooksHomeSectionStore.selectedNotebook = node.data)
+                            (notebooksHomeSectionStore.selectedNotebook =
+                                node.data)
                         }
                     />
                 </Body>
@@ -270,7 +306,9 @@ class MasterView extends React.Component {
 class AppStore implements IAppStore {
     constructor(public notebookId: string) {}
 
-    @observable selectHistoryItemsSpecification: SelectHistoryItemsSpecification | undefined;
+    @observable selectHistoryItemsSpecification:
+        | SelectHistoryItemsSpecification
+        | undefined;
     @observable selectedHistoryItems = new Map<string, boolean>();
 
     instrument: {
@@ -317,17 +355,24 @@ class AppStore implements IAppStore {
     }
 
     @action
-    selectHistoryItems(specification: SelectHistoryItemsSpecification | undefined) {
+    selectHistoryItems(
+        specification: SelectHistoryItemsSpecification | undefined
+    ) {
         this.selectHistoryItemsSpecification = specification;
         this.selectedHistoryItems.clear();
     }
 
     navigationStore = {
         navigateToHistory() {
-            runInAction(() => (notebooksHomeSectionStore.showDeletedHistoryItems = false));
+            runInAction(
+                () =>
+                    (notebooksHomeSectionStore.showDeletedHistoryItems = false)
+            );
         },
         navigateToDeletedHistoryItems() {
-            runInAction(() => (notebooksHomeSectionStore.showDeletedHistoryItems = true));
+            runInAction(
+                () => (notebooksHomeSectionStore.showDeletedHistoryItems = true)
+            );
         },
         navigateToSessionsList() {},
         mainHistoryView: undefined,
@@ -355,7 +400,9 @@ export class DetailsView extends React.Component {
             return (
                 <VerticalHeaderWithBody>
                     <ToolbarHeader>
-                        <DeletedHistoryItemsTools appStore={notebooksHomeSectionStore.appStore!} />
+                        <DeletedHistoryItemsTools
+                            appStore={notebooksHomeSectionStore.appStore!}
+                        />
                     </ToolbarHeader>
                     <Body>
                         <DeletedHistoryItemsView
@@ -369,7 +416,9 @@ export class DetailsView extends React.Component {
             return (
                 <VerticalHeaderWithBody>
                     <ToolbarHeader>
-                        <HistoryTools appStore={notebooksHomeSectionStore.appStore!} />
+                        <HistoryTools
+                            appStore={notebooksHomeSectionStore.appStore!}
+                        />
                     </ToolbarHeader>
                     <Body>
                         <HistoryView
@@ -389,9 +438,17 @@ export class DetailsView extends React.Component {
 class NotebooksHomeSection extends React.Component {
     render() {
         return (
-            <Splitter type="horizontal" sizes="240px|100%" persistId="notebook/notebooks/splitter">
+            <Splitter
+                type="horizontal"
+                sizes="240px|100%"
+                persistId="notebook/notebooks/splitter"
+            >
                 <MasterView />
-                {notebooksHomeSectionStore.selectedNotebook ? <DetailsView /> : <div />}
+                {notebooksHomeSectionStore.selectedNotebook ? (
+                    <DetailsView />
+                ) : (
+                    <div />
+                )}
             </Splitter>
         );
     }

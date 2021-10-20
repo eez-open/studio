@@ -1,5 +1,4 @@
 import { observable, computed, action, autorun, toJS } from "mobx";
-import { bind } from "bind-decorator";
 
 import {
     IActivityLogEntry,
@@ -370,8 +369,7 @@ export class Connection
         }
     }
 
-    @bind
-    housekeeping() {
+    housekeeping = () => {
         if (this.acquireQueue.length > 0) {
             const acquireTask = this.acquireQueue[0];
             if (Date.now() - acquireTask.requestTime > CONF_ACQUIRE_TIMEOUT) {
@@ -405,7 +403,7 @@ export class Connection
         ) {
             this.disconnect();
         }
-    }
+    };
 
     onData(data: string) {
         if (this.dataTimeoutId) {

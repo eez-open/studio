@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import classNames from "classnames";
 import { humanize } from "eez-studio-shared/string";
 import { PropertyProps } from "project-editor/core/object";
@@ -17,8 +16,7 @@ export class PropertyMenu extends React.Component<PropertyProps> {
         return getPropertySourceInfo(this.props);
     }
 
-    @bind
-    onClicked(event: React.MouseEvent) {
+    onClicked = (event: React.MouseEvent) => {
         let menuItems: Electron.MenuItem[] = [];
 
         if (this.props.propertyInfo.propertyMenu) {
@@ -51,7 +49,7 @@ export class PropertyMenu extends React.Component<PropertyProps> {
             menuItems.forEach(menuItem => menu.append(menuItem));
             menu.popup({});
         }
-    }
+    };
 
     render() {
         let title = humanize(this.sourceInfo.source);

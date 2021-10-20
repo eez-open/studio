@@ -9,7 +9,6 @@ import {
     reaction
 } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { objectEqual } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -667,8 +666,7 @@ class WaveformConfigurationDialog extends React.Component<
             this.props.waveform.waveformDefinition
         );
 
-    @bind
-    async handleSubmit() {
+    handleSubmit = async () => {
         const newWaveformDefinition =
             await this.waveformProperties.checkValidity();
         if (!newWaveformDefinition) {
@@ -703,7 +701,7 @@ class WaveformConfigurationDialog extends React.Component<
         }
 
         return true;
-    }
+    };
 
     render() {
         return (

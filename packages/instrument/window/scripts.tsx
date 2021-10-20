@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, values, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { stringCompare } from "eez-studio-shared/string";
 import { validators } from "eez-studio-shared/validation";
@@ -136,8 +135,7 @@ export class ScriptsModel implements IModel {
         }
     }
 
-    @bind
-    addScript() {
+    addScript = () => {
         showGenericDialog({
             dialogDefinition: {
                 fields: [
@@ -201,10 +199,9 @@ export class ScriptsModel implements IModel {
                 }
             })
             .catch(() => {});
-    }
+    };
 
-    @bind
-    deleteScript() {
+    deleteScript = () => {
         const selectedScript = this.selectedScript;
         if (selectedScript) {
             const isExtensionShortcut =
@@ -223,14 +220,13 @@ export class ScriptsModel implements IModel {
                 }
             );
         }
-    }
+    };
 
-    @bind
-    run() {
+    run = () => {
         if (this.selectedScript) {
             executeShortcut(this.appStore, this.selectedScript);
         }
-    }
+    };
 
     @computed
     get canUpload() {
@@ -244,8 +240,7 @@ export class ScriptsModel implements IModel {
         );
     }
 
-    @bind
-    upload() {
+    upload = () => {
         if (this.canUpload) {
             const instrument = this.appStore.instrument!;
             const connection = instrument.connection;
@@ -265,7 +260,7 @@ export class ScriptsModel implements IModel {
                     )
             );
         }
-    }
+    };
 }
 
 @observer

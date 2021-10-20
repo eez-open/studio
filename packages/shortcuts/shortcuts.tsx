@@ -2,7 +2,6 @@ import React from "react";
 import { observable, computed, action, IObservableValue } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
@@ -389,15 +388,13 @@ class ShortcutRow implements IRow {
         });
     }
 
-    @bind
-    onClick() {
+    onClick = () => {
         if (this.props.shortcutsStore.addShortcut) {
             selectShortcutById(this.props.shortcutsStore, this.id);
         }
-    }
+    };
 
-    @bind
-    onDoubleClick() {
+    onDoubleClick = () => {
         if (this.props.shortcutsStore.addShortcut) {
             showShortcutDialog(
                 this.props.shortcutsStore,
@@ -408,7 +405,7 @@ class ShortcutRow implements IRow {
                 }
             );
         }
-    }
+    };
 }
 
 @observer

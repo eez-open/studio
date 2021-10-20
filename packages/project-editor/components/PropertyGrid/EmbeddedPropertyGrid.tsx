@@ -1,7 +1,6 @@
 import React from "react";
 import { observable } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import { Icon } from "eez-studio-ui/icon";
 import {
     findPropertyByNameInClassInfo,
@@ -20,23 +19,21 @@ export class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
 
     @observable collapsed = true;
 
-    @bind
-    toggleCollapsed() {
+    toggleCollapsed = () => {
         propertyCollapsedStore.toggleColapsed(
             this.props.objects[0],
             this.props.propertyInfo
         );
-    }
+    };
 
-    @bind
-    updateObject(propertyValues: Object) {
+    updateObject = (propertyValues: Object) => {
         this.context.undoManager.setCombineCommands(true);
         this.props.objects.forEach(object => {
             object = (object as any)[this.props.propertyInfo.name];
             this.context.updateObject(object, propertyValues);
         });
         this.context.undoManager.setCombineCommands(false);
-    }
+    };
 
     render() {
         const { objects, propertyInfo } = this.props;

@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, runInAction, action, toJS } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 import classNames from "classnames";
 
 import { objectClone } from "eez-studio-shared/util";
@@ -385,8 +384,7 @@ class TableChartsHeader extends React.Component<
         return (this.props.chartsController as TableChartsController).list;
     }
 
-    @bind
-    editProperties() {
+    editProperties = () => {
         showGenericDialog({
             dialogDefinition: {
                 fields: [
@@ -441,7 +439,7 @@ class TableChartsHeader extends React.Component<
                 }
             })
             .catch(() => {});
-    }
+    };
 
     render() {
         return (
@@ -489,14 +487,13 @@ class Cell extends React.Component<CellProps, {}> {
         }
     }
 
-    @bind
-    onBlur(e: React.FocusEvent<HTMLElement>) {
+    onBlur = (e: React.FocusEvent<HTMLElement>) => {
         this.props.onChange(
             this.props.index,
             this.props.unit,
             (e.target as HTMLElement).innerText
         );
-    }
+    };
 
     static focusNext(element: HTMLElement, offset: number) {
         element.blur();
@@ -539,8 +536,7 @@ class Cell extends React.Component<CellProps, {}> {
         return caretPos;
     }
 
-    @bind
-    onKeyDown(e: React.KeyboardEvent<HTMLElement>) {
+    onKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
         if (e.key === "Enter") {
             e.preventDefault();
             e.stopPropagation();
@@ -580,7 +576,7 @@ class Cell extends React.Component<CellProps, {}> {
                 }
             }
         }
-    }
+    };
 
     render() {
         const { index, unit, onFocus } = this.props;
@@ -835,8 +831,7 @@ export class TableDetailsView extends React.Component<
         return !this.list.isMaxPointsReached && !this.isLastRow;
     }
 
-    @bind
-    insertRowAbove() {
+    insertRowAbove = () => {
         if (this.canInsertRowAbove) {
             const index = selectedCell.index;
             const key = selectedCell.key;
@@ -851,14 +846,13 @@ export class TableDetailsView extends React.Component<
                 $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
             }, 10);
         }
-    }
+    };
 
     get canInsertRowBelow() {
         return !this.list.isMaxPointsReached && !this.isLastRow;
     }
 
-    @bind
-    insertRowBelow() {
+    insertRowBelow = () => {
         if (this.canInsertRowBelow) {
             const index = selectedCell.index;
             const key = selectedCell.key;
@@ -875,14 +869,13 @@ export class TableDetailsView extends React.Component<
                 ).focus();
             }, 10);
         }
-    }
+    };
 
     get canDeleteRow() {
         return !this.isLastRow;
     }
 
-    @bind
-    deleteRow() {
+    deleteRow = () => {
         if (this.canDeleteRow) {
             const index = selectedCell.index;
             const key = selectedCell.key;
@@ -897,7 +890,7 @@ export class TableDetailsView extends React.Component<
                 $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
             }, 10);
         }
-    }
+    };
 
     get canClearColumn() {
         return (
@@ -905,8 +898,7 @@ export class TableDetailsView extends React.Component<
         );
     }
 
-    @bind
-    clearColumn() {
+    clearColumn = () => {
         if (this.canClearColumn) {
             const index = selectedCell.index;
             const key = selectedCell.key;
@@ -919,14 +911,13 @@ export class TableDetailsView extends React.Component<
                 $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
             }, 10);
         }
-    }
+    };
 
     get canDeleteAllFromCursor() {
         return !this.isLastRow;
     }
 
-    @bind
-    deleteAllFromCursor() {
+    deleteAllFromCursor = () => {
         if (this.canDeleteAllFromCursor) {
             const index = selectedCell.index;
             const key = selectedCell.key;
@@ -941,14 +932,13 @@ export class TableDetailsView extends React.Component<
                 $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
             }, 10);
         }
-    }
+    };
 
     get canDeleteAll() {
         return this.props.list.numPoints > 0;
     }
 
-    @bind
-    deleteAll() {
+    deleteAll = () => {
         if (this.canDeleteAll) {
             const key = selectedCell.key;
 
@@ -962,7 +952,7 @@ export class TableDetailsView extends React.Component<
                 $(`.EezStudio_TableListEditor_Cell_0_${key}`).focus();
             }, 10);
         }
-    }
+    };
 
     @observable error: string | undefined;
 

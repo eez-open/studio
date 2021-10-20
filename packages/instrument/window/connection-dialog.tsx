@@ -3,7 +3,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { observable, action, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 const os = require("os");
 
 import { objectClone } from "eez-studio-shared/util";
@@ -211,11 +210,10 @@ export class ConnectionProperties extends React.Component<
         }
     }
 
-    @bind
-    onRefreshSerialPortPaths(event: React.MouseEvent) {
+    onRefreshSerialPortPaths = (event: React.MouseEvent) => {
         event.preventDefault();
         this.refreshSerialPortPaths();
-    }
+    };
 
     @action.bound
     onUsbDeviceChange(value: string) {
@@ -251,11 +249,10 @@ export class ConnectionProperties extends React.Component<
         });
     }
 
-    @bind
-    onRefreshUsbDevices(event: React.MouseEvent) {
+    onRefreshUsbDevices = (event: React.MouseEvent) => {
         event.preventDefault();
         this.refreshUsbDevices();
-    }
+    };
 
     render() {
         let options: JSX.Element[] | null = null;
@@ -375,16 +372,16 @@ class ConnectionDialog extends React.Component<
 > {
     connectionParameters: ConnectionParameters;
 
-    @bind
-    onConnectionParametersChanged(connectionParameters: ConnectionParameters) {
+    onConnectionParametersChanged = (
+        connectionParameters: ConnectionParameters
+    ) => {
         this.connectionParameters = connectionParameters;
-    }
+    };
 
-    @bind
-    handleSubmit() {
+    handleSubmit = () => {
         this.props.connect(this.connectionParameters);
         return true;
-    }
+    };
 
     render() {
         return (

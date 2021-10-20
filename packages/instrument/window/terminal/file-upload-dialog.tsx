@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, action, computed } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import {
     getFileName,
@@ -46,14 +45,13 @@ class FileUploadSettingsDialog extends React.Component<
         chunkSize: validators.rangeInclusive(1, 4096)
     });
 
-    @bind
-    async handleSubmit() {
+    handleSubmit = async () => {
         if (!(await this.validator.checkValidity(this.instructions))) {
             return false;
         }
         this.props.callback(this.instructions);
         return true;
-    }
+    };
 
     render() {
         return (
@@ -63,7 +61,8 @@ class FileUploadSettingsDialog extends React.Component<
                         name="Use short (8.3) file names"
                         value={this.instructions.shortFileName}
                         onChange={action(
-                            (value: boolean) => (this.instructions.shortFileName = value)
+                            (value: boolean) =>
+                                (this.instructions.shortFileName = value)
                         )}
                     />
 
@@ -71,7 +70,8 @@ class FileUploadSettingsDialog extends React.Component<
                         name="Start command"
                         value={this.instructions.startCommandTemplate}
                         onChange={action(
-                            (value: string) => (this.instructions.startCommandTemplate = value)
+                            (value: string) =>
+                                (this.instructions.startCommandTemplate = value)
                         )}
                         errors={this.validator.errors.startCommandTemplate}
                     />
@@ -80,7 +80,9 @@ class FileUploadSettingsDialog extends React.Component<
                         name="File size command"
                         value={this.instructions.fileSizeCommandTemplate || ""}
                         onChange={action(
-                            (value: string) => (this.instructions.fileSizeCommandTemplate = value)
+                            (value: string) =>
+                                (this.instructions.fileSizeCommandTemplate =
+                                    value)
                         )}
                     />
 
@@ -88,7 +90,9 @@ class FileUploadSettingsDialog extends React.Component<
                         name="Send one chunk command"
                         value={this.instructions.sendChunkCommandTemplate}
                         onChange={action(
-                            (value: string) => (this.instructions.sendChunkCommandTemplate = value)
+                            (value: string) =>
+                                (this.instructions.sendChunkCommandTemplate =
+                                    value)
                         )}
                         errors={this.validator.errors.sendChunkCommandTemplate}
                     />
@@ -97,7 +101,9 @@ class FileUploadSettingsDialog extends React.Component<
                         name="Finish command"
                         value={this.instructions.finishCommandTemplate || ""}
                         onChange={action(
-                            (value: string) => (this.instructions.finishCommandTemplate = value)
+                            (value: string) =>
+                                (this.instructions.finishCommandTemplate =
+                                    value)
                         )}
                     />
 
@@ -105,14 +111,18 @@ class FileUploadSettingsDialog extends React.Component<
                         name="Abort command"
                         value={this.instructions.abortCommandTemplate || ""}
                         onChange={action(
-                            (value: string) => (this.instructions.abortCommandTemplate = value)
+                            (value: string) =>
+                                (this.instructions.abortCommandTemplate = value)
                         )}
                     />
 
                     <NumberInputProperty
                         name="Chunk size"
                         value={this.instructions.chunkSize}
-                        onChange={action((value: number) => (this.instructions.chunkSize = value))}
+                        onChange={action(
+                            (value: number) =>
+                                (this.instructions.chunkSize = value)
+                        )}
                         errors={this.validator.errors.chunkSize}
                     />
                 </PropertyList>
@@ -125,7 +135,12 @@ function showAdvancedSettingsDialog(
     instructions: IFileUploadInstructions,
     callback: (instructions: IFileUploadInstructions) => void
 ) {
-    showDialog(<FileUploadSettingsDialog instructions={instructions} callback={callback} />);
+    showDialog(
+        <FileUploadSettingsDialog
+            instructions={instructions}
+            callback={callback}
+        />
+    );
 }
 
 @observer
@@ -192,26 +207,28 @@ class FileUploadDialog extends React.Component<
         ]
     });
 
-    @bind
-    async handleSubmit() {
+    handleSubmit = async () => {
         if (!(await this.validator.checkValidity(this.instructions))) {
             return false;
         }
         this.props.callback(this.instructions);
         return true;
-    }
+    };
 
     deriveDestinationFileNameFromSourceFilePath() {
         if (this.instructions.shortFileName) {
             return getShortFileName(this.instructions.sourceFilePath!);
         } else {
-            return getValidFileNameFromFileName(getFileName(this.instructions.sourceFilePath!));
+            return getValidFileNameFromFileName(
+                getFileName(this.instructions.sourceFilePath!)
+            );
         }
     }
 
     deriveDestinationFolderPathFromSourceFilePath() {
         const sourceFilePath = this.instructions.sourceFilePath;
-        const favoriteDestinationPaths = this.instructions.favoriteDestinationPaths;
+        const favoriteDestinationPaths =
+            this.instructions.favoriteDestinationPaths;
         if (sourceFilePath && favoriteDestinationPaths) {
             const favoriteDestinationPath = favoriteDestinationPaths.find(
                 favoriteDestinationPath =>
@@ -257,7 +274,8 @@ class FileUploadDialog extends React.Component<
                                 Object.assign(this.instructions, instructions);
 
                                 if (updateDestinationFileName) {
-                                    this.instructions.destinationFileName = this.deriveDestinationFileNameFromSourceFilePath();
+                                    this.instructions.destinationFileName =
+                                        this.deriveDestinationFileNameFromSourceFilePath();
                                 }
                             })
                         ),
@@ -274,20 +292,32 @@ class FileUploadDialog extends React.Component<
                         onChange={action((value: string) => {
                             this.instructions.sourceFilePath = value;
 
-                            let destinationFileName = this.instructions.destinationFileName;
+                            let destinationFileName =
+                                this.instructions.destinationFileName;
                             if (destinationFileName) {
-                                destinationFileName = destinationFileName.trim();
+                                destinationFileName =
+                                    destinationFileName.trim();
                             }
-                            if (!destinationFileName || !this.destinationFileNameChanged) {
-                                this.instructions.destinationFileName = this.deriveDestinationFileNameFromSourceFilePath();
+                            if (
+                                !destinationFileName ||
+                                !this.destinationFileNameChanged
+                            ) {
+                                this.instructions.destinationFileName =
+                                    this.deriveDestinationFileNameFromSourceFilePath();
                             }
 
-                            let destinationFolderPath = this.instructions.destinationFolderPath;
+                            let destinationFolderPath =
+                                this.instructions.destinationFolderPath;
                             if (destinationFolderPath) {
-                                destinationFolderPath = destinationFolderPath.trim();
+                                destinationFolderPath =
+                                    destinationFolderPath.trim();
                             }
-                            if (!destinationFolderPath || !this.destinationFolderPathChanged) {
-                                this.instructions.destinationFolderPath = this.deriveDestinationFolderPathFromSourceFilePath();
+                            if (
+                                !destinationFolderPath ||
+                                !this.destinationFolderPathChanged
+                            ) {
+                                this.instructions.destinationFolderPath =
+                                    this.deriveDestinationFolderPathFromSourceFilePath();
                             }
                         })}
                         errors={this.validator.errors.sourceFilePath}
@@ -323,5 +353,7 @@ export function showFileUploadDialog(
     instructions: IFileUploadInstructions,
     callback: (instructions: IFileUploadInstructions) => void
 ) {
-    showDialog(<FileUploadDialog instructions={instructions} callback={callback} />);
+    showDialog(
+        <FileUploadDialog instructions={instructions} callback={callback} />
+    );
 }

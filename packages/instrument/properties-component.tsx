@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, action, toJS } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { changeExtensionProperties } from "eez-studio-shared/extensions/extensions";
 import { PropertyList } from "eez-studio-ui/properties";
@@ -53,8 +52,7 @@ export class PropertiesComponent extends React.Component<
         }
     }
 
-    @bind
-    onBlur() {
+    onBlur = () => {
         if (
             this.props.extension.isEditable &&
             !this.errors &&
@@ -74,7 +72,7 @@ export class PropertiesComponent extends React.Component<
                 )
             );
         }
-    }
+    };
 
     render() {
         return (

@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, computed, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { clamp, objectClone } from "eez-studio-shared/util";
 import { _max, _range } from "eez-studio-shared/algorithm";
@@ -1460,8 +1459,7 @@ class EnvelopeChartsHeader extends React.Component<
         return (this.props.chartsController as EnvelopeChartsController).list;
     }
 
-    @bind
-    editProperties() {
+    editProperties = () => {
         showGenericDialog({
             dialogDefinition: {
                 fields: [
@@ -1548,7 +1546,7 @@ class EnvelopeChartsHeader extends React.Component<
                 }
             })
             .catch(() => {});
-    }
+    };
 
     get canClearAllPoints() {
         return this.canClearAllVoltagePoints || this.canClearAllCurrentPoints;

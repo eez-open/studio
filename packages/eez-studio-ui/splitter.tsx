@@ -2,7 +2,6 @@ import { action, observable } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { theme } from "eez-studio-ui/theme";
 import { Draggable } from "eez-studio-ui/draggable";
@@ -332,19 +331,18 @@ export class Splitter extends React.Component<SplitterProps, {}> {
         }
     }
 
-    @bind
-    onDragMove(
+    onDragMove = (
         e: PointerEvent,
         x: number,
         y: number,
         params: IDraggableParams
-    ) {
+    ) => {
         this.onSplitterMove(
             params.iSplitter,
             params.xOffset + x,
             params.yOffset + y
         );
-    }
+    };
 
     render() {
         ////////////////////////////////////////////////////////////////////////////////

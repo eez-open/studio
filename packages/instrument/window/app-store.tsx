@@ -1,6 +1,5 @@
 import React from "react";
 import { observable, action, runInAction, reaction, autorun } from "mobx";
-import { bind } from "bind-decorator";
 
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import type { IStore } from "eez-studio-shared/store";
@@ -226,15 +225,13 @@ export class InstrumentAppStore implements IEditor {
         return this.editor;
     }
 
-    @bind
-    onSave() {
+    onSave = () => {
         if (this.undoManager.modified) {
             this.undoManager.commit();
         }
-    }
+    };
 
-    @bind
-    onDeleteShortcut() {
+    onDeleteShortcut = () => {
         if (document.activeElement) {
             if (
                 $(document.activeElement).closest(".EezStudio_HistoryContainer")
@@ -255,10 +252,9 @@ export class InstrumentAppStore implements IEditor {
                 getScrapbookStore().deleteSelectedHistoryItems();
             }
         }
-    }
+    };
 
-    @bind
-    onKeyDown(event: KeyboardEvent) {
+    onKeyDown = (event: KeyboardEvent) => {
         if (event.target && $(event.target).parents(".modal").length > 0) {
             // ignore if target is modal dialog
             return;
@@ -297,7 +293,7 @@ export class InstrumentAppStore implements IEditor {
                 }
             }
         }
-    }
+    };
 
     getFiltersFromLocalStorage(): Filters {
         const filters = new Filters();

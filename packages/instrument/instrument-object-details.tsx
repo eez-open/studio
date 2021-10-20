@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { Loader } from "eez-studio-ui/loader";
 import {
@@ -114,10 +113,9 @@ class Connection extends React.Component<{
 }> {
     connectionParameters: ConnectionParameters | null;
 
-    @bind
-    dismissError() {
+    dismissError = () => {
         this.props.instrument.connection.dismissError();
-    }
+    };
 
     render() {
         let { instrument } = this.props;
@@ -225,18 +223,15 @@ export class InstrumentDetails extends React.Component<
     { instrument: InstrumentObject },
     {}
 > {
-    @bind
-    onOpenInTab() {
+    onOpenInTab = () => {
         this.props.instrument.openEditor("tab");
-    }
+    };
 
-    @bind
-    onOpenInWindow() {
+    onOpenInWindow = () => {
         this.props.instrument.openEditor("window");
-    }
+    };
 
-    @bind
-    onDelete() {
+    onDelete = () => {
         window.postMessage(
             {
                 type: "delete-instrument",
@@ -244,7 +239,7 @@ export class InstrumentDetails extends React.Component<
             },
             "*"
         );
-    }
+    };
 
     render() {
         let { instrument } = this.props;

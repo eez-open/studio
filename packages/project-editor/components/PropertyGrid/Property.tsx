@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, action, runInAction, autorun } from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
-import { bind } from "bind-decorator";
 import { guid } from "eez-studio-shared/guid";
 import { humanize, stringCompare } from "eez-studio-shared/string";
 import { validators, filterNumber } from "eez-studio-shared/validation";
@@ -56,8 +55,7 @@ export class Property extends React.Component<PropertyProps> {
         }
     });
 
-    @bind
-    resizeTextArea() {
+    resizeTextArea = () => {
         setTimeout(() => {
             if (this.textarea) {
                 this.textarea.style.overflow = "hidden";
@@ -65,7 +63,7 @@ export class Property extends React.Component<PropertyProps> {
                 this.textarea.style.height = this.textarea.scrollHeight + "px";
             }
         }, 0);
-    }
+    };
 
     @action
     componentDidUpdate(prevProps: any) {
@@ -96,8 +94,7 @@ export class Property extends React.Component<PropertyProps> {
         this.resizeTextArea();
     }
 
-    @bind
-    onSelect(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    onSelect = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         if (this.props.propertyInfo.onSelect) {
             let params;
 
@@ -127,7 +124,7 @@ export class Property extends React.Component<PropertyProps> {
                 })
                 .catch(error => console.error(error));
         }
-    }
+    };
 
     @action.bound
     changeValue(newValue: any) {
@@ -153,8 +150,7 @@ export class Property extends React.Component<PropertyProps> {
         });
     }
 
-    @bind
-    onChange(event: any) {
+    onChange = (event: any) => {
         const target = event.target;
         if (
             this.props.propertyInfo.type === PropertyType.ConfigurationReference
@@ -175,10 +171,9 @@ export class Property extends React.Component<PropertyProps> {
                 target.type === "checkbox" ? target.checked : target.value
             );
         }
-    }
+    };
 
-    @bind
-    onEditUnique() {
+    onEditUnique = () => {
         showGenericDialog({
             dialogDefinition: {
                 fields: [
@@ -229,15 +224,13 @@ export class Property extends React.Component<PropertyProps> {
                     console.error(error);
                 }
             });
-    }
+    };
 
-    @bind
-    onGenerateGuid() {
+    onGenerateGuid = () => {
         this.changeValue(guid());
-    }
+    };
 
-    @bind
-    onKeyDown(event: React.KeyboardEvent) {
+    onKeyDown = (event: React.KeyboardEvent) => {
         if (event.keyCode === 13) {
             if (this.props.propertyInfo.type === PropertyType.Number) {
                 try {
@@ -253,7 +246,7 @@ export class Property extends React.Component<PropertyProps> {
                 }
             }
         }
-    }
+    };
 
     render() {
         const { propertyInfo, readOnly } = this.props;

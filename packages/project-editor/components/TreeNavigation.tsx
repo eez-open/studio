@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { IconAction } from "eez-studio-ui/action";
 
@@ -104,15 +103,14 @@ export class TreeNavigationPanel extends React.Component<
         );
     }
 
-    @bind
-    onTreeDoubleClick(object: IEezObject) {
+    onTreeDoubleClick = (object: IEezObject) => {
         if (
             this.context.editorsStore.activeEditor &&
             this.context.editorsStore.activeEditor.object == object
         ) {
             this.context.editorsStore.activeEditor.makePermanent();
         }
-    }
+    };
 
     onFocus() {
         this.context.navigationStore.setSelectedPanel(undefined);

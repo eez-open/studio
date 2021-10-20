@@ -1,5 +1,4 @@
 import { observable, computed, runInAction, action, reaction } from "mobx";
-import { bind } from "bind-decorator";
 
 import { formatTransferSpeed, formatDate } from "eez-studio-shared/util";
 import { db } from "eez-studio-shared/db-path";
@@ -385,8 +384,7 @@ class HistorySearch {
         this.searchLoop();
     }
 
-    @bind
-    async searchLoop() {
+    searchLoop = async () => {
         this.searchLoopTimeout = undefined;
 
         // (
@@ -445,7 +443,7 @@ class HistorySearch {
                 this.searchInProgress = false;
             });
         }
-    }
+    };
 
     stopSearch() {
         if (this.searchActive) {

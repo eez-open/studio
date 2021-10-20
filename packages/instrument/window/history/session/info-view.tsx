@@ -1,6 +1,5 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
 import { ButtonAction, TextAction, IconAction } from "eez-studio-ui/action";
@@ -10,14 +9,13 @@ import { IAppStore } from "instrument/window/history/history";
 
 @observer
 export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
-    @bind
-    onClose() {
+    onClose = () => {
         confirm(
             "Are you sure?",
             undefined,
             this.props.appStore.history.sessions.closeActiveSession
         );
-    }
+    };
 
     render() {
         const viewSessionsList = (

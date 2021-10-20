@@ -3,7 +3,6 @@ import { findDOMNode } from "react-dom";
 import { action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { bind } from "bind-decorator";
 
 import { _debounce } from "eez-studio-shared/algorithm";
 
@@ -378,8 +377,7 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         scrollIntoView();
     }
 
-    @bind
-    autoScroll() {
+    autoScroll = () => {
         if ($(this.div).is(":visible")) {
             if (this.fromBottom !== undefined) {
                 if (this.fromBottom != this.div.scrollTop) {
@@ -426,10 +424,9 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         this.animationFrameRequestId = window.requestAnimationFrame(
             this.autoScroll
         );
-    }
+    };
 
-    @bind
-    onScroll(event: any) {
+    onScroll = (event: any) => {
         if (
             this.div.scrollHeight === this.lastScrollHeight &&
             this.div.clientHeight === this.lastClientHeight
@@ -486,10 +483,9 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
                 }
             }
         }, 100);
-    }
+    };
 
-    @bind
-    async loadOlder() {
+    loadOlder = async () => {
         this.autoReloadEnabled = false;
 
         this.fromBottom = undefined;
@@ -528,15 +524,14 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
         } else {
             await this.props.history.navigator.loadOlder();
         }
-    }
+    };
 
-    @bind
-    loadNewer() {
+    loadNewer = () => {
         this.fromBottom = undefined;
         this.fromTop = undefined;
 
         this.props.history.navigator.loadNewer();
-    }
+    };
 
     render() {
         return (

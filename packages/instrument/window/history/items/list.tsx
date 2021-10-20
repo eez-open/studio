@@ -1,7 +1,6 @@
 import React from "react";
 import { computed, action } from "mobx";
 import { observer } from "mobx-react";
-import { bind } from "bind-decorator";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import {
@@ -85,8 +84,7 @@ export class ListHistoryItemComponent extends React.Component<
         }
     }
 
-    @bind
-    onSave() {
+    onSave = () => {
         if (this.list) {
             saveTableListData(
                 this.props.historyItem.appStore!.instrument! as any, // @todo remove need for any
@@ -94,7 +92,7 @@ export class ListHistoryItemComponent extends React.Component<
                 this.list!.tableListData
             );
         }
-    }
+    };
 
     render() {
         return (
