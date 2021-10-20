@@ -2350,7 +2350,8 @@ export class CommentActionComponent extends ActionComponent {
         properties: [
             {
                 name: "text",
-                type: PropertyType.String
+                type: PropertyType.String,
+                hideInPropertyGrid: true
             }
         ],
         icon: (
