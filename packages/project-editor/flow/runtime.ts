@@ -4,41 +4,25 @@ import { action, computed, observable, runInAction } from "mobx";
 import {
     DocumentStoreClass,
     findPropertyByNameInObject,
-    getClassInfo,
     getLabel
 } from "project-editor/core/store";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
-import {
-    CatchErrorActionComponent,
-    ErrorActionComponent,
-    InputActionComponent,
-    StartActionComponent
-} from "project-editor/flow/action-components";
+import { CatchErrorActionComponent } from "project-editor/flow/action-components";
 import { Component, Widget } from "project-editor/flow/component";
 import { IEezObject, PropertyType } from "project-editor/core/object";
 import type {
     IDataContext,
     IFlowContext
 } from "project-editor/flow//flow-interfaces";
-import { visitObjects } from "project-editor/core/search";
 import { Page } from "project-editor/features/page/page";
 import {
     ActionEndLogItem,
-    ActionStartLogItem,
-    ExecuteComponentLogItem,
-    ExecutionErrorLogItem,
     LogItem,
-    RuntimeLogs,
-    NoStartActionComponentLogItem,
-    OutputValueLogItem
+    RuntimeLogs
 } from "project-editor/flow/debugger/logs";
 import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow/debugger/WatchPanel";
-import {
-    evalExpression,
-    evalAssignableExpression
-} from "project-editor/flow/expression/expression";
-import { Action } from "project-editor/features/action/action";
+import { evalExpression } from "project-editor/flow/expression/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -159,9 +143,6 @@ export abstract class RuntimeBase {
         this.DocumentStore.dataContext.clear();
     }
 
-    abstract doStartRuntime(isDebuggerActive: boolean): Promise<void>;
-    abstract doStopRuntime(notifyUser: boolean): Promise<void>;
-
     @action
     stopRuntimeWithError(error: string) {
         this.error = error;
@@ -263,14 +244,6 @@ export abstract class RuntimeBase {
         }
     }
 
-    abstract toggleDebugger(): void;
-
-    abstract resume(): void;
-
-    abstract pause(): void;
-
-    abstract runSingleStep(): void;
-
     ////////////////////////////////////////
 
     getFlowState(flow: Flow) {
@@ -346,11 +319,6 @@ export abstract class RuntimeBase {
         }
     }
 
-    abstract executeWidgetAction(
-        flowContext: IFlowContext,
-        widget: Widget
-    ): void;
-
     selectFlowStateForFlow(flow: Flow) {
         this.selectedFlowState = this.getFlowState(flow);
     }
@@ -422,8 +390,43 @@ export abstract class RuntimeBase {
 
     onBreakpointDisabled(component: Component) {}
 
+    // ABSTRACT FUNCTIONS
+
+    abstract doStartRuntime(isDebuggerActive: boolean): Promise<void>;
+    abstract doStopRuntime(notifyUser: boolean): Promise<void>;
+
+    abstract toggleDebugger(): void;
+
+    abstract resume(): void;
+
+    abstract pause(): void;
+
+    abstract runSingleStep(): void;
+
+    abstract executeWidgetAction(
+        flowContext: IFlowContext,
+        widget: Widget
+    ): void;
+
     abstract readSettings(key: string): any;
     abstract writeSettings(key: string, value: any): void;
+
+    abstract startFlow(flowState: FlowState): Promise<void>;
+
+    abstract propagateValue(
+        flowState: FlowState,
+        sourceComponent: Component,
+        output: string,
+        value: any,
+        outputName?: string
+    ): void;
+
+    abstract assignValue(
+        flowState: FlowState,
+        component: Component,
+        assignableExpression: string,
+        value: any
+    ): void;
 }
 
 export class FlowState {
@@ -543,29 +546,6 @@ export class FlowState {
         return this.dataContext.set(variableName, value);
     }
 
-    assignValue(
-        component: Component,
-        assignableExpression: string,
-        value: any
-    ) {
-        const result = evalAssignableExpression(
-            this,
-            component,
-            assignableExpression
-        );
-        if (result.isOutput()) {
-            this.propagateValue(component, result.name, value);
-        } else if (result.isLocalVariable()) {
-            this.dataContext.set(result.name, value);
-        } else if (result.isGlobalVariable()) {
-            this.dataContext.set(result.name, value);
-        } else if (result.isFlowValue()) {
-            runInAction(() => (result.object[result.name] = value));
-        } else {
-            throw "Not an assignable expression";
-        }
-    }
-
     @computed get isRunning(): boolean {
         for (let [_, componentState] of this.componentStates) {
             if (componentState.isRunning) {
@@ -579,40 +559,6 @@ export class FlowState {
     }
 
     @action
-    async start() {
-        let componentState: ComponentState | undefined = undefined;
-
-        const v = visitObjects(this.flow);
-        while (true) {
-            let visitResult = v.next();
-            if (visitResult.done) {
-                break;
-            }
-            if (visitResult.value instanceof Component) {
-                if (!componentState) {
-                    componentState = new ComponentState(
-                        this,
-                        visitResult.value
-                    );
-                } else {
-                    componentState.component = visitResult.value;
-                }
-
-                if (componentState.isReadyToRun()) {
-                    if (componentState.component instanceof Widget) {
-                        await componentState.run();
-                    } else {
-                        this.runtime.pushTask({
-                            flowState: this,
-                            component: visitResult.value
-                        });
-                    }
-                }
-            }
-        }
-    }
-
-    @action
     finish() {
         this.flowStates.forEach(flowState => flowState.finish());
 
@@ -621,83 +567,6 @@ export class FlowState {
         this.runtime.logs.addLogItem(new ActionEndLogItem(this));
 
         this.isFinished = true;
-    }
-
-    executeStartAction() {
-        this.runtime.logs.addLogItem(new ActionStartLogItem(this));
-
-        const startActionComponent = this.flow.components.find(
-            component => component instanceof StartActionComponent
-        ) as StartActionComponent;
-
-        if (startActionComponent) {
-            runInAction(() =>
-                this.runtime.pushTask({
-                    flowState: this,
-                    component: startActionComponent
-                })
-            );
-        } else {
-            this.runtime.logs.addLogItem(
-                new NoStartActionComponentLogItem(this)
-            );
-
-            this.runtime.error = this.error = "No Start action component";
-
-            this.flowState.runtime.stopRuntime(true);
-        }
-    }
-
-    propagateValue(
-        sourceComponent: Component,
-        output: string,
-        value: any,
-        outputName?: string
-    ) {
-        this.flow.connectionLines.forEach(connectionLine => {
-            if (
-                connectionLine.sourceComponent === sourceComponent &&
-                connectionLine.output === output &&
-                connectionLine.targetComponent
-            ) {
-                connectionLine.setActive();
-
-                this.runtime.logs.addLogItem(
-                    new OutputValueLogItem(
-                        this,
-                        connectionLine,
-                        outputName ?? output,
-                        value
-                    )
-                );
-
-                this.setInputValue(
-                    connectionLine.targetComponent,
-                    connectionLine.input,
-                    value,
-                    connectionLine
-                );
-            }
-        });
-    }
-
-    setInputValue(
-        component: Component,
-        input: string,
-        value: any,
-        connectionLine?: ConnectionLine
-    ) {
-        const componentState = this.getComponentState(component);
-
-        componentState.setInputData(input, value);
-
-        if (componentState.isReadyToRun()) {
-            this.runtime.pushTask({
-                flowState: this,
-                component,
-                connectionLine
-            });
-        }
     }
 
     findCatchErrorActionComponent(): ComponentState | undefined {
@@ -778,209 +647,9 @@ export class ComponentState {
         );
     }
 
-    isReadyToRun() {
-        if (getClassInfo(this.component).isFlowExecutableComponent === false) {
-            return false;
-        }
-
-        if (this.component instanceof Widget) {
-            return true;
-        }
-
-        if (this.component instanceof CatchErrorActionComponent) {
-            return !!this.inputsData.get("message");
-        }
-
-        // if there is any connected sequence input then at least one should be filled
-        if (
-            this.connectedSequenceInputsSet.size > 0 &&
-            !this.sequenceInputs.find(input => this.inputsData.has(input.name))
-        ) {
-            return false;
-        }
-
-        // all mandatory data inputs should be filled
-        if (
-            this.mandatoryDataInputs.find(
-                input => !this.inputsData.has(input.name)
-            )
-        ) {
-            return false;
-        }
-
-        if (this.component instanceof InputActionComponent) {
-            return false;
-        }
-
-        if (this.component instanceof StartActionComponent) {
-            const parentFlowState = this.flowState.parentFlowState;
-            if (parentFlowState) {
-                const parentComponent = this.flowState.component;
-                if (parentComponent) {
-                    const parentComponentState =
-                        parentFlowState.getComponentState(parentComponent);
-                    if (
-                        parentFlowState.flow.connectionLines.find(
-                            connectionLine =>
-                                connectionLine.targetComponent ==
-                                    parentComponent &&
-                                connectionLine.input === "@seqin"
-                        )
-                    ) {
-                        if (!parentComponentState.inputsData.has("@seqin")) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
-    @action
-    async run() {
-        this.flowState.runtime.logs.addLogItem(
-            new ExecuteComponentLogItem(this.flowState, this.component)
-        );
-
-        runInAction(() => {
-            this.isRunning = true;
-        });
-
-        let propagateThroughSeqout = false;
-
-        try {
-            if (this.flowState.isFinished) {
-                throw "The flow has already completed execution.";
-            }
-
-            const result = await this.component.execute(
-                this.flowState,
-                this.dispose
-            );
-
-            if (
-                --this.flowState.numActiveComponents == 0 &&
-                this.flowState.flow instanceof Action
-            ) {
-                runInAction(() => (this.flowState.isFinished = true));
-            }
-
-            if (result == undefined) {
-                propagateThroughSeqout = true;
-            } else {
-                if (typeof result == "boolean") {
-                    propagateThroughSeqout = false;
-                } else {
-                    this.dispose = result;
-                    propagateThroughSeqout = true;
-                }
-            }
-        } catch (err) {
-            --this.flowState.numActiveComponents;
-
-            runInAction(() => {
-                this.flowState.runtime.error = this.flowState.error =
-                    err.toString();
-            });
-
-            if (this.component instanceof ErrorActionComponent) {
-                this.flowState.log(
-                    "error",
-                    `Error: ${err.toString()}`,
-                    this.component
-                );
-            } else {
-                this.flowState.runtime.logs.addLogItem(
-                    new ExecutionErrorLogItem(
-                        this.flowState,
-                        this.component,
-                        err
-                    )
-                );
-            }
-
-            const catchErrorOutput = this.findCatchErrorOutput();
-            if (!this.flowState.isFinished && catchErrorOutput) {
-                this.flowState.propagateValue(this.component, "@error", err);
-            } else {
-                let flowState: FlowState | undefined;
-                if (this.component instanceof ErrorActionComponent) {
-                    flowState = this.flowState.parentFlowState;
-                } else {
-                    flowState = this.flowState;
-                }
-
-                const catchErrorActionComponentState =
-                    flowState && flowState.findCatchErrorActionComponent();
-                if (catchErrorActionComponentState) {
-                    // remove from the queue all the tasks beloging to this flow state
-                    this.flowState.runtime.removeQueueTasksForFlowState(
-                        this.flowState
-                    );
-
-                    if (
-                        catchErrorActionComponentState.flowState !=
-                        this.flowState
-                    ) {
-                        runInAction(() => (this.flowState.isFinished = true));
-                    }
-
-                    catchErrorActionComponentState.flowState.setInputValue(
-                        catchErrorActionComponentState.component,
-                        "message",
-                        err
-                    );
-                } else {
-                    this.flowState.runtime.stopRuntime(true);
-                }
-            }
-        } finally {
-            runInAction(() => {
-                this.isRunning = false;
-            });
-        }
-
-        if (propagateThroughSeqout) {
-            this.flowState.propagateValue(this.component, "@seqout", null);
-        }
-
-        this.component.inputs.forEach(input => {
-            if (input.isSequenceInput) {
-                this.inputsData.delete(input.name);
-            }
-        });
-    }
-
     finish() {
         if (this.dispose) {
             this.dispose();
         }
-    }
-
-    findCatchErrorOutput():
-        | {
-              componentState: ComponentState;
-              connectionLines: ConnectionLine[];
-          }
-        | undefined {
-        const connectionLines = this.flowState.flow.connectionLines.filter(
-            connectionLine =>
-                connectionLine.sourceComponent == this.component &&
-                connectionLine.output === "@error" &&
-                connectionLine.targetComponent
-        );
-        if (connectionLines.length > 0) {
-            return { componentState: this, connectionLines };
-        }
-
-        if (this.flowState.parentFlowState && this.flowState.component) {
-            return this.flowState.parentFlowState
-                .getComponentState(this.flowState.component)
-                .findCatchErrorOutput();
-        }
-
-        return undefined;
     }
 }

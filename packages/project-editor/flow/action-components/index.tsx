@@ -159,7 +159,8 @@ export class EndActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         if (flowState.parentFlowState && flowState.component) {
-            flowState.parentFlowState.propagateValue(
+            flowState.parentFlowState.runtime.propagateValue(
+                flowState.parentFlowState,
                 flowState.component,
                 "@seqout",
                 null
@@ -291,7 +292,8 @@ export class OutputActionComponent extends ActionComponent {
             flowState.component &&
             this.name
         ) {
-            flowState.parentFlowState.propagateValue(
+            flowState.parentFlowState.runtime.propagateValue(
+                flowState.parentFlowState,
                 flowState.component,
                 this.wireID,
                 value,
@@ -376,7 +378,7 @@ export class EvalExprActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         const value = evalExpression(flowState, this, this.expression);
-        flowState.propagateValue(this, "result", value);
+        flowState.runtime.propagateValue(flowState, this, "result", value);
         return undefined;
     }
 }
@@ -508,7 +510,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
         const { jsEvalExpression, values } = this.expandExpression(flowState);
         values;
         let result = (0, eval)(jsEvalExpression);
-        flowState.propagateValue(this, "result", result);
+        flowState.runtime.propagateValue(flowState, this, "result", result);
         return undefined;
     }
 }
@@ -597,7 +599,7 @@ export class SetVariableActionComponent extends ActionComponent {
     async execute(flowState: FlowState) {
         let value = flowState.evalExpression(this, this.value);
 
-        flowState.assignValue(this, this.variable, value);
+        flowState.runtime.assignValue(flowState, this, this.variable, value);
 
         return undefined;
     }
@@ -681,7 +683,12 @@ export class WatchVariableActionComponent extends ActionComponent {
     ): Promise<(() => void) | undefined | boolean> {
         let lastValue = flowState.evalExpression(this, this.variable);
 
-        flowState.propagateValue(this, "variable", lastValue);
+        flowState.runtime.propagateValue(
+            flowState,
+            this,
+            "variable",
+            lastValue
+        );
 
         if (dispose) {
             return dispose;
@@ -692,7 +699,12 @@ export class WatchVariableActionComponent extends ActionComponent {
             value => {
                 if (value !== lastValue) {
                     lastValue = value;
-                    flowState.propagateValue(this, "variable", value);
+                    flowState.runtime.propagateValue(
+                        flowState,
+                        this,
+                        "variable",
+                        value
+                    );
                 }
             }
         );
@@ -826,7 +838,12 @@ export class SwitchActionComponent extends ActionComponent {
         for (const test of this.tests) {
             let value = flowState.evalExpression(this, test.condition);
             if (value) {
-                flowState.propagateValue(this, test.outputName, null);
+                flowState.runtime.propagateValue(
+                    flowState,
+                    this,
+                    test.outputName,
+                    null
+                );
                 break;
             }
         }
@@ -1027,9 +1044,9 @@ export class CompareActionComponent extends ActionComponent {
         }
 
         if (result) {
-            flowState.propagateValue(this, "True", true);
+            flowState.runtime.propagateValue(flowState, this, "True", true);
         } else {
-            flowState.propagateValue(this, "False", false);
+            flowState.runtime.propagateValue(flowState, this, "False", false);
         }
         return undefined;
     }
@@ -1130,9 +1147,9 @@ export class IsTrueActionComponent extends ActionComponent {
         let value = flowState.evalExpression(this, this.value);
 
         if (value) {
-            flowState.propagateValue(this, "True", true);
+            flowState.runtime.propagateValue(flowState, this, "True", true);
         } else {
-            flowState.propagateValue(this, "False", false);
+            flowState.runtime.propagateValue(flowState, this, "False", false);
         }
         return undefined;
     }
@@ -1209,7 +1226,8 @@ export class ConstantActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        flowState.propagateValue(
+        flowState.runtime.propagateValue(
+            flowState,
             this,
             "value",
             evalConstantExpression(ProjectEditor.getProject(this), this.value)
@@ -1263,7 +1281,7 @@ export class DateNowActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        flowState.propagateValue(this, "value", Date.now());
+        flowState.runtime.propagateValue(flowState, this, "value", Date.now());
         return undefined;
     }
 }
@@ -1341,7 +1359,8 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         let key = flowState.evalExpression(this, this.key);
-        flowState.propagateValue(
+        flowState.runtime.propagateValue(
+            flowState,
             this,
             "value",
             flowState.runtime.readSettings(key)
@@ -1649,14 +1668,16 @@ export class CallActionActionComponent extends ActionComponent {
             this
         );
         flowState.flowStates.push(actionFlowState);
-        actionFlowState.start();
+
+        actionFlowState.runtime.startFlow(actionFlowState);
 
         const componentState = flowState.getComponentState(this);
         for (let [input, inputData] of componentState.inputsData) {
             for (let component of action.components) {
                 if (component instanceof InputActionComponent) {
                     if (component.wireID === input) {
-                        actionFlowState.propagateValue(
+                        actionFlowState.runtime.propagateValue(
+                            actionFlowState,
                             component,
                             "@seqout",
                             inputData
@@ -1668,7 +1689,7 @@ export class CallActionActionComponent extends ActionComponent {
 
         if (actionFlowState.numActiveComponents == 0) {
             actionFlowState.isFinished = true;
-            flowState.propagateValue(this, "@seqout", null);
+            flowState.runtime.propagateValue(flowState, this, "@seqout", null);
         } else {
             actionFlowState.numActiveComponents++;
         }
@@ -1878,7 +1899,8 @@ export class CatchErrorActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         const messageInputValue = flowState.getInputValue(this, "message");
-        flowState.propagateValue(
+        flowState.runtime.propagateValue(
+            flowState,
             this,
             "Message",
             messageInputValue ?? "unknow error"
@@ -1976,7 +1998,7 @@ export class CounterActionComponent extends ActionComponent {
         }
 
         if (counterRunningState.value == 0) {
-            flowState.propagateValue(this, "done", null);
+            flowState.runtime.propagateValue(flowState, this, "done", null);
             flowState.setComponentRunningState(this, undefined);
         } else {
             counterRunningState.value--;
@@ -2128,16 +2150,26 @@ export class LoopActionComponent extends ActionComponent {
                 flowState.evalExpression(this, this.step)
             );
             flowState.setComponentRunningState(this, runningState);
-            flowState.assignValue(this, this.variable, runningState.value);
+            flowState.runtime.assignValue(
+                flowState,
+                this,
+                this.variable,
+                runningState.value
+            );
         } else {
             runningState.value += runningState.step;
 
             if (runningState.value >= runningState.to) {
-                flowState.propagateValue(this, "done", null);
+                flowState.runtime.propagateValue(flowState, this, "done", null);
                 flowState.setComponentRunningState(this, undefined);
                 return false;
             } else {
-                flowState.assignValue(this, this.variable, runningState.value);
+                flowState.runtime.assignValue(
+                    flowState,
+                    this,
+                    this.variable,
+                    runningState.value
+                );
             }
         }
 

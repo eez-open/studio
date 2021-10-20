@@ -1272,6 +1272,8 @@ export class LayoutViewWidget extends EmbeddedWidget {
         );
 
         if (page) {
+            const runtime = flowState.runtime;
+
             let layoutFlowState = flowState.getFlowStateByComponent(this);
 
             if (!layoutFlowState) {
@@ -1285,7 +1287,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
                     flowState.flowStates.push(layoutFlowState);
 
-                    layoutFlowState.start();
+                    runtime.startFlow(layoutFlowState);
                 });
             }
 
@@ -1294,22 +1296,28 @@ export class LayoutViewWidget extends EmbeddedWidget {
                 if (input === "@seqin") {
                     for (let component of page.components) {
                         if (component instanceof StartActionComponent) {
-                            layoutFlowState?.propagateValue(
-                                component,
-                                "@seqout",
-                                inputData
-                            );
+                            if (layoutFlowState) {
+                                runtime.propagateValue(
+                                    layoutFlowState,
+                                    component,
+                                    "@seqout",
+                                    inputData
+                                );
+                            }
                         }
                     }
                 } else {
                     for (let component of page.components) {
                         if (component instanceof InputActionComponent) {
                             if (component.wireID === input) {
-                                layoutFlowState?.propagateValue(
-                                    component,
-                                    "@seqout",
-                                    inputData
-                                );
+                                if (layoutFlowState) {
+                                    runtime.propagateValue(
+                                        layoutFlowState,
+                                        component,
+                                        "@seqout",
+                                        inputData
+                                    );
+                                }
                             }
                         }
                     }
@@ -4902,9 +4910,16 @@ export class TextInputWidget extends Widget {
                         if (runningState && runningState.value != value) {
                             runInAction(() => (runningState.value = value));
 
-                            (
-                                flowContext.flowState as FlowState | undefined
-                            )?.propagateValue(this, "value", value);
+                            if (flowContext.flowState) {
+                                (
+                                    flowContext.flowState as FlowState
+                                ).runtime.propagateValue(
+                                    flowContext.flowState as FlowState,
+                                    this,
+                                    "value",
+                                    value
+                                );
+                            }
                         }
                     }}
                 ></input>

@@ -157,6 +157,16 @@ export type LogItemType =
     | "info"
     | "debug";
 
+interface IRuntime {
+    propagateValue(
+        flowState: IFlowState,
+        sourceComponent: Component,
+        output: string,
+        value: any,
+        outputName?: string
+    ): void;
+}
+
 interface IFlowState {
     getFlowStateByComponent(component: Component): IFlowState | undefined;
 
@@ -167,18 +177,11 @@ interface IFlowState {
     getComponentRunningState<T>(component: Component): T | undefined;
     setComponentRunningState<T>(component: Component, runningState: T): void;
 
-    DocumentStore: any;
+    runtime: IRuntime;
     dataContext: IDataContext;
 
     getVariable(component: Component, variableName: string): any;
     setVariable(component: Component, variableName: string, value: any): void;
-
-    propagateValue(
-        sourceComponent: Component,
-        output: string,
-        value: any,
-        outputName?: string
-    ): void;
 
     log(
         type: LogItemType,

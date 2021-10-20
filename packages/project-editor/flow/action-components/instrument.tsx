@@ -1093,7 +1093,8 @@ export class SCPIActionComponent extends ActionComponent {
                                 ? str.substring(1, str.length - 1)
                                 : str;
 
-                        flowState.assignValue(
+                        flowState.runtime.assignValue(
+                            flowState,
                             this,
                             assignableExpression,
                             result
@@ -1330,7 +1331,8 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                 <SelectInstrumentDialog
                     callback={instrument => {
                         if (instrument) {
-                            flowState.propagateValue(
+                            flowState.runtime.propagateValue(
+                                flowState,
                                 this,
                                 "instrument",
                                 instrument
@@ -1406,7 +1408,12 @@ export class GetInstrumentActionComponent extends ActionComponent {
     async execute(flowState: FlowState) {
         const id = flowState.evalExpression(this, "id");
         const instrument = instruments.get(id);
-        flowState.propagateValue(this, "instrument", instrument);
+        flowState.runtime.propagateValue(
+            flowState,
+            this,
+            "instrument",
+            instrument
+        );
         return undefined;
     }
 }

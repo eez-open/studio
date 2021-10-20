@@ -452,6 +452,23 @@ export class RemoteRuntime extends RuntimeBase {
 
     readSettings(key: string) {}
     writeSettings(key: string, value: any) {}
+
+    async startFlow(flowState: FlowState) {}
+
+    propagateValue(
+        flowState: FlowState,
+        sourceComponent: Component,
+        output: string,
+        value: any,
+        outputName?: string
+    ) {}
+
+    assignValue(
+        flowState: FlowState,
+        component: Component,
+        assignableExpression: string,
+        value: any
+    ) {}
 }
 
 class DebuggerConnection {
