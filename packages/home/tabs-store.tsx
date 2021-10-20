@@ -417,32 +417,44 @@ export class ProjectEditorTab implements IHomeTab {
     @observable
     DocumentStore: DocumentStoreClass | undefined;
 
+    @observable error: string | undefined;
+
     ProjectContext: React.Context<DocumentStoreClass>;
     ProjectEditor: typeof ProjectEditorModule.ProjectEditor;
 
+    closed: boolean = false;
+
     async loadProject() {
-        this.ProjectContext = ProjectContext;
+        try {
+            this.ProjectContext = ProjectContext;
 
-        this.ProjectEditor = ProjectEditor;
+            this.ProjectEditor = ProjectEditor;
 
-        await initProjectEditor();
-        const DocumentStore = await DocumentStoreClass.create();
+            await initProjectEditor();
+            const DocumentStore = await DocumentStoreClass.create();
 
-        if (this._filePath) {
-            await DocumentStore.openFile(this._filePath);
-        } else {
-            DocumentStore.newProject();
+            if (this._filePath) {
+                await DocumentStore.openFile(this._filePath);
+            } else {
+                DocumentStore.newProject();
+            }
+
+            await DocumentStore.loadAllExternalProjects();
+            runInAction(() => {
+                DocumentStore.project._fullyLoaded = true;
+            });
+            DocumentStore.startBackgroundCheck();
+
+            if (!this.closed) {
+                runInAction(() => {
+                    this.DocumentStore = DocumentStore;
+                });
+            }
+        } catch (err) {
+            runInAction(() => {
+                this.error = "Failed to load file!";
+            });
         }
-
-        await DocumentStore.loadAllExternalProjects();
-        runInAction(() => {
-            DocumentStore.project._fullyLoaded = true;
-        });
-        DocumentStore.startBackgroundCheck();
-
-        runInAction(() => {
-            this.DocumentStore = DocumentStore;
-        });
     }
 
     get active() {
@@ -466,7 +478,7 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     async addListeners() {
-        if (!this.DocumentStore) {
+        if (!this.DocumentStore && !this.error) {
             await this.loadProject();
         }
 
@@ -599,7 +611,11 @@ export class ProjectEditorTab implements IHomeTab {
                         justifyContent: "center"
                     }}
                 >
-                    <Loader size={60} />
+                    {this.error ? (
+                        <div className="error">{this.error}</div>
+                    ) : (
+                        <Loader size={60} />
+                    )}
                 </div>
             );
         }
@@ -623,7 +639,10 @@ export class ProjectEditorTab implements IHomeTab {
                 this.DocumentStore.changeProject(undefined);
             }
             this.DocumentStore = undefined;
+        } else {
+            this.tabs.removeTab(this);
         }
+        this.closed = true;
     }
 
     async beforeAppClose() {
