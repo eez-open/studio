@@ -14,14 +14,14 @@ interface DraggableConfig {
 
 export class Draggable {
     element: Element | null = null;
-    overlayElement: HTMLDivElement;
-    cursor: string | undefined;
-    dragging: boolean;
-    xDragStart: number;
-    yDragStart: number;
+    overlayElement: HTMLDivElement | null = null;
+    cursor: string | undefined = undefined;
+    dragging: boolean = false;
+    xDragStart: number = 0;
+    yDragStart: number = 0;
     params: any;
-    savedBodyUserSelect: string | null;
-    capturedPointerId: number;
+    savedBodyUserSelect: string | null = null;
+    capturedPointerId: number = 0;
 
     constructor(private config: DraggableConfig) {}
 
@@ -165,7 +165,9 @@ export class Draggable {
             } catch {}
         }
 
-        this.overlayElement.remove();
+        if (this.overlayElement) {
+            this.overlayElement.remove();
+        }
 
         document.body.style.userSelect = this.savedBodyUserSelect || "";
 

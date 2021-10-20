@@ -614,6 +614,17 @@ class EditEnvelopeValue extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DragEnvelopePointMouseHandler implements MouseHandler {
+    newValue = false;
+
+    target: EventTarget | null = null;
+    startEnvelopeValue: IEnvelopePoint;
+
+    startTime: number = 0;
+    startPoint: Point = { x: 0, y: 0 };
+    lastPoint: Point = { x: 0, y: 0 };
+
+    cursor = "move";
+
     constructor(
         public chartView: ChartView,
         public valueIndex: number,
@@ -623,17 +634,6 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         this.startEnvelopeValue = { ...values[this.valueIndex] };
         this.startTime = new Date().getTime();
     }
-
-    newValue = false;
-
-    target: EventTarget;
-    startEnvelopeValue: IEnvelopePoint;
-
-    startTime: number;
-    startPoint: Point;
-    lastPoint: Point;
-
-    cursor: "move";
 
     get list() {
         return (
@@ -916,7 +916,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             }
         }
 
-        if (!this.isDragged && !this.newValue) {
+        if (!this.isDragged && !this.newValue && this.chartView.svg) {
             const target = $(this.chartView.svg).find(
                 `[data-value-index=${this.valueIndex}]`
             );

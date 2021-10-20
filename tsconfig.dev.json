@@ -17,7 +17,8 @@
         "pretty": true,
         "watch": true,
         "outDir": "./build",
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "strictPropertyInitialization": false
     },
     "include": ["./packages"]
 }

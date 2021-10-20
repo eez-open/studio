@@ -172,7 +172,7 @@ export class GenericDialog extends React.Component<GenericDialogProps> {
     @observable errorMessages: any;
 
     @observable progressType: "none" | "info" | "error" = "none";
-    @observable progressMessage: string;
+    @observable progressMessage: string | undefined = undefined;
 
     abort: boolean = false;
 

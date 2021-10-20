@@ -33,16 +33,16 @@ interface IDraggableParams {
 
 @observer
 export class Splitter extends React.Component<SplitterProps, {}> {
-    element: HTMLDivElement | null;
+    element: HTMLDivElement | null = null;
 
     @observable width: number = 0;
     @observable height: number = 0;
 
-    @observable offsets: number[];
-    @observable sizes: number[];
-    @observable idealSizes: number[];
-    @observable childIsFixed: boolean[];
-    @observable childIsCollapsed: boolean[];
+    @observable offsets: number[] = [];
+    @observable sizes: number[] = [];
+    @observable idealSizes: number[] = [];
+    @observable childIsFixed: boolean[] = [];
+    @observable childIsCollapsed: boolean[] = [];
 
     resizeObserver: ResizeObserver;
 

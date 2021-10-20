@@ -26,8 +26,6 @@ export class TreeRow extends React.Component<{
     getExpanded: (level: number, node: ITreeNode) => boolean;
     toggleExpanded: (level: number, node: ITreeNode) => void;
 }> {
-    index: number;
-
     @action
     onTriangleClick(event: any) {
         event.preventDefault();

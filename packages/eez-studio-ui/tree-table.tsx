@@ -46,8 +46,6 @@ class TreeTableRow extends React.Component<{
     level: number;
     selectNode: (node: ITreeNode) => void;
 }> {
-    index: number;
-
     onTriangleClick = action((event: any) => {
         event.preventDefault();
         event.stopPropagation();

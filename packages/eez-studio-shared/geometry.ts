@@ -11,10 +11,10 @@ export interface Rect {
 }
 
 export class BoundingRectBuilder {
-    minX: number;
-    maxX: number;
-    minY: number;
-    maxY: number;
+    minX: number | undefined = undefined;
+    maxX: number | undefined = undefined;
+    minY: number | undefined = undefined;
+    maxY: number | undefined = undefined;
 
     addRect(rect: Rect | undefined) {
         if (rect) {
@@ -42,7 +42,12 @@ export class BoundingRectBuilder {
     }
 
     getRect() {
-        if (this.minX === undefined) {
+        if (
+            this.minX === undefined ||
+            this.maxX === undefined ||
+            this.minY === undefined ||
+            this.maxY === undefined
+        ) {
             return {
                 left: 0,
                 top: 0,
@@ -123,7 +128,13 @@ export function pointSegmentDistance(p: Point, s: Segment) {
     // We find projection of point p onto the line.
     // It falls where t = [(p-s.p1) . (s.p2-s.p1)] / |s|^2
     // We clamp t from [0,1] to handle points outside the segment s.
-    let t = Math.max(0, Math.min(1, pointDotProduct(pointSub(p, s.p1), pointSub(s.p2, s.p1)) / l2));
+    let t = Math.max(
+        0,
+        Math.min(
+            1,
+            pointDotProduct(pointSub(p, s.p1), pointSub(s.p2, s.p1)) / l2
+        )
+    );
     let projection = pointAdd(s.p1, pointMul(pointSub(s.p2, s.p1), t)); // Projection falls on the segment
     return pointDistance(p, projection);
 }
@@ -182,7 +193,10 @@ export function boundingRect(r1?: Rect, r2?: Rect): Rect | undefined {
     };
 }
 
-export function rectSegmentIntersection(rect: Rect, s: Segment): Point | undefined {
+export function rectSegmentIntersection(
+    rect: Rect,
+    s: Segment
+): Point | undefined {
     let topLeft = { x: rect.left, y: rect.top };
     let topRight = { x: rect.left + rect.width, y: rect.top };
 
@@ -249,7 +263,10 @@ export function rectExpand(rect: Rect, amount: number) {
 
 export function rectEqual(r1: Rect, r2: Rect) {
     return (
-        r1.left === r2.left && r1.top === r2.top && r1.width === r2.width && r1.height === r2.height
+        r1.left === r2.left &&
+        r1.top === r2.top &&
+        r1.width === r2.width &&
+        r1.height === r2.height
     );
 }
 
@@ -277,7 +294,10 @@ export interface Segment {
     p2: Point;
 }
 
-export function segmentSegmentIntersecttion(s1: Segment, s2: Segment): Point | undefined {
+export function segmentSegmentIntersecttion(
+    s1: Segment,
+    s2: Segment
+): Point | undefined {
     // http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
     let s1_x = s1.p2.x - s1.p1.x;
     let s1_y = s1.p2.y - s1.p1.y;
@@ -285,9 +305,11 @@ export function segmentSegmentIntersecttion(s1: Segment, s2: Segment): Point | u
     let s2_y = s2.p2.y - s2.p1.y;
 
     let s =
-        (-s1_y * (s1.p1.x - s2.p1.x) + s1_x * (s1.p1.y - s2.p1.y)) / (-s2_x * s1_y + s1_x * s2_y);
+        (-s1_y * (s1.p1.x - s2.p1.x) + s1_x * (s1.p1.y - s2.p1.y)) /
+        (-s2_x * s1_y + s1_x * s2_y);
     let t =
-        (s2_x * (s1.p1.y - s2.p1.y) - s2_y * (s1.p1.x - s2.p1.x)) / (-s2_x * s1_y + s1_x * s2_y);
+        (s2_x * (s1.p1.y - s2.p1.y) - s2_y * (s1.p1.x - s2.p1.x)) /
+        (-s2_x * s1_y + s1_x * s2_y);
 
     if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
         // Collision detected

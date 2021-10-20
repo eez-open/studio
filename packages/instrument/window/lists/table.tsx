@@ -121,6 +121,7 @@ export class TableListData extends BaseListData {
 
 export class TableList extends BaseList {
     @observable data: TableListData;
+    isZoomable = false;
 
     constructor(
         props: any,
@@ -175,8 +176,6 @@ export class TableList extends BaseList {
     get tableListData() {
         return this.data;
     }
-
-    isZoomable: false;
 
     renderToolbar(chartsController: ChartsController): React.ReactNode {
         return null;

@@ -78,8 +78,8 @@ class AboutBox extends React.Component {
         version: string;
     };
 
-    @observable checkingForUpdates: boolean;
-    @observable latestVersion: string;
+    @observable checkingForUpdates: boolean = false;
+    @observable latestVersion: string | undefined = undefined;
 
     constructor(props: any) {
         super(props);

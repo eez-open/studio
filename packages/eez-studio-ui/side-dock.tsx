@@ -28,7 +28,7 @@ export class DockablePanels extends React.Component<{
         headerHeight: 26
     };
 
-    containerDiv: HTMLDivElement | null;
+    containerDiv: HTMLDivElement | null = null;
 
     goldenLayout: any;
 
@@ -154,7 +154,7 @@ export class SideDock extends React.Component<{
 
     @observable isOpen: boolean;
 
-    dockablePanels: DockablePanels | null;
+    dockablePanels: DockablePanels | null = null;
 
     constructor(props: any) {
         super(props);

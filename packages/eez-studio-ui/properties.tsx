@@ -304,7 +304,7 @@ export class RichTextProperty extends React.Component<
         super(props);
     }
 
-    div: HTMLDivElement;
+    div: HTMLDivElement | null = null;
 
     quill: any;
 
@@ -359,7 +359,7 @@ export class StaticRichTextProperty extends React.Component<
         super(props);
     }
 
-    div: HTMLDivElement;
+    div: HTMLDivElement | null = null;
 
     quill: any;
 

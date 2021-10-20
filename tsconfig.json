@@ -16,7 +16,8 @@
         "sourceMap": false,
         "pretty": false,
         "outDir": "./build",
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "strictPropertyInitialization": false
     },
     "include": ["./packages"]
 }

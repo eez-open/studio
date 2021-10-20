@@ -754,7 +754,7 @@ class AxisScrollBar extends React.Component<
     { axisController: AxisController },
     {}
 > {
-    div: HTMLDivElement | null;
+    div: HTMLDivElement | null = null;
 
     get from() {
         return Math.min(
@@ -1183,9 +1183,9 @@ export function getSnapToValue(
 class PanMouseHandler implements MouseHandler {
     constructor(private axes: AxisController[]) {}
 
-    lastPoint: Point;
+    lastPoint: Point = { x: 0, y: 0 };
 
-    cursor: "default";
+    cursor = "default";
 
     down(point: SVGPoint, event: PointerEvent) {
         this.lastPoint = point;
@@ -1226,11 +1226,11 @@ class ZoomToRectMouseHandler implements MouseHandler {
 
     constructor(private chartController: ChartController) {}
 
-    @observable startPoint: Point;
-    @observable endPoint: Point;
+    @observable startPoint: Point = { x: 0, y: 0 };
+    @observable endPoint: Point = { x: 0, y: 0 };
     @observable orientation: "x" | "y" | "both" | undefined = undefined;
 
-    cursor: "default";
+    cursor = "default";
 
     clamp(point: SVGPoint) {
         return {
@@ -1500,13 +1500,13 @@ class CursorPopover extends React.Component<{ cursor: ICursor }, {}> {
 class Cursor implements ICursor {
     @observable visible: boolean = false;
     @observable lineController: ILineController;
-    @observable time: number;
-    @observable value: number;
-    @observable valueIndex: number;
-    @observable addPoint: boolean;
-    @observable error: string | undefined;
-    cursorElement: SVGElement | null;
-    cursorPopover: any;
+    @observable time: number = 0;
+    @observable value: number = 0;
+    @observable valueIndex: number = 0;
+    @observable addPoint: boolean = false;
+    @observable error: string | undefined = undefined;
+    cursorElement: SVGElement | null = null;
+    cursorPopover: any = undefined;
 
     @observable fillColor: string | undefined;
     @observable strokeColor: string | undefined;
@@ -1606,6 +1606,7 @@ class Cursor implements ICursor {
     onPointerMove = (event: PointerEvent) => {
         if (
             event.target instanceof Element &&
+            this.chartView.svg &&
             !$.contains(this.chartView.svg, event.target) &&
             event.target != this.chartView.svg &&
             this.cursorPopover
@@ -1739,7 +1740,7 @@ export class ChartView extends React.Component<
     },
     {}
 > {
-    svg: SVGSVGElement;
+    svg: SVGSVGElement | null = null;
     deltaY: number = 0;
     cursor = new Cursor(this);
     @observable mouseHandler: MouseHandler | undefined;
@@ -1747,10 +1748,10 @@ export class ChartView extends React.Component<
     draggable = new Draggable(this);
 
     transformEventPoint(event: { clientX: number; clientY: number }) {
-        let point = this.svg.createSVGPoint();
+        let point = this.svg!.createSVGPoint();
         point.x = event.clientX;
         point.y = event.clientY;
-        point = point.matrixTransform(this.svg.getScreenCTM()!.inverse());
+        point = point.matrixTransform(this.svg!.getScreenCTM()!.inverse());
         point.x -= this.props.chartController.chartsController.chartLeft;
         point.y =
             this.props.chartController.chartsController.chartBottom - point.y;
@@ -2300,7 +2301,7 @@ export abstract class AxisController {
     @observable labelTextsWidth: number = 0;
     @observable labelTextsHeight: number = 0;
 
-    @observable isAnimationActive: boolean;
+    @observable isAnimationActive: boolean = false;
     animationController = new AnimationController();
 
     isDigital = false;
@@ -2507,7 +2508,7 @@ export abstract class ChartsController {
         public viewOptions: IViewOptions
     ) {}
 
-    chartControllers: ChartController[];
+    chartControllers: ChartController[] = [];
 
     @computed
     get xAxisController() {
@@ -2847,7 +2848,7 @@ export abstract class ChartsController {
     }
 
     rulersController: RulersController;
-    measurementsController: MeasurementsController;
+    measurementsController: MeasurementsController | undefined = undefined;
 
     createRulersController(rulersModel: RulersModel) {
         if (this.supportRulers && this.mode !== "preview") {
@@ -3256,10 +3257,10 @@ export class ChartsView extends React.Component<
     },
     {}
 > {
-    animationFrameRequestId: any;
-    div: HTMLDivElement | null;
-    sideDock: SideDock | null;
-    chartMeasurements: ChartMeasurements | null;
+    animationFrameRequestId: any = undefined;
+    div: HTMLDivElement | null = null;
+    sideDock: SideDock | null = null;
+    chartMeasurements: ChartMeasurements | null = null;
 
     get sideDockAvailable() {
         return this.props.sideDockAvailable !== undefined
@@ -3623,7 +3624,7 @@ export class ChartsView extends React.Component<
 export class ChartMeasurements extends React.Component<{
     measurementsController: MeasurementsController;
 }> {
-    dockablePanels: DockablePanels | null;
+    dockablePanels: DockablePanels | null = null;
 
     get measurementsModel() {
         return this.props.measurementsController.measurementsModel;
@@ -3757,8 +3758,8 @@ export class DynamicAxisController extends AxisController {
         super(position, chartsController, chartController, axisModel);
     }
 
-    @observable animationFrom: number;
-    @observable animationTo: number;
+    @observable animationFrom: number = 0;
+    @observable animationTo: number = 0;
 
     @computed
     get from() {
@@ -4294,8 +4295,8 @@ export class FixedAxisController extends AxisController {
 
     animationController = new AnimationController();
 
-    @observable animationSubdivisionOffset: number;
-    @observable animationSubdivisionScale: number;
+    @observable animationSubdivisionOffset: number = 0;
+    @observable animationSubdivisionScale: number = 0;
 
     get majorSubdivison() {
         return this.position === "x"
@@ -4802,7 +4803,7 @@ export class GenericChartXAxisModel implements IAxisModel {
         return this.data.xAxes.unit;
     }
 
-    chartsController: ChartsController;
+    chartsController: ChartsController | undefined = undefined;
 
     get minValue() {
         return 0;
@@ -4856,9 +4857,9 @@ export class GenericChartXAxisModel implements IAxisModel {
         return 1;
     }
 
-    label: "";
-    color: "";
-    colorInverse: "";
+    label = "";
+    color = "";
+    colorInverse = "";
 
     get logarithmic() {
         return this.data.xAxes.logarithmic;
@@ -7144,12 +7145,14 @@ export class BookmarkView extends React.Component<{
 export class BookmarksView extends React.Component<{
     chartsController: ChartsController;
 }> {
-    div: HTMLElement;
+    div: HTMLElement | null = null;
 
     ensureVisible() {
-        const selectedRow = $(this.div).find("tr.selected")[0];
-        if (selectedRow) {
-            scrollIntoViewIfNeeded(selectedRow);
+        if (this.div) {
+            const selectedRow = $(this.div).find("tr.selected")[0];
+            if (selectedRow) {
+                scrollIntoViewIfNeeded(selectedRow);
+            }
         }
     }
 
@@ -7233,9 +7236,9 @@ export class RulersModel {
 
 class DragXRulerMouseHandler implements MouseHandler {
     cursor = "ew-resize";
-    xStart: number;
-    x1: number;
-    dx: number;
+    xStart: number = 0;
+    x1: number = 0;
+    dx: number = 0;
 
     constructor(
         private rulersController: RulersController,
@@ -7347,9 +7350,9 @@ class DragYRulerMouseHandler implements MouseHandler {
     chartIndex: number;
 
     cursor = "ns-resize";
-    yStart: number;
-    y1: number;
-    dy: number;
+    yStart: number = 0;
+    y1: number = 0;
+    dy: number = 0;
 
     constructor(
         private chartView: ChartView,
@@ -7768,10 +7771,10 @@ interface RulersDockViewProps {
 
 @observer
 export class RulersDockView extends React.Component<RulersDockViewProps> {
-    @observable x1: string;
-    @observable x1Error: boolean;
-    @observable x2: string;
-    @observable x2Error: boolean;
+    @observable x1: string = "";
+    @observable x1Error: boolean = false;
+    @observable x2: string = "";
+    @observable x2Error: boolean = false;
     @observable y1: string[] = [];
     @observable y1Error: boolean[] = [];
     @observable y2: string[] = [];
@@ -8240,10 +8243,10 @@ interface DynamicSubdivisionOptionsProps {
 
 @observer
 class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOptionsProps> {
-    @observable xAxisSteps: string;
-    @observable xAxisStepsError: boolean;
-    @observable yAxisSteps: string[];
-    @observable yAxisStepsError: boolean[];
+    @observable xAxisSteps: string = "";
+    @observable xAxisStepsError: boolean = false;
+    @observable yAxisSteps: string[] = [];
+    @observable yAxisStepsError: boolean[] = [];
 
     constructor(props: DynamicSubdivisionOptionsProps) {
         super(props);
@@ -8427,11 +8430,11 @@ interface FixedSubdivisionOptionsProps {
 
 @observer
 class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsProps> {
-    @observable majorSubdivisionHorizontal: number;
-    @observable majorSubdivisionVertical: number;
-    @observable minorSubdivisionHorizontal: number;
-    @observable minorSubdivisionVertical: number;
-    @observable majorSubdivisionHorizontalError: boolean;
+    @observable majorSubdivisionHorizontal: number = 0;
+    @observable majorSubdivisionVertical: number = 0;
+    @observable minorSubdivisionHorizontal: number = 0;
+    @observable minorSubdivisionVertical: number = 0;
+    @observable majorSubdivisionHorizontalError: boolean = false;
 
     constructor(props: FixedSubdivisionOptionsProps) {
         super(props);
@@ -8809,6 +8812,7 @@ export class WaveformLineView extends React.Component<WaveformLineViewProperties
         };
     }
 
+    @action
     componentDidUpdate(prevProps: any) {
         if (this.props != prevProps) {
             this.waveformLineController = this.props.waveformLineController;

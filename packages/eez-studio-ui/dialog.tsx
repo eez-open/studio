@@ -10,19 +10,20 @@ import { IconAction } from "eez-studio-ui/action";
 
 @observer
 export class BootstrapDialog extends React.Component<IDialogComponentProps> {
-    div: HTMLDivElement;
-    form: HTMLFormElement;
-    modal: bootstrap.Modal;
+    div: HTMLDivElement | null = null;
+    form: HTMLFormElement | null = null;
+    modal: bootstrap.Modal | null = null;
 
     componentDidMount() {
-        if (this.div) {
-            $(this.div).on("shown.bs.modal", () => {
+        const div = this.div;
+        if (div) {
+            $(div).on("shown.bs.modal", () => {
                 setTimeout(() => {
-                    let element = $(this.div).find(".ql-editor")[0];
+                    let element = $(div).find(".ql-editor")[0];
                     if (element) {
                         element.focus();
                     } else {
-                        $(this.div)
+                        $(div)
                             .find(".modal-body")
                             .find(
                                 "input, textarea, select, .EezStudio_ListContainer, button"
@@ -33,14 +34,14 @@ export class BootstrapDialog extends React.Component<IDialogComponentProps> {
                 });
             });
 
-            $(this.div).on("hidden.bs.modal", () => {
-                const parent = this.div.parentElement as HTMLElement;
+            $(div).on("hidden.bs.modal", () => {
+                const parent = div.parentElement as HTMLElement;
                 ReactDOM.unmountComponentAtNode(parent);
                 parent.remove();
                 this.props.onCancel();
             });
 
-            this.modal = new bootstrap.Modal(this.div);
+            this.modal = new bootstrap.Modal(div);
             this.modal.show();
         }
     }

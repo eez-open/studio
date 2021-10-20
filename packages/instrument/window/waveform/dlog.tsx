@@ -828,7 +828,7 @@ export class DlogWaveform extends FileHistoryItem {
         return <ChartPreview data={this} />;
     }
 
-    isZoomable: false;
+    isZoomable = false;
 
     convertToCsv = async () => {
         return convertDlogToCsv(this.data);
