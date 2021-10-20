@@ -216,7 +216,7 @@ class SelectItemDialog extends React.Component<{
             children: [],
             selected: this.selection == operatorSign,
             expanded: false,
-            data: operator
+            data: operatorSign
         }));
     }
 

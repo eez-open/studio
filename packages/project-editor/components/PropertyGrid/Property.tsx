@@ -60,7 +60,8 @@ export class Property extends React.Component<PropertyProps> {
             if (this.textarea) {
                 this.textarea.style.overflow = "hidden";
                 this.textarea.style.height = "0";
-                this.textarea.style.height = this.textarea.scrollHeight + "px";
+                this.textarea.style.height =
+                    Math.max(this.textarea.scrollHeight, 33.5) + "px";
             }
         }, 0);
     };
@@ -98,11 +99,14 @@ export class Property extends React.Component<PropertyProps> {
         if (this.props.propertyInfo.onSelect) {
             let params;
 
-            if (this.props.propertyInfo.type == PropertyType.String) {
+            if (
+                this.props.propertyInfo.type == PropertyType.String ||
+                this.props.propertyInfo.type == PropertyType.MultilineText
+            ) {
                 const input = $(event.target)
                     .parent()
                     .parent()
-                    .find("input")[0] as HTMLInputElement;
+                    .find("input,textarea")[0] as HTMLInputElement;
                 if (input) {
                     params = {
                         textInputSelection: {
@@ -297,18 +301,43 @@ export class Property extends React.Component<PropertyProps> {
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.MultilineText) {
-            return (
-                <textarea
-                    ref={(ref: any) => (this.textarea = ref)}
-                    className={classNames("form-control", {
-                        pre: propertyInfo.monospaceFont
-                    })}
-                    value={this._value || ""}
-                    onChange={this.onChange}
-                    style={{ resize: "none" }}
-                    readOnly={readOnly}
-                />
-            );
+            if (!readOnly && this.props.propertyInfo.onSelect) {
+                return (
+                    <div className="input-group" title={this._value || ""}>
+                        <textarea
+                            ref={(ref: any) => (this.textarea = ref)}
+                            className={classNames("form-control", {
+                                pre: propertyInfo.monospaceFont
+                            })}
+                            value={this._value || ""}
+                            onChange={this.onChange}
+                            style={{ resize: "none" }}
+                            readOnly={propertyInfo.computed}
+                        />
+                        <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={this.onSelect}
+                            title={this.props.propertyInfo.onSelectTitle}
+                        >
+                            &hellip;
+                        </button>
+                    </div>
+                );
+            } else {
+                return (
+                    <textarea
+                        ref={(ref: any) => (this.textarea = ref)}
+                        className={classNames("form-control", {
+                            pre: propertyInfo.monospaceFont
+                        })}
+                        value={this._value || ""}
+                        onChange={this.onChange}
+                        style={{ resize: "none" }}
+                        readOnly={readOnly || propertyInfo.computed}
+                    />
+                );
+            }
         } else if (propertyInfo.type === PropertyType.JSON) {
             return (
                 <CodeEditorProperty

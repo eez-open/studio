@@ -475,6 +475,18 @@ export const builtInFunctions: {
         }
     },
 
+    "String.split": {
+        arity: 2,
+        args: ["string", "separator"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0].split(args[1]),
+        getValueType: (...args: ValueType[]) => {
+            return "array:string";
+        }
+    },
+
     "Array.slice": {
         arity: { min: 2, max: 3 },
         args: ["array", "from", "[to]"],

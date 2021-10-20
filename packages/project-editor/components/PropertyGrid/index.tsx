@@ -152,11 +152,18 @@ export class PropertyGrid extends React.Component<{
                 readOnly: readOnly || propertyReadOnly
             };
 
-            let propertyMenuEnabled =
+            let propertyMenuEnabled;
+
+            if (
                 !readOnly &&
                 (propertyInfo.inheritable ||
                     (propertyInfo.propertyMenu &&
-                        propertyInfo.propertyMenu(propertyProps).length > 0));
+                        propertyInfo.propertyMenu(propertyProps).length > 0))
+            ) {
+                propertyMenuEnabled = true;
+            } else {
+                propertyMenuEnabled = false;
+            }
 
             let property;
             if (colSpan) {
