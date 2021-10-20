@@ -2224,7 +2224,7 @@ function renderActionComponent(
                 )}
             </div>
             {!emptyContent && (
-                <div className="content eez-flow-editor-capture-pointers">
+                <div className="content ">
                     {inputs.length > 0 && (
                         <div className="inputs">
                             {inputs.map(input => (
@@ -2240,7 +2240,11 @@ function renderActionComponent(
                             ))}
                         </div>
                     )}
-                    {actionNode.getBody(flowContext)}
+                    {body ? (
+                        <div className="eez-flow-editor-capture-pointers">
+                            {body}
+                        </div>
+                    ) : null}
                     {outputs.length > 0 && (
                         <div className="outputs">
                             {outputs.map(output => (
