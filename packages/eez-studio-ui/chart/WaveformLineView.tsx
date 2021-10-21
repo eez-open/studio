@@ -6,8 +6,8 @@ import {
     renderWaveformPath,
     ILineController,
     IWaveform
-} from "./chart";
-import { globalViewOptions } from "./GlobalViewOptions";
+} from "eez-studio-ui/chart/chart";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 
 interface IWaveformLineController extends ILineController {
     waveform: IWaveform;

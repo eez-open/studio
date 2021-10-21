@@ -61,7 +61,7 @@ import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Action } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 
-import "project-editor/flow/components/instrument";
+import "project-editor/flow/components/actions/instrument";
 
 let extensionsInitialized = false;
 

@@ -48,19 +48,22 @@ import type {
     IMeasurementFunction,
     IMeasurementFunctionResultType
 } from "eez-studio-shared/extensions/extension";
-import { Measurement } from "./Measurement";
-import { clamp } from "./clamp";
-import { WaveformFormat } from "./WaveformFormat";
-import type { IWaveformDlogParams } from "./IWaveformDlogParams";
-import { WaveformLineView } from "./WaveformLineView";
-import { ChartViewOptionsProps, ChartViewOptions } from "./ChartViewOptions";
-import { globalViewOptions } from "./GlobalViewOptions";
+import { Measurement } from "eez-studio-ui/chart/Measurement";
+import { clamp } from "eez-studio-ui/chart/clamp";
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
+import type { IWaveformDlogParams } from "eez-studio-ui/chart/IWaveformDlogParams";
+import { WaveformLineView } from "eez-studio-ui/chart/WaveformLineView";
+import {
+    ChartViewOptionsProps,
+    ChartViewOptions
+} from "eez-studio-ui/chart/ChartViewOptions";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 import {
     IRulersController,
     IRulersModel,
     RulersController,
     RulersDockView
-} from "./rulers";
+} from "eez-studio-ui/chart/rulers";
 
 ////////////////////////////////////////////////////////////////////////////////
 

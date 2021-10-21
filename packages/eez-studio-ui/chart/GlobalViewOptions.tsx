@@ -1,5 +1,5 @@
 import { autorun, observable, runInAction, toJS } from "mobx";
-import type { WaveformRenderAlgorithm } from "./chart";
+import type { WaveformRenderAlgorithm } from "eez-studio-ui/chart/chart";
 
 class GlobalViewOptions {
     static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";

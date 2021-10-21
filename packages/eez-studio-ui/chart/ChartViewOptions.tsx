@@ -9,9 +9,9 @@ import type {
     IChartsController,
     WaveformRenderAlgorithm,
     IChartController
-} from "./chart";
+} from "eez-studio-ui/chart/chart";
 
-import { globalViewOptions } from "./GlobalViewOptions";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 
 ////////////////////////////////////////////////////////////////////////////////
 

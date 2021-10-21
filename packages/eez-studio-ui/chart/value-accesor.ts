@@ -1,6 +1,6 @@
 import { DataType } from "./DataType";
-import type { IWaveformDlogParams } from "./IWaveformDlogParams";
-import { WaveformFormat } from "./WaveformFormat";
+import type { IWaveformDlogParams } from "eez-studio-ui/chart/IWaveformDlogParams";
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 
 function getCsvValues(valuesArray: any) {
     var values = new Buffer(valuesArray.buffer || []).toString("binary");

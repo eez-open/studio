@@ -15,8 +15,8 @@ import type {
     IChartView,
     ICursor,
     MouseHandler
-} from "./chart";
-import { globalViewOptions } from "./GlobalViewOptions";
+} from "eez-studio-ui/chart/chart";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 
 export interface IRulersController {
     rulersModel: IRulersModel;

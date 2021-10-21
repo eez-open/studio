@@ -15,11 +15,11 @@ import type {
     IMeasurementDefinition,
     ISingleInputMeasurementTaskSpecification,
     IMultiInputMeasurementTaskSpecification
-} from "./chart";
+} from "eez-studio-ui/chart/chart";
 
 import { initValuesAccesor } from "eez-studio-ui/chart/value-accesor";
 
-import { clamp } from "./clamp";
+import { clamp } from "eez-studio-ui/chart/clamp";
 
 export class Measurement implements IMeasurement {
     constructor(
