@@ -1,55 +1,203 @@
 import React from "react";
-import { runInAction } from "mobx";
+import { computed, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
-
 import { getId } from "project-editor/core/object";
 
-import { ProjectEditor } from "project-editor/project-editor-interface";
-
-import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-
-import type { Page } from "project-editor/features/page/page";
-import type { Component } from "project-editor/flow/component";
-
-import { strokeWidth } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
+import type { Page } from "project-editor/features/page/page";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import type { Component } from "project-editor/flow/component";
+import { strokeWidth } from "project-editor/flow/flow-editor/ConnectionLineComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const Svg: React.FunctionComponent<{
+@observer
+export class ComponentsContainerEnclosure extends React.Component<{
+    components: Component[];
     flowContext: IFlowContext;
-    defs?: JSX.Element | null;
-    className?: string;
-    style?: React.CSSProperties;
-}> = observer(({ flowContext, defs, className, style, children }) => {
-    const transform = flowContext.viewState.transform;
-    let svgRect;
-    let gTransform;
-    if (transform) {
-        svgRect = transform.clientToPageRect(transform.clientRect);
-        gTransform = `translate(${-svgRect.left} ${-svgRect.top})`;
+}> {
+    render() {
+        const { components, flowContext } = this.props;
+
+        return components.map((component, i) => (
+            <ComponentEnclosure
+                key={getId(component)}
+                component={component}
+                flowContext={flowContext}
+            />
+        ));
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ComponentEnclosure extends React.Component<{
+    component: Component | Page;
+    flowContext: IFlowContext;
+    left?: number;
+    top?: number;
+}> {
+    elRef = React.createRef<HTMLDivElement>();
+
+    @computed
+    get listIndex() {
+        if (
+            this.props.flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)
+        ) {
+            return this.props.flowContext.dataContext.get(
+                FLOW_ITERATOR_INDEX_VARIABLE
+            );
+        }
+        return 0;
     }
 
-    return (
-        <svg
-            className={className}
-            style={{
-                position: "absolute",
-                pointerEvents: "none",
-                ...svgRect,
-                ...style
-            }}
-        >
-            {defs && <defs>{defs}</defs>}
-            <g transform={gTransform} style={{ pointerEvents: "auto" }}>
-                {children}
-            </g>
-        </svg>
-    );
-});
+    updateComponentGeometry() {
+        if (this.elRef.current && this.listIndex == 0) {
+            const geometry = calcComponentGeometry(
+                this.props.component,
+                this.elRef.current,
+                this.props.flowContext
+            );
+
+            runInAction(() => {
+                this.props.component.geometry = geometry;
+            });
+        }
+    }
+
+    componentDidMount() {
+        this.updateComponentGeometry();
+    }
+
+    componentDidUpdate() {
+        this.updateComponentGeometry();
+    }
+
+    render() {
+        const { component, flowContext, left, top } = this.props;
+
+        // data-eez-flow-object-id
+        let dataFlowObjectId = getId(component);
+        if (this.listIndex > 0) {
+            dataFlowObjectId = dataFlowObjectId + "-" + this.listIndex;
+        }
+
+        // style
+        const style: React.CSSProperties = {
+            left: left ?? component.left,
+            top: top ?? component.top
+        };
+
+        if (!(component.autoSize == "width" || component.autoSize == "both")) {
+            style.width = component.width;
+        }
+        if (!(component.autoSize == "height" || component.autoSize == "both")) {
+            style.height = component.height;
+        }
+
+        style.overflow = "visible";
+        component.styleHook(style, flowContext);
+
+        // className
+        const DocumentStore = flowContext.DocumentStore;
+        const uiStateStore = DocumentStore.uiStateStore;
+        const runtime = DocumentStore.runtime;
+
+        let breakpointClass;
+        if (component instanceof ProjectEditor.ComponentClass) {
+            if (uiStateStore.isBreakpointAddedForComponent(component)) {
+                if (uiStateStore.isBreakpointEnabledForComponent(component)) {
+                    breakpointClass = "enabled-breakpoint";
+                } else {
+                    breakpointClass = "disabled-breakpoint";
+                }
+            }
+        }
+
+        const componentClassName = component.getClassName();
+
+        const className = classNames(
+            "EezStudio_ComponentEnclosure",
+            breakpointClass,
+            componentClassName,
+            {
+                "eez-flow-editor-capture-pointers":
+                    runtime && !(runtime.isDebuggerActive && runtime.isPaused)
+            }
+        );
+
+        return (
+            <div
+                ref={this.elRef}
+                data-eez-flow-object-id={dataFlowObjectId}
+                className={className}
+                style={style}
+            >
+                {component.render(flowContext)}
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class ComponentCanvas extends React.Component<{
+    component: Component;
+    draw: (ctx: CanvasRenderingContext2D) => void;
+}> {
+    elRef = React.createRef<HTMLDivElement>();
+
+    drawCanvas() {
+        if (!this.elRef.current) {
+            return;
+        }
+
+        const { component, draw } = this.props;
+
+        let canvas: HTMLCanvasElement;
+
+        canvas = document.createElement("canvas");
+        canvas.width = component.width;
+        canvas.height = component.height;
+        canvas.style.imageRendering = "pixelated";
+        canvas.style.display = "block";
+        draw(canvas.getContext("2d")!);
+
+        if (this.elRef.current.children[0]) {
+            this.elRef.current.replaceChild(
+                canvas,
+                this.elRef.current.children[0]
+            );
+        } else {
+            this.elRef.current.appendChild(canvas);
+        }
+    }
+
+    componentDidMount() {
+        this.drawCanvas();
+    }
+
+    componentDidUpdate() {
+        this.drawCanvas();
+    }
+
+    render() {
+        const { component } = this.props;
+
+        return (
+            <div
+                ref={this.elRef}
+                style={{ width: component.width, height: component.height }}
+            ></div>
+        );
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -150,182 +298,34 @@ export function calcComponentGeometry(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ComponentCanvas = observer(
-    ({
-        component,
-        flowContext,
-        draw
-    }: {
-        component: Component;
-        flowContext: IFlowContext;
-        draw: (ctx: CanvasRenderingContext2D) => void;
-    }) => {
-        const refDiv = React.useRef<HTMLDivElement>(null);
-
-        let canvas: HTMLCanvasElement;
-
-        React.useEffect(() => {
-            if (refDiv.current) {
-                if (refDiv.current.children[0]) {
-                    refDiv.current.replaceChild(
-                        canvas,
-                        refDiv.current.children[0]
-                    );
-                } else {
-                    refDiv.current.appendChild(canvas);
-                }
-            }
-        });
-
-        canvas = document.createElement("canvas");
-        canvas.width = component.width;
-        canvas.height = component.height;
-        canvas.style.imageRendering = "pixelated";
-        canvas.style.display = "block";
-        draw(canvas.getContext("2d")!);
-
-        return (
-            <div
-                ref={refDiv}
-                style={{ width: component.width, height: component.height }}
-            ></div>
-        );
+export const Svg: React.FunctionComponent<{
+    flowContext: IFlowContext;
+    defs?: JSX.Element | null;
+    className?: string;
+    style?: React.CSSProperties;
+}> = observer(({ flowContext, defs, className, style, children }) => {
+    const transform = flowContext.viewState.transform;
+    let svgRect;
+    let gTransform;
+    if (transform) {
+        svgRect = transform.clientToPageRect(transform.clientRect);
+        gTransform = `translate(${-svgRect.left} ${-svgRect.top})`;
     }
-);
 
-export const ComponentEnclosure = observer(
-    ({
-        component,
-        flowContext,
-        left,
-        top
-    }: {
-        component: Component | Page;
-        flowContext: IFlowContext;
-        left?: number;
-        top?: number;
-    }) => {
-        const elRef = React.useRef<HTMLDivElement>(null);
-
-        let listIndex = 0;
-        if (flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)) {
-            listIndex = flowContext.dataContext.get(
-                FLOW_ITERATOR_INDEX_VARIABLE
-            );
-        }
-
-        React.useEffect(() => {
-            const el = elRef.current;
-            if (el && listIndex == 0) {
-                const geometry = calcComponentGeometry(
-                    component,
-                    el,
-                    flowContext
-                );
-                runInAction(() => {
-                    component.geometry = geometry;
-                });
-            }
-        });
-
-        React.useEffect(() => {
-            const el = elRef.current;
-            if (el && listIndex == 0) {
-                const geometry = calcComponentGeometry(
-                    component,
-                    el,
-                    flowContext
-                );
-                runInAction(() => {
-                    component.geometry = geometry;
-                });
-            }
-        }, [listIndex]);
-
-        const style: React.CSSProperties = {
-            left: left ?? component.left,
-            top: top ?? component.top
-        };
-
-        if (!(component.autoSize == "width" || component.autoSize == "both")) {
-            style.width = component.width;
-        }
-        if (!(component.autoSize == "height" || component.autoSize == "both")) {
-            style.height = component.height;
-        }
-
-        let dataFlowObjectId = getId(component);
-        if (listIndex > 0) {
-            dataFlowObjectId = dataFlowObjectId + "-" + listIndex;
-        }
-
-        style.overflow = "visible";
-        component.styleHook(style, flowContext);
-
-        const className = component.getClassName();
-
-        let breakpointClass;
-
-        const DocumentStore = flowContext.DocumentStore;
-
-        const uiStateStore = DocumentStore.uiStateStore;
-
-        if (component instanceof ProjectEditor.ComponentClass) {
-            if (uiStateStore.isBreakpointAddedForComponent(component)) {
-                if (uiStateStore.isBreakpointEnabledForComponent(component)) {
-                    breakpointClass = "enabled-breakpoint";
-                } else {
-                    breakpointClass = "disabled-breakpoint";
-                }
-            }
-        }
-
-        const runtime = DocumentStore.runtime;
-
-        return (
-            <div
-                data-eez-flow-object-id={dataFlowObjectId}
-                ref={elRef}
-                className={classNames(
-                    "EezStudio_ComponentEnclosure",
-                    breakpointClass,
-                    className,
-                    {
-                        "eez-flow-editor-capture-pointers":
-                            runtime &&
-                            !(runtime.isDebuggerActive && runtime.isPaused)
-                    }
-                )}
-                style={style}
-            >
-                {component.render(flowContext)}
-            </div>
-        );
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const ComponentsContainerEnclosure = observer(
-    ({
-        components,
-        flowContext
-    }: {
-        components: Component[];
-        flowContext: IFlowContext;
-    }) => {
-        return (
-            <>
-                {components.map((component, i) => {
-                    return (
-                        <ComponentEnclosure
-                            key={getId(component)}
-                            component={component}
-                            flowContext={flowContext}
-                        />
-                    );
-                })}
-            </>
-        );
-    }
-);
+    return (
+        <svg
+            className={className}
+            style={{
+                position: "absolute",
+                pointerEvents: "none",
+                ...svgRect,
+                ...style
+            }}
+        >
+            {defs && <defs>{defs}</defs>}
+            <g transform={gTransform} style={{ pointerEvents: "auto" }}>
+                {children}
+            </g>
+        </svg>
+    );
+});

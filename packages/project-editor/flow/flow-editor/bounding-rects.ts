@@ -12,7 +12,6 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 
 import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
-import type { Component } from "project-editor/flow/component";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -25,13 +24,25 @@ export function getObjectBoundingRect(objectAdapter: ITreeObjectAdapter) {
             width: object.targetPosition.x - object.sourcePosition.x,
             height: object.targetPosition.y - object.sourcePosition.y
         };
-    } else {
-        const widget = object as Component;
+    } else if (object instanceof ProjectEditor.ComponentClass) {
         return {
-            left: widget.absolutePositionPoint?.x ?? widget.left,
-            top: widget.absolutePositionPoint?.y ?? widget.top,
+            left: object.absolutePositionPoint?.x ?? object.left,
+            top: object.absolutePositionPoint?.y ?? object.top,
             width: objectAdapter.rect.width,
             height: objectAdapter.rect.height
+        };
+    } else if (
+        object instanceof ProjectEditor.ActionClass ||
+        object instanceof ProjectEditor.PageClass
+    ) {
+        return object.pageRect;
+    } else {
+        console.warn("Unexpected!");
+        return {
+            left: 0,
+            top: 0,
+            width: 0,
+            height: 0
         };
     }
 }

@@ -276,7 +276,6 @@ export class ContainerWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             const w = this.width;
@@ -1522,7 +1521,6 @@ export class DisplayDataWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let text =
@@ -1751,7 +1749,6 @@ export class TextWidget extends EmbeddedWidget {
                     <span>{text}</span>
                 ) : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
@@ -2111,7 +2108,6 @@ export class MultilineTextWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let text = this.text
@@ -2221,7 +2217,6 @@ export class RectangleWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             const w = this.width;
@@ -2451,7 +2446,6 @@ export class BitmapWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             const w = this.width;
@@ -2650,7 +2644,6 @@ export class ButtonWidget extends EmbeddedWidget {
                     </button>
                 ) : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
@@ -2745,7 +2738,6 @@ export class ToggleButtonWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
@@ -2819,7 +2811,6 @@ export class ButtonGroupWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let buttonLabels =
@@ -3036,7 +3027,6 @@ export class BarGraphWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let barGraphWidget = this;
@@ -3395,7 +3385,6 @@ export class YTGraphWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let ytGraphWidget = this;
@@ -3512,7 +3501,6 @@ export class UpDownWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let upDownWidget = this;
@@ -3681,7 +3669,6 @@ export class ListGraphWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let listGraphWidget = this;
@@ -3867,7 +3854,6 @@ export class ScrollBarWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let widget = this;
@@ -4028,7 +4014,6 @@ export class ProgressWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let widget = this;
@@ -4117,7 +4102,6 @@ export class CanvasWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let widget = this;
@@ -4570,11 +4554,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
-                    <ComponentCanvas
-                        flowContext={flowContext}
-                        component={this}
-                        draw={drawGauge}
-                    />
+                    <ComponentCanvas component={this} draw={drawGauge} />
                 )}
                 {super.render(flowContext)}
             </>
@@ -4738,7 +4718,6 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
-                        flowContext={flowContext}
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             let text;
