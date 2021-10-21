@@ -1,18 +1,12 @@
 import Database from "better-sqlite3";
 
-import { isRenderer, isWebStudio } from "eez-studio-shared/util-electron";
+import { isRenderer } from "eez-studio-shared/util-electron";
 
 import type * as MainSettingsModule from "main/settings";
 
 export let getDbPath: () => string;
 export let setDbPath: (dbPath: string) => void;
-if (isWebStudio()) {
-    getDbPath = function () {
-        return "";
-    };
-
-    setDbPath = function (dbPath: string) {};
-} else if (isRenderer()) {
+if (isRenderer()) {
     getDbPath = function () {
         return EEZStudio.electron.ipcRenderer.sendSync("getDbPath");
     };

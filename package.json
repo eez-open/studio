@@ -61,7 +61,6 @@
         "@types/sha256": "^0.2.0",
         "@types/tinycolor2": "^1.4.2",
         "@types/usb": "^1.5.1",
-        "browserify": "^17.0.0",
         "concurrently": "^5.2.0",
         "electron": "12.1.0",
         "electron-builder": "^22.11.7",

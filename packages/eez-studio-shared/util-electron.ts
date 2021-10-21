@@ -5,29 +5,18 @@ export let app: Electron.App;
 let fs: any;
 let path: any;
 
-if (isWebStudio()) {
-} else {
-    fs = require("fs");
-    path = require("path");
+fs = require("fs");
+path = require("path");
 
-    if (isRenderer()) {
-        app = EEZStudio.remote.app;
-    } else {
-        app = require("electron").app;
-    }
+if (isRenderer()) {
+    app = EEZStudio.remote.app;
+} else {
+    app = require("electron").app;
 }
 
 export const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(
     process.execPath
 );
-
-export function isWebStudio() {
-    try {
-        return EEZStudio.isWebStudio;
-    } catch (err) {
-        return false;
-    }
-}
 
 export function isRenderer() {
     // running in a web browser
@@ -49,9 +38,7 @@ export function isRenderer() {
 }
 
 export function getUserDataPath(relativePath: string) {
-    return isWebStudio()
-        ? ""
-        : app.getPath("userData") + path.sep + relativePath;
+    return app.getPath("userData") + path.sep + relativePath;
 }
 
 export function localPathToFileUrl(localPath: string) {

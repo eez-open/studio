@@ -2,8 +2,6 @@ import React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
 
-import { isWebStudio } from "eez-studio-shared/util-electron";
-
 import { Splitter } from "eez-studio-ui/splitter";
 
 import { Output } from "project-editor/components/Output";
@@ -136,14 +134,7 @@ export class ProjectEditor extends React.Component<{}, {}> {
 
         let mainContent;
 
-        if (isWebStudio()) {
-            mainContent = (
-                <>
-                    <Toolbar />
-                    <Content />
-                </>
-            );
-        } else if (
+        if (
             this.context.runtime &&
             (this.context.project.isDashboardProject ||
                 this.context.project.isAppletProject)

@@ -171,8 +171,6 @@ let files = [
     "!**/node_modules/*.d.ts",
     "!**/node_modules/.bin",
     "!**/*.js.map",
-    "!build/project-editor/webstudio-bundle.js",
-    "!build/project-editor/webstudio.html",
     "!**/*.ilk",
     "!**/*.lib",
     "!node_modules/better-sqlite3/build/Release/obj",

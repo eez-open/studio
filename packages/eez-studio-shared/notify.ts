@@ -1,5 +1,5 @@
 import electron from "electron";
-import { isWebStudio, isRenderer } from "eez-studio-shared/util-electron";
+import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { BrowserWindow } from "electron";
 
@@ -92,10 +92,6 @@ export function watch(
     filterSpecification: any,
     callback: (message: any) => void
 ) {
-    if (isWebStudio()) {
-        return "";
-    }
-
     let targetId = guid();
 
     // add target to this window
@@ -177,78 +173,70 @@ function sendSendMessage(
     target.send("notify/send-message", args);
 }
 
-if (!isWebStudio()) {
-    let ipc: Electron.IpcRenderer | Electron.IpcMain;
-    if (isRenderer()) {
-        ipc = EEZStudio.electron.ipcRenderer;
-    } else {
-        ipc = electron.ipcMain;
-    }
+let ipc: Electron.IpcRenderer | Electron.IpcMain;
+if (isRenderer()) {
+    ipc = EEZStudio.electron.ipcRenderer;
+} else {
+    ipc = electron.ipcMain;
+}
 
-    ipc.on("notify/watch", function (event: any, args: INotifyWatchArgs) {
-        targets.set(args.targetId, {
-            sourceId: args.sourceId,
-            filterSpecification: args.filterSpecification,
-            targetWindowId: args.targetWindowId
-        });
-
-        let source = sources.get(args.sourceId);
-        if (source && source.onNewTarget) {
-            source.onNewTarget(args.targetId, args.filterSpecification, false);
-        }
+ipc.on("notify/watch", function (event: any, args: INotifyWatchArgs) {
+    targets.set(args.targetId, {
+        sourceId: args.sourceId,
+        filterSpecification: args.filterSpecification,
+        targetWindowId: args.targetWindowId
     });
 
-    ////////////////////////////////////////////////////////////////////////////////
+    let source = sources.get(args.sourceId);
+    if (source && source.onNewTarget) {
+        source.onNewTarget(args.targetId, args.filterSpecification, false);
+    }
+});
 
-    ipc.on(
-        "notify/send-message",
-        function (event: any, args: ISendMessageArgs) {
-            targets.forEach((target, targetId) => {
-                if (target.callback && targetId === args.targetId) {
-                    target.callback(args.message);
-                }
+////////////////////////////////////////////////////////////////////////////////
+
+ipc.on("notify/send-message", function (event: any, args: ISendMessageArgs) {
+    targets.forEach((target, targetId) => {
+        if (target.callback && targetId === args.targetId) {
+            target.callback(args.message);
+        }
+    });
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+ipc.on("notify/get-targets", function (event: any, windowId: number) {
+    let targetWindowId: number;
+    if (isRenderer()) {
+        targetWindowId = EEZStudio.remote.getCurrentWindow().id;
+    } else {
+        targetWindowId = -1;
+    }
+    targets.forEach((target, targetId) => {
+        if (target.callback) {
+            sendNotifyWatch(getBrowserWindow().fromId(windowId)!.webContents, {
+                sourceId: target.sourceId,
+                filterSpecification: target.filterSpecification,
+                targetId,
+                targetWindowId
             });
         }
-    );
+    });
+});
 
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ipc.on("notify/get-targets", function (event: any, windowId: number) {
-        let targetWindowId: number;
-        if (isRenderer()) {
-            targetWindowId = EEZStudio.remote.getCurrentWindow().id;
-        } else {
-            targetWindowId = -1;
+if (isRenderer()) {
+    let currentWindowId = EEZStudio.remote.getCurrentWindow().id;
+    EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
+        if (currentWindowId !== window.id) {
+            window.webContents.send(
+                "notify/get-targets",
+                EEZStudio.remote.getCurrentWindow().id
+            );
         }
-        targets.forEach((target, targetId) => {
-            if (target.callback) {
-                sendNotifyWatch(
-                    getBrowserWindow().fromId(windowId)!.webContents,
-                    {
-                        sourceId: target.sourceId,
-                        filterSpecification: target.filterSpecification,
-                        targetId,
-                        targetWindowId
-                    }
-                );
-            }
-        });
     });
 
-    if (isRenderer()) {
-        let currentWindowId = EEZStudio.remote.getCurrentWindow().id;
-        EEZStudio.remote.BrowserWindow.getAllWindows().forEach(window => {
-            if (currentWindowId !== window.id) {
-                window.webContents.send(
-                    "notify/get-targets",
-                    EEZStudio.remote.getCurrentWindow().id
-                );
-            }
-        });
-
-        EEZStudio.electron.ipcRenderer.send(
-            "notify/get-targets",
-            EEZStudio.remote.getCurrentWindow().id
-        );
-    }
+    EEZStudio.electron.ipcRenderer.send(
+        "notify/get-targets",
+        EEZStudio.remote.getCurrentWindow().id
+    );
 }

@@ -1,4 +1,4 @@
-import { isWebStudio, isRenderer } from "eez-studio-shared/util-electron";
+import { isRenderer } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { toJS } from "mobx";
 import { sourceRootDir } from "eez-studio-shared/util";
@@ -34,8 +34,7 @@ export let service: <I, O>(
     return serviceImplementation;
 };
 
-if (isWebStudio()) {
-} else if (isRenderer()) {
+if (isRenderer()) {
     if (EEZStudio.windowType === "shared/service") {
         // this is service process (renderer)
 

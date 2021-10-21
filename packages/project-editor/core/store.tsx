@@ -20,7 +20,6 @@ import {
     _find
 } from "eez-studio-shared/algorithm";
 import { confirmSave } from "eez-studio-shared/util";
-import { isWebStudio } from "eez-studio-shared/util-electron";
 import { humanize } from "eez-studio-shared/string";
 import { guid } from "eez-studio-shared/guid";
 
@@ -1453,9 +1452,7 @@ export class DocumentStoreClass {
             }
         );
 
-        if (!isWebStudio()) {
-            this.watch();
-        }
+        this.watch();
     }
 
     async watch() {
@@ -1533,10 +1530,6 @@ export class DocumentStoreClass {
     }
 
     updateProjectWindowState() {
-        if (isWebStudio()) {
-            return;
-        }
-
         const path = EEZStudio.remote.require("path");
 
         let title = "";
@@ -1593,10 +1586,6 @@ export class DocumentStoreClass {
     }
 
     getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
-        if (isWebStudio()) {
-            return relativeFilePath;
-        }
-
         const path = EEZStudio.remote.require("path");
         const filePath = this.getProjectFilePath(project ?? this.project);
         return filePath
@@ -1707,10 +1696,6 @@ export class DocumentStoreClass {
     }
 
     loadUIState(projectFilePath: string) {
-        if (isWebStudio()) {
-            return {} as any;
-        }
-
         return new Promise<any>((resolve, reject) => {
             const fs = EEZStudio.remote.require("fs");
             fs.readFile(

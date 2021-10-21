@@ -2,7 +2,6 @@
 
 declare const EEZStudio: {
     title: string;
-    isWebStudio?: boolean;
     electron: typeof Electron;
     require: any;
     windowType: string;

@@ -4,7 +4,6 @@ import { DocumentStoreClass, getClassInfo } from "project-editor/core/store";
 import { Action, findAction } from "project-editor/features/action/action";
 import { Component, Widget } from "project-editor/flow/component";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { isWebStudio } from "eez-studio-shared/util-electron";
 import {
     ActionStartLogItem,
     ExecuteComponentLogItem,
@@ -419,10 +418,6 @@ export class LocalRuntime extends RuntimeBase {
     }
 
     async loadSettings() {
-        if (isWebStudio()) {
-            return;
-        }
-
         const filePath = this.getSettingsFilePath();
         if (!filePath) {
             return;
@@ -442,10 +437,6 @@ export class LocalRuntime extends RuntimeBase {
     }
 
     async saveSettings() {
-        if (isWebStudio()) {
-            return;
-        }
-
         const filePath = this.getSettingsFilePath();
         if (!filePath) {
             return;
