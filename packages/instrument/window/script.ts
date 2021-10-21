@@ -15,12 +15,12 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { validators } from "eez-studio-shared/validation";
 
-import { run as runScpi } from "eez-studio-shared/script-engines/scpi";
-import { run as runJavaScript } from "eez-studio-shared/script-engines/javascript";
-
 import { IShortcut } from "shortcuts/interfaces";
 
 import { InstrumentObject } from "instrument/instrument-object";
+
+import { run as runScpi } from "instrument/script-engines/scpi";
+import { run as runJavaScript } from "instrument/script-engines/javascript";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { getConnection } from "instrument/window/connection";
