@@ -2599,9 +2599,34 @@ export class ButtonWidget extends EmbeddedWidget {
     });
 
     render(flowContext: IFlowContext) {
-        let text = this.data && flowContext.dataContext.get(this.data);
-        if (!text) {
-            text = this.text;
+        let text: string;
+
+        if (this.data) {
+            if (flowContext.flowState) {
+                try {
+                    const value = evalExpression(flowContext, this, this.data);
+
+                    if (value != null && value != undefined) {
+                        text = value.toString();
+                    } else {
+                        text = "";
+                    }
+                } catch (err) {
+                    console.error(err);
+                    text = err.toString();
+                }
+            } else {
+                if (
+                    flowContext.DocumentStore.project.isDashboardProject ||
+                    flowContext.DocumentStore.project.isAppletProject
+                ) {
+                    text = this.data;
+                } else {
+                    text = flowContext.dataContext.get(this.data) ?? "";
+                }
+            }
+        } else {
+            text = this.text || "<no text>";
         }
 
         let buttonEnabled;
