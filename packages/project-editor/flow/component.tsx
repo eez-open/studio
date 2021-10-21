@@ -104,18 +104,27 @@ export function makeDataPropertyInfo(
             type: PropertyType.ObjectReference,
             referencedObjectCollectionPath: "variables/globalVariables",
             propertyGridGroup: propertyGridGroup || dataGroup,
-            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) => {
+            onSelect: (
+                object: IEezObject,
+                propertyInfo: PropertyInfo,
+                params: IOnSelectParams
+            ) => {
                 const DocumentStore = getDocumentStore(object);
                 if (
                     DocumentStore.project.isAppletProject ||
                     DocumentStore.project.isDashboardProject
                 ) {
-                    return expressionBuilder(object, propertyInfo, {
-                        assignableExpression: false,
-                        title: "Expression Builder",
-                        width: 400,
-                        height: 600
-                    });
+                    return expressionBuilder(
+                        object,
+                        propertyInfo,
+                        {
+                            assignableExpression: false,
+                            title: "Expression Builder",
+                            width: 400,
+                            height: 600
+                        },
+                        params
+                    );
                 } else {
                     return onSelectItem(object, propertyInfo, {
                         title: "Select Data",
@@ -176,12 +185,16 @@ export function makeTextPropertyInfo(
         displayName,
         type: PropertyType.String,
         propertyGridGroup: propertyGridGroup || specificGroup,
-        onSelect: (
+        onSelect: async (
             object: IEezObject,
             propertyInfo: PropertyInfo,
             params?: IOnSelectParams
-        ) =>
-            onSelectItem(
+        ) => {
+            if (ProjectEditor.getProject(object).isDashboardProject) {
+                return undefined;
+            }
+
+            return await onSelectItem(
                 object,
                 propertyInfo,
                 {
@@ -189,7 +202,8 @@ export function makeTextPropertyInfo(
                     width: 800
                 },
                 params
-            ),
+            );
+        },
         onSelectTitle: "Select Glyph"
     };
 }

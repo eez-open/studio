@@ -26,6 +26,11 @@ import { ArrayProperty } from "./ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "./EmbeddedPropertyGrid";
 import { objectToString } from "project-editor/core/store";
 import classNames from "classnames";
+import { parseIdentifier } from "project-editor/flow/expression/expression";
+import {
+    EXPR_MARK_END,
+    EXPR_MARK_START
+} from "project-editor/flow/expression/ExpressionBuilder";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +106,8 @@ export class Property extends React.Component<PropertyProps> {
 
             if (
                 this.props.propertyInfo.type == PropertyType.String ||
-                this.props.propertyInfo.type == PropertyType.MultilineText
+                this.props.propertyInfo.type == PropertyType.MultilineText ||
+                this.props.propertyInfo.type == PropertyType.ObjectReference
             ) {
                 const input = $(event.target)
                     .parent()
@@ -175,6 +181,77 @@ export class Property extends React.Component<PropertyProps> {
                 target.type === "checkbox" ? target.checked : target.value
             );
         }
+    };
+
+    onSelectionChange = (
+        event: React.SyntheticEvent<
+            HTMLTextAreaElement | HTMLInputElement,
+            Event
+        >
+    ) => {
+        const start = event.currentTarget.selectionStart;
+        const end = event.currentTarget.selectionEnd;
+        if (!(typeof start == "number") || !(typeof end == "number")) {
+            return;
+        }
+
+        const value = event.currentTarget.value;
+
+        let expressionStart: number | undefined;
+        for (let i = start; i >= 0; i--) {
+            if (
+                value[i] == EXPR_MARK_START[0] &&
+                value[i + 1] == EXPR_MARK_START[1]
+            ) {
+                expressionStart = i;
+                break;
+            }
+        }
+
+        if (expressionStart === undefined) {
+            return;
+        }
+
+        let expressionEnd: number | undefined;
+        for (let i = end; i < value.length; i++) {
+            if (
+                value[i] == EXPR_MARK_END[1] &&
+                value[i - 1] == EXPR_MARK_END[0]
+            ) {
+                expressionEnd = i + 1;
+                break;
+            }
+        }
+
+        if (expressionEnd === undefined) {
+            return;
+        }
+
+        const identifier = value.substring(
+            expressionStart + 2,
+            expressionEnd - 2
+        );
+
+        if (identifier.length == 0) {
+            return;
+        }
+
+        let isIdentifier = false;
+        try {
+            isIdentifier = parseIdentifier(identifier);
+        } catch (err) {
+            return;
+        }
+
+        if (!isIdentifier) {
+            return;
+        }
+
+        event.currentTarget.setSelectionRange(
+            expressionStart,
+            expressionEnd,
+            event.currentTarget.selectionDirection ?? undefined
+        );
     };
 
     onEditUnique = () => {
@@ -311,6 +388,7 @@ export class Property extends React.Component<PropertyProps> {
                             })}
                             value={this._value || ""}
                             onChange={this.onChange}
+                            onSelect={this.onSelectionChange}
                             style={{ resize: "none" }}
                             readOnly={propertyInfo.computed}
                         />
@@ -443,24 +521,30 @@ export class Property extends React.Component<PropertyProps> {
         } else if (propertyInfo.type === PropertyType.ObjectReference) {
             if (readOnly) {
                 return (
-                    <input
-                        ref={(ref: any) => (this.input = ref)}
-                        type="text"
-                        className="form-control"
+                    <textarea
+                        ref={(ref: any) => (this.textarea = ref)}
+                        className={classNames("form-control", {
+                            pre: propertyInfo.monospaceFont
+                        })}
                         value={this._value || ""}
-                        readOnly
+                        onChange={this.onChange}
+                        style={{ resize: "none" }}
+                        readOnly={readOnly || propertyInfo.computed}
                     />
                 );
             } else {
                 if (this.props.propertyInfo.onSelect) {
                     return (
                         <div className="input-group" title={this._value || ""}>
-                            <input
-                                ref={(ref: any) => (this.input = ref)}
-                                type="text"
-                                className="form-control"
+                            <textarea
+                                ref={(ref: any) => (this.textarea = ref)}
+                                className={classNames("form-control", {
+                                    pre: propertyInfo.monospaceFont
+                                })}
                                 value={this._value || ""}
                                 onChange={this.onChange}
+                                onSelect={this.onSelectionChange}
+                                style={{ resize: "none" }}
                                 readOnly={propertyInfo.computed}
                             />
                             <button
@@ -586,6 +670,7 @@ export class Property extends React.Component<PropertyProps> {
                             className="form-control"
                             value={this._value || ""}
                             onChange={this.onChange}
+                            onSelect={this.onSelectionChange}
                             onKeyDown={this.onKeyDown}
                             readOnly={propertyInfo.computed}
                         />

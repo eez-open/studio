@@ -34,6 +34,9 @@ import {
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
+export const EXPR_MARK_START = "{<";
+export const EXPR_MARK_END = ">}";
+
 export async function expressionBuilder(
     object: IEezObject,
     propertyInfo: PropertyInfo,
@@ -203,21 +206,44 @@ class SelectItemDialog extends React.Component<{
         return [];
     }
 
-    getOperators<
+    getUnaryOperators<
         T extends {
             [operator: string]: {
                 name: string;
             };
         }
     >(operators: T) {
-        return _map(operators, (operator, operatorSign) => ({
-            id: operator.name,
-            label: `${humanize(operator.name)} (${operatorSign})`,
-            children: [],
-            selected: this.selection == operatorSign,
-            expanded: false,
-            data: operatorSign
-        }));
+        return _map(operators, (operator, operatorSign) => {
+            const data = `${operatorSign}${EXPR_MARK_START}expr${EXPR_MARK_END}`;
+            return {
+                id: operator.name,
+                label: `${humanize(operator.name)} (${operatorSign})`,
+                children: [],
+                selected: this.selection == data,
+                expanded: false,
+                data
+            };
+        });
+    }
+
+    getBinaryOperators<
+        T extends {
+            [operator: string]: {
+                name: string;
+            };
+        }
+    >(operators: T) {
+        return _map(operators, (operator, operatorSign) => {
+            const data = `${EXPR_MARK_START}expr${EXPR_MARK_END} ${operatorSign} ${EXPR_MARK_START}expr${EXPR_MARK_END}`;
+            return {
+                id: operator.name,
+                label: `${humanize(operator.name)} (${operatorSign})`,
+                children: [],
+                selected: this.selection == data,
+                expanded: false,
+                data
+            };
+        });
     }
 
     @computed get rootNode(): ITreeNode<string> {
@@ -328,7 +354,7 @@ class SelectItemDialog extends React.Component<{
             children.push({
                 id: "binary-operators",
                 label: "Binary operators",
-                children: this.getOperators(binaryOperators),
+                children: this.getBinaryOperators(binaryOperators),
                 selected: false,
                 expanded: true
             });
@@ -336,15 +362,25 @@ class SelectItemDialog extends React.Component<{
             children.push({
                 id: "logical-operators",
                 label: "Logical operators",
-                children: this.getOperators(logicalOperators),
+                children: this.getBinaryOperators(logicalOperators),
                 selected: false,
                 expanded: true
+            });
+
+            const conditionalOperatorData = `${EXPR_MARK_START}condition${EXPR_MARK_END} ? ${EXPR_MARK_START}exprIfTrue${EXPR_MARK_END} : ${EXPR_MARK_START}exprIfFalse${EXPR_MARK_END}`;
+            children.push({
+                id: "conditional-operator",
+                label: "Conditional operator (condition ? exprIfTrue : exprIfFalse)",
+                children: [],
+                selected: this.selection == conditionalOperatorData,
+                expanded: false,
+                data: conditionalOperatorData
             });
 
             children.push({
                 id: "unary-operators",
                 label: "Unary operators",
-                children: this.getOperators(unaryOperators),
+                children: this.getUnaryOperators(unaryOperators),
                 selected: false,
                 expanded: true
             });
@@ -354,8 +390,8 @@ class SelectItemDialog extends React.Component<{
                 label: "Built-in Functions",
                 children: _map(builtInFunctions, (func, functionName) => {
                     const data = `${functionName}(${func.args
-                        .map(arg => `<${arg}>`)
-                        .join(",")})`;
+                        .map(arg => `${EXPR_MARK_START}${arg}${EXPR_MARK_END}`)
+                        .join(", ")})`;
                     return {
                         id: functionName,
                         label: functionName,
