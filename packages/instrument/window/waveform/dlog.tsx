@@ -33,7 +33,8 @@ import {
     initValuesAccesor,
     getNearestValuePoint,
     WaveformModel,
-    WaveformLineView
+    WaveformLineView,
+    DataType
 } from "eez-studio-ui/chart/chart";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
@@ -54,7 +55,6 @@ import {
     decodeDlog,
     ScaleType
 } from "instrument/window/waveform/dlog-file";
-import { DataType } from "instrument/window/waveform/DataType";
 import {
     convertDlogToCsv,
     dlogUnitToStudioUnit

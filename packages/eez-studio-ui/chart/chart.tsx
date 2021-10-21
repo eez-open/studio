@@ -1,6 +1,5 @@
-const tinycolor = require("tinycolor2");
+import tinycolor from "tinycolor2";
 import { clipboard, SaveDialogOptions } from "electron";
-
 import bootstrap from "bootstrap";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -14,7 +13,6 @@ import {
     toJS
 } from "mobx";
 import { observer } from "mobx-react";
-
 import classNames from "classnames";
 import { cssTransition } from "react-toastify";
 
@@ -26,16 +24,16 @@ import { guid } from "eez-studio-shared/guid";
 import { capitalize, stringCompare } from "eez-studio-shared/string";
 import { writeBinaryData } from "eez-studio-shared/util-electron";
 import { closestByClass, scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
-
-import { SvgLabel } from "eez-studio-ui/svg-label";
-import * as notification from "eez-studio-ui/notification";
-import { Draggable } from "eez-studio-ui/draggable";
 import {
     _difference,
     _map,
     _range,
     _uniqWith
 } from "eez-studio-shared/algorithm";
+
+import { SvgLabel } from "eez-studio-ui/svg-label";
+import * as notification from "eez-studio-ui/notification";
+import { Draggable } from "eez-studio-ui/draggable";
 import { DockablePanels, SideDock } from "eez-studio-ui/side-dock";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
@@ -46,7 +44,6 @@ import {
 import { IconAction } from "eez-studio-ui/action";
 import { Checkbox, Radio } from "eez-studio-ui/properties";
 
-import { DataType } from "instrument/window/waveform/DataType";
 import type {
     IChart,
     IMeasurementFunction,
@@ -55,45 +52,72 @@ import type {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const SCROLL_BAR_SIZE = 16;
-
-export const CONF_LABEL_TICK_GAP_HORZ = 10;
-export const CONF_LABEL_TICK_GAP_VERT = 10;
-export const CONF_ZOOM_STEP = 1.5;
-export const CONF_PAN_STEP = 0.05;
-
-export const ZOOM_ICON_SIZE = 32;
-export const ZOOM_ICON_PADDING = 4;
-export const CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION = 250;
-export const CONF_AXIS_MIN_TICK_DISTANCE = 4;
-export const CONF_AXIS_MAX_TICK_DISTANCE = 400;
-export const CONF_X_AXIS_MIN_TICK_LABEL_WIDTH = 100;
-export const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 20;
-
-export const CONF_MIN_Y_SCALE_LABELS_WIDTH = 70;
-
-export const CONF_MIN_X_AXIS_BAND_HEIGHT = 20;
-export const CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY = 0.1;
-export const CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY = 0.9;
-export const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND = "192, 192, 192";
-export const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND = "164, 164, 164";
-export const CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY = 0.8;
-export const CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY = 1.0;
-export const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND =
-    "255, 255, 255";
-export const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "0, 0, 0";
-export const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#ccc";
-export const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#f0f0f0";
-export const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#444";
-export const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#222";
-export const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#666";
-export const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#999";
-export const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#eee";
-export const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#ddd";
-
 export const CONF_CURSOR_RADIUS = 8;
 
+const SCROLL_BAR_SIZE = 16;
+
+const CONF_LABEL_TICK_GAP_HORZ = 10;
+const CONF_LABEL_TICK_GAP_VERT = 10;
+const CONF_ZOOM_STEP = 1.5;
+const CONF_PAN_STEP = 0.05;
+
+const ZOOM_ICON_SIZE = 32;
+const ZOOM_ICON_PADDING = 4;
+const CONF_SCALE_ZOOM_FACTOR_ANIMATION_DURATION = 250;
+const CONF_AXIS_MIN_TICK_DISTANCE = 4;
+const CONF_AXIS_MAX_TICK_DISTANCE = 400;
+const CONF_X_AXIS_MIN_TICK_LABEL_WIDTH = 100;
+const CONF_Y_AXIS_MIN_TICK_LABEL_WIDTH = 20;
+
+const CONF_MIN_Y_SCALE_LABELS_WIDTH = 70;
+
+const CONF_MIN_X_AXIS_BAND_HEIGHT = 20;
+const CONF_DYNAMIC_AXIS_LINE_MIN_COLOR_OPACITY = 0.1;
+const CONF_DYNAMIC_AXIS_LINE_MAX_COLOR_OPACITY = 0.9;
+const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_BLACK_BACKGROUND = "192, 192, 192";
+const CONF_DYNAMIC_AXIS_LINE_COLOR_ON_WHITE_BACKGROUND = "164, 164, 164";
+const CONF_DYNAMIC_AXIS_LINE_MIN_TEXT_COLOR_OPACITY = 0.8;
+const CONF_DYNAMIC_AXIS_LINE_MAX_TEXT_COLOR_OPACITY = 1.0;
+const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "255, 255, 255";
+const CONF_DYNAMIC_AXIS_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "0, 0, 0";
+const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#ccc";
+const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_WHITE_BACKGROUND = "#f0f0f0";
+const CONF_FIXED_AXIS_MAJOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#444";
+const CONF_FIXED_AXIS_MINOR_LINE_COLOR_ON_BLACK_BACKGROUND = "#222";
+const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#666";
+const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_WHITE_BACKGROUND = "#999";
+const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#eee";
+const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#ddd";
+
+const CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE = 1000000;
+
 ////////////////////////////////////////////////////////////////////////////////
+
+export enum DataType {
+    DATA_TYPE_BIT,
+    DATA_TYPE_INT8,
+    DATA_TYPE_UINT8,
+    DATA_TYPE_INT16,
+    DATA_TYPE_INT16_BE,
+    DATA_TYPE_UINT16,
+    DATA_TYPE_UINT16_BE,
+    DATA_TYPE_INT24,
+    DATA_TYPE_INT24_BE,
+    DATA_TYPE_UINT24,
+    DATA_TYPE_UINT24_BE,
+    DATA_TYPE_INT32,
+    DATA_TYPE_INT32_BE,
+    DATA_TYPE_UINT32,
+    DATA_TYPE_UINT32_BE,
+    DATA_TYPE_INT64,
+    DATA_TYPE_INT64_BE,
+    DATA_TYPE_UINT64,
+    DATA_TYPE_UINT64_BE,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_FLOAT_BE,
+    DATA_TYPE_DOUBLE,
+    DATA_TYPE_DOUBLE_BE
+}
 
 export type ZoomMode = "default" | "all" | "custom";
 
@@ -135,7 +159,7 @@ export interface IAxisModel {
     };
 }
 
-export interface ITick {
+interface ITick {
     px: number;
     value: number;
     label: string;
@@ -517,7 +541,7 @@ export interface IViewOptions {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ChartBookmark {
+interface ChartBookmark {
     value: number;
     text: string;
 }
@@ -926,7 +950,7 @@ class AxisScrollBar extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class AxisView extends React.Component<
+class AxisView extends React.Component<
     {
         axisController: AxisController;
     },
@@ -2120,7 +2144,7 @@ function Arrow() {
     );
 }
 
-export function HelpView(props: any) {
+function HelpView(props: any) {
     return (
         <div className="EezStudio_HelpView">
             <table>
@@ -2226,7 +2250,7 @@ interface IAnimation {
     step(t: number): void;
 }
 
-export class AnimationController {
+class AnimationController {
     animationState:
         | {
               duration: number;
@@ -2268,7 +2292,7 @@ export class AnimationController {
     }
 }
 
-export function getAxisController(chartsController: ChartsController) {
+function getAxisController(chartsController: ChartsController) {
     if (chartsController.viewOptions.axesLines.type === "dynamic") {
         return new DynamicAxisController(
             "x",
@@ -2901,10 +2925,6 @@ export abstract class ChartsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE = 1000000;
-
-////////////////////////////////////////////////////////////////////////////////
-
 let calculatingToastId: any;
 
 const Fade = cssTransition({
@@ -2912,7 +2932,7 @@ const Fade = cssTransition({
     exit: "fadeOut"
 });
 
-export function showCalculating() {
+function showCalculating() {
     if (!calculatingToastId) {
         calculatingToastId = notification.info("Calculating...", {
             transition: Fade,
@@ -2922,7 +2942,7 @@ export function showCalculating() {
     }
 }
 
-export function hideCalculating() {
+function hideCalculating() {
     if (calculatingToastId) {
         notification.dismiss(calculatingToastId);
         calculatingToastId = undefined;
@@ -2931,7 +2951,7 @@ export function hideCalculating() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class MeasurementsController {
+class MeasurementsController {
     dispose1: any;
     dispose2: any;
     dispose3: any;
@@ -3621,7 +3641,7 @@ export class ChartsView extends React.Component<
 }
 
 @observer
-export class ChartMeasurements extends React.Component<{
+class ChartMeasurements extends React.Component<{
     measurementsController: MeasurementsController;
 }> {
     dockablePanels: DockablePanels | null = null;
@@ -3748,7 +3768,7 @@ export class ChartMeasurements extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DynamicAxisController extends AxisController {
+class DynamicAxisController extends AxisController {
     constructor(
         public position: "x" | "y" | "yRight",
         public chartsController: ChartsController,
@@ -4283,7 +4303,7 @@ function scaleZoomOut(currentScale: number) {
     return currentScale;
 }
 
-export class FixedAxisController extends AxisController {
+class FixedAxisController extends AxisController {
     constructor(
         public position: "x" | "y" | "yRight",
         public chartsController: ChartsController,
@@ -4711,7 +4731,7 @@ export function getNearestValuePoint(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GenericChartWaveform implements IWaveform {
+class GenericChartWaveform implements IWaveform {
     constructor(private chartData: IChart) {
         this.xAxes = {
             unit: UNITS[this.chartData.xAxes.unit],
@@ -4795,7 +4815,7 @@ export class GenericChartWaveform implements IWaveform {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GenericChartXAxisModel implements IAxisModel {
+class GenericChartXAxisModel implements IAxisModel {
     constructor(private data: GenericChartWaveform) {}
 
     @computed
@@ -4868,7 +4888,7 @@ export class GenericChartXAxisModel implements IAxisModel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GenericChartYAxisModel implements IAxisModel {
+class GenericChartYAxisModel implements IAxisModel {
     constructor(private data: GenericChartWaveform) {}
 
     @computed
@@ -4939,7 +4959,7 @@ export class GenericChartYAxisModel implements IAxisModel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GenericChartViewOptions implements IViewOptions {
+class GenericChartViewOptions implements IViewOptions {
     constructor(props?: any) {
         if (props) {
             Object.assign(this, props);
@@ -5011,7 +5031,7 @@ export class GenericChartViewOptions implements IViewOptions {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class GenericChart extends React.Component<{
+class GenericChart extends React.Component<{
     chart: IChart;
     className?: string;
 }> {
@@ -5056,7 +5076,7 @@ export class GenericChart extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GenericChartChartsController extends ChartsController {
+class GenericChartChartsController extends ChartsController {
     constructor(
         public data: GenericChartWaveform,
         mode: ChartMode,
@@ -5080,7 +5100,7 @@ export class GenericChartChartsController extends ChartsController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GenericChartLineController extends LineController {
+class GenericChartLineController extends LineController {
     constructor(
         public id: string,
         public waveform: GenericChartWaveform,
@@ -5117,7 +5137,7 @@ export class GenericChartLineController extends LineController {
     }
 }
 
-export class Measurement {
+class Measurement {
     constructor(
         public measurementsController: MeasurementsController,
         public measurementDefinition: IMeasurementDefinition,
@@ -5495,7 +5515,7 @@ export class Measurement {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IMeasurementDefinition {
+interface IMeasurementDefinition {
     measurementId: string;
     measurementFunctionId: string;
     chartIndex?: number;
@@ -5515,13 +5535,13 @@ interface IInput {
     valueUnit: keyof typeof UNITS;
 }
 
-export interface ISingleInputMeasurementTaskSpecification extends IInput {
+interface ISingleInputMeasurementTaskSpecification extends IInput {
     xStartValue: number;
     xStartIndex: number;
     xNumSamples: number;
 }
 
-export interface IMultiInputMeasurementTaskSpecification {
+interface IMultiInputMeasurementTaskSpecification {
     xStartValue: number;
     xStartIndex: number;
     xNumSamples: number;
@@ -5947,7 +5967,7 @@ class MeasurementComponent extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class MeasurementsDockView extends React.Component<{
+class MeasurementsDockView extends React.Component<{
     measurementsController: MeasurementsController;
 }> {
     get measurementsModel() {
@@ -6067,7 +6087,7 @@ export class MeasurementsDockView extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class MeasurementValue extends React.Component<{
+class MeasurementValue extends React.Component<{
     measurement: Measurement;
     inDockablePanel?: boolean;
 }> {
@@ -6134,14 +6154,14 @@ export class MeasurementValue extends React.Component<{
 }
 
 @observer
-export class MeasurementResultField extends FieldComponent {
+class MeasurementResultField extends FieldComponent {
     render() {
         const measurement = this.props.dialogContext;
         return <MeasurementValue measurement={measurement} />;
     }
 }
 
-export class GlobalViewOptions {
+class GlobalViewOptions {
     static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
 
     @observable enableZoomAnimations: boolean = true;
@@ -6175,7 +6195,7 @@ export const globalViewOptions = new GlobalViewOptions();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const measurementFunctions = computed(() => {
+const measurementFunctions = computed(() => {
     const allFunctions = new Map<string, IMeasurementFunction>();
 
     function loadMeasurementFunctions(
@@ -6260,7 +6280,7 @@ function genRandomOffsets(K: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IWaveformDlogParams {
+interface IWaveformDlogParams {
     dataType: DataType;
     dataOffset: number;
     dataContainsSampleValidityBit: boolean;
@@ -6300,9 +6320,9 @@ interface IAxisController {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type WaveformRenderAlgorithm = "avg" | "minmax" | "gradually";
+type WaveformRenderAlgorithm = "avg" | "minmax" | "gradually";
 
-export interface IWaveformRenderJobSpecification {
+interface IWaveformRenderJobSpecification {
     renderAlgorithm: string;
     waveform: IWaveform;
     xAxisController: IAxisController;
@@ -6357,7 +6377,7 @@ interface ILogarithmicContinuation extends IContinuation {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function renderWaveformPath(
+function renderWaveformPath(
     canvas: HTMLCanvasElement,
     job: IWaveformRenderJobSpecification,
     continuation: any
@@ -7103,7 +7123,7 @@ export function initValuesAccesor(
 }
 
 @observer
-export class BookmarkView extends React.Component<{
+class BookmarkView extends React.Component<{
     chartsController: ChartsController;
     index: number;
     bookmark: ChartBookmark;
@@ -7142,7 +7162,7 @@ export class BookmarkView extends React.Component<{
 }
 
 @observer
-export class BookmarksView extends React.Component<{
+class BookmarksView extends React.Component<{
     chartsController: ChartsController;
 }> {
     div: HTMLElement | null = null;
@@ -7457,7 +7477,7 @@ class DragYRulerMouseHandler implements MouseHandler {
     }
 }
 
-export class RulersController {
+class RulersController {
     constructor(
         public chartsController: ChartsController,
         public rulersModel: RulersModel
@@ -7770,7 +7790,7 @@ interface RulersDockViewProps {
 }
 
 @observer
-export class RulersDockView extends React.Component<RulersDockViewProps> {
+class RulersDockView extends React.Component<RulersDockViewProps> {
     @observable x1: string = "";
     @observable x1Error: boolean = false;
     @observable x2: string = "";
@@ -8607,13 +8627,13 @@ class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsPro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface ChartViewOptionsProps {
+interface ChartViewOptionsProps {
     showRenderAlgorithm: boolean;
     showShowSampledDataOption: boolean;
 }
 
 @observer
-export class ChartViewOptions extends React.Component<
+class ChartViewOptions extends React.Component<
     ChartViewOptionsProps & {
         chartsController: ChartsController;
     }
