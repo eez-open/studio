@@ -1,4 +1,5 @@
 import { observable, action } from "mobx";
+
 import { IPropertyGridGroupDefinition } from "project-editor/core/object";
 
 class GroupCollapsedStore {

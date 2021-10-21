@@ -1,6 +1,6 @@
 import type { Socket } from "net";
 
-import { showSelectInstrumentDialog } from "./action-components/instrument";
+import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import * as notification from "eez-studio-ui/notification";
 import { Connection, getConnection } from "instrument/window/connection";
 import { InstrumentObject } from "instrument/instrument-object";

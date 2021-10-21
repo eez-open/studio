@@ -8,7 +8,7 @@ import * as notification from "eez-studio-ui/notification";
 import { DocumentStoreClass } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
-import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+import { LineMarkers } from "project-editor/flow/editor/ConnectionLineComponent";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 
 configure({ enforceActions: "observed" });

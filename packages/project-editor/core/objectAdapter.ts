@@ -15,8 +15,8 @@ import {
     _isEqual,
     _map
 } from "eez-studio-shared/algorithm";
-
 import { stringCompare } from "eez-studio-shared/string";
+import { Rect } from "eez-studio-shared/geometry";
 
 import {
     getProperty,
@@ -56,14 +56,14 @@ import {
     isObjectInstanceOf,
     isPartOfNavigation,
     getClassInfo,
-    getLabel
+    getLabel,
+    objectToJson
 } from "project-editor/core/store";
 import {
     DragAndDropManagerClass,
     DragAndDropManager
 } from "project-editor/core/dd";
-import { objectToJson } from "project-editor/core/store";
-import { Rect } from "eez-studio-shared/geometry";
+
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};

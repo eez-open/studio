@@ -8,7 +8,7 @@ import {
     findClosestHorizontalSnapLinesToPosition,
     findClosestVerticalSnapLinesToPosition,
     drawSnapLinesGeneric
-} from "project-editor/flow/flow-editor/snap-lines";
+} from "project-editor/flow/editor/snap-lines";
 import { addAlphaToColor } from "eez-studio-shared/color";
 
 import { theme } from "eez-studio-ui/theme";
@@ -18,10 +18,10 @@ import {
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect,
     getObjectIdFromPoint
-} from "project-editor/flow/flow-editor/bounding-rects";
+} from "project-editor/flow/editor/bounding-rects";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { Transform } from "project-editor/flow/flow-editor/transform";
-import { generateNodeRedLinkPath } from "project-editor/flow/flow-editor/connection-line-shape";
+import { Transform } from "project-editor/flow/editor/transform";
+import { generateNodeRedLinkPath } from "project-editor/flow/editor/connection-line-shape";
 import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";

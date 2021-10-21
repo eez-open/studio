@@ -30,15 +30,18 @@ import {
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/core/store";
-import { ContainerWidget, SelectWidget } from "project-editor/flow/widgets";
+import {
+    ContainerWidget,
+    SelectWidget
+} from "project-editor/flow/components/widgets";
 import { Variable } from "project-editor/features/variable/variable";
 import { ValueType } from "project-editor/features/variable/value-type";
 import {
     InputActionComponent,
     OutputActionComponent
-} from "./action-components";
+} from "project-editor/flow/components/actions";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { Transform } from "./flow-editor/transform";
+import { Transform } from "project-editor/flow/editor/transform";
 import { cloneObject } from "project-editor/core/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

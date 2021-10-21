@@ -32,7 +32,7 @@ import {
     ComponentsContainerEnclosure,
     ComponentGeometry,
     ComponentEnclosure
-} from "project-editor/flow/flow-editor/render";
+} from "project-editor/flow/editor/render";
 
 import type { Project } from "project-editor/project/project";
 
@@ -51,7 +51,7 @@ import { metrics } from "project-editor/features/page/metrics";
 import { build } from "project-editor/features/page/build";
 import type { Assets, DataBuffer } from "./build/assets";
 import { buildWidget } from "./build/widgets";
-import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/widgets/widget_types";
+import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/widgets/widget_types";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

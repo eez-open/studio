@@ -7,8 +7,9 @@ import {
     isProperAncestor,
     getProperty
 } from "project-editor/core/object";
-import { Section } from "project-editor/core/store";
+
 import {
+    Section,
     getDocumentStore,
     getInheritedValue,
     getPropertyAsString

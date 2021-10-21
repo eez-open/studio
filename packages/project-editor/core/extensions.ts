@@ -4,6 +4,8 @@ import {
     PropertyType,
     PropertyInfo
 } from "project-editor/core/object";
+import type { Message } from "project-editor/core/store";
+
 import type {
     Project,
     BuildConfiguration
@@ -20,7 +22,6 @@ import fontFeature from "project-editor/features/font/font";
 import bitmapFeature from "project-editor/features/bitmap/bitmap";
 import scpiFeature from "project-editor/features/scpi/scpi";
 import shortcutsFeature from "project-editor/features/shortcuts/project-shortcuts";
-import type { Message } from "project-editor/core/store";
 
 export type BuildResult = { [key: string]: string };
 

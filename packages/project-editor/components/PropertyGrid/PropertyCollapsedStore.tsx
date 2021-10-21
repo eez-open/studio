@@ -1,4 +1,5 @@
 import { observable, action } from "mobx";
+
 import { IEezObject, PropertyInfo } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////

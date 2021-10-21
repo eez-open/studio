@@ -10,11 +10,11 @@ import type {
     IResizeHandler,
     IDataContext
 } from "project-editor/flow/flow-interfaces";
-import { Transform } from "project-editor/flow/flow-editor/transform";
+import { Transform } from "project-editor/flow/editor/transform";
 
 import type { Component } from "project-editor/flow/component";
 import type { FlowTabState } from "project-editor/flow/flow";
-import { FlowDocument } from "project-editor/flow/flow-runtime/flow-document";
+import { FlowDocument } from "project-editor/flow/runtime-viewer/flow-document";
 import type { FlowState } from "project-editor/flow/runtime";
 
 ////////////////////////////////////////////////////////////////////////////////

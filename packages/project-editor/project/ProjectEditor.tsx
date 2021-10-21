@@ -20,7 +20,7 @@ import {
     PageTabState
 } from "project-editor/features/page/PagesNavigation";
 
-import { LineMarkers } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+import { LineMarkers } from "project-editor/flow/editor/ConnectionLineComponent";
 import { getClassInfo } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////

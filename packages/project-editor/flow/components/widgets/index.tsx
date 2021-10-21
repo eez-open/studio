@@ -47,7 +47,7 @@ import {
     ComponentsContainerEnclosure,
     ComponentEnclosure,
     ComponentCanvas
-} from "project-editor/flow/flow-editor/render";
+} from "project-editor/flow/editor/render";
 
 import { Page, findPage } from "project-editor/features/page/page";
 import { findBitmap } from "project-editor/features/bitmap/bitmap";
@@ -70,8 +70,8 @@ import {
     styleIsVertAlignBottom,
     styleGetFont,
     drawStr
-} from "project-editor/flow/draw";
-import * as draw from "project-editor/flow/draw";
+} from "project-editor/flow/editor/draw";
+import * as draw from "project-editor/flow/editor/draw";
 import { Font } from "project-editor/features/font/font";
 
 import { BootstrapButton } from "project-editor/components/BootstrapButton";
@@ -92,11 +92,11 @@ import {
     InputActionComponent,
     OutputActionComponent,
     StartActionComponent
-} from "project-editor/flow/action-components";
+} from "project-editor/flow/components/actions";
 
 import { FlowState } from "project-editor/flow/runtime";
 
-import "project-editor/flow/widgets/plotly";
+import "project-editor/flow/components/widgets/plotly";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { buildWidget } from "project-editor/features/page/build/widgets";
 import {

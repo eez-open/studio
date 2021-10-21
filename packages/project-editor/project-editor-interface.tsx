@@ -22,7 +22,7 @@ import type {
     Widget
 } from "project-editor/flow/component";
 import type { Glyph } from "project-editor/features/font/font";
-import type { EmbeddedWidget } from "project-editor/flow/widgets";
+import type { EmbeddedWidget } from "project-editor/flow/components/widgets";
 import type { ConnectionLine, Flow } from "project-editor/flow/flow";
 import type { Action } from "project-editor/features/action/action";
 import type {

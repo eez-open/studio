@@ -3,7 +3,7 @@ import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { DocumentStoreClass } from "project-editor/core/store";
 
-import type { Transform } from "project-editor/flow/flow-editor/transform";
+import type { Transform } from "project-editor/flow/editor/transform";
 import type { Component } from "project-editor/flow/component";
 
 export interface IFlowContext {

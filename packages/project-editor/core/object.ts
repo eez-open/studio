@@ -1,7 +1,9 @@
 import React from "react";
+import { observable } from "mobx";
 
 import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
+import { Rect } from "eez-studio-shared/geometry";
 
 import type {
     DocumentStoreClass,
@@ -9,9 +11,8 @@ import type {
     INavigationStore
 } from "project-editor/core/store";
 import type { DragAndDropManagerClass } from "project-editor/core/dd";
-import { Rect } from "eez-studio-shared/geometry";
+
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
-import { observable } from "mobx";
 
 import type { ValueType } from "project-editor/features/variable/value-type";
 
@@ -19,6 +20,8 @@ import type {
     IDataContext,
     IVariable
 } from "project-editor/flow/flow-interfaces";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const enum PropertyType {
     String,

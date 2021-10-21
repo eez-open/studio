@@ -1,12 +1,12 @@
 import { computed } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
-import type { EditorFlowContext } from "project-editor/flow/flow-editor/context";
+import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import {
     getObjectIdFromPoint,
     getObjectIdsInsideRect,
     getSelectedObjectsBoundingRect
-} from "project-editor/flow/flow-editor/bounding-rects";
+} from "project-editor/flow/editor/bounding-rects";
 import { IEezObject, getParent } from "project-editor/core/object";
 import { getDocumentStore } from "project-editor/core/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";

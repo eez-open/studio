@@ -1,11 +1,14 @@
 import React from "react";
 import { observable, action, runInAction, autorun } from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
+
 import { CodeEditor, CodeEditorMode } from "eez-studio-ui/code-editor";
+
 import {
     PropertyProps,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
+
 import { getPropertyValue } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////

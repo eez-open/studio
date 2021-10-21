@@ -6,8 +6,8 @@ import classNames from "classnames";
 import { Rect, rectExpand } from "eez-studio-shared/geometry";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import type { IMouseHandler } from "project-editor/flow/flow-editor/mouse-handler";
-import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
+import type { IMouseHandler } from "project-editor/flow/editor/mouse-handler";
+import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

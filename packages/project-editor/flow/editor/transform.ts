@@ -1,7 +1,7 @@
 import { observable, action, runInAction } from "mobx";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
-import type { IPointerEvent } from "project-editor/flow/flow-editor/mouse-handler";
+import type { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
 
 // prettier-ignore
 const SCALES = [

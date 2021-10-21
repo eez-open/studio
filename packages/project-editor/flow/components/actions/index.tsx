@@ -58,7 +58,7 @@ import {
     evalConstantExpression,
     evalExpression
 } from "project-editor/flow/expression/expression";
-import { calcComponentGeometry } from "project-editor/flow/flow-editor/render";
+import { calcComponentGeometry } from "project-editor/flow/editor/render";
 import { ValueType } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

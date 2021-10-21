@@ -24,9 +24,9 @@ import { ListNavigation } from "project-editor/components/ListNavigation";
 import { Tree } from "project-editor/components/Tree";
 import { Panel } from "project-editor/components/Panel";
 
-import { FlowEditor } from "project-editor/flow/flow-editor/editor";
-import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
-import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
+import { FlowEditor } from "project-editor/flow/editor/editor";
+import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
+import { ComponentsPalette } from "project-editor/flow/editor/ComponentsPalette";
 
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 
@@ -35,7 +35,7 @@ import { ProjectContext } from "project-editor/project/context";
 
 import type { Page } from "project-editor/features/page/page";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
-import { Transform } from "project-editor/flow/flow-editor/transform";
+import { Transform } from "project-editor/flow/editor/transform";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

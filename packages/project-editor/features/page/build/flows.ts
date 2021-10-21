@@ -20,7 +20,7 @@ import {
     Section
 } from "project-editor/core/store";
 import { visitObjects } from "project-editor/core/search";
-import { CommentActionComponent } from "project-editor/flow/action-components";
+import { CommentActionComponent } from "project-editor/flow/components/actions";
 import {
     buildExpression,
     operationIndexes

@@ -40,7 +40,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 
 import { findFont } from "project-editor/features/font/font";
-import { drawText } from "project-editor/flow/draw";
+import { drawText } from "project-editor/flow/editor/draw";
 import {
     getThemedColor,
     ThemesSideView

@@ -1,5 +1,5 @@
 import { Point } from "eez-studio-shared/geometry";
-import { IMouseHandler } from "project-editor/flow/flow-editor/mouse-handler";
+import { IMouseHandler } from "project-editor/flow/editor/mouse-handler";
 
 const DRAG_SCROLL_BORDER_THRESHOLD = 10;
 const DRAG_SCROLL_MIN_SPEED = 50; // px per second
@@ -95,14 +95,12 @@ export function setupDragScroll(
             dragScrollLastTime = undefined;
         }
 
-        dragScrollAnimationFrameRequest = window.requestAnimationFrame(
-            onDragScroll
-        );
+        dragScrollAnimationFrameRequest =
+            window.requestAnimationFrame(onDragScroll);
     }
 
-    let dragScrollAnimationFrameRequest = window.requestAnimationFrame(
-        onDragScroll
-    );
+    let dragScrollAnimationFrameRequest =
+        window.requestAnimationFrame(onDragScroll);
 
     return () => {
         window.cancelAnimationFrame(dragScrollAnimationFrameRequest);

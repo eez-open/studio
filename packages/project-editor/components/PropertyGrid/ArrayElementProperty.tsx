@@ -2,8 +2,10 @@ import React from "react";
 import { computed, observable, action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
+
 import {
     IEezObject,
     PropertyInfo,
@@ -13,13 +15,17 @@ import {
     isPropertyReadOnly,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
-import { isValue, getClassInfo, addItem } from "project-editor/core/store";
-import { ProjectContext } from "project-editor/project/context";
 import {
+    isValue,
+    getClassInfo,
+    addItem,
     deleteObject,
     insertObjectAfter,
     insertObjectBefore
 } from "project-editor/core/store";
+
+import { ProjectContext } from "project-editor/project/context";
+
 import {
     isArrayElementPropertyVisible,
     isHighlightedProperty,

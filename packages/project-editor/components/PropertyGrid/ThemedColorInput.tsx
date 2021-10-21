@@ -1,10 +1,14 @@
 import React from "react";
 import { observer } from "mobx-react";
+
 import { isDark } from "eez-studio-shared/color";
+
 import { getProperty } from "project-editor/core/object";
-import { getThemedColor } from "project-editor/features/style/theme";
-import { ProjectContext } from "project-editor/project/context";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/store";
+
+import { getThemedColor } from "project-editor/features/style/theme";
+
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 

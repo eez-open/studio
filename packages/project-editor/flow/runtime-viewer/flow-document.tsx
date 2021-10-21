@@ -1,11 +1,15 @@
 import { computed } from "mobx";
 import { Point, Rect } from "eez-studio-shared/geometry";
-import type { IDocument } from "project-editor/flow/flow-interfaces";
-import type { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
+
 import { getDocumentStore } from "project-editor/core/store";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { getObjectIdFromPoint } from "../flow-editor/bounding-rects";
+
 import { ProjectEditor } from "project-editor/project-editor-interface";
+
+import type { IDocument } from "project-editor/flow/flow-interfaces";
+import type { RuntimeFlowContext } from "project-editor/flow/runtime-viewer/context";
+
+import { getObjectIdFromPoint } from "project-editor/flow/editor/bounding-rects";
 
 export class FlowDocument implements IDocument {
     constructor(

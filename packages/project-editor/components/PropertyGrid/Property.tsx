@@ -1,11 +1,15 @@
 import React from "react";
 import { observable, action, runInAction, autorun } from "mobx";
 import { observer, disposeOnUnmount } from "mobx-react";
+import classNames from "classnames";
+
 import { guid } from "eez-studio-shared/guid";
 import { humanize, stringCompare } from "eez-studio-shared/string";
 import { validators, filterNumber } from "eez-studio-shared/validation";
+
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Icon } from "eez-studio-ui/icon";
+
 import {
     IEezObject,
     PropertyType,
@@ -16,21 +20,23 @@ import {
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
 import { replaceObjectReference } from "project-editor/core/search";
+
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
+
 import { getNameProperty } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
+import { parseIdentifier } from "project-editor/flow/expression/expression";
+import {
+    EXPR_MARK_END,
+    EXPR_MARK_START
+} from "project-editor/flow/expression/ExpressionBuilder";
+
 import { getPropertyValue, getPropertyValueAsString } from "./utils";
 import { CodeEditorProperty } from "./CodeEditorProperty";
 import { ThemedColorInput } from "./ThemedColorInput";
 import { ArrayProperty } from "./ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "./EmbeddedPropertyGrid";
 import { objectToString } from "project-editor/core/store";
-import classNames from "classnames";
-import { parseIdentifier } from "project-editor/flow/expression/expression";
-import {
-    EXPR_MARK_END,
-    EXPR_MARK_START
-} from "project-editor/flow/expression/ExpressionBuilder";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -30,7 +30,7 @@ import { Font } from "project-editor/features/font/font";
 import { Style } from "project-editor/features/style/style";
 import { Page, PageOrientation } from "project-editor/features/page/page";
 import { Widget, Component } from "project-editor/flow/component";
-import { EmbeddedWidget } from "project-editor/flow/widgets";
+import { EmbeddedWidget } from "project-editor/flow/components/widgets";
 import {
     BarGraphWidget,
     BitmapWidget,
@@ -47,7 +47,7 @@ import {
     ToggleButtonWidget,
     UpDownWidget,
     YTGraphWidget
-} from "project-editor/flow/widgets";
+} from "project-editor/flow/components/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 

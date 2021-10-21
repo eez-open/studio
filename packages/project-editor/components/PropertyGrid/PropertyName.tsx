@@ -1,13 +1,16 @@
 import React from "react";
 import { observable } from "mobx";
 import { observer } from "mobx-react";
+
 import { Icon } from "eez-studio-ui/icon";
+
 import {
     PropertyProps,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
-import { propertyCollapsedStore } from "./PropertyCollapsedStore";
 import { isAnyPropertyModified } from "project-editor/core/store";
+
+import { propertyCollapsedStore } from "./PropertyCollapsedStore";
 
 ////////////////////////////////////////////////////////////////////////////////
 

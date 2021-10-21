@@ -52,7 +52,7 @@ import {
     setColor,
     setBackColor,
     getPixelByteIndex
-} from "project-editor/flow/draw";
+} from "project-editor/flow/editor/draw";
 import { showGenericDialog } from "project-editor/core/util";
 
 import { metrics } from "project-editor/features/page/metrics";

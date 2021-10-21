@@ -18,13 +18,13 @@ import {
 } from "eez-studio-shared/dom";
 
 import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
-import { EditorFlowContext } from "project-editor/flow/flow-editor/context";
+import { EditorFlowContext } from "project-editor/flow/editor/context";
 
 import {
     getObjectBoundingRect,
     getObjectIdFromPoint,
     getSelectedObjectsBoundingRect
-} from "project-editor/flow/flow-editor/bounding-rects";
+} from "project-editor/flow/editor/bounding-rects";
 
 import {
     isAncestor,
@@ -38,12 +38,9 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { Flow, FlowTabState } from "project-editor/flow/flow";
 import type { Component } from "project-editor/flow/component";
-import {
-    Svg,
-    ComponentEnclosure
-} from "project-editor/flow/flow-editor/render";
+import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
 import { ProjectContext } from "project-editor/project/context";
-import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
+import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
 import { Draggable } from "eez-studio-ui/draggable";
 import {
     IMouseHandler,
@@ -57,9 +54,9 @@ import {
     ResizeMouseHandler,
     RubberBandSelectionMouseHandler,
     SnapLines
-} from "project-editor/flow/flow-editor/mouse-handler";
-import { Selection } from "project-editor/flow/flow-editor/selection";
-import { setupDragScroll } from "project-editor/flow/flow-editor/drag-scroll";
+} from "project-editor/flow/editor/mouse-handler";
+import { Selection } from "project-editor/flow/editor/selection";
+import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
 import { settingsController } from "home/settings";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 

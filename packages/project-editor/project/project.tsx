@@ -66,8 +66,11 @@ import type { Style } from "project-editor/features/style/style";
 import type { Font } from "project-editor/features/font/font";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Flow } from "project-editor/flow/flow";
-import { FlowEditor } from "project-editor/flow/flow-editor/editor";
-import { ContainerWidget, LayoutViewWidget } from "project-editor/flow/widgets";
+import { FlowEditor } from "project-editor/flow/editor/editor";
+import {
+    ContainerWidget,
+    LayoutViewWidget
+} from "project-editor/flow/components/widgets";
 import { Widget } from "project-editor/flow/component";
 import { PagesNavigation } from "project-editor/features/page/PagesNavigation";
 import { ProjectEditor } from "project-editor/project-editor-interface";

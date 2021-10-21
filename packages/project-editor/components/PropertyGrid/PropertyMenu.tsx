@@ -1,7 +1,9 @@
 import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+
 import { humanize } from "eez-studio-shared/string";
+
 import { PropertyProps } from "project-editor/core/object";
 import {
     getPropertySourceInfo,

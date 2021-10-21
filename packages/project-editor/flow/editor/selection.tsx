@@ -9,12 +9,12 @@ import {
 } from "eez-studio-shared/geometry";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import type { IMouseHandler } from "project-editor/flow/flow-editor/mouse-handler";
+import type { IMouseHandler } from "project-editor/flow/editor/mouse-handler";
 import {
     RubberBandSelectionMouseHandler,
     isSelectionMoveable
-} from "project-editor/flow/flow-editor/mouse-handler";
-import { getObjectBoundingRect } from "project-editor/flow/flow-editor/bounding-rects";
+} from "project-editor/flow/editor/mouse-handler";
+import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////

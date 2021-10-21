@@ -5,9 +5,9 @@ import classNames from "classnames";
 import { theme } from "eez-studio-ui/theme";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { ConnectionLine } from "project-editor/flow/flow";
-import { getConnectionLineShape } from "project-editor/flow/flow-editor/connection-line-shape";
+import { getConnectionLineShape } from "project-editor/flow/editor/connection-line-shape";
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { OutputActionComponent } from "project-editor/flow/action-components";
+import { OutputActionComponent } from "project-editor/flow/components/actions";
 import { SvgLabel } from "eez-studio-ui/svg-label";
 
 ////////////////////////////////////////////////////////////////////////////////

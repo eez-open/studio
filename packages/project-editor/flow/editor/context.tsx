@@ -20,8 +20,8 @@ import type {
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
 import type { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
-import { FlowDocument } from "project-editor/flow/flow-editor/flow-document";
-import { Transform } from "project-editor/flow/flow-editor/transform";
+import { FlowDocument } from "project-editor/flow/editor/flow-document";
+import { Transform } from "project-editor/flow/editor/transform";
 
 ////////////////////////////////////////////////////////////////////////////////
 

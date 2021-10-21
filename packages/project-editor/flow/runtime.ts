@@ -7,7 +7,7 @@ import {
     getLabel
 } from "project-editor/core/store";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
-import { CatchErrorActionComponent } from "project-editor/flow/action-components";
+import { CatchErrorActionComponent } from "project-editor/flow/components/actions";
 import { Component, Widget } from "project-editor/flow/component";
 import { IEezObject, PropertyType } from "project-editor/core/object";
 import type {

@@ -1,12 +1,15 @@
 import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+
+import { Icon } from "eez-studio-ui/icon";
+
 import {
     IEezObject,
     IPropertyGridGroupDefinition
 } from "project-editor/core/object";
+
 import { groupCollapsedStore } from "./GroupCollapsedStore";
-import { Icon } from "eez-studio-ui/icon";
 
 @observer
 export class GroupTitle extends React.Component<{

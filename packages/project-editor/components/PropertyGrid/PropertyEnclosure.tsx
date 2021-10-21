@@ -1,6 +1,8 @@
 import React from "react";
 import classNames from "classnames";
+
 import { IEezObject, PropertyInfo } from "project-editor/core/object";
+
 import { isHighlightedProperty, isPropertyInError } from "./utils";
 import { PropertyMenu } from "./PropertyMenu";
 

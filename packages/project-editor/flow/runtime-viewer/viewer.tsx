@@ -11,24 +11,30 @@ import {
     Rect,
     rectContains
 } from "eez-studio-shared/geometry";
+import { attachCssToElement } from "eez-studio-shared/dom";
 
-import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { RuntimeFlowContext } from "project-editor/flow/flow-runtime/context";
+import { Draggable } from "eez-studio-ui/draggable";
 
 import { IPanel } from "project-editor/core/store";
 
-import type { Flow, FlowTabState } from "project-editor/flow/flow";
-import { Svg } from "project-editor/flow/flow-editor/render";
 import { ProjectContext } from "project-editor/project/context";
-import { ConnectionLines } from "project-editor/flow/flow-editor/ConnectionLineComponent";
-import { Selection } from "project-editor/flow/flow-runtime/selection";
+
+import type { Flow, FlowTabState } from "project-editor/flow/flow";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { RuntimeFlowContext } from "project-editor/flow/runtime-viewer/context";
+
+import { Svg } from "project-editor/flow/editor/render";
+import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
 import {
     getObjectBoundingRect,
     getSelectedObjectsBoundingRect
-} from "project-editor/flow/flow-editor/bounding-rects";
-import { attachCssToElement } from "eez-studio-shared/dom";
-import { Draggable } from "eez-studio-ui/draggable";
-import { IMouseHandler, PanMouseHandler } from "../flow-editor/mouse-handler";
+} from "project-editor/flow/editor/bounding-rects";
+import {
+    IMouseHandler,
+    PanMouseHandler
+} from "project-editor/flow/editor/mouse-handler";
+
+import { Selection } from "project-editor/flow/runtime-viewer/selection";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px

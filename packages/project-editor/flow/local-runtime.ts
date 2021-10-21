@@ -30,7 +30,7 @@ import {
     ErrorActionComponent,
     InputActionComponent,
     StartActionComponent
-} from "project-editor/flow/action-components";
+} from "project-editor/flow/components/actions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import { visitObjects } from "project-editor/core/search";

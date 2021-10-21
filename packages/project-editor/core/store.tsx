@@ -19,13 +19,16 @@ import {
     _uniqWith,
     _find
 } from "eez-studio-shared/algorithm";
-
-import * as notification from "eez-studio-ui/notification";
-
 import { confirmSave } from "eez-studio-shared/util";
-import { confirm } from "project-editor/core/util";
+import { isWebStudio } from "eez-studio-shared/util-electron";
+import { humanize } from "eez-studio-shared/string";
+import { guid } from "eez-studio-shared/guid";
 
+import { Icon } from "eez-studio-ui/icon";
+import * as notification from "eez-studio-ui/notification";
 import { showGenericDialog, TableField } from "eez-studio-ui/generic-dialog";
+
+import { confirm } from "project-editor/core/util";
 
 import {
     IEezObject,
@@ -63,19 +66,14 @@ import {
     SerializedData
 } from "project-editor/core/object";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { CurrentSearch } from "project-editor/core/search";
 
 import type { DataContext } from "project-editor/features/variable/variable";
 
 import type { Component } from "project-editor/flow/component";
 
-import { isWebStudio } from "eez-studio-shared/util-electron";
 import type { RuntimeBase } from "project-editor/flow/runtime";
 
-import { humanize } from "eez-studio-shared/string";
-import { Icon } from "eez-studio-ui/icon";
-import { guid } from "eez-studio-shared/guid";
-
-import type { CurrentSearch } from "project-editor/core/search";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import type { Project } from "project-editor/project/project";

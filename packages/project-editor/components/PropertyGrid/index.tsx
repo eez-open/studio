@@ -1,7 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
-
 import classNames from "classnames";
+
+import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 
 import {
     IEezObject,
@@ -20,7 +21,7 @@ import {
 import { isAnyObjectReadOnly } from "project-editor/project/project";
 
 import { ProjectContext } from "project-editor/project/context";
-import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
+
 import { Property } from "./Property";
 import { PropertyName } from "./PropertyName";
 import { propertyCollapsedStore } from "./PropertyCollapsedStore";

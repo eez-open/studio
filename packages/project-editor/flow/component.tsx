@@ -51,18 +51,21 @@ import type {
     IFlowContext,
     IFlowState
 } from "project-editor/flow/flow-interfaces";
-import { ComponentGeometry } from "project-editor/flow/flow-editor/render";
+import { ComponentGeometry } from "project-editor/flow/editor/render";
 import {
     IResizing,
     resizingProperty
-} from "project-editor/flow/flow-editor/resizing-widget-property";
+} from "project-editor/flow/editor/resizing-widget-property";
 
 import { onSelectItem } from "project-editor/components/SelectItem";
 
 import type { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
-import type { ContainerWidget, ListWidget } from "project-editor/flow/widgets";
-import { WIDGET_TYPE_NONE } from "project-editor/flow/widgets/widget_types";
+import type {
+    ContainerWidget,
+    ListWidget
+} from "project-editor/flow/components/widgets";
+import { WIDGET_TYPE_NONE } from "project-editor/flow/components/widgets/widget_types";
 import { guid } from "eez-studio-shared/guid";
 import classNames from "classnames";
 import type {
@@ -82,7 +85,7 @@ import {
     VariableTypeFieldComponent
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
-import { getComponentName } from "./flow-editor/ComponentsPalette";
+import { getComponentName } from "./editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 

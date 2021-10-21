@@ -22,14 +22,14 @@ import { ProjectContext } from "project-editor/project/context";
 import { Splitter } from "eez-studio-ui/splitter";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
-import { FlowEditor } from "project-editor/flow/flow-editor/editor";
-import { FlowViewer } from "project-editor/flow/flow-runtime/viewer";
+import { FlowEditor } from "project-editor/flow/editor/editor";
+import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
 import {
     getAncestorOfType,
     getDocumentStore,
     IPanel
 } from "project-editor/core/store";
-import { ComponentsPalette } from "project-editor/flow/flow-editor/ComponentsPalette";
+import { ComponentsPalette } from "project-editor/flow/editor/ComponentsPalette";
 
 import {
     ITreeObjectAdapter,
@@ -38,9 +38,9 @@ import {
 } from "project-editor/core/objectAdapter";
 import { Flow, FlowTabState } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { ComponentsContainerEnclosure } from "project-editor/flow/flow-editor/render";
+import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
-import { Transform } from "project-editor/flow/flow-editor/transform";
+import { Transform } from "project-editor/flow/editor/transform";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
