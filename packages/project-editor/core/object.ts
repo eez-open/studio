@@ -89,8 +89,6 @@ export const specificGroup: IPropertyGridGroupDefinition = {
     title: "Specific",
     position: 1
 };
-export const dataGroup = specificGroup;
-export const actionsGroup = specificGroup;
 
 export const flowGroup: IPropertyGridGroupDefinition = {
     id: "flow",

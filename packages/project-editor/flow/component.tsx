@@ -14,8 +14,6 @@ import {
     PropertyInfo,
     PropertyType,
     findClass,
-    dataGroup,
-    actionsGroup,
     geometryGroup,
     styleGroup,
     specificGroup,
@@ -94,46 +92,47 @@ const { MenuItem } = EEZStudio.remote || {};
 
 export function makeDataPropertyInfo(
     name: string,
-    displayName?: string,
-    propertyGridGroup?: IPropertyGridGroupDefinition
+    props?: Partial<PropertyInfo>
 ): PropertyInfo {
-    return makeExpressionProperty(
-        {
-            name,
-            displayName,
-            type: PropertyType.ObjectReference,
-            referencedObjectCollectionPath: "variables/globalVariables",
-            propertyGridGroup: propertyGridGroup || dataGroup,
-            onSelect: (
-                object: IEezObject,
-                propertyInfo: PropertyInfo,
-                params: IOnSelectParams
-            ) => {
-                const DocumentStore = getDocumentStore(object);
-                if (
-                    DocumentStore.project.isAppletProject ||
-                    DocumentStore.project.isDashboardProject
-                ) {
-                    return expressionBuilder(
-                        object,
-                        propertyInfo,
-                        {
-                            assignableExpression: false,
-                            title: "Expression Builder",
-                            width: 400,
-                            height: 600
-                        },
-                        params
-                    );
-                } else {
-                    return onSelectItem(object, propertyInfo, {
-                        title: "Select Data",
-                        width: 800
-                    });
+    return Object.assign(
+        makeExpressionProperty(
+            {
+                name,
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "variables/globalVariables",
+                propertyGridGroup: specificGroup,
+                onSelect: (
+                    object: IEezObject,
+                    propertyInfo: PropertyInfo,
+                    params: IOnSelectParams
+                ) => {
+                    const DocumentStore = getDocumentStore(object);
+                    if (
+                        DocumentStore.project.isAppletProject ||
+                        DocumentStore.project.isDashboardProject
+                    ) {
+                        return expressionBuilder(
+                            object,
+                            propertyInfo,
+                            {
+                                assignableExpression: false,
+                                title: "Expression Builder",
+                                width: 400,
+                                height: 600
+                            },
+                            params
+                        );
+                    } else {
+                        return onSelectItem(object, propertyInfo, {
+                            title: "Select Data",
+                            width: 800
+                        });
+                    }
                 }
-            }
-        },
-        "any"
+            },
+            "any"
+        ),
+        props
     );
 }
 
@@ -147,7 +146,7 @@ export function makeActionPropertyInfo(
         displayName,
         type: PropertyType.ObjectReference,
         referencedObjectCollectionPath: "actions",
-        propertyGridGroup: propertyGridGroup || actionsGroup,
+        propertyGridGroup: propertyGridGroup || specificGroup,
         onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
             onSelectItem(object, propertyInfo, {
                 title: propertyInfo.onSelectTitle!,
@@ -177,35 +176,36 @@ export function makeStylePropertyInfo(
 
 export function makeTextPropertyInfo(
     name: string,
-    displayName?: string,
-    propertyGridGroup?: IPropertyGridGroupDefinition
+    props?: Partial<PropertyInfo>
 ): PropertyInfo {
-    return {
-        name,
-        displayName,
-        type: PropertyType.String,
-        propertyGridGroup: propertyGridGroup || specificGroup,
-        onSelect: async (
-            object: IEezObject,
-            propertyInfo: PropertyInfo,
-            params?: IOnSelectParams
-        ) => {
-            if (ProjectEditor.getProject(object).isDashboardProject) {
-                return undefined;
-            }
+    return Object.assign(
+        {
+            name,
+            type: PropertyType.String,
+            propertyGridGroup: specificGroup,
+            onSelect: async (
+                object: IEezObject,
+                propertyInfo: PropertyInfo,
+                params?: IOnSelectParams
+            ) => {
+                if (ProjectEditor.getProject(object).isDashboardProject) {
+                    return undefined;
+                }
 
-            return await onSelectItem(
-                object,
-                propertyInfo,
-                {
-                    title: propertyInfo.onSelectTitle!,
-                    width: 800
-                },
-                params
-            );
+                return await onSelectItem(
+                    object,
+                    propertyInfo,
+                    {
+                        title: propertyInfo.onSelectTitle!,
+                        width: 800
+                    },
+                    params
+                );
+            },
+            onSelectTitle: "Select Glyph"
         },
-        onSelectTitle: "Select Glyph"
-    };
+        props
+    );
 }
 
 export function migrateStyleProperty(

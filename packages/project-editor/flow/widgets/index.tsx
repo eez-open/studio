@@ -124,9 +124,13 @@ import {
     WIDGET_TYPE_GAUGE,
     WIDGET_TYPE_INPUT
 } from "./widget_types";
-import { evalExpression } from "project-editor/flow/expression/expression";
+import {
+    evalConstantExpression,
+    evalExpression
+} from "project-editor/flow/expression/expression";
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -1634,16 +1638,20 @@ export class TextWidget extends EmbeddedWidget {
         flowComponentId: WIDGET_TYPE_TEXT,
 
         label: (widget: TextWidget) => {
-            if (widget.text) {
-                return `${humanize(widget.type)}: ${widget.text}`;
-            }
+            const project = ProjectEditor.getProject(widget);
 
-            if (widget.data) {
-                return `${humanize(widget.type)}: ${widget.data}`;
+            if (!project.isDashboardProject && !project.isAppletProject) {
+                if (widget.text) {
+                    return `${humanize(widget.type)}: ${widget.text}`;
+                }
             }
 
             if (widget.name) {
                 return `${humanize(widget.type)}: ${widget.name}`;
+            }
+
+            if (widget.data) {
+                return `${humanize(widget.type)}: ${widget.data}`;
             }
 
             return humanize(widget.type);
@@ -1655,7 +1663,23 @@ export class TextWidget extends EmbeddedWidget {
                 type: PropertyType.String,
                 propertyGridGroup: generalGroup
             },
-            makeTextPropertyInfo("text"),
+            makeDataPropertyInfo("data", {
+                displayName: (widget: TextWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    if (project.isDashboardProject || project.isAppletProject) {
+                        return "Text";
+                    }
+                    return "Data";
+                }
+            }),
+            makeTextPropertyInfo("text", {
+                hideInPropertyGrid: (widget: TextWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    return (
+                        project.isDashboardProject || project.isAppletProject
+                    );
+                }
+            }),
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
@@ -1671,6 +1695,18 @@ export class TextWidget extends EmbeddedWidget {
             )
         ],
 
+        beforeLoadHook: (widget: Widget, jsObject: any) => {
+            if (jsObject.text) {
+                const project = ProjectEditor.getProject(widget);
+                if (project.isDashboardProject || project.isAppletProject) {
+                    if (!jsObject.data) {
+                        jsObject.data = `"${jsObject.text}"`;
+                    }
+                    delete jsObject.text;
+                }
+            }
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -1680,80 +1716,109 @@ export class TextWidget extends EmbeddedWidget {
 
         icon: "../home/_images/widgets/Text.png",
 
-        check: (object: TextWidget) => {
+        check: (widget: TextWidget) => {
             let messages: Message[] = [];
 
-            if (
-                !object.text &&
-                !object.data &&
-                !object.isInputProperty("data")
-            ) {
-                messages.push(propertyNotSetMessage(object, "text"));
+            const project = ProjectEditor.getProject(widget);
+
+            if (!project.isDashboardProject && !project.isAppletProject) {
+                if (!widget.text && !widget.data) {
+                    messages.push(propertyNotSetMessage(widget, "text"));
+                }
+            } else {
+                if (!widget.data) {
+                    messages.push(propertyNotSetMessage(widget, "text"));
+                }
             }
 
             return messages;
         }
     });
 
-    render(flowContext: IFlowContext) {
-        let text: string;
+    getText(flowContext: IFlowContext): React.ReactNode {
+        if (
+            flowContext.DocumentStore.project.isDashboardProject ||
+            flowContext.DocumentStore.project.isAppletProject
+        ) {
+            if (this.data) {
+                if (flowContext.flowState) {
+                    try {
+                        const value = evalExpression(
+                            flowContext,
+                            this,
+                            this.data
+                        );
+
+                        if (value != null && value != undefined) {
+                            return value;
+                        }
+                        return "";
+                    } catch (err) {
+                        return err.toString();
+                    }
+                }
+
+                if (this.name) {
+                    return this.name;
+                }
+
+                try {
+                    const result = evalConstantExpression(
+                        ProjectEditor.getProject(this),
+                        this.data
+                    );
+                    if (typeof result === "string") {
+                        return result;
+                    }
+                } catch (err) {}
+
+                return <span className="expression">{this.data}</span>;
+            }
+
+            if (flowContext.flowState) {
+                return "";
+            }
+
+            if (this.name) {
+                return this.name;
+            }
+
+            return "<no text>";
+        }
 
         if (this.text) {
-            text = this.text;
-        } else if (this.data) {
-            if (flowContext.flowState) {
-                try {
-                    const value = evalExpression(flowContext, this, this.data);
-
-                    if (value != null && value != undefined) {
-                        text = value.toString();
-                    } else {
-                        text = "";
-                    }
-                } catch (err) {
-                    console.error(err);
-                    text = err.toString();
-                }
-            } else {
-                if (this.name) {
-                    text = this.name;
-                } else if (
-                    flowContext.DocumentStore.project.isDashboardProject ||
-                    flowContext.DocumentStore.project.isAppletProject
-                ) {
-                    return (
-                        <>
-                            <span className="expression">{this.data}</span>
-                            {super.render(flowContext)}
-                        </>
-                    );
-                } else {
-                    text = flowContext.dataContext.get(this.data) ?? "";
-                }
-            }
-        } else {
-            if (flowContext.flowState) {
-                text = "";
-            } else {
-                if (this.name) {
-                    text = this.name;
-                } else {
-                    text = "<no text>";
-                }
-            }
+            return this.text;
         }
+
+        if (this.name) {
+            return this.name;
+        }
+
+        if (this.data) {
+            const result = flowContext.dataContext.get(this.data);
+            if (result != undefined) {
+                return result;
+            }
+            return this.data;
+        }
+
+        return "<no text>";
+    }
+
+    render(flowContext: IFlowContext) {
+        const text = this.getText(flowContext);
 
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
-                    <span>{text}</span>
+                    text
                 ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
-                                text,
+                                typeof text == "string" ? text : "err!",
                                 0,
                                 0,
                                 this.width,
@@ -2557,12 +2622,37 @@ export class ButtonWidget extends EmbeddedWidget {
         flowComponentId: WIDGET_TYPE_BUTTON,
 
         properties: [
-            makeTextPropertyInfo("text"),
-            makeDataPropertyInfo("enabled"),
+            makeDataPropertyInfo("data", {
+                displayName: (widget: TextWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    if (project.isDashboardProject || project.isAppletProject) {
+                        return "Text";
+                    }
+                    return "Data";
+                }
+            }),
+            makeTextPropertyInfo("text", {
+                hideInPropertyGrid: (widget: TextWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    return (
+                        project.isDashboardProject || project.isAppletProject
+                    );
+                }
+            }),
             makeStylePropertyInfo("disabledStyle")
         ],
 
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+        beforeLoadHook: (widget: IEezObject, jsObject: any) => {
+            if (jsObject.text) {
+                const project = ProjectEditor.getProject(widget);
+                if (project.isDashboardProject || project.isAppletProject) {
+                    if (!jsObject.data) {
+                        jsObject.data = `"${jsObject.text}"`;
+                    }
+                    delete jsObject.text;
+                }
+            }
+
             migrateStyleProperty(jsObject, "disabledStyle");
         },
 
@@ -2575,62 +2665,93 @@ export class ButtonWidget extends EmbeddedWidget {
 
         icon: "../home/_images/widgets/Button.png",
 
-        check: (object: ButtonWidget) => {
+        check: (widget: ButtonWidget) => {
             let messages: Message[] = [];
 
-            if (
-                !object.text &&
-                !object.data &&
-                !object.isInputProperty("data")
-            ) {
-                messages.push(propertyNotSetMessage(object, "text"));
-            }
+            const project = ProjectEditor.getProject(widget);
 
-            const DocumentStore = getDocumentStore(object);
-            if (
-                !DocumentStore.project.isDashboardProject &&
-                !DocumentStore.project.isAppletProject
-            ) {
-                checkObjectReference(object, "enabled", messages, true);
+            if (!project.isDashboardProject && !project.isAppletProject) {
+                if (
+                    !widget.text &&
+                    !widget.data &&
+                    !widget.isInputProperty("data")
+                ) {
+                    messages.push(propertyNotSetMessage(widget, "text"));
+                }
+
+                checkObjectReference(widget, "enabled", messages, true);
+            } else {
+                if (!widget.data) {
+                    messages.push(propertyNotSetMessage(widget, "text"));
+                }
             }
 
             return messages;
         }
     });
 
-    render(flowContext: IFlowContext) {
-        let text: string;
+    getText(flowContext: IFlowContext): React.ReactNode {
+        if (
+            flowContext.DocumentStore.project.isDashboardProject ||
+            flowContext.DocumentStore.project.isAppletProject
+        ) {
+            if (this.data) {
+                if (flowContext.flowState) {
+                    try {
+                        const value = evalExpression(
+                            flowContext,
+                            this,
+                            this.data
+                        );
 
-        if (this.data) {
-            if (flowContext.flowState) {
-                try {
-                    const value = evalExpression(flowContext, this, this.data);
-
-                    if (value != null && value != undefined) {
-                        text = value.toString();
-                    } else {
-                        text = "";
+                        if (value != null && value != undefined) {
+                            return value;
+                        }
+                        return "";
+                    } catch (err) {
+                        return err.toString();
                     }
-                } catch (err) {
-                    console.error(err);
-                    text = err.toString();
                 }
-            } else {
-                if (
-                    flowContext.DocumentStore.project.isDashboardProject ||
-                    flowContext.DocumentStore.project.isAppletProject
-                ) {
-                    text = this.data;
-                } else {
-                    text = flowContext.dataContext.get(this.data) ?? "";
-                }
+
+                try {
+                    const result = evalConstantExpression(
+                        ProjectEditor.getProject(this),
+                        this.data
+                    );
+                    if (typeof result === "string") {
+                        return result;
+                    }
+                } catch (err) {}
+
+                return <span className="expression">{this.data}</span>;
             }
-        } else {
-            text = this.text || "<no text>";
+
+            if (flowContext.flowState) {
+                return "";
+            }
+
+            return "<no text>";
         }
 
-        let buttonEnabled;
+        if (this.data) {
+            const result = flowContext.dataContext.get(this.data);
+            if (result != undefined) {
+                return result;
+            }
+            return this.data;
+        }
 
+        if (this.text) {
+            return this.text;
+        }
+
+        return "<no text>";
+    }
+
+    render(flowContext: IFlowContext) {
+        const text = this.getText(flowContext);
+
+        let buttonEnabled;
         if (flowContext.flowState) {
             try {
                 buttonEnabled = this.enabled
@@ -2673,7 +2794,7 @@ export class ButtonWidget extends EmbeddedWidget {
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
-                                text,
+                                typeof text == "string" ? text : "err!",
                                 0,
                                 0,
                                 this.width,
@@ -3480,8 +3601,8 @@ export class UpDownWidget extends EmbeddedWidget {
 
         properties: [
             makeStylePropertyInfo("buttonsStyle"),
-            makeTextPropertyInfo("downButtonText", undefined, specificGroup),
-            makeTextPropertyInfo("upButtonText", undefined, specificGroup)
+            makeTextPropertyInfo("downButtonText"),
+            makeTextPropertyInfo("upButtonText")
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -3837,8 +3958,8 @@ export class ScrollBarWidget extends EmbeddedWidget {
         properties: [
             makeStylePropertyInfo("thumbStyle"),
             makeStylePropertyInfo("buttonsStyle"),
-            makeTextPropertyInfo("leftButtonText", undefined, specificGroup),
-            makeTextPropertyInfo("rightButtonText", undefined, specificGroup)
+            makeTextPropertyInfo("leftButtonText"),
+            makeTextPropertyInfo("rightButtonText")
         ],
 
         defaultValue: {

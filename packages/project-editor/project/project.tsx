@@ -914,7 +914,7 @@ function getProjectClassInfo() {
         projectProperties.splice(
             0,
             projectProperties.length,
-            ...projectFeatureProperties.concat(builtinProjectProperties)
+            ...builtinProjectProperties.concat(projectFeatureProperties)
         );
     }
 

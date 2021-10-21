@@ -3688,6 +3688,16 @@ button.EezStudio_Action {
     &.ButtonWidget button {
         width: 100%;
         height: 100%;
+
+        span.expression {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-family: var(--bs-font-monospace);
+            font-size: 0.875em;
+            max-width: 100%;
+            display: inline-block;
+        }
     }
 
     &.Text button,
@@ -3698,6 +3708,8 @@ button.EezStudio_Action {
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+            font-family: var(--bs-font-monospace);
+            font-size: 0.875em;
         }
     }
 

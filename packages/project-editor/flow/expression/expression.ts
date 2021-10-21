@@ -1279,8 +1279,7 @@ function evalConstantExpressionNode(
                 throw `Unknown constant '${builtInConstantName}'`;
             }
 
-            console.log("TODO eval_constant MemberExpression", node);
-            return [];
+            throw "constant MemberExpression currently not supported";
         }
 
         if (node.type == "ArrayExpression") {
