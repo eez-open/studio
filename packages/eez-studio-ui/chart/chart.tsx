@@ -23,7 +23,7 @@ import { Point, pointDistance } from "eez-studio-shared/geometry";
 import { guid } from "eez-studio-shared/guid";
 import { capitalize, stringCompare } from "eez-studio-shared/string";
 import { writeBinaryData } from "eez-studio-shared/util-electron";
-import { closestByClass, scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
+import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 import {
     _difference,
     _map,
@@ -42,13 +42,25 @@ import {
     IFieldProperties
 } from "eez-studio-ui/generic-dialog";
 import { IconAction } from "eez-studio-ui/action";
-import { Checkbox, Radio } from "eez-studio-ui/properties";
 
 import type {
     IChart,
     IMeasurementFunction,
-    IMeasureTask
+    IMeasurementFunctionResultType
 } from "eez-studio-shared/extensions/extension";
+import { Measurement } from "./Measurement";
+import { clamp } from "./clamp";
+import { WaveformFormat } from "./WaveformFormat";
+import type { IWaveformDlogParams } from "./IWaveformDlogParams";
+import { WaveformLineView } from "./WaveformLineView";
+import { ChartViewOptionsProps, ChartViewOptions } from "./ChartViewOptions";
+import { globalViewOptions } from "./GlobalViewOptions";
+import {
+    IRulersController,
+    IRulersModel,
+    RulersController,
+    RulersDockView
+} from "./rulers";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,34 +102,6 @@ const CONF_FIXED_AXIS_MAJOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#eee";
 const CONF_FIXED_AXIS_MINOR_LINE_TEXT_COLOR_ON_BLACK_BACKGROUND = "#ddd";
 
 const CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE = 1000000;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export enum DataType {
-    DATA_TYPE_BIT,
-    DATA_TYPE_INT8,
-    DATA_TYPE_UINT8,
-    DATA_TYPE_INT16,
-    DATA_TYPE_INT16_BE,
-    DATA_TYPE_UINT16,
-    DATA_TYPE_UINT16_BE,
-    DATA_TYPE_INT24,
-    DATA_TYPE_INT24_BE,
-    DATA_TYPE_UINT24,
-    DATA_TYPE_UINT24_BE,
-    DATA_TYPE_INT32,
-    DATA_TYPE_INT32_BE,
-    DATA_TYPE_UINT32,
-    DATA_TYPE_UINT32_BE,
-    DATA_TYPE_INT64,
-    DATA_TYPE_INT64_BE,
-    DATA_TYPE_UINT64,
-    DATA_TYPE_UINT64_BE,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_FLOAT_BE,
-    DATA_TYPE_DOUBLE,
-    DATA_TYPE_DOUBLE_BE
-}
 
 export type ZoomMode = "default" | "all" | "custom";
 
@@ -175,11 +159,11 @@ interface ITick {
 export interface ILineController {
     id: string;
 
-    xAxisController: AxisController;
+    xAxisController: IAxisController;
     xMin: number;
     xMax: number;
 
-    yAxisController: AxisController;
+    yAxisController: IAxisController;
     yMin: number;
     yMax: number;
 
@@ -190,9 +174,9 @@ export interface ILineController {
     getNearestValuePoint(point: Point): Point;
 
     updateCursor(cursor: ICursor, point: Point, event: PointerEvent): void;
-    addPoint(chartView: ChartView, cursor: ICursor): MouseHandler | undefined;
+    addPoint(chartView: IChartView, cursor: ICursor): MouseHandler | undefined;
     onDragStart(
-        chartView: ChartView,
+        chartView: IChartView,
         event: PointerEvent
     ): MouseHandler | undefined;
     render(clipId: string): JSX.Element;
@@ -200,8 +184,236 @@ export interface ILineController {
     closestPoint(point: Point): Point | undefined;
 }
 
+export interface IWaveform {
+    format: any;
+    values: any;
+    offset: number;
+    scale: number;
+
+    dlog?: IWaveformDlogParams;
+
+    length: number;
+    value: (i: number) => number;
+    waveformData: (i: number) => number;
+
+    samplingRate: number;
+}
+
+interface IAnimationController {
+    frameAnimation(): void;
+}
+
+export interface IAxisController {
+    position: "x" | "y" | "yRight";
+    from: number;
+    to: number;
+    range: number;
+    scale: number;
+    distance: number;
+    distancePx: number;
+    unit: IUnit;
+    ticks: ITick[];
+    logarithmic?: boolean;
+    chartsController: IChartsController;
+    axisModel: IAxisModel;
+    chartController: IChartController | undefined;
+    isAnimationActive: boolean;
+    isDigital: boolean;
+    labelTextsWidth: number;
+    labelTextsHeight: number;
+    zoomInEnabled: boolean;
+    zoomOutEnabled: boolean;
+    minValue: number;
+    maxValue: number;
+    isScrollBarEnabled: boolean;
+    animationController: IAnimationController;
+    numSamples: number;
+    valueToPx(value: number): number;
+    pxToValue(value: number): number;
+    linearValueToPx(value: number): number;
+    zoom(from: number, to: number): void;
+    zoomDefault(): void;
+    zoomAll(): void;
+    zoomAroundPivotPoint(pivotPx: number, zoomIn: boolean): void;
+    zoomIn(): void;
+    zoomOut(): void;
+    panByDirection(direction: number): void;
+    panByDistanceInPx(distanceInPx: number): void;
+    panTo(to: number): void;
+    pxToLinearValue(px: number): number;
+    pageUp(): void;
+    pageDown(): void;
+    home(): void;
+    end(): void;
+}
+
+export interface IChartController {
+    id: string;
+    xAxisController: IAxisController;
+    yAxisController: IAxisController;
+    yAxisControllerOnRightSide?: IAxisController;
+    chartsController: IChartsController;
+    lineControllers: ILineController[];
+    minValue: { x: number; y: number; yRight: number };
+    maxValue: { x: number; y: number; yRight: number };
+    chartView: IChartView | undefined;
+    chartViews: IChartView[];
+    axes: IAxisController[];
+    chartIndex: number;
+    zoomAll(): void;
+    zoomDefault(): void;
+    onDragStart(
+        chartView: IChartView,
+        event: PointerEvent
+    ): MouseHandler | undefined;
+    customRender(): JSX.Element | null;
+}
+
+export interface IChartView {
+    svg: SVGSVGElement | null;
+    props: IChartViewProps;
+    clipId: string;
+    transformEventPoint(event: { clientX: number; clientY: number }): Point;
+}
+
+export interface IChartsController {
+    mode: ChartMode;
+
+    xAxisController: IAxisController;
+    xAxisModel: IAxisModel;
+
+    lineControllers: ILineController[];
+    chartControllers: IChartController[];
+
+    chartLeft: number;
+    chartTop: number;
+    chartRight: number;
+    chartBottom: number;
+    chartWidth: number;
+    chartHeight: number;
+
+    xAxisHeight: number;
+    minLeftMargin: number;
+    minRightMargin: number;
+
+    viewOptions: IViewOptions;
+
+    areZoomButtonsVisible: boolean;
+
+    minValue: number;
+    maxValue: number;
+
+    selectBookmark(index: number): void;
+    selectedBookmark: number;
+    bookmarks: IChartBookmark[] | undefined;
+
+    chartViewWidth: number | undefined;
+    chartViewHeight: number | undefined;
+
+    rulersController: IRulersController;
+    measurementsController: IMeasurementsController | undefined;
+
+    supportRulers: boolean;
+
+    isZoomAllEnabled: boolean;
+    zoomAll(): void;
+
+    zoomDefault(): void;
+
+    chartViewOptionsProps: {
+        showRenderAlgorithm: boolean;
+        showShowSampledDataOption: boolean;
+    };
+
+    destroy(): void;
+}
+
+export interface IMeasurementsController {
+    isThereAnyMeasurementChart: boolean;
+    chartsController: IChartsController;
+    measurementsModel: IMeasurementsModel;
+    chartPanelsViewState: string | undefined;
+    measurements: IMeasurement[];
+    measurementsInterval: { x1: number; x2: number } | undefined;
+    refreshRequired: boolean;
+    findMeasurementById(measurementId: string): IMeasurement | undefined;
+    startMeasurement(measurementsInterval: {
+        x1: number;
+        x2: number;
+        numSamples: number;
+    }): void;
+    calcMeasurementsInterval(): { x1: number; x2: number; numSamples: number };
+    destroy(): void;
+}
+
+interface IChartBookmark {
+    value: number;
+    text: string;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export type WaveformRenderAlgorithm = "avg" | "minmax" | "gradually";
+
+export interface IWaveformRenderJobSpecification {
+    renderAlgorithm: string;
+    waveform: IWaveform;
+    xAxisController: IAxisController;
+    yAxisController: IAxisController;
+    xFromValue: number;
+    xToValue: number;
+    yFromValue: number;
+    yToValue: number;
+    strokeColor: string;
+    label?: string;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface IContinuation {
+    isDone?: boolean;
+    xLabel?: number;
+    yLabel?: number;
+}
+
+interface IAverageContinuation extends IContinuation {
+    offsets: number[];
+    offset: number;
+    commitAlways: boolean;
+}
+
+interface IMinMaxContinuation extends IContinuation {
+    offsets: number[];
+    offset: number;
+    commitAlways: boolean;
+}
+
+interface IGraduallyContinuation extends IContinuation {
+    a: number;
+    b: number;
+    K: number;
+    offsets: number[];
+    offset: number;
+    commitAlways: boolean;
+}
+
+interface ILogarithmicContinuation extends IContinuation {
+    i: number;
+    b: number;
+    K: number;
+
+    points: {
+        x: number;
+        y: number;
+    }[];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export abstract class LineController implements ILineController {
-    constructor(public id: string, yAxisController: AxisController) {
+    private _yAxisController: IAxisController;
+
+    constructor(public id: string, yAxisController: IAxisController) {
         this._yAxisController = yAxisController;
     }
 
@@ -218,8 +430,6 @@ export abstract class LineController implements ILineController {
     get xMax(): number {
         return this.xAxisController.axisModel.maxValue;
     }
-
-    private _yAxisController: AxisController;
 
     get yAxisController() {
         return this._yAxisController;
@@ -254,12 +464,12 @@ export abstract class LineController implements ILineController {
         }
     }
 
-    addPoint(chartView: ChartView, cursor: ICursor): MouseHandler | undefined {
+    addPoint(chartView: IChartView, cursor: ICursor): MouseHandler | undefined {
         return undefined;
     }
 
     onDragStart(
-        chartView: ChartView,
+        chartView: IChartView,
         event: PointerEvent
     ): MouseHandler | undefined {
         return undefined;
@@ -278,18 +488,21 @@ export abstract class LineController implements ILineController {
 
 /////////////////////////////////////////////////////////
 
-export class ChartController {
-    constructor(public chartsController: ChartsController, public id: string) {}
+export class ChartController implements IChartController {
+    constructor(
+        public chartsController: IChartsController,
+        public id: string
+    ) {}
 
     get xAxisController() {
         return this.chartsController.xAxisController;
     }
 
-    get chartIndex() {
+    get chartIndex(): number {
         return this.chartsController.chartControllers.indexOf(this);
     }
 
-    yAxisController: AxisController;
+    yAxisController: IAxisController;
 
     createYAxisController(model: IAxisModel) {
         if (this.chartsController.viewOptions.axesLines.type === "dynamic") {
@@ -309,7 +522,7 @@ export class ChartController {
         }
     }
 
-    yAxisControllerOnRightSide?: AxisController;
+    yAxisControllerOnRightSide?: IAxisController;
 
     createYAxisControllerOnRightSide(model: IAxisModel) {
         if (this.chartsController.viewOptions.axesLines.type === "dynamic") {
@@ -331,9 +544,9 @@ export class ChartController {
 
     lineControllers: ILineController[] = [];
 
-    chartViews: ChartView[] = [];
+    chartViews: IChartView[] = [];
 
-    get chartView(): ChartView | undefined {
+    get chartView(): IChartView | undefined {
         for (let i = 0; i < this.chartViews.length; i++) {
             const svg = this.chartViews[i].svg;
             if (svg) {
@@ -361,7 +574,7 @@ export class ChartController {
     }
 
     onDragStart(
-        chartView: ChartView,
+        chartView: IChartView,
         event: PointerEvent
     ): MouseHandler | undefined {
         if (this.chartsController.rulersController) {
@@ -541,16 +754,9 @@ export interface IViewOptions {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ChartBookmark {
-    value: number;
-    text: string;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 @observer
 class ChartBorder extends React.Component<
-    { chartsController: ChartsController },
+    { chartsController: IChartsController },
     {}
 > {
     render() {
@@ -574,7 +780,7 @@ class ChartBorder extends React.Component<
 
 @observer
 class AxisLines extends React.Component<
-    { axisController: AxisController },
+    { axisController: IAxisController },
     {}
 > {
     line = (tick: ITick, i: number) => {
@@ -701,7 +907,7 @@ class SvgButton extends React.Component<
 
 @observer
 class AxisLabels extends React.Component<
-    { axisController: AxisController },
+    { axisController: IAxisController },
     {}
 > {
     ref = React.createRef<SVGGElement>();
@@ -775,7 +981,7 @@ class AxisLabels extends React.Component<
 
 @observer
 class AxisScrollBar extends React.Component<
-    { axisController: AxisController },
+    { axisController: IAxisController },
     {}
 > {
     div: HTMLDivElement | null = null;
@@ -952,7 +1158,7 @@ class AxisScrollBar extends React.Component<
 @observer
 class AxisView extends React.Component<
     {
-        axisController: AxisController;
+        axisController: IAxisController;
     },
     {}
 > {
@@ -1054,7 +1260,7 @@ class AxisView extends React.Component<
 @observer
 class Bookmark extends React.Component<
     {
-        chartController: ChartController;
+        chartController: IChartController;
         index: number;
         x: number;
         y1: number;
@@ -1116,7 +1322,7 @@ class Bookmark extends React.Component<
 @observer
 class Bookmarks extends React.Component<
     {
-        chartController: ChartController;
+        chartController: IChartController;
     },
     {}
 > {
@@ -1179,33 +1385,8 @@ export interface MouseHandler {
     render(): JSX.Element | null;
 }
 
-export function getSnapToValue(
-    event: PointerEvent | undefined,
-    value: number,
-    axisController: AxisController
-): number {
-    let snapValue: number | undefined = undefined;
-
-    if (
-        !(event && event.shiftKey) &&
-        axisController.chartsController.viewOptions.axesLines.snapToGrid
-    ) {
-        axisController.ticks.forEach(tick => {
-            if (
-                tick.allowSnapTo &&
-                (snapValue === undefined ||
-                    Math.abs(value - tick.value) < Math.abs(value - snapValue))
-            ) {
-                snapValue = tick.value;
-            }
-        });
-    }
-
-    return snapValue !== undefined ? snapValue : value;
-}
-
 class PanMouseHandler implements MouseHandler {
-    constructor(private axes: AxisController[]) {}
+    constructor(private axes: IAxisController[]) {}
 
     lastPoint: Point = { x: 0, y: 0 };
 
@@ -1248,7 +1429,7 @@ class PanMouseHandler implements MouseHandler {
 class ZoomToRectMouseHandler implements MouseHandler {
     static MIN_SIZE = 5;
 
-    constructor(private chartController: ChartController) {}
+    constructor(private chartController: IChartController) {}
 
     @observable startPoint: Point = { x: 0, y: 0 };
     @observable endPoint: Point = { x: 0, y: 0 };
@@ -1535,7 +1716,7 @@ class Cursor implements ICursor {
     @observable fillColor: string | undefined;
     @observable strokeColor: string | undefined;
 
-    constructor(private chartView: ChartView) {}
+    constructor(private chartView: IChartView) {}
 
     get xAxisController() {
         return this.chartView.props.chartController.xAxisController;
@@ -1756,14 +1937,16 @@ class Cursor implements ICursor {
 
 export type ChartMode = "preview" | "interactive" | "editable";
 
+interface IChartViewProps {
+    chartController: IChartController;
+    mode: ChartMode;
+}
+
 @observer
-export class ChartView extends React.Component<
-    {
-        chartController: ChartController;
-        mode: ChartMode;
-    },
-    {}
-> {
+export class ChartView
+    extends React.Component<IChartViewProps>
+    implements IChartView
+{
     svg: SVGSVGElement | null = null;
     deltaY: number = 0;
     cursor = new Cursor(this);
@@ -1785,7 +1968,7 @@ export class ChartView extends React.Component<
     handleMouseWheelPanAndZoom(
         event: React.WheelEvent<SVGSVGElement>,
         pivotPx: number,
-        axisController: AxisController
+        axisController: IAxisController
     ) {
         this.deltaY += event.deltaY;
         if (Math.abs(this.deltaY) > 10) {
@@ -2292,7 +2475,7 @@ class AnimationController {
     }
 }
 
-function getAxisController(chartsController: ChartsController) {
+function getAxisController(chartsController: IChartsController) {
     if (chartsController.viewOptions.axesLines.type === "dynamic") {
         return new DynamicAxisController(
             "x",
@@ -2310,11 +2493,11 @@ function getAxisController(chartsController: ChartsController) {
     }
 }
 
-export abstract class AxisController {
+export abstract class AxisController implements IAxisController {
     constructor(
         public position: "x" | "y" | "yRight",
-        public chartsController: ChartsController,
-        public chartController: ChartController | undefined,
+        public chartsController: IChartsController,
+        public chartController: IChartController | undefined,
         public axisModel: IAxisModel
     ) {}
 
@@ -2345,7 +2528,7 @@ export abstract class AxisController {
         );
     }
 
-    get _minValue() {
+    get _minValue(): number {
         return this.position === "x"
             ? this.chartsController.minValue
             : this.chartController!.minValue[this.position];
@@ -2356,7 +2539,7 @@ export abstract class AxisController {
         return this._minValue;
     }
 
-    get _maxValue() {
+    get _maxValue(): number {
         return this.position === "x"
             ? this.chartsController.maxValue
             : this.chartController!.maxValue[this.position];
@@ -2525,17 +2708,17 @@ export abstract class AxisController {
     }
 }
 
-export abstract class ChartsController {
+export abstract class ChartsController implements IChartsController {
     constructor(
         public mode: ChartMode,
         public xAxisModel: IAxisModel,
         public viewOptions: IViewOptions
     ) {}
 
-    chartControllers: ChartController[] = [];
+    chartControllers: IChartController[] = [];
 
     @computed
-    get xAxisController() {
+    get xAxisController(): IAxisController {
         return getAxisController(this);
     }
 
@@ -2787,7 +2970,7 @@ export abstract class ChartsController {
     }
 
     @computed
-    get minValue() {
+    get minValue(): number {
         return this.chartControllers.length > 0
             ? Math.min(
                   ...this.chartControllers.map(
@@ -2798,7 +2981,7 @@ export abstract class ChartsController {
     }
 
     @computed
-    get maxValue() {
+    get maxValue(): number {
         return this.chartControllers.length > 0
             ? Math.max(
                   ...this.chartControllers.map(
@@ -2813,7 +2996,7 @@ export abstract class ChartsController {
         return (
             this.xAxisController.from != this.minValue ||
             this.xAxisController.to != this.maxValue ||
-            this.chartControllers.find(chartController => {
+            !!this.chartControllers.find(chartController => {
                 return (
                     chartController.yAxisController.from !=
                         chartController.yAxisController.minValue ||
@@ -2855,7 +3038,7 @@ export abstract class ChartsController {
         return false;
     }
 
-    get bookmarks(): ChartBookmark[] | undefined {
+    get bookmarks(): IChartBookmark[] | undefined {
         return undefined;
     }
 
@@ -2871,16 +3054,16 @@ export abstract class ChartsController {
         return lineControllers;
     }
 
-    rulersController: RulersController;
-    measurementsController: MeasurementsController | undefined = undefined;
+    rulersController: IRulersController;
+    measurementsController: IMeasurementsController | undefined = undefined;
 
-    createRulersController(rulersModel: RulersModel) {
+    createRulersController(rulersModel: IRulersModel) {
         if (this.supportRulers && this.mode !== "preview") {
             this.rulersController = new RulersController(this, rulersModel);
         }
     }
 
-    createMeasurementsController(measurementsModel: MeasurementsModel) {
+    createMeasurementsController(measurementsModel: IMeasurementsModel) {
         if (this.supportRulers && this.mode !== "preview") {
             if (this.measurementsController) {
                 this.measurementsController.destroy();
@@ -2957,8 +3140,8 @@ class MeasurementsController {
     dispose3: any;
 
     constructor(
-        public chartsController: ChartsController,
-        public measurementsModel: MeasurementsModel
+        public chartsController: IChartsController,
+        public measurementsModel: IMeasurementsModel
     ) {
         this.dispose1 = reaction(
             () => toJS(this.measurementsModel.measurements),
@@ -3133,7 +3316,7 @@ class MeasurementsController {
         );
     }
 
-    @observable measurements: Measurement[];
+    @observable measurements: IMeasurement[];
     @observable measurementsInterval: { x1: number; x2: number } | undefined;
 
     @computed get refreshRequired() {
@@ -3270,7 +3453,7 @@ class MeasurementsController {
 @observer
 export class ChartsView extends React.Component<
     {
-        chartsController: ChartsController;
+        chartsController: IChartsController;
         className?: string;
         tabIndex?: number;
         sideDockAvailable?: boolean;
@@ -3642,7 +3825,7 @@ export class ChartsView extends React.Component<
 
 @observer
 class ChartMeasurements extends React.Component<{
-    measurementsController: MeasurementsController;
+    measurementsController: IMeasurementsController;
 }> {
     dockablePanels: DockablePanels | null = null;
 
@@ -3771,8 +3954,8 @@ class ChartMeasurements extends React.Component<{
 class DynamicAxisController extends AxisController {
     constructor(
         public position: "x" | "y" | "yRight",
-        public chartsController: ChartsController,
-        public chartController: ChartController | undefined,
+        public chartsController: IChartsController,
+        public chartController: IChartController | undefined,
         public axisModel: IAxisModel
     ) {
         super(position, chartsController, chartController, axisModel);
@@ -4306,8 +4489,8 @@ function scaleZoomOut(currentScale: number) {
 class FixedAxisController extends AxisController {
     constructor(
         public position: "x" | "y" | "yRight",
-        public chartsController: ChartsController,
-        public chartController: ChartController | undefined,
+        public chartsController: IChartsController,
+        public chartController: IChartController | undefined,
         public axisModel: IAxisModel
     ) {
         super(position, chartsController, chartController, axisModel);
@@ -4676,8 +4859,8 @@ class FixedAxisController extends AxisController {
 
 export function getNearestValuePoint(
     point: Point,
-    xAxisController: AxisController,
-    yAxisController: AxisController,
+    xAxisController: IAxisController,
+    yAxisController: IAxisController,
     waveform: IWaveform
 ): Point {
     let i1 = Math.floor(
@@ -4823,7 +5006,7 @@ class GenericChartXAxisModel implements IAxisModel {
         return this.data.xAxes.unit;
     }
 
-    chartsController: ChartsController | undefined = undefined;
+    chartsController: IChartsController | undefined = undefined;
 
     get minValue() {
         return 0;
@@ -5104,7 +5287,7 @@ class GenericChartLineController extends LineController {
     constructor(
         public id: string,
         public waveform: GenericChartWaveform,
-        yAxisController: AxisController
+        yAxisController: IAxisController
     ) {
         super(id, yAxisController);
     }
@@ -5137,385 +5320,33 @@ class GenericChartLineController extends LineController {
     }
 }
 
-class Measurement {
-    constructor(
-        public measurementsController: MeasurementsController,
-        public measurementDefinition: IMeasurementDefinition,
-        public measurementFunction: IMeasurementFunction | undefined
-    ) {}
-
-    @observable dirty = true;
-
-    get measurementId() {
-        return this.measurementDefinition.measurementId;
-    }
-
-    get namePrefix() {
-        return (
-            (this.measurementFunction && this.measurementFunction.name) ||
-            this.measurementDefinition.measurementFunctionId
-        );
-    }
-
-    @computed
-    get name() {
-        const namePrefix = this.namePrefix;
-
-        let samePrefixBeforeCounter = 0;
-
-        const measurements = this.measurementsController.measurements;
-
-        let i;
-        for (i = 0; i < measurements.length && measurements[i] !== this; ++i) {
-            if (measurements[i].namePrefix === namePrefix) {
-                samePrefixBeforeCounter++;
-            }
-        }
-
-        if (i < measurements.length) {
-            for (
-                ++i;
-                i < measurements.length &&
-                measurements[i].namePrefix !== namePrefix;
-                ++i
-            ) {}
-        }
-
-        if (samePrefixBeforeCounter === 0 && i === measurements.length) {
-            // no measurement with the same namePrefix found
-            return namePrefix;
-        }
-
-        return `${namePrefix} ${samePrefixBeforeCounter + 1}`;
-    }
-
-    get arity() {
-        return (
-            (this.measurementFunction && this.measurementFunction.arity) || 1
-        );
-    }
-
-    get parametersDescription() {
-        return (
-            this.measurementFunction &&
-            this.measurementFunction.parametersDescription
-        );
-    }
-
-    get parameters() {
-        if (this.measurementDefinition.parameters) {
-            return this.measurementDefinition.parameters;
-        }
-
-        const parameters: any = {};
-
-        if (this.parametersDescription) {
-            this.parametersDescription.forEach(parameter => {
-                if (parameter.defaultValue) {
-                    parameters[parameter.name] = parameter.defaultValue;
-                }
-            });
-        }
-
-        return parameters;
-    }
-
-    set parameters(value: any) {
-        runInAction(() => (this.measurementDefinition.parameters = value));
-    }
-
-    get resultType() {
-        return (
-            (this.measurementFunction && this.measurementFunction.resultType) ||
-            "value"
-        );
-    }
-
-    get script() {
-        return this.measurementFunction && this.measurementFunction.script;
-    }
-
-    get chartIndex() {
-        return this.measurementDefinition.chartIndex || 0;
-    }
-
-    set chartIndex(value: number) {
-        runInAction(() => (this.measurementDefinition.chartIndex = value));
-    }
-
-    get chartIndexes() {
-        if (this.measurementDefinition.chartIndexes) {
-            return this.measurementDefinition.chartIndexes;
-        }
-        return _range(this.arity);
-    }
-
-    set chartIndexes(value: number[]) {
-        runInAction(() => (this.measurementDefinition.chartIndexes = value));
-    }
-
-    getChartTask(
-        chartIndex: number
-    ): ISingleInputMeasurementTaskSpecification | null {
-        if (!this.script) {
-            return null;
-        }
-
-        const lineController =
-            this.measurementsController.chartsController.lineControllers[
-                chartIndex
-            ];
-        const waveformModel =
-            lineController && lineController.getWaveformModel();
-
-        if (!waveformModel) {
-            return null;
-        }
-
-        const length: number = waveformModel.length;
-
-        if (length === 0) {
-            return null;
-        }
-
-        function xAxisValueToIndex(value: number) {
-            return value * waveformModel!.samplingRate;
-        }
-
-        const { x1, x2 } = this.measurementsController.measurementsInterval!;
-
-        let xStartValue: number = x1;
-        let a: number = clamp(
-            Math.floor(xAxisValueToIndex(x1)),
-            0,
-            waveformModel.length
-        );
-        let b: number = clamp(
-            Math.ceil(xAxisValueToIndex(x2)),
-            0,
-            waveformModel.length - 1
-        );
-
-        const xNumSamples = b - a + 1;
-        if (xNumSamples <= 0) {
-            return null;
-        }
-
-        return {
-            xStartValue: xStartValue,
-            xStartIndex: a,
-            xNumSamples,
-
-            format: waveformModel.format,
-            values: waveformModel.values,
-            offset: waveformModel.offset,
-            scale: waveformModel.scale,
-
-            dlog: waveformModel.dlog,
-
-            samplingRate: waveformModel.samplingRate,
-            valueUnit: waveformModel.valueUnit
-        };
-    }
-
-    getMeasureTaskForSingleInput(
-        taskSpec: ISingleInputMeasurementTaskSpecification
-    ) {
-        const accessor = {
-            format: taskSpec.format,
-            values: taskSpec.values,
-            offset: taskSpec.offset,
-            scale: taskSpec.scale,
-            dlog: taskSpec.dlog,
-            length: 0,
-            value: (value: number) => 0,
-            waveformData: (value: number) => 0
-        };
-
-        initValuesAccesor(accessor, true);
-
-        return {
-            values: taskSpec.values,
-            xStartValue: taskSpec.xStartValue,
-            xStartIndex: taskSpec.xStartIndex,
-            xNumSamples: taskSpec.xNumSamples,
-            samplingRate: taskSpec.samplingRate,
-            getSampleValueAtIndex: accessor.value,
-            valueUnit: taskSpec.valueUnit,
-            inputs: [],
-            parameters: this.parameters,
-            result: null
-        };
-    }
-
-    getMeasureTaskForMultipleInputs(
-        taskSpec: IMultiInputMeasurementTaskSpecification
-    ) {
-        const inputs = taskSpec.inputs.map(input => {
-            const accessor = {
-                format: input.format,
-                values: input.values,
-                offset: input.offset,
-                scale: input.scale,
-                dlog: input.dlog,
-                length: 0,
-                value: (value: number) => 0,
-                waveformData: (value: number) => 0
-            };
-
-            initValuesAccesor(accessor, true);
-
-            return {
-                values: input.values,
-                samplingRate: input.samplingRate,
-                getSampleValueAtIndex: accessor.value,
-                valueUnit: input.valueUnit
-            };
-        });
-
-        return {
-            values: null,
-            xStartValue: taskSpec.xStartValue,
-            xStartIndex: taskSpec.xStartIndex,
-            xNumSamples: taskSpec.xNumSamples,
-            samplingRate: taskSpec.inputs[0].samplingRate,
-            getSampleValueAtIndex: inputs[0].getSampleValueAtIndex,
-            valueUnit: inputs[0].valueUnit,
-            inputs,
-            parameters: this.parameters,
-            result: null
-        };
-    }
-
-    get task(): IMeasureTask | null {
-        if (!this.script) {
-            return null;
-        }
-
-        if (this.arity === 1) {
-            const singleInputTaskSpec = this.getChartTask(this.chartIndex);
-            if (!singleInputTaskSpec) {
-                return null;
-            }
-            return this.getMeasureTaskForSingleInput(singleInputTaskSpec);
-        }
-
-        const tasks = this.chartIndexes
-            .map(chartIndex => this.getChartTask(chartIndex))
-            .filter(task => task) as ISingleInputMeasurementTaskSpecification[];
-
-        if (tasks.length < this.arity) {
-            return null;
-        }
-
-        const task = tasks[0];
-        let xStartValue = task.xStartValue;
-        let xStartIndex = task.xStartIndex;
-        let xEndIndex = task.xStartIndex + task.xNumSamples;
-
-        for (let i = 1; i < tasks.length; ++i) {
-            const task = tasks[i];
-
-            if (task.xStartIndex > xStartIndex) {
-                xStartIndex = task.xStartIndex;
-            }
-
-            if (task.xStartIndex + task.xNumSamples < xEndIndex) {
-                xEndIndex = task.xStartIndex + task.xNumSamples;
-            }
-        }
-
-        const xNumSamples = xEndIndex - xStartIndex;
-        if (xNumSamples <= 0) {
-            return null;
-        }
-
-        return this.getMeasureTaskForMultipleInputs({
-            xStartValue,
-            xStartIndex,
-            xNumSamples,
-
-            inputs: tasks.map(task => ({
-                format: task.format,
-                values: task.values,
-                offset: task.offset,
-                scale: task.scale,
-                samplingRate: task.samplingRate,
-                valueUnit: task.valueUnit,
-                dlog: task.dlog,
-                getSampleValueAtIndex: (index: number) => 0
-            }))
-        });
-    }
-
-    @observable result: {
+export interface IMeasurement {
+    measurementsController: IMeasurementsController;
+    measurementDefinition: IMeasurementDefinition;
+    measurementFunction: IMeasurementFunction | undefined;
+    measurementId: string;
+    namePrefix: string;
+    name: string;
+    arity: number;
+    chartPanelTitle: string;
+    script: string | undefined;
+    result: {
         result: number | string | IChart | null;
         resultUnit?: keyof typeof UNITS | undefined;
-    } | null = null;
-
-    refreshResult() {
-        if (!this.script) {
-            return;
-        }
-
-        if (!this.measurementsController.measurementsInterval) {
-            return;
-        }
-
-        const task = this.task;
-        if (!task) {
-            return;
-        }
-
-        let measureFunction: (task: IMeasureTask) => void;
-        measureFunction = (require(this.script) as any).default;
-        measureFunction(task);
-
-        runInAction(() => {
-            this.result = task;
-            this.dirty = false;
-        });
-    }
-
-    get chartPanelTitle() {
-        const lineControllers =
-            this.measurementsController.chartsController.lineControllers;
-        if (lineControllers.length > 1) {
-            if (this.arity === 1) {
-                const lineController = lineControllers[this.chartIndex];
-                if (lineController) {
-                    return `${this.name} (${lineController.label})`;
-                }
-            } else {
-                return `${this.name} (${this.chartIndexes
-                    .map(chartIndex => {
-                        const lineController = lineControllers[chartIndex];
-                        return lineController ? lineController.label : "";
-                    })
-                    .join(", ")})`;
-            }
-        }
-
-        return this.name;
-    }
-
-    get chartPanelConfiguration() {
-        return {
-            type: "component",
-            componentName: "MeasurementValue",
-            id: this.measurementId,
-            componentState: {
-                measurementId: this.measurementId
-            },
-            title: this.chartPanelTitle,
-            isClosable: false
-        };
-    }
+    } | null;
+    resultType: IMeasurementFunctionResultType;
+    chartIndex: number;
+    chartIndexes: number[];
+    parametersDescription: IFieldProperties[] | undefined;
+    parameters: any;
+    dirty: boolean;
+    refreshResult(): void;
+    chartPanelConfiguration: any; // golden layout
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IMeasurementDefinition {
+export interface IMeasurementDefinition {
     measurementId: string;
     measurementFunctionId: string;
     chartIndex?: number;
@@ -5535,13 +5366,13 @@ interface IInput {
     valueUnit: keyof typeof UNITS;
 }
 
-interface ISingleInputMeasurementTaskSpecification extends IInput {
+export interface ISingleInputMeasurementTaskSpecification extends IInput {
     xStartValue: number;
     xStartIndex: number;
     xNumSamples: number;
 }
 
-interface IMultiInputMeasurementTaskSpecification {
+export interface IMultiInputMeasurementTaskSpecification {
     xStartValue: number;
     xStartIndex: number;
     xNumSamples: number;
@@ -5551,7 +5382,12 @@ interface IMultiInputMeasurementTaskSpecification {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class MeasurementsModel {
+export interface IMeasurementsModel {
+    measurements: IMeasurementDefinition[];
+    chartPanelsViewState: string | undefined;
+}
+
+export class MeasurementsModel implements IMeasurementsModel {
     @observable measurements: IMeasurementDefinition[] = [];
     @observable chartPanelsViewState: string | undefined;
 
@@ -5585,7 +5421,7 @@ export class MeasurementsModel {
 @observer
 class MeasurementInputField extends FieldComponent {
     render() {
-        const measurement = this.props.dialogContext as Measurement;
+        const measurement = this.props.dialogContext as IMeasurement;
         const inputIndex = parseInt(
             this.props.fieldProperties.name.slice(INPUT_FILED_NAME.length)
         );
@@ -5639,7 +5475,7 @@ const RESULT_FILED_NAME = "___result___";
 
 @observer
 class MeasurementComponent extends React.Component<{
-    measurement: Measurement;
+    measurement: IMeasurement;
 }> {
     get numCharts() {
         return this.props.measurement.measurementsController.chartsController
@@ -5968,7 +5804,7 @@ class MeasurementComponent extends React.Component<{
 
 @observer
 class MeasurementsDockView extends React.Component<{
-    measurementsController: MeasurementsController;
+    measurementsController: IMeasurementsController;
 }> {
     get measurementsModel() {
         return this.props.measurementsController.measurementsModel;
@@ -6088,7 +5924,7 @@ class MeasurementsDockView extends React.Component<{
 
 @observer
 class MeasurementValue extends React.Component<{
-    measurement: Measurement;
+    measurement: IMeasurement;
     inDockablePanel?: boolean;
 }> {
     render() {
@@ -6161,38 +5997,6 @@ class MeasurementResultField extends FieldComponent {
     }
 }
 
-class GlobalViewOptions {
-    static LOCAL_STORAGE_ITEM_ID = "shared/ui/chart/globalViewOptions";
-
-    @observable enableZoomAnimations: boolean = true;
-    @observable blackBackground: boolean = false;
-    @observable renderAlgorithm: WaveformRenderAlgorithm = "minmax";
-    @observable showSampledData: boolean = false;
-
-    constructor() {
-        const globalViewOptionsJSON = localStorage.getItem(
-            GlobalViewOptions.LOCAL_STORAGE_ITEM_ID
-        );
-        if (globalViewOptionsJSON) {
-            try {
-                const globakViewOptionsJS = JSON.parse(globalViewOptionsJSON);
-                runInAction(() => Object.assign(this, globakViewOptionsJS));
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        autorun(() => {
-            localStorage.setItem(
-                GlobalViewOptions.LOCAL_STORAGE_ITEM_ID,
-                JSON.stringify(toJS(this))
-            );
-        });
-    }
-}
-
-export const globalViewOptions = new GlobalViewOptions();
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const measurementFunctions = computed(() => {
@@ -6241,23 +6045,11 @@ export interface WaveformModel {
     samplingRate: number;
     valueUnit: keyof typeof UNITS;
 
-    rulers?: RulersModel;
-    measurements?: MeasurementsModel;
+    rulers?: IRulersModel;
+    measurements?: IMeasurementsModel;
 }
 
 const CONF_SINGLE_STEP_TIMEOUT = 1000 / 30;
-
-////////////////////////////////////////////////////////////////////////////////
-
-function clamp(value: number, min: number, max: number) {
-    if (value < min) {
-        return min;
-    }
-    if (value > max) {
-        return max;
-    }
-    return value;
-}
 
 function addAlphaToColor(color: string, alpha: number) {
     return tinycolor(color).setAlpha(alpha).toRgbString();
@@ -6280,104 +6072,7 @@ function genRandomOffsets(K: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IWaveformDlogParams {
-    dataType: DataType;
-    dataOffset: number;
-    dataContainsSampleValidityBit: boolean;
-    columnDataIndex: number;
-    numBytesPerRow: number;
-    bitMask: number;
-    logOffset?: number;
-    transformOffset: number;
-    transformScale: number;
-}
-
-export interface IWaveform {
-    format: any;
-    values: any;
-    offset: number;
-    scale: number;
-
-    dlog?: IWaveformDlogParams;
-
-    length: number;
-    value: (i: number) => number;
-    waveformData: (i: number) => number;
-
-    samplingRate: number;
-}
-
-interface IAxisController {
-    from: number;
-    to: number;
-    range: number;
-    scale: number;
-    valueToPx(value: number): number;
-    pxToValue(value: number): number;
-    linearValueToPx(value: number): number;
-    logarithmic?: boolean;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-type WaveformRenderAlgorithm = "avg" | "minmax" | "gradually";
-
-interface IWaveformRenderJobSpecification {
-    renderAlgorithm: string;
-    waveform: IWaveform;
-    xAxisController: IAxisController;
-    yAxisController: IAxisController;
-    xFromValue: number;
-    xToValue: number;
-    yFromValue: number;
-    yToValue: number;
-    strokeColor: string;
-    label?: string;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface IContinuation {
-    isDone?: boolean;
-    xLabel?: number;
-    yLabel?: number;
-}
-
-interface IAverageContinuation extends IContinuation {
-    offsets: number[];
-    offset: number;
-    commitAlways: boolean;
-}
-
-interface IMinMaxContinuation extends IContinuation {
-    offsets: number[];
-    offset: number;
-    commitAlways: boolean;
-}
-
-interface IGraduallyContinuation extends IContinuation {
-    a: number;
-    b: number;
-    K: number;
-    offsets: number[];
-    offset: number;
-    commitAlways: boolean;
-}
-
-interface ILogarithmicContinuation extends IContinuation {
-    i: number;
-    b: number;
-    K: number;
-
-    points: {
-        x: number;
-        y: number;
-    }[];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function renderWaveformPath(
+export function renderWaveformPath(
     canvas: HTMLCanvasElement,
     job: IWaveformRenderJobSpecification,
     continuation: any
@@ -6863,270 +6558,11 @@ function renderWaveformPath(
     return undefined;
 }
 
-export enum WaveformFormat {
-    UNKNOWN,
-    FLOATS_32BIT,
-    RIGOL_BYTE,
-    RIGOL_WORD,
-    CSV_STRING,
-    EEZ_DLOG,
-    EEZ_DLOG_LOGARITHMIC,
-    JS_NUMBERS,
-    FLOATS_64BIT
-}
-
-function getCsvValues(valuesArray: any) {
-    var values = new Buffer(valuesArray.buffer || []).toString("binary");
-
-    if (!values || !values.split) {
-        return [];
-    }
-    let lines = values
-        .split("\n")
-        .map(line => line.split(",").map(value => parseFloat(value)));
-    if (lines.length === 1) {
-        return lines[0];
-    }
-    return lines.map(line => line[0]);
-}
-
-const buffer = Buffer.allocUnsafe(8);
-
-function readUInt8(data: any, i: number) {
-    buffer[0] = data[i];
-    return buffer.readUInt8(0);
-}
-
-function readInt16BE(data: any, i: number) {
-    buffer[0] = data[i];
-    buffer[1] = data[i + 1];
-    return buffer.readInt16BE(0);
-}
-
-function readInt24BE(data: any, i: number) {
-    buffer[0] = data[i];
-    buffer[1] = data[i + 1];
-    buffer[2] = data[i + 2];
-    buffer[3] = 0;
-    return buffer.readInt32BE(0) >> 8;
-}
-
-function readFloat(data: any, i: number) {
-    buffer[0] = data[i];
-    buffer[1] = data[i + 1];
-    buffer[2] = data[i + 2];
-    buffer[3] = data[i + 3];
-    return buffer.readFloatLE(0);
-}
-
-function readDouble(data: any, i: number) {
-    buffer[0] = data[i];
-    buffer[1] = data[i + 1];
-    buffer[2] = data[i + 2];
-    buffer[3] = data[i + 3];
-    buffer[4] = data[i + 4];
-    buffer[5] = data[i + 5];
-    buffer[6] = data[i + 6];
-    buffer[7] = data[i + 7];
-    return buffer.readDoubleLE(0);
-}
-
-export function initValuesAccesor(
-    object: {
-        // input
-        format: WaveformFormat;
-        values: any;
-        offset: number;
-        scale: number;
-
-        dlog?: IWaveformDlogParams;
-
-        // output
-        length: number;
-        value(value: number): number;
-        waveformData(value: number): number;
-    },
-    disableNaNs: boolean = false
-) {
-    const values = object.values || [];
-    const format = object.format;
-    const offset = object.offset;
-    const scale = object.scale;
-
-    let length: number;
-    let value: (value: number) => number;
-    let waveformData: (value: number) => number;
-
-    if (format === WaveformFormat.FLOATS_32BIT) {
-        length = Math.floor(values.length / 4);
-        value = (index: number) => {
-            return offset + readFloat(values, 4 * index) * scale;
-        };
-        waveformData = value;
-    } else if (format === WaveformFormat.FLOATS_64BIT) {
-        length = Math.floor(values.length / 8);
-        value = (index: number) => {
-            return offset + readDouble(values, 8 * index) * scale;
-        };
-        waveformData = value;
-    } else if (format === WaveformFormat.RIGOL_BYTE) {
-        length = values.length;
-        waveformData = (index: number) => {
-            return values[index];
-        };
-        value = (index: number) => {
-            return offset + waveformData(index) * scale;
-        };
-    } else if (format === WaveformFormat.RIGOL_WORD) {
-        length = Math.floor(values.length / 2);
-        waveformData = (index: number) => {
-            return values[index];
-        };
-        value = (index: number) => {
-            return offset + waveformData(index) * scale;
-        };
-    } else if (format === WaveformFormat.CSV_STRING) {
-        const csvValues = getCsvValues(values);
-        length = csvValues.length;
-        value = (index: number) => {
-            return offset + csvValues[index] * scale;
-        };
-        waveformData = value;
-    } else if (
-        format === WaveformFormat.EEZ_DLOG ||
-        format === WaveformFormat.EEZ_DLOG_LOGARITHMIC
-    ) {
-        length = object.length;
-        if (length === undefined) {
-            length = values.length;
-        }
-
-        const {
-            dataType,
-            dataContainsSampleValidityBit,
-            dataOffset,
-            columnDataIndex,
-            numBytesPerRow,
-            bitMask,
-            logOffset,
-            transformOffset,
-            transformScale
-        } = object.dlog!;
-
-        value = (index: number) => {
-            let rowOffset = dataOffset + index * numBytesPerRow;
-
-            let value;
-
-            if (
-                !dataContainsSampleValidityBit ||
-                readUInt8(values, rowOffset) & 0x80
-            ) {
-                rowOffset += columnDataIndex;
-
-                if (dataType == DataType.DATA_TYPE_BIT) {
-                    value = readUInt8(values, rowOffset) & bitMask ? 1.0 : 0.0;
-                } else if (dataType == DataType.DATA_TYPE_INT16_BE) {
-                    value =
-                        transformOffset +
-                        transformScale * readInt16BE(values, rowOffset);
-                } else if (dataType == DataType.DATA_TYPE_INT24_BE) {
-                    value =
-                        transformOffset +
-                        transformScale * readInt24BE(values, rowOffset);
-                } else if (dataType == DataType.DATA_TYPE_FLOAT) {
-                    value = readFloat(values, rowOffset);
-                } else {
-                    console.error("Unknown data type", dataType);
-                    value = NaN;
-                }
-            } else {
-                value = NaN;
-            }
-
-            if (format === WaveformFormat.EEZ_DLOG_LOGARITHMIC) {
-                return Math.log10(logOffset! + value);
-            } else {
-                return offset + value * scale;
-            }
-        };
-
-        waveformData = value;
-    } else if (format === WaveformFormat.JS_NUMBERS) {
-        length = object.length;
-        value = (index: number) => {
-            return values[offset + index * scale];
-        };
-        waveformData = value;
-    } else {
-        return;
-    }
-
-    object.length = length;
-
-    if (format === WaveformFormat.EEZ_DLOG && disableNaNs) {
-        object.value = (index: number) => {
-            let x = value(index);
-            if (!isNaN(x)) {
-                return x;
-            }
-
-            // find first non NaN on left or right
-            const nLeft = index;
-            const nRight = length - index - 1;
-
-            const n = Math.min(nLeft, nRight);
-
-            let k;
-            for (k = 1; k <= n; ++k) {
-                // check left
-                x = value(index - k);
-                if (!isNaN(x)) {
-                    return x;
-                }
-
-                // check right
-                x = value(index + k);
-                if (!isNaN(x)) {
-                    return x;
-                }
-            }
-
-            if (nLeft > nRight) {
-                index -= k;
-                for (; index >= 0; --index) {
-                    // check left
-                    x = value(index);
-                    if (!isNaN(x)) {
-                        return x;
-                    }
-                }
-            } else if (nLeft < nRight) {
-                index += k;
-                for (; index < length; ++index) {
-                    // check right
-                    x = value(index);
-                    if (!isNaN(x)) {
-                        return x;
-                    }
-                }
-            }
-
-            // give up
-            return NaN;
-        };
-    } else {
-        object.value = value;
-    }
-
-    object.waveformData = waveformData;
-}
-
 @observer
 class BookmarkView extends React.Component<{
-    chartsController: ChartsController;
+    chartsController: IChartsController;
     index: number;
-    bookmark: ChartBookmark;
+    bookmark: IChartBookmark;
     selected: boolean;
     onClick: () => void;
 }> {
@@ -7163,7 +6599,7 @@ class BookmarkView extends React.Component<{
 
 @observer
 class BookmarksView extends React.Component<{
-    chartsController: ChartsController;
+    chartsController: IChartsController;
 }> {
     div: HTMLElement | null = null;
 
@@ -7215,1696 +6651,6 @@ class BookmarksView extends React.Component<{
                     </tbody>
                 </table>
             </div>
-        );
-    }
-}
-
-export class RulersModel {
-    @observable xAxisRulersEnabled: boolean = false;
-    @observable x1: number = 0;
-    @observable x2: number = 0;
-    @observable yAxisRulersEnabled: boolean[] = [];
-    @observable y1: number[] = [];
-    @observable y2: number[] = [];
-    @observable pauseDbUpdate?: boolean = false;
-
-    constructor(props: any) {
-        if (props) {
-            if (!Array.isArray(props.yAxisRulersEnabled)) {
-                props.yAxisRulersEnabled = [props.yAxisRulersEnabled];
-                props.y1 = [props.y1];
-                props.y2 = [props.y2];
-            }
-
-            Object.assign(this, props);
-        }
-    }
-
-    initYRulers(numCharts: number) {
-        for (let chartIndex = 0; chartIndex < numCharts; chartIndex++) {
-            if (
-                chartIndex >= this.yAxisRulersEnabled.length ||
-                this.yAxisRulersEnabled[chartIndex] === undefined
-            ) {
-                this.yAxisRulersEnabled[chartIndex] = false;
-                this.y1[chartIndex] = 0;
-                this.y2[chartIndex] = 0;
-            }
-        }
-    }
-}
-
-class DragXRulerMouseHandler implements MouseHandler {
-    cursor = "ew-resize";
-    xStart: number = 0;
-    x1: number = 0;
-    dx: number = 0;
-
-    constructor(
-        private rulersController: RulersController,
-        private whichRuller: "x1" | "x2" | "both" | "none"
-    ) {}
-
-    get xAxisController() {
-        return this.rulersController.chartsController.xAxisController;
-    }
-
-    @action
-    down(point: SVGPoint, event: PointerEvent) {
-        this.rulersController.rulersModel.pauseDbUpdate = true;
-
-        this.xStart = this.xAxisController.pxToValue(point.x);
-
-        if (this.whichRuller === "none") {
-            let x = getSnapToValue(event, this.xStart, this.xAxisController);
-            x = this.rulersController.snapToSample(x);
-
-            this.rulersController.rulersModel.x1 = x;
-            this.rulersController.rulersModel.x2 = x;
-        }
-
-        this.x1 = this.rulersController.rulersModel.x1;
-        this.dx =
-            this.rulersController.rulersModel.x2 -
-            this.rulersController.rulersModel.x1;
-    }
-
-    @action
-    move(point: SVGPoint, event: PointerEvent) {
-        let x = this.xAxisController.pxToValue(point.x);
-        if (this.whichRuller === "both") {
-            x = getSnapToValue(
-                event,
-                this.x1 + x - this.xStart,
-                this.xAxisController
-            );
-            x = this.rulersController.snapToSample(x);
-
-            if (x < this.xAxisController.minValue) {
-                x = this.xAxisController.minValue;
-            }
-
-            if (x + this.dx < this.xAxisController.minValue) {
-                x = this.xAxisController.minValue - this.dx;
-            }
-
-            if (x > this.xAxisController.maxValue) {
-                x = this.xAxisController.maxValue;
-            }
-
-            if (x + this.dx > this.xAxisController.maxValue) {
-                x = this.xAxisController.maxValue - this.dx;
-            }
-
-            this.rulersController.rulersModel.x1 = x;
-            this.rulersController.rulersModel.x2 = x + this.dx;
-        } else {
-            x = getSnapToValue(event, x, this.xAxisController);
-            x = this.rulersController.snapToSample(x);
-
-            if (x < this.xAxisController.minValue) {
-                x = this.xAxisController.minValue;
-            } else if (x > this.xAxisController.maxValue) {
-                x = this.xAxisController.maxValue;
-            }
-
-            if (this.whichRuller === "x1") {
-                this.rulersController.rulersModel.x1 = x;
-            } else {
-                this.rulersController.rulersModel.x2 = x;
-            }
-
-            if (
-                this.rulersController.rulersModel.x1 >
-                this.rulersController.rulersModel.x2
-            ) {
-                const temp = this.rulersController.rulersModel.x2;
-                this.rulersController.rulersModel.x2 =
-                    this.rulersController.rulersModel.x1;
-                this.rulersController.rulersModel.x1 = temp;
-
-                this.whichRuller = this.whichRuller === "x1" ? "x2" : "x1";
-            }
-        }
-    }
-
-    @action
-    up(
-        point: SVGPoint | undefined,
-        event: PointerEvent | undefined,
-        cancel: boolean
-    ) {
-        this.rulersController.rulersModel.pauseDbUpdate = false;
-    }
-
-    updateCursor(event: PointerEvent | undefined, cursor: ICursor) {
-        cursor.visible = false;
-    }
-
-    render() {
-        return null;
-    }
-}
-
-class DragYRulerMouseHandler implements MouseHandler {
-    chartIndex: number;
-
-    cursor = "ns-resize";
-    yStart: number = 0;
-    y1: number = 0;
-    dy: number = 0;
-
-    constructor(
-        private chartView: ChartView,
-        private whichRuller: "y1" | "y2" | "both" | "none"
-    ) {
-        this.chartIndex = chartView.props.chartController.chartIndex;
-    }
-
-    get rulersController() {
-        return this.chartView.props.chartController.chartsController
-            .rulersController;
-    }
-
-    get rulersModel() {
-        return this.rulersController.rulersModel;
-    }
-
-    get yAxisController() {
-        return this.chartView.props.chartController.yAxisController;
-    }
-
-    @action
-    down(point: SVGPoint, event: PointerEvent) {
-        this.rulersModel.pauseDbUpdate = true;
-
-        this.yStart = this.yAxisController.pxToValue(point.y);
-
-        if (this.whichRuller === "none") {
-            let y = this.yAxisController.pxToValue(point.y);
-            y = getSnapToValue(event, y, this.yAxisController);
-
-            this.rulersModel.y1[this.chartIndex] = y;
-            this.rulersModel.y2[this.chartIndex] = y;
-        }
-
-        this.y1 = this.rulersModel.y1[this.chartIndex];
-        this.dy =
-            this.rulersModel.y2[this.chartIndex] -
-            this.rulersModel.y1[this.chartIndex];
-    }
-
-    @action
-    move(point: SVGPoint, event: PointerEvent) {
-        let y = this.yAxisController.pxToValue(point.y);
-        if (this.whichRuller === "both") {
-            y = getSnapToValue(
-                event,
-                this.y1 + y - this.yStart,
-                this.yAxisController
-            );
-
-            if (y < this.yAxisController.minValue) {
-                y = this.yAxisController.minValue;
-            }
-
-            if (y + this.dy < this.yAxisController.minValue) {
-                y = this.yAxisController.minValue - this.dy;
-            }
-
-            if (y > this.yAxisController.maxValue) {
-                y = this.yAxisController.maxValue;
-            }
-
-            if (y + this.dy > this.yAxisController.maxValue) {
-                y = this.yAxisController.maxValue - this.dy;
-            }
-
-            this.rulersModel.y1[this.chartIndex] = y;
-            this.rulersModel.y2[this.chartIndex] = y + this.dy;
-        } else {
-            y = getSnapToValue(event, y, this.yAxisController);
-
-            if (y < this.yAxisController.minValue) {
-                y = this.yAxisController.minValue;
-            } else if (y > this.yAxisController.maxValue) {
-                y = this.yAxisController.maxValue;
-            }
-
-            if (this.whichRuller === "y1") {
-                this.rulersModel.y1[this.chartIndex] = y;
-            } else {
-                this.rulersModel.y2[this.chartIndex] = y;
-            }
-        }
-    }
-
-    @action
-    up(
-        point: SVGPoint | undefined,
-        event: PointerEvent | undefined,
-        cancel: boolean
-    ) {
-        this.rulersModel.pauseDbUpdate = false;
-    }
-
-    updateCursor(event: PointerEvent | undefined, cursor: ICursor) {
-        cursor.visible = false;
-    }
-
-    render() {
-        return null;
-    }
-}
-
-class RulersController {
-    constructor(
-        public chartsController: ChartsController,
-        public rulersModel: RulersModel
-    ) {}
-
-    @computed
-    get x1() {
-        return (
-            Math.round(
-                this.chartsController.chartLeft +
-                    this.chartsController.xAxisController.valueToPx(
-                        this.rulersModel.x1
-                    )
-            ) + 0.5
-        );
-    }
-
-    @computed
-    get x2() {
-        return (
-            Math.round(
-                this.chartsController.chartLeft +
-                    this.chartsController.xAxisController.valueToPx(
-                        this.rulersModel.x2
-                    )
-            ) + 0.5
-        );
-    }
-
-    getY1(chartIndex: number) {
-        return (
-            Math.round(
-                this.chartsController.chartBottom -
-                    this.chartsController.chartControllers[
-                        chartIndex
-                    ].yAxisController.valueToPx(this.rulersModel.y1[chartIndex])
-            ) + 0.5
-        );
-    }
-
-    getY2(chartIndex: number) {
-        return (
-            Math.round(
-                this.chartsController.chartBottom -
-                    this.chartsController.chartControllers[
-                        chartIndex
-                    ].yAxisController.valueToPx(this.rulersModel.y2[chartIndex])
-            ) + 0.5
-        );
-    }
-
-    onDragStart(
-        chartView: ChartView,
-        event: PointerEvent
-    ): MouseHandler | undefined {
-        if (closestByClass(event.target, "EezStudio_ChartRuler_x1rect")) {
-            return new DragXRulerMouseHandler(this, "x1");
-        }
-
-        if (closestByClass(event.target, "EezStudio_ChartRuler_x2rect")) {
-            return new DragXRulerMouseHandler(this, "x2");
-        }
-
-        if (closestByClass(event.target, "EezStudio_ChartRuler_y1rect")) {
-            return new DragYRulerMouseHandler(chartView, "y1");
-        }
-
-        if (closestByClass(event.target, "EezStudio_ChartRuler_y2rect")) {
-            return new DragYRulerMouseHandler(chartView, "y2");
-        }
-
-        if (closestByClass(event.target, "EezStudio_ChartRuler_xrect")) {
-            return new DragXRulerMouseHandler(this, "both");
-        }
-
-        if (closestByClass(event.target, "EezStudio_ChartRuler_yrect")) {
-            return new DragYRulerMouseHandler(chartView, "both");
-        }
-
-        if (this.rulersModel.xAxisRulersEnabled) {
-            return new DragXRulerMouseHandler(this, "none");
-        } else if (
-            chartView.props.chartController.chartIndex <
-                this.rulersModel.yAxisRulersEnabled.length &&
-            this.rulersModel.yAxisRulersEnabled[
-                chartView.props.chartController.chartIndex
-            ]
-        ) {
-            return new DragYRulerMouseHandler(chartView, "none");
-        }
-
-        return undefined;
-    }
-
-    static LINE_WIDTH = 2;
-    static BAND_WIDTH = 8;
-
-    @computed
-    get color() {
-        return globalViewOptions.blackBackground ? "#d4e5f3" : "#337BB7";
-    }
-
-    @computed
-    get fillOpacity() {
-        return globalViewOptions.blackBackground ? 0.2 : 0.1;
-    }
-
-    renderXRulersRect(chartView: ChartView) {
-        if (!this.rulersModel.xAxisRulersEnabled) {
-            return null;
-        }
-
-        let x1 = this.x1;
-        let x2 = this.x2;
-        if (x1 > x2) {
-            const temp = x1;
-            x1 = x2;
-            x2 = temp;
-        }
-
-        const y1 = this.chartsController.chartTop;
-        const y2 = this.chartsController.chartBottom;
-
-        return (
-            <g clipPath={`url(#${chartView.clipId})`}>
-                <rect
-                    className="EezStudio_ChartRuler_xrect"
-                    x={x1}
-                    y={y1}
-                    width={x2 - x1}
-                    height={y2 - y1}
-                    fillOpacity={this.fillOpacity}
-                    fill={this.color}
-                    style={{ cursor: "move" }}
-                />
-            </g>
-        );
-    }
-
-    renderXRulersLines(chartView: ChartView) {
-        if (!this.rulersModel.xAxisRulersEnabled) {
-            return null;
-        }
-
-        const x1 = this.x1;
-        const x2 = this.x2;
-
-        const y1 = this.chartsController.chartTop;
-        const y2 = this.chartsController.chartBottom;
-
-        return (
-            <g clipPath={`url(#${chartView.clipId})`}>
-                <line
-                    x1={x1}
-                    y1={y1}
-                    x2={x1}
-                    y2={y2}
-                    stroke={this.color}
-                    strokeWidth={RulersController.LINE_WIDTH}
-                />
-                <rect
-                    className="EezStudio_ChartRuler_x1rect"
-                    x={x1 - RulersController.BAND_WIDTH / 2}
-                    y={y1}
-                    width={RulersController.BAND_WIDTH}
-                    height={y2 - y1}
-                    fillOpacity={0}
-                    style={{ cursor: "ew-resize" }}
-                />
-
-                <line
-                    x1={x2}
-                    y1={y1}
-                    x2={x2}
-                    y2={y2}
-                    stroke={this.color}
-                    strokeWidth={RulersController.LINE_WIDTH}
-                />
-                <rect
-                    className="EezStudio_ChartRuler_x2rect"
-                    x={x2 - RulersController.BAND_WIDTH / 2}
-                    y={y1}
-                    width={RulersController.BAND_WIDTH}
-                    height={y2 - y1}
-                    fillOpacity={0}
-                    style={{ cursor: "ew-resize" }}
-                />
-            </g>
-        );
-    }
-
-    renderYRulersRect(chartView: ChartView) {
-        const chartIndex = chartView.props.chartController.chartIndex;
-
-        if (
-            chartIndex >= this.rulersModel.yAxisRulersEnabled.length ||
-            !this.rulersModel.yAxisRulersEnabled[chartIndex]
-        ) {
-            return null;
-        }
-
-        let y1 = this.getY1(chartIndex);
-        let y2 = this.getY2(chartIndex);
-        if (y1 < y2) {
-            const temp = y1;
-            y1 = y2;
-            y2 = temp;
-        }
-
-        const x1 = this.chartsController.chartLeft;
-        const x2 = this.chartsController.chartRight;
-
-        return (
-            <g clipPath={`url(#${chartView.clipId})`}>
-                <rect
-                    className="EezStudio_ChartRuler_yrect"
-                    x={x1}
-                    y={y2}
-                    width={x2 - x1}
-                    height={y1 - y2}
-                    fillOpacity={this.fillOpacity}
-                    fill={this.color}
-                    style={{ cursor: "move" }}
-                />
-            </g>
-        );
-    }
-
-    renderYRulersLines(chartView: ChartView) {
-        const chartIndex = chartView.props.chartController.chartIndex;
-
-        if (
-            chartIndex >= this.rulersModel.yAxisRulersEnabled.length ||
-            !this.rulersModel.yAxisRulersEnabled[chartIndex]
-        ) {
-            return null;
-        }
-
-        const y1 = this.getY1(chartIndex);
-        const y2 = this.getY2(chartIndex);
-
-        const x1 = this.chartsController.chartLeft;
-        const x2 = this.chartsController.chartRight;
-
-        return (
-            <g clipPath={`url(#${chartView.clipId})`}>
-                <line
-                    x1={x1}
-                    y1={y1}
-                    x2={x2}
-                    y2={y1}
-                    stroke={this.color}
-                    strokeWidth={RulersController.LINE_WIDTH}
-                />
-                <rect
-                    className="EezStudio_ChartRuler_y1rect"
-                    x={x1}
-                    y={y1 - RulersController.BAND_WIDTH / 2}
-                    width={x2 - x1}
-                    height={RulersController.BAND_WIDTH}
-                    fillOpacity={0}
-                    style={{ cursor: "ns-resize" }}
-                />
-
-                <line
-                    x1={x1}
-                    y1={y2}
-                    x2={x2}
-                    y2={y2}
-                    stroke={this.color}
-                    strokeWidth={RulersController.LINE_WIDTH}
-                />
-                <rect
-                    className="EezStudio_ChartRuler_y2rect"
-                    x={x1}
-                    y={y2 - RulersController.BAND_WIDTH / 2}
-                    width={x2 - x1}
-                    height={RulersController.BAND_WIDTH}
-                    fillOpacity={0}
-                    style={{ cursor: "ns-resize" }}
-                />
-            </g>
-        );
-    }
-
-    render(chartView: ChartView) {
-        return (
-            <React.Fragment>
-                {this.renderYRulersRect(chartView)}
-                {this.renderXRulersRect(chartView)}
-                {this.renderYRulersLines(chartView)}
-                {this.renderXRulersLines(chartView)}
-            </React.Fragment>
-        );
-    }
-
-    snapToSample(x: number) {
-        x =
-            (x / this.chartsController.xAxisController.range) *
-            (this.chartsController.xAxisController.numSamples - 1);
-        return (
-            (Math.round(x) * this.chartsController.xAxisController.range) /
-            (this.chartsController.xAxisController.numSamples - 1)
-        );
-    }
-}
-
-interface RulersDockViewProps {
-    chartsController: ChartsController;
-}
-
-@observer
-class RulersDockView extends React.Component<RulersDockViewProps> {
-    @observable x1: string = "";
-    @observable x1Error: boolean = false;
-    @observable x2: string = "";
-    @observable x2Error: boolean = false;
-    @observable y1: string[] = [];
-    @observable y1Error: boolean[] = [];
-    @observable y2: string[] = [];
-    @observable y2Error: boolean[] = [];
-
-    outsideChangeInXRulersSubscriptionDisposer: any;
-    outsideChangeInYRulersSubscriptionDisposer: any;
-
-    isInsideChange: boolean = false;
-
-    constructor(props: RulersDockViewProps) {
-        super(props);
-
-        this.subscribeToOutsideModelChanges();
-    }
-
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.subscribeToOutsideModelChanges();
-        }
-    }
-
-    @action
-    subscribeToOutsideModelChanges() {
-        if (this.outsideChangeInXRulersSubscriptionDisposer) {
-            this.outsideChangeInXRulersSubscriptionDisposer();
-        }
-
-        this.outsideChangeInXRulersSubscriptionDisposer = autorun(() => {
-            const x1 =
-                this.props.chartsController.xAxisController.unit.formatValue(
-                    this.rulersModel.x1,
-                    10
-                );
-            const x2 =
-                this.props.chartsController.xAxisController.unit.formatValue(
-                    this.rulersModel.x2,
-                    10
-                );
-            if (!this.isInsideChange) {
-                runInAction(() => {
-                    this.x1 = x1;
-                    this.x1Error = false;
-                    this.x2 = x2;
-                    this.x2Error = false;
-                });
-            }
-        });
-
-        if (this.outsideChangeInYRulersSubscriptionDisposer) {
-            this.outsideChangeInYRulersSubscriptionDisposer();
-        }
-
-        this.outsideChangeInYRulersSubscriptionDisposer = autorun(() => {
-            for (
-                let i = 0;
-                i < this.props.chartsController.chartControllers.length;
-                ++i
-            ) {
-                const chartController =
-                    this.props.chartsController.chartControllers[i];
-                if (
-                    i < this.rulersModel.yAxisRulersEnabled.length &&
-                    this.rulersModel.yAxisRulersEnabled[i] &&
-                    !this.isInsideChange
-                ) {
-                    const y1 = chartController.yAxisController.unit.formatValue(
-                        this.rulersModel.y1[i],
-                        4
-                    );
-                    const y2 = chartController.yAxisController.unit.formatValue(
-                        this.rulersModel.y2[i],
-                        4
-                    );
-
-                    runInAction(() => {
-                        this.y1[i] = y1;
-                        this.y1Error[i] = false;
-                        this.y2[i] = y2;
-                        this.y2Error[i] = false;
-                    });
-                }
-            }
-        });
-    }
-
-    get rulersController() {
-        return this.props.chartsController.rulersController;
-    }
-
-    get rulersModel() {
-        return this.rulersController.rulersModel!;
-    }
-
-    validateXRange() {
-        const xAxisController = this.props.chartsController.xAxisController;
-
-        const x1 = xAxisController.unit.parseValue(this.x1);
-        this.x1Error =
-            x1 == null ||
-            x1 < xAxisController.minValue ||
-            x1 > xAxisController.maxValue;
-
-        const x2 = xAxisController.unit.parseValue(this.x2);
-        this.x2Error =
-            x2 == null ||
-            x2 < xAxisController.minValue ||
-            x2 > xAxisController.maxValue;
-
-        if (this.x1Error || this.x2Error) {
-            return;
-        }
-
-        this.rulersModel.x1 = x1!;
-        this.rulersModel.x2 = x2!;
-    }
-
-    @action.bound
-    enableXAxisRulers(checked: boolean) {
-        if (checked) {
-            this.rulersModel.xAxisRulersEnabled = true;
-
-            const xAxisController = this.props.chartsController.xAxisController;
-
-            this.rulersModel.x1 = this.rulersController.snapToSample(
-                xAxisController.from + 0.1 * xAxisController.distance
-            );
-
-            this.rulersModel.x2 = this.rulersController.snapToSample(
-                xAxisController.to - 0.1 * xAxisController.distance
-            );
-        } else {
-            this.rulersModel.xAxisRulersEnabled = false;
-        }
-    }
-
-    setX1 = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.x1 = event.target.value;
-            this.validateXRange();
-        });
-        this.isInsideChange = false;
-    };
-
-    setX2 = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.x2 = event.target.value;
-            this.validateXRange();
-        });
-        this.isInsideChange = false;
-    };
-
-    zoomToFitXRulers = () => {
-        let x1;
-        let x2;
-        if (this.rulersModel.x1 < this.rulersModel.x2) {
-            x1 = this.rulersModel.x1;
-            x2 = this.rulersModel.x2;
-        } else {
-            x1 = this.rulersModel.x2;
-            x2 = this.rulersModel.x1;
-        }
-
-        const dx = x2 - x1;
-        this.props.chartsController.xAxisController.zoom(
-            x1 - 0.05 * dx,
-            x2 + 0.05 * dx
-        );
-    };
-
-    validateYRange(chartIndex: number) {
-        const yAxisController =
-            this.props.chartsController.chartControllers[chartIndex]
-                .yAxisController;
-
-        const y1 = yAxisController.unit.parseValue(this.y1[chartIndex]);
-        this.y1Error[chartIndex] =
-            y1 == null ||
-            y1 < yAxisController.minValue ||
-            y1 > yAxisController.maxValue;
-
-        const y2 = yAxisController.unit.parseValue(this.y2[chartIndex]);
-        this.y2Error[chartIndex] =
-            y2 == null ||
-            y2 < yAxisController.minValue ||
-            y2 > yAxisController.maxValue;
-
-        if (this.y1Error[chartIndex] || this.y2Error[chartIndex]) {
-            return;
-        }
-
-        this.rulersModel.y1[chartIndex] = y1!;
-        this.rulersModel.y2[chartIndex] = y2!;
-    }
-
-    @action.bound
-    enableYAxisRulers(chartIndex: number, checked: boolean) {
-        if (checked) {
-            this.rulersModel.yAxisRulersEnabled[chartIndex] = true;
-
-            const yAxisController =
-                this.props.chartsController.chartControllers[chartIndex]
-                    .yAxisController;
-
-            this.rulersModel.y1[chartIndex] =
-                yAxisController.from + 0.1 * yAxisController.distance;
-            this.rulersModel.y2[chartIndex] =
-                yAxisController.to - 0.1 * yAxisController.distance;
-        } else {
-            this.rulersModel.yAxisRulersEnabled[chartIndex] = false;
-        }
-    }
-
-    setY1 = (
-        chartIndex: number,
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.y1[chartIndex] = event.target.value;
-            this.validateYRange(chartIndex);
-        });
-        this.isInsideChange = false;
-    };
-
-    setY2 = (
-        chartIndex: number,
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        this.isInsideChange = true;
-        runInAction(() => {
-            this.y2[chartIndex] = event.target.value;
-            this.validateYRange(chartIndex);
-        });
-        this.isInsideChange = false;
-    };
-
-    zoomToFitYRulers = (chartIndex: number) => {
-        let y1;
-        let y2;
-        if (this.rulersModel.y1[chartIndex] < this.rulersModel.y2[chartIndex]) {
-            y1 = this.rulersModel.y1[chartIndex];
-            y2 = this.rulersModel.y2[chartIndex];
-        } else {
-            y1 = this.rulersModel.y2[chartIndex];
-            y2 = this.rulersModel.y1[chartIndex];
-        }
-
-        const dy = y2 - y1;
-        this.props.chartsController.chartControllers[
-            chartIndex
-        ].yAxisController.zoom(y1 - 0.05 * dy, y2 + 0.05 * dy);
-    };
-
-    render() {
-        return (
-            <div className="EezStudio_SideDockViewContainer">
-                <div className="EezStudio_AxisRulersProperties">
-                    <div className="EezStudio_SideDockView_PropertyLabel">
-                        <Checkbox
-                            checked={this.rulersModel.xAxisRulersEnabled}
-                            onChange={this.enableXAxisRulers}
-                        >
-                            Enable X axis rulers
-                        </Checkbox>
-                    </div>
-                    {this.rulersModel.xAxisRulersEnabled && (
-                        <div className="EezStudio_SideDockView_Property">
-                            <table>
-                                <tbody>
-                                    <tr>
-                                        <td>X1</td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className={classNames(
-                                                    "form-control",
-                                                    {
-                                                        error: this.x1Error
-                                                    }
-                                                )}
-                                                value={this.x1}
-                                                onChange={this.setX1}
-                                            />
-                                        </td>
-                                        <td>X2</td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className={classNames(
-                                                    "form-control",
-                                                    {
-                                                        error: this.x2Error
-                                                    }
-                                                )}
-                                                value={this.x2}
-                                                onChange={this.setX2}
-                                            />
-                                        </td>
-                                        <td>&Delta;X</td>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                value={this.props.chartsController.xAxisController.unit.formatValue(
-                                                    this.rulersModel.x2 -
-                                                        this.rulersModel.x1,
-                                                    10
-                                                )}
-                                                readOnly={true}
-                                            />
-                                        </td>
-                                        <td />
-                                        <td style={{ textAlign: "left" }}>
-                                            <IconAction
-                                                icon="material:search"
-                                                onClick={this.zoomToFitXRulers}
-                                                title="Zoom chart to fit both x1 and x2"
-                                            />
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-                {_range(
-                    this.props.chartsController.chartControllers.length
-                ).map(chartIndex => (
-                    <div
-                        key={chartIndex}
-                        className="EezStudio_AxisRulersProperties"
-                    >
-                        <div className="EezStudio_SideDockView_PropertyLabel">
-                            <Checkbox
-                                checked={
-                                    chartIndex <
-                                        this.rulersModel.yAxisRulersEnabled
-                                            .length &&
-                                    this.rulersModel.yAxisRulersEnabled[
-                                        chartIndex
-                                    ]
-                                }
-                                onChange={(checked: boolean) =>
-                                    this.enableYAxisRulers(chartIndex, checked)
-                                }
-                            >
-                                Enable{" "}
-                                {this.props.chartsController.chartControllers
-                                    .length > 1
-                                    ? `"${this.props.chartsController.chartControllers[chartIndex].yAxisController.axisModel.label}" `
-                                    : ""}
-                                Y axis rulers
-                            </Checkbox>
-                        </div>
-                        {chartIndex <
-                            this.rulersModel.yAxisRulersEnabled.length &&
-                            this.rulersModel.yAxisRulersEnabled[chartIndex] && (
-                                <div className="EezStudio_SideDockView_Property">
-                                    <table>
-                                        <tbody>
-                                            <tr>
-                                                <td>Y1</td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        className={classNames(
-                                                            "form-control",
-                                                            {
-                                                                error: this
-                                                                    .y1Error[
-                                                                    chartIndex
-                                                                ]
-                                                            }
-                                                        )}
-                                                        value={
-                                                            this.y1[chartIndex]
-                                                        }
-                                                        onChange={event =>
-                                                            this.setY1(
-                                                                chartIndex,
-                                                                event
-                                                            )
-                                                        }
-                                                    />
-                                                </td>
-                                                <td>Y2</td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        className={classNames(
-                                                            "form-control",
-                                                            {
-                                                                error: this
-                                                                    .y2Error[
-                                                                    chartIndex
-                                                                ]
-                                                            }
-                                                        )}
-                                                        value={
-                                                            this.y2[chartIndex]
-                                                        }
-                                                        onChange={event =>
-                                                            this.setY2(
-                                                                chartIndex,
-                                                                event
-                                                            )
-                                                        }
-                                                    />
-                                                </td>
-                                                <td>&Delta;Y</td>
-                                                <td>
-                                                    <input
-                                                        type="text"
-                                                        className="form-control"
-                                                        value={this.props.chartsController.chartControllers[
-                                                            chartIndex
-                                                        ].yAxisController.unit.formatValue(
-                                                            this.rulersModel.y2[
-                                                                chartIndex
-                                                            ] -
-                                                                this.rulersModel
-                                                                    .y1[
-                                                                    chartIndex
-                                                                ],
-                                                            4
-                                                        )}
-                                                        readOnly={true}
-                                                    />
-                                                </td>
-                                                <td />
-                                                <td
-                                                    style={{
-                                                        textAlign: "left"
-                                                    }}
-                                                >
-                                                    <IconAction
-                                                        icon="material:search"
-                                                        onClick={() =>
-                                                            this.zoomToFitYRulers(
-                                                                chartIndex
-                                                            )
-                                                        }
-                                                        title="Zoom chart to fit both y1 and y2"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                    </div>
-                ))}
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface DynamicSubdivisionOptionsProps {
-    chartsController: ChartsController;
-}
-
-@observer
-class DynamicSubdivisionOptions extends React.Component<DynamicSubdivisionOptionsProps> {
-    @observable xAxisSteps: string = "";
-    @observable xAxisStepsError: boolean = false;
-    @observable yAxisSteps: string[] = [];
-    @observable yAxisStepsError: boolean[] = [];
-
-    constructor(props: DynamicSubdivisionOptionsProps) {
-        super(props);
-
-        this.loadProps(this.props);
-    }
-
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.loadProps(this.props);
-        }
-    }
-
-    @action
-    loadProps(props: DynamicSubdivisionOptionsProps) {
-        const chartsController = props.chartsController;
-        const viewOptions = chartsController.viewOptions;
-
-        const xSteps =
-            viewOptions.axesLines.steps && viewOptions.axesLines.steps.x;
-        this.xAxisSteps = xSteps
-            ? xSteps
-                  .map(step =>
-                      chartsController.xAxisController.unit.formatValue(step)
-                  )
-                  .join(", ")
-            : "";
-
-        this.yAxisSteps = chartsController.chartControllers.map(
-            (chartController: ChartController, i: number) => {
-                const ySteps =
-                    viewOptions.axesLines.steps &&
-                    i < viewOptions.axesLines.steps.y.length &&
-                    viewOptions.axesLines.steps.y[i];
-                return ySteps
-                    ? ySteps
-                          .map(step =>
-                              chartsController.chartControllers[
-                                  i
-                              ].yAxisController.unit.formatValue(step)
-                          )
-                          .join(", ")
-                    : "";
-            }
-        );
-        this.yAxisStepsError = this.yAxisSteps.map(x => false);
-    }
-
-    render() {
-        const chartsController = this.props.chartsController;
-        const viewOptions = chartsController.viewOptions;
-
-        const yAxisSteps = chartsController.chartControllers
-            .filter(
-                chartController => !chartController.yAxisController.isDigital
-            )
-            .map((chartController: ChartController, i: number) => {
-                const yAxisController = chartController.yAxisController;
-
-                return (
-                    <tr key={i}>
-                        <td>{yAxisController.axisModel.label}</td>
-                        <td>
-                            <input
-                                type="text"
-                                className={classNames("form-control", {
-                                    error: this.yAxisStepsError[i]
-                                })}
-                                value={this.yAxisSteps[i]}
-                                onChange={action(
-                                    (
-                                        event: React.ChangeEvent<HTMLInputElement>
-                                    ) => {
-                                        this.yAxisSteps[i] = event.target.value;
-
-                                        const steps = event.target.value
-                                            .split(",")
-                                            .map(value =>
-                                                yAxisController.unit.parseValue(
-                                                    value
-                                                )
-                                            );
-
-                                        if (
-                                            steps.length === 0 ||
-                                            !steps.every(
-                                                step =>
-                                                    step != null &&
-                                                    step >=
-                                                        yAxisController.unit
-                                                            .units[0]
-                                            )
-                                        ) {
-                                            this.yAxisStepsError[i] = true;
-                                        } else {
-                                            this.yAxisStepsError[i] = false;
-                                            steps.sort();
-                                            viewOptions.setAxesLinesStepsY(
-                                                i,
-                                                steps as number[]
-                                            );
-                                        }
-                                    }
-                                )}
-                            />
-                        </td>
-                    </tr>
-                );
-            });
-
-        return (
-            <div className="EezStudio_ChartViewOptions_DynamicAxisLines_Properties">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td />
-                            <td>Steps</td>
-                        </tr>
-                        <tr>
-                            <td>Time</td>
-                            <td>
-                                <input
-                                    type="text"
-                                    className={classNames("form-control", {
-                                        error: this.xAxisStepsError
-                                    })}
-                                    value={this.xAxisSteps}
-                                    onChange={action(
-                                        (
-                                            event: React.ChangeEvent<HTMLInputElement>
-                                        ) => {
-                                            this.xAxisSteps =
-                                                event.target.value;
-
-                                            const steps = event.target.value
-                                                .split(",")
-                                                .map(value =>
-                                                    chartsController.xAxisController.unit.parseValue(
-                                                        value
-                                                    )
-                                                )
-                                                .sort();
-
-                                            if (
-                                                steps.length === 0 ||
-                                                !steps.every(
-                                                    step =>
-                                                        step != null &&
-                                                        step >=
-                                                            chartsController
-                                                                .xAxisController
-                                                                .unit.units[0]
-                                                )
-                                            ) {
-                                                this.xAxisStepsError = true;
-                                            } else {
-                                                this.xAxisStepsError = false;
-                                                steps.sort();
-                                                viewOptions.setAxesLinesStepsX(
-                                                    steps as number[]
-                                                );
-                                            }
-                                        }
-                                    )}
-                                />
-                            </td>
-                        </tr>
-                        {yAxisSteps}
-                    </tbody>
-                </table>
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface FixedSubdivisionOptionsProps {
-    chartsController: ChartsController;
-}
-
-@observer
-class FixedSubdivisionOptions extends React.Component<FixedSubdivisionOptionsProps> {
-    @observable majorSubdivisionHorizontal: number = 0;
-    @observable majorSubdivisionVertical: number = 0;
-    @observable minorSubdivisionHorizontal: number = 0;
-    @observable minorSubdivisionVertical: number = 0;
-    @observable majorSubdivisionHorizontalError: boolean = false;
-
-    constructor(props: FixedSubdivisionOptionsProps) {
-        super(props);
-
-        this.loadProps(this.props);
-    }
-
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.loadProps(this.props);
-        }
-    }
-
-    @action
-    loadProps(props: FixedSubdivisionOptionsProps) {
-        const axesLines = props.chartsController.viewOptions.axesLines;
-
-        this.majorSubdivisionHorizontal = axesLines.majorSubdivision.horizontal;
-        this.majorSubdivisionVertical = axesLines.majorSubdivision.vertical;
-        this.minorSubdivisionHorizontal = axesLines.minorSubdivision.horizontal;
-        this.minorSubdivisionVertical = axesLines.minorSubdivision.vertical;
-    }
-
-    render() {
-        const viewOptions = this.props.chartsController.viewOptions;
-
-        return (
-            <div className="EezStudio_ChartViewOptions_FixedAxisLines_Properties">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td />
-                            <td>X axis</td>
-                            <td />
-                            <td>Y axis</td>
-                        </tr>
-                        <tr>
-                            <td>Major</td>
-                            <td>
-                                <input
-                                    type="number"
-                                    min={2}
-                                    max={100}
-                                    className={classNames("form-control", {
-                                        error: this
-                                            .majorSubdivisionHorizontalError
-                                    })}
-                                    value={this.majorSubdivisionHorizontal}
-                                    onChange={action((event: any) => {
-                                        this.majorSubdivisionHorizontal =
-                                            event.target.value;
-
-                                        const value = parseInt(
-                                            event.target.value
-                                        );
-
-                                        if (
-                                            isNaN(value) ||
-                                            value < 2 ||
-                                            value > 100
-                                        ) {
-                                            this.majorSubdivisionHorizontalError =
-                                                true;
-                                        } else {
-                                            this.majorSubdivisionHorizontalError =
-                                                false;
-                                            viewOptions.setAxesLinesMajorSubdivisionHorizontal(
-                                                value
-                                            );
-                                        }
-                                    })}
-                                />
-                            </td>
-                            <td>by</td>
-                            <td>
-                                <input
-                                    type="number"
-                                    min={2}
-                                    max={100}
-                                    className="form-control"
-                                    value={this.majorSubdivisionVertical}
-                                    onChange={action((event: any) => {
-                                        this.majorSubdivisionVertical =
-                                            event.target.value;
-
-                                        const value = parseInt(
-                                            event.target.value
-                                        );
-
-                                        if (
-                                            isNaN(value) ||
-                                            value < 2 ||
-                                            value > 100
-                                        ) {
-                                        } else {
-                                            viewOptions.setAxesLinesMajorSubdivisionVertical(
-                                                value
-                                            );
-                                        }
-                                    })}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Minor</td>
-                            <td>
-                                <input
-                                    type="number"
-                                    min={2}
-                                    max={10}
-                                    className="form-control"
-                                    value={this.minorSubdivisionHorizontal}
-                                    onChange={action((event: any) => {
-                                        this.minorSubdivisionHorizontal =
-                                            event.target.value;
-
-                                        const value = parseInt(
-                                            event.target.value
-                                        );
-
-                                        if (
-                                            isNaN(value) ||
-                                            value < 2 ||
-                                            value > 10
-                                        ) {
-                                        } else {
-                                            viewOptions.setAxesLinesMinorSubdivisionHorizontal(
-                                                value
-                                            );
-                                        }
-                                    })}
-                                />
-                            </td>
-                            <td>by</td>
-                            <td>
-                                <input
-                                    type="number"
-                                    min={2}
-                                    max={10}
-                                    className="form-control"
-                                    value={this.minorSubdivisionVertical}
-                                    onChange={action((event: any) => {
-                                        this.minorSubdivisionVertical =
-                                            event.target.value;
-
-                                        const value = parseInt(
-                                            event.target.value
-                                        );
-
-                                        if (
-                                            isNaN(value) ||
-                                            value < 2 ||
-                                            value > 10
-                                        ) {
-                                        } else {
-                                            viewOptions.setAxesLinesMinorSubdivisionVertical(
-                                                value
-                                            );
-                                        }
-                                    })}
-                                />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface ChartViewOptionsProps {
-    showRenderAlgorithm: boolean;
-    showShowSampledDataOption: boolean;
-}
-
-@observer
-class ChartViewOptions extends React.Component<
-    ChartViewOptionsProps & {
-        chartsController: ChartsController;
-    }
-> {
-    render() {
-        const chartsController = this.props.chartsController;
-        const viewOptions = chartsController.viewOptions;
-
-        return (
-            <div className="EezStudio_ChartViewOptionsContainer">
-                <div>
-                    <div className="EezStudio_SideDockView_PropertyLabel">
-                        Axes lines subdivision:
-                    </div>
-                    <div className="EezStudio_SideDockView_Property">
-                        <Radio
-                            checked={viewOptions.axesLines.type === "dynamic"}
-                            onChange={action(() =>
-                                viewOptions.setAxesLinesType("dynamic")
-                            )}
-                        >
-                            Dynamic
-                        </Radio>
-                        {viewOptions.axesLines.type === "dynamic" && (
-                            <DynamicSubdivisionOptions
-                                chartsController={chartsController}
-                            />
-                        )}
-                        <Radio
-                            checked={viewOptions.axesLines.type === "fixed"}
-                            onChange={action(() =>
-                                viewOptions.setAxesLinesType("fixed")
-                            )}
-                        >
-                            Fixed
-                        </Radio>
-                        {viewOptions.axesLines.type === "fixed" && (
-                            <FixedSubdivisionOptions
-                                chartsController={chartsController}
-                            />
-                        )}
-                    </div>
-                    <div className="EezStudio_SideDockView_PropertyLabel">
-                        <Checkbox
-                            checked={viewOptions.axesLines.snapToGrid}
-                            onChange={action((checked: boolean) => {
-                                viewOptions.setAxesLinesSnapToGrid(checked);
-                            })}
-                        >
-                            Snap to grid
-                        </Checkbox>
-                    </div>
-                </div>
-                {this.props.showRenderAlgorithm && (
-                    <div>
-                        <div className="EezStudio_SideDockView_PropertyLabel">
-                            Rendering algorithm:
-                        </div>
-                        <div className="EezStudio_SideDockView_Property">
-                            <select
-                                className="form-control"
-                                title="Chart rendering algorithm"
-                                value={globalViewOptions.renderAlgorithm}
-                                onChange={action(
-                                    (
-                                        event: React.ChangeEvent<HTMLSelectElement>
-                                    ) =>
-                                        (globalViewOptions.renderAlgorithm =
-                                            event.target
-                                                .value as WaveformRenderAlgorithm)
-                                )}
-                            >
-                                <option value="avg">Average</option>
-                                <option value="minmax">Min-max</option>
-                                <option value="gradually">Gradually</option>
-                            </select>
-                        </div>
-                    </div>
-                )}
-                <div>
-                    <div>
-                        <Checkbox
-                            checked={viewOptions.showAxisLabels}
-                            onChange={action((checked: boolean) => {
-                                viewOptions.setShowAxisLabels(checked);
-                            })}
-                        >
-                            Show axis labels
-                        </Checkbox>
-                    </div>
-                    <div>
-                        <Checkbox
-                            checked={viewOptions.showZoomButtons}
-                            onChange={action((checked: boolean) => {
-                                viewOptions.setShowZoomButtons(checked);
-                            })}
-                        >
-                            Show zoom in/out buttons
-                        </Checkbox>
-                    </div>
-                    <div className="EezStudio_GlobalOptionsContainer">
-                        Global options:
-                    </div>
-                    <div>
-                        <Checkbox
-                            checked={globalViewOptions.enableZoomAnimations}
-                            onChange={action((checked: boolean) => {
-                                globalViewOptions.enableZoomAnimations =
-                                    checked;
-                            })}
-                        >
-                            Enable zoom in/out animations
-                        </Checkbox>
-                    </div>
-                    <div>
-                        <Checkbox
-                            checked={globalViewOptions.blackBackground}
-                            onChange={action((checked: boolean) => {
-                                globalViewOptions.blackBackground = checked;
-                            })}
-                        >
-                            Black background
-                        </Checkbox>
-                    </div>
-                    {this.props.showShowSampledDataOption && (
-                        <div>
-                            <Checkbox
-                                checked={globalViewOptions.showSampledData}
-                                onChange={action(
-                                    (checked: boolean) =>
-                                        (globalViewOptions.showSampledData =
-                                            checked)
-                                )}
-                            >
-                                Show sampled data
-                            </Checkbox>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface IWaveformLineController extends ILineController {
-    waveform: IWaveform;
-}
-
-interface WaveformLineViewProperties {
-    waveformLineController: IWaveformLineController;
-    label?: string;
-}
-
-@observer
-export class WaveformLineView extends React.Component<WaveformLineViewProperties> {
-    @observable waveformLineController = this.props.waveformLineController;
-
-    nextJob: IWaveformRenderJobSpecification | undefined;
-    canvas: HTMLCanvasElement | undefined;
-    @observable chartImage: string | undefined;
-    continuation: any;
-    requestAnimationFrameId: any;
-
-    @computed
-    get waveformRenderJobSpecification():
-        | IWaveformRenderJobSpecification
-        | undefined {
-        const yAxisController = this.waveformLineController.yAxisController;
-        const chartsController = yAxisController.chartsController;
-        const xAxisController = chartsController.xAxisController;
-        const waveform = this.waveformLineController.waveform;
-
-        if (chartsController.chartWidth < 1 || !waveform.length) {
-            return undefined;
-        }
-
-        return {
-            renderAlgorithm: globalViewOptions.renderAlgorithm,
-            waveform,
-            xAxisController,
-            yAxisController,
-            xFromValue: xAxisController.from,
-            xToValue: xAxisController.to,
-            yFromValue: yAxisController.from,
-            yToValue: yAxisController.to,
-            strokeColor: globalViewOptions.blackBackground
-                ? yAxisController.axisModel.color
-                : yAxisController.axisModel.colorInverse,
-            label:
-                yAxisController.chartController!.lineControllers.length > 1 &&
-                chartsController.mode !== "preview"
-                    ? this.props.label
-                    : undefined
-        };
-    }
-
-    @action
-    componentDidUpdate(prevProps: any) {
-        if (this.props != prevProps) {
-            this.waveformLineController = this.props.waveformLineController;
-        }
-        this.draw();
-    }
-
-    componentDidMount() {
-        this.draw();
-    }
-
-    @action.bound
-    drawStep() {
-        if (!this.canvas) {
-            const chartsController =
-                this.props.waveformLineController.yAxisController
-                    .chartsController;
-            this.canvas = document.createElement("canvas");
-            this.canvas.width = Math.floor(chartsController.chartWidth);
-            this.canvas.height = Math.floor(chartsController.chartHeight);
-        }
-
-        this.continuation = renderWaveformPath(
-            this.canvas,
-            this.nextJob!,
-            this.continuation
-        );
-        if (this.continuation) {
-            this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.drawStep
-            );
-        } else {
-            this.requestAnimationFrameId = undefined;
-            this.chartImage = this.canvas.toDataURL();
-            this.canvas = undefined;
-        }
-    }
-
-    draw() {
-        if (this.nextJob != this.waveformRenderJobSpecification) {
-            if (this.requestAnimationFrameId) {
-                window.cancelAnimationFrame(this.requestAnimationFrameId);
-                this.requestAnimationFrameId = undefined;
-            }
-
-            this.nextJob = this.waveformRenderJobSpecification;
-            this.continuation = undefined;
-            this.drawStep();
-        }
-    }
-
-    componentWillUnmount() {
-        if (this.requestAnimationFrameId) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
-        }
-    }
-
-    render() {
-        if (!this.waveformRenderJobSpecification) {
-            return null;
-        }
-        const chartsController =
-            this.props.waveformLineController.yAxisController.chartsController;
-
-        return (
-            <image
-                x={Math.floor(chartsController.chartLeft)}
-                y={Math.floor(chartsController.chartTop)}
-                width={Math.floor(chartsController.chartWidth)}
-                height={Math.floor(chartsController.chartHeight)}
-                href={this.chartImage}
-            />
         );
     }
 }

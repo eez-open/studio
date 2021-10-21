@@ -29,15 +29,12 @@ import {
     ChartMode,
     IAxisModel,
     LineController,
-    ChartView,
-    MouseHandler
+    IChartView,
+    MouseHandler,
+    IAxisController
 } from "eez-studio-ui/chart/chart";
-import {
-    globalViewOptions,
-    AxisController,
-    ChartsController,
-    ChartsView
-} from "eez-studio-ui/chart/chart";
+import { ChartsController, ChartsView } from "eez-studio-ui/chart/chart";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import {
     ButtonAction,
@@ -216,7 +213,7 @@ class TableListTimeAxisModel extends ListAxisModel {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TableLineController extends LineController {
-    constructor(public id: string, yAxisController: AxisController) {
+    constructor(public id: string, yAxisController: IAxisController) {
         super(id, yAxisController);
     }
 
@@ -1075,7 +1072,7 @@ class TableChartController extends ChartController {
     }
 
     onDragStart(
-        chartView: ChartView,
+        chartView: IChartView,
         event: PointerEvent
     ): MouseHandler | undefined {
         let point = this.chartView!.transformEventPoint(event);

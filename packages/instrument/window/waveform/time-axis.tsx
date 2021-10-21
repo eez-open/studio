@@ -1,8 +1,11 @@
 import { observable } from "mobx";
 
 import { IUnit } from "eez-studio-shared/units";
-import { IAxisModel, ZoomMode } from "eez-studio-ui/chart/chart";
-import { ChartsController } from "eez-studio-ui/chart/chart";
+import type {
+    IAxisModel,
+    ZoomMode,
+    IChartsController
+} from "eez-studio-ui/chart/chart";
 
 interface IWaveform {
     xAxisUnit: IUnit;
@@ -21,7 +24,7 @@ export class WaveformTimeAxisModel implements IAxisModel {
         public semiLogarithmic?: { a: number; b: number }
     ) {}
 
-    chartsController: ChartsController;
+    chartsController: IChartsController;
 
     get unit() {
         return this.waveform.xAxisUnit;

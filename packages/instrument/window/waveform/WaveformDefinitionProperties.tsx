@@ -9,7 +9,7 @@ import { makeValidator, validators } from "eez-studio-shared/validation";
 
 import { TextInputProperty, SelectProperty } from "eez-studio-ui/properties";
 
-import { WaveformFormat } from "eez-studio-ui/chart/chart";
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 import type { IWaveformDefinition } from "./generic";
 
 ////////////////////////////////////////////////////////////////////////////////

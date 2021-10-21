@@ -8,7 +8,7 @@ import {
     POWER_UNIT
 } from "eez-studio-shared/units";
 
-import {
+import type {
     IAxisModel,
     ZoomMode,
     IViewOptions,

@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
-import { ChartsController } from "eez-studio-ui/chart/chart";
+import type { IChartsController } from "eez-studio-ui/chart/chart";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -14,7 +14,7 @@ interface IWaveform {
 @observer
 export class WaveformToolbar extends React.Component<
     {
-        chartsController: ChartsController;
+        chartsController: IChartsController;
         waveform: IWaveform;
     },
     {}

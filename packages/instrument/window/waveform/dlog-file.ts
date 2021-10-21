@@ -1,4 +1,4 @@
-import { DataType } from "./DataType";
+import { DataType } from "eez-studio-ui/chart/DataType";
 
 export enum Unit {
     UNIT_UNKNOWN = 255,

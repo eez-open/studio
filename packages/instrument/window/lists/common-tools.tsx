@@ -2,7 +2,7 @@ import React from "react";
 import { observable, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { ChartsController } from "eez-studio-ui/chart/chart";
+import type { IChartsController } from "eez-studio-ui/chart/chart";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,7 @@ export type ChartsDisplayOption = "split" | "voltage" | "current" | "both";
 
 @observer
 export class CommonTools extends React.Component<
-    { chartsController: ChartsController },
+    { chartsController: IChartsController },
     {}
 > {
     @action

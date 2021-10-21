@@ -25,15 +25,18 @@ import {
     ChartMode,
     IAxisModel,
     LineController,
-    AxisController,
     ChartsController,
-    RulersModel,
+    IChartsController,
     MeasurementsModel,
-    initValuesAccesor,
-    WaveformFormat,
     getNearestValuePoint,
-    WaveformLineView
+    IAxisController,
+    IMeasurementsModel
 } from "eez-studio-ui/chart/chart";
+import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
+
+import { WaveformLineView } from "eez-studio-ui/chart/WaveformLineView";
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
+import { initValuesAccesor } from "eez-studio-ui/chart/value-accesor";
 import * as notification from "eez-studio-ui/notification";
 
 import { checkMime } from "instrument/connection/file-type";
@@ -429,17 +432,17 @@ export class Waveform extends FileHistoryItem {
     }
 
     viewOptions: ViewOptions;
-    rulers: RulersModel;
-    measurements: MeasurementsModel;
+    rulers: IRulersModel;
+    measurements: IMeasurementsModel;
 
     xAxisModel = new WaveformTimeAxisModel(this);
 
-    chartsController: ChartsController;
+    chartsController: IChartsController;
 
     createChartsController(
         displayOption: ChartsDisplayOption,
         mode: ChartMode
-    ): ChartsController {
+    ): IChartsController {
         if (
             this.chartsController &&
             this.chartsController.mode === mode &&
@@ -481,7 +484,7 @@ export class Waveform extends FileHistoryItem {
     }
 
     createChartController(
-        chartsController: ChartsController,
+        chartsController: IChartsController,
         id: string,
         axisModel: IAxisModel
     ) {
@@ -540,7 +543,7 @@ export class Waveform extends FileHistoryItem {
         }
     }
 
-    renderToolbar(chartsController: ChartsController): JSX.Element {
+    renderToolbar(chartsController: IChartsController): JSX.Element {
         return (
             <WaveformToolbar
                 chartsController={chartsController}
@@ -619,7 +622,7 @@ class WaveformLineController extends LineController {
     constructor(
         public id: string,
         public waveform: Waveform,
-        yAxisController: AxisController
+        yAxisController: IAxisController
     ) {
         super(id, yAxisController);
     }

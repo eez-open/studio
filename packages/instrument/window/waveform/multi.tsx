@@ -22,14 +22,15 @@ import {
     SelectFromListProperty
 } from "eez-studio-ui/properties";
 import { IListNode, ListItem } from "eez-studio-ui/list";
-import { ChartMode, IAxisModel } from "eez-studio-ui/chart/chart";
 import { Icon } from "eez-studio-ui/icon";
 
 import {
+    ChartMode,
+    IAxisModel,
     ChartsController,
-    RulersModel,
     MeasurementsModel
 } from "eez-studio-ui/chart/chart";
+import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
@@ -245,7 +246,7 @@ export class MultiWaveform extends HistoryItem {
 
     viewOptions: ViewOptions;
 
-    rulers: RulersModel;
+    rulers: IRulersModel;
 
     @computed get messageObject() {
         return JSON.parse(this.message);

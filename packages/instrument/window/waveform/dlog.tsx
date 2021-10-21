@@ -18,24 +18,27 @@ import { readBinaryFile } from "eez-studio-shared/util-electron";
 
 import {
     ChartController,
+    IChartController,
     ChartMode,
     IAxisModel,
     ZoomMode,
-    LineController
+    LineController,
+    IAxisController,
+    IMeasurementsModel
 } from "eez-studio-ui/chart/chart";
 import {
     AxisController,
     ChartsController,
-    RulersModel,
     MeasurementsModel,
     IWaveform,
-    WaveformFormat,
-    initValuesAccesor,
     getNearestValuePoint,
-    WaveformModel,
-    WaveformLineView,
-    DataType
+    WaveformModel
 } from "eez-studio-ui/chart/chart";
+import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
+import { WaveformLineView } from "eez-studio-ui/chart/WaveformLineView";
+import { DataType } from "eez-studio-ui/chart/DataType";
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
+import { initValuesAccesor } from "eez-studio-ui/chart/value-accesor";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
@@ -168,7 +171,7 @@ class DlogWaveformAxisModel implements IAxisModel {
 ////////////////////////////////////////////////////////////////////////////////
 
 class TransformedAxisController extends AxisController {
-    constructor(axisController: AxisController, from: number, to: number) {
+    constructor(axisController: IAxisController, from: number, to: number) {
         super(
             axisController.position,
             axisController.chartsController,
@@ -210,7 +213,7 @@ class DlogWaveformLineController extends LineController {
     constructor(
         public id: string,
         public dlogWaveform: DlogWaveform,
-        yAxisController: AxisController,
+        yAxisController: IAxisController,
         private channel: IChannel,
         values: any,
         dataOffset: number,
@@ -612,7 +615,7 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     createLineController(
-        chartController: ChartController,
+        chartController: IChartController,
 
         channel: IChannel,
 
@@ -738,8 +741,8 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     viewOptions: ViewOptions;
-    rulers: RulersModel;
-    measurements: MeasurementsModel;
+    rulers: IRulersModel;
+    measurements: IMeasurementsModel;
 
     @computed get xAxisModel() {
         return new WaveformTimeAxisModel(

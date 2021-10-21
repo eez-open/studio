@@ -4,11 +4,8 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { ChartMode } from "eez-studio-ui/chart/chart";
-import {
-    globalViewOptions,
-    ChartsController,
-    ChartsView
-} from "eez-studio-ui/chart/chart";
+import { IChartsController, ChartsView } from "eez-studio-ui/chart/chart";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
@@ -18,18 +15,18 @@ import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 
 export interface ChartData {
     isZoomable: boolean;
-    renderToolbar: (chartsController: ChartsController) => React.ReactNode;
+    renderToolbar: (chartsController: IChartsController) => React.ReactNode;
     createChartsController: (
         displayOption: ChartsDisplayOption,
         mode: ChartMode
-    ) => ChartsController;
+    ) => IChartsController;
 }
 
 export function createChartsController(
     chartData: ChartData,
     displayOption: ChartsDisplayOption,
     mode: ChartMode
-): ChartsController {
+): IChartsController {
     return chartData.createChartsController(displayOption, mode);
 }
 

@@ -21,22 +21,22 @@ import {
 } from "eez-studio-ui/header-with-body";
 import {
     ChartMode,
-    ChartView,
+    IChartView,
     ChartController,
-    getSnapToValue,
     IAxisModel,
     ICursor,
     LineController,
     ILineController,
-    MouseHandler
+    MouseHandler,
+    IAxisController,
+    IChartController
 } from "eez-studio-ui/chart/chart";
 import {
-    globalViewOptions,
-    AxisController,
     CONF_CURSOR_RADIUS,
     ChartsController,
     ChartsView
 } from "eez-studio-ui/chart/chart";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 import { showPopup } from "eez-studio-ui/popup";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import {
@@ -65,6 +65,7 @@ import {
     CommonTools
 } from "instrument/window/lists/common-tools";
 import { TableLineController } from "instrument/window/lists/table";
+import { getSnapToValue } from "eez-studio-ui/chart/rulers";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -626,7 +627,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
     cursor = "move";
 
     constructor(
-        public chartView: ChartView,
+        public chartView: IChartView,
         public valueIndex: number,
         public lineController: EnvelopeLineController
     ) {
@@ -1032,7 +1033,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
 }
 
 export class EnvelopeLineController extends LineController {
-    constructor(public id: string, yAxisController: AxisController) {
+    constructor(public id: string, yAxisController: IAxisController) {
         super(id, yAxisController);
     }
 
@@ -1141,7 +1142,7 @@ export class EnvelopeLineController extends LineController {
         cursor.addPoint = !cursor.error;
     }
 
-    addPoint(chartView: ChartView, cursor: ICursor): MouseHandler | undefined {
+    addPoint(chartView: IChartView, cursor: ICursor): MouseHandler | undefined {
         // add new value
         const value = {
             time: cursor.time,
@@ -1200,7 +1201,7 @@ export class EnvelopeLineController extends LineController {
     }
 
     onDragStart(
-        chartView: ChartView,
+        chartView: IChartView,
         event: PointerEvent
     ): MouseHandler | undefined {
         let valueIndex = parseInt(
@@ -1814,7 +1815,7 @@ class EnvelopeChartController extends ChartController {
 
 function getLineControllers(
     list: EnvelopeList,
-    axisController: AxisController
+    axisController: IAxisController
 ) {
     const lineControllers: ILineController[] = [];
 
@@ -1848,7 +1849,7 @@ export function createEnvelopeChartsController(
         list.data.timeAxisModel
     );
 
-    const charts: ChartController[] = [];
+    const charts: IChartController[] = [];
 
     if (displayOption === "both") {
         const chartController = new EnvelopeChartController(
