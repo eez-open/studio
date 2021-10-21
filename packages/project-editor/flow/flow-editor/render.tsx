@@ -153,29 +153,20 @@ export class ComponentCanvas extends React.Component<{
 }> {
     elRef = React.createRef<HTMLDivElement>();
 
+    canvas: HTMLCanvasElement;
+
     drawCanvas() {
         if (!this.elRef.current) {
             return;
         }
 
-        const { component, draw } = this.props;
-
-        let canvas: HTMLCanvasElement;
-
-        canvas = document.createElement("canvas");
-        canvas.width = component.width;
-        canvas.height = component.height;
-        canvas.style.imageRendering = "pixelated";
-        canvas.style.display = "block";
-        draw(canvas.getContext("2d")!);
-
         if (this.elRef.current.children[0]) {
             this.elRef.current.replaceChild(
-                canvas,
+                this.canvas,
                 this.elRef.current.children[0]
             );
         } else {
-            this.elRef.current.appendChild(canvas);
+            this.elRef.current.appendChild(this.canvas);
         }
     }
 
@@ -188,7 +179,14 @@ export class ComponentCanvas extends React.Component<{
     }
 
     render() {
-        const { component } = this.props;
+        const { component, draw } = this.props;
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = component.width;
+        this.canvas.height = component.height;
+        this.canvas.style.imageRendering = "pixelated";
+        this.canvas.style.display = "block";
+        draw(this.canvas.getContext("2d")!);
 
         return (
             <div
