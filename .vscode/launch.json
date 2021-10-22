@@ -2,10 +2,9 @@
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Main Process",
+            "name": "Electron: Main",
             "type": "node",
             "request": "launch",
             "cwd": "${workspaceRoot}",
@@ -13,18 +12,31 @@
             "windows": {
                 "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
             },
-            "args": ["."]
+            "args": ["--remote-debugging-port=9223", "."],
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**/*.js",
+                "${workspaceFolder}/libs/**/*.js"
+            ]
         },
         {
-            "name": "Debug Renderer Process",
+            "name": "Electron: Renderer",
             "type": "chrome",
-            "request": "launch",
-            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-            "windows": {
-                "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
-            },
-            "runtimeArgs": ["${workspaceRoot}", "--remote-debugging-port=9222"],
-            "webRoot": "${workspaceRoot}/src"
+            "request": "attach",
+            "port": 9223,
+            "webRoot": "${workspaceFolder}",
+            "timeout": 30000,
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**/*.js",
+                "${workspaceFolder}/libs/**/*.js"
+            ]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Electron: All",
+            "configurations": ["Electron: Main", "Electron: Renderer"]
         }
     ]
 }
