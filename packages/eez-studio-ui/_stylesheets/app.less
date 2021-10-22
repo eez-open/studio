@@ -310,8 +310,8 @@ input[type="color"] {
 }
 
 .EezStudio_IconAction {
-    color: @actionTextColor;
-    fill: @actionTextColor;
+    color: @selectionBackgroundColor;
+    fill: @selectionBackgroundColor;
     background: transparent;
     border: 1px solid transparent;
 
@@ -319,7 +319,7 @@ input[type="color"] {
 }
 
 .EezStudio_TextAction {
-    color: @actionTextColor;
+    color: @selectionBackgroundColor;
     background: transparent;
     border: none;
 }
@@ -2747,7 +2747,7 @@ button.EezStudio_Action {
             cursor: pointer;
             float: right;
             visibility: hidden;
-            color: @actionTextColor;
+            color: @selectionBackgroundColor;
             &:hover {
                 color: @actionHoverColor;
             }
@@ -3544,7 +3544,6 @@ button.EezStudio_Action {
         flex-direction: column;
 
         background-color: @componentBackgroundColor;
-        border: 1px solid @componentBackgroundColor;
         border-radius: 4px;
 
         box-shadow: @componentShadow;
@@ -3796,18 +3795,15 @@ button.EezStudio_Action {
         &.active {
             stroke: @activeConnectionLineColor;
             stroke-dasharray: 10;
-            animation: dash 10s linear infinite;
+            animation: dash 100000s linear infinite;
             marker-start: url(#activeLineStart);
             marker-end: url(#activeLineEnd);
         }
     }
 
     @keyframes dash {
-        from {
-            stroke-dashoffset: 0;
-        }
         to {
-            stroke-dashoffset: -600;
+            stroke-dashoffset: -12000000;
         }
     }
 }

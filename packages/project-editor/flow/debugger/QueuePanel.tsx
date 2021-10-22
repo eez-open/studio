@@ -81,16 +81,14 @@ export class QueuePanel extends React.Component<{
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             >
-                                <path
-                                    stroke="none"
-                                    d="M0 0h24v24H0z"
-                                    fill="none"
-                                ></path>
                                 <path d="M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5"></path>
                             </svg>
                         }
                         iconSize={18}
-                        style={{ marginTop: 4, color: "green" }}
+                        style={{
+                            marginTop: 4,
+                            color: this.props.runtime.isPaused ? "green" : ""
+                        }}
                         title="Restart"
                         onClick={
                             this.props.runtime.DocumentStore

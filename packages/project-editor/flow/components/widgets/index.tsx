@@ -1735,7 +1735,9 @@ export class TextWidget extends EmbeddedWidget {
         }
     });
 
-    getText(flowContext: IFlowContext): React.ReactNode {
+    getText(
+        flowContext: IFlowContext
+    ): { text: string; node: React.ReactNode } | string {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
             flowContext.DocumentStore.project.isAppletProject
@@ -1772,7 +1774,10 @@ export class TextWidget extends EmbeddedWidget {
                     }
                 } catch (err) {}
 
-                return <span className="expression">{this.data}</span>;
+                return {
+                    text: this.data,
+                    node: <span className="expression">{this.data}</span>
+                };
             }
 
             if (flowContext.flowState) {
@@ -1806,19 +1811,28 @@ export class TextWidget extends EmbeddedWidget {
     }
 
     render(flowContext: IFlowContext) {
-        const text = this.getText(flowContext);
+        const result = this.getText(flowContext);
+        let text: string;
+        let node: React.ReactNode | null;
+        if (typeof result == "string") {
+            text = result;
+            node = null;
+        } else {
+            text = result.text;
+            node = result.node;
+        }
 
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
-                    text
+                    node || text
                 ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
-                                typeof text == "string" ? text : "err!",
+                                text,
                                 0,
                                 0,
                                 this.width,
@@ -2639,6 +2653,7 @@ export class ButtonWidget extends EmbeddedWidget {
                     );
                 }
             }),
+            makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
         ],
 
@@ -2690,7 +2705,9 @@ export class ButtonWidget extends EmbeddedWidget {
         }
     });
 
-    getText(flowContext: IFlowContext): React.ReactNode {
+    getText(
+        flowContext: IFlowContext
+    ): { text: string; node: React.ReactNode } | string {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
             flowContext.DocumentStore.project.isAppletProject
@@ -2723,7 +2740,10 @@ export class ButtonWidget extends EmbeddedWidget {
                     }
                 } catch (err) {}
 
-                return <span className="expression">{this.data}</span>;
+                return {
+                    text: this.data,
+                    node: <span className="expression">{this.data}</span>
+                };
             }
 
             if (flowContext.flowState) {
@@ -2749,7 +2769,16 @@ export class ButtonWidget extends EmbeddedWidget {
     }
 
     render(flowContext: IFlowContext) {
-        const text = this.getText(flowContext);
+        const result = this.getText(flowContext);
+        let text: string;
+        let node: React.ReactNode | null;
+        if (typeof result == "string") {
+            text = result;
+            node = null;
+        } else {
+            text = result.text;
+            node = result.node;
+        }
 
         let buttonEnabled;
         if (flowContext.flowState) {
@@ -2786,7 +2815,7 @@ export class ButtonWidget extends EmbeddedWidget {
                             }
                         }}
                     >
-                        {text}
+                        {node || text}
                     </button>
                 ) : (
                     <ComponentCanvas
@@ -2794,7 +2823,7 @@ export class ButtonWidget extends EmbeddedWidget {
                         draw={(ctx: CanvasRenderingContext2D) => {
                             drawText(
                                 ctx,
-                                typeof text == "string" ? text : "err!",
+                                text,
                                 0,
                                 0,
                                 this.width,

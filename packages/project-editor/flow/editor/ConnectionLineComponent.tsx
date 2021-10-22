@@ -65,20 +65,26 @@ const VisiblePath = observer(
             connectionLine.input === "@seqin" &&
             !(connectionLine.targetComponent instanceof OutputActionComponent);
 
+        const active =
+            connectionLine.active && context.document.DocumentStore.runtime;
+
         return (
             <path
                 d={lineShape}
                 style={{
                     fill: "none",
                     strokeWidth: seq ? seqStrokeWidth : strokeWidth,
-                    strokeLinecap: "round"
+                    strokeLinecap: "round",
+                    strokeDashoffset: active
+                        ? Math.ceil(
+                              ((performance.now() / 1000) * 120) % 12000000
+                          ) * -1
+                        : undefined
                 }}
                 className={classNames("connection-line-path", {
                     selected,
                     seq,
-                    active:
-                        connectionLine.active &&
-                        context.document.DocumentStore.runtime
+                    active
                 })}
                 vectorEffect={selected ? "non-scaling-stroke" : "none"}
             ></path>
