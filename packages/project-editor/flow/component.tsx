@@ -2258,7 +2258,10 @@ function renderActionComponent(
                         </div>
                     )}
                     {body ? (
-                        <div className="eez-flow-editor-capture-pointers">
+                        <div
+                            className="eez-flow-editor-capture-pointers"
+                            style={{ width: "100%" }}
+                        >
                             {body}
                         </div>
                     ) : null}
