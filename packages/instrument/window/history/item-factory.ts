@@ -1,3 +1,4 @@
+import type { IStore } from "eez-studio-shared/store";
 import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import type * as FileTypeModule from "instrument/connection/file-type";
@@ -190,4 +191,14 @@ export function remapReferencedItemIds(
     }
 
     return item.message;
+}
+
+export function rowsToHistoryItems(store: IStore, rows: any[]) {
+    const historyItems: IHistoryItem[] = [];
+    rows.forEach(row => {
+        const activityLogEntry = store.dbRowToObject(row);
+        const historyItem = createHistoryItem(activityLogEntry);
+        historyItems.push(historyItem);
+    });
+    return historyItems;
 }

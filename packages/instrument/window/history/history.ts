@@ -28,6 +28,7 @@ import { HistorySessions } from "instrument/window/history/session/store";
 import type { IHistoryItem } from "instrument/window/history/item";
 import {
     createHistoryItem,
+    rowsToHistoryItems,
     updateHistoryItemClass
 } from "instrument/window/history/item-factory";
 import {
@@ -1119,13 +1120,7 @@ export class History {
     }
 
     rowsToHistoryItems(rows: any[]) {
-        const historyItems: IHistoryItem[] = [];
-        rows.forEach(row => {
-            const activityLogEntry = this.options.store.dbRowToObject(row);
-            const historyItem = createHistoryItem(activityLogEntry);
-            historyItems.push(historyItem);
-        });
-        return historyItems;
+        return rowsToHistoryItems(this.options.store, rows);
     }
 
     @action

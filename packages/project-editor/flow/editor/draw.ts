@@ -337,9 +337,7 @@ export function drawText(
 
     try {
         text = JSON.parse('"' + text + '"');
-    } catch (e) {
-        console.log(e, text);
-    }
+    } catch (e) {}
 
     let width = measureStr(text, font, 0);
     let height = font.height;

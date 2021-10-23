@@ -14,7 +14,10 @@ import { error } from "eez-studio-ui/notification";
 
 import type { History } from "instrument/window/history/history";
 import { CONF_ITEMS_BLOCK_SIZE } from "instrument/window/history/CONF_ITEMS_BLOCK_SIZE";
-import { createHistoryItem } from "instrument/window/history/item-factory";
+import {
+    createHistoryItem,
+    rowsToHistoryItems
+} from "instrument/window/history/item-factory";
 import { moveToTopOfHistory } from "instrument/window/history/history-view";
 
 import type { SessionHistoryItem } from "instrument/window/history/items/session";
@@ -71,13 +74,13 @@ export class HistorySessions {
                     id,
                     ${activityLogStore.nonTransientAndNonLazyProperties}
                 FROM
-                    ${this.history.table} AS T3
+                    "${activityLogStore.storeName}" AS T3
                 WHERE
                     type = 'activity-log/session-start' AND
                     (
                         json_extract(message, '$.sessionCloseId') IS NULL OR
                         EXISTS(
-                            SELECT * FROM ${this.history.table} AS T1
+                            SELECT * FROM ${activityLogStore.storeName} AS T1
                             WHERE ${this.history.oidWhereClause} AND T1.sid = T3.id
                         )
                     )
@@ -86,13 +89,13 @@ export class HistorySessions {
         ).all();
 
         runInAction(() => {
-            this.sessions = this.history
-                .rowsToHistoryItems(rows)
-                .map(activityLogEntry => ({
+            this.sessions = rowsToHistoryItems(activityLogStore, rows).map(
+                activityLogEntry => ({
                     selected: false,
                     id: activityLogEntry.id,
                     activityLogEntry
-                }));
+                })
+            );
         });
     }
 
@@ -116,7 +119,7 @@ export class HistorySessions {
                             SELECT
                                 *
                             FROM
-                                ${this.history.table} as T1
+                            ${activityLogStore.storeName} as T1
                             WHERE
                                 ${
                                     this.history.oidWhereClause
