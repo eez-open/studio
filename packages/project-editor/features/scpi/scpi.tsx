@@ -25,7 +25,7 @@ import {
     propertyNotFoundMessage
 } from "project-editor/core/store";
 
-import {
+import type {
     IParameterType,
     IParameterTypeType,
     IResponseType,

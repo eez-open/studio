@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, computed, action, runInAction, ObservableMap } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -15,14 +15,13 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { IListNode, ListItem } from "eez-studio-ui/list";
 import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";
 
-import { InstrumentObject, instruments } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 
 import {
     ActionComponent,
     ComponentOutput,
     makeExpressionProperty
 } from "project-editor/flow/component";
-import { getConnection } from "instrument/window/connection";
 import { FlowState } from "project-editor/flow//runtime";
 import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
@@ -1038,6 +1037,8 @@ export class SCPIActionComponent extends ActionComponent {
             });
         }
 
+        const { getConnection } = await import("instrument/window/connection");
+
         const connection = getConnection(editor);
         if (!connection || !connection.isConnected) {
             throw "instrument not connected";
@@ -1161,6 +1162,7 @@ registerClass("SCPIActionComponent", SCPIActionComponent);
 export class SelectInstrumentDialog extends React.Component<
     {
         name?: string;
+        instruments: ObservableMap<string, InstrumentObject>;
         instrument?: InstrumentObject;
         callback: (instrument: InstrumentObject | undefined) => void;
     },
@@ -1201,7 +1203,7 @@ export class SelectInstrumentDialog extends React.Component<
     get instrumentNodes() {
         const instrumentObjects = [];
 
-        for (let [_, instrument] of instruments) {
+        for (let [_, instrument] of this.props.instruments) {
             instrumentObjects.push(instrument);
         }
 
@@ -1259,14 +1261,17 @@ export class SelectInstrumentDialog extends React.Component<
     }
 }
 
-export function showSelectInstrumentDialog(
+export async function showSelectInstrumentDialog(
     name?: string,
     instrument?: InstrumentObject
 ) {
+    const { instruments } = await import("instrument/instrument-object");
+
     return new Promise<InstrumentObject | undefined>(resolve =>
         showDialog(
             <SelectInstrumentDialog
                 name={name}
+                instruments={instruments}
                 instrument={instrument}
                 callback={instrument => {
                     resolve(instrument);
@@ -1326,9 +1331,11 @@ export class SelectInstrumentActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
+        const { instruments } = await import("instrument/instrument-object");
         await new Promise<void>(resolve => {
             showDialog(
                 <SelectInstrumentDialog
+                    instruments={instruments}
                     callback={instrument => {
                         if (instrument) {
                             flowState.runtime.propagateValue(
@@ -1407,6 +1414,7 @@ export class GetInstrumentActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         const id = flowState.evalExpression(this, "id");
+        const { instruments } = await import("instrument/instrument-object");
         const instrument = instruments.get(id);
         flowState.runtime.propagateValue(
             flowState,
@@ -1502,6 +1510,7 @@ async function connectToInstrument(instrument: InstrumentObject) {
     instrument.connection.connect();
     const editor = instrument.getEditor();
     editor.onCreate();
+    const { getConnection } = await import("instrument/window/connection");
     const connection = getConnection(editor);
     if (connection) {
         for (let i = 0; i < 100; i++) {
@@ -1531,6 +1540,9 @@ export class InstrumentVariableType extends ObjectType {
         },
         onObjectVariableLoad: async (value: any) => {
             if (typeof value == "string") {
+                const { instruments } = await import(
+                    "instrument/instrument-object"
+                );
                 const instrument = instruments.get(value);
                 if (instrument) {
                     await connectToInstrument(instrument);

@@ -2,10 +2,7 @@ import { toJS } from "mobx";
 
 import { makeFolder } from "eez-studio-shared/util-electron";
 
-import {
-    buildInstrumentExtension,
-    IdfProperties as InstrumentIdfProperties
-} from "instrument/export";
+import type { IdfProperties as InstrumentIdfProperties } from "instrument/export";
 import { getProperty, MessageType } from "project-editor/core/object";
 import { objectToJS, Section } from "project-editor/core/store";
 import type { DocumentStoreClass } from "project-editor/core/store";
@@ -138,6 +135,10 @@ export async function extensionDefinitionBuild(
             const scpi = DocumentStore.project.scpi;
             const subsystems = objectToJS(scpi.subsystems);
             const enums = objectToJS(scpi.enums);
+
+            const { buildInstrumentExtension } = await import(
+                "instrument/export"
+            );
 
             await buildInstrumentExtension(
                 instrumentIdf,

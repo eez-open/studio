@@ -2,9 +2,11 @@ import type { Socket } from "net";
 
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import * as notification from "eez-studio-ui/notification";
-import { Connection, getConnection } from "instrument/window/connection";
-import { InstrumentObject } from "instrument/instrument-object";
-import { ConnectionParameters } from "instrument/connection/interface";
+
+import type { Connection } from "instrument/window/connection";
+import type { InstrumentObject } from "instrument/instrument-object";
+import type { ConnectionParameters } from "instrument/connection/interface";
+
 import { AssetsMap } from "project-editor/features/page/build/assets";
 import { action, observable, runInAction } from "mobx";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
@@ -128,6 +130,7 @@ export class RemoteRuntime extends RuntimeBase {
 
         //await new Promise<void>(resolve => setTimeout(resolve, 1000));
 
+        const { getConnection } = await import("instrument/window/connection");
         const connection = getConnection(editor);
 
         if (connection) {
