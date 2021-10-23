@@ -13,7 +13,6 @@ import {
     CURRENT_UNIT
 } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
-
 import { validators } from "eez-studio-shared/validation";
 
 import { theme } from "eez-studio-ui/theme";
@@ -43,20 +42,13 @@ import {
 } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { InstrumentObject } from "instrument/instrument-object";
-
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { IAppStore } from "instrument/window/history/history";
 
 import {
     BaseList,
     BaseListData,
-    ListAxisModel /*,
-    checkVoltage,
-    getMaxVoltage,
-    checkCurrent,
-    getMaxCurrent,
-    checkPower,
-    getPowerLimitErrorMessage*/
+    ChartViewOptions,
+    ListAxisModel
 } from "instrument/window/lists/store-renderer";
 import {
     displayOption,
@@ -81,14 +73,12 @@ export class TableListData extends BaseListData {
     @observable voltage: number[];
     @observable current: number[];
 
-    constructor(list: BaseList, props: any) {
+    constructor(list: BaseList, props: Partial<TableListData>) {
         super(list, props);
 
         this.dwell = props.dwell || TABLE_LIST_DATA_DEFAULTS.dwell;
         this.voltage = props.voltage || TABLE_LIST_DATA_DEFAULTS.voltage;
         this.current = props.current || TABLE_LIST_DATA_DEFAULTS.current;
-
-        this.timeAxisModel = new TableListTimeAxisModel(list as TableList);
     }
 
     toJS() {
@@ -118,14 +108,9 @@ export class TableListData extends BaseListData {
 
 export class TableList extends BaseList {
     @observable data: TableListData;
-    isZoomable = false;
 
-    constructor(
-        props: any,
-        appStore: InstrumentAppStore,
-        instrument: InstrumentObject
-    ) {
-        super(props, appStore, instrument);
+    constructor(props: any) {
+        super(props);
         this.type = "table";
         this.data = new TableListData(this, props.data);
     }
@@ -136,14 +121,6 @@ export class TableList extends BaseList {
             this.data.dwell.length,
             this.data.current.length,
             this.data.voltage.length
-        );
-    }
-
-    @computed
-    get isMaxPointsReached() {
-        return (
-            this.numPoints >=
-            this.$eez_noser_appStore.instrument!.listsMaxPointsProperty
         );
     }
 
@@ -160,22 +137,15 @@ export class TableList extends BaseList {
     }
 
     createChartsController(
+        appStore: IAppStore,
         displayOption: ChartsDisplayOption,
         mode: ChartMode
     ): ChartsController {
-        return createTableChartsController(this, displayOption, mode);
+        return createTableChartsController(appStore, this, displayOption, mode);
     }
 
-    renderDetailsView() {
-        return <TableDetailsView list={this} />;
-    }
-
-    get tableListData() {
-        return this.data;
-    }
-
-    renderToolbar(chartsController: ChartsController): React.ReactNode {
-        return null;
+    renderDetailsView(appStore: IAppStore): React.ReactNode {
+        return <TableDetailsView appStore={appStore} list={this} />;
     }
 }
 
@@ -195,25 +165,12 @@ const selectedCell = observable<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TableListTimeAxisModel extends ListAxisModel {
-    constructor(public $eez_noser_list: TableList) {
-        super($eez_noser_list, TIME_UNIT_NO_CUSTOM_FORMAT);
-    }
-
-    get minValue() {
-        return 0;
-    }
-
-    @computed
-    get maxValue() {
-        return this.$eez_noser_list.getMaxTime();
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class TableLineController extends LineController {
-    constructor(public id: string, yAxisController: IAxisController) {
+    constructor(
+        appStore: IAppStore,
+        public id: string,
+        yAxisController: IAxisController
+    ) {
         super(id, yAxisController);
     }
 
@@ -224,7 +181,7 @@ export class TableLineController extends LineController {
 
     @computed
     get tableData() {
-        return this.list.tableListData;
+        return this.list.data;
     }
 
     @computed
@@ -337,6 +294,7 @@ export class TableLineView extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 function executeCommand(
+    appStore: IAppStore,
     list: TableList,
     modificator: (data: TableListData) => void
 ) {
@@ -347,9 +305,9 @@ function executeCommand(
         modificator(newData);
     });
 
-    list.$eez_noser_appStore.undoManager.addCommand(
+    appStore.undoManager!.addCommand(
         "Edit table list",
-        list.$eez_noser_appStore.instrumentListStore,
+        appStore.instrumentListStore!,
         list,
         {
             execute: action(() => {
@@ -372,10 +330,10 @@ function cellKeyFromUnit(unit: IUnit): CellKey {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class TableChartsHeader extends React.Component<
-    { chartsController: ChartsController },
-    {}
-> {
+class TableChartsHeader extends React.Component<{
+    appStore: IAppStore;
+    chartsController: ChartsController;
+}> {
     get list() {
         return (this.props.chartsController as TableChartsController).list;
     }
@@ -391,7 +349,7 @@ class TableChartsHeader extends React.Component<
                             validators.required,
                             validators.unique(
                                 this.list,
-                                this.list.$eez_noser_appStore.instrumentLists
+                                this.props.appStore.instrumentLists!
                             )
                         ]
                     },
@@ -417,9 +375,9 @@ class TableChartsHeader extends React.Component<
                 const newDescription = result.values.description;
 
                 if (oldName !== newName || oldDescription !== newDescription) {
-                    list.$eez_noser_appStore.undoManager.addCommand(
+                    this.props.appStore.undoManager!.addCommand(
                         "Edit envelope list",
-                        this.list.$eez_noser_appStore.instrumentListStore,
+                        this.props.appStore.instrumentListStore!,
                         list,
                         {
                             execute: action(() => {
@@ -603,6 +561,7 @@ class Cell extends React.Component<CellProps, {}> {
 @observer
 export class Table extends React.Component<
     {
+        appStore: IAppStore;
         list: TableList;
         className?: string;
         onCellFocus: (index: number, key: CellKey) => void;
@@ -618,8 +577,16 @@ export class Table extends React.Component<
     }
 
     @computed
+    get isMaxPointsReached() {
+        return (
+            this.props.list.numPoints >=
+            this.props.appStore.instrument!.listsMaxPointsProperty
+        );
+    }
+
+    @computed
     get numRows() {
-        return this.props.list.isMaxPointsReached
+        return this.isMaxPointsReached
             ? this.props.list.numPoints
             : this.props.list.numPoints + 1;
     }
@@ -647,56 +614,7 @@ export class Table extends React.Component<
             }
 
             if (key === "voltage" || key === "current") {
-                // let power;
-                // if (key === "voltage") {
-                //     if (!checkVoltage(numValue, this.props.list.$eez_noser_instrument)) {
-                //         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                //         this.props.setError(
-                //             `Allowed range: 0 - ${unit.formatValue(
-                //                 getMaxVoltage(this.props.list.$eez_noser_instrument)
-                //             )}`
-                //         );
-                //         return;
-                //     }
-                //     power = numValue * this.props.list.data.current[index];
-                // } else {
-                //     if (!checkCurrent(numValue, this.props.list.$eez_noser_instrument)) {
-                //         $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                //         this.props.setError(
-                //             `Allowed range: 0 - ${unit.formatValue(
-                //                 getMaxCurrent(this.props.list.$eez_noser_instrument)
-                //             )}`
-                //         );
-                //         return;
-                //     }
-                //     power = numValue * this.props.list.data.voltage[index];
-                // }
-                // if (!checkPower(power, this.props.list.$eez_noser_instrument)) {
-                //     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                //     this.props.setError(
-                //         getPowerLimitErrorMessage(this.props.list.$eez_noser_instrument)
-                //     );
-                //     return;
-                // }
             } else {
-                // const minDwell = this.props.list.$eez_noser_appStore.instrument!
-                //     .listsMinDwellProperty;
-                // const maxDwell = this.props.list.$eez_noser_appStore.instrument!
-                //     .listsMaxDwellProperty;
-                // if (numValue < minDwell || numValue > maxDwell) {
-                //     $(`.EezStudio_TableListEditor_Cell_${index}_${key}`).focus();
-                //     this.props.setError(
-                //         `Allowed range: ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
-                //             minDwell,
-                //             this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
-                //         )} - ${TIME_UNIT_NO_CUSTOM_FORMAT.formatValue(
-                //             maxDwell,
-                //             this.props.list.$eez_noser_appStore.instrument!.getDigits(TIME_UNIT)
-                //         )}`
-                //     );
-                //     return;
-                // }
-
                 if (numValue <= 0) {
                     $(
                         `.EezStudio_TableListEditor_Cell_${index}_${key}`
@@ -706,7 +624,7 @@ export class Table extends React.Component<
                 }
             }
 
-            executeCommand(this.props.list, data => {
+            executeCommand(this.props.appStore, this.props.list, data => {
                 let array: any = data[key];
                 if (!array) {
                     array = [];
@@ -786,20 +704,17 @@ export class Table extends React.Component<
     }
 }
 
-interface TableDetailsViewProps {
-    list: TableList;
-}
-
 @observer
-export class TableDetailsView extends React.Component<
-    TableDetailsViewProps,
-    {}
-> {
+export class TableDetailsView extends React.Component<{
+    appStore: IAppStore;
+    list: TableList;
+}> {
     @observable list: TableList = this.props.list;
 
     @computed
     get chartsController() {
         return createTableChartsController(
+            this.props.appStore,
             this.list,
             displayOption.get() as ChartsDisplayOption,
             "editable"
@@ -823,8 +738,16 @@ export class TableDetailsView extends React.Component<
         return selectedCell.index === this.props.list.numPoints;
     }
 
+    @computed
+    get isMaxPointsReached() {
+        return (
+            this.props.list.numPoints >=
+            this.props.appStore.instrument!.listsMaxPointsProperty
+        );
+    }
+
     get canInsertRowAbove() {
-        return !this.list.isMaxPointsReached && !this.isLastRow;
+        return !this.isMaxPointsReached && !this.isLastRow;
     }
 
     insertRowAbove = () => {
@@ -832,7 +755,7 @@ export class TableDetailsView extends React.Component<
             const index = selectedCell.index;
             const key = selectedCell.key;
 
-            executeCommand(this.props.list, data => {
+            executeCommand(this.props.appStore, this.props.list, data => {
                 data.dwell.splice(index, 0, data.dwell[index]);
                 data.voltage.splice(index, 0, data.voltage[index]);
                 data.current.splice(index, 0, data.current[index]);
@@ -845,7 +768,7 @@ export class TableDetailsView extends React.Component<
     };
 
     get canInsertRowBelow() {
-        return !this.list.isMaxPointsReached && !this.isLastRow;
+        return !this.isMaxPointsReached && !this.isLastRow;
     }
 
     insertRowBelow = () => {
@@ -853,7 +776,7 @@ export class TableDetailsView extends React.Component<
             const index = selectedCell.index;
             const key = selectedCell.key;
 
-            executeCommand(this.props.list, data => {
+            executeCommand(this.props.appStore, this.props.list, data => {
                 data.dwell.splice(index + 1, 0, data.dwell[index]);
                 data.voltage.splice(index + 1, 0, data.voltage[index]);
                 data.current.splice(index + 1, 0, data.current[index]);
@@ -876,7 +799,7 @@ export class TableDetailsView extends React.Component<
             const index = selectedCell.index;
             const key = selectedCell.key;
 
-            executeCommand(this.props.list, data => {
+            executeCommand(this.props.appStore, this.props.list, data => {
                 data.dwell.splice(index, 1);
                 data.voltage.splice(index, 1);
                 data.current.splice(index, 1);
@@ -899,7 +822,7 @@ export class TableDetailsView extends React.Component<
             const index = selectedCell.index;
             const key = selectedCell.key;
 
-            executeCommand(this.props.list, data => {
+            executeCommand(this.props.appStore, this.props.list, data => {
                 data[key].splice(index, data[key].length - index);
             });
 
@@ -918,7 +841,7 @@ export class TableDetailsView extends React.Component<
             const index = selectedCell.index;
             const key = selectedCell.key;
 
-            executeCommand(this.props.list, data => {
+            executeCommand(this.props.appStore, this.props.list, data => {
                 data.dwell.splice(index, data.dwell.length - index);
                 data.voltage.splice(index, data.voltage.length - index);
                 data.current.splice(index, data.current.length - index);
@@ -938,7 +861,7 @@ export class TableDetailsView extends React.Component<
         if (this.canDeleteAll) {
             const key = selectedCell.key;
 
-            executeCommand(this.props.list, data => {
+            executeCommand(this.props.appStore, this.props.list, data => {
                 data.dwell = [];
                 data.voltage = [];
                 data.current = [];
@@ -968,6 +891,7 @@ export class TableDetailsView extends React.Component<
             >
                 <VerticalHeaderWithBody>
                     <TableChartsHeader
+                        appStore={this.props.appStore}
                         chartsController={this.chartsController}
                     />
                     <Body>
@@ -1021,7 +945,7 @@ export class TableDetailsView extends React.Component<
                                 onClick={this.deleteAll}
                             />
                         </DropdownButtonAction>
-                        {this.list.isMaxPointsReached && (
+                        {this.isMaxPointsReached && (
                             <div className="text-success">
                                 Max no. of points reached.
                             </div>
@@ -1030,6 +954,7 @@ export class TableDetailsView extends React.Component<
                     </ToolbarHeader>
                     <Body className="EezStudio_TableListEditorBody">
                         <Table
+                            appStore={this.props.appStore}
                             className="EezStudio_TableListEditorTable"
                             list={list}
                             onCellFocus={this.onCellFocus}
@@ -1046,11 +971,12 @@ export class TableDetailsView extends React.Component<
 
 class TableChartsController extends ChartsController {
     constructor(
+        appStore: IAppStore,
         public list: TableList,
         mode: ChartMode,
         xAxisModel: IAxisModel
     ) {
-        super(mode, xAxisModel, list.data.viewOptions);
+        super(mode, xAxisModel, new ChartViewOptions(appStore, list));
     }
 
     get chartViewOptionsProps() {
@@ -1158,14 +1084,16 @@ class TableChartController extends ChartController {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createTableChartsController(
+    appStore: IAppStore,
     list: TableList,
     displayOption: ChartsDisplayOption,
     mode: ChartMode
 ) {
     const chartsController = new TableChartsController(
+        appStore,
         list,
         mode,
-        list.data.timeAxisModel
+        new ListAxisModel(appStore, list, TIME_UNIT_NO_CUSTOM_FORMAT)
     );
 
     const charts: ChartController[] = [];
@@ -1176,13 +1104,16 @@ export function createTableChartsController(
             displayOption
         );
 
-        chartController.createYAxisController(list.data.voltageAxisModel);
+        chartController.createYAxisController(
+            new ListAxisModel(appStore, list, VOLTAGE_UNIT)
+        );
         chartController.createYAxisControllerOnRightSide(
-            list.data.currentAxisModel
+            new ListAxisModel(appStore, list, CURRENT_UNIT)
         );
 
         chartController.lineControllers.push(
             new TableLineController(
+                appStore,
                 "envelope-sample-data-" +
                     chartController.yAxisController.position,
                 chartController.yAxisController
@@ -1190,6 +1121,7 @@ export function createTableChartsController(
         );
         chartController.lineControllers.push(
             new TableLineController(
+                appStore,
                 "envelope-sample-data-" +
                     chartController.yAxisControllerOnRightSide!.position,
                 chartController.yAxisControllerOnRightSide!
@@ -1203,9 +1135,12 @@ export function createTableChartsController(
                 chartsController,
                 "voltage"
             );
-            chartController.createYAxisController(list.data.voltageAxisModel);
+            chartController.createYAxisController(
+                new ListAxisModel(appStore, list, VOLTAGE_UNIT)
+            );
             chartController.lineControllers.push(
                 new TableLineController(
+                    appStore,
                     "envelope-sample-data-" +
                         chartController.yAxisController.position,
                     chartController.yAxisController
@@ -1219,9 +1154,12 @@ export function createTableChartsController(
                 chartsController,
                 "current"
             );
-            chartController.createYAxisController(list.data.currentAxisModel);
+            chartController.createYAxisController(
+                new ListAxisModel(appStore, list, CURRENT_UNIT)
+            );
             chartController.lineControllers.push(
                 new TableLineController(
+                    appStore,
                     "envelope-sample-data-" +
                         chartController.yAxisController.position,
                     chartController.yAxisController

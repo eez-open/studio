@@ -21,7 +21,7 @@ export interface IHistoryItem {
     data: string;
     deleted: boolean;
     selected: boolean;
-    listItemElement: JSX.Element | null;
+    getListItemElement(appStore: IAppStore): React.ReactNode;
     canBePartOfMultiChart: boolean;
 }
 
@@ -108,7 +108,7 @@ export class HistoryItem implements IHistoryItem {
         return <div className="plain-text">{text}</div>;
     }
 
-    get listItemElement(): JSX.Element | null {
+    getListItemElement(appStore: IAppStore): React.ReactNode {
         return null;
     }
 

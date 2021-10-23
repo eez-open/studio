@@ -49,9 +49,10 @@ import { FileHistoryItem } from "instrument/window/history/items/file";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
-import { ViewOptions } from "./ViewOptions";
-import { WaveformAxisModel } from "./WaveformAxisModel";
-import { WaveformDefinitionProperties } from "./WaveformDefinitionProperties";
+import { ViewOptions } from "instrument/window/waveform/ViewOptions";
+import { WaveformAxisModel } from "instrument/window/waveform/WaveformAxisModel";
+import { WaveformDefinitionProperties } from "instrument/window/waveform/WaveformDefinitionProperties";
+import type { IAppStore } from "instrument/window/history/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -440,6 +441,7 @@ export class Waveform extends FileHistoryItem {
     chartsController: IChartsController;
 
     createChartsController(
+        appStore: IAppStore,
         displayOption: ChartsDisplayOption,
         mode: ChartMode
     ): IChartsController {
@@ -601,8 +603,8 @@ export class Waveform extends FileHistoryItem {
     }
 
     @computed
-    get previewElement() {
-        return <ChartPreview data={this} />;
+    getPreviewElement(appStore: IAppStore) {
+        return <ChartPreview appStore={appStore} data={this} />;
     }
 
     get valueUnit() {

@@ -1,13 +1,11 @@
-import {
+import type {
     IListType,
     BaseListData
 } from "instrument/window/lists/store-renderer";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
-
-import { HistoryItem } from "instrument/window/history/item";
+import type { HistoryItem } from "instrument/window/history/item";
 
 import {
     createEmptyTableListData,
@@ -33,29 +31,17 @@ export function createEmptyListData(
     }
 }
 
-export function createTableListFromData(
-    data: TableListData,
-    appStore: InstrumentAppStore,
-    instrument: InstrumentObject
-) {
-    return new TableList(
-        {
-            id: "",
-            name: "",
-            description: "",
-            type: "table",
-            data: data
-        },
-        appStore,
-        instrument
-    );
+export function createTableListFromData(data: TableListData) {
+    return new TableList({
+        id: "",
+        name: "",
+        description: "",
+        type: "table",
+        data: data
+    });
 }
 
-export function createTableListFromHistoryItem(
-    historyItem: HistoryItem,
-    appStore: InstrumentAppStore,
-    instrument: InstrumentObject
-) {
+export function createTableListFromHistoryItem(historyItem: HistoryItem) {
     const tableData: {
         dwell: number[];
         voltage: number[];
@@ -88,17 +74,13 @@ export function createTableListFromHistoryItem(
         }
     }
 
-    return createTableListFromData(tableData as any, appStore, instrument);
+    return createTableListFromData(tableData as any);
 }
 
-export function createListObject(
-    props: any,
-    appStore: InstrumentAppStore,
-    instrument: InstrumentObject
-) {
+export function createListObject(props: any) {
     if (props.type === "table") {
-        return new TableList(props, appStore, instrument);
+        return new TableList(props);
     } else {
-        return new EnvelopeList(props, appStore, instrument);
+        return new EnvelopeList(props);
     }
 }

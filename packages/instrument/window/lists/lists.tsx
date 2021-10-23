@@ -12,7 +12,6 @@ import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { _range } from "eez-studio-shared/algorithm";
 import { formatDateTimeLong } from "eez-studio-shared/util";
-
 import { validators } from "eez-studio-shared/validation";
 
 import { Icon } from "eez-studio-ui/icon";
@@ -29,7 +28,6 @@ import { error, confirm } from "eez-studio-ui/dialog-electron";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import * as notification from "eez-studio-ui/notification";
 import { PropertyList, NumberInputProperty } from "eez-studio-ui/properties";
-// import { SelectProperty } from "eez-studio-ui/properties";
 import { Header } from "eez-studio-ui/header-with-body";
 
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";
@@ -39,7 +37,9 @@ import { getList, sendList } from "instrument/connection/list-operations";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 
-import {
+import type { IAppStore } from "instrument/window/history/history";
+
+import type {
     BaseList,
     ITableListData
 } from "instrument/window/lists/store-renderer";
@@ -47,6 +47,7 @@ import {
     createEmptyListData,
     createTableListFromData
 } from "instrument/window/lists/factory";
+import { getTableListData } from "instrument/window/lists/table-data";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -215,10 +216,10 @@ class MasterView extends React.Component<
 }
 
 @observer
-export class DetailsView extends React.Component<
-    { list: BaseList | undefined },
-    {}
-> {
+export class DetailsView extends React.Component<{
+    appStore: IAppStore;
+    list: BaseList | undefined;
+}> {
     render() {
         const { list } = this.props;
 
@@ -242,7 +243,9 @@ export class DetailsView extends React.Component<
                         )}
                     </Header>
                 )}
-                <Body>{list && list.renderDetailsView()}</Body>
+                <Body>
+                    {list && list.renderDetailsView(this.props.appStore)}
+                </Body>
             </VerticalHeaderWithBody>
         );
     }
@@ -277,7 +280,10 @@ export class ListsEditor extends React.Component<
                         )
                     )}
                 />
-                <DetailsView list={this.selectedList} />
+                <DetailsView
+                    appStore={this.props.appStore}
+                    list={this.selectedList}
+                />
             </Splitter>
         );
     }
@@ -476,11 +482,7 @@ export class ListsButtons extends React.Component<
                 }
             })
                 .then(async result => {
-                    let list = createTableListFromData(
-                        data,
-                        this.props.appStore,
-                        this.props.appStore.instrument!
-                    );
+                    let list = createTableListFromData(data);
                     list.name = result.values.name;
                     list.description = result.values.description;
 
@@ -513,7 +515,10 @@ export class ListsButtons extends React.Component<
             saveTableListData(
                 this.props.appStore.instrument!,
                 this.selectedList.name,
-                this.selectedList.tableListData
+                getTableListData(
+                    this.selectedList,
+                    this.props.appStore.instrument!
+                )
             );
         }
     };
@@ -544,11 +549,7 @@ export class ListsButtons extends React.Component<
         }
 
         const tableListData = Object.assign({}, listData[0]);
-        const tableList = createTableListFromData(
-            tableListData,
-            this.props.appStore,
-            this.props.appStore.instrument!
-        );
+        const tableList = createTableListFromData(tableListData);
 
         showGenericDialog({
             dialogDefinition: {
@@ -627,7 +628,10 @@ export class ListsButtons extends React.Component<
                 "Send list to channel:",
                 this.numChannels
             );
-            const channel = this.selectedList.tableListData;
+            const channel = getTableListData(
+                this.selectedList,
+                this.props.appStore.instrument!
+            );
             try {
                 await sendList(
                     this.props.appStore.history.oid,
@@ -651,9 +655,9 @@ export class ListsButtons extends React.Component<
         if (list) {
             let oldModifiedAt = list.modifiedAt;
             let newModifedAt = new Date();
-            list.$eez_noser_appStore.undoManager.addCommand(
+            this.props.appStore.undoManager.addCommand(
                 "Set list modifiedAt",
-                list.$eez_noser_appStore.instrumentListStore,
+                this.props.appStore.instrumentListStore,
                 list,
                 {
                     execute: action(() => {

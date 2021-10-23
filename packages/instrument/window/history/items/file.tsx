@@ -418,7 +418,9 @@ export class FileHistoryItemComponent extends React.Component<
             let actions;
 
             if (this.props.historyItem.fileType) {
-                preview = this.props.historyItem.previewElement;
+                preview = this.props.historyItem.getPreviewElement(
+                    this.props.appStore
+                );
 
                 actions = (
                     <Toolbar>
@@ -589,8 +591,7 @@ export class FileHistoryItem extends HistoryItem {
         );
     }
 
-    @computed
-    get listItemElement(): JSX.Element | null {
+    getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <FileHistoryItemComponent
                 appStore={this.appStore!}
@@ -599,8 +600,7 @@ export class FileHistoryItem extends HistoryItem {
         );
     }
 
-    @computed
-    get previewElement(): JSX.Element | null {
+    getPreviewElement(appStore: IAppStore): JSX.Element | null {
         if (!this.data) {
             return null;
         }

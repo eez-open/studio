@@ -10,8 +10,12 @@ import {
     closestPointOnSegment
 } from "eez-studio-shared/geometry";
 import { capitalize } from "eez-studio-shared/string";
-import { IUnit, TIME_UNIT } from "eez-studio-shared/units";
-
+import {
+    CURRENT_UNIT,
+    IUnit,
+    TIME_UNIT,
+    VOLTAGE_UNIT
+} from "eez-studio-shared/units";
 import { validators } from "eez-studio-shared/validation";
 
 import {
@@ -45,19 +49,24 @@ import {
     DropdownItem
 } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { getSnapToValue } from "eez-studio-ui/chart/rulers";
 
 import type { InstrumentObject } from "instrument/instrument-object";
 
-import type { InstrumentAppStore } from "instrument/window/app-store";
+import type {
+    IAppStore,
+    IInstrumentObject
+} from "instrument/window/history/history";
 
 import {
     BaseList,
     BaseListData,
-    ListAxisModel,
     getMaxVoltage,
     getMaxCurrent,
     checkPower,
-    getPowerLimitErrorMessage
+    getPowerLimitErrorMessage,
+    ChartViewOptions,
+    ListAxisModel
 } from "instrument/window/lists/store-renderer";
 import {
     displayOption,
@@ -65,7 +74,7 @@ import {
     CommonTools
 } from "instrument/window/lists/common-tools";
 import { TableLineController } from "instrument/window/lists/table";
-import { getSnapToValue } from "eez-studio-ui/chart/rulers";
+import { getTableListData } from "instrument/window/lists/table-data";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +86,7 @@ const CONF_ENVELOPE_POINT_RADIUS = CONF_CURSOR_RADIUS;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getDefaultEnvelopeListData(instrument: InstrumentObject) {
+function getDefaultEnvelopeListData(instrument: IInstrumentObject) {
     const voltage = getMaxVoltage(instrument) / 2;
     const current = getMaxCurrent(instrument) / 2;
     return {
@@ -122,20 +131,10 @@ export class EnvelopeListData extends BaseListData {
     constructor(list: BaseList, props: any) {
         super(list, props);
 
-        const defaultEnvelopeListData = getDefaultEnvelopeListData(
-            list.$eez_noser_instrument
-        );
-
-        this.duration = props.duration || defaultEnvelopeListData.duration;
-        this.numSamples =
-            props.numSamples || defaultEnvelopeListData.numSamples;
-
-        this.voltage = props.voltage || defaultEnvelopeListData.voltage;
-        this.current = props.current || defaultEnvelopeListData.current;
-
-        this.timeAxisModel = new EnveloperListTimeAxisModel(
-            list as EnvelopeList
-        );
+        this.duration = props.duration;
+        this.numSamples = props.numSamples;
+        this.voltage = props.voltage;
+        this.current = props.current;
     }
 
     toJS() {
@@ -171,12 +170,8 @@ export class EnvelopeListData extends BaseListData {
 export class EnvelopeList extends BaseList {
     @observable data: EnvelopeListData;
 
-    constructor(
-        props: any,
-        appStore: InstrumentAppStore,
-        instrument: InstrumentObject
-    ) {
-        super(props, appStore, instrument);
+    constructor(props: any) {
+        super(props);
         this.type = "envelope";
         this.data = new EnvelopeListData(this, props.data);
     }
@@ -190,241 +185,20 @@ export class EnvelopeList extends BaseList {
     }
 
     createChartsController(
+        appStore: IAppStore,
         displayOption: ChartsDisplayOption,
         mode: ChartMode
     ): ChartsController {
-        return createEnvelopeChartsController(this, displayOption, mode);
-    }
-
-    renderDetailsView() {
-        return <EnvelopeDetailsView list={this} />;
-    }
-
-    @computed
-    get tableListData() {
-        const envelopeListData = this.data;
-
-        const { voltage, current, numSamples, duration } = envelopeListData;
-
-        let timeN = [0];
-        let iVoltage = 1;
-        let iCurrent = 1;
-        while (iVoltage < voltage.length || iCurrent < current.length) {
-            if (iCurrent === current.length) {
-                timeN.push(voltage[iVoltage].time);
-                iVoltage++;
-            } else if (iVoltage === voltage.length) {
-                timeN.push(current[iCurrent].time);
-                iCurrent++;
-            } else {
-                let voltageTime = voltage[iVoltage].time;
-                let currentTime = current[iCurrent].time;
-                if (voltageTime < currentTime) {
-                    timeN.push(voltageTime);
-                    iVoltage++;
-                } else if (currentTime < voltageTime) {
-                    timeN.push(currentTime);
-                    iCurrent++;
-                } else {
-                    timeN.push(voltageTime);
-                    iVoltage++;
-                    iCurrent++;
-                }
-            }
-        }
-
-        let timeTemp = [0];
-        const minDwell =
-            this.$eez_noser_appStore.instrument!.listsMinDwellProperty;
-        const maxDwell =
-            this.$eez_noser_appStore.instrument!.listsMaxDwellProperty;
-        for (let i = 1; i < timeN.length; i++) {
-            let dt = timeN[i] - timeTemp[timeTemp.length - 1];
-            while (dt > maxDwell) {
-                timeTemp.push(timeTemp[timeTemp.length - 1] + maxDwell);
-                dt -= maxDwell;
-            }
-            timeTemp.push(
-                timeTemp[timeTemp.length - 1] + Math.max(dt, minDwell)
-            );
-        }
-
-        timeN = timeTemp;
-
-        let voltageN = [voltage[0].value];
-        let currentN = [current[0].value];
-        iVoltage = 1;
-        iCurrent = 1;
-        for (let i = 1; i < timeN.length; i++) {
-            while (
-                iVoltage < voltage.length &&
-                voltage[iVoltage].time < timeN[i]
-            ) {
-                iVoltage++;
-            }
-            if (iVoltage === voltage.length) {
-                voltageN.push(voltage[voltage.length - 1].value);
-            } else {
-                voltageN.push(
-                    voltage[iVoltage - 1].value +
-                        ((timeN[i] - voltage[iVoltage - 1].time) /
-                            (voltage[iVoltage].time -
-                                voltage[iVoltage - 1].time)) *
-                            (voltage[iVoltage].value -
-                                voltage[iVoltage - 1].value)
-                );
-            }
-
-            while (
-                iCurrent < current.length &&
-                current[iCurrent].time < timeN[i]
-            ) {
-                iCurrent++;
-            }
-            if (iCurrent === current.length) {
-                currentN.push(current[current.length - 1].value);
-            } else {
-                currentN.push(
-                    current[iCurrent - 1].value +
-                        ((timeN[i] - current[iCurrent - 1].time) /
-                            (current[iCurrent].time -
-                                current[iCurrent - 1].time)) *
-                            (current[iCurrent].value -
-                                current[iCurrent - 1].value)
-                );
-            }
-        }
-
-        for (let i = 0; i < timeN.length; i++) {
-            if (timeN[i] >= duration) {
-                if (timeN[i] > duration) {
-                    voltageN[i] =
-                        voltageN[i - 1] +
-                        ((duration - timeN[i - 1]) /
-                            (timeN[i] - timeN[i - 1])) *
-                            (voltageN[i] - voltageN[i - 1]);
-
-                    currentN[i] =
-                        currentN[i - 1] +
-                        ((duration - timeN[i - 1]) /
-                            (timeN[i] - timeN[i - 1])) *
-                            (currentN[i] - currentN[i - 1]);
-
-                    timeN[i] = duration;
-                }
-
-                timeN = timeN.slice(0, i + 1);
-                voltageN = voltageN.slice(0, i + 1);
-                currentN = currentN.slice(0, i + 1);
-                break;
-            }
-        }
-
-        if (timeN[timeN.length - 1] !== duration) {
-            timeN.push(duration);
-            voltageN.push(voltage[voltage.length - 1].value);
-            currentN.push(current[current.length - 1].value);
-        }
-
-        let T = 0;
-        let N = numSamples;
-
-        for (let i = 1; i < timeN.length; i++) {
-            if (
-                voltageN[i] === voltageN[i - 1] &&
-                currentN[i] === currentN[i - 1]
-            ) {
-                N--;
-            } else {
-                T += timeN[i] - timeN[i - 1];
-            }
-        }
-
-        const dwellS = [];
-        const voltageS = [];
-        const currentS = [];
-
-        for (let i = 1; i < timeN.length; i++) {
-            let dt = timeN[i] - timeN[i - 1];
-
-            if (
-                voltageN[i] === voltageN[i - 1] &&
-                currentN[i] === currentN[i - 1]
-            ) {
-                dwellS.push(dt);
-                voltageS.push(voltageN[i]);
-                currentS.push(currentN[i]);
-            } else {
-                let n = Math.round((N * dt) / T);
-
-                let dwellSum = 0;
-                let dVoltage = voltageN[i] - voltageN[i - 1];
-                let dCurrent = currentN[i] - currentN[i - 1];
-
-                for (let j = 0; j < n; j++) {
-                    let dwell = (dt - dwellSum) / (n - j);
-                    dwellS.push(dwell);
-
-                    voltageS.push(
-                        voltageN[i - 1] +
-                            ((dwellSum + dwell / 2) * dVoltage) / dt
-                    );
-                    currentS.push(
-                        currentN[i - 1] +
-                            ((dwellSum + dwell / 2) * dCurrent) / dt
-                    );
-
-                    dwellSum += dwell;
-                }
-
-                N -= n;
-                T -= dwellSum;
-            }
-        }
-
-        return {
-            dwell: dwellS,
-            voltage: voltageS,
-            current: currentS
-        };
-    }
-
-    @computed
-    get numPoints() {
-        return Math.max(
-            this.tableListData.dwell.length,
-            this.tableListData.current.length,
-            this.tableListData.voltage.length
+        return createEnvelopeChartsController(
+            appStore,
+            this,
+            displayOption,
+            mode
         );
     }
 
-    @computed
-    get powerLimitError() {
-        for (let i = 0; i < this.tableListData.dwell.length; i++) {
-            let power =
-                this.tableListData.voltage[i] * this.tableListData.current[i];
-            if (!checkPower(power, this.$eez_noser_instrument)) {
-                return getPowerLimitErrorMessage(this.$eez_noser_instrument);
-            }
-        }
-        return undefined;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class EnveloperListTimeAxisModel extends ListAxisModel {
-    constructor(public $eez_noser_list: EnvelopeList) {
-        super($eez_noser_list, TIME_UNIT);
-    }
-
-    get minValue(): number {
-        return 0;
-    }
-
-    @computed
-    get maxValue(): number {
-        return this.$eez_noser_list.getMaxTime();
+    renderDetailsView(appStore: IAppStore): React.ReactNode {
+        return <EnvelopeDetailsView appStore={appStore} list={this} />;
     }
 }
 
@@ -433,6 +207,7 @@ class EnveloperListTimeAxisModel extends ListAxisModel {
 @observer
 class EditEnvelopeValue extends React.Component<
     {
+        appStore: IAppStore;
         list: EnvelopeList;
         time: number | undefined;
         minTime: number;
@@ -476,6 +251,26 @@ class EditEnvelopeValue extends React.Component<
         );
     }
 
+    @computed get instrument() {
+        return this.props.appStore.instrument!;
+    }
+
+    @computed get tableListData() {
+        return getTableListData(this.props.list, this.instrument);
+    }
+
+    @computed
+    get powerLimitError() {
+        for (let i = 0; i < this.tableListData.dwell.length; i++) {
+            let power =
+                this.tableListData.voltage[i] * this.tableListData.current[i];
+            if (!checkPower(power, this.instrument)) {
+                return getPowerLimitErrorMessage(this.instrument);
+            }
+        }
+        return undefined;
+    }
+
     @action
     onTimeChange(event: React.ChangeEvent<HTMLInputElement>) {
         this.time = event.target.value;
@@ -489,7 +284,7 @@ class EditEnvelopeValue extends React.Component<
             } else {
                 this.props.onTimeChange(time);
                 this.lastTime = time;
-                this.timeError = this.props.list.powerLimitError;
+                this.timeError = this.powerLimitError;
             }
         } else {
             this.timeError = "Invalid value";
@@ -510,7 +305,7 @@ class EditEnvelopeValue extends React.Component<
             } else {
                 this.lastValue = value;
                 this.props.onValueChange(value);
-                this.valueError = this.props.list.powerLimitError;
+                this.valueError = this.powerLimitError;
             }
         } else {
             this.valueError = "Invalid value";
@@ -627,6 +422,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
     cursor = "move";
 
     constructor(
+        public appStore: IAppStore,
         public chartView: IChartView,
         public valueIndex: number,
         public lineController: EnvelopeLineController
@@ -670,6 +466,26 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             this.startEnvelopeValue.time !== value.time ||
             this.startEnvelopeValue.value !== value.value
         );
+    }
+
+    @computed get instrument() {
+        return this.appStore.instrument!;
+    }
+
+    @computed get tableListData() {
+        return getTableListData(this.list, this.instrument);
+    }
+
+    @computed
+    get powerLimitError() {
+        for (let i = 0; i < this.tableListData.dwell.length; i++) {
+            let power =
+                this.tableListData.voltage[i] * this.tableListData.current[i];
+            if (!checkPower(power, this.instrument)) {
+                return getPowerLimitErrorMessage(this.instrument);
+            }
+        }
+        return undefined;
     }
 
     down(point: SVGPoint, event: PointerEvent) {
@@ -727,9 +543,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with previous point
             const removedPoint = this.values[index - 1];
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -751,9 +567,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // join this point with next point
             const removedPoint = this.values[index + 1];
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -776,9 +592,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove previous point and join this point with one before previous point
             const removedPoint1 = this.values[index - 2];
             const removedPoint2 = this.values[index - 1];
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -806,9 +622,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             // remove next point and join this point with one after next point
             const removedPoint1 = this.values[index + 1];
             const removedPoint2 = this.values[index + 2];
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -831,9 +647,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         } else if (index - 2 >= 0 && this.values[index - 2].time === newTime) {
             // remove previous point
             const removedPoint = this.values[index - 1];
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -854,9 +670,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         ) {
             // remove next point
             const removedPoint = this.values[index + 1];
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -873,9 +689,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             );
         } else {
             // just change this point
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -900,7 +716,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
             const oldTime = this.startEnvelopeValue.time;
             const oldValue = this.startEnvelopeValue.value;
 
-            if (this.list.powerLimitError) {
+            if (this.powerLimitError) {
                 this.values[this.valueIndex].time = oldTime;
                 this.values[this.valueIndex].value = oldValue;
             } else {
@@ -948,9 +764,9 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
 
                     const value = values[this.valueIndex];
 
-                    this.list.$eez_noser_appStore.undoManager.addCommand(
+                    this.appStore.undoManager!.addCommand(
                         "Edit envelope list",
-                        this.list.$eez_noser_appStore.instrumentListStore,
+                        this.appStore.instrumentListStore!,
                         this.list,
                         {
                             execute: action(() => {
@@ -972,6 +788,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         const popup = showPopup(
             targetElement,
             <EditEnvelopeValue
+                appStore={this.appStore}
                 list={this.list}
                 time={time}
                 minTime={minTime}
@@ -1024,7 +841,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
         cursor.value = this.values[this.valueIndex].value;
         cursor.lineController = this.lineController;
         cursor.addPoint = false;
-        cursor.error = this.list.powerLimitError;
+        cursor.error = this.powerLimitError;
     }
 
     render() {
@@ -1033,7 +850,11 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
 }
 
 export class EnvelopeLineController extends LineController {
-    constructor(public id: string, yAxisController: IAxisController) {
+    constructor(
+        private appStore: IAppStore,
+        public id: string,
+        yAxisController: IAxisController
+    ) {
         super(id, yAxisController);
     }
 
@@ -1060,6 +881,26 @@ export class EnvelopeLineController extends LineController {
     get yMax(): number {
         //return Math.max(...this.values.map(value => value.value));
         return this.yAxisController.axisModel.maxValue;
+    }
+
+    @computed get instrument() {
+        return this.appStore.instrument!;
+    }
+
+    @computed get tableListData() {
+        return getTableListData(this.list, this.instrument);
+    }
+
+    @computed
+    get powerLimitError() {
+        for (let i = 0; i < this.tableListData.dwell.length; i++) {
+            let power =
+                this.tableListData.voltage[i] * this.tableListData.current[i];
+            if (!checkPower(power, this.instrument)) {
+                return getPowerLimitErrorMessage(this.instrument);
+            }
+        }
+        return undefined;
     }
 
     getWaveformModel() {
@@ -1135,8 +976,7 @@ export class EnvelopeLineController extends LineController {
             value: cursor.value
         };
         this.values.splice(cursor.valueIndex, 0, newValue);
-        cursor.error =
-            time < 0 ? "Time must be >= 0" : this.list.powerLimitError;
+        cursor.error = time < 0 ? "Time must be >= 0" : this.powerLimitError;
         this.values.splice(cursor.valueIndex, 1);
 
         cursor.addPoint = !cursor.error;
@@ -1160,9 +1000,9 @@ export class EnvelopeLineController extends LineController {
         ) {
             valueIndex--;
             const oldValue = this.values[valueIndex];
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -1174,9 +1014,9 @@ export class EnvelopeLineController extends LineController {
                 }
             );
         } else {
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -1190,6 +1030,7 @@ export class EnvelopeLineController extends LineController {
         }
 
         const mouseHandler = new DragEnvelopePointMouseHandler(
+            this.appStore,
             chartView,
             valueIndex,
             this
@@ -1221,6 +1062,7 @@ export class EnvelopeLineController extends LineController {
         ) {
             // move existing value
             return new DragEnvelopePointMouseHandler(
+                this.appStore,
                 chartView,
                 valueIndex,
                 this
@@ -1452,10 +1294,10 @@ export class EnvelopeLineView extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class EnvelopeChartsHeader extends React.Component<
-    { chartsController: ChartsController },
-    {}
-> {
+class EnvelopeChartsHeader extends React.Component<{
+    appStore: IAppStore;
+    chartsController: ChartsController;
+}> {
     get list() {
         return (this.props.chartsController as EnvelopeChartsController).list;
     }
@@ -1471,7 +1313,7 @@ class EnvelopeChartsHeader extends React.Component<
                             validators.required,
                             validators.unique(
                                 this.list,
-                                this.list.$eez_noser_appStore.instrumentLists
+                                this.props.appStore.instrumentLists
                             )
                         ]
                     },
@@ -1491,7 +1333,7 @@ class EnvelopeChartsHeader extends React.Component<
                         validators: [
                             validators.rangeInclusive(
                                 1,
-                                this.list.$eez_noser_appStore.instrument!
+                                this.props.appStore.instrument!
                                     .listsMaxPointsProperty
                             )
                         ]
@@ -1525,9 +1367,9 @@ class EnvelopeChartsHeader extends React.Component<
                     oldDuration !== newDuration ||
                     oldNumSamples !== newNumSamples
                 ) {
-                    this.list.$eez_noser_appStore.undoManager.addCommand(
+                    this.props.appStore.undoManager!.addCommand(
                         "Edit envelope list",
-                        this.list.$eez_noser_appStore.instrumentListStore,
+                        this.props.appStore.instrumentListStore!,
                         list,
                         {
                             execute: action(() => {
@@ -1560,7 +1402,7 @@ class EnvelopeChartsHeader extends React.Component<
             const oldCurrent = this.list.data.current;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.list.$eez_noser_instrument
+                this.props.appStore.instrument!
             );
 
             const newVoltage = objectClone(defaultEnvelopeListData.voltage);
@@ -1569,9 +1411,9 @@ class EnvelopeChartsHeader extends React.Component<
             const newCurrent = objectClone(defaultEnvelopeListData.current);
             newCurrent[1].time = this.list.data.duration;
 
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.props.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.props.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -1600,15 +1442,15 @@ class EnvelopeChartsHeader extends React.Component<
             const oldVoltage = this.list.data.voltage;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.list.$eez_noser_instrument
+                this.props.appStore.instrument!
             );
 
             const newVoltage = defaultEnvelopeListData.voltage.slice();
             newVoltage[1].time = this.list.data.duration;
 
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.props.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.props.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -1635,15 +1477,15 @@ class EnvelopeChartsHeader extends React.Component<
             const oldCurrent = this.list.data.current;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.list.$eez_noser_instrument
+                this.props.appStore.instrument!
             );
 
             const newCurrent = defaultEnvelopeListData.current.slice();
             newCurrent[1].time = this.list.data.duration;
 
-            this.list.$eez_noser_appStore.undoManager.addCommand(
+            this.props.appStore.undoManager!.addCommand(
                 "Edit envelope list",
-                this.list.$eez_noser_appStore.instrumentListStore,
+                this.props.appStore.instrumentListStore!,
                 this.list,
                 {
                     execute: action(() => {
@@ -1701,20 +1543,17 @@ class EnvelopeChartsHeader extends React.Component<
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface EnvelopeDetailsViewProps {
-    list: EnvelopeList;
-}
-
 @observer
-export class EnvelopeDetailsView extends React.Component<
-    EnvelopeDetailsViewProps,
-    {}
-> {
+export class EnvelopeDetailsView extends React.Component<{
+    appStore: IAppStore;
+    list: EnvelopeList;
+}> {
     @observable list: EnvelopeList = this.props.list;
 
     @computed
     get chartsController() {
         return createEnvelopeChartsController(
+            this.props.appStore,
             this.list,
             displayOption.get() as ChartsDisplayOption,
             "editable"
@@ -1732,6 +1571,7 @@ export class EnvelopeDetailsView extends React.Component<
         return (
             <VerticalHeaderWithBody>
                 <EnvelopeChartsHeader
+                    appStore={this.props.appStore}
                     chartsController={this.chartsController}
                 />
                 <Body>
@@ -1749,11 +1589,12 @@ export class EnvelopeDetailsView extends React.Component<
 
 export class EnvelopeChartsController extends ChartsController {
     constructor(
+        appStore: IAppStore,
         public list: EnvelopeList,
         mode: ChartMode,
         xAxisModel: IAxisModel
     ) {
-        super(mode, xAxisModel, list.data.viewOptions);
+        super(mode, xAxisModel, new ChartViewOptions(appStore, list));
     }
 
     get chartViewOptionsProps() {
@@ -1814,6 +1655,7 @@ class EnvelopeChartController extends ChartController {
 ////////////////////////////////////////////////////////////////////////////////
 
 function getLineControllers(
+    appStore: IAppStore,
     list: EnvelopeList,
     axisController: IAxisController
 ) {
@@ -1821,6 +1663,7 @@ function getLineControllers(
 
     lineControllers.push(
         new EnvelopeLineController(
+            appStore,
             "envelope-" + axisController.position,
             axisController
         )
@@ -1829,6 +1672,7 @@ function getLineControllers(
     if (globalViewOptions.showSampledData) {
         lineControllers.push(
             new TableLineController(
+                appStore,
                 "envelope-sample-data-" + axisController.position,
                 axisController
             )
@@ -1839,14 +1683,16 @@ function getLineControllers(
 }
 
 export function createEnvelopeChartsController(
+    appStore: IAppStore,
     list: EnvelopeList,
     displayOption: ChartsDisplayOption,
     mode: ChartMode
 ) {
     const chartsController = new EnvelopeChartsController(
+        appStore,
         list,
         mode,
-        list.data.timeAxisModel
+        new ListAxisModel(appStore, list, TIME_UNIT)
     );
 
     const charts: IChartController[] = [];
@@ -1857,16 +1703,23 @@ export function createEnvelopeChartsController(
             displayOption
         );
 
-        chartController.createYAxisController(list.data.voltageAxisModel);
+        chartController.createYAxisController(
+            new ListAxisModel(appStore, list, VOLTAGE_UNIT)
+        );
         chartController.createYAxisControllerOnRightSide(
-            list.data.currentAxisModel
+            new ListAxisModel(appStore, list, CURRENT_UNIT)
         );
 
         chartController.lineControllers.push(
-            ...getLineControllers(list, chartController.yAxisController)
+            ...getLineControllers(
+                appStore,
+                list,
+                chartController.yAxisController
+            )
         );
         chartController.lineControllers.push(
             ...getLineControllers(
+                appStore,
                 list,
                 chartController.yAxisControllerOnRightSide!
             )
@@ -1879,9 +1732,15 @@ export function createEnvelopeChartsController(
                 chartsController,
                 "voltage"
             );
-            chartController.createYAxisController(list.data.voltageAxisModel);
+            chartController.createYAxisController(
+                new ListAxisModel(appStore, list, VOLTAGE_UNIT)
+            );
             chartController.lineControllers.push(
-                ...getLineControllers(list, chartController.yAxisController)
+                ...getLineControllers(
+                    appStore,
+                    list,
+                    chartController.yAxisController
+                )
             );
             charts.push(chartController);
         }
@@ -1891,9 +1750,15 @@ export function createEnvelopeChartsController(
                 chartsController,
                 "current"
             );
-            chartController.createYAxisController(list.data.currentAxisModel);
+            chartController.createYAxisController(
+                new ListAxisModel(appStore, list, CURRENT_UNIT)
+            );
             chartController.lineControllers.push(
-                ...getLineControllers(list, chartController.yAxisController)
+                ...getLineControllers(
+                    appStore,
+                    list,
+                    chartController.yAxisController
+                )
             );
             charts.push(chartController);
         }

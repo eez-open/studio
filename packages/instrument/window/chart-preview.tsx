@@ -10,6 +10,7 @@ import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
+import { IAppStore } from "instrument/window/history/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -17,27 +18,30 @@ export interface ChartData {
     isZoomable: boolean;
     renderToolbar: (chartsController: IChartsController) => React.ReactNode;
     createChartsController: (
+        appStore: IAppStore,
         displayOption: ChartsDisplayOption,
         mode: ChartMode
     ) => IChartsController;
 }
 
-export function createChartsController(
+function createChartsController(
+    appStore: IAppStore,
     chartData: ChartData,
     displayOption: ChartsDisplayOption,
     mode: ChartMode
 ): IChartsController {
-    return chartData.createChartsController(displayOption, mode);
+    return chartData.createChartsController(appStore, displayOption, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ChartPreviewProps {
+    appStore: IAppStore;
     data: ChartData;
 }
 
 @observer
-export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
+export class ChartPreview extends React.Component<ChartPreviewProps> {
     @observable zoom: boolean = false;
 
     @action.bound
@@ -48,6 +52,7 @@ export class ChartPreview extends React.Component<ChartPreviewProps, {}> {
     @computed
     get chartsController() {
         return createChartsController(
+            this.props.appStore,
             this.props.data,
             "split",
             this.zoom ? "interactive" : "preview"

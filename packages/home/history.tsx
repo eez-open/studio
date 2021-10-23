@@ -12,7 +12,8 @@ import {
     IAppStore,
     SelectHistoryItemsSpecification,
     History,
-    DeletedItemsHistory
+    DeletedItemsHistory,
+    IInstrumentObject
 } from "instrument/window/history/history";
 import { Filters } from "instrument/window/history/filters";
 import {
@@ -25,6 +26,7 @@ import {
 } from "instrument/window/history/deleted-history-items-view";
 
 import { tabs } from "home/tabs-store";
+import type { IUnit } from "eez-studio-shared/units";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -36,23 +38,21 @@ class HomeAppStore implements IAppStore {
         | undefined;
     @observable selectedHistoryItems = new Map<string, boolean>();
 
-    instrument: {
-        id: string;
-        connection: {
-            abortLongOperation(): void;
-            isConnected: boolean;
-        };
-        listsProperty?: any;
-        sendFileToInstrumentHandler?: () => void;
-    } = {
+    instrument: IInstrumentObject = {
         id: "0",
         connection: {
             abortLongOperation() {
                 // @todo
             },
             isConnected: false
-        }
+        },
+        listsMinDwellProperty: 0,
+        listsMaxDwellProperty: 0,
+        firstChannel: undefined,
+        getDigits: (unit: IUnit) => 3,
+        listsMaxPointsProperty: 0
     };
+    instrumentLists = [];
 
     filters: Filters = new Filters();
 

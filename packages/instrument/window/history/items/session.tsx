@@ -55,8 +55,7 @@ export class SessionHistoryItem extends HistoryItem {
         super(activityLogEntry, appStore);
     }
 
-    @computed
-    get listItemElement(): JSX.Element | null {
+    getListItemElement(appStore: IAppStore): React.ReactNode {
         return <SessionHistoryItemComponent historyItem={this} />;
     }
 

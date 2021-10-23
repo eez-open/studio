@@ -2,7 +2,10 @@ import { observable, action, computed, runInAction } from "mobx";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { objectClone } from "eez-studio-shared/util";
-import { makeCsvData, getValidFileNameFromFileName } from "eez-studio-shared/util-electron";
+import {
+    makeCsvData,
+    getValidFileNameFromFileName
+} from "eez-studio-shared/util-electron";
 
 import { BaseList } from "instrument/window/lists/store-renderer";
 import { Connection } from "instrument/window/connection";
@@ -12,6 +15,7 @@ import { getCsvDataColumnDefinitions } from "instrument/window/lists/lists";
 
 import { removeQuotes, useConnection } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
+import { getTableListData } from "instrument/window/lists/table-data";
 
 export interface IListOnInstrument {
     name: string;
@@ -21,19 +25,34 @@ export interface IListOnInstrument {
 export async function getListsOnTheInstrument(connection: Connection) {
     const lists: IListOnInstrument[] = [];
 
-    const filesInFolderAsOneString = await connection.query('MMEM:CAT? "/Lists"');
-    const filesInFolderAsArray = removeQuotes(filesInFolderAsOneString).split('","');
+    const filesInFolderAsOneString = await connection.query(
+        'MMEM:CAT? "/Lists"'
+    );
+    const filesInFolderAsArray = removeQuotes(filesInFolderAsOneString).split(
+        '","'
+    );
 
     for (const fileInfoLine of filesInFolderAsArray) {
         const fileName = fileInfoLine.split(",")[0];
         if (fileName.toLowerCase().endsWith(".list")) {
             const name = fileName.substr(0, fileName.lastIndexOf("."));
 
-            const dateStr = await connection.query(`MMEMory:DATE? "/Lists/${fileName}"`);
+            const dateStr = await connection.query(
+                `MMEMory:DATE? "/Lists/${fileName}"`
+            );
             const [year, month, day] = dateStr.split(",");
-            const timeStr = await connection.query(`MMEMory:TIME? "/Lists/${fileName}"`);
+            const timeStr = await connection.query(
+                `MMEMory:TIME? "/Lists/${fileName}"`
+            );
             const [hours, minutes, seconds] = timeStr.split(",");
-            const date = new Date(year, month - 1, day, hours, minutes, seconds);
+            const date = new Date(
+                year,
+                month - 1,
+                day,
+                hours,
+                minutes,
+                seconds
+            );
 
             lists.push({
                 name,
@@ -59,7 +78,10 @@ export class List {
 
     @computed
     get baseName() {
-        return this.listOnInstrument?.name ?? getValidFileNameFromFileName(this.studioList!.name);
+        return (
+            this.listOnInstrument?.name ??
+            getValidFileNameFromFileName(this.studioList!.name)
+        );
     }
 
     @computed
@@ -84,12 +106,18 @@ export class List {
 
     @computed
     get instrumentVersionNewer() {
-        return this.instrumentDate && (!this.studioDate || this.instrumentDate > this.studioDate);
+        return (
+            this.instrumentDate &&
+            (!this.studioDate || this.instrumentDate > this.studioDate)
+        );
     }
 
     @computed
     get studioVersionNewer() {
-        return this.studioDate && (!this.instrumentDate || this.studioDate > this.instrumentDate);
+        return (
+            this.studioDate &&
+            (!this.instrumentDate || this.studioDate > this.instrumentDate)
+        );
     }
 
     get canDownload() {
@@ -113,11 +141,8 @@ export class List {
                     `MMEMory:UPLoad? "/Lists/${this.fileName}"`
                 );
 
-                const tableList = createTableListFromHistoryItem(
-                    listHistoryItem,
-                    this.bb3Instrument.appStore,
-                    this.bb3Instrument.appStore.instrument!
-                );
+                const tableList =
+                    createTableListFromHistoryItem(listHistoryItem);
 
                 tableList.description = this.description;
                 tableList.modifiedAt = listOnInstrument.date;
@@ -153,12 +178,19 @@ export class List {
             return;
         }
 
+        const tableListData = getTableListData(
+            studioList,
+            this.bb3Instrument.instrument
+        );
+
         await useConnection(
             this,
             async connection => {
                 const sourceData = makeCsvData(
-                    studioList.tableListData,
-                    getCsvDataColumnDefinitions(this.bb3Instrument.appStore.instrument!)
+                    tableListData,
+                    getCsvDataColumnDefinitions(
+                        this.bb3Instrument.appStore.instrument!
+                    )
                 );
 
                 await new Promise<void>((resolve, reject) => {
@@ -176,14 +208,25 @@ export class List {
                     connection.upload(uploadInstructions, resolve, reject);
                 });
 
-                const dateStr = await connection.query(`MMEMory:DATE? "/Lists/${this.fileName}"`);
+                const dateStr = await connection.query(
+                    `MMEMory:DATE? "/Lists/${this.fileName}"`
+                );
                 const [year, month, day] = dateStr.split(",");
-                const timeStr = await connection.query(`MMEMory:TIME? "/Lists/${this.fileName}"`);
+                const timeStr = await connection.query(
+                    `MMEMory:TIME? "/Lists/${this.fileName}"`
+                );
                 const [hours, minutes, seconds] = timeStr.split(",");
 
                 const listOnInstrument = {
                     name: this.baseName,
-                    date: new Date(year, month - 1, day, hours, minutes, seconds)
+                    date: new Date(
+                        year,
+                        month - 1,
+                        day,
+                        hours,
+                        minutes,
+                        seconds
+                    )
                 };
 
                 runInAction(() => {
@@ -207,7 +250,9 @@ export class List {
 
     edit = () => {
         if (this.studioList) {
-            this.bb3Instrument.appStore.navigationStore.changeSelectedListId(this.studioList.id);
+            this.bb3Instrument.appStore.navigationStore.changeSelectedListId(
+                this.studioList.id
+            );
         }
     };
 }

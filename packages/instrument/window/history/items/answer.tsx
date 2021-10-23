@@ -76,7 +76,7 @@ export class AnswerHistoryItem extends HistoryItem {
         super(activityLogEntry, appStore);
     }
 
-    get listItemElement(): JSX.Element | null {
+    getListItemElement(appStore: IAppStore): React.ReactNode {
         return <AnswerHistoryItemComponent historyItem={this} />;
     }
 }

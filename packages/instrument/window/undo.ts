@@ -6,11 +6,7 @@ import {
     beginTransaction,
     commitTransaction
 } from "eez-studio-shared/store";
-
-interface ICommand {
-    execute: () => void;
-    undo: () => void;
-}
+import type { ICommand } from "instrument/window/history/history";
 
 export interface IModel {
     modified: boolean;

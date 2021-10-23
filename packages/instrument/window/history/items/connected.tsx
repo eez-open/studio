@@ -65,7 +65,7 @@ export class ConnectedHistoryItem extends HistoryItem {
         super(activityLogEntry, appStore);
     }
 
-    get listItemElement(): JSX.Element | null {
+    getListItemElement(appStore: IAppStore): React.ReactNode {
         return <ConnectedHistoryItemComponent historyItem={this} />;
     }
 }

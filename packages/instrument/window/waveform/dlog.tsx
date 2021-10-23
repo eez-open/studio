@@ -63,6 +63,7 @@ import {
     dlogUnitToStudioUnit
 } from "instrument/connection/file-type-utils";
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
+import type { IAppStore } from "instrument/window/history/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -759,6 +760,7 @@ export class DlogWaveform extends FileHistoryItem {
     chartsController: ChartsController;
 
     createChartsController(
+        appStore: IAppStore,
         displayOption: ChartsDisplayOption,
         mode: ChartMode
     ): ChartsController {
@@ -826,9 +828,8 @@ export class DlogWaveform extends FileHistoryItem {
         return undefined;
     }
 
-    @computed
-    get previewElement() {
-        return <ChartPreview data={this} />;
+    getPreviewElement(appStore: IAppStore) {
+        return <ChartPreview appStore={appStore} data={this} />;
     }
 
     isZoomable = false;

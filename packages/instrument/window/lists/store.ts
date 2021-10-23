@@ -65,12 +65,9 @@ export function createInstrumentListStore(appStore: InstrumentAppStore | null) {
             modifiedAt: types.date
         },
         create: (props: any) => {
-            if (appStore) {
-                const { createListObject } =
-                    require("instrument/window/lists/factory") as typeof ListsFactoryModule;
-                props = createListObject(props, appStore, appStore.instrument!);
-            }
-            return props;
+            const { createListObject } =
+                require("instrument/window/lists/factory") as typeof ListsFactoryModule;
+            return createListObject(props);
         }
     });
 }

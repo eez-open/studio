@@ -102,8 +102,7 @@ export class ScriptHistoryItem extends HistoryItem {
         return JSON.parse(this.message) as IScriptHistoryItemMessage;
     }
 
-    @computed
-    get listItemElement(): JSX.Element | null {
+    getListItemElement(appStore: IAppStore): React.ReactNode {
         return <ScriptHistoryItemComponent historyItem={this} />;
     }
 }

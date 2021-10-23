@@ -40,6 +40,8 @@ import { FileHistoryItem } from "instrument/window/history/items/file";
 import type { ISelection } from "./list-component";
 import { getScrapbookStore } from "instrument/window/history/scrapbook";
 import { CONF_ITEMS_BLOCK_SIZE } from "./CONF_ITEMS_BLOCK_SIZE";
+import { IUnit } from "eez-studio-shared/units";
+import type { BaseList } from "instrument/window/lists/store-renderer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +87,41 @@ export interface IScrapbookStore {
     selectAllItems(appStore: IAppStore): void;
 }
 
+export interface IInstrumentObject {
+    id: string;
+    connection: {
+        abortLongOperation(): void;
+        isConnected: boolean;
+    };
+    listsProperty?: any;
+    sendFileToInstrumentHandler?: () => void;
+    listsMinDwellProperty: number;
+    listsMaxDwellProperty: number;
+    firstChannel:
+        | {
+              maxVoltage?: number | undefined;
+              maxCurrent?: number | undefined;
+              maxPower?: number | undefined;
+          }
+        | undefined;
+    getDigits(unit: IUnit): number;
+    listsMaxPointsProperty: number;
+}
+
+interface IUndoManager {
+    addCommand(
+        transactionLabel: string,
+        store: IStore,
+        object: any,
+        command: ICommand
+    ): void;
+}
+
+export interface ICommand {
+    execute: () => void;
+    undo: () => void;
+}
+
 export interface IAppStore {
     selectHistoryItemsSpecification:
         | SelectHistoryItemsSpecification
@@ -101,15 +138,10 @@ export interface IAppStore {
 
     oids?: string[];
 
-    instrument?: {
-        id: string;
-        connection: {
-            abortLongOperation(): void;
-            isConnected: boolean;
-        };
-        listsProperty?: any;
-        sendFileToInstrumentHandler?: () => void;
-    };
+    instrument?: IInstrumentObject;
+    instrumentListStore?: IStore;
+    instrumentLists: BaseList[];
+    undoManager?: IUndoManager;
 
     navigationStore: INavigationStore;
 

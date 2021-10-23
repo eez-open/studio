@@ -230,7 +230,7 @@ export class BB3Instrument {
     constructor(
         public scriptsCatalog: ScriptsCatalog,
         public appStore: InstrumentAppStore,
-        instrument: InstrumentObject
+        public instrument: InstrumentObject
     ) {
         const bb3Properties =
             instrument.custom[BB3Instrument.CUSTOM_PROPERTY_NAME];

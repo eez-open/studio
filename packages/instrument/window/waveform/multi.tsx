@@ -28,7 +28,8 @@ import {
     ChartMode,
     IAxisModel,
     ChartsController,
-    MeasurementsModel
+    MeasurementsModel,
+    IChartsController
 } from "eez-studio-ui/chart/chart";
 import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
 
@@ -44,6 +45,7 @@ import { ViewOptions } from "instrument/window/waveform/ViewOptions";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
 import { WaveformToolbar } from "instrument/window/waveform/toolbar";
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
+import type { IAppStore } from "instrument/window/history/history";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,12 +85,10 @@ export class MultiWaveformChartsController extends ChartsController {
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ChartHistoryItemComponent extends React.Component<
-    {
-        historyItem: MultiWaveform;
-    },
-    {}
-> {
+export class ChartHistoryItemComponent extends React.Component<{
+    appStore: IAppStore;
+    historyItem: MultiWaveform;
+}> {
     setVisibleTimeoutId: any;
 
     render() {
@@ -105,7 +105,10 @@ export class ChartHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
-                    <ChartPreview data={this.props.historyItem} />
+                    <ChartPreview
+                        appStore={this.props.appStore}
+                        data={this.props.historyItem}
+                    />
                 </div>
             </div>
         );
@@ -305,6 +308,7 @@ export class MultiWaveform extends HistoryItem {
     chartsController: ChartsController;
 
     createChartsController(
+        appStore: IAppStore,
         displayOption: ChartsDisplayOption,
         mode: ChartMode
     ): ChartsController {
@@ -341,7 +345,7 @@ export class MultiWaveform extends HistoryItem {
         return chartsController;
     }
 
-    renderToolbar(chartsController: ChartsController): JSX.Element {
+    renderToolbar(chartsController: IChartsController): React.ReactNode {
         return (
             <WaveformToolbar
                 chartsController={chartsController}
@@ -362,9 +366,10 @@ export class MultiWaveform extends HistoryItem {
         return this.linkedWaveforms[0].waveform.xAxisDefaultSubdivisionScale;
     }
 
-    @computed
-    get listItemElement(): JSX.Element | null {
-        return <ChartHistoryItemComponent historyItem={this} />;
+    getListItemElement(appStore: IAppStore): React.ReactNode {
+        return (
+            <ChartHistoryItemComponent appStore={appStore} historyItem={this} />
+        );
     }
 
     isZoomable = true;

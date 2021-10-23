@@ -28,6 +28,7 @@ import { saveTableListData } from "instrument/window/lists/lists";
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
+import { getTableListData } from "instrument/window/lists/table-data";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +36,7 @@ import { HistoryItem } from "instrument/window/history/item";
 export class ListHistoryItemComponent extends React.Component<
     {
         historyItem: ListHistoryItem;
+        appStore: IAppStore;
     },
     {}
 > {
@@ -51,18 +53,12 @@ export class ListHistoryItemComponent extends React.Component<
             this.props.historyItem.instrument
         ) {
             return createTableListFromData(
-                Object.assign({}, this.message.listData[0]),
-                this.props.historyItem.appStore! as any, // @todo remove need for any
-                this.props.historyItem.instrument
+                Object.assign({}, this.message.listData[0])
             );
         }
 
         if (this.props.historyItem.data && this.props.historyItem.instrument) {
-            return createTableListFromHistoryItem(
-                this.props.historyItem,
-                this.props.historyItem.appStore! as any, // @todo remove need for any
-                this.props.historyItem.instrument
-            );
+            return createTableListFromHistoryItem(this.props.historyItem);
         }
 
         return null;
@@ -86,10 +82,15 @@ export class ListHistoryItemComponent extends React.Component<
 
     onSave = () => {
         if (this.list) {
+            const tableListData = getTableListData(
+                this.list!,
+                this.props.appStore.instrument!
+            );
+
             saveTableListData(
                 this.props.historyItem.appStore!.instrument! as any, // @todo remove need for any
                 this.message.listName,
-                this.list!.tableListData
+                tableListData
             );
         }
     };
@@ -114,7 +115,12 @@ export class ListHistoryItemComponent extends React.Component<
                     {this.message.error && (
                         <div className="text-danger">{this.message.error}</div>
                     )}
-                    {this.list && <ChartPreview data={this.list} />}
+                    {this.list && (
+                        <ChartPreview
+                            appStore={this.props.appStore}
+                            data={this.list}
+                        />
+                    )}
                     {
                         <Toolbar>
                             {this.listId && (
@@ -165,9 +171,10 @@ export class ListHistoryItem extends HistoryItem {
         }
     }
 
-    @computed
-    get listItemElement(): JSX.Element | null {
-        return <ListHistoryItemComponent historyItem={this} />;
+    getListItemElement(appStore: IAppStore): React.ReactNode {
+        return (
+            <ListHistoryItemComponent historyItem={this} appStore={appStore} />
+        );
     }
 }
 
