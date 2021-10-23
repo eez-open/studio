@@ -20,7 +20,6 @@ import {
 } from "instrument/window/history/list-component";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import type { IAppStore, History } from "instrument/window/history/history";
-import { instruments } from "instrument/instrument-object";
 
 class Selection {
     @observable items: IHistoryItem[] = [];
@@ -31,13 +30,6 @@ class Selection {
         this.items = historyItems;
         this.items.forEach(historyItem => (historyItem.selected = true));
     }
-}
-
-function getAppStore(instrumentId: string) {
-    const instrument = instruments.get(instrumentId);
-    const appStore = instrument?.getEditor();
-    appStore?.onCreate();
-    return appStore;
 }
 
 class ScrapbookStore {
@@ -56,10 +48,7 @@ class ScrapbookStore {
                         const activityLogEntry =
                             activityLogStore.findById(itemId);
                         if (activityLogEntry) {
-                            return createHistoryItem(
-                                activityLogEntry,
-                                getAppStore(activityLogEntry.oid)
-                            );
+                            return createHistoryItem(activityLogEntry);
                         }
                         return undefined;
                     })
@@ -153,10 +142,7 @@ class ScrapbookStore {
             this._items.splice(
                 insertAt,
                 0,
-                createHistoryItem(
-                    activityLogEntry,
-                    getAppStore(activityLogEntry.oid)
-                )
+                createHistoryItem(activityLogEntry)
             );
         }
     }

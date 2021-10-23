@@ -106,6 +106,10 @@ export interface IInstrumentObject {
         | undefined;
     getDigits(unit: IUnit): number;
     listsMaxPointsProperty: number;
+
+    listsDwellDigitsProperty: number;
+    listsVoltageDigitsProperty: number;
+    listsCurrentDigitsProperty: number;
 }
 
 interface IUndoManager {
@@ -1040,7 +1044,7 @@ export class History {
 
         const activityLogEntry = this.options.store.findById(id);
         if (activityLogEntry) {
-            return createHistoryItem(activityLogEntry, this.appStore);
+            return createHistoryItem(activityLogEntry);
         }
 
         return undefined;
@@ -1059,7 +1063,7 @@ export class History {
     }
 
     addActivityLogEntry(activityLogEntry: IActivityLogEntry) {
-        const historyItem = createHistoryItem(activityLogEntry, this.appStore);
+        const historyItem = createHistoryItem(activityLogEntry);
 
         this.filterStats.onHistoryItemCreated(historyItem);
 
@@ -1118,10 +1122,7 @@ export class History {
         const historyItems: IHistoryItem[] = [];
         rows.forEach(row => {
             const activityLogEntry = this.options.store.dbRowToObject(row);
-            const historyItem = createHistoryItem(
-                activityLogEntry,
-                this.appStore
-            );
+            const historyItem = createHistoryItem(activityLogEntry);
             historyItems.push(historyItem);
         });
         return historyItems;
@@ -1224,8 +1225,7 @@ export class History {
         ) {
             foundItem.historyItem.message = activityLogEntry.message;
             const updatedHistoryItem = updateHistoryItemClass(
-                foundItem.historyItem,
-                this.appStore
+                foundItem.historyItem
             );
             if (updatedHistoryItem !== foundItem.historyItem) {
                 this.items[foundItem.index] = updatedHistoryItem;

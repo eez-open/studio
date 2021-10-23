@@ -20,7 +20,11 @@ import * as notification from "eez-studio-ui/notification";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { SAMPLING_RATE_UNIT } from "eez-studio-shared/units";
-import { IActivityLogEntry, logUpdate } from "eez-studio-shared/activity-log";
+import {
+    activityLogStore,
+    IActivityLogEntry,
+    logUpdate
+} from "eez-studio-shared/activity-log";
 
 import type * as UiPropertiesModule from "eez-studio-ui/properties";
 import { Balloon } from "eez-studio-ui/balloon";
@@ -206,7 +210,7 @@ export class FileHistoryItemComponent extends React.Component<
     onAddNote = () => {
         showAddNoteDialog(note => {
             beginTransaction("Add file note");
-            this.props.historyItem.note = note;
+            this.props.historyItem.setNote(this.props.appStore, note);
             commitTransaction();
         });
     };
@@ -215,7 +219,7 @@ export class FileHistoryItemComponent extends React.Component<
         showEditNoteDialog(this.props.historyItem.note!, note => {
             if (this.props.historyItem.note !== note) {
                 beginTransaction("Edit file note");
-                this.props.historyItem.note = note;
+                this.props.historyItem.setNote(this.props.appStore, note);
                 commitTransaction();
             }
         });
@@ -223,7 +227,7 @@ export class FileHistoryItemComponent extends React.Component<
 
     onDeleteNote = () => {
         beginTransaction("Delete file note");
-        this.props.historyItem.note = undefined;
+        this.props.historyItem.setNote(this.props.appStore, undefined);
         commitTransaction();
     };
 
@@ -550,7 +554,9 @@ export class FileHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
-                    {this.props.historyItem.sourceDescriptionElement}
+                    {this.props.historyItem.getSourceDescriptionElement(
+                        this.props.appStore
+                    )}
                     {body}
                 </div>
             </div>
@@ -559,8 +565,8 @@ export class FileHistoryItemComponent extends React.Component<
 }
 
 export class FileHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     get info() {
@@ -593,10 +599,7 @@ export class FileHistoryItem extends HistoryItem {
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
-            <FileHistoryItemComponent
-                appStore={this.appStore!}
-                historyItem={this}
-            />
+            <FileHistoryItemComponent appStore={appStore!} historyItem={this} />
         );
     }
 
@@ -641,16 +644,16 @@ export class FileHistoryItem extends HistoryItem {
         return this.fileState.note;
     }
 
-    set note(value: string | undefined) {
+    setNote(appStore: IAppStore, value: string | undefined) {
         let fileState = JSON.parse(this.message);
 
         fileState.note = value;
 
         logUpdate(
-            this.appStore.history.options.store,
+            activityLogStore,
             {
                 id: this.id,
-                oid: this.appStore!.history.oid,
+                oid: appStore.history.oid,
                 message: JSON.stringify(fileState)
             },
             {

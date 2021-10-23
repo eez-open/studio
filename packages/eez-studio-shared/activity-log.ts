@@ -10,6 +10,7 @@ import {
     IFilterSpecification,
     IStoreOperationOptions
 } from "eez-studio-shared/store";
+import { createHistoryItem } from "instrument/window/history/item-factory";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -520,3 +521,12 @@ class ActiveSession {
 }
 
 export const activeSession = new ActiveSession();
+
+export function getHistoryItemById(id: string) {
+    const activityLogEntry = activityLogStore.findById(id);
+    if (activityLogEntry) {
+        return createHistoryItem(activityLogEntry);
+    }
+
+    return undefined;
+}

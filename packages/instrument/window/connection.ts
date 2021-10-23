@@ -131,7 +131,7 @@ export class Connection {
             }
         } else {
             if (value.logEntry !== undefined) {
-                value = createHistoryItem(value.logEntry, this.appStore);
+                value = createHistoryItem(value.logEntry);
             }
 
             if (this.resolveCallback) {

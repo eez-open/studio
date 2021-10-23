@@ -12,7 +12,11 @@ import { observer } from "mobx-react";
 
 import { objectEqual } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import {
+    logUpdate,
+    IActivityLogEntry,
+    activityLogStore
+} from "eez-studio-shared/activity-log";
 import { UNITS, TIME_UNIT } from "eez-studio-shared/units";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 import { Point } from "eez-studio-shared/geometry";
@@ -41,7 +45,6 @@ import * as notification from "eez-studio-ui/notification";
 
 import { checkMime } from "instrument/connection/file-type";
 
-import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { FileHistoryItem } from "instrument/window/history/items/file";
@@ -119,11 +122,8 @@ export class WaveformChartsController extends ChartsController {
 export class Waveform extends FileHistoryItem {
     canBePartOfMultiChart = true;
 
-    constructor(
-        activityLogEntry: IActivityLogEntry | FileHistoryItem,
-        appStore: InstrumentAppStore
-    ) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem) {
+        super(activityLogEntry);
 
         const message = JSON.parse(this.message);
 
@@ -157,7 +157,7 @@ export class Waveform extends FileHistoryItem {
                     !objectEqual(message.waveformDefinition, waveformDefinition)
                 ) {
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -182,7 +182,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -212,7 +212,7 @@ export class Waveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -243,7 +243,7 @@ export class Waveform extends FileHistoryItem {
                     );
                     runInAction(() => (this.message = messageStr));
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -692,7 +692,7 @@ class WaveformConfigurationDialog extends React.Component<
 
             beginTransaction("Edit waveform configuration");
             logUpdate(
-                this.props.waveform.appStore.history.options.store,
+                activityLogStore,
                 {
                     id: this.props.waveform.id,
                     oid: this.props.waveform.oid,

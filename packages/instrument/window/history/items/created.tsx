@@ -12,6 +12,7 @@ import { HistoryItem } from "instrument/window/history/item";
 @observer
 export class CreatedHistoryItemComponent extends React.Component<
     {
+        appStore: IAppStore;
         historyItem: HistoryItem;
     },
     {}
@@ -35,18 +36,25 @@ export class CreatedHistoryItemComponent extends React.Component<
                     </small>
                     <span>Instrument {this.type}!</span>
                 </p>
-                {this.props.historyItem.sourceDescriptionElement}
+                {this.props.historyItem.getSourceDescriptionElement(
+                    this.props.appStore
+                )}
             </div>
         );
     }
 }
 
 export class CreatedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
-        return <CreatedHistoryItemComponent historyItem={this} />;
+        return (
+            <CreatedHistoryItemComponent
+                appStore={appStore}
+                historyItem={this}
+            />
+        );
     }
 }

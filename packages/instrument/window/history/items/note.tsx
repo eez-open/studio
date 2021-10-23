@@ -21,6 +21,7 @@ import { PreventDraggable } from "instrument/window/history/helper";
 @observer
 export class NoteHistoryItemComponent extends React.Component<
     {
+        appStore: IAppStore;
         historyItem: NoteHistoryItem;
     },
     {}
@@ -29,10 +30,10 @@ export class NoteHistoryItemComponent extends React.Component<
         showEditNoteDialog(this.props.historyItem.message, note => {
             beginTransaction("Edit note");
             logUpdate(
-                this.props.historyItem.appStore.history.options.store,
+                this.props.appStore.history.options.store,
                 {
                     id: this.props.historyItem.id,
-                    oid: this.props.historyItem.appStore!.history.oid,
+                    oid: this.props.appStore.history.oid,
                     message: note
                 },
                 {
@@ -55,7 +56,9 @@ export class NoteHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
-                    {this.props.historyItem.sourceDescriptionElement}
+                    {this.props.historyItem.getSourceDescriptionElement(
+                        this.props.appStore
+                    )}
                     <PreventDraggable tag="div">
                         <PropertyList>
                             <StaticRichTextProperty
@@ -77,8 +80,8 @@ export class NoteHistoryItemComponent extends React.Component<
 }
 
 export class NoteHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     get info() {
@@ -92,6 +95,8 @@ export class NoteHistoryItem extends HistoryItem {
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
-        return <NoteHistoryItemComponent historyItem={this} />;
+        return (
+            <NoteHistoryItemComponent appStore={appStore} historyItem={this} />
+        );
     }
 }

@@ -3,7 +3,11 @@ import { observable, computed, reaction, toJS, runInAction } from "mobx";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
-import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import {
+    logUpdate,
+    IActivityLogEntry,
+    activityLogStore
+} from "eez-studio-shared/activity-log";
 import {
     TIME_UNIT,
     FREQUENCY_UNIT,
@@ -373,11 +377,8 @@ interface IChannelsGroup {
 }
 
 export class DlogWaveform extends FileHistoryItem {
-    constructor(
-        activityLogEntry: IActivityLogEntry | FileHistoryItem,
-        appStore: InstrumentAppStore
-    ) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem) {
+        super(activityLogEntry);
 
         const message = JSON.parse(this.message);
 
@@ -392,7 +393,7 @@ export class DlogWaveform extends FileHistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -430,7 +431,7 @@ export class DlogWaveform extends FileHistoryItem {
                     this.message = newMessage;
 
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -457,7 +458,7 @@ export class DlogWaveform extends FileHistoryItem {
                     );
                     runInAction(() => (this.message = messageStr));
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,

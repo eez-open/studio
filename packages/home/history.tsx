@@ -50,7 +50,10 @@ class HomeAppStore implements IAppStore {
         listsMaxDwellProperty: 0,
         firstChannel: undefined,
         getDigits: (unit: IUnit) => 3,
-        listsMaxPointsProperty: 0
+        listsMaxPointsProperty: 0,
+        listsCurrentDigitsProperty: 0,
+        listsDwellDigitsProperty: 0,
+        listsVoltageDigitsProperty: 0
     };
     instrumentLists = [];
 

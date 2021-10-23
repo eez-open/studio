@@ -14,6 +14,7 @@ import { PreventDraggable } from "instrument/window/history/helper";
 @observer
 export class AnswerHistoryItemComponent extends React.Component<
     {
+        appStore: IAppStore;
         historyItem: HistoryItem;
     },
     {}
@@ -64,7 +65,9 @@ export class AnswerHistoryItemComponent extends React.Component<
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
                 </p>
-                {this.props.historyItem.sourceDescriptionElement}
+                {this.props.historyItem.getSourceDescriptionElement(
+                    this.props.appStore
+                )}
                 {content}
             </div>
         );
@@ -72,11 +75,16 @@ export class AnswerHistoryItemComponent extends React.Component<
 }
 
 export class AnswerHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
-        return <AnswerHistoryItemComponent historyItem={this} />;
+        return (
+            <AnswerHistoryItemComponent
+                appStore={appStore}
+                historyItem={this}
+            />
+        );
     }
 }

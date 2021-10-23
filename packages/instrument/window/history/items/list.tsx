@@ -3,18 +3,11 @@ import { computed, action } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import {
-    IActivityLogEntry,
-    activityLogStore
-} from "eez-studio-shared/activity-log";
+import { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
-
-import { getSource } from "notebook/store";
-
-import { InstrumentObject, instruments } from "instrument/instrument-object";
 
 import { checkMime, MIME_EEZ_LIST } from "instrument/connection/file-type";
 
@@ -50,14 +43,14 @@ export class ListHistoryItemComponent extends React.Component<
         if (
             this.message.listData &&
             this.message.listData.length > 0 &&
-            this.props.historyItem.instrument
+            this.props.appStore.instrument!
         ) {
             return createTableListFromData(
                 Object.assign({}, this.message.listData[0])
             );
         }
 
-        if (this.props.historyItem.data && this.props.historyItem.instrument) {
+        if (this.props.historyItem.data && this.props.appStore.instrument!) {
             return createTableListFromHistoryItem(this.props.historyItem);
         }
 
@@ -66,15 +59,13 @@ export class ListHistoryItemComponent extends React.Component<
 
     @computed
     get listId() {
-        return this.props.historyItem.appStore!.findListIdByName(
-            this.message.listName
-        );
+        return this.props.appStore.findListIdByName(this.message.listName);
     }
 
     @action.bound
     onOpen() {
         if (this.listId) {
-            this.props.historyItem.appStore!.navigationStore.changeSelectedListId(
+            this.props.appStore.navigationStore.changeSelectedListId(
                 this.listId
             );
         }
@@ -88,7 +79,7 @@ export class ListHistoryItemComponent extends React.Component<
             );
 
             saveTableListData(
-                this.props.historyItem.appStore!.instrument! as any, // @todo remove need for any
+                this.props.appStore.instrument!,
                 this.message.listName,
                 tableListData
             );
@@ -105,7 +96,9 @@ export class ListHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
-                    {this.props.historyItem.sourceDescriptionElement}
+                    {this.props.historyItem.getSourceDescriptionElement(
+                        this.props.appStore
+                    )}
                     <div>
                         {this.message.operation &&
                             (this.message.operation === "get"
@@ -148,27 +141,8 @@ export class ListHistoryItemComponent extends React.Component<
 }
 
 export class ListHistoryItem extends HistoryItem {
-    instrument: InstrumentObject | undefined;
-
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
-
-        if (appStore && appStore.history.options.store === activityLogStore) {
-            this.instrument = instruments.get(activityLogEntry.oid);
-        } else {
-            if (activityLogEntry.sid) {
-                const source = getSource(activityLogEntry.sid);
-                if (source) {
-                    this.instrument = new InstrumentObject({
-                        id: "0",
-                        instrumentExtensionId: source.instrumentExtensionId,
-                        label: source.instrumentName,
-                        autoConnect: false,
-                        selectedShortcutGroups: []
-                    });
-                }
-            }
-        }
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {

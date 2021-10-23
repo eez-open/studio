@@ -31,13 +31,15 @@ import { PropertyList, NumberInputProperty } from "eez-studio-ui/properties";
 import { Header } from "eez-studio-ui/header-with-body";
 
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";
-import type { InstrumentObject } from "instrument/instrument-object";
 
 import { getList, sendList } from "instrument/connection/list-operations";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 
-import type { IAppStore } from "instrument/window/history/history";
+import type {
+    IAppStore,
+    IInstrumentObject
+} from "instrument/window/history/history";
 
 import type {
     BaseList,
@@ -366,7 +368,7 @@ async function selectChannel(label: string, numChannels: number) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function getCsvDataColumnDefinitions(instrument: InstrumentObject) {
+export function getCsvDataColumnDefinitions(instrument: IInstrumentObject) {
     return [
         {
             id: "dwell",
@@ -384,7 +386,7 @@ export function getCsvDataColumnDefinitions(instrument: InstrumentObject) {
 }
 
 export async function saveTableListData(
-    instrument: InstrumentObject,
+    instrument: IInstrumentObject,
     listName: string,
     tableListData: ITableListData
 ) {

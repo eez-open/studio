@@ -15,6 +15,7 @@ import { HistoryItem } from "instrument/window/history/item";
 @observer
 export class ConnectFailedHistoryItemComponent extends React.Component<
     {
+        appStore: IAppStore;
         historyItem: HistoryItem;
     },
     {}
@@ -54,18 +55,25 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
                         {this.message.error && ": " + this.message.error}
                     </span>
                 </p>
-                {this.props.historyItem.sourceDescriptionElement}
+                {this.props.historyItem.getSourceDescriptionElement(
+                    this.props.appStore
+                )}
             </div>
         );
     }
 }
 
 export class ConnectFailedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
-        return <ConnectFailedHistoryItemComponent historyItem={this} />;
+        return (
+            <ConnectFailedHistoryItemComponent
+                appStore={appStore}
+                historyItem={this}
+            />
+        );
     }
 }

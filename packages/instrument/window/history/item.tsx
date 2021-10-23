@@ -3,6 +3,7 @@ import { observable } from "mobx";
 
 import { formatDuration } from "eez-studio-shared/util";
 import {
+    activityLogStore,
     IActivityLogEntry,
     loadData,
     logDelete
@@ -39,10 +40,7 @@ export class HistoryItem implements IHistoryItem {
     deleted: boolean;
     canBePartOfMultiChart = false;
 
-    constructor(
-        activityLogEntry: IActivityLogEntry,
-        public appStore: IAppStore
-    ) {
+    constructor(activityLogEntry: IActivityLogEntry) {
         this.id = activityLogEntry.id;
         this.sid = activityLogEntry.sid;
         this.oid = activityLogEntry.oid;
@@ -60,7 +58,7 @@ export class HistoryItem implements IHistoryItem {
 
     deleteLog() {
         logDelete(
-            this.appStore.history.options.store,
+            activityLogStore,
             {
                 id: this.id,
                 sid: this.sid,
@@ -77,7 +75,7 @@ export class HistoryItem implements IHistoryItem {
         if (this._data !== undefined) {
             return this._data;
         }
-        this._data = loadData(this.appStore.history.options.store, this.id);
+        this._data = loadData(activityLogStore, this.id);
         return this._data;
     }
 
@@ -112,15 +110,11 @@ export class HistoryItem implements IHistoryItem {
         return null;
     }
 
-    get sourceDescriptionElement() {
-        if (
-            this.sid &&
-            this.appStore.history.options.store.getSourceDescription
-        ) {
-            const source =
-                this.appStore.history.options.store.getSourceDescription(
-                    this.sid
-                );
+    getSourceDescriptionElement(appStore: IAppStore) {
+        if (this.sid && appStore.history.options.store.getSourceDescription) {
+            const source = appStore.history.options.store.getSourceDescription(
+                this.sid
+            );
             if (source) {
                 return (
                     <p>

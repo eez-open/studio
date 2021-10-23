@@ -15,6 +15,7 @@ import { HistoryItem } from "instrument/window/history/item";
 @observer
 export class ScriptHistoryItemComponent extends React.Component<
     {
+        appStore: IAppStore;
         historyItem: ScriptHistoryItem;
     },
     {}
@@ -29,7 +30,9 @@ export class ScriptHistoryItemComponent extends React.Component<
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>
                     </p>
-                    {this.props.historyItem.sourceDescriptionElement}
+                    {this.props.historyItem.getSourceDescriptionElement(
+                        this.props.appStore
+                    )}
                     <table className="table">
                         <tbody>
                             <tr>
@@ -93,8 +96,8 @@ export interface IScriptHistoryItemMessage {
 }
 
 export class ScriptHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     @computed
@@ -103,6 +106,11 @@ export class ScriptHistoryItem extends HistoryItem {
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
-        return <ScriptHistoryItemComponent historyItem={this} />;
+        return (
+            <ScriptHistoryItemComponent
+                appStore={appStore}
+                historyItem={this}
+            />
+        );
     }
 }

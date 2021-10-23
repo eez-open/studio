@@ -11,7 +11,12 @@ import { observer } from "mobx-react";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { logUpdate, IActivityLogEntry } from "eez-studio-shared/activity-log";
+import {
+    logUpdate,
+    IActivityLogEntry,
+    activityLogStore,
+    getHistoryItemById
+} from "eez-studio-shared/activity-log";
 import { TIME_UNIT } from "eez-studio-shared/units";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
@@ -33,7 +38,6 @@ import {
 } from "eez-studio-ui/chart/chart";
 import { RulersModel, IRulersModel } from "eez-studio-ui/chart/rulers";
 
-import type { InstrumentAppStore } from "instrument/window/app-store";
 import { ChartPreview } from "instrument/window/chart-preview";
 
 import { HistoryItem } from "instrument/window/history/item";
@@ -124,11 +128,8 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
-    constructor(
-        activityLogEntry: IActivityLogEntry,
-        appStore: InstrumentAppStore
-    ) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
 
         const message = JSON.parse(this.message);
 
@@ -164,7 +165,7 @@ export class MultiWaveform extends HistoryItem {
             arg => {
                 if (!objectEqual(arg.message.viewOptions, arg.viewOptions)) {
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -197,7 +198,7 @@ export class MultiWaveform extends HistoryItem {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.rulers, rulers)) {
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -228,7 +229,7 @@ export class MultiWaveform extends HistoryItem {
                     );
                     runInAction(() => (this.message = messageStr));
                     logUpdate(
-                        this.appStore.history.options.store,
+                        activityLogStore,
                         {
                             id: this.id,
                             oid: this.oid,
@@ -263,7 +264,7 @@ export class MultiWaveform extends HistoryItem {
     get linkedWaveforms() {
         return this.waveformLinks
             .map(waveformLink => {
-                const waveform = this.appStore!.history.getHistoryItemById(
+                const waveform = getHistoryItemById(
                     waveformLink.id
                 )! as Waveform;
                 return {
@@ -598,13 +599,9 @@ class MultiWaveformConfigurationDialog extends React.Component<
             beginTransaction("Edit chart configuration");
 
             changedHistoryItems.forEach(changedHistoryItem => {
-                logUpdate(
-                    this.props.multiWaveform.appStore.history.options.store,
-                    changedHistoryItem,
-                    {
-                        undoable: true
-                    }
-                );
+                logUpdate(activityLogStore, changedHistoryItem, {
+                    undoable: true
+                });
             });
 
             commitTransaction();

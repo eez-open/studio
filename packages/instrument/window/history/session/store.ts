@@ -38,8 +38,7 @@ export class HistorySessions {
                     );
                     if (activityLogEntry) {
                         newActiveSession = createHistoryItem(
-                            activityLogEntry,
-                            this.history.appStore
+                            activityLogEntry
                         ) as SessionHistoryItem;
                     }
                 } else {

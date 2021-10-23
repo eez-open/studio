@@ -13,6 +13,7 @@ import { HistoryItem } from "instrument/window/history/item";
 @observer
 export class DisconnectedHistoryItemComponent extends React.Component<
     {
+        appStore: IAppStore;
         historyItem: HistoryItem;
     },
     {}
@@ -54,18 +55,25 @@ export class DisconnectedHistoryItemComponent extends React.Component<
                         </span>
                     )}
                 </p>
-                {this.props.historyItem.sourceDescriptionElement}
+                {this.props.historyItem.getSourceDescriptionElement(
+                    this.props.appStore
+                )}
             </div>
         );
     }
 }
 
 export class DisconnectedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry, appStore: IAppStore) {
-        super(activityLogEntry, appStore);
+    constructor(activityLogEntry: IActivityLogEntry) {
+        super(activityLogEntry);
     }
 
     getListItemElement(appStore: IAppStore): React.ReactNode {
-        return <DisconnectedHistoryItemComponent historyItem={this} />;
+        return (
+            <DisconnectedHistoryItemComponent
+                appStore={appStore}
+                historyItem={this}
+            />
+        );
     }
 }

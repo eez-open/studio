@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import { ButtonAction, TextAction, IconAction } from "eez-studio-ui/action";
 import { IAppStore } from "instrument/window/history/history";
+import { computed } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,6 +17,12 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
             this.props.appStore.history.sessions.closeActiveSession
         );
     };
+
+    @computed get activeSessionName() {
+        return this.props.appStore.history.sessions.activeSession!.getSessionName(
+            this.props.appStore
+        );
+    }
 
     render() {
         const viewSessionsList = (
@@ -34,12 +41,7 @@ export class SessionInfo extends React.Component<{ appStore: IAppStore }, {}> {
             body = (
                 <React.Fragment>
                     <span>Active session:</span>
-                    <span>
-                        {
-                            this.props.appStore.history.sessions.activeSession
-                                .sessionName
-                        }
-                    </span>
+                    <span>{this.activeSessionName}</span>
                     <ButtonAction
                         text="Close"
                         title="Close active session"

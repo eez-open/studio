@@ -22,15 +22,12 @@ import type * as ScriptHistoryItemModule from "instrument/window/history/items/s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getFileSpecializationItem(
-    activityLogEntry: IActivityLogEntry,
-    appStore?: any
-) {
+function getFileSpecializationItem(activityLogEntry: IActivityLogEntry) {
     const { ListHistoryItem, isTableList } =
         require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
 
     if (isTableList(activityLogEntry)) {
-        return new ListHistoryItem(activityLogEntry, appStore);
+        return new ListHistoryItem(activityLogEntry);
     }
 
     const { isDlogWaveform } =
@@ -40,27 +37,26 @@ function getFileSpecializationItem(
         require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
 
     if (isDlogWaveform(activityLogEntry)) {
-        return new DlogWaveform(activityLogEntry, appStore);
+        return new DlogWaveform(activityLogEntry);
     }
 
     const { isWaveform, Waveform } =
         require("instrument/window/waveform/generic") as typeof GenericWaveformModule;
 
     if (isWaveform(activityLogEntry)) {
-        return new Waveform(activityLogEntry, appStore);
+        return new Waveform(activityLogEntry);
     }
 
     return undefined;
 }
 
 export function createHistoryItem(
-    activityLogEntry: IActivityLogEntry,
-    appStore?: any
+    activityLogEntry: IActivityLogEntry
 ): HistoryItem {
     if (activityLogEntry.type.startsWith("activity-log/session")) {
         const { SessionHistoryItem } =
             require("instrument/window/history/items/session") as typeof SessionHistoryItemModule;
-        return new SessionHistoryItem(activityLogEntry, appStore);
+        return new SessionHistoryItem(activityLogEntry);
     }
 
     if (
@@ -70,86 +66,83 @@ export function createHistoryItem(
     ) {
         const { CreatedHistoryItem } =
             require("instrument/window/history/items/created") as typeof CreatedHistoryItemModule;
-        return new CreatedHistoryItem(activityLogEntry, appStore);
+        return new CreatedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/connected") {
         const { ConnectedHistoryItem } =
             require("instrument/window/history/items/connected") as typeof ConnectedHistoryItemModule;
-        return new ConnectedHistoryItem(activityLogEntry, appStore);
+        return new ConnectedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/connect-failed") {
         const { ConnectFailedHistoryItem } =
             require("instrument/window/history/items/connect-failed") as typeof ConnectFailedHistoryItemModule;
-        return new ConnectFailedHistoryItem(activityLogEntry, appStore);
+        return new ConnectFailedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/disconnected") {
         const { DisconnectedHistoryItem } =
             require("instrument/window/history/items/disconnected") as typeof DisconnectedHistoryItemModule;
-        return new DisconnectedHistoryItem(activityLogEntry, appStore);
+        return new DisconnectedHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/request") {
         const { RequestHistoryItem } =
             require("instrument/window/history/items/request") as typeof RequestHistoryItemModule;
-        return new RequestHistoryItem(activityLogEntry, appStore);
+        return new RequestHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/answer") {
         const { AnswerHistoryItem } =
             require("instrument/window/history/items/answer") as typeof AnswerHistoryItemModule;
-        return new AnswerHistoryItem(activityLogEntry, appStore);
+        return new AnswerHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "activity-log/note") {
         const { NoteHistoryItem } =
             require("instrument/window/history/items/note") as typeof NoteHistoryItemModule;
-        return new NoteHistoryItem(activityLogEntry, appStore);
+        return new NoteHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type.startsWith("instrument/file")) {
-        if (appStore) {
-            const item = getFileSpecializationItem(activityLogEntry, appStore);
-            if (item) {
-                return item;
-            }
+        const item = getFileSpecializationItem(activityLogEntry);
+        if (item) {
+            return item;
         }
 
         const { FileHistoryItem } =
             require("instrument/window/history/items/file") as typeof FileHistoryItemModule;
 
-        return new FileHistoryItem(activityLogEntry, appStore);
+        return new FileHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/list") {
         const { ListHistoryItem } =
             require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
-        return new ListHistoryItem(activityLogEntry, appStore);
+        return new ListHistoryItem(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/chart") {
         const { MultiWaveform } =
             require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
-        return new MultiWaveform(activityLogEntry, appStore);
+        return new MultiWaveform(activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/script") {
         const { ScriptHistoryItem } =
             require("instrument/window/history/items/script") as typeof ScriptHistoryItemModule;
-        return new ScriptHistoryItem(activityLogEntry, appStore);
+        return new ScriptHistoryItem(activityLogEntry);
     }
 
     throw "Unknown activity log entry";
 }
 
 export function updateHistoryItemClass(
-    historyItem: IHistoryItem,
-    appStore: any
+    historyItem: IHistoryItem
 ): IHistoryItem {
     if (historyItem.type.startsWith("instrument/file")) {
-        const item = getFileSpecializationItem(historyItem, appStore);
+        const item = getFileSpecializationItem(historyItem);
         if (item) {
             return item;
         }
