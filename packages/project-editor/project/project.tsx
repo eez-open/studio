@@ -613,8 +613,7 @@ export class General extends EezObject {
                     const documentStore = getDocumentStore(general);
                     return (
                         general.imports.length > 0 ||
-                        documentStore.project.isDashboardProject ||
-                        documentStore.project.isAppletProject
+                        documentStore.project.isDashboardProject
                     );
                 }
             },
