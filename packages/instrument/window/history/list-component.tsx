@@ -360,7 +360,7 @@ export class HistoryListComponent extends React.Component<HistoryListComponentPr
     lastItemInTheCenterId: string | undefined;
 
     componentDidMount() {
-        this.autoScroll();
+        //this.autoScroll();
         this.div.addEventListener("scroll", this.onScroll);
 
         this.lastItemInTheCenterId = undefined;
