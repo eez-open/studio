@@ -36,23 +36,7 @@ export class Connection {
     resolveCallback: ((result: any) => void) | undefined;
     rejectCallback: ((result: any) => void) | undefined;
 
-    constructor(private appStore: InstrumentAppStore) {
-        EEZStudio.electron.ipcRenderer.on(
-            "instrument/connection/value",
-            (
-                event: any,
-                args: {
-                    acquireId: string;
-                    value: any;
-                    error: any;
-                }
-            ) => {
-                if (this.acquireId === args.acquireId) {
-                    this.onValue(args.value, args.error);
-                }
-            }
-        );
-    }
+    constructor(private appStore: InstrumentAppStore) {}
 
     get instrument() {
         return this.appStore.instrument!;
@@ -95,6 +79,7 @@ export class Connection {
 
     async acquire(traceEnabled: boolean = false) {
         await this.instrument.connection.acquire(
+            this.instrument.id,
             this.acquireId,
             EEZStudio.remote.getCurrentWindow().id,
             traceEnabled
@@ -152,13 +137,46 @@ export class Connection {
 ////////////////////////////////////////////////////////////////////////////////
 
 const connections = new Map<InstrumentObject, Connection>();
+const instrumentIdToConnectionMap = new Map<string, Connection>();
 
 export function getConnection(appStore: InstrumentAppStore) {
     const instrument = appStore.instrument!;
     let connection = connections.get(instrument);
     if (!connection) {
         connection = new Connection(appStore);
+
         connections.set(instrument, connection);
+        instrumentIdToConnectionMap.set(instrument.id, connection);
+
+        if (instrumentIdToConnectionMap.size == 1) {
+            EEZStudio.electron.ipcRenderer.on(
+                "instrument/connection/value",
+                (
+                    event: any,
+                    args: {
+                        instrumentId: string;
+                        acquireId: string;
+                        value: any;
+                        error: any;
+                    }
+                ) => {
+                    const connection = instrumentIdToConnectionMap.get(
+                        args.instrumentId
+                    );
+
+                    if (connection) {
+                        if (connection.acquireId === args.acquireId) {
+                            connection.onValue(args.value, args.error);
+                        }
+                    } else {
+                        console.error(
+                            "Unknown instrument ID for the query result:",
+                            args.instrumentId
+                        );
+                    }
+                }
+            );
+        }
     }
     return connection;
 }

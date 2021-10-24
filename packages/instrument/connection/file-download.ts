@@ -47,7 +47,7 @@ export class FileDownload extends FileTransfer {
         };
 
         if (this.state === "success") {
-            this.logEntry.data = new Buffer(this.data, "binary");
+            this.logEntry.data = Buffer.from(this.data, "binary");
         }
 
         this.logId = log(activityLogStore, this.logEntry, {
@@ -98,7 +98,7 @@ export class FileDownload extends FileTransfer {
         this.logEntry.message = this.serializeState();
 
         if (this.state === "success") {
-            this.logEntry.data = new Buffer(this.data, "binary");
+            this.logEntry.data = Buffer.from(this.data, "binary");
         }
 
         let logEntryChanges: Partial<IActivityLogEntry> = {

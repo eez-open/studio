@@ -125,3 +125,5 @@ ipcMain.on("preventAppSuspension", (event: any, on: boolean) => {
         }
     }
 });
+
+process.on("warning", e => console.warn(e.stack));

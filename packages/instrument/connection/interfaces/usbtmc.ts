@@ -870,7 +870,7 @@ export class Instrument {
                 const req = Buffer.concat([
                     this.pack_dev_dep_msg_out_header(size, eom),
                     block,
-                    new Buffer((4 - (size % 4)) % 4)
+                    Buffer.alloc((4 - (size % 4)) % 4)
                 ]);
 
                 await this.bulk_out_ep_write(req);

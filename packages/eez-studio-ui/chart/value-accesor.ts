@@ -3,7 +3,7 @@ import type { IWaveformDlogParams } from "eez-studio-ui/chart/IWaveformDlogParam
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 
 function getCsvValues(valuesArray: any) {
-    var values = new Buffer(valuesArray.buffer || []).toString("binary");
+    var values = Buffer.from(valuesArray.buffer || []).toString("binary");
 
     if (!values || !values.split) {
         return [];

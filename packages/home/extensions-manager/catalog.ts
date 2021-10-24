@@ -175,7 +175,7 @@ class ExtensionsCatalog {
         req.addEventListener("load", async () => {
             const decompress = require("decompress");
 
-            const files = await decompress(new Buffer(req.response));
+            const files = await decompress(Buffer.from(req.response));
 
             const catalog = JSON.parse(files[0].data);
 

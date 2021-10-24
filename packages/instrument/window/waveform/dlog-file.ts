@@ -176,7 +176,7 @@ export function decodeDlog<UnitType>(
     }
 
     function readString(start: number, end: number) {
-        return new Buffer(data.slice(start, end)).toString();
+        return Buffer.from(data.slice(start, end)).toString();
     }
 
     function readUInt16(i: number) {

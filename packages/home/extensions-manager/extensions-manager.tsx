@@ -792,7 +792,7 @@ export function downloadAndInstallExtension(
         });
 
         req.addEventListener("load", () => {
-            const extensionZipFileData = new Buffer(req.response);
+            const extensionZipFileData = Buffer.from(req.response);
 
             if (extensionToInstall.sha256) {
                 if (

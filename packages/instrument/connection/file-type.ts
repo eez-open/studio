@@ -81,7 +81,11 @@ export function convertBmpToPng(data: string) {
         browserWindow.webContents.once("dom-ready", () => {
             browserWindow.webContents.send("convertBmpToPng", data);
 
-            const onConvertBmpToPngResult = (event: any, error: any, data: string) => {
+            const onConvertBmpToPngResult = (
+                event: any,
+                error: any,
+                data: string
+            ) => {
                 if (browserWindow.webContents === event.sender) {
                     if (error) {
                         reject(error);
@@ -89,7 +93,10 @@ export function convertBmpToPng(data: string) {
                         resolve(data);
                     }
                     browserWindow.close();
-                    ipcMain.removeListener("convertBmpToPngResult", onConvertBmpToPngResult);
+                    ipcMain.removeListener(
+                        "convertBmpToPngResult",
+                        onConvertBmpToPngResult
+                    );
                 }
             };
 
@@ -102,7 +109,9 @@ export function convertBmpToPng(data: string) {
 
 function getUint8Array(data: string | Buffer) {
     if (typeof data === "string") {
-        return new Uint8Array(new Buffer(data.slice(0, SAMPLE_LENGTH), "binary"));
+        return new Uint8Array(
+            Buffer.from(data.slice(0, SAMPLE_LENGTH), "binary")
+        );
     } else {
         return new Uint8Array(data);
     }
@@ -136,7 +145,11 @@ function detectCSV(data: string | Buffer) {
             }
         }
 
-        if (numbers.find(number => number !== "=" && !isFinite(parseFloat(number)))) {
+        if (
+            numbers.find(
+                number => number !== "=" && !isFinite(parseFloat(number))
+            )
+        ) {
             return undefined;
         }
     }
@@ -159,9 +172,7 @@ export function checkMime(message: string, list: string[]) {
     return list.indexOf(mime) !== -1;
 }
 
-function recognizeXAxisUnit(
-    xAxisUnit: string
-): {
+function recognizeXAxisUnit(xAxisUnit: string): {
     unitName: keyof typeof UNITS;
     timeScale: number;
 } {
@@ -182,9 +193,7 @@ function recognizeXAxisUnit(
     };
 }
 
-function recognizeYAxisUnit(
-    yAxisUnit: string
-): {
+function recognizeYAxisUnit(yAxisUnit: string): {
     unitName: keyof typeof UNITS;
     valueScale: number;
 } {
@@ -246,7 +255,8 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
     const { unitName, valueScale } = recognizeYAxisUnit(yAxisUnit);
 
     // calc sampling rate
-    let dt = parseFloat(lines[4].split(",")[0]) - parseFloat(lines[3].split(",")[0]);
+    let dt =
+        parseFloat(lines[4].split(",")[0]) - parseFloat(lines[3].split(",")[0]);
     if (isNaN(dt)) {
         return undefined;
     }
@@ -254,7 +264,7 @@ export function extractColumnFromCSVHeuristically(data: string | Buffer) {
     let samplingRate = 1 / dt;
 
     // get y values
-    let numbers = new Buffer((lines.length - 3) * 8);
+    let numbers = Buffer.alloc((lines.length - 3) * 8);
     for (let i = 3; i < lines.length; ++i) {
         const number = parseFloat(lines[i].split(",")[1]) * valueScale;
         numbers.writeDoubleLE(number, (i - 3) * 8);

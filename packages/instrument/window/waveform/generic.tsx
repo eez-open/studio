@@ -394,7 +394,7 @@ export class Waveform extends FileHistoryItem {
     @computed
     get values(): any {
         if (typeof this.data === "string") {
-            return new Uint8Array(new Buffer(this.data, "binary").buffer);
+            return new Uint8Array(Buffer.from(this.data, "binary").buffer);
         }
         return this.data;
     }

@@ -162,7 +162,7 @@ class JavaScriptSession {
             var dataBuffers = [];
             for (let i = 0; i < config.data.length; i++) {
                 if (typeof config.data[i] === "string") {
-                    dataBuffers.push(new Buffer(config.data[i], "binary"));
+                    dataBuffers.push(Buffer.from(config.data[i], "binary"));
                 } else if (config.data[i] instanceof Buffer) {
                     dataBuffers.push(config.data[i]);
                 } else if (config.data[i] instanceof Uint8Array) {
@@ -173,7 +173,7 @@ class JavaScriptSession {
             }
             data = Buffer.concat(dataBuffers);
         } else if (typeof config.data === "string") {
-            data = new Buffer(config.data, "binary");
+            data = Buffer.from(config.data, "binary");
         } else if (config.data instanceof Buffer) {
             data = config.data;
         } else {

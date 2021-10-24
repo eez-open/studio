@@ -177,7 +177,7 @@ export class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
 
     generateChart = () => {
         const numSamples = 128;
-        const data = new Buffer(numSamples * 8);
+        const data = Buffer.alloc(numSamples * 8);
         for (let i = 0; i < numSamples; ++i) {
             let value;
             if (i <= 10) {

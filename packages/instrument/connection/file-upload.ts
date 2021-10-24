@@ -45,7 +45,7 @@ export async function upload(
 ) {}
 
 function arrayBufferToBuffer(ab: ArrayBuffer): Buffer {
-    var buffer = new Buffer(ab.byteLength);
+    var buffer = Buffer.alloc(ab.byteLength);
     var view = new Uint8Array(ab);
     for (var i = 0; i < buffer.length; ++i) {
         buffer[i] = view[i];
@@ -116,7 +116,7 @@ export class FileUpload extends FileTransfer {
                 );
                 this.fileData = Buffer.allocUnsafe(this.fileDataLength);
                 this.fd = await openFile(this.instructions.sourceFilePath);
-                let inputBuffer = new Buffer(SAMPLE_LENGTH);
+                let inputBuffer = Buffer.alloc(SAMPLE_LENGTH);
                 let { buffer } = await readFile(
                     this.fd,
                     inputBuffer,

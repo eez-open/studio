@@ -28,6 +28,7 @@ const OtherReleases = observer(
         }
 
         const otherReleases = bb3Instrument.mcu.allReleases
+            .slice()
             .sort((a, b) => compareVersions(b.tag_name, a.tag_name))
             .filter(
                 release =>
