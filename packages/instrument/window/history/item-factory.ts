@@ -106,7 +106,10 @@ export function createHistoryItem(
         return new NoteHistoryItem(activityLogEntry);
     }
 
-    if (activityLogEntry.type.startsWith("instrument/file")) {
+    if (
+        activityLogEntry.type.startsWith("instrument/file") ||
+        activityLogEntry.type.startsWith("instrument/received")
+    ) {
         const item = getFileSpecializationItem(activityLogEntry);
         if (item) {
             return item;

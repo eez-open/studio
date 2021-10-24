@@ -2995,7 +2995,10 @@ export function getInheritedValue(object: IEezObject, propertyName: string) {
 export function humanizePropertyName(object: IEezObject, propertyName: string) {
     const property = findPropertyByNameInObject(object, propertyName);
     if (property && property.displayName) {
-        return property.displayName;
+        if (typeof property.displayName == "string") {
+            return property.displayName;
+        }
+        return property.displayName(object);
     }
     return humanize(propertyName);
 }

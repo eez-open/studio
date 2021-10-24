@@ -791,6 +791,7 @@ interface IHistoryOptions {
     store: IStore;
     isSessionsSupported: boolean;
     oid?: string;
+    loadAtStart: boolean;
 }
 
 export class History {
@@ -798,10 +799,13 @@ export class History {
         {
             isDeletedItemsHistory: false,
             store: activityLogStore,
-            isSessionsSupported: true
+            isSessionsSupported: true,
+            loadAtStart: true
         },
         this.optionsArg
     );
+
+    loaded = false;
 
     @observable items: IHistoryItem[] = [];
 
@@ -903,17 +907,9 @@ export class History {
             }
         );
 
-        scheduleTask(
-            "Show most recent log items",
-            this.isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
-            action(() => this.calendar.update())
-        );
-
-        scheduleTask(
-            "Load calendar",
-            this.isDeletedItemsHistory ? Priority.Lowest : Priority.Low,
-            action(() => this.calendar.load())
-        );
+        if (this.options.loadAtStart) {
+            this.load();
+        }
 
         if (this.isSessionsSupported) {
             scheduleTask(
@@ -937,6 +933,24 @@ export class History {
                 }, 10);
             }
         );
+    }
+
+    load() {
+        if (!this.loaded) {
+            this.loaded = true;
+
+            scheduleTask(
+                "Show most recent log items",
+                this.isDeletedItemsHistory ? Priority.Lowest : Priority.Middle,
+                action(() => this.calendar.update())
+            );
+
+            scheduleTask(
+                "Load calendar",
+                this.isDeletedItemsHistory ? Priority.Lowest : Priority.Low,
+                action(() => this.calendar.load())
+            );
+        }
     }
 
     get isDeletedItemsHistory() {

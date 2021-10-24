@@ -921,13 +921,13 @@ class Tabs {
 
     @observable viewDeletedHistory = false;
 
-    @action
+    @action.bound
     navigateToHistory() {
         this.openTabById("history", true);
         this.viewDeletedHistory = false;
     }
 
-    @action
+    @action.bound
     navigateToDeletedHistoryItems() {
         this.openTabById("history", true);
         this.viewDeletedHistory = true;

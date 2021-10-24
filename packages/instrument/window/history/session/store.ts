@@ -30,6 +30,10 @@ export interface ISession {
 }
 
 export class HistorySessions {
+    @observable sessions: ISession[] = [];
+    @observable selectedSession: ISession | undefined;
+    @observable activeSession: SessionHistoryItem | undefined;
+
     constructor(public history: History) {
         autorun(
             () => {
@@ -62,10 +66,6 @@ export class HistorySessions {
             }
         );
     }
-
-    @observable sessions: ISession[] = [];
-    @observable selectedSession: ISession | undefined;
-    @observable activeSession: SessionHistoryItem | undefined;
 
     @action
     async load() {

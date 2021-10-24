@@ -443,7 +443,7 @@ export class SelectProperty extends React.Component<
                     <div className={className}>
                         <select
                             id={id}
-                            className="form-control"
+                            className="form-select"
                             value={this.props.value}
                             onChange={event =>
                                 this.props.onChange(event.target.value)

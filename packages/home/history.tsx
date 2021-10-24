@@ -59,8 +59,12 @@ class HomeAppStore implements IAppStore {
 
     filters: Filters = new Filters();
 
-    history: History = new History(this);
-    deletedItemsHistory: DeletedItemsHistory = new DeletedItemsHistory(this);
+    history: History = new History(this, {
+        loadAtStart: false
+    });
+    deletedItemsHistory: DeletedItemsHistory = new DeletedItemsHistory(this, {
+        loadAtStart: false
+    });
 
     isHistoryItemSelected(id: string): boolean {
         return this.selectedHistoryItems.has(id);
@@ -116,11 +120,13 @@ export class HistorySection extends React.Component<{
     constructor(props: any) {
         super(props);
         this.appStore = getAppStore(props.oids);
+        this.appStore.history.load();
     }
 
     componentDidUpdate(prevProps: any) {
         if (this.props != prevProps) {
             this.appStore = getAppStore(this.props.oids);
+            this.appStore.history.load();
         }
     }
 
@@ -151,7 +157,12 @@ export class HistorySection extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class DeletedHistoryItemsSection extends React.Component<{}> {
+export class DeletedHistoryItemsSection extends React.Component {
+    constructor(props: any) {
+        super(props);
+        getAppStore().history.load();
+    }
+
     render() {
         return (
             <VerticalHeaderWithBody>
