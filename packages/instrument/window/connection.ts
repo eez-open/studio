@@ -9,6 +9,7 @@ import { createHistoryItem } from "instrument/window/history/item-factory";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import { guid } from "eez-studio-shared/guid";
+import { activityLogStore } from "eez-studio-shared/activity-log";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +132,7 @@ export class Connection {
             }
         } else {
             if (value.logEntry !== undefined) {
-                value = createHistoryItem(value.logEntry);
+                value = createHistoryItem(activityLogStore, value.logEntry);
             }
 
             if (this.resolveCallback) {

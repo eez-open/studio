@@ -21,7 +21,10 @@ export class SearchResultComponent extends React.Component<{
     searchResult: SearchResult;
 }> {
     getLogEntryInfo(logEntry: IActivityLogEntry) {
-        const historyItem = createHistoryItem(logEntry);
+        const historyItem = createHistoryItem(
+            this.props.history.options.store,
+            logEntry
+        );
         return historyItem.info;
     }
 

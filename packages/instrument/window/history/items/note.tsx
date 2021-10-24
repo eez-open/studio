@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { IActivityLogEntry, logUpdate } from "eez-studio-shared/activity-log";
+import { logUpdate } from "eez-studio-shared/activity-log";
 
 import { Balloon } from "eez-studio-ui/balloon";
 import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
@@ -80,10 +80,6 @@ export class NoteHistoryItemComponent extends React.Component<
 }
 
 export class NoteHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
-    }
-
     get info() {
         return (
             <Balloon>

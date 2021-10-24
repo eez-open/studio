@@ -10,7 +10,11 @@ import {
 import { observer } from "mobx-react";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
-import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import {
+    beginTransaction,
+    commitTransaction,
+    IStore
+} from "eez-studio-shared/store";
 import {
     logUpdate,
     IActivityLogEntry,
@@ -128,8 +132,8 @@ interface ILinkedWaveform {
 }
 
 export class MultiWaveform extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
+    constructor(store: IStore, activityLogEntry: IActivityLogEntry) {
+        super(store, activityLogEntry);
 
         const message = JSON.parse(this.message);
 
@@ -265,6 +269,7 @@ export class MultiWaveform extends HistoryItem {
         return this.waveformLinks
             .map(waveformLink => {
                 const waveform = getHistoryItemById(
+                    this.store,
                     waveformLink.id
                 )! as Waveform;
                 return {

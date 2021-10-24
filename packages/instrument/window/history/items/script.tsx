@@ -3,7 +3,6 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { Icon } from "eez-studio-ui/icon";
 
@@ -96,10 +95,6 @@ export interface IScriptHistoryItemMessage {
 }
 
 export class ScriptHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
-    }
-
     @computed
     get scriptMessage() {
         return JSON.parse(this.message) as IScriptHistoryItemMessage;

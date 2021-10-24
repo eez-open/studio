@@ -9,6 +9,7 @@ import {
     logDelete
 } from "eez-studio-shared/activity-log";
 import type { IAppStore } from "instrument/window/history/history";
+import type { IStore } from "eez-studio-shared/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +41,7 @@ export class HistoryItem implements IHistoryItem {
     deleted: boolean;
     canBePartOfMultiChart = false;
 
-    constructor(activityLogEntry: IActivityLogEntry) {
+    constructor(protected store: IStore, activityLogEntry: IActivityLogEntry) {
         this.id = activityLogEntry.id;
         this.sid = activityLogEntry.sid;
         this.oid = activityLogEntry.oid;
@@ -75,7 +76,7 @@ export class HistoryItem implements IHistoryItem {
         if (this._data !== undefined) {
             return this._data;
         }
-        this._data = loadData(activityLogStore, this.id);
+        this._data = loadData(this.store, this.id);
         return this._data;
     }
 

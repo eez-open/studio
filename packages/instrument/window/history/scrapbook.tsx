@@ -48,7 +48,10 @@ class ScrapbookStore {
                         const activityLogEntry =
                             activityLogStore.findById(itemId);
                         if (activityLogEntry) {
-                            return createHistoryItem(activityLogEntry);
+                            return createHistoryItem(
+                                activityLogStore,
+                                activityLogEntry
+                            );
                         }
                         return undefined;
                     })
@@ -142,7 +145,7 @@ class ScrapbookStore {
             this._items.splice(
                 insertAt,
                 0,
-                createHistoryItem(activityLogEntry)
+                createHistoryItem(activityLogStore, activityLogEntry)
             );
         }
     }

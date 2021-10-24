@@ -141,10 +141,6 @@ export class ListHistoryItemComponent extends React.Component<
 }
 
 export class ListHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
-    }
-
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <ListHistoryItemComponent historyItem={this} appStore={appStore} />

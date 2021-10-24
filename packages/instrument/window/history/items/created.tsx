@@ -2,7 +2,6 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
@@ -45,10 +44,6 @@ export class CreatedHistoryItemComponent extends React.Component<
 }
 
 export class CreatedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
-    }
-
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <CreatedHistoryItemComponent

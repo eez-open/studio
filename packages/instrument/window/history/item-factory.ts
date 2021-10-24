@@ -23,12 +23,15 @@ import type * as ScriptHistoryItemModule from "instrument/window/history/items/s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getFileSpecializationItem(activityLogEntry: IActivityLogEntry) {
+function getFileSpecializationItem(
+    store: IStore,
+    activityLogEntry: IActivityLogEntry
+) {
     const { ListHistoryItem, isTableList } =
         require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
 
     if (isTableList(activityLogEntry)) {
-        return new ListHistoryItem(activityLogEntry);
+        return new ListHistoryItem(store, activityLogEntry);
     }
 
     const { isDlogWaveform } =
@@ -38,26 +41,27 @@ function getFileSpecializationItem(activityLogEntry: IActivityLogEntry) {
         require("instrument/window/waveform/dlog") as typeof DlogWaveformModule;
 
     if (isDlogWaveform(activityLogEntry)) {
-        return new DlogWaveform(activityLogEntry);
+        return new DlogWaveform(store, activityLogEntry);
     }
 
     const { isWaveform, Waveform } =
         require("instrument/window/waveform/generic") as typeof GenericWaveformModule;
 
     if (isWaveform(activityLogEntry)) {
-        return new Waveform(activityLogEntry);
+        return new Waveform(store, activityLogEntry);
     }
 
     return undefined;
 }
 
 export function createHistoryItem(
+    store: IStore,
     activityLogEntry: IActivityLogEntry
 ): HistoryItem {
     if (activityLogEntry.type.startsWith("activity-log/session")) {
         const { SessionHistoryItem } =
             require("instrument/window/history/items/session") as typeof SessionHistoryItemModule;
-        return new SessionHistoryItem(activityLogEntry);
+        return new SessionHistoryItem(store, activityLogEntry);
     }
 
     if (
@@ -67,50 +71,50 @@ export function createHistoryItem(
     ) {
         const { CreatedHistoryItem } =
             require("instrument/window/history/items/created") as typeof CreatedHistoryItemModule;
-        return new CreatedHistoryItem(activityLogEntry);
+        return new CreatedHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/connected") {
         const { ConnectedHistoryItem } =
             require("instrument/window/history/items/connected") as typeof ConnectedHistoryItemModule;
-        return new ConnectedHistoryItem(activityLogEntry);
+        return new ConnectedHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/connect-failed") {
         const { ConnectFailedHistoryItem } =
             require("instrument/window/history/items/connect-failed") as typeof ConnectFailedHistoryItemModule;
-        return new ConnectFailedHistoryItem(activityLogEntry);
+        return new ConnectFailedHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/disconnected") {
         const { DisconnectedHistoryItem } =
             require("instrument/window/history/items/disconnected") as typeof DisconnectedHistoryItemModule;
-        return new DisconnectedHistoryItem(activityLogEntry);
+        return new DisconnectedHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/request") {
         const { RequestHistoryItem } =
             require("instrument/window/history/items/request") as typeof RequestHistoryItemModule;
-        return new RequestHistoryItem(activityLogEntry);
+        return new RequestHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/answer") {
         const { AnswerHistoryItem } =
             require("instrument/window/history/items/answer") as typeof AnswerHistoryItemModule;
-        return new AnswerHistoryItem(activityLogEntry);
+        return new AnswerHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "activity-log/note") {
         const { NoteHistoryItem } =
             require("instrument/window/history/items/note") as typeof NoteHistoryItemModule;
-        return new NoteHistoryItem(activityLogEntry);
+        return new NoteHistoryItem(store, activityLogEntry);
     }
 
     if (
         activityLogEntry.type.startsWith("instrument/file") ||
         activityLogEntry.type.startsWith("instrument/received")
     ) {
-        const item = getFileSpecializationItem(activityLogEntry);
+        const item = getFileSpecializationItem(store, activityLogEntry);
         if (item) {
             return item;
         }
@@ -118,35 +122,36 @@ export function createHistoryItem(
         const { FileHistoryItem } =
             require("instrument/window/history/items/file") as typeof FileHistoryItemModule;
 
-        return new FileHistoryItem(activityLogEntry);
+        return new FileHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/list") {
         const { ListHistoryItem } =
             require("instrument/window/history/items/list") as typeof ListHistoryItemModule;
-        return new ListHistoryItem(activityLogEntry);
+        return new ListHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/chart") {
         const { MultiWaveform } =
             require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
-        return new MultiWaveform(activityLogEntry);
+        return new MultiWaveform(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/script") {
         const { ScriptHistoryItem } =
             require("instrument/window/history/items/script") as typeof ScriptHistoryItemModule;
-        return new ScriptHistoryItem(activityLogEntry);
+        return new ScriptHistoryItem(store, activityLogEntry);
     }
 
     throw "Unknown activity log entry";
 }
 
 export function updateHistoryItemClass(
+    store: IStore,
     historyItem: IHistoryItem
 ): IHistoryItem {
     if (historyItem.type.startsWith("instrument/file")) {
-        const item = getFileSpecializationItem(historyItem);
+        const item = getFileSpecializationItem(store, historyItem);
         if (item) {
             return item;
         }
@@ -200,7 +205,7 @@ export function rowsToHistoryItems(store: IStore, rows: any[]) {
     const historyItems: IHistoryItem[] = [];
     rows.forEach(row => {
         const activityLogEntry = store.dbRowToObject(row);
-        const historyItem = createHistoryItem(activityLogEntry);
+        const historyItem = createHistoryItem(store, activityLogEntry);
         historyItems.push(historyItem);
     });
     return historyItems;

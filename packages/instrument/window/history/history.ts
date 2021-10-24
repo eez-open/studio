@@ -1059,7 +1059,7 @@ export class History {
 
         const activityLogEntry = this.options.store.findById(id);
         if (activityLogEntry) {
-            return createHistoryItem(activityLogEntry);
+            return createHistoryItem(this.options.store, activityLogEntry);
         }
 
         return undefined;
@@ -1078,7 +1078,10 @@ export class History {
     }
 
     addActivityLogEntry(activityLogEntry: IActivityLogEntry) {
-        const historyItem = createHistoryItem(activityLogEntry);
+        const historyItem = createHistoryItem(
+            this.options.store,
+            activityLogEntry
+        );
 
         this.filterStats.onHistoryItemCreated(historyItem);
 
@@ -1234,6 +1237,7 @@ export class History {
         ) {
             foundItem.historyItem.message = activityLogEntry.message;
             const updatedHistoryItem = updateHistoryItemClass(
+                this.options.store,
                 foundItem.historyItem
             );
             if (updatedHistoryItem !== foundItem.historyItem) {

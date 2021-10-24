@@ -16,7 +16,11 @@ import {
     IUnit
 } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
-import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import {
+    beginTransaction,
+    commitTransaction,
+    IStore
+} from "eez-studio-shared/store";
 import { log } from "eez-studio-shared/activity-log";
 import { readBinaryFile } from "eez-studio-shared/util-electron";
 
@@ -377,8 +381,11 @@ interface IChannelsGroup {
 }
 
 export class DlogWaveform extends FileHistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem) {
-        super(activityLogEntry);
+    constructor(
+        store: IStore,
+        activityLogEntry: IActivityLogEntry | FileHistoryItem
+    ) {
+        super(store, activityLogEntry);
 
         const message = JSON.parse(this.message);
 

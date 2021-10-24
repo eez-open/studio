@@ -20,11 +20,7 @@ import * as notification from "eez-studio-ui/notification";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 import { SAMPLING_RATE_UNIT } from "eez-studio-shared/units";
-import {
-    activityLogStore,
-    IActivityLogEntry,
-    logUpdate
-} from "eez-studio-shared/activity-log";
+import { activityLogStore, logUpdate } from "eez-studio-shared/activity-log";
 
 import type * as UiPropertiesModule from "eez-studio-ui/properties";
 import { Balloon } from "eez-studio-ui/balloon";
@@ -565,10 +561,6 @@ export class FileHistoryItemComponent extends React.Component<
 }
 
 export class FileHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
-    }
-
     get info() {
         let note;
         if (this.note) {

@@ -522,10 +522,10 @@ class ActiveSession {
 
 export const activeSession = new ActiveSession();
 
-export function getHistoryItemById(id: string) {
+export function getHistoryItemById(store: IStore, id: string) {
     const activityLogEntry = activityLogStore.findById(id);
     if (activityLogEntry) {
-        return createHistoryItem(activityLogEntry);
+        return createHistoryItem(store, activityLogEntry);
     }
 
     return undefined;

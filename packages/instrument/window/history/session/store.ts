@@ -45,6 +45,7 @@ export class HistorySessions {
                     );
                     if (activityLogEntry) {
                         newActiveSession = createHistoryItem(
+                            this.history.options.store,
                             activityLogEntry
                         ) as SessionHistoryItem;
                     }

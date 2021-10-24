@@ -11,7 +11,11 @@ import {
 import { observer } from "mobx-react";
 
 import { objectEqual } from "eez-studio-shared/util";
-import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
+import {
+    beginTransaction,
+    commitTransaction,
+    IStore
+} from "eez-studio-shared/store";
 import {
     logUpdate,
     IActivityLogEntry,
@@ -122,8 +126,11 @@ export class WaveformChartsController extends ChartsController {
 export class Waveform extends FileHistoryItem {
     canBePartOfMultiChart = true;
 
-    constructor(activityLogEntry: IActivityLogEntry | FileHistoryItem) {
-        super(activityLogEntry);
+    constructor(
+        store: IStore,
+        activityLogEntry: IActivityLogEntry | FileHistoryItem
+    ) {
+        super(store, activityLogEntry);
 
         const message = JSON.parse(this.message);
 
@@ -602,7 +609,6 @@ export class Waveform extends FileHistoryItem {
         return this.yAxisDefaultSubdivisionOffsetAndScale.scale;
     }
 
-    @computed
     getPreviewElement(appStore: IAppStore) {
         return <ChartPreview appStore={appStore} data={this} />;
     }

@@ -3,7 +3,6 @@ import { computed } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import type { IActivityLogEntry } from "eez-studio-shared/activity-log";
 
 import { getConnectionParametersInfo } from "instrument/window/connection";
 
@@ -64,10 +63,6 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
 }
 
 export class ConnectFailedHistoryItem extends HistoryItem {
-    constructor(activityLogEntry: IActivityLogEntry) {
-        super(activityLogEntry);
-    }
-
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <ConnectFailedHistoryItemComponent
