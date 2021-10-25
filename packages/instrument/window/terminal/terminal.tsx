@@ -5,10 +5,10 @@ import { observer } from "mobx-react";
 import { Splitter } from "eez-studio-ui/splitter";
 import { IconAction } from "eez-studio-ui/action";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";
 
-import { ISession } from "instrument/window/history/session/store";
+import type { ISession } from "instrument/window/history/session/store";
 import {
     HistoryView,
     HistoryTools

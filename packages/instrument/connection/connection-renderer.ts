@@ -1,4 +1,4 @@
-import { observable, action, toJS, runInAction } from "mobx";
+import { observable, toJS, runInAction } from "mobx";
 
 import { watch } from "eez-studio-shared/notify";
 
@@ -45,11 +45,23 @@ export class IpcConnection extends ConnectionBase {
         watch(
             "instrument/" + instrument.id + "/connection",
             undefined,
-            action((connectionStatus: ConnectionStatus) => {
-                this.state = connectionStatus.state;
-                this.errorCode = connectionStatus.errorCode;
-                this.error = connectionStatus.error;
-            })
+            (connectionStatus: ConnectionStatus) => {
+                runInAction(() => {
+                    this.state = connectionStatus.state;
+                    this.errorCode = connectionStatus.errorCode;
+                    this.error = connectionStatus.error;
+                });
+
+                if (connectionStatus.state != ConnectionState.CONNECTED) {
+                    if (this.rejectCallback) {
+                        this.rejectCallback(
+                            new Error("Connection disconnected.")
+                        );
+                        this.rejectCallback = undefined;
+                        this.resolveCallback = undefined;
+                    }
+                }
+            }
         );
 
         IpcConnection.ipcConnections.set(instrument.id, this);

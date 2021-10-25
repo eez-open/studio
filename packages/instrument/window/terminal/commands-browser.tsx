@@ -27,11 +27,61 @@ import {
     matchCommand
 } from "instrument/commands-tree";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
-import {
-    insertScpiCommandIntoCode,
-    insertScpiQueryIntoCode
-} from "instrument/window/scripts";
+import type { InstrumentAppStore } from "instrument/window/app-store";
+
+////////////////////////////////////////////////////////////////////////////////
+
+function insertScpiCommandIntoCode(
+    appStore: InstrumentAppStore,
+    scpiCommand: string
+) {
+    const scriptsModel = appStore.scriptsModel;
+
+    const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;
+
+    if (!codeEditor || !scriptsModel.selectedScript) {
+        return;
+    }
+
+    let text;
+
+    if (scriptsModel.selectedScript.action.type === "scpi-commands") {
+        text = scpiCommand;
+    } else if (scriptsModel.selectedScript.action.type === "javascript") {
+        text = `connection.command("${scpiCommand}");`;
+    } else {
+        return;
+    }
+
+    codeEditor.insertText(text);
+}
+
+function insertScpiQueryIntoCode(
+    appStore: InstrumentAppStore,
+    scpiQuery: string
+) {
+    const scriptsModel = appStore.scriptsModel;
+
+    const codeEditor = appStore.scriptView && appStore.scriptView.codeEditor;
+
+    if (!codeEditor || !scriptsModel.selectedScript) {
+        return;
+    }
+
+    let text;
+
+    if (scriptsModel.selectedScript.action.type === "scpi-commands") {
+        text = scpiQuery;
+    } else if (scriptsModel.selectedScript.action.type === "javascript") {
+        text = `var <name> = await connection.query("${scpiQuery}");`;
+    } else {
+        return;
+    }
+
+    codeEditor.insertText(text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export interface ICommandNode extends ITreeNode {
     commandSyntax?: ICommandSyntax;

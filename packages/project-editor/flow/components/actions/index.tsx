@@ -56,7 +56,8 @@ import {
     buildExpression,
     checkExpression,
     evalConstantExpression,
-    evalExpression
+    evalExpression,
+    ExpressionEvalError
 } from "project-editor/flow/expression/expression";
 import { calcComponentGeometry } from "project-editor/flow/editor/render";
 import { ValueType } from "project-editor/features/variable/value-type";
@@ -509,7 +510,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
     async execute(flowState: FlowState) {
         const { jsEvalExpression, values } = this.expandExpression(flowState);
         values;
-        let result = (0, eval)(jsEvalExpression);
+        let result = eval(jsEvalExpression);
         flowState.runtime.propagateValue(flowState, this, "result", result);
         return undefined;
     }
@@ -681,7 +682,16 @@ export class WatchVariableActionComponent extends ActionComponent {
         flowState: FlowState,
         dispose: (() => void) | undefined
     ): Promise<(() => void) | undefined | boolean> {
-        let lastValue = flowState.evalExpression(this, this.variable);
+        let lastValue: any;
+        try {
+            lastValue = flowState.evalExpression(this, this.variable);
+        } catch (err) {
+            if (err instanceof ExpressionEvalError) {
+                lastValue = undefined;
+            } else {
+                throw err;
+            }
+        }
 
         flowState.runtime.propagateValue(
             flowState,

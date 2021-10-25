@@ -7,9 +7,9 @@ import { capitalize } from "eez-studio-shared/string";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
-import { IShortcut } from "shortcuts/interfaces";
+import type { IShortcut } from "shortcuts/interfaces";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 
 @observer
 export class ShortcutButton extends React.Component<

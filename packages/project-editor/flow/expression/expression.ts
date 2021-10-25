@@ -465,6 +465,13 @@ type ExpressionNode =
 
 type NonComputedPropertyExpressionNode = ExpressionNode & { name: string };
 
+function getNodeDescription(node: ExpressionNode) {
+    if (node.type == "Identifier") {
+        return node.name;
+    }
+    return node.type;
+}
+
 function findValueTypeInExpressionNode(
     component: Component,
     node: ExpressionNode,
@@ -1430,7 +1437,9 @@ function evalExpressionWithContext(
             const object = evalNode(node.object);
 
             if (object == undefined) {
-                throw `undefined`;
+                throw new ExpressionEvalError(
+                    `${getNodeDescription(node.object)} is undefined`
+                );
             }
 
             const property = node.computed
@@ -1438,7 +1447,9 @@ function evalExpressionWithContext(
                 : (node.property as NonComputedPropertyExpressionNode).name;
 
             if (property == undefined) {
-                throw `undefined`;
+                throw new ExpressionEvalError(
+                    `${getNodeDescription(node.property)} is undefined`
+                );
             }
 
             return object[property];
@@ -1560,4 +1571,10 @@ function evalAssignableExpressionWithContext(
     }
 
     return evalNode(rootNode);
+}
+
+export class ExpressionEvalError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
 }

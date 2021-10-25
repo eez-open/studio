@@ -1,4 +1,4 @@
-import { observable, runInAction } from "mobx";
+import { action, observable, runInAction } from "mobx";
 
 import { format } from "eez-studio-shared/units";
 import {
@@ -15,17 +15,34 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { validators } from "eez-studio-shared/validation";
 
-import { IShortcut } from "shortcuts/interfaces";
+import type { IShortcut } from "shortcuts/interfaces";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 
 import { run as runScpi } from "instrument/script-engines/scpi";
 import { run as runJavaScript } from "instrument/script-engines/javascript";
 
-import { InstrumentAppStore } from "instrument/window/app-store";
-import { showScriptError } from "instrument/window/scripts";
+import type { InstrumentAppStore } from "instrument/window/app-store";
 
-import { IScriptHistoryItemMessage } from "instrument/window/history/items/script";
+import type { IScriptHistoryItemMessage } from "instrument/window/history/items/script";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const showScriptError = action(
+    (
+        appStore: InstrumentAppStore,
+        shortcut: IShortcut,
+        errorMessage: string,
+        errorLineNumber: number | undefined,
+        errorColumnNumber: number | undefined
+    ) => {
+        appStore.navigationStore.navigateToScripts();
+        appStore.navigationStore.changeSelectedScriptId(shortcut.id);
+        appStore.scriptsModel.errorMessage = errorMessage;
+        appStore.scriptsModel.errorLineNumber = errorLineNumber;
+        appStore.scriptsModel.errorColumnNumber = errorColumnNumber;
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
