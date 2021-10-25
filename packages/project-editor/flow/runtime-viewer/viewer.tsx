@@ -7,7 +7,6 @@ import {
     BoundingRectBuilder,
     Point,
     pointDistance,
-    pointInRect,
     Rect,
     rectContains
 } from "eez-studio-shared/geometry";
@@ -25,10 +24,7 @@ import { RuntimeFlowContext } from "project-editor/flow/runtime-viewer/context";
 
 import { Svg } from "project-editor/flow/editor/render";
 import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
-import {
-    getObjectBoundingRect,
-    getSelectedObjectsBoundingRect
-} from "project-editor/flow/editor/bounding-rects";
+import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import {
     IMouseHandler,
     PanMouseHandler
@@ -350,23 +346,14 @@ export class Canvas extends React.Component<{
                 const context = this.props.flowContext;
                 const point =
                     context.viewState.transform.pointerEventToPagePoint(event);
-                if (
-                    context.viewState.selectedObjects.length === 0 ||
-                    !pointInRect(
-                        point,
-                        getSelectedObjectsBoundingRect(context.viewState)
-                    )
-                ) {
-                    context.viewState.deselectAllObjects();
 
-                    let result = context.document.objectFromPoint(point);
-                    if (result) {
-                        const object = context.document.findObjectById(
-                            result.id
-                        );
-                        if (object) {
-                            context.viewState.selectObject(object);
-                        }
+                context.viewState.deselectAllObjects();
+
+                let result = context.document.objectFromPoint(point);
+                if (result) {
+                    const object = context.document.findObjectById(result.id);
+                    if (object) {
+                        context.viewState.selectObject(object);
                     }
                 }
 
