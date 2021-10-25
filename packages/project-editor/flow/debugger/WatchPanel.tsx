@@ -465,7 +465,7 @@ class WatchTable extends React.Component<{
                 name: getInputDisplayName(componentState.component, input.name),
                 value: valueLabel,
                 valueTitle: valueLabel,
-                type: typeof value,
+                type: input.type,
 
                 children: this.getValueChildren(value, null),
                 selected: false,

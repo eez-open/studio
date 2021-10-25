@@ -1048,11 +1048,14 @@ class DebuggerConnection {
                         const componentInputValue = new ComponentInputValue(
                             componentState,
                             componentInputMap.inputName,
-                            "any"
+                            componentInputMap.inputType
                         );
 
                         componentInputValue.set(
-                            this.parseDebuggerValue(value, "any")
+                            this.parseDebuggerValue(
+                                value,
+                                componentInputMap.inputType
+                            )
                         );
 
                         runtime.debuggerValues.set(

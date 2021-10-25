@@ -117,7 +117,8 @@ function buildComponent(
         assets.map.flows[flowIndex].componentInputs.push({
             inputIndex,
             componentIndex,
-            inputName: input.name
+            inputName: input.name,
+            inputType: input.type
         });
     });
 

@@ -1174,6 +1174,7 @@ export interface AssetsMap {
             inputIndex: number;
             componentIndex: number;
             inputName: string;
+            inputType: string;
         }[];
         localVariables: {
             index: number;
