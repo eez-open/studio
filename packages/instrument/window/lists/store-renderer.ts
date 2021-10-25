@@ -402,7 +402,7 @@ export class ListAxisModel implements IAxisModel {
         unit: IUnit
     ) {
         this.unit = unit.clone();
-        this.unit.precision = appStore.instrument!.getDigits(unit);
+        this.unit.precision = appStore.instrument.getDigits(unit);
     }
 
     @computed
@@ -430,8 +430,8 @@ export class ListAxisModel implements IAxisModel {
         return this.unit.name === "time"
             ? this.list.getMaxTime()
             : this.unit.name === "voltage"
-            ? getMaxVoltage(this.appStore.instrument!)
-            : getMaxCurrent(this.appStore.instrument!);
+            ? getMaxVoltage(this.appStore.instrument)
+            : getMaxCurrent(this.appStore.instrument);
     }
 
     get defaultFrom() {

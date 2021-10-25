@@ -4,12 +4,10 @@ import classNames from "classnames";
 
 import { Loader } from "eez-studio-ui/loader";
 
-import { getConnection } from "instrument/window/connection";
-
 import { List } from "instrument/bb3/objects/List";
 
 export const ListActions = observer(({ list }: { list: List }) => {
-    if (!getConnection(list.bb3Instrument.appStore).isConnected) {
+    if (!list.bb3Instrument.instrument.isConnected) {
         return null;
     }
 
@@ -22,8 +20,11 @@ export const ListActions = observer(({ list }: { list: List }) => {
             {list.canDownload && (
                 <button
                     className={classNames("btn btn-sm", {
-                        "btn-primary": list.instrumentVersionNewer || !list.studioList,
-                        "btn-secondary": !(list.instrumentVersionNewer || !list.studioList)
+                        "btn-primary":
+                            list.instrumentVersionNewer || !list.studioList,
+                        "btn-secondary": !(
+                            list.instrumentVersionNewer || !list.studioList
+                        )
                     })}
                     onClick={list.download}
                     disabled={list.bb3Instrument.busy}
@@ -35,8 +36,11 @@ export const ListActions = observer(({ list }: { list: List }) => {
             {list.canUpload && (
                 <button
                     className={classNames("btn btn-sm", {
-                        "btn-primary": list.studioVersionNewer || !list.listOnInstrument,
-                        "btn-secondary": !(list.studioVersionNewer || !list.listOnInstrument)
+                        "btn-primary":
+                            list.studioVersionNewer || !list.listOnInstrument,
+                        "btn-secondary": !(
+                            list.studioVersionNewer || !list.listOnInstrument
+                        )
                     })}
                     onClick={list.upload}
                     disabled={list.bb3Instrument.busy}

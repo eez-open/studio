@@ -1017,32 +1017,11 @@ export class SCPIActionComponent extends ActionComponent {
             throw "instrument not found";
         }
 
-        const editor = instrument.getEditor();
-
-        if (!editor || !editor.instrument) {
-            editor.onCreate();
-            let startTime = Date.now();
-            await new Promise<void>(resolve => {
-                const intervalId = setInterval(() => {
-                    if (editor.instrument) {
-                        clearInterval(intervalId);
-                        resolve();
-                    }
-
-                    if (Date.now() - startTime > 5000) {
-                        clearInterval(intervalId);
-                        resolve();
-                    }
-                }, 50);
-            });
-        }
-
-        const { getConnection } = await import("instrument/window/connection");
-
-        const connection = getConnection(editor);
-        if (!connection || !connection.isConnected) {
+        if (!instrument.isConnected) {
             throw "instrument not connected";
         }
+
+        const connection = instrument.connection;
 
         await connection.acquire(false);
 
@@ -1507,20 +1486,15 @@ registerClass(
 ////////////////////////////////////////////////////////////////////////////////
 
 async function connectToInstrument(instrument: InstrumentObject) {
-    instrument.connection.connect();
-    const editor = instrument.getEditor();
-    editor.onCreate();
-    const { getConnection } = await import("instrument/window/connection");
-    const connection = getConnection(editor);
-    if (connection) {
-        for (let i = 0; i < 100; i++) {
-            try {
-                await connection.acquire(false);
-                connection.release();
-                return;
-            } catch (err) {
-                await new Promise<void>(resolve => setTimeout(resolve, 100));
-            }
+    const connection = instrument.connection;
+    connection.connect();
+    for (let i = 0; i < 100; i++) {
+        try {
+            await connection.acquire(false);
+            connection.release();
+            return;
+        } catch (err) {
+            await new Promise<void>(resolve => setTimeout(resolve, 100));
         }
     }
     notification.error("Failed to connect to the instrument!");

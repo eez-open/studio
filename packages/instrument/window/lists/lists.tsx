@@ -117,7 +117,7 @@ class MasterView extends React.Component<
                         validators: [
                             validators.rangeInclusive(
                                 1,
-                                this.props.appStore.instrument!
+                                this.props.appStore.instrument
                                     .listsMaxPointsProperty
                             )
                         ],
@@ -132,7 +132,7 @@ class MasterView extends React.Component<
                 description: "",
                 duration: CONF_DEFAULT_ENVELOPE_LIST_DURATION,
                 numSamples:
-                    this.props.appStore.instrument!.listsMaxPointsProperty
+                    this.props.appStore.instrument.listsMaxPointsProperty
             }
         })
             .then(async result => {
@@ -148,7 +148,7 @@ class MasterView extends React.Component<
                                 duration: result.values.duration,
                                 numSamples: result.values.numSamples
                             },
-                            this.props.appStore.instrument!
+                            this.props.appStore.instrument
                         )
                     });
                 commitTransaction();
@@ -449,7 +449,7 @@ export class ListsButtons extends React.Component<
         if (filePaths && filePaths[0]) {
             let data = await readCsvFile(
                 filePaths[0],
-                getCsvDataColumnDefinitions(this.props.appStore.instrument!)
+                getCsvDataColumnDefinitions(this.props.appStore.instrument)
             );
 
             if (!data) {
@@ -515,18 +515,18 @@ export class ListsButtons extends React.Component<
     export = () => {
         if (this.selectedList) {
             saveTableListData(
-                this.props.appStore.instrument!,
+                this.props.appStore.instrument,
                 this.selectedList.name,
                 getTableListData(
                     this.selectedList,
-                    this.props.appStore.instrument!
+                    this.props.appStore.instrument
                 )
             );
         }
     };
 
     get numChannels(): number {
-        const channels = this.props.appStore.instrument!.channelsProperty;
+        const channels = this.props.appStore.instrument.channelsProperty;
         if (channels) {
             return channels.length;
         }
@@ -632,7 +632,7 @@ export class ListsButtons extends React.Component<
             );
             const channel = getTableListData(
                 this.selectedList,
-                this.props.appStore.instrument!
+                this.props.appStore.instrument
             );
             try {
                 await sendList(
@@ -709,7 +709,7 @@ export class ListsButtons extends React.Component<
                     title="Get list from instrument channel"
                     className="btn-secondary"
                     enabled={
-                        this.props.appStore.instrument!.connection.isConnected
+                        this.props.appStore.instrument.connection.isConnected
                     }
                     onClick={this.getList}
                 />
@@ -719,8 +719,8 @@ export class ListsButtons extends React.Component<
                     title="Send list to instrument channel"
                     className="btn-secondary"
                     enabled={
-                        this.props.appStore.instrument!.connection
-                            .isConnected && this.selectedList !== undefined
+                        this.props.appStore.instrument.connection.isConnected &&
+                        this.selectedList !== undefined
                     }
                     onClick={this.sendList}
                 />

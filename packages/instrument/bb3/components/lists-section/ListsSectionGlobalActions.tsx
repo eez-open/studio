@@ -1,13 +1,11 @@
 import React from "react";
 import { observer } from "mobx-react";
 
-import { getConnection } from "instrument/window/connection";
-
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
 export const ListsSectionGlobalActions = observer(
     ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
-        if (!getConnection(bb3Instrument.appStore).isConnected) {
+        if (!bb3Instrument.instrument.isConnected) {
             return null;
         }
 

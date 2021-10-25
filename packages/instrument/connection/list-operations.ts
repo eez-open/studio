@@ -2,9 +2,13 @@ import { autorun, toJS } from "mobx";
 
 import { isRenderer } from "eez-studio-shared/util-electron";
 import { roundNumber } from "eez-studio-shared/roundNumber";
-import { activityLogStore, IActivityLogEntry, log } from "eez-studio-shared/activity-log";
+import {
+    activityLogStore,
+    IActivityLogEntry,
+    log
+} from "eez-studio-shared/activity-log";
 
-import { Connection, connections } from "instrument/connection/connection";
+import { Connection, connections } from "instrument/connection/connection-main";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +52,8 @@ abstract class ListOperation {
                 oid: this.connection.instrument.id,
                 type: "instrument/list",
                 message: JSON.stringify({
-                    operation: this instanceof GetListOperation ? "get" : "send",
+                    operation:
+                        this instanceof GetListOperation ? "get" : "send",
                     listName: this.listName,
                     error
                 })
@@ -59,10 +64,15 @@ abstract class ListOperation {
                     undoable: false
                 });
 
-                let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
-                browserWindow.webContents.send("instrument/connection/list-operation-result", {
-                    error
-                });
+                let browserWindow = require("electron").BrowserWindow.fromId(
+                    this.callbackWindowId
+                )!;
+                browserWindow.webContents.send(
+                    "instrument/connection/list-operation-result",
+                    {
+                        error
+                    }
+                );
             } else {
                 this.logEntry = logEntry;
             }
@@ -153,7 +163,11 @@ export class GetListOperation extends ListOperation {
 
     isQuery = true;
 
-    constructor(connection: Connection, channelIndex: number, callbackWindowId: number) {
+    constructor(
+        connection: Connection,
+        channelIndex: number,
+        callbackWindowId: number
+    ) {
         super(connection, channelIndex, undefined, callbackWindowId);
 
         this.state = "dwell";
@@ -162,10 +176,13 @@ export class GetListOperation extends ListOperation {
     }
 
     sendQueryCommand() {
-        this.connection.send(`SOUR${this.channelIndex + 1}:LIST:${this.state}?;*OPC?`, {
-            log: false,
-            longOperation: true
-        });
+        this.connection.send(
+            `SOUR${this.channelIndex + 1}:LIST:${this.state}?;*OPC?`,
+            {
+                log: false,
+                longOperation: true
+            }
+        );
     }
 
     onLineReceived(line: string) {
@@ -198,11 +215,16 @@ export class GetListOperation extends ListOperation {
                     undoable: false
                 });
 
-                let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
-                browserWindow.webContents.send("instrument/connection/list-operation-result", {
-                    listData: [this.listData],
-                    logId
-                });
+                let browserWindow = require("electron").BrowserWindow.fromId(
+                    this.callbackWindowId
+                )!;
+                browserWindow.webContents.send(
+                    "instrument/connection/list-operation-result",
+                    {
+                        listData: [this.listData],
+                        logId
+                    }
+                );
             } else {
                 this.logEntry = logEntry;
             }
@@ -252,11 +274,16 @@ export class SendListOperation extends ListOperation {
     sendCommand() {
         const array = this.listData[this.state];
         if (array.length > 0) {
-            const data = array.map((value: number) => roundNumber(value, this.digits)).join(",");
-            this.connection.send(`SOUR${this.channelIndex + 1}:LIST:${this.state} ${data};*OPC?`, {
-                log: false,
-                longOperation: true
-            });
+            const data = array
+                .map((value: number) => roundNumber(value, this.digits))
+                .join(",");
+            this.connection.send(
+                `SOUR${this.channelIndex + 1}:LIST:${this.state} ${data};*OPC?`,
+                {
+                    log: false,
+                    longOperation: true
+                }
+            );
             return true;
         } else {
             this.moveToNextState();
@@ -288,8 +315,13 @@ export class SendListOperation extends ListOperation {
                 undoable: false
             });
 
-            let browserWindow = require("electron").BrowserWindow.fromId(this.callbackWindowId)!;
-            browserWindow.webContents.send("instrument/connection/list-operation-result", {});
+            let browserWindow = require("electron").BrowserWindow.fromId(
+                this.callbackWindowId
+            )!;
+            browserWindow.webContents.send(
+                "instrument/connection/list-operation-result",
+                {}
+            );
         } else {
             this.logEntry = logEntry;
         }
@@ -320,7 +352,11 @@ export async function getList(instrumentId: string, channelIndex: number) {
     });
 }
 
-function getListRenderer(instrumentId: string, channelIndex: number, callbackWindowId: number) {
+function getListRenderer(
+    instrumentId: string,
+    channelIndex: number,
+    callbackWindowId: number
+) {
     EEZStudio.electron.ipcRenderer.send("instrument/connection/get-list", {
         instrumentId,
         channelIndex,
@@ -331,31 +367,47 @@ function getListRenderer(instrumentId: string, channelIndex: number, callbackWin
 if (!isRenderer()) {
     const { ipcMain } = require("electron");
 
-    ipcMain.on("instrument/connection/get-list", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-            channelIndex: number;
-            callbackWindowId: number;
+    ipcMain.on(
+        "instrument/connection/get-list",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                channelIndex: number;
+                callbackWindowId: number;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                getListMain(
+                    connection as Connection,
+                    arg.channelIndex,
+                    arg.callbackWindowId
+                );
+            }
         }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            getListMain(connection as Connection, arg.channelIndex, arg.callbackWindowId);
-        }
-    });
+    );
 }
 
-function getListMain(connection: Connection, channelIndex: number, callbackWindowId: number) {
+function getListMain(
+    connection: Connection,
+    channelIndex: number,
+    callbackWindowId: number
+) {
     try {
         connection.startLongOperation(
-            () => new GetListOperation(connection, channelIndex, callbackWindowId)
+            () =>
+                new GetListOperation(connection, channelIndex, callbackWindowId)
         );
     } catch (error) {
-        let browserWindow = require("electron").BrowserWindow.fromId(callbackWindowId)!;
-        browserWindow.webContents.send("instrument/connection/list-operation-result", {
-            error
-        });
+        let browserWindow =
+            require("electron").BrowserWindow.fromId(callbackWindowId)!;
+        browserWindow.webContents.send(
+            "instrument/connection/list-operation-result",
+            {
+                error
+            }
+        );
     }
 }
 
@@ -400,27 +452,30 @@ function sendListRenderer(
 if (!isRenderer()) {
     const { ipcMain } = require("electron");
 
-    ipcMain.on("instrument/connection/send-list", function (
-        event: any,
-        arg: {
-            instrumentId: string;
-            channelIndex: number;
-            listData: any;
-            listName: any;
-            callbackWindowId: number;
+    ipcMain.on(
+        "instrument/connection/send-list",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                channelIndex: number;
+                listData: any;
+                listName: any;
+                callbackWindowId: number;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                sendListMain(
+                    connection as Connection,
+                    arg.channelIndex,
+                    arg.listName,
+                    arg.listData,
+                    arg.callbackWindowId
+                );
+            }
         }
-    ) {
-        let connection = connections.get(arg.instrumentId);
-        if (connection) {
-            sendListMain(
-                connection as Connection,
-                arg.channelIndex,
-                arg.listName,
-                arg.listData,
-                arg.callbackWindowId
-            );
-        }
-    });
+    );
 }
 
 function sendListMain(
@@ -442,10 +497,14 @@ function sendListMain(
                 )
         );
     } catch (error) {
-        let browserWindow = require("electron").BrowserWindow.fromId(callbackWindowId)!;
-        browserWindow.webContents.send("instrument/connection/list-operation-result", {
-            error
-        });
+        let browserWindow =
+            require("electron").BrowserWindow.fromId(callbackWindowId)!;
+        browserWindow.webContents.send(
+            "instrument/connection/list-operation-result",
+            {
+                error
+            }
+        );
     }
 }
 

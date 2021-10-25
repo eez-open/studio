@@ -32,15 +32,19 @@ import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PRO
 import type { IInstrumentProperties } from "instrument/export";
 import type { ICommandSyntax, IQuerySyntax } from "instrument/commands-tree";
 
-import type { IConnection } from "instrument/connection/connection";
+import type { IConnection } from "instrument/connection/connection-base";
 import type { ConnectionParameters } from "instrument/connection/interface";
 import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 import type { IFileUploadInstructions } from "instrument/connection/file-upload";
-import { createConnection } from "instrument/connection/connection";
 
 import type * as UiPropertiesModule from "eez-studio-ui/properties";
 import type * as AppStoreModule from "instrument/window/app-store";
 import type * as Bb3Module from "instrument/bb3";
+import { Priority, scheduleTask } from "eez-studio-shared/scheduler";
+import { CommandsTree } from "./window/terminal/commands-tree";
+
+import type * as ConnectionMainModule from "instrument/connection/connection-main";
+import type * as ConnectionRendererModule from "instrument/connection/connection-renderer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,6 +77,23 @@ const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
 };
 
 export class InstrumentObject {
+    id: string;
+
+    @observable instrumentExtensionId: string;
+    @observable label: string | undefined;
+    @observable idn: string | undefined;
+    @observable lastConnection: ConnectionParameters | undefined;
+    @observable autoConnect: boolean;
+    @observable lastFileUploadInstructions: IFileUploadInstructions | undefined;
+    @observable selectedShortcutGroups: string[];
+    @observable custom: any;
+
+    connection: IConnection;
+
+    _creationDate: Date | null | undefined;
+
+    commandsTree = new CommandsTree();
+
     constructor(props: IInstrumentObjectProps) {
         this.id = props.id;
         this.instrumentExtensionId = props.instrumentExtensionId;
@@ -93,7 +114,19 @@ export class InstrumentObject {
 
         this.custom = props.custom || {};
 
-        this.connection = createConnection(this);
+        if (isRenderer()) {
+            const { createRendererProcessConnection } =
+                require("instrument/connection/connection-renderer") as typeof ConnectionRendererModule;
+            this.connection = createRendererProcessConnection(this);
+
+            scheduleTask("Load commands tree", Priority.Low, () =>
+                this.commandsTree.load(this.instrumentExtensionId)
+            );
+        } else {
+            const { createMainProcessConnection } =
+                require("instrument/connection/connection-main") as typeof ConnectionMainModule;
+            this.connection = createMainProcessConnection(this);
+        }
 
         autorun(() => {
             if (this._extension) {
@@ -115,21 +148,6 @@ export class InstrumentObject {
             }
         });
     }
-
-    id: string;
-
-    @observable instrumentExtensionId: string;
-    @observable label: string | undefined;
-    @observable idn: string | undefined;
-    @observable lastConnection: ConnectionParameters | undefined;
-    @observable autoConnect: boolean;
-    @observable lastFileUploadInstructions: IFileUploadInstructions | undefined;
-    @observable selectedShortcutGroups: string[];
-    @observable custom: any;
-
-    connection: IConnection;
-
-    _creationDate: Date | null | undefined;
 
     toString() {
         return `Instrument: ${this.name} [${this.id}]`;
@@ -690,7 +708,7 @@ export class InstrumentObject {
         if (!this._instrumentAppStore) {
             const { InstrumentAppStore } =
                 require("instrument/window/app-store") as typeof AppStoreModule;
-            this._instrumentAppStore = new InstrumentAppStore(this.id);
+            this._instrumentAppStore = new InstrumentAppStore(this);
         }
 
         return this._instrumentAppStore;
@@ -910,7 +928,7 @@ export class InstrumentObject {
                     showFileUploadDialog(
                         fileUploadInstructions,
                         instructions => {
-                            instrument.connection.upload(instructions);
+                            instrument.connection.doUpload(instructions);
                         }
                     );
                 };

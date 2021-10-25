@@ -9,7 +9,7 @@ import type { IEditor } from "eez-studio-shared/extensions/extension";
 import type { IShortcut } from "shortcuts/interfaces";
 import { bindShortcuts } from "shortcuts/mousetrap";
 
-import { InstrumentObject, instruments } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
 
 import { App } from "instrument/window/app";
 import { NavigationStore } from "instrument/window/navigation-store";
@@ -27,7 +27,6 @@ import {
 import { Filters } from "instrument/window/history/filters";
 
 import { Terminal } from "instrument/window/terminal/terminal";
-import { CommandsTree } from "instrument/window/terminal/commands-tree";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList } from "instrument/window/lists/store-renderer";
@@ -36,7 +35,6 @@ import { getScrapbookStore } from "instrument/window/history/scrapbook";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class InstrumentAppStore implements IEditor {
-    @observable instrument: InstrumentObject | undefined = undefined;
     @observable helpVisible: boolean = false;
     @observable filters: Filters = new Filters();
     @observable selectHistoryItemsSpecification:
@@ -48,8 +46,6 @@ export class InstrumentAppStore implements IEditor {
     scriptsModel = new ScriptsModel(this);
     shortcutsStore = new ShortcutsStore(this);
     groupsStore = new GroupsStore(this);
-
-    commandsTree = new CommandsTree();
 
     history: History;
     deletedItemsHistory: DeletedItemsHistory;
@@ -70,7 +66,11 @@ export class InstrumentAppStore implements IEditor {
 
     _created = false;
 
-    constructor(private instrumentId: string) {}
+    constructor(public instrument: InstrumentObject) {}
+
+    get commandsTree() {
+        return this.instrument.commandsTree;
+    }
 
     onCreate() {
         if (this._created) {
@@ -85,20 +85,12 @@ export class InstrumentAppStore implements IEditor {
             "Load instrument",
             Priority.High,
             action(async () => {
-                this.instrument = instruments.get(this.instrumentId);
-
                 this.helpVisible =
                     localStorage.getItem(
-                        `instrument/${this.instrumentId}/window/help-visible`
+                        `instrument/${this.instrument.id}/window/help-visible`
                     ) === "1" || false;
 
                 this.filters = this.getFiltersFromLocalStorage();
-
-                scheduleTask("Load commands tree", Priority.Low, () =>
-                    this.commandsTree.load(
-                        this.instrument!.instrumentExtensionId
-                    )
-                );
 
                 bindShortcuts(
                     this.shortcutsStore.instrumentShortcuts,
@@ -116,7 +108,7 @@ export class InstrumentAppStore implements IEditor {
                 // this is autorun because instrument extension is loaded asynchronously,
                 // so getListsProperty would eventually become true
                 this.autorunDisposer = autorun(() => {
-                    if (this.instrument!.listsProperty) {
+                    if (this.instrument.listsProperty) {
                         this.instrumentListStore =
                             createInstrumentListStore(this);
 
@@ -165,7 +157,7 @@ export class InstrumentAppStore implements IEditor {
             () => JSON.stringify(this.filters),
             filters => {
                 localStorage.setItem(
-                    `instrument/${this.instrumentId}/window/filters`,
+                    `instrument/${this.instrument.id}/window/filters`,
                     filters
                 );
             }
@@ -299,7 +291,7 @@ export class InstrumentAppStore implements IEditor {
         const filters = new Filters();
 
         let filtersJSON = localStorage.getItem(
-            `instrument/${this.instrumentId}/window/filters`
+            `instrument/${this.instrument.id}/window/filters`
         );
         if (filtersJSON) {
             try {
@@ -316,7 +308,7 @@ export class InstrumentAppStore implements IEditor {
     toggleHelpVisible() {
         this.helpVisible = !this.helpVisible;
         localStorage.setItem(
-            `instrument/${this.instrumentId}/window/help-visible`,
+            `instrument/${this.instrument.id}/window/help-visible`,
             this.helpVisible ? "1" : "0"
         );
     }

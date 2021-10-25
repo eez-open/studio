@@ -108,7 +108,7 @@ class ScrapbookStore {
     items(appStore: IAppStore) {
         return this.showAll
             ? this._items
-            : this._items.filter(item => item.oid == appStore.instrument!.id);
+            : this._items.filter(item => item.oid == appStore.instrument.id);
     }
 
     private findIndexOfItemById(itemId: string) {

@@ -217,7 +217,7 @@ class Input extends React.Component<
                         value={terminalState.command}
                         onChange={this.handleChange}
                         disabled={
-                            !this.props.appStore.instrument!.connection
+                            !this.props.appStore.instrument.connection
                                 .isConnected
                         }
                     />
@@ -227,7 +227,7 @@ class Input extends React.Component<
                         icon="material:play_arrow"
                         onClick={this.handleSendCommandClick}
                         enabled={
-                            this.props.appStore.instrument!.connection
+                            this.props.appStore.instrument.connection
                                 .isConnected
                         }
                         title="Run command"
@@ -257,7 +257,7 @@ export class Terminal extends React.Component<
 
     render() {
         const { appStore } = this.props;
-        const instrument = appStore.instrument!;
+        const instrument = appStore.instrument;
 
         const terminal = (
             <div className="EezStudio_TerminalBodyContainer">
@@ -269,7 +269,7 @@ export class Terminal extends React.Component<
                 </div>
                 <Input
                     appStore={appStore}
-                    sendCommand={() => {
+                    sendCommand={async () => {
                         instrument.connection.send(terminalState.command);
                         terminalState.command = "";
                     }}

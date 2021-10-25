@@ -8,7 +8,6 @@ import {
 } from "eez-studio-shared/util-electron";
 
 import { BaseList } from "instrument/window/lists/store-renderer";
-import { Connection } from "instrument/window/connection";
 import { ListHistoryItem } from "instrument/window/history/items/list";
 import { createTableListFromHistoryItem } from "instrument/window/lists/factory";
 import { getCsvDataColumnDefinitions } from "instrument/window/lists/lists";
@@ -16,13 +15,14 @@ import { getCsvDataColumnDefinitions } from "instrument/window/lists/lists";
 import { removeQuotes, useConnection } from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { getTableListData } from "instrument/window/lists/table-data";
+import { ConnectionBase } from "instrument/connection/connection-base";
 
 export interface IListOnInstrument {
     name: string;
     date: Date;
 }
 
-export async function getListsOnTheInstrument(connection: Connection) {
+export async function getListsOnTheInstrument(connection: ConnectionBase) {
     const lists: IListOnInstrument[] = [];
 
     const filesInFolderAsOneString = await connection.query(
@@ -189,7 +189,7 @@ export class List {
                 const sourceData = makeCsvData(
                     tableListData,
                     getCsvDataColumnDefinitions(
-                        this.bb3Instrument.appStore.instrument!
+                        this.bb3Instrument.appStore.instrument
                     )
                 );
 

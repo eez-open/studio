@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 
-import { getConnectionParametersInfo } from "instrument/window/connection";
+import { getConnectionParametersInfo } from "instrument/connection/connection-renderer";
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";

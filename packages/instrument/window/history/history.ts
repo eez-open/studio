@@ -143,7 +143,7 @@ export interface IAppStore {
 
     oids?: string[];
 
-    instrument?: IInstrumentObject;
+    instrument: IInstrumentObject;
     instrumentListStore?: IStore;
     instrumentLists: BaseList[];
     undoManager?: IUndoManager;
@@ -966,7 +966,7 @@ export class History {
     }
 
     get oid() {
-        return this.options.oid || this.appStore.instrument!.id;
+        return this.options.oid || this.appStore.instrument.id;
     }
 
     get oidCond() {

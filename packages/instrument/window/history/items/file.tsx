@@ -200,7 +200,7 @@ export class FileHistoryItemComponent extends React.Component<
     setVisibleTimeoutId: any;
 
     onAbortFileTransfer = () => {
-        this.props.appStore.instrument!.connection.abortLongOperation();
+        this.props.appStore.instrument.connection.abortLongOperation();
     };
 
     onAddNote = () => {

@@ -1,17 +1,11 @@
-import { observable, computed, action, autorun, toJS } from "mobx";
+import { observable, action, autorun, toJS, runInAction } from "mobx";
 
-import {
-    IActivityLogEntry,
-    activityLogStore,
-    log
-} from "eez-studio-shared/activity-log";
+import { activityLogStore, log } from "eez-studio-shared/activity-log";
 import {
     registerSource,
     unregisterSource,
-    sendMessage,
-    watch
+    sendMessage
 } from "eez-studio-shared/notify";
-import { isRenderer } from "eez-studio-shared/util-electron";
 
 import type { InstrumentObject } from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
@@ -29,6 +23,14 @@ import {
     FileUpload
 } from "instrument/connection/file-upload";
 import { parseScpiValue, IResponseTypeType } from "instrument/scpi";
+import {
+    ConnectionBase,
+    ConnectionState,
+    ConnectionStatus,
+    IConnection,
+    ISendOptions,
+    LongOperation
+} from "instrument/connection/connection-base";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,86 +41,6 @@ const CONF_START_LONG_OPERATION_TIMEOUT = 5000;
 const CONF_ACQUIRE_TIMEOUT = 3000;
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export enum ConnectionState {
-    IDLE,
-    CONNECTING,
-    TESTING,
-    CONNECTED,
-    DISCONNECTING
-}
-
-export interface ConnectionStatus {
-    state: ConnectionState;
-    errorCode: ConnectionErrorCode;
-    error: string | undefined;
-}
-
-interface ISendOptions {
-    log?: boolean;
-    longOperation?: boolean;
-    queryResponseType?: IResponseTypeType;
-}
-
-abstract class ConnectionBase {
-    constructor(public instrument: InstrumentObject) {}
-
-    abstract get state(): ConnectionState;
-    abstract get errorCode(): ConnectionErrorCode;
-    abstract get error(): string | undefined;
-
-    abstract dismissError(): void;
-
-    @computed
-    get isIdle() {
-        return this.state === ConnectionState.IDLE;
-    }
-
-    @computed
-    get isTransitionState() {
-        return (
-            this.state === ConnectionState.CONNECTING ||
-            this.state === ConnectionState.TESTING ||
-            this.state === ConnectionState.DISCONNECTING
-        );
-    }
-
-    @computed
-    get isConnected() {
-        return this.state === ConnectionState.CONNECTED;
-    }
-
-    abstract connect(connectionParameters?: ConnectionParameters): void;
-    abstract disconnect(): void;
-    abstract destroy(): void;
-    abstract send(command: string, options?: ISendOptions): void;
-    abstract upload(
-        instructions: IFileUploadInstructions,
-        onSuccess?: () => void,
-        onError?: (error: any) => void
-    ): void;
-    abstract abortLongOperation(): void;
-
-    abstract acquire(
-        instrumentId: string,
-        acquireId: string,
-        callbackWindowId: number,
-        traceEnabled: boolean
-    ): void;
-    abstract release(): void;
-}
-
-export type IConnection = ConnectionBase;
-
-export interface LongOperation {
-    logId: string;
-    logEntry: Partial<IActivityLogEntry>;
-    abort(): void;
-    onData(data: string): void;
-    isDone(): boolean;
-    dataSurplus: string | undefined;
-    isQuery: boolean;
-}
 
 export class Connection
     extends ConnectionBase
@@ -375,10 +297,10 @@ export class Connection
     }
 
     housekeeping = () => {
-        if (this.mainProcessAcquireQueue.length > 0) {
-            const acquireTask = this.mainProcessAcquireQueue[0];
+        if (this.acquireQueue.length > 0) {
+            const acquireTask = this.acquireQueue[0];
             if (Date.now() - acquireTask.requestTime > CONF_ACQUIRE_TIMEOUT) {
-                this.mainProcessAcquireQueue.shift()!;
+                this.acquireQueue.shift()!;
 
                 const browserWindow = require("electron").BrowserWindow.fromId(
                     acquireTask.callbackWindowId
@@ -603,7 +525,7 @@ export class Connection
         callDoStartLongOperationUntilTimeout();
     }
 
-    upload(
+    doUpload(
         instructions: IFileUploadInstructions,
         onSuccess?: () => void,
         onError?: (error: any) => void
@@ -693,10 +615,10 @@ export class Connection
             this.housekeepingIntervalId = undefined;
         }
 
-        this.release();
+        this.doRelease();
     }
 
-    mainProcessAcquireQueue: {
+    acquireQueue: {
         requestTime: number;
         instrumentId: string;
         acquireId: string;
@@ -704,7 +626,7 @@ export class Connection
         traceEnabled: boolean;
     }[] = [];
 
-    async acquire(
+    async doAcquire(
         instrumentId: string,
         acquireId: string,
         callbackWindowId: number,
@@ -715,7 +637,7 @@ export class Connection
 
         if (this.isConnected) {
             if (this.callbackWindowId != undefined) {
-                this.mainProcessAcquireQueue.push({
+                this.acquireQueue.push({
                     requestTime: Date.now(),
                     instrumentId,
                     acquireId,
@@ -748,14 +670,14 @@ export class Connection
         }
     }
 
-    release() {
+    doRelease() {
         this.callbackWindowId = undefined;
         this.acquireId = undefined;
         this.traceEnabled = true;
 
-        const acquireTask = this.mainProcessAcquireQueue.shift();
+        const acquireTask = this.acquireQueue.shift();
         if (acquireTask) {
-            this.acquire(
+            this.doAcquire(
                 acquireTask.instrumentId,
                 acquireTask.acquireId,
                 acquireTask.callbackWindowId,
@@ -763,252 +685,21 @@ export class Connection
             );
         }
     }
-}
 
-export class IpcConnection extends ConnectionBase {
-    static ipcConnections = new Map<string, IpcConnection>();
-
-    @observable state: ConnectionState = ConnectionState.IDLE;
-    @observable errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
-    @observable error: string | undefined;
-
-    onSuccess?: () => void;
-    onError?: (error: any) => void;
-
-    constructor(instrument: InstrumentObject) {
-        super(instrument);
-
-        watch(
-            "instrument/" + instrument.id + "/connection",
-            undefined,
-            action((connectionStatus: ConnectionStatus) => {
-                this.state = connectionStatus.state;
-                this.errorCode = connectionStatus.errorCode;
-                this.error = connectionStatus.error;
-            })
-        );
-
-        IpcConnection.ipcConnections.set(instrument.id, this);
-        if (IpcConnection.ipcConnections.size == 1) {
-            IpcConnection.setupIpcListeners();
-        }
+    // no need to implement these in main process connection
+    get interfaceInfo() {
+        return undefined;
     }
-
-    static setupIpcListeners() {
-        EEZStudio.electron.ipcRenderer.on(
-            "instrument/connection/long-operation-result",
-            (
-                event: any,
-                args: {
-                    instrumentId: string;
-                    error?: any;
-                }
-            ) => {
-                const ipcConnection = IpcConnection.ipcConnections.get(
-                    args.instrumentId
-                );
-                if (ipcConnection) {
-                    if (args.error) {
-                        if (ipcConnection.onError) {
-                            ipcConnection.onError(args.error);
-                        }
-                    } else {
-                        if (ipcConnection.onSuccess) {
-                            ipcConnection.onSuccess();
-                        }
-                    }
-                    ipcConnection.onError = undefined;
-                    ipcConnection.onSuccess = undefined;
-                } else {
-                    console.error(
-                        "Unknown instrument ID for the long operation:",
-                        args.instrumentId
-                    );
-                }
-            }
-        );
-
-        EEZStudio.electron.ipcRenderer.on(
-            "instrument/connection/acquire-result",
-            (
-                event: any,
-                args: {
-                    instrumentId: string;
-                    acquireId: string;
-                    rejectReason?: any;
-                }
-            ) => {
-                const ipcConnection = IpcConnection.ipcConnections.get(
-                    args.instrumentId
-                );
-                if (ipcConnection) {
-                    for (
-                        let i = 0;
-                        i < ipcConnection.rendererProcessAcquireQueue.length;
-                        i++
-                    ) {
-                        const acquireTask =
-                            ipcConnection.rendererProcessAcquireQueue[i];
-                        if (acquireTask.acquireId === args.acquireId) {
-                            ipcConnection.rendererProcessAcquireQueue.splice(
-                                i,
-                                1
-                            );
-                            if (args.rejectReason) {
-                                acquireTask.reject(args.rejectReason);
-                            } else {
-                                acquireTask.resolve();
-                            }
-                            break;
-                        }
-                    }
-                } else {
-                    console.error(
-                        "Unknown instrument ID for the acquire result:",
-                        args.instrumentId
-                    );
-                }
-            }
-        );
-    }
-
-    dismissError() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/dismiss-error",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
-    }
-
-    connect(connectionParameters?: ConnectionParameters) {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/connect", {
-            instrumentId: this.instrument.id,
-            connectionParameters: toJS(connectionParameters)
-        });
-    }
-
-    disconnect() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/disconnect",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
-    }
-
-    destroy() {
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/destroy", {
-            instrumentId: this.instrument.id
-        });
-    }
-
-    send(command: string) {
-        let options: ISendOptions | undefined;
-
-        // find out command name, i.e. up to parameters section which start with space
-        let commandName;
-        let i = command.indexOf(" ");
-        if (i !== -1) {
-            commandName = command.substr(0, i);
-        } else {
-            // no parameters
-            commandName = command;
-        }
-
-        if (commandName.endsWith("?")) {
-            // get expected query response
-            options = {
-                queryResponseType:
-                    this.instrument.getQueryResponseType(commandName)
-            };
-        } else {
-            if (this.instrument.isCommandSendsBackDataBlock(commandName)) {
-                options = {
-                    queryResponseType: "non-standard-data-block"
-                };
-            }
-        }
-
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/send", {
-            instrumentId: this.instrument.id,
-            command,
-            options
-        });
-    }
-
+    openConnectDialog() {}
+    async acquire(traceEnabled: boolean) {}
+    command(command: string) {}
+    async query(query: string) {}
     upload(
         instructions: IFileUploadInstructions,
         onSuccess?: () => void,
         onError?: (error: any) => void
-    ) {
-        this.onSuccess = onSuccess;
-        this.onError = onError;
-
-        EEZStudio.electron.ipcRenderer.send("instrument/connection/upload", {
-            instrumentId: this.instrument.id,
-            instructions: toJS(instructions),
-            callbackWindowId: EEZStudio.remote.getCurrentWindow().id
-        });
-    }
-
-    async isLongOperationInProgress() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/abort-long-operation",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
-    }
-
-    abortLongOperation() {
-        EEZStudio.electron.ipcRenderer.send(
-            "instrument/connection/abort-long-operation",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
-    }
-
-    rendererProcessAcquireQueue: {
-        acquireId: string;
-        resolve: () => void;
-        reject: (reason?: any) => void;
-    }[] = [];
-
-    async acquire(
-        instrumentId: string,
-        acquireId: string,
-        callbackWindowId: number,
-        traceEnabled: boolean
-    ) {
-        return new Promise<void>((resolve, reject) => {
-            this.rendererProcessAcquireQueue.push({
-                acquireId,
-                resolve,
-                reject
-            });
-
-            EEZStudio.electron.ipcRenderer.send(
-                "instrument/connection/acquire",
-                {
-                    instrumentId,
-                    acquireId,
-                    callbackWindowId,
-                    traceEnabled
-                }
-            );
-        });
-    }
-
-    release() {
-        EEZStudio.electron.ipcRenderer.sendSync(
-            "instrument/connection/release",
-            {
-                instrumentId: this.instrument.id
-            }
-        );
-    }
+    ) {}
+    release() {}
 }
 
 export function setupIpcServer() {
@@ -1098,7 +789,7 @@ export function setupIpcServer() {
                     arg.instructions
                 );
 
-                connection.upload(
+                connection.doUpload(
                     arg.instructions,
                     () => {
                         let browserWindow =
@@ -1173,7 +864,7 @@ export function setupIpcServer() {
         ) {
             let connection = connections.get(arg.instrumentId);
             if (connection) {
-                connection.acquire(
+                connection.doAcquire(
                     arg.instrumentId,
                     arg.acquireId,
                     arg.callbackWindowId,
@@ -1205,7 +896,7 @@ export function setupIpcServer() {
         ) {
             let connection = connections.get(arg.instrumentId);
             if (connection) {
-                connection.release();
+                connection.doRelease();
             }
             event.returnValue = true;
         }
@@ -1214,17 +905,8 @@ export function setupIpcServer() {
 
 export const connections = observable(new Map<string, IConnection>());
 
-export function createConnection(instrument: InstrumentObject) {
-    let connection: IConnection;
-    if (isRenderer()) {
-        connection = new IpcConnection(instrument);
-    } else {
-        connection = new Connection(instrument);
-    }
-
-    action(() => {
-        connections.set(instrument.id.toString(), connection);
-    })();
-
+export function createMainProcessConnection(instrument: InstrumentObject) {
+    const connection = new Connection(instrument);
+    runInAction(() => connections.set(instrument.id.toString(), connection));
     return connection;
 }

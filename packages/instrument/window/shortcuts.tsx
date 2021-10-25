@@ -91,7 +91,7 @@ export class ShortcutsStore {
                     SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX
                 )
             ) {
-                this.appStore.instrument!.addShortcutGroupToInstrument(
+                this.appStore.instrument.addShortcutGroupToInstrument(
                     shortcut.groupName
                 );
             }
@@ -118,7 +118,7 @@ export class ShortcutsStore {
                     SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX
                 )
             ) {
-                this.appStore.instrument!.addShortcutGroupToInstrument(
+                this.appStore.instrument.addShortcutGroupToInstrument(
                     shortcut.groupName
                 );
             }
@@ -126,7 +126,7 @@ export class ShortcutsStore {
             shortcut = Object.assign({}, shortcut, {
                 groupName:
                     SHORTCUTS_GROUP_NAME_FOR_INSTRUMENT_PREFIX +
-                    this.appStore.instrument!.id
+                    this.appStore.instrument.id
             });
         }
         updateShortcut(shortcut);
@@ -169,7 +169,7 @@ export class GroupsStore {
 
     isGroupEnabled(group: IGroup) {
         return (
-            this.appStore.instrument!.selectedShortcutGroups.indexOf(
+            this.appStore.instrument.selectedShortcutGroups.indexOf(
                 group.name
             ) !== -1
         );
@@ -178,10 +178,10 @@ export class GroupsStore {
     enableGroup(group: IGroup, enable: boolean): void {
         if (enable) {
             beginTransaction("Add shortcut group to instrument");
-            this.appStore.instrument!.addShortcutGroupToInstrument(group.name);
+            this.appStore.instrument.addShortcutGroupToInstrument(group.name);
         } else {
             beginTransaction("Remove shortcut group from instrument");
-            this.appStore.instrument!.removeShortcutGroupFromInstrument(
+            this.appStore.instrument.removeShortcutGroupFromInstrument(
                 group.name
             );
         }

@@ -3,12 +3,10 @@ import { observer } from "mobx-react";
 
 import { Loader } from "eez-studio-ui/loader";
 
-import { getConnection } from "instrument/window/connection";
-
 import { Script } from "instrument/bb3/objects/Script";
 
 export const ScriptActions = observer(({ script }: { script: Script }) => {
-    if (!getConnection(script.bb3Instrument.appStore).isConnected) {
+    if (!script.bb3Instrument.instrument.isConnected) {
         return null;
     }
 

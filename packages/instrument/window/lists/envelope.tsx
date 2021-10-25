@@ -252,7 +252,7 @@ class EditEnvelopeValue extends React.Component<
     }
 
     @computed get instrument() {
-        return this.props.appStore.instrument!;
+        return this.props.appStore.instrument;
     }
 
     @computed get tableListData() {
@@ -469,7 +469,7 @@ export class DragEnvelopePointMouseHandler implements MouseHandler {
     }
 
     @computed get instrument() {
-        return this.appStore.instrument!;
+        return this.appStore.instrument;
     }
 
     @computed get tableListData() {
@@ -884,7 +884,7 @@ export class EnvelopeLineController extends LineController {
     }
 
     @computed get instrument() {
-        return this.appStore.instrument!;
+        return this.appStore.instrument;
     }
 
     @computed get tableListData() {
@@ -1333,7 +1333,7 @@ class EnvelopeChartsHeader extends React.Component<{
                         validators: [
                             validators.rangeInclusive(
                                 1,
-                                this.props.appStore.instrument!
+                                this.props.appStore.instrument
                                     .listsMaxPointsProperty
                             )
                         ]
@@ -1402,7 +1402,7 @@ class EnvelopeChartsHeader extends React.Component<{
             const oldCurrent = this.list.data.current;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.props.appStore.instrument!
+                this.props.appStore.instrument
             );
 
             const newVoltage = objectClone(defaultEnvelopeListData.voltage);
@@ -1442,7 +1442,7 @@ class EnvelopeChartsHeader extends React.Component<{
             const oldVoltage = this.list.data.voltage;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.props.appStore.instrument!
+                this.props.appStore.instrument
             );
 
             const newVoltage = defaultEnvelopeListData.voltage.slice();
@@ -1477,7 +1477,7 @@ class EnvelopeChartsHeader extends React.Component<{
             const oldCurrent = this.list.data.current;
 
             const defaultEnvelopeListData = getDefaultEnvelopeListData(
-                this.props.appStore.instrument!
+                this.props.appStore.instrument
             );
 
             const newCurrent = defaultEnvelopeListData.current.slice();

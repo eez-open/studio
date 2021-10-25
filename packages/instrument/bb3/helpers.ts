@@ -1,6 +1,6 @@
 import * as notification from "eez-studio-ui/notification";
+import { ConnectionBase } from "instrument/connection/connection-base";
 
-import { getConnection, Connection } from "instrument/window/connection";
 import { BB3Instrument } from "./objects/BB3Instrument";
 
 export function removeQuotes(str: string) {
@@ -89,10 +89,10 @@ export async function useConnection(
         bb3Instrument: BB3Instrument;
         setBusy(value: boolean): void;
     },
-    callback: (connection: Connection) => Promise<void>,
+    callback: (connection: ConnectionBase) => Promise<void>,
     traceEnabled: boolean
 ) {
-    const connection = getConnection(obj.bb3Instrument.appStore);
+    const connection = obj.bb3Instrument.instrument.connection;
     if (!connection.isConnected) {
         return;
     }

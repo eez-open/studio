@@ -43,14 +43,14 @@ export class ListHistoryItemComponent extends React.Component<
         if (
             this.message.listData &&
             this.message.listData.length > 0 &&
-            this.props.appStore.instrument!
+            this.props.appStore.instrument
         ) {
             return createTableListFromData(
                 Object.assign({}, this.message.listData[0])
             );
         }
 
-        if (this.props.historyItem.data && this.props.appStore.instrument!) {
+        if (this.props.historyItem.data && this.props.appStore.instrument) {
             return createTableListFromHistoryItem(this.props.historyItem);
         }
 
@@ -75,11 +75,11 @@ export class ListHistoryItemComponent extends React.Component<
         if (this.list) {
             const tableListData = getTableListData(
                 this.list!,
-                this.props.appStore.instrument!
+                this.props.appStore.instrument
             );
 
             saveTableListData(
-                this.props.appStore.instrument!,
+                this.props.appStore.instrument,
                 this.message.listName,
                 tableListData
             );

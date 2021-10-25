@@ -7,7 +7,7 @@ import {
 
 import type { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";
-import type { Connection } from "instrument/connection/connection";
+import type { Connection } from "instrument/connection/connection-main";
 import {
     detectFileType,
     convertBmpToPng

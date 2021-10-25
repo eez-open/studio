@@ -14,7 +14,6 @@ import { Header } from "eez-studio-ui/header-with-body";
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import type { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
 import type { InstrumentObject } from "instrument/instrument-object";
-import { getConnection } from "instrument/window/connection";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,11 +55,11 @@ export class AppBar extends React.Component<
     {}
 > {
     get instrument() {
-        return this.props.appStore.instrument!;
+        return this.props.appStore.instrument;
     }
 
     get connection() {
-        return getConnection(this.props.appStore);
+        return this.instrument.connection;
     }
 
     handleConnectClick = () => {
@@ -74,7 +73,7 @@ export class AppBar extends React.Component<
     onEditInstrumentLabel = () => {
         showDialog(
             <EditInstrumentLabelDialog
-                instrument={this.props.appStore.instrument!}
+                instrument={this.props.appStore.instrument}
             />
         );
     };

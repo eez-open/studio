@@ -288,8 +288,6 @@ async function yarnInstall() {
 }
 
 async function getNodeModuleFolders() {
-    yarnInstall();
-
     const packageJsonPath = `${extensionsFolderPath}/package.json`;
     if (!(await fileExists(packageJsonPath))) {
         try {
@@ -345,6 +343,10 @@ export async function loadExtensions() {
         } catch (err) {
             console.error(err);
         }
+    }
+
+    if (isRenderer()) {
+        yarnInstall();
     }
 }
 

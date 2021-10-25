@@ -14,7 +14,7 @@ import { loadInstrumentExtension } from "instrument/import";
 import { instrumentStore } from "instrument/instrument-object";
 import type { IInstrumentProperties } from "instrument/export";
 
-import type * as ConnectionModule from "instrument/connection/connection";
+import type * as ConnectionModule from "instrument/connection/connection-main";
 
 import { createInstrumentListStore } from "instrument/window/lists/store";
 
@@ -51,7 +51,7 @@ const instrumentExtension: IExtensionDefinition = {
     init() {
         if (!isRenderer()) {
             const { setupIpcServer } =
-                require("instrument/connection/connection") as typeof ConnectionModule;
+                require("instrument/connection/connection-main") as typeof ConnectionModule;
 
             setupIpcServer();
 

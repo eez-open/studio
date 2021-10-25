@@ -580,7 +580,7 @@ export class Table extends React.Component<
     get isMaxPointsReached() {
         return (
             this.props.list.numPoints >=
-            this.props.appStore.instrument!.listsMaxPointsProperty
+            this.props.appStore.instrument.listsMaxPointsProperty
         );
     }
 
@@ -742,7 +742,7 @@ export class TableDetailsView extends React.Component<{
     get isMaxPointsReached() {
         return (
             this.props.list.numPoints >=
-            this.props.appStore.instrument!.listsMaxPointsProperty
+            this.props.appStore.instrument.listsMaxPointsProperty
         );
     }
 

@@ -2,14 +2,18 @@ import { observable, computed, action, runInAction } from "mobx";
 
 import { compareVersions } from "eez-studio-shared/util";
 
-import { Connection } from "instrument/window/connection";
-
-import { fetchFileUrl, IFetchedFile, removeQuotes, useConnection } from "instrument/bb3/helpers";
+import {
+    fetchFileUrl,
+    IFetchedFile,
+    removeQuotes,
+    useConnection
+} from "instrument/bb3/helpers";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import {
     ICatalogScriptItem,
     ICatalogScriptItemVersion
 } from "instrument/bb3/objects/ScriptsCatalog";
+import { ConnectionBase } from "instrument/connection/connection-base";
 
 export interface IScriptOnInstrument {
     name: string;
@@ -18,11 +22,15 @@ export interface IScriptOnInstrument {
 }
 
 export async function getScriptsOnTheInstrument(
-    connection: Connection,
+    connection: ConnectionBase,
     previousScriptsOnInstrument: IScriptOnInstrument[] | undefined
 ) {
-    const filesInFolderAsOneString = await connection.query('MMEM:CAT? "/Scripts"');
-    const filesInFolderAsArray = removeQuotes(filesInFolderAsOneString).split('","');
+    const filesInFolderAsOneString = await connection.query(
+        'MMEM:CAT? "/Scripts"'
+    );
+    const filesInFolderAsArray = removeQuotes(filesInFolderAsOneString).split(
+        '","'
+    );
 
     const scripts: IScriptOnInstrument[] = [];
 
@@ -32,7 +40,9 @@ export async function getScriptsOnTheInstrument(
             const scriptName = fileName.substring(0, fileName.length - 3);
 
             const previousScriptOnInstrument = previousScriptsOnInstrument
-                ? previousScriptsOnInstrument.find(oldScript => oldScript.name == scriptName)
+                ? previousScriptsOnInstrument.find(
+                      oldScript => oldScript.name == scriptName
+                  )
                 : undefined;
 
             scripts.push({
@@ -51,9 +61,13 @@ export async function getScriptsOnTheInstrument(
         const indexOfExtension = fileName.indexOf(".");
 
         const fileNameWithoutExtension =
-            indexOfExtension != -1 ? fileName.substr(0, indexOfExtension) : fileName;
+            indexOfExtension != -1
+                ? fileName.substr(0, indexOfExtension)
+                : fileName;
 
-        const script = scripts.find(script => script.name == fileNameWithoutExtension);
+        const script = scripts.find(
+            script => script.name == fileNameWithoutExtension
+        );
 
         if (script && script.files.indexOf(fileName) == -1) {
             script.files.push(fileName);
@@ -67,7 +81,10 @@ function fetchScriptFiles(catalogScriptItemVersion: ICatalogScriptItemVersion) {
     return Promise.all(catalogScriptItemVersion.files.map(fetchFileUrl));
 }
 
-async function uploadScriptFilesToInstrument(connection: Connection, files: IFetchedFile[]) {
+async function uploadScriptFilesToInstrument(
+    connection: ConnectionBase,
+    files: IFetchedFile[]
+) {
     for (const file of files) {
         await new Promise<void>((resolve, reject) => {
             const sourceFileType = file.fileName.toLowerCase().endsWith(".py")
@@ -247,7 +264,10 @@ export class Script {
             this.scriptOnInstrument &&
             this.selectedVersion &&
             this.scriptOnInstrument.version &&
-            compareVersions(this.selectedVersion, this.scriptOnInstrument.version) > 0
+            compareVersions(
+                this.selectedVersion,
+                this.scriptOnInstrument.version
+            ) > 0
         );
     }
 
@@ -261,7 +281,10 @@ export class Script {
             this.scriptOnInstrument &&
             this.selectedVersion &&
             this.scriptOnInstrument.version &&
-            compareVersions(this.selectedVersion, this.scriptOnInstrument.version) < 0
+            compareVersions(
+                this.selectedVersion,
+                this.scriptOnInstrument.version
+            ) < 0
         );
     }
 

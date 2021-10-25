@@ -6,8 +6,6 @@ import { compareVersions } from "eez-studio-shared/util";
 import { InstrumentAppStore } from "instrument/window/app-store";
 import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 
-import { getConnection } from "instrument/window/connection";
-
 import { FirmwareVersionSection } from "instrument/bb3/components/FirmwareVersionSection";
 import { ShortcutsSection } from "instrument/bb3/components/ShortcutsSection";
 import { ModulesSection } from "instrument/bb3/components/modules-section/ModulesSection";
@@ -23,7 +21,7 @@ export const StartPage = observer(
         appStore: InstrumentAppStore;
         bb3Instrument: BB3Instrument;
     }) => {
-        const isConnected = getConnection(appStore).isConnected;
+        const isConnected = bb3Instrument.instrument.isConnected;
 
         if (!bb3Instrument.timeOfLastRefresh) {
             return null;

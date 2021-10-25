@@ -230,7 +230,7 @@ export class ScriptsModel implements IModel {
 
     @computed
     get canUpload() {
-        const instrument = this.appStore.instrument!;
+        const instrument = this.appStore.instrument;
         const connection = instrument.connection;
         return (
             this.selectedScript &&
@@ -242,10 +242,10 @@ export class ScriptsModel implements IModel {
 
     upload = () => {
         if (this.canUpload) {
-            const instrument = this.appStore.instrument!;
+            const instrument = this.appStore.instrument;
             const connection = instrument.connection;
 
-            connection.upload(
+            connection.doUpload(
                 Object.assign({}, instrument.defaultFileUploadInstructions, {
                     sourceData:
                         this.newActionCode || this.selectedScript!.action.data,
@@ -525,7 +525,7 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
             )}
             {!isShorcutRunning() &&
                 scriptsModel.selectedScript &&
-                appStore.instrument!.connection.isConnected &&
+                appStore.instrument.connection.isConnected &&
                 (scriptsModel.selectedScript.action.type === "scpi-commands" ||
                     scriptsModel.selectedScript.action.type ===
                         "javascript") && (

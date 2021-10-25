@@ -23,7 +23,6 @@ import { run as runScpi } from "instrument/script-engines/scpi";
 import { run as runJavaScript } from "instrument/script-engines/javascript";
 
 import { InstrumentAppStore } from "instrument/window/app-store";
-import { getConnection } from "instrument/window/connection";
 import { showScriptError } from "instrument/window/scripts";
 
 import { IScriptHistoryItemMessage } from "instrument/window/history/items/script";
@@ -60,7 +59,7 @@ class ScpiSession {
 }
 
 function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
-    const connection = getConnection(appStore);
+    const connection = appStore.instrument.connection;
 
     return {
         session: new ScpiSession(shortcut),
@@ -270,12 +269,12 @@ function prepareJavaScriptModules(
     appStore: InstrumentAppStore,
     shortcut: IShortcut
 ) {
-    const instrument = appStore.instrument!;
+    const instrument = appStore.instrument;
 
     return {
         session: new JavaScriptSession(instrument, shortcut),
 
-        connection: getConnection(appStore),
+        connection: appStore.instrument.connection,
 
         instrument: {
             get properties() {
@@ -391,7 +390,7 @@ export function executeShortcut(
         return;
     }
 
-    if (!getConnection(appStore).isConnected) {
+    if (!appStore.instrument.isConnected) {
         info("Not connected to the instrument.", undefined);
         return;
     }

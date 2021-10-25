@@ -7,7 +7,6 @@ import { BB3Instrument } from "instrument/bb3/objects/BB3Instrument";
 import { Section } from "instrument/bb3/components/Section";
 import { ModuleItem } from "instrument/bb3/components/modules-section/ModuleItem";
 import { InstrumentAppStore } from "instrument/window/app-store";
-import { getConnection } from "instrument/window/connection";
 
 export const ModulesSection = observer(
     ({
@@ -17,7 +16,7 @@ export const ModulesSection = observer(
         bb3Instrument: BB3Instrument;
         appStore: InstrumentAppStore;
     }) => {
-        const isConnected = getConnection(appStore).isConnected;
+        const isConnected = bb3Instrument.instrument.isConnected;
 
         let body;
 

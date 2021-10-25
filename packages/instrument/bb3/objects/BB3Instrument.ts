@@ -11,7 +11,6 @@ import {
 import { stringCompare } from "eez-studio-shared/string";
 
 import { InstrumentObject } from "instrument/instrument-object";
-import { getConnection, Connection } from "instrument/window/connection";
 import { InstrumentAppStore } from "instrument/window/app-store";
 
 import { compareVersions } from "eez-studio-shared/util";
@@ -41,6 +40,7 @@ import {
 import { IHistoryItem } from "instrument/window/history/item";
 
 import * as notification from "eez-studio-ui/notification";
+import { ConnectionBase } from "instrument/connection/connection-base";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -141,7 +141,7 @@ function getModuleFirmwareReleases(moduleType: string) {
 async function getModulesInfoFromInstrument(
     bb3Instrument: BB3Instrument,
     firmwareVersion: string,
-    connection: Connection,
+    connection: ConnectionBase,
     forceRefresh: boolean
 ) {
     let modules: Module[] = [];
@@ -312,7 +312,7 @@ export class BB3Instrument {
         );
 
         const dispose4 = autorun(() => {
-            if (getConnection(appStore).isConnected) {
+            if (this.instrument.isConnected) {
                 setTimeout(() => this.refresh(false), 50);
             }
         });

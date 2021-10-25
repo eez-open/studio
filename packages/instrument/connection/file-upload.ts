@@ -14,7 +14,7 @@ import { Buffer } from "buffer";
 
 import type { FileState } from "instrument/connection/file-state";
 import { FileTransfer } from "instrument/connection/file-transfer";
-import type { Connection } from "instrument/connection/connection";
+import type { Connection } from "instrument/connection/connection-main";
 import { detectFileType, SAMPLE_LENGTH } from "instrument/connection/file-type";
 
 export interface IFileUploadInstructions {

@@ -3,7 +3,6 @@ import type { Socket } from "net";
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import * as notification from "eez-studio-ui/notification";
 
-import type { Connection } from "instrument/window/connection";
 import type { InstrumentObject } from "instrument/instrument-object";
 import type { ConnectionParameters } from "instrument/connection/interface";
 
@@ -29,6 +28,7 @@ import { DocumentStoreClass } from "project-editor/core/store";
 
 import net from "net";
 import { getObjectFromStringPath } from "project-editor/core/store";
+import { ConnectionBase } from "instrument/connection/connection-base";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -77,7 +77,7 @@ const LOG_ITEM_TYPE_INFO = 4;
 const LOG_ITEM_TYPE_DEBUG = 5;
 
 export class RemoteRuntime extends RuntimeBase {
-    connection: Connection | undefined;
+    connection: ConnectionBase | undefined;
     debuggerConnection: DebuggerConnection | undefined;
     instrument: InstrumentObject | undefined;
     assetsMap: AssetsMap;
@@ -125,21 +125,15 @@ export class RemoteRuntime extends RuntimeBase {
 
         instrument.connection.connect();
 
-        const editor = instrument.getEditor();
-        editor.onCreate();
+        const connection = instrument.connection;
 
-        //await new Promise<void>(resolve => setTimeout(resolve, 1000));
+        connection.connect();
 
-        const { getConnection } = await import("instrument/window/connection");
-        const connection = getConnection(editor);
-
-        if (connection) {
-            for (let i = 0; i < 10; i++) {
-                if (instrument.isConnected) {
-                    break;
-                }
-                await new Promise<void>(resolve => setTimeout(resolve, 100));
+        for (let i = 0; i < 10; i++) {
+            if (instrument.isConnected) {
+                break;
             }
+            await new Promise<void>(resolve => setTimeout(resolve, 100));
         }
 
         if (!connection || !instrument.isConnected) {
