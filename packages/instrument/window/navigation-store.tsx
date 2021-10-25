@@ -147,7 +147,7 @@ export class NavigationStore {
         });
     }
 
-    @computed
+    @computed({ keepAlive: true })
     get startPageNavigationItem() {
         if (this.appStore.instrument?.isBB3) {
             return {

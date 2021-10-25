@@ -771,7 +771,7 @@ export class BB3Instrument {
                 },
                 async connection => {
                     const toastId = notification.info(
-                        "Sending firmware file to the BB3, please wait ...",
+                        `Sending firmware file to the ${this.instrument.name}, please wait ...`,
                         {
                             autoClose: false
                         }
@@ -889,7 +889,7 @@ export class BB3Instrument {
 
                         notification.update(toastId, {
                             type: notification.INFO,
-                            render: "Sending firmware file to the BB3, please wait ..."
+                            render: `Sending firmware file to the ${this.instrument.name}, please wait ...`
                         });
 
                         await new Promise<void>((resolve, reject) => {
@@ -900,7 +900,7 @@ export class BB3Instrument {
                                 {
                                     sourceData: file.fileData,
                                     sourceFileType: "application/octet-stream",
-                                    destinationFileName: "o.s",
+                                    destinationFileName: "_o.s",
                                     destinationFolderPath: "/"
                                 }
                             );
@@ -911,6 +911,8 @@ export class BB3Instrument {
                                 reject
                             );
                         });
+
+                        connection.command(`:MMEM:MOVE "/_o.s", "/o.s"`);
 
                         notification.update(toastId, {
                             type: notification.INFO,
