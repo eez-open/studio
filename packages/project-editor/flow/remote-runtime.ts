@@ -32,8 +32,6 @@ import { ConnectionBase } from "instrument/connection/connection-base";
 
 const DEBUGGER_TCP_PORT = 3333;
 
-const DEBUGGER_CONNECTION_TIMEOUT = 5000;
-
 enum MessagesToDebugger {
     MESSAGE_TO_DEBUGGER_STATE_CHANGED, // STATE
 
@@ -561,15 +559,10 @@ class DebuggerConnection {
     sendMessageFromDebugger(data: string) {
         if (this.socket) {
             this.socket.write(data, "binary");
-
-            this.timeoutTimerId = setTimeout(() => {
-                this.timeoutTimerId = undefined;
-                this.runtime.stopRuntimeWithError(
-                    "Debugger connection timeout"
-                );
-            }, DEBUGGER_CONNECTION_TIMEOUT);
         } else if (this.runtime.isDebuggerActive) {
-            this.runtime.stopRuntimeWithError("Debugger connection timeout");
+            this.runtime.stopRuntimeWithError(
+                "Connection with debugger is closed"
+            );
         }
     }
 
@@ -707,11 +700,6 @@ class DebuggerConnection {
     }
 
     onMessageToDebugger(data: string) {
-        if (this.timeoutTimerId) {
-            clearTimeout(this.timeoutTimerId);
-            this.timeoutTimerId = undefined;
-        }
-
         this.dataAccumulated += data;
 
         while (true) {
