@@ -335,7 +335,7 @@ export class FileUpload extends FileTransfer {
 
         this.logEntry.message = this.serializeState();
 
-        if (this.state === "success" || this.state === "upload-finish") {
+        if (this.state === "success") {
             if (this.fileData) {
                 this.logEntry.data = this.fileData;
                 this.fileData = undefined;

@@ -797,7 +797,9 @@ export class BB3Instrument {
                             );
                         });
 
-                        connection.command(`:MMEM:MOVE "/_o.s", "/o.s"`);
+                        connection.command(`MMEM:MOVE "/_o.s", "/o.s"`);
+
+                        await connection.query(`MMEM:DATE? "/o.s"`);
 
                         notification.update(toastId, {
                             type: notification.INFO,
@@ -820,7 +822,7 @@ export class BB3Instrument {
                         });
                     }
                 },
-                false
+                true
             );
         }
     };
@@ -912,7 +914,9 @@ export class BB3Instrument {
                             );
                         });
 
-                        connection.command(`:MMEM:MOVE "/_o.s", "/o.s"`);
+                        connection.command(`MMEM:MOVE "/_o.s", "/o.s"`);
+
+                        await connection.query(`MMEM:DATE? "/o.s"`);
 
                         notification.update(toastId, {
                             type: notification.INFO,

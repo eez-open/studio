@@ -37,7 +37,6 @@ import {
 const CONF_HOUSEKEEPING_INTERVAL = 100;
 const CONF_IDN_EXPECTED_TIMEOUT = 1000;
 const CONF_COMBINE_IF_BELOW_MS = 250;
-const CONF_START_LONG_OPERATION_TIMEOUT = 5000;
 const CONF_ACQUIRE_TIMEOUT = 3000;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -393,60 +392,39 @@ export class Connection
     }
 
     send(command: string, options?: ISendOptions): void {
-        const doSend = () => {
-            if (!options || !options.longOperation) {
-                if (this.longOperation) {
-                    if (
-                        this.longOperation instanceof FileDownload ||
-                        this.longOperation instanceof FileUpload
-                    ) {
-                        return "**ERROR: file transfer in progress\n";
-                    } else {
-                        return "**ERROR: another operation in progress\n";
-                    }
-                }
-            }
-
-            if (!options || options.log === undefined || options.log) {
-                this.logRequest(command);
-            }
-
-            if (
-                (this.state !== ConnectionState.TESTING &&
-                    this.state !== ConnectionState.CONNECTED) ||
-                !this.communicationInterface
-            ) {
-                this.logAnswer("**ERROR: not connected\n");
-                return null;
-            }
-
-            this.expectedResponseType = options && options.queryResponseType;
-
-            this.errorCode = ConnectionErrorCode.NONE;
-            this.error = undefined;
-
-            this.communicationInterface.write(command + "\n");
-            return null;
-        };
-
-        const startTime = new Date().getTime();
-
-        const callDoSendUntilTimeout = () => {
-            const err = doSend();
-            if (err) {
-                const currentTime = new Date().getTime();
+        if (!options || !options.longOperation) {
+            if (this.longOperation) {
                 if (
-                    currentTime - startTime >
-                    CONF_START_LONG_OPERATION_TIMEOUT
+                    this.longOperation instanceof FileDownload ||
+                    this.longOperation instanceof FileUpload
                 ) {
-                    throw err;
+                    this.logAnswer("**ERROR: file transfer in progress\n");
                 } else {
-                    setTimeout(callDoSendUntilTimeout, 0);
+                    this.logAnswer("**ERROR: another operation in progress\n");
                 }
+                return;
             }
-        };
+        }
 
-        callDoSendUntilTimeout();
+        if (!options || options.log === undefined || options.log) {
+            this.logRequest(command);
+        }
+
+        if (
+            (this.state !== ConnectionState.TESTING &&
+                this.state !== ConnectionState.CONNECTED) ||
+            !this.communicationInterface
+        ) {
+            this.logAnswer("**ERROR: not connected\n");
+            return;
+        }
+
+        this.expectedResponseType = options && options.queryResponseType;
+
+        this.errorCode = ConnectionErrorCode.NONE;
+        this.error = undefined;
+
+        this.communicationInterface.write(command + "\n");
     }
 
     sendIdn() {
@@ -480,49 +458,27 @@ export class Connection
     }
 
     startLongOperation(createLongOperation: () => LongOperation) {
-        const startTime = new Date().getTime();
+        if (
+            this.state !== ConnectionState.CONNECTED ||
+            !this.communicationInterface
+        ) {
+            this.logAnswer("not connected");
+            return;
+        }
 
-        const doStartLongOperation = (
-            createLongOperation: () => LongOperation
-        ) => {
+        if (this.longOperation) {
             if (
-                this.state !== ConnectionState.CONNECTED ||
-                !this.communicationInterface
+                this.longOperation instanceof FileDownload ||
+                this.longOperation instanceof FileUpload
             ) {
-                return "not connected";
+                this.logAnswer("file transfer in progress");
+            } else {
+                throw this.logAnswer("another operation in progress");
             }
+            return;
+        }
 
-            if (this.longOperation) {
-                if (
-                    this.longOperation instanceof FileDownload ||
-                    this.longOperation instanceof FileUpload
-                ) {
-                    return "file transfer in progress";
-                } else {
-                    return "another operation in progress";
-                }
-            }
-
-            this.longOperation = createLongOperation();
-            return null;
-        };
-
-        const callDoStartLongOperationUntilTimeout = () => {
-            const err = doStartLongOperation(createLongOperation);
-            if (err) {
-                const currentTime = new Date().getTime();
-                if (
-                    currentTime - startTime >
-                    CONF_START_LONG_OPERATION_TIMEOUT
-                ) {
-                    throw err;
-                } else {
-                    setTimeout(callDoStartLongOperationUntilTimeout, 0);
-                }
-            }
-        };
-
-        callDoStartLongOperationUntilTimeout();
+        this.longOperation = createLongOperation();
     }
 
     doUpload(
