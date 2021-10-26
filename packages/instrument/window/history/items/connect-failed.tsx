@@ -8,6 +8,7 @@ import { getConnectionParametersInfo } from "instrument/connection/connection-re
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
+import { PreventDraggable } from "../helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,17 +43,19 @@ export class ConnectFailedHistoryItemComponent extends React.Component<
                     <small className="EezStudio_HistoryItemDate">
                         {formatDateTimeLong(this.props.historyItem.date)}
                     </small>
-                    <span className="text-danger">
-                        CONNECT
-                        {this.message.connectionParameters
-                            ? " to " +
-                              getConnectionParametersInfo(
-                                  this.message.connectionParameters
-                              )
-                            : " "}{" "}
-                        failed
-                        {this.message.error && ": " + this.message.error}
-                    </span>
+                    <PreventDraggable tag="span">
+                        <span className="text-danger">
+                            CONNECT
+                            {this.message.connectionParameters
+                                ? " to " +
+                                  getConnectionParametersInfo(
+                                      this.message.connectionParameters
+                                  )
+                                : " "}{" "}
+                            failed
+                            {this.message.error && ": " + this.message.error}
+                        </span>
+                    </PreventDraggable>
                 </p>
                 {this.props.historyItem.getSourceDescriptionElement(
                     this.props.appStore
