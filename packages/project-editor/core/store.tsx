@@ -1508,12 +1508,24 @@ export class DocumentStoreClass {
 
         // load master project
         if (project.settings.general.masterProject) {
-            await project.loadMasterProject();
+            try {
+                await project.loadMasterProject();
+            } catch (err) {
+                notification.error(
+                    `Failed to load project ${project.settings.general.masterProject}`
+                );
+            }
         }
 
         // load imported projects
         for (let i = 0; i < project.settings.general.imports.length; i++) {
-            await project.settings.general.imports[i].loadProject();
+            try {
+                await project.settings.general.imports[i].loadProject();
+            } catch (err) {
+                notification.error(
+                    `Failed to load project ${project.settings.general.imports[i].projectFilePath}`
+                );
+            }
         }
     }
 
