@@ -15,9 +15,7 @@ import type { IDataContext } from "project-editor/flow/flow-interfaces";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
     getArrayElementTypeFromType,
-    getEnumTypeNameFromType,
-    getStructureFromType,
-    isEnumType
+    getStructureFromType
 } from "project-editor/features/variable/value-type";
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import type { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
@@ -28,7 +26,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { Project } from "project-editor/project/project";
+import { getValueLabel } from "project-editor/features/variable/value-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -567,52 +565,3 @@ class WatchTable extends React.Component<{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export function getValueLabel(
-    project: Project,
-    value: any,
-    type: string | null
-) {
-    if (value === undefined) {
-        return "undefined";
-    }
-
-    if (value == "null") {
-        return "null";
-    }
-
-    if (type) {
-        if (isEnumType(type)) {
-            const enumTypeName = getEnumTypeNameFromType(type);
-            if (enumTypeName) {
-                const enumType = project.variables.enumsMap.get(enumTypeName);
-                if (enumType) {
-                    const enumMember = enumType.members.find(
-                        member => member.value == value
-                    );
-                    if (enumMember) {
-                        return enumMember.name;
-                    }
-                }
-            }
-        }
-    }
-
-    if (Array.isArray(value)) {
-        return `${value.length} element(s)`;
-    }
-
-    if (typeof value == "object") {
-        try {
-            return JSON.stringify(value);
-        } catch (err) {
-            return "[object]";
-        }
-    }
-
-    if (typeof value == "string") {
-        return `"${value}"`;
-    }
-
-    return value.toString();
-}

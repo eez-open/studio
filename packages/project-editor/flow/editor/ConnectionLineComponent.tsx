@@ -9,7 +9,7 @@ import { getConnectionLineShape } from "project-editor/flow/editor/connection-li
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { OutputActionComponent } from "project-editor/flow/components/actions";
 import { SvgLabel } from "eez-studio-ui/svg-label";
-import { getValueLabel } from "project-editor/flow/debugger/WatchPanel";
+import { getValueLabel } from "project-editor/features/variable/value-type";
 import type { ComponentInput } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////

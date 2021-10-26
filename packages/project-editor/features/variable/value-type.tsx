@@ -112,6 +112,55 @@ export function getDefaultValueForType(project: Project, type: string): string {
     return "null";
 }
 
+export function getValueLabel(
+    project: Project,
+    value: any,
+    type: string | null
+) {
+    if (value === undefined) {
+        return "undefined";
+    }
+
+    if (value == "null") {
+        return "null";
+    }
+
+    if (type) {
+        if (isEnumType(type)) {
+            const enumTypeName = getEnumTypeNameFromType(type);
+            if (enumTypeName) {
+                const enumType = project.variables.enumsMap.get(enumTypeName);
+                if (enumType) {
+                    const enumMember = enumType.members.find(
+                        member => member.value == value
+                    );
+                    if (enumMember) {
+                        return enumMember.name;
+                    }
+                }
+            }
+        }
+    }
+
+    if (Array.isArray(value)) {
+        return `${value.length} element(s)`;
+    }
+
+    if (typeof value == "object") {
+        try {
+            return JSON.stringify(value);
+        } catch (err) {
+            return "[object]";
+        }
+    }
+
+    if (typeof value == "string") {
+        return `"${value}"`;
+    }
+
+    return value.toString();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const VariableTypeSelect = observer(
