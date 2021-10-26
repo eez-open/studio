@@ -99,3 +99,15 @@ export class CommandsTree {
         return this.findCommandInChildren(commandName, this.children);
     }
 }
+
+const commandsTreeCache = new Map<string, CommandsTree>();
+
+export function getCommandsTree(extensionId: string) {
+    let commandsTree = commandsTreeCache.get(extensionId);
+    if (!commandsTree) {
+        commandsTree = new CommandsTree();
+        commandsTreeCache.set(extensionId, commandsTree);
+        commandsTree.load(extensionId);
+    }
+    return commandsTree;
+}
