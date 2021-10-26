@@ -9,6 +9,8 @@ import { getConnectionLineShape } from "project-editor/flow/editor/connection-li
 import type { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { OutputActionComponent } from "project-editor/flow/components/actions";
 import { SvgLabel } from "eez-studio-ui/svg-label";
+import { getValueLabel } from "project-editor/flow/debugger/WatchPanel";
+import type { ComponentInput } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,15 +56,17 @@ const VisiblePath = observer(
         lineShape,
         selected,
         connectionLine,
-        context
+        context,
+        targetInput
     }: {
         lineShape: string;
         selected: boolean;
         connectionLine: ConnectionLine;
         context: IFlowContext;
+        targetInput: ComponentInput | undefined;
     }) => {
         const seq =
-            connectionLine.input === "@seqin" &&
+            targetInput?.isSequenceInput &&
             !(connectionLine.targetComponent instanceof OutputActionComponent);
 
         const active =
@@ -109,6 +113,10 @@ const ConnectionLineShape = observer(
             return null;
         }
 
+        const targetInput = connectionLine.targetComponent?.inputs.find(
+            input => input.name == connectionLine.input
+        );
+
         const scale = context.viewState.transform.scale;
 
         return (
@@ -144,12 +152,14 @@ const ConnectionLineShape = observer(
                     selected={selected}
                     connectionLine={connectionLine}
                     context={context}
+                    targetInput={targetInput}
                 />
                 <DebugValue
                     context={context}
                     connectionLine={connectionLine}
                     selected={selected}
                     id={connectionLineAdapter.id}
+                    targetInput={targetInput}
                 />
             </g>
         );
@@ -161,12 +171,14 @@ const DebugValue = observer(
         connectionLine,
         context,
         selected,
-        id
+        id,
+        targetInput
     }: {
         connectionLine: ConnectionLine;
         context: IFlowContext;
         selected: boolean;
         id: string;
+        targetInput: ComponentInput | undefined;
     }) => {
         let valueStr: string | undefined;
 
@@ -175,21 +187,19 @@ const DebugValue = observer(
             context.document.DocumentStore.runtime &&
             context.document.DocumentStore.runtime.isDebuggerActive &&
             connectionLine.targetComponent &&
-            connectionLine.input !== "@seqin"
+            targetInput &&
+            !targetInput.isSequenceInput
         ) {
             const inputValue = context.flowState.getInputValue(
                 connectionLine.targetComponent,
                 connectionLine.input
             );
-            if (inputValue !== undefined) {
-                try {
-                    valueStr = JSON.stringify(inputValue);
-                    if (valueStr.length > 50) {
-                        valueStr = valueStr.substr(0, 50) + "...";
-                    }
-                } catch (err) {
-                    valueStr = "err!";
-                }
+            if (inputValue != undefined) {
+                valueStr = getValueLabel(
+                    context.DocumentStore.project,
+                    inputValue,
+                    targetInput.type
+                );
             }
         }
 

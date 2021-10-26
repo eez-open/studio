@@ -28,6 +28,7 @@ import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -201,54 +202,6 @@ class WatchTable extends React.Component<{
         return result;
     }
 
-    getValueLabel(value: any, type: string | null) {
-        if (value === undefined) {
-            return "undefined";
-        }
-
-        if (value == "null") {
-            return "null";
-        }
-
-        if (type) {
-            if (isEnumType(type)) {
-                const enumTypeName = getEnumTypeNameFromType(type);
-                if (enumTypeName) {
-                    const enumType =
-                        this.props.runtime.DocumentStore.project.variables.enumsMap.get(
-                            enumTypeName
-                        );
-                    if (enumType) {
-                        const enumMember = enumType.members.find(
-                            member => member.value == value
-                        );
-                        if (enumMember) {
-                            return enumMember.name;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (Array.isArray(value)) {
-            return `${value.length} element(s)`;
-        }
-
-        if (typeof value == "object") {
-            try {
-                return JSON.stringify(value);
-            } catch (err) {
-                return "[object]";
-            }
-        }
-
-        if (typeof value == "string") {
-            return `"${value}"`;
-        }
-
-        return value.toString();
-    }
-
     getValueChildren = computedFn(
         (value: any, type: string | null): (() => ITreeNode[]) | undefined => {
             if (Array.isArray(value)) {
@@ -261,7 +214,8 @@ class WatchTable extends React.Component<{
                         const elementValue = value[i];
                         const name = `[${i}]`;
                         const type = elementType ?? typeof elementValue;
-                        const valueLabel = this.getValueLabel(
+                        const valueLabel = getValueLabel(
+                            this.props.runtime.DocumentStore.project,
                             elementValue,
                             type
                         );
@@ -302,7 +256,8 @@ class WatchTable extends React.Component<{
                             }
                         }
 
-                        const valueLabel = this.getValueLabel(
+                        const valueLabel = getValueLabel(
+                            this.props.runtime.DocumentStore.project,
                             propertyValue,
                             fieldType
                         );
@@ -355,7 +310,11 @@ class WatchTable extends React.Component<{
                                         expression
                                     ));
 
-                                value = this.getValueLabel(value, type);
+                                value = getValueLabel(
+                                    this.props.runtime.DocumentStore.project,
+                                    value,
+                                    type
+                                );
                             } catch (err) {
                                 value = err.toString();
                                 type = "";
@@ -399,7 +358,11 @@ class WatchTable extends React.Component<{
             }
 
             const value = dataContext.get(variable.name);
-            const valueLabel = this.getValueLabel(value, variable.type);
+            const valueLabel = getValueLabel(
+                this.props.runtime.DocumentStore.project,
+                value,
+                variable.type
+            );
 
             return observable({
                 id: variable.name,
@@ -457,7 +420,11 @@ class WatchTable extends React.Component<{
         return inputs.map(input => {
             let value = componentState.getInputValue(input.name);
 
-            let valueLabel = this.getValueLabel(value, null);
+            let valueLabel = getValueLabel(
+                this.props.runtime.DocumentStore.project,
+                value,
+                null
+            );
 
             return observable({
                 id: input.name,
@@ -597,4 +564,55 @@ class WatchTable extends React.Component<{
             </div>
         );
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getValueLabel(
+    project: Project,
+    value: any,
+    type: string | null
+) {
+    if (value === undefined) {
+        return "undefined";
+    }
+
+    if (value == "null") {
+        return "null";
+    }
+
+    if (type) {
+        if (isEnumType(type)) {
+            const enumTypeName = getEnumTypeNameFromType(type);
+            if (enumTypeName) {
+                const enumType = project.variables.enumsMap.get(enumTypeName);
+                if (enumType) {
+                    const enumMember = enumType.members.find(
+                        member => member.value == value
+                    );
+                    if (enumMember) {
+                        return enumMember.name;
+                    }
+                }
+            }
+        }
+    }
+
+    if (Array.isArray(value)) {
+        return `${value.length} element(s)`;
+    }
+
+    if (typeof value == "object") {
+        try {
+            return JSON.stringify(value);
+        } catch (err) {
+            return "[object]";
+        }
+    }
+
+    if (typeof value == "string") {
+        return `"${value}"`;
+    }
+
+    return value.toString();
 }
