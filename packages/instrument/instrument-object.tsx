@@ -40,7 +40,7 @@ import type { IFileUploadInstructions } from "instrument/connection/file-upload"
 import type * as UiPropertiesModule from "eez-studio-ui/properties";
 import type * as AppStoreModule from "instrument/window/app-store";
 import type * as Bb3Module from "instrument/bb3";
-import { getCommandsTree } from "./window/terminal/commands-tree";
+import { CommandsTree, getCommandsTree } from "./window/terminal/commands-tree";
 
 import type * as ConnectionMainModule from "instrument/connection/connection-main";
 import type * as ConnectionRendererModule from "instrument/connection/connection-renderer";
@@ -91,6 +91,8 @@ export class InstrumentObject {
 
     _creationDate: Date | null | undefined;
 
+    commandsTree: CommandsTree;
+
     constructor(props: IInstrumentObjectProps) {
         this.id = props.id;
         this.instrumentExtensionId = props.instrumentExtensionId;
@@ -115,6 +117,7 @@ export class InstrumentObject {
             const { createRendererProcessConnection } =
                 require("instrument/connection/connection-renderer") as typeof ConnectionRendererModule;
             this.connection = createRendererProcessConnection(this);
+            this.commandsTree = getCommandsTree(this.instrumentExtensionId);
         } else {
             const { createMainProcessConnection } =
                 require("instrument/connection/connection-main") as typeof ConnectionMainModule;
@@ -144,10 +147,6 @@ export class InstrumentObject {
 
     toString() {
         return `Instrument: ${this.name} [${this.id}]`;
-    }
-
-    get commandsTree() {
-        return getCommandsTree(this.instrumentExtensionId);
     }
 
     get isUnknownExtension() {
