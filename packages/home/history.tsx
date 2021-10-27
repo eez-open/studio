@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action } from "mobx";
+import { observable, action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import {
@@ -115,6 +115,7 @@ export class HistorySection extends React.Component<{
     oids?: string[];
     simple?: boolean;
 }> {
+    @observable
     appStore: HomeAppStore;
 
     constructor(props: any) {
@@ -125,7 +126,7 @@ export class HistorySection extends React.Component<{
 
     componentDidUpdate(prevProps: any) {
         if (this.props != prevProps) {
-            this.appStore = getAppStore(this.props.oids);
+            runInAction(() => (this.appStore = getAppStore(this.props.oids)));
             this.appStore.history.load();
         }
     }
