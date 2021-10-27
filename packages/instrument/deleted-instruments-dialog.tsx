@@ -1,6 +1,6 @@
 import React from "react";
 import { findDOMNode } from "react-dom";
-import { computed, values } from "mobx";
+import { computed, IObservableValue, runInAction, values } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
@@ -16,7 +16,8 @@ import { InstrumentObject, store } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const deletedInstrumentCollection = createStoreObjectsCollection<InstrumentObject>(true);
+const deletedInstrumentCollection =
+    createStoreObjectsCollection<InstrumentObject>(true);
 store.watch(deletedInstrumentCollection, {
     deletedOption: "only"
 });
@@ -25,36 +26,45 @@ export const deletedInstruments = deletedInstrumentCollection.objects;
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class DeletedInstrumentsDialog extends React.Component<{}, {}> {
+class DeletedInstrumentsDialog extends React.Component<{
+    selectedInstrument: IObservableValue<string | undefined>;
+}> {
     element: Element;
 
-    renderNode(node: IListNode) {
+    renderNode = (node: IListNode) => {
         let instrument = node.data as InstrumentObject;
         return (
             <ListItem
                 leftIcon={instrument.image}
                 leftIconSize={48}
                 label={
-                    <div>
+                    <>
                         <div>{instrument.name}</div>
                         <div>
                             {"Creation date: " +
                                 (instrument.creationDate
-                                    ? formatDateTimeLong(instrument.creationDate)
+                                    ? formatDateTimeLong(
+                                          instrument.creationDate
+                                      )
                                     : "unknown")}
                         </div>
-                        <div style={{ paddingBottom: "5px" }}>
+                        <div style={{ display: "flex" }}>
                             <ButtonAction
-                                className="btn-sm btn-outline-success"
+                                className="btn btn-sm btn-outline-success"
                                 text="Restore"
                                 title="Restore"
                                 onClick={() => {
                                     instrument.restore();
+                                    runInAction(() =>
+                                        this.props.selectedInstrument.set(
+                                            instrument.id
+                                        )
+                                    );
                                 }}
                                 style={{ marginRight: "5px" }}
                             />
                             <ButtonAction
-                                className="btn-sm btn-outline-danger"
+                                className="btn btn-sm btn-outline-danger"
                                 text="Delete Permanently"
                                 title="Delete instrument permanently including all the history"
                                 onClick={() => {
@@ -68,11 +78,11 @@ class DeletedInstrumentsDialog extends React.Component<{}, {}> {
                                 }}
                             />
                         </div>
-                    </div>
+                    </>
                 }
             />
         );
-    }
+    };
 
     @computed
     get deletedInstruments() {
@@ -114,14 +124,26 @@ class DeletedInstrumentsDialog extends React.Component<{}, {}> {
                     text: "Delete All Permanently"
                 }}
             >
-                <ListContainer tabIndex={0} minHeight={240} maxHeight={400}>
-                    <List nodes={this.deletedInstruments} renderNode={this.renderNode} />
+                <ListContainer
+                    tabIndex={0}
+                    minHeight={240}
+                    maxHeight={400}
+                    className="EezStudio_DeletedInstrumentsList"
+                >
+                    <List
+                        nodes={this.deletedInstruments}
+                        renderNode={this.renderNode}
+                    />
                 </ListContainer>
             </Dialog>
         );
     }
 }
 
-export function showDeletedInstrumentsDialog() {
-    showDialog(<DeletedInstrumentsDialog />);
+export function showDeletedInstrumentsDialog(
+    selectedInstrument: IObservableValue<string | undefined>
+) {
+    showDialog(
+        <DeletedInstrumentsDialog selectedInstrument={selectedInstrument} />
+    );
 }

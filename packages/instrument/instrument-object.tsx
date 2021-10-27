@@ -117,7 +117,9 @@ export class InstrumentObject {
             const { createRendererProcessConnection } =
                 require("instrument/connection/connection-renderer") as typeof ConnectionRendererModule;
             this.connection = createRendererProcessConnection(this);
-            this.commandsTree = getCommandsTree(this.instrumentExtensionId);
+            if (this.instrumentExtensionId) {
+                this.commandsTree = getCommandsTree(this.instrumentExtensionId);
+            }
         } else {
             const { createMainProcessConnection } =
                 require("instrument/connection/connection-main") as typeof ConnectionMainModule;
@@ -202,9 +204,13 @@ export class InstrumentObject {
             id: this.instrumentExtensionId
         });
 
-        _defer(() => {
-            this._extension = extension;
-        });
+        if (extension) {
+            _defer(
+                action(() => {
+                    this._extension = extension;
+                })
+            );
+        }
 
         return extension;
     }
@@ -623,7 +629,7 @@ export class InstrumentObject {
             try {
                 result = db
                     .prepare(
-                        `SELECT * FROM "activityLog" WHERE oid=? AND type="instrument/created"`
+                        `SELECT * FROM "activityLog" WHERE oid=? AND type='instrument/created'`
                     )
                     .get(this.id);
             } catch (err) {
@@ -979,7 +985,7 @@ export class InstrumentObject {
 // Legacy: we don't user 'workbench/objects' anymore, but if exists then remove all instruments not referenced by the 'workbench/objects'.
 try {
     db.prepare(
-        `DELETE FROM instrument WHERE id NOT IN (SELECT oid FROM 'workbench/objects')`
+        `DELETE FROM instrument WHERE id NOT IN (SELECT oid FROM 'workbench/objects'); DROP TABLE 'workbench/objects';`
     ).run();
 } catch (err) {}
 

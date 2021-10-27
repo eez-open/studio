@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, action, observable, toJS } from "mobx";
+import { computed, action, observable, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import {
@@ -27,6 +27,10 @@ const { Menu, MenuItem } = EEZStudio.remote;
 
 import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { instrumentStore } from "instrument/instrument-object";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const selectedInstrument = observable.box<string | undefined>();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,8 +206,14 @@ export class WorkbenchToolbar extends React.Component {
 
                     showAddInstrumentDialog(extension => {
                         beginTransaction("Add instrument");
-                        createInstrument(extension);
+                        const id = createInstrument(extension);
                         commitTransaction();
+
+                        setTimeout(() => {
+                            runInAction(() =>
+                                selectedInstrument.set(instruments.get(id)?.id)
+                            );
+                        }, 100);
                     });
                 }
             }
@@ -219,7 +229,7 @@ export class WorkbenchToolbar extends React.Component {
                 title: "Show deleted instruments",
                 className: "btn-default",
                 onClick: () => {
-                    showDeletedInstrumentsDialog();
+                    showDeletedInstrumentsDialog(selectedInstrument);
                 }
             });
         }
@@ -254,10 +264,10 @@ export class PanelTitle extends React.Component<{ title?: string }, {}> {
 
 @observer
 export class Properties extends React.Component<{
-    selectedInstrument: InstrumentObject | undefined;
+    selectedInstrumentId: string | undefined;
 }> {
     render() {
-        if (!this.props.selectedInstrument) {
+        if (!this.props.selectedInstrumentId) {
             return <div />;
         }
 
@@ -266,7 +276,7 @@ export class Properties extends React.Component<{
                 <PanelTitle title="History" />
                 <div className="EezStudio_HistoryContent">
                     <HistorySection
-                        oids={[this.props.selectedInstrument.id]}
+                        oids={[this.props.selectedInstrumentId]}
                         simple={true}
                     />
                 </div>
@@ -280,7 +290,7 @@ export class Properties extends React.Component<{
                 persistId={"home/designer/properties/splitter"}
             >
                 <div className="EezStudio_InstrumentDetailsEnclosure">
-                    {this.props.selectedInstrument.details}
+                    {instruments.get(this.props.selectedInstrumentId)?.details}
                 </div>
                 {history}
             </Splitter>
@@ -299,15 +309,27 @@ class InstrumentComponent extends React.Component<
     },
     {}
 > {
+    ref = React.createRef<HTMLDivElement>();
+
     open = () => {
         openEditor(this.props.instrument, "default");
     };
+
+    componentDidUpdate() {
+        if (this.props.isSelected) {
+            this.ref.current!.scrollIntoView({
+                block: "nearest",
+                behavior: "smooth"
+            });
+        }
+    }
 
     render() {
         const { instrument } = this.props;
 
         return (
             <div
+                ref={this.ref}
                 className={classNames(
                     "EezStudio_InstrumentComponentEnclosure shadow-sm p-3 m-3 rounded bg-light",
                     {
@@ -317,6 +339,7 @@ class InstrumentComponent extends React.Component<
                 onClick={() => this.props.selectInstrument(instrument)}
                 onDoubleClick={this.open}
                 onContextMenu={() => {
+                    runInAction(() => selectedInstrument.set(instrument.id));
                     const contextMenu = workbenchDocument.createContextMenu([
                         instrument
                     ]);
@@ -331,7 +354,7 @@ class InstrumentComponent extends React.Component<
 
 @observer
 export class WorkbenchDocumentComponent extends React.Component<{
-    selectedInstrument: InstrumentObject | undefined;
+    selectedInstrumentId: string | undefined;
     selectInstrument: (instrument: InstrumentObject) => void;
 }> {
     render() {
@@ -343,7 +366,9 @@ export class WorkbenchDocumentComponent extends React.Component<{
                         <InstrumentComponent
                             key={obj.id}
                             instrument={obj}
-                            isSelected={obj == this.props.selectedInstrument}
+                            isSelected={
+                                obj.id == this.props.selectedInstrumentId
+                            }
                             selectInstrument={this.props.selectInstrument}
                         />
                     ))}
@@ -356,11 +381,9 @@ export class WorkbenchDocumentComponent extends React.Component<{
 
 @observer
 export class Workbench extends React.Component<{}, {}> {
-    @observable selectedInstrument: InstrumentObject | undefined;
-
     @action.bound
     selectInstrument(instrument: InstrumentObject) {
-        this.selectedInstrument = instrument;
+        selectedInstrument.set(instrument.id);
     }
 
     render() {
@@ -376,12 +399,12 @@ export class Workbench extends React.Component<{}, {}> {
                         persistId="home/designer/splitter"
                     >
                         <WorkbenchDocumentComponent
-                            selectedInstrument={this.selectedInstrument}
+                            selectedInstrumentId={selectedInstrument.get()}
                             selectInstrument={this.selectInstrument}
                         />
 
                         <Properties
-                            selectedInstrument={this.selectedInstrument}
+                            selectedInstrumentId={selectedInstrument.get()}
                         />
                     </Splitter>
                 </Body>

@@ -594,7 +594,10 @@ export function createStore({
             EEZStudio.electron.ipcRenderer.sendSync(
                 "shared/store/undelete-object/" + storeName,
                 {
-                    object: toJS(object),
+                    object: {
+                        id: object.id,
+                        oid: object.oid
+                    },
                     options
                 }
             );
@@ -868,7 +871,7 @@ export function createStore({
                             ) {
                                 deleteObject(params.object);
                             } else {
-                                createObject(params.object);
+                                createObject(findById(params.object.id));
                             }
                         }
                     }

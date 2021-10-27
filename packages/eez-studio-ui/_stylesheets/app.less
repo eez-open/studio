@@ -141,6 +141,17 @@ input[type="color"] {
     }
 }
 
+.EezStudio_DeletedInstrumentsList {
+    .EezStudio_ListItem {
+        &:not(:last-child) {
+            margin-bottom: 10px;
+        }
+        & > div:nth-child(1) {
+            align-self: flex-start;
+        }
+    }
+}
+
 .EezStudio_SimpleTree {
     padding: 5px;
     border: 2px dashed transparent;
@@ -625,7 +636,9 @@ input[type="color"] {
 }
 
 button.EezStudio_Action {
-    border: none;
+    &:not(.btn-outline-success, .btn-outline-danger) {
+        border: none;
+    }
 
     &.selected {
         background-color: @selectionBackgroundColor;

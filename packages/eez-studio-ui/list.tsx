@@ -128,6 +128,7 @@ export class ListContainer extends React.Component<
         tabIndex: any;
         minHeight?: number;
         maxHeight?: number;
+        className?: string;
     },
     {}
 > {
@@ -135,7 +136,10 @@ export class ListContainer extends React.Component<
         const { minHeight, maxHeight } = this.props;
         return (
             <div
-                className="EezStudio_ListContainer"
+                className={classNames(
+                    "EezStudio_ListContainer",
+                    this.props.className
+                )}
                 tabIndex={this.props.tabIndex}
                 style={{ minHeight, maxHeight }}
             >
