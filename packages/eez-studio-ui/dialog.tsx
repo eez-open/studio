@@ -198,13 +198,13 @@ export class BootstrapDialog extends React.Component<{
     modal?: boolean;
     open: boolean;
     size?: "small" | "medium" | "large";
-    title: string | undefined;
-    onSubmit: (event: React.FormEvent) => void;
+    title?: string;
+    onSubmit?: (event: React.FormEvent) => void;
     onCancel: () => void;
     cancelDisabled?: boolean;
     okEnabled?: () => boolean;
     disableButtons: boolean;
-    buttons: IDialogButton[];
+    buttons?: IDialogButton[];
     children: React.ReactNode;
     additionalFooterControl?: React.ReactNode;
 }> {
@@ -256,14 +256,16 @@ export class BootstrapDialog extends React.Component<{
             !(event.target instanceof HTMLTextAreaElement)
         ) {
             event.preventDefault();
-            this.props.onSubmit(event);
+            if (this.props.onSubmit) {
+                this.props.onSubmit(event);
+            }
         }
     };
 
     render() {
         const props = this.props;
 
-        const buttons = props.buttons.map(button =>
+        const buttons = props.buttons?.map(button =>
             button.text ? (
                 <button
                     key={button.id}
@@ -305,10 +307,12 @@ export class BootstrapDialog extends React.Component<{
             return (
                 <div className="EezStudio_NonModalDialogContainer">
                     <div>{props.children}</div>
-                    <div>
-                        {this.props.additionalFooterControl}
-                        {buttons}
-                    </div>
+                    {(buttons || this.props.additionalFooterControl) && (
+                        <div>
+                            {this.props.additionalFooterControl}
+                            {buttons}
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -329,7 +333,11 @@ export class BootstrapDialog extends React.Component<{
                     ref={ref => (this.form = ref!)}
                     className={formClassName}
                     role="document"
-                    onSubmit={event => props.onSubmit}
+                    onSubmit={event => {
+                        if (props.onSubmit) {
+                            props.onSubmit(event);
+                        }
+                    }}
                     onKeyPress={this.onKeyPress}
                 >
                     <div className="modal-content">
@@ -351,13 +359,15 @@ export class BootstrapDialog extends React.Component<{
 
                         <div className="modal-body">{props.children}</div>
 
-                        <div
-                            className="modal-footer"
-                            style={{ justifyContent: "flex-start" }}
-                        >
-                            {this.props.additionalFooterControl}
-                            {buttons}
-                        </div>
+                        {(buttons || this.props.additionalFooterControl) && (
+                            <div
+                                className="modal-footer"
+                                style={{ justifyContent: "flex-start" }}
+                            >
+                                {this.props.additionalFooterControl}
+                                {buttons}
+                            </div>
+                        )}
                     </div>
                 </form>
             </div>

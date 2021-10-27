@@ -1,91 +1,53 @@
 import React from "react";
-import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
 
-import { IExtension } from "eez-studio-shared/extensions/extension";
-import { Dialog, showDialog } from "eez-studio-ui/dialog";
-import { info } from "eez-studio-ui/dialog-electron";
-import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";
-import { IListNode, ListItem } from "eez-studio-ui/list";
+import { BootstrapDialog, showDialog } from "eez-studio-ui/dialog";
 
-import { instrumentExtensions } from "instrument/instrument-extension";
+import { Setup, setupState } from "home/setup";
+import { action, observable } from "mobx";
 
 @observer
 class AddInstrumentDialog extends React.Component<
     {
-        callback: (instrumentExtension: IExtension) => void;
+        callback: (instrumentId: string) => void;
     },
     {}
 > {
-    constructor(props: any) {
-        super(props);
+    @observable open = true;
 
-        this.selectedInstrumentExtension = instrumentExtensions.get()[0];
-    }
-
-    @observable selectedInstrumentExtension: IExtension;
-
-    renderNode(node: IListNode) {
-        let instrumentExtension = node.data as IExtension;
-        return (
-            <ListItem
-                leftIcon={instrumentExtension.image}
-                leftIconSize={48}
-                label={
-                    instrumentExtension.displayName || instrumentExtension.name
-                }
-            />
-        );
-    }
-
-    @computed
-    get instrumentExtensions() {
-        return instrumentExtensions.get().map(instrumentExtension => ({
-            id: instrumentExtension.id,
-            data: instrumentExtension,
-            selected:
-                instrumentExtension.id === this.selectedInstrumentExtension.id
-        }));
+    @action.bound
+    onAdd(instrumentId: string) {
+        this.open = false;
+        this.props.callback(instrumentId);
     }
 
     @action.bound
-    selectInstrumentExtension(node: IListNode) {
-        this.selectedInstrumentExtension = node.data;
+    onCancel() {
+        this.open = false;
     }
-
-    handleSubmit = () => {
-        if (this.selectedInstrumentExtension) {
-            this.props.callback(this.selectedInstrumentExtension);
-            return true;
-        }
-        return false;
-    };
 
     render() {
         return (
-            <Dialog onOk={this.handleSubmit}>
-                <PropertyList>
-                    <SelectFromListProperty
-                        name="Select instrument definition:"
-                        nodes={this.instrumentExtensions}
-                        renderNode={this.renderNode}
-                        onChange={this.selectInstrumentExtension}
-                    />
-                </PropertyList>
-            </Dialog>
+            <BootstrapDialog
+                modal={true}
+                open={this.open}
+                size={"large"}
+                onCancel={this.onCancel}
+                disableButtons={true}
+                okEnabled={() => false}
+            >
+                <Setup
+                    onAddCallback={this.onAdd}
+                    onCancelCallback={this.onCancel}
+                />
+            </BootstrapDialog>
         );
     }
 }
 
 export function showAddInstrumentDialog(
-    callback: (instrumentExtension: IExtension) => void
+    callback: (instrumentId: string) => void
 ) {
-    if (instrumentExtensions.get().length > 0) {
-        showDialog(<AddInstrumentDialog callback={callback} />);
-    } else {
-        info(
-            "There is no instrument installed.",
-            "Go to the Extensions Manager and install some instrument."
-        );
-    }
+    setupState.reset();
+    showDialog(<AddInstrumentDialog callback={callback} />);
 }

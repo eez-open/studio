@@ -19,7 +19,6 @@ import { HistorySection } from "home/history";
 import classNames from "classnames";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { createInstrument } from "instrument/instrument-extension";
 
 import type * as TabsStoreModule from "home/tabs-store";
 
@@ -204,14 +203,10 @@ export class WorkbenchToolbar extends React.Component {
                     const { showAddInstrumentDialog } =
                         require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
 
-                    showAddInstrumentDialog(extension => {
-                        beginTransaction("Add instrument");
-                        const id = createInstrument(extension);
-                        commitTransaction();
-
+                    showAddInstrumentDialog(instrumentId => {
                         setTimeout(() => {
                             runInAction(() =>
-                                selectedInstrument.set(instruments.get(id)?.id)
+                                selectedInstrument.set(instrumentId)
                             );
                         }, 100);
                     });
