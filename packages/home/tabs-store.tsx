@@ -708,7 +708,7 @@ class Tabs {
                     }
 
                     if (this.tabs.length == 0) {
-                        //this.openTabById("workbench", true);
+                        this.openTabById("workbench", true);
                     }
                 }
             }

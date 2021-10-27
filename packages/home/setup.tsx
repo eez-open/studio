@@ -121,7 +121,7 @@ function renderExtension(node: IListNode) {
 }
 
 function onSkip() {
-    firstTime.set(false);
+    runInAction(() => firstTime.set(false));
 }
 
 async function onAdd() {
