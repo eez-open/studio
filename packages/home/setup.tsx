@@ -122,6 +122,8 @@ function renderExtension(node: IListNode) {
 
 function onSkip() {
     runInAction(() => firstTime.set(false));
+
+    tabs.openTabById("workbench", true);
 }
 
 async function onAdd() {

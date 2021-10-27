@@ -5,6 +5,6 @@ export const firstTime = observable.box<boolean>(
 );
 
 reaction(
-    () => firstTime.get,
+    () => firstTime.get(),
     firstTime => EEZStudio.electron.ipcRenderer.send("setFirstTime", firstTime)
 );

@@ -706,10 +706,10 @@ class Tabs {
                             }
                         }
                     }
+                }
 
-                    if (this.tabs.length == 0) {
-                        this.openTabById("workbench", true);
-                    }
+                if (this.tabs.length == 0) {
+                    this.openTabById("workbench", true);
                 }
             }
         });
