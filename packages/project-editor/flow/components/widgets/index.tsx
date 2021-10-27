@@ -1520,86 +1520,147 @@ export class DisplayDataWidget extends EmbeddedWidget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    getText(
+        flowContext: IFlowContext
+    ): { text: string; node: React.ReactNode } | string {
+        if (
+            flowContext.DocumentStore.project.isDashboardProject ||
+            flowContext.DocumentStore.project.isAppletProject
+        ) {
+            if (this.data) {
+                if (flowContext.flowState) {
+                    try {
+                        const value = evalExpression(
+                            flowContext,
+                            this,
+                            this.data
+                        );
+
+                        if (value != null && value != undefined) {
+                            return value;
+                        }
+                        return "";
+                    } catch (err) {
+                        return err.toString();
+                    }
+                }
+
+                try {
+                    const result = evalConstantExpression(
+                        ProjectEditor.getProject(this),
+                        this.data
+                    );
+                    if (typeof result === "string") {
+                        return result;
+                    }
+                } catch (err) {}
+
+                return {
+                    text: this.data,
+                    node: <span className="expression">{this.data}</span>
+                };
+            }
+
+            if (flowContext.flowState) {
+                return "";
+            }
+
+            return "<no text>";
+        }
+
+        if (this.data) {
+            const result = flowContext.dataContext.get(this.data);
+            if (result != undefined) {
+                return result;
+            }
+            return this.data;
+        }
+
+        return "<no text>";
+    }
+
+    applyDisplayOption(text: string) {
+        text = text.toString();
+
+        function findStartOfFraction() {
+            let i;
+            for (
+                i = 0;
+                text[i] &&
+                (text[i] == "<" ||
+                    text[i] == " " ||
+                    text[i] == "-" ||
+                    (text[i] >= "0" && text[i] <= "9"));
+                i++
+            ) {}
+            return i;
+        }
+
+        function findStartOfUnit(i: number) {
+            for (
+                i = 0;
+                text[i] &&
+                (text[i] == "<" ||
+                    text[i] == " " ||
+                    text[i] == "-" ||
+                    (text[i] >= "0" && text[i] <= "9") ||
+                    text[i] == ".");
+                i++
+            ) {}
+            return i;
+        }
+
+        if (this.displayOption === DisplayOption.Integer) {
+            let i = findStartOfFraction();
+            text = text.substr(0, i);
+        } else if (this.displayOption === DisplayOption.FractionAndUnit) {
+            let i = findStartOfFraction();
+            text = text.substr(i);
+        } else if (this.displayOption === DisplayOption.Fraction) {
+            let i = findStartOfFraction();
+            let k = findStartOfUnit(i);
+            if (i < k) {
+                text = text.substring(i, k);
+            } else {
+                text = ".00";
+            }
+        } else if (this.displayOption === DisplayOption.Unit) {
+            let i = findStartOfUnit(0);
+            text = text.substr(i);
+        } else if (this.displayOption === DisplayOption.IntegerAndFraction) {
+            let i = findStartOfUnit(0);
+            text = text.substr(0, i);
+        }
+
+        if (typeof text === "string") {
+            text = text.trim();
+        }
+
+        return text;
+    }
+
     render(flowContext: IFlowContext) {
+        const result = this.getText(flowContext);
+        let text: string;
+        let node: React.ReactNode | null;
+        if (typeof result == "string") {
+            text = result;
+            node = null;
+        } else {
+            text = result.text;
+            node = result.node;
+        }
+
+        text = this.applyDisplayOption(text);
+
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? (
+                    node || text
+                ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let text =
-                                (this.data &&
-                                    (flowContext.dataContext.get(
-                                        this.data
-                                    ) as string)) ||
-                                "";
-
-                            text = text.toString();
-
-                            function findStartOfFraction() {
-                                let i;
-                                for (
-                                    i = 0;
-                                    text[i] &&
-                                    (text[i] == "<" ||
-                                        text[i] == " " ||
-                                        text[i] == "-" ||
-                                        (text[i] >= "0" && text[i] <= "9"));
-                                    i++
-                                ) {}
-                                return i;
-                            }
-
-                            function findStartOfUnit(i: number) {
-                                for (
-                                    i = 0;
-                                    text[i] &&
-                                    (text[i] == "<" ||
-                                        text[i] == " " ||
-                                        text[i] == "-" ||
-                                        (text[i] >= "0" && text[i] <= "9") ||
-                                        text[i] == ".");
-                                    i++
-                                ) {}
-                                return i;
-                            }
-
-                            if (this.displayOption === DisplayOption.Integer) {
-                                let i = findStartOfFraction();
-                                text = text.substr(0, i);
-                            } else if (
-                                this.displayOption ===
-                                DisplayOption.FractionAndUnit
-                            ) {
-                                let i = findStartOfFraction();
-                                text = text.substr(i);
-                            } else if (
-                                this.displayOption === DisplayOption.Fraction
-                            ) {
-                                let i = findStartOfFraction();
-                                let k = findStartOfUnit(i);
-                                if (i < k) {
-                                    text = text.substring(i, k);
-                                } else {
-                                    text = ".00";
-                                }
-                            } else if (
-                                this.displayOption === DisplayOption.Unit
-                            ) {
-                                let i = findStartOfUnit(0);
-                                text = text.substr(i);
-                            } else if (
-                                this.displayOption ===
-                                DisplayOption.IntegerAndFraction
-                            ) {
-                                let i = findStartOfUnit(0);
-                                text = text.substr(0, i);
-                            }
-
-                            if (typeof text === "string") {
-                                text = text.trim();
-                            }
-
                             drawText(
                                 ctx,
                                 text,
