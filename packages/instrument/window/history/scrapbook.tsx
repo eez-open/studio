@@ -21,6 +21,10 @@ import {
 import { createHistoryItem } from "instrument/window/history/item-factory";
 import type { IAppStore, History } from "instrument/window/history/history";
 
+function isHomeHistoryAppStore(appStore: IAppStore) {
+    return appStore.instrument.id === "0";
+}
+
 class Selection {
     @observable items: IHistoryItem[] = [];
 
@@ -106,7 +110,7 @@ class ScrapbookStore {
     }
 
     items(appStore: IAppStore) {
-        return this.showAll
+        return this.showAll || isHomeHistoryAppStore(appStore)
             ? this._items
             : this._items.filter(item => item.oid == appStore.instrument.id);
     }
@@ -300,21 +304,26 @@ export class Scrapbook extends React.Component<{
             >
                 <ToolbarHeader>
                     <div className="EezStudio_ScrapbookHeaderContainer">
-                        <div className="form-check">
-                            <label className="form-check-label">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    checked={theScrapbook.showAll}
-                                    onChange={action(
-                                        event =>
-                                            (theScrapbook.showAll =
-                                                event.target.checked)
-                                    )}
-                                />
-                                Show all
-                            </label>
-                        </div>
+                        {/* do not show this checkbox in Home/History tab */}
+                        {isHomeHistoryAppStore(this.props.appStore) ? (
+                            <div />
+                        ) : (
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input
+                                        type="checkbox"
+                                        className="form-check-input"
+                                        checked={theScrapbook.showAll}
+                                        onChange={action(
+                                            event =>
+                                                (theScrapbook.showAll =
+                                                    event.target.checked)
+                                        )}
+                                    />
+                                    Show all instruments
+                                </label>
+                            </div>
+                        )}
                         <div>
                             <span>Thumbnail size</span>
                             <input
