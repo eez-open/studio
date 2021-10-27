@@ -29,201 +29,6 @@ function isMacOs() {
     return os.platform() === "darwin";
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-const darwinAppMenu: Electron.MenuItemConstructorOptions = {
-    label: APP_NAME,
-    submenu: [
-        {
-            label: "About " + APP_NAME,
-            click: showAboutBox
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Services",
-            role: "services",
-            submenu: []
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Hide " + APP_NAME,
-            accelerator: "Command+H",
-            role: "hide"
-        },
-        {
-            label: "Hide Others",
-            accelerator: "Command+Alt+H",
-            role: "hideOthers"
-        },
-        {
-            label: "Show All",
-            role: "unhide"
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Quit",
-            accelerator: "Command+Q",
-            click: function () {
-                setForceQuit();
-                app.quit();
-            }
-        }
-    ]
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-let fileRecentSubmenu: Electron.MenuItemConstructorOptions = {
-    label: "Open Recent",
-    submenu: []
-};
-
-const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [
-    {
-        label: "New Window",
-        accelerator: "CmdOrCtrl+N",
-        click: function (item, focusedWindow) {
-            openHomeWindow();
-        }
-    },
-    {
-        label: "New Project",
-        accelerator: "CmdOrCtrl+N",
-        click: function (item, focusedWindow) {
-            createNewProject();
-        }
-    },
-    {
-        type: "separator"
-    },
-    {
-        label: "Open...",
-        accelerator: "CmdOrCtrl+O",
-        click: async function (item: any, focusedWindow: any) {
-            const result = await dialog.showOpenDialog({
-                properties: ["openFile"],
-                filters: [
-                    { name: "EEZ Project", extensions: ["eez-project"] },
-                    { name: "All Files", extensions: ["*"] }
-                ]
-            });
-            const filePaths = result.filePaths;
-            if (filePaths && filePaths[0]) {
-                openProject(filePaths[0], focusedWindow);
-            }
-        }
-    },
-    fileRecentSubmenu,
-    {
-        type: "separator"
-    },
-    {
-        label: "Import Instrument Definition...",
-        click: async function (item: any, focusedWindow: any) {
-            const result = await dialog.showOpenDialog({
-                properties: ["openFile"],
-                filters: [
-                    {
-                        name: "Instrument Definition Files",
-                        extensions: ["zip"]
-                    },
-                    { name: "All Files", extensions: ["*"] }
-                ]
-            });
-            const filePaths = result.filePaths;
-            if (filePaths && filePaths[0]) {
-                importInstrumentDefinitionFile(filePaths[0]);
-            }
-        }
-    },
-    {
-        type: "separator"
-    },
-    {
-        id: "save",
-        label: "Save",
-        accelerator: "CmdOrCtrl+S",
-        click: function (item: any, focusedWindow: any) {
-            if (focusedWindow) {
-                focusedWindow.webContents.send("save");
-            }
-        }
-    },
-    {
-        label: "Save As",
-        accelerator: "CmdOrCtrl+Shift+S",
-        click: function (item: any, focusedWindow: any) {
-            if (focusedWindow) {
-                focusedWindow.webContents.send("saveAs");
-            }
-        }
-    },
-    {
-        type: "separator"
-    },
-    {
-        label: "Check",
-        accelerator: "CmdOrCtrl+K",
-        click: function (item: any, focusedWindow: any) {
-            if (focusedWindow) {
-                focusedWindow.webContents.send("check");
-            }
-        }
-    },
-    {
-        label: "Build",
-        accelerator: "CmdOrCtrl+B",
-        click: function (item: any, focusedWindow: any) {
-            if (focusedWindow) {
-                focusedWindow.webContents.send("build");
-            }
-        }
-    },
-    {
-        label: "Build Extensions",
-        click: function (item: any, focusedWindow: any) {
-            if (focusedWindow) {
-                focusedWindow.webContents.send("build-extensions");
-            }
-        }
-    },
-    {
-        type: "separator"
-    },
-    {
-        label: "Close Window",
-        accelerator: "CmdOrCtrl+W",
-        click: function (item: any, focusedWindow: any) {
-            if (focusedWindow) {
-                focusedWindow.webContents.send("beforeClose");
-            }
-        }
-    }
-];
-
-if (!isMacOs()) {
-    fileMenuSubmenu.push(
-        {
-            type: "separator"
-        },
-        {
-            label: "Exit",
-            click: function (item: any, focusedWindow: any) {
-                setForceQuit();
-                app.quit();
-            }
-        }
-    );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 function enableMenuItem(
     menuItems: Electron.MenuItemConstructorOptions[],
     id: string,
@@ -236,140 +41,6 @@ function enableMenuItem(
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-const editMenu: Electron.MenuItemConstructorOptions = {
-    label: "Edit",
-    submenu: [
-        {
-            id: "undo",
-            label: "Undo",
-            accelerator: "CmdOrCtrl+Z",
-            role: isMacOs() ? "undo" : undefined,
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    const win = findWindowByBrowserWindow(focusedWindow);
-                    if (win !== undefined && win.state.undo != null) {
-                        focusedWindow.webContents.send("undo");
-                        return;
-                    }
-                }
-
-                undoManager.undo();
-            }
-        },
-        {
-            id: "redo",
-            label: "Redo",
-            accelerator: "CmdOrCtrl+Y",
-            role: isMacOs() ? "redo" : undefined,
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    const win = findWindowByBrowserWindow(focusedWindow);
-                    if (win !== undefined && win.state.redo != null) {
-                        focusedWindow.webContents.send("redo");
-                        return;
-                    }
-                }
-
-                undoManager.redo();
-            }
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Cut",
-            accelerator: "CmdOrCtrl+X",
-            role: isMacOs() ? "cut" : undefined,
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("cut");
-                }
-            }
-        },
-        {
-            label: "Copy",
-            accelerator: "CmdOrCtrl+C",
-            role: isMacOs() ? "copy" : undefined,
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("copy");
-                }
-            }
-        },
-        {
-            label: "Paste",
-            accelerator: "CmdOrCtrl+V",
-            role: isMacOs() ? "paste" : undefined,
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("paste");
-                }
-            }
-        },
-        {
-            label: "Delete",
-            accelerator: "Delete",
-            role: isMacOs() ? "delete" : undefined,
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("delete");
-                }
-            }
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Select All",
-            accelerator: "CmdOrCtrl+A",
-            role: "selectAll"
-        }
-    ]
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-const darwinWindowMenu: Electron.MenuItemConstructorOptions = {
-    label: "Window",
-    role: "window",
-    submenu: [
-        {
-            label: "Minimize",
-            accelerator: "CmdOrCtrl+M",
-            role: "minimize"
-        },
-        {
-            label: "Close",
-            accelerator: "CmdOrCtrl+W",
-            role: "close"
-        },
-        {
-            type: "separator"
-        },
-        {
-            label: "Bring All to Front",
-            role: "front"
-        }
-    ]
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-const helpMenu: Electron.MenuItemConstructorOptions = {
-    label: "Help",
-    role: "help",
-    submenu: [
-        {
-            label: "About",
-            click: showAboutBox
-        }
-    ]
-};
-
-////////////////////////////////////////////////////////////////////////////////
 
 export function openProject(projectFilePath: string, focusedWindow?: any) {
     if (!focusedWindow) {
@@ -387,31 +58,252 @@ function createNewProject() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildFileMenu() {
-    fileRecentSubmenu.submenu = settings.mru.map(mru => ({
-        label: mru.filePath,
-        click: function () {
-            if (fs.existsSync(mru.filePath)) {
-                openProject(mru.filePath);
-            } else {
-                // file not found, remove from mru
-                var i = settings.mru.indexOf(mru);
-                if (i != -1) {
-                    runInAction(() => {
-                        settings.mru.splice(i, 1);
-                    });
+function buildMacOSAppMenu(
+    win: IWindow | undefined
+): Electron.MenuItemConstructorOptions {
+    return {
+        label: APP_NAME,
+        submenu: [
+            {
+                label: "About " + APP_NAME,
+                click: showAboutBox
+            },
+            {
+                type: "separator"
+            },
+            {
+                label: "Services",
+                role: "services",
+                submenu: []
+            },
+            {
+                type: "separator"
+            },
+            {
+                label: "Hide " + APP_NAME,
+                accelerator: "Command+H",
+                role: "hide"
+            },
+            {
+                label: "Hide Others",
+                accelerator: "Command+Alt+H",
+                role: "hideOthers"
+            },
+            {
+                label: "Show All",
+                role: "unhide"
+            },
+            {
+                type: "separator"
+            },
+            {
+                label: "Quit",
+                accelerator: "Command+Q",
+                click: function () {
+                    setForceQuit();
+                    app.quit();
                 }
+            }
+        ]
+    };
+}
 
-                // notify user
-                dialog.showMessageBox(BrowserWindow.getFocusedWindow()!, {
-                    type: "error",
-                    title: "EEZ Studio",
-                    message: "File does not exist.",
-                    detail: `The file '${mru.filePath}' does not seem to exist anymore.`
+////////////////////////////////////////////////////////////////////////////////
+
+function buildFileMenu(win: IWindow | undefined) {
+    const fileMenuSubmenu: Electron.MenuItemConstructorOptions[] = [];
+
+    fileMenuSubmenu.push(
+        {
+            label: "New Window",
+            accelerator: "CmdOrCtrl+N",
+            click: function (item, focusedWindow) {
+                openHomeWindow();
+            }
+        },
+        {
+            label: "New Project",
+            accelerator: "CmdOrCtrl+N",
+            click: function (item, focusedWindow) {
+                createNewProject();
+            }
+        },
+        {
+            type: "separator"
+        },
+        {
+            label: "Open...",
+            accelerator: "CmdOrCtrl+O",
+            click: async function (item: any, focusedWindow: any) {
+                const result = await dialog.showOpenDialog({
+                    properties: ["openFile"],
+                    filters: [
+                        { name: "EEZ Project", extensions: ["eez-project"] },
+                        { name: "All Files", extensions: ["*"] }
+                    ]
                 });
+                const filePaths = result.filePaths;
+                if (filePaths && filePaths[0]) {
+                    openProject(filePaths[0], focusedWindow);
+                }
+            }
+        },
+        {
+            label: "Open Recent",
+            submenu: settings.mru.map(mru => ({
+                label: mru.filePath,
+                click: function () {
+                    if (fs.existsSync(mru.filePath)) {
+                        openProject(mru.filePath);
+                    } else {
+                        // file not found, remove from mru
+                        var i = settings.mru.indexOf(mru);
+                        if (i != -1) {
+                            runInAction(() => {
+                                settings.mru.splice(i, 1);
+                            });
+                        }
+
+                        // notify user
+                        dialog.showMessageBox(
+                            BrowserWindow.getFocusedWindow()!,
+                            {
+                                type: "error",
+                                title: "EEZ Studio",
+                                message: "File does not exist.",
+                                detail: `The file '${mru.filePath}' does not seem to exist anymore.`
+                            }
+                        );
+                    }
+                }
+            }))
+        },
+        {
+            type: "separator"
+        },
+        {
+            label: "Import Instrument Definition...",
+            click: async function (item: any, focusedWindow: any) {
+                const result = await dialog.showOpenDialog({
+                    properties: ["openFile"],
+                    filters: [
+                        {
+                            name: "Instrument Definition Files",
+                            extensions: ["zip"]
+                        },
+                        { name: "All Files", extensions: ["*"] }
+                    ]
+                });
+                const filePaths = result.filePaths;
+                if (filePaths && filePaths[0]) {
+                    importInstrumentDefinitionFile(filePaths[0]);
+                }
             }
         }
-    }));
+    );
+
+    if (win?.activeTabType === "project") {
+        fileMenuSubmenu.push(
+            {
+                type: "separator"
+            },
+            {
+                id: "save",
+                label: "Save",
+                accelerator: "CmdOrCtrl+S",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("save");
+                    }
+                }
+            },
+            {
+                label: "Save As",
+                accelerator: "CmdOrCtrl+Shift+S",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("saveAs");
+                    }
+                }
+            },
+
+            {
+                type: "separator"
+            },
+            {
+                label: "Check",
+                accelerator: "CmdOrCtrl+K",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("check");
+                    }
+                }
+            },
+            {
+                label: "Build",
+                accelerator: "CmdOrCtrl+B",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("build");
+                    }
+                }
+            },
+            {
+                label: "Build Extensions",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("build-extensions");
+                    }
+                }
+            }
+        );
+    } else if (win?.activeTabType === "instrument") {
+        fileMenuSubmenu.push(
+            {
+                type: "separator"
+            },
+            {
+                id: "save",
+                label: "Save",
+                accelerator: "CmdOrCtrl+S",
+                click: function (item: any, focusedWindow: any) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("save");
+                    }
+                }
+            }
+        );
+    }
+
+    fileMenuSubmenu.push(
+        {
+            type: "separator"
+        },
+        {
+            label: "Close Window",
+            accelerator: "CmdOrCtrl+W",
+            click: function (item: any, focusedWindow: any) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("beforeClose");
+                }
+            }
+        }
+    );
+
+    if (!isMacOs()) {
+        fileMenuSubmenu.push(
+            {
+                type: "separator"
+            },
+            {
+                label: "Exit",
+                click: function (item: any, focusedWindow: any) {
+                    setForceQuit();
+                    app.quit();
+                }
+            }
+        );
+    }
 
     return {
         label: "File",
@@ -422,6 +314,97 @@ function buildFileMenu() {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildEditMenu(win: IWindow | undefined) {
+    const editMenu: Electron.MenuItemConstructorOptions = {
+        label: "Edit",
+        submenu: [
+            {
+                id: "undo",
+                label: "Undo",
+                accelerator: "CmdOrCtrl+Z",
+                role: isMacOs() ? "undo" : undefined,
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        const win = findWindowByBrowserWindow(focusedWindow);
+                        if (win !== undefined && win.state.undo != null) {
+                            focusedWindow.webContents.send("undo");
+                            return;
+                        }
+                    }
+
+                    undoManager.undo();
+                }
+            },
+            {
+                id: "redo",
+                label: "Redo",
+                accelerator: "CmdOrCtrl+Y",
+                role: isMacOs() ? "redo" : undefined,
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        const win = findWindowByBrowserWindow(focusedWindow);
+                        if (win !== undefined && win.state.redo != null) {
+                            focusedWindow.webContents.send("redo");
+                            return;
+                        }
+                    }
+
+                    undoManager.redo();
+                }
+            },
+            {
+                type: "separator"
+            },
+            {
+                label: "Cut",
+                accelerator: "CmdOrCtrl+X",
+                role: isMacOs() ? "cut" : undefined,
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("cut");
+                    }
+                }
+            },
+            {
+                label: "Copy",
+                accelerator: "CmdOrCtrl+C",
+                role: isMacOs() ? "copy" : undefined,
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("copy");
+                    }
+                }
+            },
+            {
+                label: "Paste",
+                accelerator: "CmdOrCtrl+V",
+                role: isMacOs() ? "paste" : undefined,
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("paste");
+                    }
+                }
+            },
+            {
+                label: "Delete",
+                accelerator: "Delete",
+                role: isMacOs() ? "delete" : undefined,
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("delete");
+                    }
+                }
+            },
+            {
+                type: "separator"
+            },
+            {
+                label: "Select All",
+                accelerator: "CmdOrCtrl+A",
+                role: "selectAll"
+            }
+        ]
+    };
+
     enableMenuItem(
         <Electron.MenuItemConstructorOptions[]>editMenu.submenu,
         "undo",
@@ -443,22 +426,27 @@ function buildEditMenu(win: IWindow | undefined) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function buildViewMenu() {
+function buildViewMenu(win: IWindow | undefined) {
     let viewSubmenu: Electron.MenuItemConstructorOptions[] = [];
 
-    viewSubmenu.push(
-        {
-            label: "Command Palette...",
-            accelerator: "CmdOrCtrl+Shift+P",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("command-palette");
+    if (win?.activeTabType === "project") {
+        viewSubmenu.push(
+            {
+                label: "Command Palette...",
+                accelerator: "CmdOrCtrl+Shift+P",
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("command-palette");
+                    }
                 }
+            },
+            {
+                type: "separator"
             }
-        },
-        {
-            type: "separator"
-        },
+        );
+    }
+
+    viewSubmenu.push(
         {
             label: "Workbench",
             click: function (item, focusedWindow) {
@@ -510,43 +498,19 @@ function buildViewMenu() {
         }
     );
 
-    viewSubmenu.push(
-        {
-            label: "Toggle Output",
+    if (win?.activeTabType === "project") {
+        viewSubmenu.push({
+            label: "Toggle Output Panel",
             accelerator: "Ctrl+Shift+O",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("toggleOutput");
                 }
             }
-        },
-        {
-            label: "Toggle Experimental Layout",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("toggleExperimentalLayout");
-                }
-            }
-        },
-        {
-            type: "separator"
-        }
-    );
+        });
+    }
 
     viewSubmenu.push(
-        {
-            label: "Reload",
-            accelerator: "CmdOrCtrl+R",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("reload");
-
-                    // focusedWindow.webContents.reload();
-
-                    // focusedWindow.webContents.clearHistory();
-                }
-            }
-        },
         {
             label: "Toggle Full Screen",
             accelerator: (function () {
@@ -608,22 +572,41 @@ function buildViewMenu() {
         {
             label: "Reset Zoom",
             role: "resetZoom"
+        },
+        {
+            type: "separator"
         }
     );
 
-    viewSubmenu.push(
-        {
-            type: "separator"
-        },
-        {
-            label: "Project Metrics...",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("showProjectMetrics");
+    if (win?.activeTabType === "project") {
+        viewSubmenu.push(
+            {
+                label: "Project Metrics...",
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("showProjectMetrics");
+                    }
                 }
+            },
+            {
+                type: "separator"
+            }
+        );
+    }
+
+    viewSubmenu.push({
+        label: "Reload",
+        accelerator: "CmdOrCtrl+R",
+        click: function (item, focusedWindow) {
+            if (focusedWindow) {
+                focusedWindow.webContents.send("reload");
+
+                // focusedWindow.webContents.reload();
+
+                // focusedWindow.webContents.clearHistory();
             }
         }
-    );
+    });
 
     return {
         label: "View",
@@ -633,23 +616,71 @@ function buildViewMenu() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function buildMacOSWindowMenu(
+    win: IWindow | undefined
+): Electron.MenuItemConstructorOptions {
+    return {
+        label: "Window",
+        role: "window",
+        submenu: [
+            {
+                label: "Minimize",
+                accelerator: "CmdOrCtrl+M",
+                role: "minimize"
+            },
+            {
+                label: "Close",
+                accelerator: "CmdOrCtrl+W",
+                role: "close"
+            },
+            {
+                type: "separator"
+            },
+            {
+                label: "Bring All to Front",
+                role: "front"
+            }
+        ]
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function buildHelpMenu(
+    win: IWindow | undefined
+): Electron.MenuItemConstructorOptions {
+    return {
+        label: "Help",
+        role: "help",
+        submenu: [
+            {
+                label: "About",
+                click: showAboutBox
+            }
+        ]
+    };
+    1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 function buildMenuTemplate(win: IWindow | undefined) {
     var menuTemplate: Electron.MenuItemConstructorOptions[] = [];
 
     if (isMacOs()) {
-        menuTemplate.push(darwinAppMenu);
+        menuTemplate.push(buildMacOSAppMenu(win));
     }
 
-    menuTemplate.push(buildFileMenu());
+    menuTemplate.push(buildFileMenu(win));
 
     menuTemplate.push(buildEditMenu(win));
 
-    menuTemplate.push(buildViewMenu());
+    menuTemplate.push(buildViewMenu(win));
 
     if (isMacOs()) {
-        menuTemplate.push(darwinWindowMenu);
+        menuTemplate.push(buildMacOSWindowMenu(win));
     } else {
-        menuTemplate.push(helpMenu);
+        menuTemplate.push(buildHelpMenu(win));
     }
 
     return menuTemplate;
@@ -667,6 +698,8 @@ autorun(() => {
         }
     }
 });
+
+////////////////////////////////////////////////////////////////////////////////
 
 ipcMain.on("getReservedKeybindings", function (event: any) {
     const menuTemplate = buildMenuTemplate(undefined);

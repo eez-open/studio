@@ -7,6 +7,7 @@ import {
     settingsSetWindowBoundsIntoParams
 } from "main/settings";
 import { sourceRootDir } from "eez-studio-shared/util";
+import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
 
 export interface IWindowSate {
     modified: boolean;
@@ -19,12 +20,24 @@ export interface IWindowParams {
     hideOnClose?: boolean;
 }
 
+type ActiveTabType =
+    | "instrument"
+    | "project"
+    | "workbench"
+    | "history"
+    | "shortcutsAndGroups"
+    | "extensions"
+    | "settings"
+    | "notebooks"
+    | undefined;
+
 export interface IWindow {
     url: string;
     browserWindow: Electron.BrowserWindow;
     readyToClose: boolean;
     state: IWindowSate;
     focused: boolean;
+    activeTabType: ActiveTabType;
 }
 
 export const windows = observable<IWindow>([]);
@@ -71,7 +84,8 @@ export function createWindow(params: IWindowParams) {
                 undo: null,
                 redo: null
             },
-            focused: false
+            focused: false,
+            activeTabType: undefined
         })
     );
     let window = windows[windows.length - 1];
@@ -210,7 +224,24 @@ ipcMain.on(
     }
 );
 
-ipcMain.on("tabs-change", (event, tabs) => {
-    console.log("event.sender.id", event.sender.id);
-    console.log("tabs", tabs);
+ipcMain.on("tabs-change", (event, tabs: { id: string; active: boolean }[]) => {
+    const window = findWindowByWebContents(event.sender);
+    if (window) {
+        runInAction(() => {
+            const activeTab = tabs.find(tab => tab.active);
+
+            let activeTabType: ActiveTabType = undefined;
+            if (activeTab) {
+                if (activeTab.id.startsWith(PROJECT_TAB_ID_PREFIX)) {
+                    activeTabType = "project";
+                } else if (Number.parseInt(activeTab.id) != undefined) {
+                    activeTabType = "instrument";
+                } else {
+                    activeTabType = activeTab.id as ActiveTabType;
+                }
+            }
+
+            window.activeTabType = activeTabType;
+        });
+    }
 });

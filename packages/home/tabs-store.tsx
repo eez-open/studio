@@ -42,6 +42,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project/ProjectEditor";
 import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
+import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -406,8 +407,6 @@ class InstrumentTab implements IHomeTab {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ProjectEditorTab implements IHomeTab {
-    static ID_PREFIX = "PROJECT_TAB_";
-
     constructor(public tabs: Tabs, public _filePath: string | undefined) {}
 
     permanent: boolean = true;
@@ -582,7 +581,7 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get id() {
-        return ProjectEditorTab.ID_PREFIX + this.filePath;
+        return PROJECT_TAB_ID_PREFIX + this.filePath;
     }
 
     get title() {
@@ -727,7 +726,7 @@ class Tabs {
             tabs => {
                 const tabsJSON = JSON.stringify(tabs);
                 window.localStorage.setItem("home/tabs", tabsJSON);
-                EEZStudio.electron.ipcRenderer.send("tabs-change", tabsJSON);
+                EEZStudio.electron.ipcRenderer.send("tabs-change", tabs);
             }
         );
 
@@ -790,10 +789,8 @@ class Tabs {
             const tabDefinition = this.findTabDefinition(tabId);
             if (tabDefinition) {
                 tab = tabDefinition.open();
-            } else if (tabId.startsWith(ProjectEditorTab.ID_PREFIX)) {
-                const filePath = tabId.substr(
-                    ProjectEditorTab.ID_PREFIX.length
-                );
+            } else if (tabId.startsWith(PROJECT_TAB_ID_PREFIX)) {
+                const filePath = tabId.substr(PROJECT_TAB_ID_PREFIX.length);
                 if (filePath === "undefined") {
                     return;
                 }
