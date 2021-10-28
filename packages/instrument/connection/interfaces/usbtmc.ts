@@ -1293,7 +1293,9 @@ export class UsbTmcInterface implements CommunicationInterface {
                 }
 
                 if (allData && allData.length > 0) {
-                    this.host.onData(allData.toString("binary"));
+                    const allDataStr = allData.toString("binary");
+                    console.log("read", allDataStr.slice(0, 50));
+                    this.host.onData(allDataStr);
                 }
             } catch (err) {
                 console.log("catch", err);
@@ -1312,6 +1314,8 @@ export class UsbTmcInterface implements CommunicationInterface {
                     return;
                 }
             }
+
+            console.log("write", data);
 
             await this.instrument.write(data);
 
