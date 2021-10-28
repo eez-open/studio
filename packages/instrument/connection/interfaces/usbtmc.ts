@@ -900,7 +900,7 @@ export class Instrument {
         });
     }
 
-    async read_raw() {
+    async read_raw(start: boolean = true) {
         // Read binary data from instrument
 
         if (!this.connected) {
@@ -929,7 +929,7 @@ export class Instrument {
 
                 let data: Buffer | undefined = undefined;
 
-                if (read_data.length == 0) {
+                if (read_data.length == 0 && start) {
                     let msgid: number;
                     let btag: number;
                     let btaginverse: number;
@@ -1275,12 +1275,26 @@ export class UsbTmcInterface implements CommunicationInterface {
         if (this.instrument) {
             this.readyToWrite = false;
             try {
-                console.log("read before");
-                const data = await this.instrument.read_raw();
-                if (data.length > 0) {
-                    this.host.onData(data.toString("binary"));
+                let start = true;
+                let allData;
+                while (true) {
+                    console.log("read before");
+                    const data = await this.instrument.read_raw(start);
+                    if (data.length == 0) {
+                        break;
+                    }
+                    if (!allData) {
+                        allData = data;
+                    } else {
+                        allData = Buffer.concat([allData, data]);
+                    }
+                    console.log("read after", data.length);
+                    start = false;
                 }
-                console.log("read after", data.length);
+
+                if (allData && allData.length > 0) {
+                    this.host.onData(allData.toString("binary"));
+                }
             } catch (err) {
                 console.log("catch", err);
             } finally {
