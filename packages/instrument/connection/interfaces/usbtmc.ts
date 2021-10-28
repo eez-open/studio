@@ -811,10 +811,10 @@ export class Instrument {
         const transfer_size = buffer.readUInt32LE(4);
         const transfer_attributes = buffer.readUInt8(8);
 
-        const data_size = Math.min(
-            transfer_size,
-            buffer.length - USBTMC_HEADER_SIZE
-        );
+        const data_size =
+            transfer_size > 0
+                ? Math.min(transfer_size, buffer.length - USBTMC_HEADER_SIZE)
+                : buffer.length - USBTMC_HEADER_SIZE;
         const data = Buffer.alloc(data_size);
         buffer.copy(
             data,
