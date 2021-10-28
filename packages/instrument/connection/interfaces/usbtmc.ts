@@ -811,12 +811,16 @@ export class Instrument {
         const transfer_size = buffer.readUInt32LE(4);
         const transfer_attributes = buffer.readUInt8(8);
 
-        const data = Buffer.alloc(transfer_size);
+        const data_size = Math.min(
+            transfer_size,
+            buffer.length - USBTMC_HEADER_SIZE
+        );
+        const data = Buffer.alloc(data_size);
         buffer.copy(
             data,
             0,
             USBTMC_HEADER_SIZE,
-            transfer_size + USBTMC_HEADER_SIZE
+            USBTMC_HEADER_SIZE + data_size
         );
 
         return {
@@ -1279,7 +1283,7 @@ export class UsbTmcInterface implements CommunicationInterface {
                 let allData;
                 while (true) {
                     console.log("read before");
-                    const data = await this.instrument.read_raw(start);
+                    const data = await this.instrument.read_raw(true);
                     if (data.length == 0) {
                         break;
                     }
