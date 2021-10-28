@@ -914,6 +914,7 @@ export class Instrument {
         let expect_msg_in_response = true;
 
         let arbitrary_data = false;
+        let first = true;
 
         while (true) {
             try {
@@ -951,19 +952,20 @@ export class Instrument {
                         eom = transfer_attributes & 1 ? true : false;
 
                         if (
-                            read_data.length > 0 &&
-                            read_data[0] === "#".charCodeAt(0)
+                            first &&
+                            data.length > 0 &&
+                            data[0] === "#".charCodeAt(0)
                         ) {
                             console.log("arbitrary data");
 
                             // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
-                            const l = read_data[1] - "0".charCodeAt(0);
-                            const n = parseInt(
-                                read_data.slice(2, l + 2).toString()
-                            );
+                            const l = data[1] - "0".charCodeAt(0);
+                            const n = parseInt(data.slice(2, l + 2).toString());
                             expected_length = n + (l + 2); // account for ieee header
                             arbitrary_data = true;
                         }
+
+                        first = false;
 
                         if (!arbitrary_data) {
                             expected_length += transfer_size;
