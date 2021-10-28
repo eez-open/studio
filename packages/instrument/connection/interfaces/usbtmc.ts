@@ -571,10 +571,10 @@ export class Instrument {
             RIGOL_QUIRK_PIDS.indexOf(this.device.deviceDescriptor.idProduct) !==
                 -1
         ) {
-            //this.rigol_quirk = true;
-            // if (this.device.deviceDescriptor.idProduct == 0x04ce) {
-            //     this.rigol_quirk_ieee_block = true;
-            // }
+            this.rigol_quirk = true;
+            if (this.device.deviceDescriptor.idProduct == 0x04ce) {
+                this.rigol_quirk_ieee_block = true;
+            }
         }
 
         this.connected = true;
