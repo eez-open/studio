@@ -1,4 +1,16 @@
-import usb from "usb";
+import type usbTypes from "usb";
+
+import type * as UsbModule from "usb";
+
+////////////////////////////////////////////////////////////////////////////////
+
+let usbModule: typeof UsbModule;
+function getUsbModule() {
+    if (!usbModule) {
+        usbModule = require("usb") as typeof UsbModule;
+    }
+    return usbModule;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -148,9 +160,9 @@ export class Instrument {
     idVendor: number;
     idProduct: number;
     iSerial: any = null;
-    device: usb.Device;
+    device: usbTypes.Device;
     //cfg: any = null;
-    iface: usb.Interface;
+    iface: usbTypes.Interface;
     term_char: any = null;
 
     bcdUSBTMC: number = 0;
@@ -172,9 +184,9 @@ export class Instrument {
 
     _timeout: number = 500;
 
-    bulk_in_ep: usb.InEndpoint;
-    bulk_out_ep: usb.OutEndpoint;
-    interrupt_in_ep: usb.InEndpoint | null = null;
+    bulk_in_ep: usbTypes.InEndpoint;
+    bulk_out_ep: usbTypes.OutEndpoint;
+    interrupt_in_ep: usbTypes.InEndpoint | null = null;
 
     last_btag: number = 0;
     last_rstb_btag: number = 0;
@@ -192,6 +204,8 @@ export class Instrument {
 
     constructor(...args: any[]) {
         let resource: string | null = null;
+
+        const usb = getUsbModule();
 
         if (args.length === 1) {
             if (typeof args[0] === "string") {
@@ -436,6 +450,8 @@ export class Instrument {
 
             (this.device as any) = undefined;
 
+            const usb = getUsbModule();
+
             for (let i = 0; i < 40; i++) {
                 this.device = usb.findByIds(0x0957, new_id);
                 if (this.device) {
@@ -499,10 +515,15 @@ export class Instrument {
         //     self.device.set_configuration(self.cfg)
 
         // claim interface
-        if (this.iface.isKernelDriverActive()) {
-            this.iface.detachKernelDriver();
+        const os = require("os");
+        if (os.platform() != "win32") {
+            if (this.iface.isKernelDriverActive()) {
+                this.iface.detachKernelDriver();
+            }
         }
         this.iface.claim();
+
+        const usb = getUsbModule();
 
         // don't need to set altsetting - USBTMC devices have 1 altsetting as per the spec
 
@@ -513,11 +534,13 @@ export class Instrument {
                 usb.LIBUSB_TRANSFER_TYPE_BULK
             ) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
-                    this.bulk_in_ep = this.iface.endpoints[i] as usb.InEndpoint;
+                    this.bulk_in_ep = this.iface.endpoints[
+                        i
+                    ] as usbTypes.InEndpoint;
                 } else {
                     this.bulk_out_ep = this.iface.endpoints[
                         i
-                    ] as usb.OutEndpoint;
+                    ] as usbTypes.OutEndpoint;
                 }
             } else if (
                 this.iface.endpoints[i].transferType ===
@@ -526,7 +549,7 @@ export class Instrument {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
                     this.interrupt_in_ep = this.iface.endpoints[
                         i
-                    ] as usb.InEndpoint;
+                    ] as usbTypes.InEndpoint;
                 }
             }
         }
@@ -847,7 +870,7 @@ export class Instrument {
                 const req = Buffer.concat([
                     this.pack_dev_dep_msg_out_header(size, eom),
                     block,
-                    new Buffer((4 - (size % 4)) % 4)
+                    Buffer.alloc((4 - (size % 4)) % 4)
                 ]);
 
                 await this.bulk_out_ep_write(req);
@@ -1039,9 +1062,9 @@ export class Instrument {
         await this.write_raw(Buffer.from(message, encoding));
     }
 
-    async read(num: number = -1, encoding: string = "binary") {
+    async read(num: number = -1, encoding: BufferEncoding = "binary") {
         // Read string from instrument
-        return (await this.read_raw(num)).toString(encoding as any);
+        return (await this.read_raw(num)).toString(encoding);
     }
 
     async readWithCallback(callback: (data: string) => void) {
@@ -1284,13 +1307,14 @@ import {
     CommunicationInterface,
     CommunicationInterfaceHost
 } from "instrument/connection/interface";
-
 import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 
 export class UsbTmcInterface implements CommunicationInterface {
     instrument: Instrument | undefined = undefined;
     commands: string[] = [];
     executing: boolean;
+
+    closeConnectionToInstrument: boolean = false;
 
     constructor(private host: CommunicationInterfaceHost) {
         try {
@@ -1304,6 +1328,34 @@ export class UsbTmcInterface implements CommunicationInterface {
                 .then(() => {
                     this.instrument = instrument;
                     this.host.connected();
+
+                    var that = this;
+
+                    function read() {
+                        if (that.instrument) {
+                            that.instrument
+                                .readWithCallback(data => {
+                                    console.log("readWithCallback", data);
+                                    that.host.onData(data);
+                                })
+                                .catch(() => {
+                                    //console.log("timeout");
+                                })
+                                .finally(() => {
+                                    //console.log("finally");
+                                    if (that.closeConnectionToInstrument) {
+                                        that.closeConnectionToInstrument =
+                                            false;
+                                        instrument.close();
+                                        that.instrument = undefined;
+                                    } else {
+                                        setTimeout(read, 0);
+                                    }
+                                });
+                        }
+                    }
+
+                    read();
                 })
                 .catch(err => {
                     this.host.setError(
@@ -1326,59 +1378,57 @@ export class UsbTmcInterface implements CommunicationInterface {
 
     destroy() {
         if (this.instrument) {
-            this.instrument.close();
-            this.instrument = undefined;
+            this.closeConnectionToInstrument = true;
         }
         this.host.disconnected();
     }
 
     flush() {
-        if (!this.instrument) {
-            return;
-        }
-
-        const command = this.commands.shift();
-        if (command) {
-            this.executing = true;
-            try {
-                this.instrument.write(command).then(() => {
-                    if (this.instrument) {
-                        try {
-                            this.instrument
-                                .readWithCallback(data => {
-                                    this.host.onData(data);
-                                })
-                                .then(data => {
-                                    if (data && data.length > 0) {
-                                        this.host.onData(data);
-                                    }
-                                    this.executing = false;
-                                    this.flush();
-                                })
-                                .catch(err => {
-                                    this.executing = false;
-                                    this.flush();
-                                });
-                        } catch (err) {
-                            this.host.setError(
-                                ConnectionErrorCode.NONE,
-                                err.toString()
-                            );
-                            this.destroy();
-                        }
-                    }
-                });
-            } catch (err) {
-                this.host.setError(ConnectionErrorCode.NONE, err.toString());
-                this.destroy();
-            }
-        }
+        // if (!this.instrument) {
+        //     return;
+        // }
+        // const command = this.commands.shift();
+        // if (command) {
+        //     this.executing = true;
+        //     try {
+        //         this.instrument.write(command).then(() => {
+        //             if (this.instrument) {
+        //                 try {
+        //                     this.instrument
+        //                         .readWithCallback(data => {
+        //                             this.host.onData(data);
+        //                         })
+        //                         .then(data => {
+        //                             if (data && data.length > 0) {
+        //                                 this.host.onData(data);
+        //                             }
+        //                             this.executing = false;
+        //                             this.flush();
+        //                         })
+        //                         .catch(err => {
+        //                             this.executing = false;
+        //                             this.flush();
+        //                         });
+        //                 } catch (err) {
+        //                     this.host.setError(ConnectionErrorCode.NONE, err.toString());
+        //                     this.destroy();
+        //                 }
+        //             }
+        //         });
+        //     } catch (err) {
+        //         this.host.setError(ConnectionErrorCode.NONE, err.toString());
+        //         this.destroy();
+        //     }
+        // }
     }
 
     write(data: string) {
-        this.commands.push(data);
-        if (!this.executing) {
-            this.flush();
+        // this.commands.push(data);
+        // if (!this.executing) {
+        //     this.flush();
+        // }
+        if (this.instrument) {
+            this.instrument.write(data);
         }
     }
 
@@ -1389,6 +1439,8 @@ export class UsbTmcInterface implements CommunicationInterface {
 
 export async function getUsbDevices() {
     let devices = [];
+
+    const usb = getUsbModule();
 
     const deviceList = usb.getDeviceList();
     for (const device of deviceList) {

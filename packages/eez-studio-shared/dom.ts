@@ -85,7 +85,13 @@ export function attachCssToElement(el: HTMLDivElement, cssStr: string) {
     el.classList.add(className);
 
     // prefix each CSS selector in given css string (cssStr) with the generated class name
-    const ast = css.parse(cssStr);
+    let ast;
+    try {
+        ast = css.parse(cssStr);
+    } catch (err) {
+        console.error(err);
+        return () => {};
+    }
 
     if (ast.stylesheet) {
         for (const stylesheetRule of ast.stylesheet.rules) {
