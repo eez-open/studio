@@ -35,7 +35,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_HOUSEKEEPING_INTERVAL = 100;
-const CONF_IDN_EXPECTED_TIMEOUT = 1000;
+const CONF_IDN_EXPECTED_TIMEOUT = 5000;
 const CONF_COMBINE_IF_BELOW_MS = 250;
 const CONF_ACQUIRE_TIMEOUT = 3000;
 

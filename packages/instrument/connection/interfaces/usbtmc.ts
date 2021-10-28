@@ -1283,14 +1283,6 @@ export class UsbTmcInterface implements CommunicationInterface {
         return !!this.instrument;
     }
 
-    destroy() {
-        if (this.instrument) {
-            this.instrument.close();
-            this.instrument = undefined;
-        }
-        this.host.disconnected();
-    }
-
     async read() {
         if (this.instrument) {
             this.readyToWrite = false;
@@ -1303,7 +1295,7 @@ export class UsbTmcInterface implements CommunicationInterface {
                     const data = await this.instrument.read_raw(true);
                     if (data.length == 0) {
                         console.log("data.length is 0");
-                        if (Date.now() - time > 500) {
+                        if (Date.now() - time > 2000) {
                             console.log("timeout");
                             break;
                         }
@@ -1334,21 +1326,32 @@ export class UsbTmcInterface implements CommunicationInterface {
         }
     }
 
-    async write(data: string) {
-        if (this.instrument) {
-            while (!this.readyToWrite) {
-                await new Promise(resolve => setTimeout(resolve));
-                if (this.instrument) {
-                    return;
-                }
+    async waitForReadyToWrite() {
+        while (!this.readyToWrite) {
+            await new Promise(resolve => setTimeout(resolve));
+            if (this.instrument) {
+                return;
             }
+        }
+    }
 
+    async write(data: string) {
+        await this.waitForReadyToWrite();
+
+        if (this.instrument) {
             console.log("write", data);
-
             await this.instrument.write(data);
-
             this.read();
         }
+    }
+
+    async destroy() {
+        await this.waitForReadyToWrite();
+        if (this.instrument) {
+            this.instrument.close();
+            this.instrument = undefined;
+        }
+        this.host.disconnected();
     }
 
     disconnect() {
