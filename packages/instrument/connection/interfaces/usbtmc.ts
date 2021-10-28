@@ -182,7 +182,7 @@ export class Instrument {
 
     max_transfer_size: number = 2 * 1024 * 1024;
 
-    _timeout: number = 500;
+    _timeout: number = 100;
 
     bulk_in_ep: usbTypes.InEndpoint;
     bulk_out_ep: usbTypes.OutEndpoint;
@@ -1002,14 +1002,16 @@ export class Instrument {
                     expected_length - read_data.length
                 );
 
-                if (!eom && !arbitrary_data) {
+                if (!eom) {
                     const req = this.pack_dev_dep_msg_in_header(
                         read_len,
                         this.term_char
                     );
                     await this.bulk_out_ep_write(req);
 
-                    expect_msg_in_response = true;
+                    if (!arbitrary_data) {
+                        expect_msg_in_response = true;
+                    }
                 }
             }
         }
