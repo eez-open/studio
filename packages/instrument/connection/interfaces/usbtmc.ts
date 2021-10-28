@@ -913,6 +913,8 @@ export class Instrument {
         await this.bulk_out_ep_write(req);
         let expect_msg_in_response = true;
 
+        let arbitrary_data = false;
+
         while (true) {
             try {
                 do {
@@ -946,8 +948,26 @@ export class Instrument {
                             `msgid=${msgid}, btag=${btag}, btaginverse=${btaginverse}, transfer_size=${transfer_size}, transfer_attributes=${transfer_attributes}, data.length=${data.length}`
                         );
 
-                        expected_length += transfer_size;
                         eom = transfer_attributes & 1 ? true : false;
+
+                        if (
+                            read_data.length > 0 &&
+                            read_data[0] === "#".charCodeAt(0)
+                        ) {
+                            console.log("arbitrary data");
+
+                            // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
+                            const l = read_data[1] - "0".charCodeAt(0);
+                            const n = parseInt(
+                                read_data.slice(2, l + 2).toString()
+                            );
+                            expected_length = n + (l + 2); // account for ieee header
+                            arbitrary_data = true;
+                        }
+
+                        if (!arbitrary_data) {
+                            expected_length += transfer_size;
+                        }
 
                         console.log("expected_length =", expected_length);
                         console.log("eom =", eom);
@@ -980,7 +1000,7 @@ export class Instrument {
                     expected_length - read_data.length
                 );
 
-                if (!eom) {
+                if (!eom && !arbitrary_data) {
                     const req = this.pack_dev_dep_msg_in_header(
                         read_len,
                         this.term_char
