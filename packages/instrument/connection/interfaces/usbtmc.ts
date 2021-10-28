@@ -885,7 +885,7 @@ export class Instrument {
         } catch (err) {
             if (isTimeoutError(err)) {
                 // timeout, abort transfer
-                await this._abort_bulk_out();
+                //await this._abort_bulk_out();
             }
             throw err;
         }
