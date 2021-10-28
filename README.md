@@ -139,7 +139,9 @@ nix run 'github:eez-open/studio'
 
 ### Windows
 
-Download and start [Zadig](http://zadig.akeo.ie/). Select your device and click "Install WCID Driver" button.
+Download and start [Zadig](http://zadig.akeo.ie/). Select your device, select libusb-win32 and press "Replace Driver" button:
+
+![Zadig](images/usbtmc_zadin_windows.png)
 
 ### Linux
 
