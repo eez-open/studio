@@ -953,7 +953,23 @@ export class Instrument {
                         `msgid=${msgid}, btag=${btag}, btaginverse=${btaginverse}, transfer_size=${transfer_size}, transfer_attributes=${transfer_attributes}, data.length=${data.length}`
                     );
 
-                    eom = transfer_attributes & 1 ? true : false;
+                    if (transfer_attributes & 1) {
+                        eom = true;
+                    } else {
+                        /*
+                        // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
+                        const l = read_data[1] - "0".charCodeAt(0);
+                        const n = parseInt(read_data.slice(2, l + 2).toString());
+                        const transfer_size = n + (l + 2); // account for ieee header
+
+                        if (read_data.length < transfer_size) {
+                            read_data = Buffer.concat([
+                                read_data,
+                                Buffer.alloc(transfer_size - read_data.length)
+                            ]);
+                        }
+                        */
+                    }
                 } else {
                     data = resp;
                 }
@@ -1280,11 +1296,20 @@ export class UsbTmcInterface implements CommunicationInterface {
             this.readyToWrite = false;
             try {
                 let allData;
+
+                let time = Date.now();
                 while (true) {
                     console.log("read before");
                     const data = await this.instrument.read_raw(true);
                     if (data.length == 0) {
-                        break;
+                        console.log("data.length is 0");
+                        if (Date.now() - time > 500) {
+                            console.log("timeout");
+                            break;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                        console.log("try again...");
+                        continue;
                     }
                     if (!allData) {
                         allData = data;
@@ -1292,6 +1317,7 @@ export class UsbTmcInterface implements CommunicationInterface {
                         allData = Buffer.concat([allData, data]);
                     }
                     console.log("read after", data.length);
+                    time = Date.now();
                 }
 
                 if (allData && allData.length > 0) {
