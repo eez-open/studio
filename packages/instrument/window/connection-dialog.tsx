@@ -235,7 +235,7 @@ export class ConnectionProperties extends React.Component<
         runInAction(() => {
             devices.usbDevices = usbDevices;
 
-            let selectedUsbDeviceIndex = "0";
+            let selectedUsbDeviceIndex: string | undefined;
             for (let i = 0; i < devices.usbDevices.length; ++i) {
                 if (
                     devices.usbDevices[i].idVendor === this.idVendor ||
@@ -244,6 +244,10 @@ export class ConnectionProperties extends React.Component<
                     selectedUsbDeviceIndex = i.toString();
                     break;
                 }
+            }
+            if (selectedUsbDeviceIndex == undefined) {
+                selectedUsbDeviceIndex = "0";
+                this.onUsbDeviceChange(selectedUsbDeviceIndex);
             }
             this.selectedUsbDeviceIndex = selectedUsbDeviceIndex;
         });
