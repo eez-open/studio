@@ -180,7 +180,7 @@ export class Instrument {
     support_RL: boolean = false;
     support_DT: boolean = false;
 
-    max_transfer_size: number = 2 * 1024 * 1024;
+    max_transfer_size: number = 1024 * 1024;
 
     _timeout: number = 100;
 
@@ -917,8 +917,10 @@ export class Instrument {
         let first = true;
 
         while (true) {
-            try {
-                do {
+            let received = 0;
+            let transfer_size = 0;
+            do {
+                try {
                     const resp = await this.bulk_in_ep_read(read_len);
                     if (resp.length === 0) {
                         break;
@@ -933,7 +935,6 @@ export class Instrument {
                         let msgid: number;
                         let btag: number;
                         let btaginverse: number;
-                        let transfer_size: number;
                         let transfer_attributes: number;
 
                         ({
@@ -977,41 +978,39 @@ export class Instrument {
                         data = resp;
                     }
 
+                    received += data.length;
+
                     read_data = Buffer.concat([read_data, data]);
-                } while (read_data.length < expected_length);
-            } catch (err) {
-                if (isTimeoutError(err)) {
-                    // timeout, abort transfer
-                    // await this._abort_bulk_in();
-                    console.log("timeout");
-                } else {
+                } catch (err) {
+                    if (isTimeoutError(err)) {
+                        // timeout, abort transfer
+                        await this._abort_bulk_in();
+                        console.log("timeout");
+                    }
                     throw err;
                 }
-            }
 
-            if (eom && read_data.length >= expected_length) {
-                console.log(
-                    "both eom and expected_length == read_data.length are true"
-                );
+                console.log(`progress ${received} / ${transfer_size}`);
+            } while (received < transfer_size);
 
+            if (eom) {
+                console.log("eom = true");
                 break;
             } else {
-                console.log("eom =", eom);
+                console.log("eom = false");
                 console.log(
                     "still expecting: ",
                     expected_length - read_data.length
                 );
 
-                if (!eom) {
-                    const req = this.pack_dev_dep_msg_in_header(
-                        read_len,
-                        this.term_char
-                    );
-                    await this.bulk_out_ep_write(req);
+                const req = this.pack_dev_dep_msg_in_header(
+                    read_len,
+                    this.term_char
+                );
+                await this.bulk_out_ep_write(req);
 
-                    if (!arbitrary_data) {
-                        expect_msg_in_response = true;
-                    }
+                if (!arbitrary_data) {
+                    expect_msg_in_response = true;
                 }
             }
         }
