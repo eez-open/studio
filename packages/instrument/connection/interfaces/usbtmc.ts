@@ -571,10 +571,10 @@ export class Instrument {
             RIGOL_QUIRK_PIDS.indexOf(this.device.deviceDescriptor.idProduct) !==
                 -1
         ) {
-            this.rigol_quirk = true;
-            if (this.device.deviceDescriptor.idProduct == 0x04ce) {
-                this.rigol_quirk_ieee_block = true;
-            }
+            //this.rigol_quirk = true;
+            // if (this.device.deviceDescriptor.idProduct == 0x04ce) {
+            //     this.rigol_quirk_ieee_block = true;
+            // }
         }
 
         this.connected = true;
@@ -900,7 +900,7 @@ export class Instrument {
         });
     }
 
-    async read_raw(num: number = -1, callback?: (buffer: Buffer) => void) {
+    async read_raw() {
         // Read binary data from instrument
 
         if (!this.connected) {
@@ -908,45 +908,32 @@ export class Instrument {
         }
 
         let read_len = this.max_transfer_size;
-        if (0 < num && num < read_len) {
-            read_len = num;
-        }
 
         let eom = false;
 
         let read_data: Buffer = Buffer.alloc(0);
 
-        let transfer_size: number = 0;
-
         try {
-            while (!eom) {
-                if (!this.rigol_quirk || read_data.length === 0) {
-                    // if the rigol sees this again, it will restart the transfer
-                    // so only send it the first time
-                    const req = this.pack_dev_dep_msg_in_header(
-                        read_len,
-                        this.term_char
-                    );
-                    await this.bulk_out_ep_write(req);
-                }
+            const req = this.pack_dev_dep_msg_in_header(
+                read_len,
+                this.term_char
+            );
+            await this.bulk_out_ep_write(req);
 
-                const resp = await this.bulk_in_ep_read(
-                    read_len + USBTMC_HEADER_SIZE + 3
-                );
+            while (!eom) {
+                const resp = await this.bulk_in_ep_read(read_len);
                 if (resp.length === 0) {
                     break;
                 }
+                console.log("received bulk data size=", resp.length);
 
                 let data: Buffer | undefined = undefined;
 
-                if (this.rigol_quirk && read_data.length > 0) {
-                    // do nothing, the packet has no header if it isn't the first
-                    // rigol devices only send the header in the first packet, and they lie about whether the transaction is complete
-                    read_data = Buffer.concat([read_data, resp]);
-                } else {
+                if (read_data.length == 0) {
                     let msgid: number;
                     let btag: number;
                     let btaginverse: number;
+                    let transfer_size: number;
                     let transfer_attributes: number;
 
                     ({
@@ -958,82 +945,23 @@ export class Instrument {
                         data
                     } = this.unpack_dev_dep_resp_header(resp));
 
-                    console.log(msgid, btag, btaginverse);
+                    console.log(
+                        `msgid=${msgid}, btag=${btag}, btaginverse=${btaginverse}, transfer_size=${transfer_size}, transfer_attributes=${transfer_attributes}, data.length=${data.length}`
+                    );
 
-                    if (this.rigol_quirk) {
-                        // rigol devices only send the header in the first packet, and they lie about whether the transaction is complete
-                        if (read_data.length > 0) {
-                            read_data = Buffer.concat([read_data, resp]);
-                        } else {
-                            if (
-                                this.rigol_quirk_ieee_block &&
-                                data[0] === "#".charCodeAt(0)
-                            ) {
-                                // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
-                                const l = data[1] - "0".charCodeAt(0);
-                                const n = parseInt(
-                                    data.slice(2, l + 2).toString()
-                                );
-                                transfer_size = n + (l + 2); // account for ieee header
-                            }
-
-                            read_data = Buffer.concat([read_data, data]);
-                        }
-                    } else {
-                        eom = transfer_attributes & 1 ? true : false;
-                        if (callback) {
-                            callback(data);
-                        } else {
-                            read_data = Buffer.concat([read_data, data]);
-                        }
-                    }
+                    eom = transfer_attributes & 1 ? true : false;
+                } else {
+                    data = resp;
                 }
 
-                if (this.rigol_quirk) {
-                    if (read_data.length >= transfer_size) {
-                        read_data = read_data.slice(0, transfer_size); // as per usbtmc spec section 3.2 note 2
-                        eom = true;
-                    } else {
-                        eom = false;
-                    }
-                }
-
-                // Advantest devices never signal EOI and may only send one read packet
-                if (this.advantest_quirk) {
-                    break;
-                }
-
-                if (data) {
-                    if (num > 0) {
-                        num = num - data.length;
-                        if (num <= 0) {
-                            break;
-                        }
-                        if (num < read_len) {
-                            read_len = num;
-                        }
-                    }
-                }
+                read_data = Buffer.concat([read_data, data]);
             }
         } catch (err) {
             if (isTimeoutError(err)) {
                 // timeout, abort transfer
                 await this._abort_bulk_in();
-            }
-            throw err;
-        }
-
-        if (read_data.length > 0 && read_data[0] === "#".charCodeAt(0)) {
-            // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
-            const l = read_data[1] - "0".charCodeAt(0);
-            const n = parseInt(read_data.slice(2, l + 2).toString());
-            const transfer_size = n + (l + 2); // account for ieee header
-
-            if (read_data.length < transfer_size) {
-                read_data = Buffer.concat([
-                    read_data,
-                    Buffer.alloc(transfer_size - read_data.length)
-                ]);
+            } else {
+                throw err;
             }
         }
 
@@ -1050,7 +978,7 @@ export class Instrument {
                 await this.lock();
             }
             await this.write_raw(data);
-            return await this.read_raw(num);
+            return await this.read_raw();
         } finally {
             if (this.advantest_quirk && !was_locked) {
                 await this.unlock();
@@ -1058,29 +986,16 @@ export class Instrument {
         }
     }
 
-    async write(message: string, encoding: BufferEncoding = "binary") {
-        await this.write_raw(Buffer.from(message, encoding));
+    async write(message: string) {
+        await this.write_raw(Buffer.from(message, "binary"));
     }
 
-    async read(num: number = -1, encoding: BufferEncoding = "binary") {
+    async read() {
         // Read string from instrument
-        return (await this.read_raw(num)).toString(encoding);
+        return (await this.read_raw()).toString("binary");
     }
 
-    async readWithCallback(callback: (data: string) => void) {
-        // Read string from instrument
-        return (
-            await this.read_raw(-1, buffer => {
-                callback(buffer.toString("binary"));
-            })
-        ).toString("binary");
-    }
-
-    async ask(
-        message: string,
-        num: number = -1,
-        encoding: BufferEncoding = "binary"
-    ) {
+    async ask(message: string) {
         // Write then read string
         // Advantest/ADCMT hardware won't respond to a command unless it's in Local Lockout mode
         const was_locked = this.advantest_locked;
@@ -1088,8 +1003,8 @@ export class Instrument {
             if (this.advantest_quirk && !was_locked) {
                 await this.lock();
             }
-            await this.write(message, encoding);
-            return await this.read(num, encoding);
+            await this.write(message);
+            return await this.read();
         } finally {
             if (this.advantest_quirk && !was_locked) {
                 await this.unlock();
@@ -1314,7 +1229,7 @@ export class UsbTmcInterface implements CommunicationInterface {
     commands: string[] = [];
     executing: boolean;
 
-    closeConnectionToInstrument: boolean = false;
+    readyToWrite = true;
 
     constructor(private host: CommunicationInterfaceHost) {
         try {
@@ -1328,34 +1243,6 @@ export class UsbTmcInterface implements CommunicationInterface {
                 .then(() => {
                     this.instrument = instrument;
                     this.host.connected();
-
-                    var that = this;
-
-                    function read() {
-                        if (that.instrument) {
-                            that.instrument
-                                .readWithCallback(data => {
-                                    console.log("readWithCallback", data);
-                                    that.host.onData(data);
-                                })
-                                .catch(() => {
-                                    //console.log("timeout");
-                                })
-                                .finally(() => {
-                                    //console.log("finally");
-                                    if (that.closeConnectionToInstrument) {
-                                        that.closeConnectionToInstrument =
-                                            false;
-                                        instrument.close();
-                                        that.instrument = undefined;
-                                    } else {
-                                        setTimeout(read, 0);
-                                    }
-                                });
-                        }
-                    }
-
-                    read();
                 })
                 .catch(err => {
                     this.host.setError(
@@ -1378,57 +1265,43 @@ export class UsbTmcInterface implements CommunicationInterface {
 
     destroy() {
         if (this.instrument) {
-            this.closeConnectionToInstrument = true;
+            this.instrument.close();
+            this.instrument = undefined;
         }
         this.host.disconnected();
     }
 
-    flush() {
-        // if (!this.instrument) {
-        //     return;
-        // }
-        // const command = this.commands.shift();
-        // if (command) {
-        //     this.executing = true;
-        //     try {
-        //         this.instrument.write(command).then(() => {
-        //             if (this.instrument) {
-        //                 try {
-        //                     this.instrument
-        //                         .readWithCallback(data => {
-        //                             this.host.onData(data);
-        //                         })
-        //                         .then(data => {
-        //                             if (data && data.length > 0) {
-        //                                 this.host.onData(data);
-        //                             }
-        //                             this.executing = false;
-        //                             this.flush();
-        //                         })
-        //                         .catch(err => {
-        //                             this.executing = false;
-        //                             this.flush();
-        //                         });
-        //                 } catch (err) {
-        //                     this.host.setError(ConnectionErrorCode.NONE, err.toString());
-        //                     this.destroy();
-        //                 }
-        //             }
-        //         });
-        //     } catch (err) {
-        //         this.host.setError(ConnectionErrorCode.NONE, err.toString());
-        //         this.destroy();
-        //     }
-        // }
+    async read() {
+        if (this.instrument) {
+            this.readyToWrite = false;
+            try {
+                console.log("read before");
+                const data = await this.instrument.read_raw();
+                if (data.length > 0) {
+                    this.host.onData(data.toString("binary"));
+                }
+                console.log("read after", data.length);
+            } catch (err) {
+                console.log("catch", err);
+            } finally {
+                console.log("finally");
+                this.readyToWrite = true;
+            }
+        }
     }
 
-    write(data: string) {
-        // this.commands.push(data);
-        // if (!this.executing) {
-        //     this.flush();
-        // }
+    async write(data: string) {
         if (this.instrument) {
-            this.instrument.write(data);
+            while (!this.readyToWrite) {
+                await new Promise(resolve => setTimeout(resolve));
+                if (this.instrument) {
+                    return;
+                }
+            }
+
+            await this.instrument.write(data);
+
+            this.read();
         }
     }
 
