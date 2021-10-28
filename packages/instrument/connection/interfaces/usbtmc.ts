@@ -1009,9 +1009,7 @@ export class Instrument {
                 );
                 await this.bulk_out_ep_write(req);
 
-                if (!arbitrary_data) {
-                    expect_msg_in_response = true;
-                }
+                expect_msg_in_response = true;
             }
         }
 
