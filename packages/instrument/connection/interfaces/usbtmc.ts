@@ -1279,7 +1279,6 @@ export class UsbTmcInterface implements CommunicationInterface {
         if (this.instrument) {
             this.readyToWrite = false;
             try {
-                let start = true;
                 let allData;
                 while (true) {
                     console.log("read before");
@@ -1293,7 +1292,6 @@ export class UsbTmcInterface implements CommunicationInterface {
                         allData = Buffer.concat([allData, data]);
                     }
                     console.log("read after", data.length);
-                    start = false;
                 }
 
                 if (allData && allData.length > 0) {
