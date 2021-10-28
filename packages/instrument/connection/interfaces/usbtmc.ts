@@ -180,7 +180,7 @@ export class Instrument {
     support_RL: boolean = false;
     support_DT: boolean = false;
 
-    max_transfer_size: number = 1024 * 1024;
+    max_transfer_size: number = 2 * 1024 * 1024;
 
     _timeout: number = 500;
 
@@ -811,17 +811,8 @@ export class Instrument {
         const transfer_size = buffer.readUInt32LE(4);
         const transfer_attributes = buffer.readUInt8(8);
 
-        const data_size =
-            transfer_size > 0
-                ? Math.min(transfer_size, buffer.length - USBTMC_HEADER_SIZE)
-                : buffer.length - USBTMC_HEADER_SIZE;
-        const data = Buffer.alloc(data_size);
-        buffer.copy(
-            data,
-            0,
-            USBTMC_HEADER_SIZE,
-            USBTMC_HEADER_SIZE + data_size
-        );
+        const data = Buffer.alloc(buffer.length - USBTMC_HEADER_SIZE);
+        buffer.copy(data, 0, USBTMC_HEADER_SIZE, buffer.length);
 
         return {
             msgid,
@@ -904,7 +895,7 @@ export class Instrument {
         });
     }
 
-    async read_raw(start: boolean = true) {
+    async read_raw() {
         // Read binary data from instrument
 
         if (!this.connected) {
@@ -913,79 +904,95 @@ export class Instrument {
 
         let read_len = this.max_transfer_size;
 
-        let eom = false;
-
         let read_data: Buffer = Buffer.alloc(0);
 
-        try {
-            const req = this.pack_dev_dep_msg_in_header(
-                read_len,
-                this.term_char
-            );
-            await this.bulk_out_ep_write(req);
+        let expected_length = 0;
+        let eom = false;
 
-            while (!eom) {
-                const resp = await this.bulk_in_ep_read(read_len);
-                if (resp.length === 0) {
-                    break;
-                }
-                console.log("received bulk data size=", resp.length);
+        const req = this.pack_dev_dep_msg_in_header(read_len, this.term_char);
+        await this.bulk_out_ep_write(req);
+        let expect_msg_in_response = true;
 
-                let data: Buffer | undefined = undefined;
-
-                if (read_data.length == 0 && start) {
-                    let msgid: number;
-                    let btag: number;
-                    let btaginverse: number;
-                    let transfer_size: number;
-                    let transfer_attributes: number;
-
-                    ({
-                        msgid,
-                        btag,
-                        btaginverse,
-                        transfer_size,
-                        transfer_attributes,
-                        data
-                    } = this.unpack_dev_dep_resp_header(resp));
-
-                    console.log(
-                        `msgid=${msgid}, btag=${btag}, btaginverse=${btaginverse}, transfer_size=${transfer_size}, transfer_attributes=${transfer_attributes}, data.length=${data.length}`
-                    );
-
-                    if (transfer_attributes & 1) {
-                        eom = true;
-                    } else {
-                        /*
-                        // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
-                        const l = read_data[1] - "0".charCodeAt(0);
-                        const n = parseInt(read_data.slice(2, l + 2).toString());
-                        const transfer_size = n + (l + 2); // account for ieee header
-
-                        if (read_data.length < transfer_size) {
-                            read_data = Buffer.concat([
-                                read_data,
-                                Buffer.alloc(transfer_size - read_data.length)
-                            ]);
-                        }
-                        */
+        while (true) {
+            try {
+                do {
+                    const resp = await this.bulk_in_ep_read(read_len);
+                    if (resp.length === 0) {
+                        break;
                     }
-                } else {
-                    data = resp;
-                }
+                    console.log("received bulk data size=", resp.length);
 
-                read_data = Buffer.concat([read_data, data]);
+                    let data: Buffer | undefined = undefined;
+
+                    if (expect_msg_in_response) {
+                        expect_msg_in_response = false;
+
+                        let msgid: number;
+                        let btag: number;
+                        let btaginverse: number;
+                        let transfer_size: number;
+                        let transfer_attributes: number;
+
+                        ({
+                            msgid,
+                            btag,
+                            btaginverse,
+                            transfer_size,
+                            transfer_attributes,
+                            data
+                        } = this.unpack_dev_dep_resp_header(resp));
+
+                        console.log(
+                            `msgid=${msgid}, btag=${btag}, btaginverse=${btaginverse}, transfer_size=${transfer_size}, transfer_attributes=${transfer_attributes}, data.length=${data.length}`
+                        );
+
+                        expected_length += transfer_size;
+                        eom = transfer_attributes & 1 ? true : false;
+
+                        console.log("expected_length =", expected_length);
+                        console.log("eom =", eom);
+                    } else {
+                        data = resp;
+                    }
+
+                    read_data = Buffer.concat([read_data, data]);
+                } while (read_data.length < expected_length);
+            } catch (err) {
+                if (isTimeoutError(err)) {
+                    // timeout, abort transfer
+                    // await this._abort_bulk_in();
+                    console.log("timeout");
+                } else {
+                    throw err;
+                }
             }
-        } catch (err) {
-            if (isTimeoutError(err)) {
-                // timeout, abort transfer
-                // await this._abort_bulk_in();
+
+            if (eom && read_data.length >= expected_length) {
+                console.log(
+                    "both eom and expected_length == read_data.length are true"
+                );
+
+                break;
             } else {
-                throw err;
+                console.log("eom =", eom);
+                console.log(
+                    "still expecting: ",
+                    expected_length - read_data.length
+                );
+
+                if (!eom) {
+                    const req = this.pack_dev_dep_msg_in_header(
+                        read_len,
+                        this.term_char
+                    );
+                    await this.bulk_out_ep_write(req);
+
+                    expect_msg_in_response = true;
+                }
             }
         }
 
-        return read_data;
+        return read_data.slice(0, expected_length);
     }
 
     async ask_raw(data: Buffer, num: number = -1) {
@@ -1286,37 +1293,12 @@ export class UsbTmcInterface implements CommunicationInterface {
     async read() {
         if (this.instrument) {
             this.readyToWrite = false;
+
             try {
-                let allData;
-
-                let time = Date.now();
-                while (true) {
-                    console.log("read before");
-                    const data = await this.instrument.read_raw(true);
-                    if (data.length == 0) {
-                        console.log("data.length is 0");
-                        if (Date.now() - time > 2000) {
-                            console.log("timeout");
-                            break;
-                        }
-                        await new Promise(resolve => setTimeout(resolve, 10));
-                        console.log("try again...");
-                        continue;
-                    }
-                    if (!allData) {
-                        allData = data;
-                    } else {
-                        allData = Buffer.concat([allData, data]);
-                    }
-                    console.log("read after", data.length);
-                    time = Date.now();
-                }
-
-                if (allData && allData.length > 0) {
-                    const allDataStr = allData.toString("binary");
-                    console.log("read", allDataStr.slice(0, 50));
-                    this.host.onData(allDataStr);
-                }
+                let data = await this.instrument.read_raw();
+                const dataStr = data.toString("binary");
+                console.log("read", dataStr.slice(0, 50));
+                this.host.onData(dataStr);
             } catch (err) {
                 console.log("catch", err);
             } finally {
