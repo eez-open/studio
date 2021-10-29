@@ -717,7 +717,8 @@ let dllName;
 // I didn't see Linux support on the NI website...
 switch (os.platform()) {
     case "darwin":
-        dllName = "/Library/Frameworks/RsVisa.framework/Versions/Current/RsVisa/librsvisa.dylib";
+        dllName =
+            "/Library/Frameworks/RsVisa.framework/Versions/Current/RsVisa/librsvisa.dylib";
         break;
     case "linux":
         dllName = "librsvisa";
@@ -770,7 +771,21 @@ if (dllName) {
                 ViStatus,
                 [ViSession, "string", ViUInt32, ViPUInt32]
             ],
-            viWrite: [ViStatus, [ViSession, "string", ViUInt32, ViPUInt32]]
+            viWrite: [ViStatus, [ViSession, "string", ViUInt32, ViPUInt32]],
+            // Resource Template Operations
+            viInstallHandler: [
+                ViStatus,
+                [ViSession, ViUInt32, "pointer", "pointer"]
+            ],
+            viUninstallHandler: [
+                ViStatus,
+                [ViSession, ViUInt32, "pointer", "pointer"]
+            ],
+            viEnableEvent: [
+                ViStatus,
+                [ViSession, ViUInt32, ViUInt16, "pointer"]
+            ],
+            viDisableEvent: [ViStatus, [ViSession, ViUInt32, ViUInt16]]
         });
     } catch (err) {
         console.error("Failed to load VISA dll");
@@ -785,7 +800,7 @@ function statusCheck(status: any) {
     if (status & vcon.VI_ERROR) {
         console.warn(
             "Warning: VISA Error: 0x" +
-            (status >>> 0).toString(16).toUpperCase()
+                (status >>> 0).toString(16).toUpperCase()
         );
         throw new Error();
     } else {
@@ -1024,6 +1039,65 @@ export function vhQuery(vi: any, query: any) {
     return viRead(vi)[1];
 }
 
+export function viInstallHandler(
+    sesn: any,
+    eventType: any,
+    handler: any,
+    userHandle: any
+) {
+    if (!libVisa) throw "VISA not supported";
+
+    const status = libVisa.viInstallHandler(
+        sesn,
+        eventType,
+        handler,
+        userHandle
+    );
+    statusCheck(status);
+    return [status];
+}
+
+export function viUninstallHandler(
+    sesn: any,
+    eventType: any,
+    handler: any,
+    userHandle: any
+) {
+    if (!libVisa) throw "VISA not supported";
+
+    const status = libVisa.viUninstallHandler(
+        sesn,
+        eventType,
+        handler,
+        userHandle
+    );
+    statusCheck(status);
+    return [status];
+}
+
+export function viEnableEvent(
+    sesn: any,
+    eventType: any,
+    mechanism: any,
+    context: any
+) {
+    if (!libVisa) throw "VISA not supported";
+
+    const status = libVisa.viEnableEvent(sesn, eventType, mechanism, context);
+    statusCheck(status);
+    return [status];
+}
+
+export function viDisableEvent(sesn: any, eventType: any, mechanism: any) {
+    if (!libVisa) throw "VISA not supported";
+
+    const status = libVisa.viDisableEvent(sesn, eventType, mechanism);
+    statusCheck(status);
+    return [status];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 let status: number = 0;
 let sesn: number = 0;
 
@@ -1048,7 +1122,18 @@ ipcMain.on("get-visa-resources", function (event) {
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+
+// var viHandler = ffi.Callback(
+//     "void",
+//     [ViPSession, ViPUInt32, ViPUInt32, "pointer"],
+//     function (vi, eventType, event, userHandle) {
+//         console.log("viHandler");
+//         console.log("\tvi: ", vi);
+//         console.log("\teventType: ", eventType);
+//         console.log("\tevent: ", event);
+//         console.log("\tuserHandle: ", userHandle);
+//     }
+// );
 
 export class VisaInterface implements CommunicationInterface {
     port: any;
@@ -1087,10 +1172,19 @@ export class VisaInterface implements CommunicationInterface {
         }
 
         try {
-            const [viOpenStatus, vi] = viOpen(
-                sesn,
-                this.host.connectionParameters.visaParameters.resource
-            );
+            let viOpenStatus;
+            let vi;
+
+            try {
+                [viOpenStatus, vi] = viOpen(
+                    sesn,
+                    this.host.connectionParameters.visaParameters.resource
+                );
+            } catch (err) {
+                console.error("viOpen", err);
+                throw err;
+            }
+
             if (viOpenStatus != 0) {
                 this.host.setError(
                     ConnectionErrorCode.UNKNOWN,
@@ -1101,8 +1195,46 @@ export class VisaInterface implements CommunicationInterface {
             }
 
             this.vi = vi;
+
+            // try {
+            //     viInstallHandler(
+            //         vi,
+            //         vcon.VI_EVENT_SERVICE_REQ,
+            //         viHandler,
+            //         ref.NULL
+            //     );
+            // } catch (err) {
+            //     console.error("viInstallHandler", err);
+            //     throw err;
+            // }
+
+            // try {
+            //     viEnableEvent(
+            //         vi,
+            //         vcon.VI_EVENT_SERVICE_REQ,
+            //         vcon.VI_HNDLR,
+            //         ref.NULL
+            //     );
+            // } catch (err) {
+            //     console.error("viEnableEvent VI_EVENT_SERVICE_REQ", err);
+            //     throw err;
+            // }
+
+            // try {
+            //     viEnableEvent(
+            //         vi,
+            //         vcon.VI_EVENT_IO_COMPLETION,
+            //         vcon.VI_QUEUE,
+            //         ref.NULL
+            //     );
+            // } catch (err) {
+            //     console.error("viEnableEvent VI_EVENT_IO_COMPLETION", err);
+            //     throw err;
+            // }
+
             this.host.connected();
         } catch (err) {
+            this.vi = undefined;
             this.host.setError(
                 ConnectionErrorCode.UNKNOWN,
                 `Failed to open VISA resource: ${err.toString()}`
@@ -1142,7 +1274,10 @@ export class VisaInterface implements CommunicationInterface {
                     );
                     this.host.onData(buffer.toString());
                 }
-                setTimeout(this.read, 0);
+
+                if (status == vcon.VI_SUCCESS_MAX_CNT) {
+                    setTimeout(this.read, 0);
+                }
             } catch (err) {
                 this.readLock = false;
                 console.error("viRead", err.toString());
@@ -1167,6 +1302,27 @@ export class VisaInterface implements CommunicationInterface {
 
     destroy() {
         if (this.vi != undefined) {
+            // try {
+            //     viDisableEvent(
+            //         this.vi,
+            //         vcon.VI_ALL_ENABLED_EVENTS,
+            //         vcon.VI_ALL_MECH
+            //     );
+            // } catch (err) {
+            //     console.error("viDisableEvent", err);
+            // }
+
+            // try {
+            //     viUninstallHandler(
+            //         this.vi,
+            //         vcon.VI_EVENT_SERVICE_REQ,
+            //         viHandler,
+            //         ref.NULL
+            //     );
+            // } catch (err) {
+            //     console.error("viUninstallHandler", err);
+            // }
+
             try {
                 viClose(this.vi);
             } catch (err) {
