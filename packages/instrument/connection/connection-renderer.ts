@@ -405,8 +405,10 @@ export function getConnectionParametersInfo(
         return `${connectionParameters.ethernetParameters.address}:${connectionParameters.ethernetParameters.port}`;
     } else if (connectionParameters.type === "serial") {
         return `${connectionParameters.serialParameters.port}:${connectionParameters.serialParameters.baudRate}`;
-    } else {
+    } else if (connectionParameters.type === "usbtmc") {
         return `USBTMC`;
+    } else {
+        return "VISA";
     }
 }
 

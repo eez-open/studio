@@ -15,11 +15,16 @@ export interface UsbtmcConnectionParameters {
     idProduct: number;
 }
 
+export interface VisaConnectionParameters {
+    resource: string;
+}
+
 export interface ConnectionParameters {
-    type: "ethernet" | "serial" | "usbtmc";
+    type: "ethernet" | "serial" | "usbtmc" | "visa";
     ethernetParameters: EthernetConnectionParameters;
     serialParameters: SerialConnectionParameters;
     usbtmcParameters: UsbtmcConnectionParameters;
+    visaParameters: VisaConnectionParameters;
 }
 
 export interface CommunicationInterfaceHost {

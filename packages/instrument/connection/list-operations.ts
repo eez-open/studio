@@ -8,7 +8,7 @@ import {
     log
 } from "eez-studio-shared/activity-log";
 
-import { Connection, connections } from "instrument/connection/connection-main";
+import type { Connection } from "instrument/connection/connection-main";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -369,7 +369,7 @@ if (!isRenderer()) {
 
     ipcMain.on(
         "instrument/connection/get-list",
-        function (
+        async function (
             event: any,
             arg: {
                 instrumentId: string;
@@ -377,6 +377,9 @@ if (!isRenderer()) {
                 callbackWindowId: number;
             }
         ) {
+            const { connections } = await import(
+                "instrument/connection/connection-main"
+            );
             let connection = connections.get(arg.instrumentId);
             if (connection) {
                 getListMain(
@@ -454,7 +457,7 @@ if (!isRenderer()) {
 
     ipcMain.on(
         "instrument/connection/send-list",
-        function (
+        async function (
             event: any,
             arg: {
                 instrumentId: string;
@@ -464,6 +467,9 @@ if (!isRenderer()) {
                 callbackWindowId: number;
             }
         ) {
+            const { connections } = await import(
+                "instrument/connection/connection-main"
+            );
             let connection = connections.get(arg.instrumentId);
             if (connection) {
                 sendListMain(

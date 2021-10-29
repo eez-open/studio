@@ -404,6 +404,9 @@ export class InstrumentObject {
             usbtmcParameters: {
                 idVendor: idVendor,
                 idProduct: idProduct
+            },
+            visaParameters: {
+                resource: ""
             }
         };
     }

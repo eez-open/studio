@@ -23,7 +23,7 @@ interface ConnectionPropertiesProps {
     onConnectionParametersChanged: (
         connectionParameters: ConnectionParameters
     ) => void;
-    availableConnections: ("ethernet" | "serial" | "usbtmc")[];
+    availableConnections: ("ethernet" | "serial" | "usbtmc" | "visa")[];
     serialBaudRates: number[];
 }
 
@@ -62,12 +62,16 @@ export class ConnectionProperties extends React.Component<
     @observable iface: string;
     @observable ethernetAddress: string;
     @observable ethernetPort: number;
+
     @observable serialPortPath: string;
     @observable serialPortBaudRate: number;
 
-    @observable selectedUsbDeviceIndex: string;
+    @observable selectedUsbDeviceIndex: number | undefined;
     @observable idVendor: number;
     @observable idProduct: number;
+
+    @observable visaResource: string;
+    @observable visaResources: string[] = [];
 
     disposer: any;
 
@@ -82,11 +86,15 @@ export class ConnectionProperties extends React.Component<
         this.iface = connectionParameters.type;
         this.ethernetAddress = connectionParameters.ethernetParameters.address;
         this.ethernetPort = connectionParameters.ethernetParameters.port;
+
         this.serialPortPath = connectionParameters.serialParameters.port;
         this.serialPortBaudRate =
             connectionParameters.serialParameters.baudRate;
+
         this.idVendor = connectionParameters.usbtmcParameters.idVendor;
         this.idProduct = connectionParameters.usbtmcParameters.idProduct;
+
+        this.visaResource = connectionParameters.visaParameters.resource;
     }
 
     componentDidMount() {
@@ -97,6 +105,8 @@ export class ConnectionProperties extends React.Component<
                 this.refreshUsbDevices();
             }
         }
+
+        this.refreshVisaResources();
 
         $(this.div).modal();
 
@@ -124,12 +134,16 @@ export class ConnectionProperties extends React.Component<
                         this.serialPortPath;
                     connectionParameters.serialParameters.baudRate =
                         this.serialPortBaudRate;
-                } else {
+                } else if (this.iface === "usbtmc") {
                     connectionParameters.type = "usbtmc";
                     connectionParameters.usbtmcParameters.idVendor =
                         this.idVendor;
                     connectionParameters.usbtmcParameters.idProduct =
                         this.idProduct;
+                } else {
+                    connectionParameters.type = "visa";
+                    connectionParameters.visaParameters.resource =
+                        this.visaResource;
                 }
 
                 return connectionParameters;
@@ -216,10 +230,10 @@ export class ConnectionProperties extends React.Component<
     };
 
     @action.bound
-    onUsbDeviceChange(value: string) {
+    onUsbDeviceChange(value: number) {
         this.selectedUsbDeviceIndex = value;
 
-        const usbDeviceIndex = parseInt(value);
+        const usbDeviceIndex = value;
         if (usbDeviceIndex >= 0 && usbDeviceIndex < devices.usbDevices.length) {
             this.idVendor = devices.usbDevices[usbDeviceIndex].idVendor;
             this.idProduct = devices.usbDevices[usbDeviceIndex].idProduct;
@@ -235,18 +249,18 @@ export class ConnectionProperties extends React.Component<
         runInAction(() => {
             devices.usbDevices = usbDevices;
 
-            let selectedUsbDeviceIndex: string | undefined;
+            let selectedUsbDeviceIndex: number | undefined;
             for (let i = 0; i < devices.usbDevices.length; ++i) {
                 if (
                     devices.usbDevices[i].idVendor === this.idVendor ||
                     devices.usbDevices[i].idProduct === this.idProduct
                 ) {
-                    selectedUsbDeviceIndex = i.toString();
+                    selectedUsbDeviceIndex = i;
                     break;
                 }
             }
             if (selectedUsbDeviceIndex == undefined) {
-                selectedUsbDeviceIndex = "0";
+                selectedUsbDeviceIndex = -1;
                 this.onUsbDeviceChange(selectedUsbDeviceIndex);
             }
             this.selectedUsbDeviceIndex = selectedUsbDeviceIndex;
@@ -257,6 +271,24 @@ export class ConnectionProperties extends React.Component<
         event.preventDefault();
         this.refreshUsbDevices();
     };
+
+    async refreshVisaResources() {
+        EEZStudio.electron.ipcRenderer.send("get-visa-resources");
+        EEZStudio.electron.ipcRenderer.once("visa-resources", (event, args) => {
+            console.log(event, args);
+            runInAction(() => (this.visaResources = args));
+        });
+    }
+
+    onRefreshVisaResources = (event: React.MouseEvent) => {
+        event.preventDefault();
+        this.refreshVisaResources();
+    };
+
+    @action.bound
+    onVisaResourceChange(value: string) {
+        this.visaResource = value;
+    }
 
     render() {
         let options: JSX.Element[] | null = null;
@@ -315,13 +347,15 @@ export class ConnectionProperties extends React.Component<
                     ))}
                 </SelectProperty>
             ];
-        } else {
+        } else if (this.iface === "usbtmc") {
             options = [
                 <SelectProperty
                     key="usbDevice"
                     name="Device"
-                    value={this.selectedUsbDeviceIndex}
-                    onChange={this.onUsbDeviceChange}
+                    value={(this.selectedUsbDeviceIndex ?? -1).toString()}
+                    onChange={optionValue =>
+                        this.onUsbDeviceChange(parseInt(optionValue))
+                    }
                     inputGroupButton={
                         <button
                             className="btn btn-secondary"
@@ -332,14 +366,74 @@ export class ConnectionProperties extends React.Component<
                         </button>
                     }
                 >
-                    {devices.usbDevices.map((usbDevice, i) => (
-                        <option key={i} value={i}>
-                            {usbDevice.name ||
-                                `VID=0x${usbDevice.idVendor.toString(
-                                    16
-                                )}, PID=0x${usbDevice.idProduct.toString(16)}`}
-                        </option>
-                    ))}
+                    {(() => {
+                        const options = devices.usbDevices.map(
+                            (usbDevice, i) => (
+                                <option key={i} value={i}>
+                                    {usbDevice.name ||
+                                        `VID=0x${usbDevice.idVendor.toString(
+                                            16
+                                        )}, PID=0x${usbDevice.idProduct.toString(
+                                            16
+                                        )}`}
+                                </option>
+                            )
+                        );
+
+                        if (
+                            this.selectedUsbDeviceIndex == undefined ||
+                            this.selectedUsbDeviceIndex == -1
+                        ) {
+                            options.unshift(
+                                <option key="not-found" value="-1"></option>
+                            );
+                        }
+
+                        return options;
+                    })()}
+                </SelectProperty>
+            ];
+        } else {
+            options = [
+                <SelectProperty
+                    key="visaResource"
+                    name="Resource"
+                    value={this.visaResource}
+                    onChange={this.onVisaResourceChange}
+                    inputGroupButton={
+                        <button
+                            className="btn btn-secondary"
+                            title="Refresh list of available VISA resources"
+                            onClick={this.onRefreshVisaResources}
+                        >
+                            Refresh
+                        </button>
+                    }
+                >
+                    {(() => {
+                        const options = this.visaResources.map(
+                            (visaResource, i) => (
+                                <option key={i} value={visaResource}>
+                                    {visaResource}
+                                </option>
+                            )
+                        );
+
+                        if (
+                            this.visaResources.indexOf(this.visaResource) == -1
+                        ) {
+                            options.unshift(
+                                <option
+                                    key="not-found"
+                                    value={this.visaResource}
+                                >
+                                    {this.visaResource}
+                                </option>
+                            );
+                        }
+
+                        return options;
+                    })()}
                 </SelectProperty>
             ];
         }
@@ -357,6 +451,7 @@ export class ConnectionProperties extends React.Component<
                         -1 && <option value="serial">Serial</option>}
                     {this.props.availableConnections.indexOf("usbtmc") !==
                         -1 && <option value="usbtmc">USBTMC</option>}
+                    <option value="visa">VISA</option>
                 </SelectProperty>
                 {options}
             </PropertyList>

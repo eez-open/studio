@@ -11,6 +11,7 @@ import type { InstrumentObject } from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
 import { SerialInterface } from "instrument/connection/interfaces/serial";
 import { UsbTmcInterface } from "instrument/connection/interfaces/usbtmc";
+import { VisaInterface } from "instrument/connection/interfaces/visa";
 import type {
     CommunicationInterface,
     CommunicationInterfaceHost,
@@ -160,8 +161,10 @@ export class Connection
             this.communicationInterface = new EthernetInterface(this);
         } else if (this.connectionParameters.type === "serial") {
             this.communicationInterface = new SerialInterface(this);
-        } else {
+        } else if (this.connectionParameters.type === "usbtmc") {
             this.communicationInterface = new UsbTmcInterface(this);
+        } else {
+            this.communicationInterface = new VisaInterface(this);
         }
 
         this.communicationInterface!.connect();
