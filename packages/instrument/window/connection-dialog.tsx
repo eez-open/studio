@@ -275,7 +275,6 @@ export class ConnectionProperties extends React.Component<
     async refreshVisaResources() {
         EEZStudio.electron.ipcRenderer.send("get-visa-resources");
         EEZStudio.electron.ipcRenderer.once("visa-resources", (event, args) => {
-            console.log(event, args);
             runInAction(() => (this.visaResources = args));
         });
     }
@@ -409,31 +408,13 @@ export class ConnectionProperties extends React.Component<
                             Refresh
                         </button>
                     }
+                    comboBox={true}
                 >
-                    {(() => {
-                        const options = this.visaResources.map(
-                            (visaResource, i) => (
-                                <option key={i} value={visaResource}>
-                                    {visaResource}
-                                </option>
-                            )
-                        );
-
-                        if (
-                            this.visaResources.indexOf(this.visaResource) == -1
-                        ) {
-                            options.unshift(
-                                <option
-                                    key="not-found"
-                                    value={this.visaResource}
-                                >
-                                    {this.visaResource}
-                                </option>
-                            );
-                        }
-
-                        return options;
-                    })()}
+                    {this.visaResources.map((visaResource, i) => (
+                        <option key={i} value={visaResource}>
+                            {visaResource}
+                        </option>
+                    ))}
                 </SelectProperty>
             ];
         }

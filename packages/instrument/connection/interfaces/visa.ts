@@ -723,7 +723,6 @@ switch (os.platform()) {
         dllName = "librsvisa";
         break;
     case "win32":
-    default:
         dllName = os.arch() == "x64" ? "visa64.dll" : "visa32.dll";
         break;
 }
@@ -731,38 +730,55 @@ switch (os.platform()) {
 console.log("VISA dll Name", dllName);
 
 // 'string' is used to reduce code, the FFI module will create Buffers as needed
-let libVisa = ffi.Library(dllName, {
-    // Resource Manager Functions and Operations
-    viOpenDefaultRM: [ViStatus, [ViPSession]],
-    viFindRsrc: [
-        ViStatus,
-        [ViSession, "string", ViPFindList, ViPUInt32, "string"]
-    ],
-    viFindNext: [ViStatus, [ViFindList, "string"]],
-    viParseRsrc: [ViStatus, [ViSession, "string", ViPUInt16, ViPUInt16]],
-    viParseRsrcEx: [
-        ViStatus,
-        [
-            ViSession,
-            "string",
-            ViPUInt16,
-            ViPUInt16,
-            "string",
-            "string",
-            "string"
-        ]
-    ],
-    viOpen: [
-        ViStatus,
-        [ViSession, "string", ViAccessMode, ViUInt32, ViPSession]
-    ],
-    // Resource Template Operations
-    viClose: [ViStatus, [ViObject]],
-    // Basic I/O Operations
-    viRead: [ViStatus, [ViSession, ViPBuf, ViUInt32, ViPUInt32]],
-    viReadToFile: [ViStatus, [ViSession, "string", ViUInt32, ViPUInt32]],
-    viWrite: [ViStatus, [ViSession, "string", ViUInt32, ViPUInt32]]
-});
+let libVisa: ReturnType<typeof ffi.Library> | undefined;
+
+if (dllName) {
+    try {
+        libVisa = ffi.Library(dllName, {
+            // Resource Manager Functions and Operations
+            viOpenDefaultRM: [ViStatus, [ViPSession]],
+            viFindRsrc: [
+                ViStatus,
+                [ViSession, "string", ViPFindList, ViPUInt32, "string"]
+            ],
+            viFindNext: [ViStatus, [ViFindList, "string"]],
+            viParseRsrc: [
+                ViStatus,
+                [ViSession, "string", ViPUInt16, ViPUInt16]
+            ],
+            viParseRsrcEx: [
+                ViStatus,
+                [
+                    ViSession,
+                    "string",
+                    ViPUInt16,
+                    ViPUInt16,
+                    "string",
+                    "string",
+                    "string"
+                ]
+            ],
+            viOpen: [
+                ViStatus,
+                [ViSession, "string", ViAccessMode, ViUInt32, ViPSession]
+            ],
+            // Resource Template Operations
+            viClose: [ViStatus, [ViObject]],
+            // Basic I/O Operations
+            viRead: [ViStatus, [ViSession, ViPBuf, ViUInt32, ViPUInt32]],
+            viReadToFile: [
+                ViStatus,
+                [ViSession, "string", ViUInt32, ViPUInt32]
+            ],
+            viWrite: [ViStatus, [ViSession, "string", ViUInt32, ViPUInt32]]
+        });
+    } catch (err) {
+        console.error("Failed to load VISA dll");
+        libVisa = undefined;
+    }
+} else {
+    libVisa = undefined;
+}
 
 // TODO: since error handling is undecided, every function calls this
 function statusCheck(status: any) {
@@ -785,6 +801,8 @@ function statusCheck(status: any) {
 }
 
 export function viOpenDefaultRM() {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let pSesn = ref.alloc(ViSession);
     status = libVisa.viOpenDefaultRM(pSesn as any);
@@ -793,6 +811,8 @@ export function viOpenDefaultRM() {
 }
 
 function viFindRsrc(sesn: any, expr: any) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let pFindList = ref.alloc(ViFindList);
     let pRetcnt = ref.alloc(ViUInt32);
@@ -815,6 +835,8 @@ function viFindRsrc(sesn: any, expr: any) {
 }
 
 function viFindNext(findList: any) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let instrDesc = Buffer.alloc(512);
     status = libVisa.viFindNext(findList, instrDesc as any);
@@ -827,6 +849,8 @@ function viFindNext(findList: any) {
 }
 
 export function viParseRsrc(sesn: any, rsrcName: any) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let pIntfType = ref.alloc(ViUInt16);
     let pIntfNum = ref.alloc(ViUInt16);
@@ -848,6 +872,8 @@ export function viParseRsrc(sesn: any, rsrcName: any) {
 
 // TODO: Untested, I don't hardware that responds to this call
 export function viParseRsrcEx(sesn: any, rsrcName: any) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let pIntfType = ref.alloc(ViUInt16);
     let pIntfNum = ref.alloc(ViUInt16);
@@ -886,6 +912,8 @@ export function viOpen(
     accessMode: any = 0,
     openTimeout: any = 2000
 ) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let pVi = ref.alloc(ViSession);
     status = libVisa.viOpen(
@@ -900,6 +928,8 @@ export function viOpen(
 }
 
 export function viClose(vi: any) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     status = libVisa.viClose(vi);
     statusCheck(status);
@@ -908,6 +938,8 @@ export function viClose(vi: any) {
 
 // TODO ... assuming viRead always returns a string, probably wrong
 function viRead(vi: any, count: any = 512) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let buf = Buffer.alloc(count);
     let pRetCount = ref.alloc(ViUInt32);
@@ -922,6 +954,8 @@ function viRead(vi: any, count: any = 512) {
 
 // Returns the raw Buffer object rather than a decoded string
 export function viReadRaw(vi: any, count: any = 512) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let buf = Buffer.alloc(count);
     let pRetCount = ref.alloc(ViUInt32);
@@ -933,6 +967,8 @@ export function viReadRaw(vi: any, count: any = 512) {
 
 //	'viReadToFile': [ViStatus, [ViSession, 'string', ViUInt32, ViPUInt32]],
 export function viReadToFile(vi: any, fileName: any, count: any) {
+    if (!libVisa) throw "VISA not supported";
+
     let status;
     let pRetCount = ref.alloc(ViUInt32);
     status = libVisa.viReadToFile(vi, fileName, count, pRetCount as any);
@@ -942,6 +978,8 @@ export function viReadToFile(vi: any, fileName: any, count: any) {
 }
 
 function viWrite(vi: any, buf: any) {
+    if (!libVisa) throw "VISA not supported";
+
     //debug("write:", buf);
     let status;
     let pRetCount = ref.alloc(ViUInt32);

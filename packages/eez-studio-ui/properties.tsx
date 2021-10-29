@@ -421,6 +421,7 @@ export class SelectProperty extends React.Component<
         inputGroupButton?: JSX.Element;
         selectStyle?: React.CSSProperties;
         errors?: string[];
+        comboBox?: boolean;
     },
     {}
 > {
@@ -441,17 +442,37 @@ export class SelectProperty extends React.Component<
 
                 <td>
                     <div className={className}>
-                        <select
-                            id={id}
-                            className="form-select"
-                            value={this.props.value}
-                            onChange={event =>
-                                this.props.onChange(event.target.value)
-                            }
-                            style={this.props.selectStyle}
-                        >
-                            {this.props.children}
-                        </select>
+                        {this.props.comboBox ? (
+                            <>
+                                <input
+                                    type="text"
+                                    className="form-control "
+                                    value={this.props.value}
+                                    onChange={event =>
+                                        this.props.onChange(event.target.value)
+                                    }
+                                    list={id}
+                                />
+                                <datalist
+                                    id={id}
+                                    style={this.props.selectStyle}
+                                >
+                                    {this.props.children}
+                                </datalist>
+                            </>
+                        ) : (
+                            <select
+                                id={id}
+                                className="form-select"
+                                value={this.props.value}
+                                onChange={event =>
+                                    this.props.onChange(event.target.value)
+                                }
+                                style={this.props.selectStyle}
+                            >
+                                {this.props.children}
+                            </select>
+                        )}
                         {this.props.inputGroupButton}
                     </div>
                 </td>
