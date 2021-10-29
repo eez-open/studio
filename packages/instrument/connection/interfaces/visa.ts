@@ -717,7 +717,7 @@ let dllName;
 // I didn't see Linux support on the NI website...
 switch (os.platform()) {
     case "darwin":
-        dllName = "visa.framework/visa";
+        dllName = "/Library/Frameworks/RsVisa.framework/Versions/Current/RsVisa/librsvisa.dylib";
         break;
     case "linux":
         dllName = "librsvisa";
@@ -785,7 +785,7 @@ function statusCheck(status: any) {
     if (status & vcon.VI_ERROR) {
         console.warn(
             "Warning: VISA Error: 0x" +
-                (status >>> 0).toString(16).toUpperCase()
+            (status >>> 0).toString(16).toUpperCase()
         );
         throw new Error();
     } else {
