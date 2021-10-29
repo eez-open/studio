@@ -579,11 +579,31 @@ export class VisaInterface implements CommunicationInterface {
             //     throw err;
             // }
 
-            try {
-                viSetAttribute(this.vi, vcon.VI_ATTR_SEND_END_EN, 1);
-                this.stripTermChar = true;
-            } catch (err) {
-                console.error("viSetAttribute VI_ATTR_SEND_END_EN", err);
+            if (
+                this.host.connectionParameters.visaParameters.resource.endsWith(
+                    "::SOCKET"
+                )
+            ) {
+                try {
+                    viSetAttribute(this.vi, vcon.VI_ATTR_SUPPRESS_END_EN, 0);
+                    console.info("set VI_ATTR_SUPPRESS_END_EN = 0");
+                } catch (err) {
+                    console.error(
+                        "viSetAttribute set VI_ATTR_SUPPRESS_END_EN",
+                        err
+                    );
+                }
+            } else {
+                try {
+                    viSetAttribute(this.vi, vcon.VI_ATTR_SEND_END_EN, 1);
+                    console.info("set VI_ATTR_SEND_END_EN = 1");
+                    this.stripTermChar = true;
+                } catch (err) {
+                    console.error(
+                        "viSetAttribute set VI_ATTR_SEND_END_EN",
+                        err
+                    );
+                }
             }
 
             this.host.connected();
