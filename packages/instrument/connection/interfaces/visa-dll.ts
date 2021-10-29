@@ -155,7 +155,7 @@ export function viOpenDefaultRM() {
     return [status, pSesn.deref()];
 }
 
-function viFindRsrc(sesn: any, expr: any) {
+export function viFindRsrc(sesn: any, expr: any) {
     if (!libVisa) throw "VISA not supported";
 
     let status;
@@ -179,7 +179,7 @@ function viFindRsrc(sesn: any, expr: any) {
     ];
 }
 
-function viFindNext(findList: any) {
+export function viFindNext(findList: any) {
     if (!libVisa) throw "VISA not supported";
 
     let status;
@@ -347,6 +347,7 @@ export function viWrite(vi: any, buf: any) {
  * Returns a list of strings of found resources
  */
 export function vhListResources(sesn: any, expr: any = "?*") {
+    if (!libVisa) throw "VISA not supported";
     let descList = [];
     let [status, findList, retcnt, instrDesc] = viFindRsrc(sesn, expr);
     if (status == 0 && retcnt) {
@@ -458,3 +459,20 @@ try {
 //         console.log("\tuserHandle: ", userHandle);
 //     }
 // );
+
+// console.log("viOpenDefaultRM", status);
+// vhListResources(sesn).some(address => {
+//     console.log("address", address);
+//     const [status, vi] = viOpen(sesn, address);
+//     console.log("viOpen", status);
+//     const resp = vhQuery(vi, "*IDN?");
+//     console.log("Address " + address + " -> " + resp.toString().trim());
+//     if (typeof resp == "string") {
+//         if (resp.match(/SVA1/)) {
+//             console.log(`Using the first SVA1015 found at ${address}`);
+//             return true;
+//         }
+//     }
+//     viClose(vi);
+//     return false;
+// });

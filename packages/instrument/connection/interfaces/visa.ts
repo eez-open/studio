@@ -11,10 +11,11 @@ import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 import vcon from "instrument/connection/interfaces/visa-constants";
 
 import {
+    defaultSession,
+    defaultSessionStatus,
     vhListResources,
     viClose,
     viOpen,
-    viOpenDefaultRM,
     viRead,
     viSetAttribute,
     viWrite
@@ -22,25 +23,17 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let status: number = 0;
-let sesn: number = 0;
-
-try {
-    [status, sesn] = viOpenDefaultRM();
-} catch (error) {
-    console.error("viOpenDefaultRM", error);
-}
-
 ipcMain.on("get-visa-resources", function (event) {
-    if (status == 0) {
+    if (defaultSessionStatus == 0) {
         try {
-            const resources = vhListResources(sesn);
+            const resources = vhListResources(defaultSession);
             event.sender.send(
                 "visa-resources",
                 resources.map(resource => resource.toString())
             );
         } catch (err) {
             console.error("vhListResources", err);
+            event.sender.send("visa-resources", undefined);
         }
     }
 });
@@ -68,27 +61,10 @@ export class VisaInterface implements CommunicationInterface {
 
     stripTermChar = false;
 
-    constructor(private host: CommunicationInterfaceHost) {
-        // console.log("viOpenDefaultRM", status);
-        // vhListResources(sesn).some(address => {
-        //     console.log("address", address);
-        //     const [status, vi] = viOpen(sesn, address);
-        //     console.log("viOpen", status);
-        //     const resp = vhQuery(vi, "*IDN?");
-        //     console.log("Address " + address + " -> " + resp.toString().trim());
-        //     if (typeof resp == "string") {
-        //         if (resp.match(/SVA1/)) {
-        //             console.log(`Using the first SVA1015 found at ${address}`);
-        //             return true;
-        //         }
-        //     }
-        //     viClose(vi);
-        //     return false;
-        // });
-    }
+    constructor(private host: CommunicationInterfaceHost) {}
 
     connect() {
-        if (status != 0) {
+        if (defaultSessionStatus != 0) {
             this.host.setError(
                 ConnectionErrorCode.UNKNOWN,
                 "VISA initialization failed."
@@ -103,7 +79,7 @@ export class VisaInterface implements CommunicationInterface {
 
             try {
                 [viOpenStatus, vi] = viOpen(
-                    sesn,
+                    defaultSession,
                     this.host.connectionParameters.visaParameters.resource
                 );
             } catch (err) {

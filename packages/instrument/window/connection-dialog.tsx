@@ -1,7 +1,7 @@
 import SerialPortModule from "serialport";
 import React from "react";
 import ReactDOM from "react-dom";
-import { observable, action, runInAction, reaction } from "mobx";
+import { observable, action, runInAction, autorun } from "mobx";
 import { observer } from "mobx-react";
 const os = require("os");
 
@@ -17,6 +17,11 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
 import type { ConnectionParameters } from "instrument/connection/interface";
 import type * as UsbTmcModule from "instrument/connection/interfaces/usbtmc";
+
+function openLink(url: string) {
+    const { shell } = require("electron");
+    shell.openExternal(url);
+}
 
 interface ConnectionPropertiesProps {
     connectionParameters: ConnectionParameters;
@@ -71,7 +76,7 @@ export class ConnectionProperties extends React.Component<
     @observable idProduct: number;
 
     @observable visaResource: string;
-    @observable visaResources: string[] = [];
+    @observable visaResources: string[] | undefined = [];
 
     disposer: any;
 
@@ -97,16 +102,18 @@ export class ConnectionProperties extends React.Component<
         this.visaResource = connectionParameters.visaParameters.resource;
     }
 
-    componentDidMount() {
+    async componentDidMount() {
         if (os.platform() !== "darwin") {
             if (devices.neverEnumerated) {
                 devices.neverEnumerated = false;
-                this.refreshSerialPortPaths();
-                this.refreshUsbDevices();
+                await this.refreshSerialPortPaths();
+                await this.refreshUsbDevices();
+            } else {
+                this.initUsbDevices();
             }
         }
 
-        this.refreshVisaResources();
+        await this.refreshVisaResources();
 
         $(this.div).modal();
 
@@ -116,47 +123,47 @@ export class ConnectionProperties extends React.Component<
             parent.remove();
         });
 
-        this.disposer = reaction(
-            () => {
-                let connectionParameters: ConnectionParameters = objectClone(
-                    this.props.connectionParameters
-                );
+        this.disposer = autorun(() => {
+            let connectionParameters: ConnectionParameters = objectClone(
+                this.props.connectionParameters
+            );
 
-                if (this.iface === "ethernet") {
-                    connectionParameters.type = "ethernet";
-                    connectionParameters.ethernetParameters.address =
-                        this.ethernetAddress;
-                    connectionParameters.ethernetParameters.port =
-                        this.ethernetPort;
-                } else if (this.iface === "serial") {
-                    connectionParameters.type = "serial";
-                    connectionParameters.serialParameters.port =
-                        this.serialPortPath;
-                    connectionParameters.serialParameters.baudRate =
-                        this.serialPortBaudRate;
-                } else if (this.iface === "usbtmc") {
-                    connectionParameters.type = "usbtmc";
-                    connectionParameters.usbtmcParameters.idVendor =
-                        this.idVendor;
-                    connectionParameters.usbtmcParameters.idProduct =
-                        this.idProduct;
-                } else {
-                    connectionParameters.type = "visa";
-                    connectionParameters.visaParameters.resource =
-                        this.visaResource;
-                }
-
-                return connectionParameters;
-            },
-
-            (connectionParameters: ConnectionParameters) => {
-                this.props.onConnectionParametersChanged(connectionParameters);
+            if (this.iface === "ethernet") {
+                connectionParameters.type = "ethernet";
+                connectionParameters.ethernetParameters.address =
+                    this.ethernetAddress;
+                connectionParameters.ethernetParameters.port =
+                    this.ethernetPort;
+            } else if (this.iface === "serial") {
+                connectionParameters.type = "serial";
+                connectionParameters.serialParameters.port =
+                    this.serialPortPath;
+                connectionParameters.serialParameters.baudRate =
+                    this.serialPortBaudRate;
+            } else if (this.iface === "usbtmc") {
+                connectionParameters.type = "usbtmc";
+                connectionParameters.usbtmcParameters.idVendor = this
+                    .selectedUsbDeviceIndex
+                    ? this.idVendor
+                    : 0;
+                connectionParameters.usbtmcParameters.idProduct = this
+                    .selectedUsbDeviceIndex
+                    ? this.idProduct
+                    : 0;
+            } else {
+                connectionParameters.type = "visa";
+                connectionParameters.visaParameters.resource =
+                    this.visaResources != undefined ? this.visaResource : "";
             }
-        );
+
+            this.props.onConnectionParametersChanged(connectionParameters);
+        });
     }
 
     componentWillUnmount() {
-        this.disposer();
+        if (this.disposer) {
+            this.disposer();
+        }
     }
 
     @action.bound
@@ -233,11 +240,32 @@ export class ConnectionProperties extends React.Component<
     onUsbDeviceChange(value: number) {
         this.selectedUsbDeviceIndex = value;
 
-        const usbDeviceIndex = value;
-        if (usbDeviceIndex >= 0 && usbDeviceIndex < devices.usbDevices.length) {
-            this.idVendor = devices.usbDevices[usbDeviceIndex].idVendor;
-            this.idProduct = devices.usbDevices[usbDeviceIndex].idProduct;
+        if (value >= 0 && value < devices.usbDevices.length) {
+            this.idVendor = devices.usbDevices[value].idVendor;
+            this.idProduct = devices.usbDevices[value].idProduct;
         }
+    }
+
+    @action
+    initUsbDevices() {
+        let selectedUsbDeviceIndex: number | undefined;
+
+        for (let i = 0; i < devices.usbDevices.length; ++i) {
+            if (
+                devices.usbDevices[i].idVendor === this.idVendor ||
+                devices.usbDevices[i].idProduct === this.idProduct
+            ) {
+                selectedUsbDeviceIndex = i;
+                break;
+            }
+        }
+
+        if (selectedUsbDeviceIndex == undefined) {
+            selectedUsbDeviceIndex = -1;
+            this.onUsbDeviceChange(selectedUsbDeviceIndex);
+        }
+
+        this.selectedUsbDeviceIndex = selectedUsbDeviceIndex;
     }
 
     async refreshUsbDevices() {
@@ -248,23 +276,9 @@ export class ConnectionProperties extends React.Component<
 
         runInAction(() => {
             devices.usbDevices = usbDevices;
-
-            let selectedUsbDeviceIndex: number | undefined;
-            for (let i = 0; i < devices.usbDevices.length; ++i) {
-                if (
-                    devices.usbDevices[i].idVendor === this.idVendor ||
-                    devices.usbDevices[i].idProduct === this.idProduct
-                ) {
-                    selectedUsbDeviceIndex = i;
-                    break;
-                }
-            }
-            if (selectedUsbDeviceIndex == undefined) {
-                selectedUsbDeviceIndex = -1;
-                this.onUsbDeviceChange(selectedUsbDeviceIndex);
-            }
-            this.selectedUsbDeviceIndex = selectedUsbDeviceIndex;
         });
+
+        this.initUsbDevices();
     }
 
     onRefreshUsbDevices = (event: React.MouseEvent) => {
@@ -272,10 +286,16 @@ export class ConnectionProperties extends React.Component<
         this.refreshUsbDevices();
     };
 
-    async refreshVisaResources() {
-        EEZStudio.electron.ipcRenderer.send("get-visa-resources");
-        EEZStudio.electron.ipcRenderer.once("visa-resources", (event, args) => {
-            runInAction(() => (this.visaResources = args));
+    refreshVisaResources() {
+        return new Promise<void>(resolve => {
+            EEZStudio.electron.ipcRenderer.send("get-visa-resources");
+            EEZStudio.electron.ipcRenderer.once(
+                "visa-resources",
+                (event, args) => {
+                    runInAction(() => (this.visaResources = args));
+                    resolve();
+                }
+            );
         });
     }
 
@@ -393,30 +413,57 @@ export class ConnectionProperties extends React.Component<
                 </SelectProperty>
             ];
         } else {
-            options = [
-                <SelectProperty
-                    key="visaResource"
-                    name="Resource"
-                    value={this.visaResource}
-                    onChange={this.onVisaResourceChange}
-                    inputGroupButton={
-                        <button
-                            className="btn btn-secondary"
-                            title="Refresh list of available VISA resources"
-                            onClick={this.onRefreshVisaResources}
-                        >
-                            Refresh
-                        </button>
-                    }
-                    comboBox={true}
-                >
-                    {this.visaResources.map((visaResource, i) => (
-                        <option key={i} value={visaResource}>
-                            {visaResource}
-                        </option>
-                    ))}
-                </SelectProperty>
-            ];
+            options = this.visaResources
+                ? [
+                      <SelectProperty
+                          key="visaResource"
+                          name="Resource"
+                          value={this.visaResource}
+                          onChange={this.onVisaResourceChange}
+                          inputGroupButton={
+                              <button
+                                  className="btn btn-secondary"
+                                  title="Refresh list of available VISA resources"
+                                  onClick={this.onRefreshVisaResources}
+                              >
+                                  Refresh
+                              </button>
+                          }
+                          comboBox={true}
+                      >
+                          {this.visaResources.map((visaResource, i) => (
+                              <option key={i} value={visaResource}>
+                                  {visaResource}
+                              </option>
+                          ))}
+                      </SelectProperty>
+                  ]
+                : [
+                      <tr key="r_and_s_info">
+                          <td colSpan={2} style={{ whiteSpace: "normal" }}>
+                              <div
+                                  className="alert alert-warning"
+                                  style={{ marginTop: 10 }}
+                              >
+                                  R&S® VISA was not found on your system. For
+                                  more information on how to install R&S® VISA
+                                  please visit{" "}
+                                  <a
+                                      href="#"
+                                      onClick={event => {
+                                          event.preventDefault();
+                                          openLink(
+                                              "https://www.rohde-schwarz.com/fi/applications/r-s-visa-application-note_56280-148812.html"
+                                          );
+                                      }}
+                                  >
+                                      this page
+                                  </a>
+                                  .
+                              </div>
+                          </td>
+                      </tr>
+                  ];
         }
 
         return (
@@ -450,12 +497,40 @@ class ConnectionDialog extends React.Component<
     },
     {}
 > {
+    @observable
     connectionParameters: ConnectionParameters;
 
-    onConnectionParametersChanged = (
-        connectionParameters: ConnectionParameters
-    ) => {
-        this.connectionParameters = connectionParameters;
+    onConnectionParametersChanged = action(
+        (connectionParameters: ConnectionParameters) => {
+            this.connectionParameters = connectionParameters;
+        }
+    );
+
+    isValidConnectionParameters = () => {
+        if (!this.connectionParameters) {
+            return false;
+        }
+        if (this.connectionParameters.type == "ethernet") {
+            return (
+                this.connectionParameters.ethernetParameters?.address?.length >
+                0
+            );
+        }
+        if (this.connectionParameters.type == "serial") {
+            return this.connectionParameters.serialParameters?.port?.length > 0;
+        }
+        if (this.connectionParameters.type == "usbtmc") {
+            return (
+                this.connectionParameters.usbtmcParameters?.idVendor != 0 &&
+                this.connectionParameters.usbtmcParameters?.idProduct != 0
+            );
+        }
+        if (this.connectionParameters.type == "visa") {
+            return (
+                this.connectionParameters.visaParameters?.resource?.length > 0
+            );
+        }
+        return false;
     };
 
     handleSubmit = () => {
@@ -465,7 +540,11 @@ class ConnectionDialog extends React.Component<
 
     render() {
         return (
-            <Dialog okButtonText="Connect" onOk={this.handleSubmit}>
+            <Dialog
+                okButtonText="Connect"
+                onOk={this.handleSubmit}
+                okEnabled={this.isValidConnectionParameters}
+            >
                 <ConnectionProperties
                     connectionParameters={this.props.connectionParameters}
                     onConnectionParametersChanged={
