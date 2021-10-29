@@ -767,7 +767,7 @@ let libVisa = ffi.Library(dllName, {
 // TODO: since error handling is undecided, every function calls this
 function statusCheck(status: any) {
     if (status & vcon.VI_ERROR) {
-        console.log(
+        console.warn(
             "Warning: VISA Error: 0x" +
                 (status >>> 0).toString(16).toUpperCase()
         );
@@ -986,15 +986,26 @@ export function vhQuery(vi: any, query: any) {
     return viRead(vi)[1];
 }
 
-const [status, sesn] = viOpenDefaultRM();
+let status: number = 0;
+let sesn: number = 0;
+
+try {
+    [status, sesn] = viOpenDefaultRM();
+} catch (error) {
+    console.error("viOpenDefaultRM", error);
+}
 
 ipcMain.on("get-visa-resources", function (event) {
     if (status == 0) {
-        const resources = vhListResources(sesn);
-        event.sender.send(
-            "visa-resources",
-            resources.map(resource => resource.toString())
-        );
+        try {
+            const resources = vhListResources(sesn);
+            event.sender.send(
+                "visa-resources",
+                resources.map(resource => resource.toString())
+            );
+        } catch (err) {
+            console.error("vhListResources", err);
+        }
     }
 });
 
@@ -1066,14 +1077,6 @@ export class VisaInterface implements CommunicationInterface {
         return this.vi != undefined;
     }
 
-    destroy() {
-        if (this.vi != undefined) {
-            viClose(this.vi);
-            this.vi = undefined;
-        }
-        this.host.disconnected();
-    }
-
     readLock = false;
 
     read = () => {
@@ -1104,7 +1107,7 @@ export class VisaInterface implements CommunicationInterface {
                 setTimeout(this.read, 0);
             } catch (err) {
                 this.readLock = false;
-                console.log("viRead error", err.toString());
+                console.error("viRead", err.toString());
             }
         }
     };
@@ -1112,9 +1115,28 @@ export class VisaInterface implements CommunicationInterface {
     write(data: string) {
         if (this.vi != undefined) {
             console.log("SEND TO VISA", JSON.stringify(data));
-            viWrite(this.vi, Buffer.from(data, "binary"));
-            setTimeout(this.read, 0);
+            try {
+                viWrite(this.vi, Buffer.from(data, "binary"));
+                setTimeout(this.read, 0);
+            } catch (err) {
+                this.host.setError(
+                    ConnectionErrorCode.UNKNOWN,
+                    `Failed to write to VISA resource: ${err.toString()}`
+                );
+            }
         }
+    }
+
+    destroy() {
+        if (this.vi != undefined) {
+            try {
+                viClose(this.vi);
+            } catch (err) {
+                console.error("viClose", err);
+            }
+            this.vi = undefined;
+        }
+        this.host.disconnected();
     }
 
     disconnect() {
