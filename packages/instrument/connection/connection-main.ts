@@ -448,8 +448,6 @@ export class Connection
             return;
         }
 
-        this.send("*IDN?");
-        this.flushData();
         this.idnExpected = true;
         this.idnExpectedTimeout = setTimeout(() => {
             this.setError(
@@ -458,6 +456,9 @@ export class Connection
             );
             this.disconnect();
         }, CONF_IDN_EXPECTED_TIMEOUT);
+
+        this.send("*IDN?");
+        this.flushData();
     }
 
     startLongOperation(createLongOperation: () => LongOperation) {
