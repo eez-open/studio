@@ -415,28 +415,45 @@ export class ConnectionProperties extends React.Component<
         } else {
             options = this.visaResources
                 ? [
-                      <SelectProperty
-                          key="visaResource"
+                      <TextInputProperty
                           name="Resource"
                           value={this.visaResource}
                           onChange={this.onVisaResourceChange}
                           inputGroupButton={
-                              <button
-                                  className="btn btn-secondary"
-                                  title="Refresh list of available VISA resources"
-                                  onClick={this.onRefreshVisaResources}
-                              >
-                                  Refresh
-                              </button>
+                              <>
+                                  <button
+                                      className="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                                      type="button"
+                                      data-bs-toggle="dropdown"
+                                  />
+                                  <div className="dropdown-menu dropdown-menu-end">
+                                      {this.visaResources.map(
+                                          (suggestion, i) => (
+                                              <button
+                                                  key={i}
+                                                  className="dropdown-item"
+                                                  type="button"
+                                                  onClick={() =>
+                                                      this.onVisaResourceChange(
+                                                          suggestion
+                                                      )
+                                                  }
+                                              >
+                                                  {suggestion}
+                                              </button>
+                                          )
+                                      )}
+                                  </div>
+                                  <button
+                                      className="btn btn-outline-secondary"
+                                      title="Refresh list of available VISA resources"
+                                      onClick={this.onRefreshVisaResources}
+                                  >
+                                      Refresh
+                                  </button>
+                              </>
                           }
-                          comboBox={true}
-                      >
-                          {this.visaResources.map((visaResource, i) => (
-                              <option key={i} value={visaResource}>
-                                  {visaResource}
-                              </option>
-                          ))}
-                      </SelectProperty>
+                      />
                   ]
                 : [
                       <tr key="r_and_s_info">

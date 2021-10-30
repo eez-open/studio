@@ -95,6 +95,7 @@ export class InputProperty extends React.Component<
         name?: string;
         value: any;
         suggestions?: string[];
+        inputGroupButton?: React.ReactNode;
         title?: string;
         onChange: (value: any) => void;
         type: string;
@@ -122,31 +123,39 @@ export class InputProperty extends React.Component<
             />
         );
 
-        if (this.props.suggestions && this.props.suggestions.length > 0) {
+        const suggestions =
+            this.props.suggestions && this.props.suggestions.length
+                ? this.props.suggestions
+                : undefined;
+
+        if (suggestions || this.props.inputGroupButton) {
             input = (
                 <div className="input-group">
                     {input}
-                    <>
-                        <button
-                            className="btn btn-secondary dropdown-toggle"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                        />
-                        <div className="dropdown-menu dropdown-menu-end">
-                            {this.props.suggestions.map(suggestion => (
-                                <button
-                                    key={suggestion}
-                                    className="dropdown-item"
-                                    type="button"
-                                    onClick={() =>
-                                        this.props.onChange(suggestion)
-                                    }
-                                >
-                                    {suggestion}
-                                </button>
-                            ))}
-                        </div>
-                    </>
+                    {suggestions && (
+                        <>
+                            <button
+                                className="btn btn-secondary dropdown-toggle"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                            />
+                            <div className="dropdown-menu dropdown-menu-end">
+                                {suggestions.map((suggestion, i) => (
+                                    <button
+                                        key={i}
+                                        className="dropdown-item"
+                                        type="button"
+                                        onClick={() =>
+                                            this.props.onChange(suggestion)
+                                        }
+                                    >
+                                        {suggestion}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                    {this.props.inputGroupButton}
                 </div>
             );
         }
@@ -188,6 +197,7 @@ export class TextInputProperty extends React.Component<
         name?: string;
         value: string;
         suggestions?: string[];
+        inputGroupButton?: React.ReactNode;
         title?: string;
         onChange: (value: string) => void;
         errors?: string[];
@@ -418,7 +428,7 @@ export class SelectProperty extends React.Component<
         name: string;
         value: string;
         onChange: (value: string) => void;
-        inputGroupButton?: JSX.Element;
+        inputGroupButton?: React.ReactNode;
         selectStyle?: React.CSSProperties;
         errors?: string[];
         comboBox?: boolean;
