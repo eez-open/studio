@@ -126,9 +126,10 @@ export class Assets {
     ) {
         const assets = [];
         for (const project of this.projects) {
-            assets.push(
-                ...getCollection(project).filter(assetIncludePredicate)
-            );
+            const collection = getCollection(project);
+            if (collection) {
+                assets.push(...collection.filter(assetIncludePredicate));
+            }
         }
         return assets;
     }
@@ -470,64 +471,70 @@ export class Assets {
 
     reportUnusedAssets() {
         this.projects.forEach(project => {
-            project.styles.forEach(style => {
-                if (
-                    !this.styles.find(usedStyle => {
-                        if (!usedStyle) {
-                            return false;
-                        }
+            if (project.styles?.length > 0) {
+                project.styles.forEach(style => {
+                    if (
+                        !this.styles.find(usedStyle => {
+                            if (!usedStyle) {
+                                return false;
+                            }
 
-                        if (usedStyle == style) {
-                            return true;
-                        }
-
-                        let baseStyle = findStyle(
-                            this.rootProject,
-                            usedStyle.inheritFrom
-                        );
-                        while (baseStyle) {
-                            if (baseStyle == style) {
+                            if (usedStyle == style) {
                                 return true;
                             }
-                            baseStyle = findStyle(
+
+                            let baseStyle = findStyle(
                                 this.rootProject,
-                                baseStyle.inheritFrom
+                                usedStyle.inheritFrom
                             );
-                        }
+                            while (baseStyle) {
+                                if (baseStyle == style) {
+                                    return true;
+                                }
+                                baseStyle = findStyle(
+                                    this.rootProject,
+                                    baseStyle.inheritFrom
+                                );
+                            }
 
-                        return false;
-                    })
-                ) {
-                    this.DocumentStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.INFO,
-                        "Unused style: " + style.name,
-                        style
-                    );
-                }
-            });
+                            return false;
+                        })
+                    ) {
+                        this.DocumentStore.outputSectionsStore.write(
+                            Section.OUTPUT,
+                            MessageType.INFO,
+                            "Unused style: " + style.name,
+                            style
+                        );
+                    }
+                });
+            }
 
-            project.fonts.forEach(font => {
-                if (this.fonts.indexOf(font) === -1) {
-                    this.DocumentStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.INFO,
-                        "Unused font: " + font.name,
-                        font
-                    );
-                }
-            });
+            if (project.fonts?.length > 0) {
+                project.fonts.forEach(font => {
+                    if (this.fonts.indexOf(font) === -1) {
+                        this.DocumentStore.outputSectionsStore.write(
+                            Section.OUTPUT,
+                            MessageType.INFO,
+                            "Unused font: " + font.name,
+                            font
+                        );
+                    }
+                });
+            }
 
-            project.bitmaps.forEach(bitmap => {
-                if (this.bitmaps.indexOf(bitmap) === -1) {
-                    this.DocumentStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.INFO,
-                        "Unused bitmap: " + bitmap.name,
-                        bitmap
-                    );
-                }
-            });
+            if (project.bitmaps?.length > 0) {
+                project.bitmaps.forEach(bitmap => {
+                    if (this.bitmaps.indexOf(bitmap) === -1) {
+                        this.DocumentStore.outputSectionsStore.write(
+                            Section.OUTPUT,
+                            MessageType.INFO,
+                            "Unused bitmap: " + bitmap.name,
+                            bitmap
+                        );
+                    }
+                });
+            }
         });
     }
 
