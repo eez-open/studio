@@ -394,6 +394,9 @@ export class BB3Instrument {
                     );
                 } catch (err) {
                     console.error("failed to get firmware version", err);
+                    if (!this.instrument.isConnected) {
+                        throw err;
+                    }
                 }
 
                 if (firmwareVersion) {
@@ -406,6 +409,9 @@ export class BB3Instrument {
                         );
                     } catch (err) {
                         console.error("failed to get slots info", err);
+                        if (!this.instrument.isConnected) {
+                            throw err;
+                        }
                     }
 
                     try {
@@ -418,6 +424,9 @@ export class BB3Instrument {
                             "failed to get scripts on the instrument info",
                             err
                         );
+                        if (!this.instrument.isConnected) {
+                            throw err;
+                        }
                     }
 
                     try {
@@ -429,6 +438,9 @@ export class BB3Instrument {
                             "failed to get lists on the instrument info",
                             err
                         );
+                        if (!this.instrument.isConnected) {
+                            throw err;
+                        }
                     }
                 }
                 runInAction(() => {
@@ -647,7 +659,7 @@ export class BB3Instrument {
             this.setBusy(true);
             try {
                 for (const list of this.sortedLists) {
-                    if (list.studioVersionNewer) {
+                    if (list.studioVersionNewer || !list.listOnInstrument) {
                         await list.upload();
                     }
                 }

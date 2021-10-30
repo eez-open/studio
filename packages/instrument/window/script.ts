@@ -371,12 +371,14 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
         .catch(err => {
             console.error(err);
 
-            let lineNumber;
-            let columnNumber;
-            const match = err.stack.match(/\<anonymous\>\:(\d+)\:(\d+)/);
-            if (match) {
-                lineNumber = parseInt(match[1]) - 2;
-                columnNumber = parseInt(match[2]);
+            let lineNumber = 0;
+            let columnNumber = 0;
+            if (err?.stack?.match) {
+                const match = err.stack.match(/\<anonymous\>\:(\d+)\:(\d+)/);
+                if (match) {
+                    lineNumber = parseInt(match[1]) - 2;
+                    columnNumber = parseInt(match[2]);
+                }
             }
 
             modules.session.scriptError = err.message;

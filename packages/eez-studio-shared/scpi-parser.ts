@@ -266,6 +266,7 @@ function getScpiTokens(input: string) {
                     line,
                     column
                 });
+                state = "other";
             }
         } else if (state === "hexnum") {
             if (

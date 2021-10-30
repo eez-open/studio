@@ -191,14 +191,11 @@ export class VisaInterface implements CommunicationInterface {
                 // TODO check status
                 console.log("viRead return status", status);
                 if (typeof buffer == "string") {
-                    console.log(
-                        `RECEIVED FROM VISA (showing first 10 of ${buffer.length} characters)`,
-                        JSON.stringify(buffer.slice(0, 10))
-                    );
+                    consoleLogMaxChars(`RECEIVED FROM VISA`, buffer, 20);
                     this.host.onData(buffer);
                 } else {
                     console.log(
-                        "RECEIVED FROM VISA number",
+                        "RECEIVED FROM VISA (number):",
                         JSON.stringify(buffer.toString())
                     );
                     this.host.onData(buffer.toString());
@@ -220,7 +217,7 @@ export class VisaInterface implements CommunicationInterface {
                 data = data.slice(0, data.length - 1);
             }
 
-            console.log("SEND TO VISA", JSON.stringify(data));
+            consoleLogMaxChars("SEND TO VISA", data, 40);
             try {
                 const [status, written] = viWrite(
                     this.vi,
@@ -246,7 +243,9 @@ export class VisaInterface implements CommunicationInterface {
                     hasQuery = !!parts.find(
                         part => part.tag == SCPI_PART_QUERY
                     );
-                } catch (err) {}
+                } catch (err) {
+                    console.error(`SCPI parser error "${err}": ${data}`);
+                }
 
                 if (hasQuery) {
                     setTimeout(this.read, 0);
@@ -295,5 +294,19 @@ export class VisaInterface implements CommunicationInterface {
 
     disconnect() {
         this.destroy();
+    }
+}
+
+function consoleLogMaxChars(message: string, data: string, maxChars: number) {
+    const dataJSON = JSON.stringify(data);
+    if (data.length <= maxChars) {
+        console.log(`${message} (${data.length} chars): ${dataJSON}`);
+    } else {
+        console.log(
+            `${message} (${data.length} chars): ${dataJSON.slice(
+                0,
+                maxChars / 2
+            )}...${dataJSON.slice(dataJSON.length - maxChars / 2)}`
+        );
     }
 }

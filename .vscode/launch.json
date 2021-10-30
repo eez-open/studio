@@ -31,6 +31,22 @@
                 "${workspaceFolder}/node_modules/**/*.js",
                 "${workspaceFolder}/libs/**/*.js"
             ]
+        },
+        {
+            "name": "Electron: Main only",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
+            },
+            "args": ["."],
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**/*.js",
+                "${workspaceFolder}/libs/**/*.js"
+            ]
         }
     ],
     "compounds": [
