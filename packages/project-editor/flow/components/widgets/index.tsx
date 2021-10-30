@@ -1812,8 +1812,11 @@ export class TextWidget extends EmbeddedWidget {
                             this.data
                         );
 
-                        if (value != null && value != undefined) {
-                            return value;
+                        if (
+                            typeof value == "string" ||
+                            typeof value == "number"
+                        ) {
+                            return value.toString();
                         }
                         return "";
                     } catch (err) {
