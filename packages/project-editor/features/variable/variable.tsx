@@ -43,7 +43,6 @@ import { _difference } from "eez-studio-shared/algorithm";
 import { Icon } from "eez-studio-ui/icon";
 import {
     variableTypeProperty,
-    variableTypeUIProperty,
     migrateType,
     VariableTypeFieldComponent,
     isObjectType,
@@ -109,7 +108,6 @@ export class Variable extends EezObject {
                 type: PropertyType.MultilineText
             },
             variableTypeProperty,
-            variableTypeUIProperty,
             {
                 name: "defaultValue",
                 type: PropertyType.MultilineText
@@ -637,8 +635,7 @@ export class StructureField extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
-            variableTypeProperty,
-            variableTypeUIProperty
+            variableTypeProperty
         ],
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);

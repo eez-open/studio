@@ -60,7 +60,10 @@ import {
     ExpressionEvalError
 } from "project-editor/flow/expression/expression";
 import { calcComponentGeometry } from "project-editor/flow/editor/render";
-import { ValueType } from "project-editor/features/variable/value-type";
+import {
+    ValueType,
+    VariableTypeUI
+} from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const NOT_NAMED_LABEL = "<not named>";
@@ -185,8 +188,28 @@ export class InputActionComponent extends ActionComponent {
                 name: "name",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "inputType",
+                type: PropertyType.String,
+                propertyGridColumnComponent: VariableTypeUI,
+                propertyGridGroup: specificGroup
             }
         ],
+        check: (inputActionComponent: InputActionComponent) => {
+            let messages: Message[] = [];
+            if (!inputActionComponent.name) {
+                messages.push(
+                    propertyNotSetMessage(inputActionComponent, "name")
+                );
+            }
+            if (!inputActionComponent.inputType) {
+                messages.push(
+                    propertyNotSetMessage(inputActionComponent, "inputType")
+                );
+            }
+            return messages;
+        },
         label: (component: InputActionComponent) => {
             if (!component.name) {
                 return NOT_NAMED_LABEL;
@@ -212,6 +235,7 @@ export class InputActionComponent extends ActionComponent {
     });
 
     @observable name: string;
+    @observable inputType: ValueType;
 
     getOutputs() {
         return [
@@ -244,8 +268,28 @@ export class OutputActionComponent extends ActionComponent {
                 name: "name",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "outputType",
+                type: PropertyType.String,
+                propertyGridColumnComponent: VariableTypeUI,
+                propertyGridGroup: specificGroup
             }
         ],
+        check: (outputActionComponent: OutputActionComponent) => {
+            let messages: Message[] = [];
+            if (!outputActionComponent.name) {
+                messages.push(
+                    propertyNotSetMessage(outputActionComponent, "name")
+                );
+            }
+            if (!outputActionComponent.outputType) {
+                messages.push(
+                    propertyNotSetMessage(outputActionComponent, "outputType")
+                );
+            }
+            return messages;
+        },
         label: (component: OutputActionComponent) => {
             if (!component.name) {
                 return NOT_NAMED_LABEL;
@@ -271,6 +315,7 @@ export class OutputActionComponent extends ActionComponent {
     });
 
     @observable name: string;
+    @observable outputType: ValueType;
 
     getInputs() {
         return [
@@ -1611,7 +1656,7 @@ export class CallActionActionComponent extends ActionComponent {
                     displayName: inputActionComponent.name
                         ? inputActionComponent.name
                         : NOT_NAMED_LABEL,
-                    type: "any",
+                    type: inputActionComponent.inputType,
                     isSequenceInput: false,
                     isOptionalInput: false
                 })
@@ -1643,7 +1688,7 @@ export class CallActionActionComponent extends ActionComponent {
                     displayName: outputActionComponent.name
                         ? outputActionComponent.name
                         : NOT_NAMED_LABEL,
-                    type: "any",
+                    type: outputActionComponent.outputType,
                     isSequenceOutput: false,
                     isOptionalOutput: true
                 })

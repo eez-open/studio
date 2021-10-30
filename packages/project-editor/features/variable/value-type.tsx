@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, action, observable, autorun, runInAction } from "mobx";
+import { action, observable, autorun, runInAction } from "mobx";
 import { disposeOnUnmount, observer } from "mobx-react";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
 import {
@@ -17,7 +17,6 @@ import { humanize } from "eez-studio-shared/string";
 import { getPropertyValue } from "project-editor/components/PropertyGrid/utils";
 import type { IVariable } from "project-editor/flow/flow-interfaces";
 import { _difference } from "eez-studio-shared/algorithm";
-import { getClassInfo } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -297,19 +296,13 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
     @observable _type: ValueType;
     @observable updateCounter: number = 0;
 
-    @computed get typePropertyInfo() {
-        return getClassInfo(this.props.objects[0]).properties.find(
-            propertyInfo => propertyInfo.name === "type"
-        )!;
-    }
-
     @disposeOnUnmount
     changeDocumentDisposer = autorun(() => {
         this.updateCounter;
         if (this.context.project) {
             const getPropertyValueResultForType = getPropertyValue(
                 this.props.objects,
-                this.typePropertyInfo
+                this.props.propertyInfo
             );
 
             let type = getPropertyValueResultForType
@@ -348,7 +341,7 @@ export class VariableTypeUI extends React.Component<PropertyProps> {
         runInAction(() => (this._type = type as ValueType));
 
         this.props.updateObject({
-            type
+            [this.props.propertyInfo.name]: type
         });
     };
 
@@ -387,20 +380,12 @@ export class VariableTypeFieldComponent extends FieldComponent {
     }
 }
 
-export const variableTypeUIProperty = {
-    name: "variableTypeUI",
-    displayName: "Type",
-    type: PropertyType.Any,
-    computed: true,
-    propertyGridColumnComponent: VariableTypeUI
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export const variableTypeProperty: PropertyInfo = {
     name: "type",
     type: PropertyType.String,
-    hideInPropertyGrid: true
+    propertyGridColumnComponent: VariableTypeUI
 };
 
 ////////////////////////////////////////////////////////////////////////////////

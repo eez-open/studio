@@ -1168,7 +1168,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
             .map((inputActionComponent: InputActionComponent) => ({
                 name: inputActionComponent.wireID,
                 displayName: inputActionComponent.name,
-                type: "any",
+                type: inputActionComponent.inputType,
                 isSequenceInput: false,
                 isOptionalInput: false
             }));
@@ -1197,7 +1197,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
             .map((outputActionComponent: OutputActionComponent) => ({
                 name: outputActionComponent.wireID,
                 displayName: outputActionComponent.name,
-                type: "any",
+                type: outputActionComponent.outputType,
                 isSequenceOutput: false,
                 isOptionalOutput: false
             }));
@@ -1545,6 +1545,10 @@ export class DisplayDataWidget extends EmbeddedWidget {
                     }
                 }
 
+                if (flowContext.DocumentStore.runtime) {
+                    return "";
+                }
+
                 try {
                     const result = evalConstantExpression(
                         ProjectEditor.getProject(this),
@@ -1822,6 +1826,10 @@ export class TextWidget extends EmbeddedWidget {
                     } catch (err) {
                         return err.toString();
                     }
+                }
+
+                if (flowContext.DocumentStore.runtime) {
+                    return "";
                 }
 
                 if (this.name) {
@@ -2792,6 +2800,10 @@ export class ButtonWidget extends EmbeddedWidget {
                     } catch (err) {
                         return err.toString();
                     }
+                }
+
+                if (flowContext.DocumentStore.runtime) {
+                    return "";
                 }
 
                 try {

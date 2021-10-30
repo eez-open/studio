@@ -80,6 +80,7 @@ export class RemoteRuntime extends RuntimeBase {
     instrument: InstrumentObject | undefined;
     assetsMap: AssetsMap;
     debuggerValues = new Map<number, DebuggerValue>();
+    arrayValues = new Map<number, any>();
     flowStateMap = new Map<
         number,
         { flowIndex: number; flowState: FlowState }
@@ -588,9 +589,16 @@ class DebuggerConnection {
     }
 
     parseArrayOrStructDebuggerValue(str: string, type: string) {
-        const arrayElementAddresses = str.split(",");
+        const addresses = str
+            .substring(1, str.length - 1)
+            .split(",")
+            .map(addressStr => parseInt(addressStr));
 
-        let value: any;
+        const arrayAddress = addresses[0];
+
+        const arrayElementAddresses = addresses.slice(1);
+
+        let value: any = this.runtime.arrayValues.get(arrayAddress);
 
         let sortedStructFields;
         let arrayElementType: string | null = null;
@@ -610,16 +618,20 @@ class DebuggerConnection {
                 .sort((a, b) =>
                     a.name < b.name ? -1 : a.name > b.name ? 1 : 0
                 );
-
-            value = observable({});
+            if (!value) {
+                value = observable({});
+                this.runtime.arrayValues.set(arrayAddress, value);
+            }
         } else if (isArrayType(type)) {
             arrayElementType = getArrayElementTypeFromType(type);
             if (!arrayElementType) {
                 console.error("UNEXPECTED!");
                 return undefined;
             }
-
-            value = observable([]);
+            if (!value) {
+                value = observable([]);
+                this.runtime.arrayValues.set(arrayAddress, value);
+            }
         } else {
             console.error("UNEXPECTED!");
             return undefined;
@@ -642,7 +654,7 @@ class DebuggerConnection {
                 propertyType = arrayElementType!;
             }
 
-            value[propertyName] = undefined;
+            runInAction(() => (value[propertyName] = undefined));
 
             const objectMemberValue = new ObjectMemberValue(
                 value,
@@ -651,7 +663,7 @@ class DebuggerConnection {
             );
 
             this.runtime.debuggerValues.set(
-                parseInt(arrayElementAddresses[i]),
+                arrayElementAddresses[i],
                 objectMemberValue
             );
         }
@@ -681,10 +693,7 @@ class DebuggerConnection {
         }
 
         if (str[0] == "{") {
-            return this.parseArrayOrStructDebuggerValue(
-                str.substr(1, str.length - 2),
-                type
-            );
+            return this.parseArrayOrStructDebuggerValue(str, type);
         }
 
         return Number.parseFloat(str);

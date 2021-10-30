@@ -80,7 +80,6 @@ import {
 } from "project-editor/flow/expression/expression";
 import {
     variableTypeProperty,
-    variableTypeUIProperty,
     ValueType,
     VariableTypeFieldComponent
 } from "project-editor/features/variable/value-type";
@@ -623,8 +622,7 @@ export class CustomInput extends EezObject implements ComponentInput {
                 type: PropertyType.String,
                 unique: componentInputUnique
             },
-            variableTypeProperty,
-            variableTypeUIProperty
+            variableTypeProperty
         ],
 
         defaultValue: {},
@@ -720,8 +718,7 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                 type: PropertyType.String,
                 unique: componentOutputUnique
             },
-            variableTypeProperty,
-            variableTypeUIProperty
+            variableTypeProperty
         ],
 
         defaultValue: {},
