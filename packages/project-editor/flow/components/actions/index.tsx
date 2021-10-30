@@ -191,6 +191,7 @@ export class InputActionComponent extends ActionComponent {
             },
             {
                 name: "inputType",
+                displayName: "Type",
                 type: PropertyType.String,
                 propertyGridColumnComponent: VariableTypeUI,
                 propertyGridGroup: specificGroup
@@ -271,6 +272,7 @@ export class OutputActionComponent extends ActionComponent {
             },
             {
                 name: "outputType",
+                displayName: "Type",
                 type: PropertyType.String,
                 propertyGridColumnComponent: VariableTypeUI,
                 propertyGridGroup: specificGroup
