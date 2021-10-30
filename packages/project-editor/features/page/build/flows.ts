@@ -227,7 +227,7 @@ function buildComponent(
         assets.DocumentStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,
-            err,
+            err.toString(),
             component
         );
     }
@@ -277,12 +277,12 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 
     dataBuffer.writeFutureArray(() =>
         dataBuffer.writeArray(flowState.commponentInputs, componentInput => {
-            const COMPONENT_INPUT_FLAG_IS_ACTION = 1 << 0;
+            const COMPONENT_INPUT_FLAG_IS_SEQ_INPUT = 1 << 0;
             const COMPONENT_INPUT_FLAG_IS_OPTIONAL = 1 << 1;
 
             dataBuffer.writeUint8(
                 (componentInput.isSequenceInput
-                    ? COMPONENT_INPUT_FLAG_IS_ACTION
+                    ? COMPONENT_INPUT_FLAG_IS_SEQ_INPUT
                     : 0) |
                     (componentInput.isOptionalInput
                         ? COMPONENT_INPUT_FLAG_IS_OPTIONAL

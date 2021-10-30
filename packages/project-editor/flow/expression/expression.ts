@@ -498,14 +498,12 @@ function findValueTypeInExpressionNode(
                 node.valueType = output.type;
                 return;
             }
-        } else {
-            const input = component.inputs.find(
-                input => input.name == node.name
-            );
-            if (input) {
-                node.valueType = input.type;
-                return;
-            }
+        }
+
+        const input = component.inputs.find(input => input.name == node.name);
+        if (input) {
+            node.valueType = input.type;
+            return;
         }
 
         const flow = ProjectEditor.getFlow(component);
@@ -955,17 +953,17 @@ function buildExpressionNode(
             if (outputIndex != -1) {
                 return [makePushOutputInstruction(outputIndex)];
             }
-        } else {
-            const componentInputIndex = component.buildInputs.findIndex(
-                input => input.name == node.name
+        }
+
+        const componentInputIndex = component.buildInputs.findIndex(
+            input => input.name == node.name
+        );
+        if (componentInputIndex != -1) {
+            const inputIndex = assets.getComponentInputIndex(
+                component,
+                node.name
             );
-            if (componentInputIndex != -1) {
-                const inputIndex = assets.getComponentInputIndex(
-                    component,
-                    node.name
-                );
-                return [makePushInputInstruction(inputIndex)];
-            }
+            return [makePushInputInstruction(inputIndex)];
         }
 
         const flow = ProjectEditor.getFlow(component);

@@ -132,53 +132,71 @@ export function buildVariableFlowValue(
 }
 
 function buildFlowValue(dataBuffer: DataBuffer, flowValue: FlowValue) {
-    dataBuffer.writeUint8(flowValue.type); // type_
-    dataBuffer.writeUint8(0); // unit_
-    dataBuffer.writeUint16(0); // options_
-    dataBuffer.writeUint32(0); // reserved_
-    // union
-    if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
-        dataBuffer.writeUint32(flowValue.value);
+    if (flowValue.value === undefined) {
+        dataBuffer.writeUint8(FLOW_VALUE_TYPE_UNDEFINED); // type_
+        dataBuffer.writeUint8(0); // unit_
+        dataBuffer.writeUint16(0); // options_
+        dataBuffer.writeUint32(0); // reserved_
         dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_INT32) {
-        dataBuffer.writeInt32(flowValue.value);
         dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
-        dataBuffer.writeFloat(flowValue.value);
+    } else if (flowValue.value === null) {
+        dataBuffer.writeUint8(FLOW_VALUE_TYPE_NULL); // type_
+        dataBuffer.writeUint8(0); // unit_
+        dataBuffer.writeUint16(0); // options_
+        dataBuffer.writeUint32(0); // reserved_
         dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_DOUBLE) {
-        dataBuffer.writeDouble(flowValue.value);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
-        dataBuffer.writeObjectOffset(() => {
-            dataBuffer.writeString(flowValue.value);
-        });
-        dataBuffer.writeUint32(0);
-    } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY) {
-        dataBuffer.writeObjectOffset(() => {
-            let elements: FlowValue[];
-            if (Array.isArray(flowValue.value)) {
-                elements = flowValue.value.map((element: any) => ({
-                    type: getConstantFlowValueType(element),
-                    value: element
-                }));
-            } else {
-                elements = [];
-                const sortedKeys = Object.keys(flowValue.value).sort();
-                for (const key of sortedKeys) {
-                    const element = flowValue.value[key];
-                    elements.push({
-                        type: getConstantFlowValueType(element),
-                        value: element
-                    });
-                }
-            }
-
-            dataBuffer.writeUint32(elements.length); // arraySize
-            dataBuffer.writeUint32(0); // reserved
-            elements.forEach(element => buildFlowValue(dataBuffer, element));
-        }, 8);
         dataBuffer.writeUint32(0);
     } else {
-        dataBuffer.writeUint64(0);
+        dataBuffer.writeUint8(flowValue.type); // type_
+        dataBuffer.writeUint8(0); // unit_
+        dataBuffer.writeUint16(0); // options_
+        dataBuffer.writeUint32(0); // reserved_
+        // union
+        if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
+            dataBuffer.writeUint32(flowValue.value);
+            dataBuffer.writeUint32(0);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_INT32) {
+            dataBuffer.writeInt32(flowValue.value);
+            dataBuffer.writeUint32(0);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
+            dataBuffer.writeFloat(flowValue.value);
+            dataBuffer.writeUint32(0);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_DOUBLE) {
+            dataBuffer.writeDouble(flowValue.value);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_STRING) {
+            dataBuffer.writeObjectOffset(() => {
+                dataBuffer.writeString(flowValue.value);
+            });
+            dataBuffer.writeUint32(0);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY) {
+            dataBuffer.writeObjectOffset(() => {
+                let elements: FlowValue[];
+                if (Array.isArray(flowValue.value)) {
+                    elements = flowValue.value.map((element: any) => ({
+                        type: getConstantFlowValueType(element),
+                        value: element
+                    }));
+                } else {
+                    elements = [];
+                    const sortedKeys = Object.keys(flowValue.value).sort();
+                    for (const key of sortedKeys) {
+                        const element = flowValue.value[key];
+                        elements.push({
+                            type: getConstantFlowValueType(element),
+                            value: element
+                        });
+                    }
+                }
+
+                dataBuffer.writeUint32(elements.length); // arraySize
+                dataBuffer.writeUint32(0); // reserved
+                elements.forEach(element =>
+                    buildFlowValue(dataBuffer, element)
+                );
+            }, 8);
+            dataBuffer.writeUint32(0);
+        } else {
+            dataBuffer.writeUint64(0);
+        }
     }
 }
