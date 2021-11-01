@@ -9,8 +9,6 @@ import {
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
-import { store as instrumentsStore } from "instrument/instrument-object";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface INotebook {
@@ -141,9 +139,7 @@ export function insertSource(
 export function insertSourceFromInstrumentId(instrumentId: string) {
     try {
         let result = db
-            .prepare(
-                `SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`
-            )
+            .prepare(`SELECT * FROM "instrument" WHERE id = ?`)
             .get([instrumentId]);
 
         if (result && result.id) {

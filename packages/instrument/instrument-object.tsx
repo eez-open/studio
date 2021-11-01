@@ -16,7 +16,7 @@ import {
 import { activityLogStore, log } from "eez-studio-shared/activity-log";
 import { objectEqual } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
-import { IUnit } from "eez-studio-shared/units";
+import type { IUnit } from "eez-studio-shared/units";
 import { db } from "eez-studio-shared/db-path";
 import { _defer } from "eez-studio-shared/algorithm";
 
@@ -174,27 +174,25 @@ export class InstrumentObject {
         if (this.instrumentExtensionId) {
             if (!this._loadingExtension) {
                 this._loadingExtension = true;
-                _defer(() => {
-                    loadExtensionById(this.instrumentExtensionId)
-                        .then(
-                            action((extension: IExtension) => {
-                                this._loadingExtension = false;
-                                this._extension = extension;
-                            })
-                        )
-                        .catch(
-                            action(() => {
-                                this._loadingExtension = false;
-                                this._extension = Object.assign(
-                                    {},
-                                    UNKNOWN_INSTRUMENT_EXTENSION,
-                                    {
-                                        id: this.instrumentExtensionId
-                                    }
-                                );
-                            })
-                        );
-                });
+                loadExtensionById(this.instrumentExtensionId)
+                    .then(
+                        action((extension: IExtension) => {
+                            this._loadingExtension = false;
+                            this._extension = extension;
+                        })
+                    )
+                    .catch(
+                        action(() => {
+                            this._loadingExtension = false;
+                            this._extension = Object.assign(
+                                {},
+                                UNKNOWN_INSTRUMENT_EXTENSION,
+                                {
+                                    id: this.instrumentExtensionId
+                                }
+                            );
+                        })
+                    );
             }
 
             return undefined;
@@ -1095,6 +1093,13 @@ export const instrumentStore = store;
 const instrumentCollection = createStoreObjectsCollection<InstrumentObject>();
 store.watch(instrumentCollection);
 export const instruments = instrumentCollection.objects;
+
+export function createInstrument(extension: IExtension): string {
+    return instrumentStore.createObject({
+        instrumentExtensionId: extension.id,
+        autoConnect: false
+    });
+}
 
 export function changeGroupNameInInstruments(
     oldName: string,

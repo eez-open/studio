@@ -2,7 +2,6 @@ import { computed, values } from "mobx";
 
 import type {
     IExtensionDefinition,
-    IExtension,
     IExtensionProperties,
     IExtensionHost
 } from "eez-studio-shared/extensions/extension";
@@ -11,7 +10,6 @@ import { isRenderer } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 
 import { loadInstrumentExtension } from "instrument/import";
-import { instrumentStore } from "instrument/instrument-object";
 import type { IInstrumentProperties } from "instrument/export";
 
 import type * as ConnectionModule from "instrument/connection/connection-main";
@@ -37,13 +35,6 @@ export const instrumentExtensions = computed(() => {
             stringCompare(a.displayName || a.name, b.displayName || b.name)
         );
 });
-
-export function createInstrument(extension: IExtension): string {
-    return instrumentStore.createObject({
-        instrumentExtensionId: extension.id,
-        autoConnect: false
-    });
-}
 
 const instrumentExtension: IExtensionDefinition = {
     preInstalled: true,
