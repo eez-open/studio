@@ -239,8 +239,6 @@ export class GetListOperation extends ListOperation {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class SendListOperation extends ListOperation {
-    dataReceived: string;
-
     isQuery = false;
 
     constructor(

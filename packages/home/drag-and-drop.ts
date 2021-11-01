@@ -35,7 +35,8 @@ export function handleDragAndDrop() {
 
             const files = dt.files;
 
-            for (const file of files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
                 for (const extension of extensions) {
                     const handleDragAndDropFile =
                         extension[1].handleDragAndDropFile;

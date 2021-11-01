@@ -1329,6 +1329,8 @@ export class ListAdapter implements ITreeAdapter {
         protected searchText?: string,
         protected filter?: (object: IEezObject) => boolean
     ) {
+        this.parentItem = new ListItem(this.object);
+
         this.onDoubleClickCallback = onDoubleClick;
 
         const DocumentStore = getDocumentStore(this.object);
@@ -1358,7 +1360,7 @@ export class ListAdapter implements ITreeAdapter {
 
     onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
-    parentItem = new ListItem(this.object);
+    parentItem: ListItem;
 
     @computed
     get items() {

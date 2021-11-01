@@ -795,15 +795,7 @@ interface IHistoryOptions {
 }
 
 export class History {
-    options: IHistoryOptions = Object.assign(
-        {
-            isDeletedItemsHistory: false,
-            store: activityLogStore,
-            isSessionsSupported: true,
-            loadAtStart: true
-        },
-        this.optionsArg
-    );
+    options: IHistoryOptions;
 
     loaded = false;
 
@@ -828,6 +820,16 @@ export class History {
         public appStore: IAppStore,
         private optionsArg?: Partial<IHistoryOptions>
     ) {
+        this.options = Object.assign(
+            {
+                isDeletedItemsHistory: false,
+                store: activityLogStore,
+                isSessionsSupported: true,
+                loadAtStart: true
+            },
+            this.optionsArg
+        );
+
         if (this.isSessionsSupported) {
             this.sessions = new HistorySessions(this);
         }
