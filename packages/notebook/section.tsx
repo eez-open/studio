@@ -306,7 +306,17 @@ class MasterView extends React.Component {
 ////////////////////////////////////////////////////////////////////////////////
 
 class AppStore implements IAppStore {
-    constructor(public notebookId: string) {}
+    constructor(public notebookId: string) {
+        this.history = new History(this, {
+            store: itemsStore,
+            isSessionsSupported: false,
+            oid: this.notebookId
+        });
+        this.deletedItemsHistory = new DeletedItemsHistory(this, {
+            store: itemsStore,
+            oid: this.notebookId
+        });
+    }
 
     @observable selectHistoryItemsSpecification:
         | SelectHistoryItemsSpecification
@@ -334,15 +344,8 @@ class AppStore implements IAppStore {
 
     filters: Filters = new Filters();
 
-    history: History = new History(this, {
-        store: itemsStore,
-        isSessionsSupported: false,
-        oid: this.notebookId
-    });
-    deletedItemsHistory: DeletedItemsHistory = new DeletedItemsHistory(this, {
-        store: itemsStore,
-        oid: this.notebookId
-    });
+    history: History;
+    deletedItemsHistory: DeletedItemsHistory;
 
     isHistoryItemSelected(id: string): boolean {
         return this.selectedHistoryItems.has(id);

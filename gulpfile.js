@@ -1,5 +1,5 @@
 const gulp = require("gulp");
-const uglify = require("gulp-uglify-es").default;
+const terser = require("gulp-terser");
 const pump = require("pump");
 
 const SRC = "packages";
@@ -26,7 +26,7 @@ gulp.task("copy", function () {
 
 // minify all *.js files in DST
 gulp.task("minify", function (cb) {
-    pump([gulp.src(DST + "/**/*.js"), uglify(), gulp.dest(DST)], cb);
+    pump([gulp.src(DST + "/**/*.js"), terser(), gulp.dest(DST)], cb);
 });
 
 gulp.task("release", gulp.series("copy", "minify"));
