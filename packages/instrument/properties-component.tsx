@@ -1,13 +1,27 @@
 import React from "react";
-import { observable, action, toJS } from "mobx";
+import { observable, action, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
-import { changeExtensionProperties } from "eez-studio-shared/extensions/extensions";
+import {
+    readJsObjectFromFile,
+    writeJsObjectToFile
+} from "eez-studio-shared/util-electron";
+import { getExtensionFolderPath } from "eez-studio-shared/extensions/extension-folder";
+
 import { PropertyList } from "eez-studio-ui/properties";
 import { CodeEditorProperty } from "eez-studio-ui/code-editor";
+import * as notification from "eez-studio-ui/notification";
 
-import type { IExtension } from "eez-studio-shared/extensions/extension";
+import type {
+    IExtension,
+    IExtensionProperties
+} from "eez-studio-shared/extensions/extension";
 import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
+import {
+    ExtensionChangeEvent,
+    notifySource
+} from "eez-studio-shared/extensions/extensions";
+import { sendMessage } from "eez-studio-shared/notify";
 
 interface PropertiesComponentProps {
     extension: IExtension;
@@ -93,4 +107,33 @@ export class PropertiesComponent extends React.Component<
 
 export function renderPropertiesComponent(extension: IExtension) {
     return <PropertiesComponent extension={extension} />;
+}
+
+async function changeExtensionProperties(
+    extension: IExtension,
+    properties: IExtensionProperties
+) {
+    let extensionFolderPath = getExtensionFolderPath(extension.id);
+
+    let packageJsonFilePath = extensionFolderPath + "/package.json";
+
+    try {
+        let packageJs = await readJsObjectFromFile(packageJsonFilePath);
+        packageJs["eez-studio"] = properties;
+        await writeJsObjectToFile(packageJsonFilePath, packageJs);
+    } catch (err) {
+        notification.error(err);
+        return;
+    }
+
+    runInAction(() => {
+        extension.properties = properties;
+        extension.isDirty = true;
+    });
+
+    let extensionChange: ExtensionChangeEvent = {
+        id: extension.id,
+        properties: properties
+    };
+    sendMessage(notifySource, extensionChange);
 }

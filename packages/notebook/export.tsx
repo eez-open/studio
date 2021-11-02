@@ -21,9 +21,8 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import { validators } from "eez-studio-shared/validation";
 
-import { IActivityLogController } from "eez-studio-shared/extensions/extension";
+import type { IActivityLogController } from "eez-studio-shared/extensions/extension";
 
-import { store as instrumentsStore } from "instrument/instrument-object";
 import {
     getReferencedItemIds,
     remapReferencedItemIds
@@ -71,9 +70,7 @@ function getExternalSourceDescription(
     if (store === activityLogStore) {
         try {
             let result = db
-                .prepare(
-                    `SELECT * FROM "${instrumentsStore.storeName}" WHERE id = ?`
-                )
+                .prepare(`SELECT * FROM "instrument" WHERE id = ?`)
                 .get([item.oid]);
 
             if (result && result.id) {

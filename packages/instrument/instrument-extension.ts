@@ -20,6 +20,8 @@ import type * as InstrumentAppStoreModule from "instrument/window/app-store";
 import type * as ScriptsModule from "instrument/window/scripts";
 import type * as DlogModule from "instrument/window/waveform/dlog";
 
+import "instrument/instrument-object";
+
 if (!isRenderer()) {
     createInstrumentListStore(null);
 }

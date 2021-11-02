@@ -1,4 +1,4 @@
-import { observable, action, runInAction } from "mobx";
+import { observable, action } from "mobx";
 const EventEmitter = require("events");
 const fs = require("fs");
 const path = require("path");
@@ -13,7 +13,6 @@ import {
     removeFolder,
     renameFile,
     readFolder,
-    writeJsObjectToFile,
     makeFolder,
     isRenderer
 } from "eez-studio-shared/util-electron";
@@ -23,7 +22,6 @@ import { _difference } from "eez-studio-shared/algorithm";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 
-import * as notification from "eez-studio-ui/notification";
 import { confirm } from "eez-studio-ui/dialog-electron";
 
 import {
@@ -595,12 +593,12 @@ export async function uninstallExtension(extensionId: string) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let notifySource = {
+export let notifySource = {
     id: "shared/extension"
 };
 registerSource(notifySource);
 
-interface ExtensionChangeEvent {
+export interface ExtensionChangeEvent {
     id: string;
     image?: string;
     properties?: IExtensionProperties;
@@ -643,35 +641,6 @@ export async function changeExtensionImage(
     let extensionChange: ExtensionChangeEvent = {
         id: extension.id,
         image: image
-    };
-    sendMessage(notifySource, extensionChange);
-}
-
-export async function changeExtensionProperties(
-    extension: IExtension,
-    properties: IExtensionProperties
-) {
-    let extensionFolderPath = getExtensionFolderPath(extension.id);
-
-    let packageJsonFilePath = extensionFolderPath + "/package.json";
-
-    try {
-        let packageJs = await readJsObjectFromFile(packageJsonFilePath);
-        packageJs["eez-studio"] = properties;
-        await writeJsObjectToFile(packageJsonFilePath, packageJs);
-    } catch (err) {
-        notification.error(err);
-        return;
-    }
-
-    runInAction(() => {
-        extension.properties = properties;
-        extension.isDirty = true;
-    });
-
-    let extensionChange: ExtensionChangeEvent = {
-        id: extension.id,
-        properties: properties
     };
     sendMessage(notifySource, extensionChange);
 }

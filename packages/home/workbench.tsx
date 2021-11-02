@@ -10,6 +10,7 @@ import {
 import { Splitter } from "eez-studio-ui/splitter";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
+import { Icon } from "eez-studio-ui/icon";
 
 import type * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
 import type * as DeletedInstrumentsDialogModule from "instrument/deleted-instruments-dialog";
@@ -26,6 +27,10 @@ const { Menu, MenuItem } = EEZStudio.remote;
 
 import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { instrumentStore } from "instrument/instrument-object";
+import {
+    InstrumentDetails,
+    installExtension
+} from "instrument/instrument-object-details";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,8 +137,25 @@ class WorkbenchDocument {
         if (instruments.length === 1) {
             const instrument = instruments[0];
 
-            if (instrument.addToContextMenu) {
-                instrument.addToContextMenu(menu);
+            if (instrument.isUnknownExtension) {
+                const { MenuItem } = EEZStudio.remote;
+
+                if (menu.items.length > 0) {
+                    menu.append(
+                        new MenuItem({
+                            type: "separator"
+                        })
+                    );
+                }
+
+                menu.append(
+                    new MenuItem({
+                        label: "Install Extension",
+                        click: () => {
+                            installExtension(instrument);
+                        }
+                    })
+                );
             }
 
             if (menu.items.length > 0) {
@@ -278,6 +300,8 @@ export class Properties extends React.Component<{
             </div>
         );
 
+        const instrument = instruments.get(this.props.selectedInstrumentId);
+
         return (
             <Splitter
                 type="vertical"
@@ -285,7 +309,9 @@ export class Properties extends React.Component<{
                 persistId={"home/designer/properties/splitter"}
             >
                 <div className="EezStudio_InstrumentDetailsEnclosure">
-                    {instruments.get(this.props.selectedInstrumentId)?.details}
+                    {instrument && (
+                        <InstrumentDetails instrument={instrument} />
+                    )}
                 </div>
                 {history}
             </Splitter>
@@ -341,7 +367,7 @@ class InstrumentComponent extends React.Component<
                     contextMenu.popup({});
                 }}
             >
-                {instrument.content}
+                <InstrumentContent instrument={instrument} />
             </div>
         );
     }
@@ -367,6 +393,38 @@ export class WorkbenchDocumentComponent extends React.Component<{
                             selectInstrument={this.props.selectInstrument}
                         />
                     ))}
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class InstrumentContent extends React.Component<{
+    instrument: InstrumentObject;
+}> {
+    render() {
+        const { instrument } = this.props;
+        return (
+            <div className="EezStudio_InstrumentContent">
+                {instrument.image && (
+                    <img src={instrument.image} draggable={false} />
+                )}
+                <div className="EezStudio_InstrumentLabel">
+                    {instrument.name}
+                </div>
+                <div className="EezStudio_InstrumentConnectionState">
+                    <span
+                        style={{
+                            backgroundColor: instrument.connectionState.color
+                        }}
+                    />
+                    <span>{instrument.connectionState.label}</span>
+                    {instrument.connectionState.error && (
+                        <Icon className="text-danger" icon="material:error" />
+                    )}
+                </div>
             </div>
         );
     }

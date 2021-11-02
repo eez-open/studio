@@ -13,6 +13,7 @@ import { ListContainer, List, IListNode, ListItem } from "eez-studio-ui/list";
 import { ButtonAction } from "eez-studio-ui/action";
 
 import { InstrumentObject, store } from "instrument/instrument-object";
+import { db } from "eez-studio-shared/db-path";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +34,20 @@ class DeletedInstrumentsDialog extends React.Component<{
 
     renderNode = (node: IListNode) => {
         let instrument = node.data as InstrumentObject;
+
+        let creationDate;
+        try {
+            const result = db
+                .prepare(
+                    `SELECT * FROM "activityLog" WHERE oid=? AND type='instrument/created'`
+                )
+                .get(instrument.id);
+            creationDate = new Date(Number(result.date));
+        } catch (err) {
+            console.error(err);
+            creationDate = null;
+        }
+
         return (
             <ListItem
                 leftIcon={instrument.image}
@@ -42,10 +57,8 @@ class DeletedInstrumentsDialog extends React.Component<{
                         <div>{instrument.name}</div>
                         <div>
                             {"Creation date: " +
-                                (instrument.creationDate
-                                    ? formatDateTimeLong(
-                                          instrument.creationDate
-                                      )
+                                (creationDate
+                                    ? formatDateTimeLong(creationDate)
                                     : "unknown")}
                         </div>
                         <div style={{ display: "flex" }}>

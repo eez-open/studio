@@ -57,13 +57,17 @@ export class CommandsTree {
     }
 
     async load(extensionId: string) {
-        let { enums, commands } = await loadCommands(extensionId);
+        try {
+            let { enums, commands } = await loadCommands(extensionId);
 
-        this.enums = enums;
+            this.enums = enums;
 
-        runInAction(() => {
-            this.children = this.transform(commandsToTree(commands).nodes);
-        });
+            runInAction(() => {
+                this.children = this.transform(commandsToTree(commands).nodes);
+            });
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     findCommandInNode(

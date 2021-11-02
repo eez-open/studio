@@ -1,4 +1,3 @@
-import React from "react";
 import { observable, computed, action, runInAction, toJS, autorun } from "mobx";
 
 import {
@@ -20,12 +19,7 @@ import type { IUnit } from "eez-studio-shared/units";
 import { db } from "eez-studio-shared/db-path";
 import { _defer } from "eez-studio-shared/algorithm";
 
-import * as notification from "eez-studio-ui/notification";
-
 import type * as MainWindowModule from "main/window";
-
-import type * as ExtensionMangerModule from "home/extensions-manager/extensions-manager";
-import type * as CatalogModule from "home/extensions-manager/catalog";
 
 import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";
@@ -37,7 +31,6 @@ import type { ConnectionParameters } from "instrument/connection/interface";
 import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 import type { IFileUploadInstructions } from "instrument/connection/file-upload";
 
-import type * as UiPropertiesModule from "eez-studio-ui/properties";
 import type * as AppStoreModule from "instrument/window/app-store";
 import type * as Bb3Module from "instrument/bb3";
 import { CommandsTree, getCommandsTree } from "./window/terminal/commands-tree";
@@ -522,70 +515,6 @@ export class InstrumentObject {
         }
     }
 
-    get connectionParametersDetails() {
-        const { PropertyList, StaticProperty } =
-            require("eez-studio-ui/properties") as typeof UiPropertiesModule;
-
-        if (this.lastConnection) {
-            if (this.lastConnection.type === "ethernet") {
-                return (
-                    <PropertyList>
-                        <StaticProperty name="Interface" value="Ethernet" />
-                        <StaticProperty
-                            name="Server address"
-                            value={
-                                this.lastConnection.ethernetParameters.address
-                            }
-                        />
-                        <StaticProperty
-                            name="Port"
-                            value={this.lastConnection.ethernetParameters.port.toString()}
-                        />
-                    </PropertyList>
-                );
-            } else if (this.lastConnection.type === "serial") {
-                return (
-                    <PropertyList>
-                        <StaticProperty name="Interface" value="Serial" />
-                        <StaticProperty
-                            name="Port"
-                            value={this.lastConnection.serialParameters.port}
-                        />
-                        <StaticProperty
-                            name="Baud rate"
-                            value={this.lastConnection.serialParameters.baudRate.toString()}
-                        />
-                    </PropertyList>
-                );
-            } else if (this.lastConnection.type === "usbtmc") {
-                return (
-                    <PropertyList>
-                        <StaticProperty name="Interface" value="USBTMC" />
-                        <StaticProperty
-                            name="Vendor ID"
-                            value={
-                                "0x" +
-                                this.lastConnection.usbtmcParameters.idVendor.toString(
-                                    16
-                                )
-                            }
-                        />
-                        <StaticProperty
-                            name="Product ID"
-                            value={
-                                "0x" +
-                                this.lastConnection.usbtmcParameters.idProduct.toString(
-                                    16
-                                )
-                            }
-                        />
-                    </PropertyList>
-                );
-            }
-        }
-        return null;
-    }
-
     get image() {
         return this.extension && this.extension.image;
     }
@@ -599,59 +528,6 @@ export class InstrumentObject {
                 (this.extension.displayName || this.extension.name)) ||
             ""
         );
-    }
-
-    @computed
-    get content() {
-        const { Icon } = require("eez-studio-ui/icon");
-
-        return (
-            <div className="EezStudio_InstrumentContent">
-                {this.image && <img src={this.image} draggable={false} />}
-                <div className="EezStudio_InstrumentLabel">{this.name}</div>
-                <div className="EezStudio_InstrumentConnectionState">
-                    <span
-                        style={{
-                            backgroundColor: this.connectionState.color
-                        }}
-                    />
-                    <span>{this.connectionState.label}</span>
-                    {this.connectionState.error && (
-                        <Icon className="text-danger" icon="material:error" />
-                    )}
-                </div>
-            </div>
-        );
-    }
-
-    get creationDate() {
-        if (this._creationDate === undefined) {
-            let result;
-            try {
-                result = db
-                    .prepare(
-                        `SELECT * FROM "activityLog" WHERE oid=? AND type='instrument/created'`
-                    )
-                    .get(this.id);
-            } catch (err) {
-                console.error(err);
-            }
-            if (result) {
-                this._creationDate = new Date(Number(result.date));
-            } else {
-                this._creationDate = null;
-            }
-        }
-
-        return this._creationDate;
-    }
-
-    @computed
-    get details() {
-        const {
-            InstrumentDetails
-        } = require("instrument/instrument-object-details");
-        return <InstrumentDetails instrument={this} />;
     }
 
     afterCreate() {
@@ -840,56 +716,6 @@ export class InstrumentObject {
             { deletePermanently: true }
         );
         store.deleteObject(this, { deletePermanently: true });
-    }
-
-    async installExtension() {
-        const { extensionsCatalog } =
-            require("home/extensions-manager/catalog") as typeof CatalogModule;
-
-        const extension = extensionsCatalog.catalog.find(
-            extension => extension.id === this.extension!.id
-        );
-        if (extension) {
-            const progressToastId = notification.info("Installing...", {
-                autoClose: false
-            });
-
-            const { downloadAndInstallExtension } =
-                require("home/extensions-manager/extensions-manager") as typeof ExtensionMangerModule;
-
-            await downloadAndInstallExtension(extension, progressToastId);
-
-            notification.update(progressToastId, {
-                render: "Extensions successfully installed!",
-                type: notification.SUCCESS,
-                autoClose: 500
-            });
-        } else {
-            notification.error("Instrument extension not found!");
-        }
-    }
-
-    addToContextMenu(menu: Electron.Menu) {
-        if (this.isUnknownExtension) {
-            const { MenuItem } = EEZStudio.remote;
-
-            if (menu.items.length > 0) {
-                menu.append(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
-            }
-
-            menu.append(
-                new MenuItem({
-                    label: "Install Extension",
-                    click: () => {
-                        this.installExtension();
-                    }
-                })
-            );
-        }
     }
 
     getQueryResponseType(query: string) {
