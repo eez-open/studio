@@ -716,13 +716,20 @@ export class WatchVariableActionComponent extends ActionComponent {
             },
             {
                 name: "variable",
-                displayName: (component: WatchVariableActionComponent) =>
-                    component.variable,
+                displayName: "changed",
                 type: "any",
                 isSequenceOutput: false,
                 isOptionalOutput: false
             }
         ];
+    }
+
+    getBody() {
+        return (
+            <div className="body">
+                <pre>{this.variable}</pre>
+            </div>
+        );
     }
 
     async execute(
@@ -752,7 +759,17 @@ export class WatchVariableActionComponent extends ActionComponent {
         }
 
         return reaction(
-            () => flowState.evalExpression(this, this.variable),
+            () => {
+                try {
+                    return flowState.evalExpression(this, this.variable);
+                } catch (err) {
+                    if (err instanceof ExpressionEvalError) {
+                        return undefined;
+                    } else {
+                        throw err;
+                    }
+                }
+            },
             value => {
                 if (value !== lastValue) {
                     lastValue = value;

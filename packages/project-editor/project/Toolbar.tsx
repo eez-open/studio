@@ -6,9 +6,13 @@ import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { BuildConfiguration } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
-import { getObjectTypeClassFromType } from "project-editor/features/variable/value-type";
+import {
+    getObjectVariableTypeFromType,
+    IObjectVariableValue
+} from "project-editor/features/variable/value-type";
 import { PageTabState } from "project-editor/features/page/PagesNavigation";
 import { objectToString } from "project-editor/core/store";
+import { RenderVariableStatus } from "project-editor/features/variable/variable";
 
 @observer
 export class Toolbar extends React.Component {
@@ -42,13 +46,35 @@ class GlobalVariableStatuses extends React.Component {
         let globalVariablesStatus: React.ReactNode[] = [];
 
         for (const variable of this.context.project.variables.globalVariables) {
-            const aClass = getObjectTypeClassFromType(variable.type);
-            if (aClass && aClass.classInfo.renderObjectVariableStatus) {
+            const objectVariableType = getObjectVariableTypeFromType(
+                variable.type
+            );
+            if (objectVariableType) {
+                const objectVariableValue: IObjectVariableValue | undefined =
+                    this.context.dataContext.get(variable.name);
+
                 globalVariablesStatus.push(
-                    aClass.classInfo.renderObjectVariableStatus(
-                        variable,
-                        this.context.dataContext
-                    )
+                    <RenderVariableStatus
+                        key={variable.name}
+                        variable={variable}
+                        value={objectVariableValue}
+                        onClick={async () => {
+                            const constructorParams =
+                                await objectVariableType.editConstructorParams(
+                                    variable,
+                                    objectVariableValue?.constructorParams ??
+                                        null
+                                );
+                            if (constructorParams !== undefined) {
+                                this.context.dataContext.set(
+                                    variable.name,
+                                    objectVariableType.constructorFunction(
+                                        constructorParams
+                                    )
+                                );
+                            }
+                        }}
+                    />
                 );
             }
         }

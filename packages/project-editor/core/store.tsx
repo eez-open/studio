@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import React from "react";
 import * as mobx from "mobx";
 import {
@@ -76,6 +77,8 @@ import type { RuntimeBase } from "project-editor/flow/runtime";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import type { Project } from "project-editor/project/project";
+import type { IObjectVariableValue } from "project-editor/features/variable/value-type";
+import { IVariable } from "project-editor/flow/flow-interfaces";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -700,45 +703,72 @@ class UIStateStore {
         });
     }
 
-    @action
-    load(uiState: any) {
-        this.viewOptions.load(uiState.viewOptions);
+    getUIStateFilePath() {
+        if (this.DocumentStore.filePath) {
+            return this.DocumentStore.filePath + "-ui-state";
+        }
+        return undefined;
+    }
 
-        this.DocumentStore.navigationStore.loadNavigationMap(
-            uiState.navigationMap
-        );
-        this.DocumentStore.navigationStore.loadSettingsNavigationState(
-            uiState.settingsNavigationState
-        );
+    async load() {
+        const filePath = this.getUIStateFilePath();
+        if (!filePath) {
+            return;
+        }
 
-        this.loadObjects(uiState.objects);
+        let uiState: any = {};
+        try {
+            const data = await fs.promises.readFile(filePath, "utf8");
+            try {
+                uiState = JSON.parse(data);
+            } catch (err) {
+                console.error(err);
+            }
+        } catch (err) {}
 
-        this.DocumentStore.editorsStore.load(uiState.editors);
+        runInAction(() => {
+            this.viewOptions.load(uiState.viewOptions);
 
-        this.selectedBuildConfiguration =
-            uiState.selectedBuildConfiguration || "Default";
-        this.features = observable(uiState.features || {});
-        this.activeOutputSection =
-            uiState.activeOutputSection ?? Section.CHECKS;
-        this.pageEditorFrontFace = uiState.pageEditorFrontFace;
-        this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
+            this.DocumentStore.navigationStore.loadNavigationMap(
+                uiState.navigationMap
+            );
+            this.DocumentStore.navigationStore.loadSettingsNavigationState(
+                uiState.settingsNavigationState
+            );
 
-        if (uiState.breakpoints) {
-            for (const key in uiState.breakpoints) {
-                const component = this.DocumentStore.getObjectFromStringPath(
-                    key
-                ) as Component;
-                if (component) {
-                    this.breakpoints.set(component, uiState.breakpoints[key]);
+            this.loadObjects(uiState.objects);
+
+            this.DocumentStore.editorsStore.load(uiState.editors);
+
+            this.selectedBuildConfiguration =
+                uiState.selectedBuildConfiguration || "Default";
+            this.features = observable(uiState.features || {});
+            this.activeOutputSection =
+                uiState.activeOutputSection ?? Section.CHECKS;
+            this.pageEditorFrontFace = uiState.pageEditorFrontFace;
+            this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
+
+            if (uiState.breakpoints) {
+                for (const key in uiState.breakpoints) {
+                    const component =
+                        this.DocumentStore.getObjectFromStringPath(
+                            key
+                        ) as Component;
+                    if (component) {
+                        this.breakpoints.set(
+                            component,
+                            uiState.breakpoints[key]
+                        );
+                    }
                 }
             }
-        }
 
-        if (uiState.watchExpressions) {
-            this.watchExpressions = uiState.watchExpressions;
-        } else {
-            this.watchExpressions = [];
-        }
+            if (uiState.watchExpressions) {
+                this.watchExpressions = uiState.watchExpressions;
+            } else {
+                this.watchExpressions = [];
+            }
+        });
     }
 
     get featuresJS() {
@@ -788,6 +818,23 @@ class UIStateStore {
         state.objects = this.objectsJS;
 
         return state;
+    }
+
+    async save() {
+        const filePath = this.getUIStateFilePath();
+        if (!filePath) {
+            return;
+        }
+
+        try {
+            await fs.promises.writeFile(
+                filePath,
+                JSON.stringify(this.toJS, undefined, 2),
+                "utf8"
+            );
+        } catch (err) {
+            notification.error("Failed to save UI state: " + err);
+        }
     }
 
     @action
@@ -885,6 +932,132 @@ class UIStateStore {
     // WATCH EXPRESSIONS
 
     @observable watchExpressions: string[] = [];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class RuntimeSettings {
+    @observable settings: any = {};
+
+    constructor(public DocumentStore: DocumentStoreClass) {}
+
+    getObjectVariableValue(variable: IVariable) {
+        const objectVariableType = ProjectEditor.getObjectVariableTypeFromType(
+            variable.type
+        );
+        if (!objectVariableType) {
+            return undefined;
+        }
+
+        const persistentVariables: any =
+            this.settings.__persistentVariables || {};
+
+        let constructorParams = persistentVariables[variable.name];
+        if (constructorParams == null) {
+            return undefined;
+        }
+
+        return objectVariableType.constructorFunction(constructorParams);
+    }
+
+    setObjectVariableConstructorParams(
+        variable: IVariable,
+        constructorParams: any
+    ) {
+        runInAction(() => {
+            if (!this.settings.__persistentVariables) {
+                this.settings.__persistentVariables = {};
+            }
+            this.settings.__persistentVariables[variable.name] =
+                constructorParams;
+        });
+    }
+
+    async loadPersistentVariables() {
+        const DocumentStore = this.DocumentStore;
+        const globalVariables = DocumentStore.project.variables.globalVariables;
+        const dataContext = DocumentStore.dataContext;
+        for (const variable of globalVariables) {
+            if (variable.persistent) {
+                const value = this.getObjectVariableValue(variable);
+                dataContext.set(variable.name, value);
+            }
+        }
+    }
+
+    async savePersistentVariables() {
+        const globalVariables =
+            this.DocumentStore.project.variables.globalVariables;
+        for (const variable of globalVariables) {
+            if (variable.persistent) {
+                const value = this.DocumentStore.dataContext.get(variable.name);
+                if (value != null) {
+                    const objectVariableType =
+                        ProjectEditor.getObjectVariableTypeFromType(
+                            variable.type
+                        );
+                    if (objectVariableType) {
+                        const objectVariableValue:
+                            | IObjectVariableValue
+                            | undefined = this.DocumentStore.dataContext.get(
+                            variable.name
+                        );
+
+                        const constructorParams =
+                            objectVariableValue?.constructorParams ?? null;
+
+                        this.setObjectVariableConstructorParams(
+                            variable,
+                            constructorParams
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    getSettingsFilePath() {
+        if (this.DocumentStore.filePath) {
+            return this.DocumentStore.filePath + "-runtime-settings";
+        }
+        return undefined;
+    }
+
+    async load() {
+        const filePath = this.getSettingsFilePath();
+        if (!filePath) {
+            return;
+        }
+
+        try {
+            const data = await fs.promises.readFile(filePath, "utf8");
+            runInAction(() => {
+                try {
+                    this.settings = JSON.parse(data);
+                } catch (err) {
+                    console.error(err);
+                    this.settings = {};
+                }
+            });
+        } catch (err) {}
+    }
+
+    async save() {
+        const filePath = this.getSettingsFilePath();
+        if (!filePath) {
+            return;
+        }
+
+        try {
+            await fs.promises.writeFile(
+                filePath,
+                JSON.stringify(toJS(this.settings), undefined, "  "),
+                "utf8"
+            );
+        } catch (err) {
+            notification.error("Failed to save runtime settings: " + err);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1034,10 +1207,6 @@ export class UndoManager {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getUIStateFilePath(projectFilePath: string) {
-    return projectFilePath + "-ui-state";
-}
-
 export async function load(
     DocumentStore: DocumentStoreClass,
     filePath: string
@@ -1089,7 +1258,6 @@ export function save(DocumentStore: DocumentStoreClass, filePath: string) {
     DocumentStore.project._DocumentStore = DocumentStore;
 
     return new Promise<void>((resolve, reject) => {
-        const fs = EEZStudio.remote.require("fs");
         fs.writeFile(filePath, json, "utf8", (err: any) => {
             if (err) {
                 reject(err);
@@ -1395,6 +1563,7 @@ export class DocumentStoreClass {
     navigationStore = new NavigationStore(this);
     editorsStore = new EditorsStore(this);
     uiStateStore = new UIStateStore(this);
+    runtimeSettings = new RuntimeSettings(this);
     outputSectionsStore = new OutputSections(this);
 
     @observable runtime: RuntimeBase | undefined;
@@ -1639,7 +1808,8 @@ export class DocumentStoreClass {
 
     async doSave() {
         await save(this, this.filePath!);
-        this.saveUIState();
+        this.uiStateStore.save();
+        this.runtimeSettings.save();
         this.setModified(false);
     }
 
@@ -1703,54 +1873,18 @@ export class DocumentStoreClass {
         ) as Project;
     }
 
-    newProject() {
-        this.changeProject(undefined, this.getNewProject());
-    }
-
-    loadUIState(projectFilePath: string) {
-        return new Promise<any>((resolve, reject) => {
-            const fs = EEZStudio.remote.require("fs");
-            fs.readFile(
-                getUIStateFilePath(projectFilePath),
-                "utf8",
-                (err: any, data: string) => {
-                    if (err) {
-                        resolve({});
-                    } else {
-                        try {
-                            resolve(JSON.parse(data));
-                        } catch (err) {
-                            console.error("Invalid UI state file", err);
-                            resolve({});
-                        }
-                    }
-                }
-            );
-        });
-    }
-
-    saveUIState() {
-        return new Promise<void>(resolve => {
-            if (this.filePath) {
-                const fs = EEZStudio.remote.require("fs");
-                fs.writeFile(
-                    getUIStateFilePath(this.filePath),
-                    JSON.stringify(this.uiStateStore.toJS, undefined, 2),
-                    "utf8",
-                    resolve
-                );
-            }
-        });
+    async newProject() {
+        await this.changeProject(undefined, this.getNewProject());
     }
 
     async openFile(filePath: string) {
         const project = await load(this, filePath);
-        const uiState = await this.loadUIState(filePath);
-        this.changeProject(filePath, project, uiState);
+        await this.changeProject(filePath, project);
     }
 
     async saveModified() {
-        this.saveUIState();
+        this.uiStateStore.save();
+        this.runtimeSettings.save();
 
         if (this.project && this.modified) {
             return new Promise<boolean>(resolve => {
@@ -1889,10 +2023,9 @@ export class DocumentStoreClass {
     }
 
     @action
-    changeProject(
+    async changeProject(
         projectFilePath: string | undefined,
-        project?: Project,
-        uiState?: Project
+        project?: Project
     ) {
         if (!project) {
             this.project.settings.general.imports.forEach(importDirective => {
@@ -1916,10 +2049,12 @@ export class DocumentStoreClass {
             this.objects.clear();
             this.lastChildId = 0;
         }
-        this.uiStateStore.load(uiState || {});
         this.undoManager.clear();
 
-        if (!project) {
+        if (project) {
+            await this.uiStateStore.load();
+            await this.runtimeSettings.load();
+        } else {
             this.editorsStore.unmount();
             this.uiStateStore.unmount();
             this.unmount();
@@ -3816,4 +3951,37 @@ export function cloneObject(
         objectToJson(obj),
         getClass(obj)
     );
+}
+
+export function hideInPropertyGridIfDashboard(object: IEezObject) {
+    const documentStore = getDocumentStore(object);
+    return documentStore.project.isDashboardProject;
+}
+
+export function hideInPropertyGridIfNotDashboard(object: IEezObject) {
+    const documentStore = getDocumentStore(object);
+    return !documentStore.project.isDashboardProject;
+}
+
+export function hideInPropertyGridIfApplet(object: IEezObject) {
+    const documentStore = getDocumentStore(object);
+    return documentStore.project.isDashboardProject;
+}
+
+export function hideInPropertyGridIfDashboardOrApplet(object: IEezObject) {
+    const documentStore = getDocumentStore(object);
+    return (
+        documentStore.project.isDashboardProject ||
+        documentStore.project.isAppletProject
+    );
+}
+
+export function hideInPropertyGridIfV1(object: IEezObject) {
+    const documentStore = getDocumentStore(object);
+    return documentStore.project.settings.general.projectVersion === "v1";
+}
+
+export function hideInPropertyGridIfNotV1(object: IEezObject) {
+    const documentStore = getDocumentStore(object);
+    return documentStore.project.settings.general.projectVersion !== "v1";
 }

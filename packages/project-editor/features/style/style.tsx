@@ -21,6 +21,7 @@ import {
 } from "project-editor/core/object";
 import {
     getChildOfObject,
+    hideInPropertyGridIfV1,
     isAnyPropertyModified,
     Message,
     propertyInvalidValueMessage,
@@ -451,9 +452,7 @@ const activeColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) =>
-        getDocumentStore(object).project.settings.general.projectVersion ===
-        "v1"
+    hideInPropertyGrid: hideInPropertyGridIfV1
 };
 
 const activeBackgroundColorProperty: PropertyInfo = {
@@ -462,9 +461,7 @@ const activeBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) =>
-        getDocumentStore(object).project.settings.general.projectVersion ===
-        "v1"
+    hideInPropertyGrid: hideInPropertyGridIfV1
 };
 
 const focusColorProperty: PropertyInfo = {
@@ -473,9 +470,7 @@ const focusColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) =>
-        getDocumentStore(object).project.settings.general.projectVersion ===
-        "v1"
+    hideInPropertyGrid: hideInPropertyGridIfV1
 };
 
 const focusBackgroundColorProperty: PropertyInfo = {
@@ -484,9 +479,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: (object: IEezObject) =>
-        getDocumentStore(object).project.settings.general.projectVersion ===
-        "v1"
+    hideInPropertyGrid: hideInPropertyGridIfV1
 };
 
 const borderSizeProperty: PropertyInfo = {

@@ -20,6 +20,7 @@ import {
 } from "project-editor/core/object";
 import {
     getDocumentStore,
+    hideInPropertyGridIfDashboard,
     Message,
     propertyInvalidValueMessage
 } from "project-editor/core/store";
@@ -204,23 +205,20 @@ export class Page extends Flow {
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "styles",
                 propertyGridGroup: styleGroup,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
                 name: "portrait",

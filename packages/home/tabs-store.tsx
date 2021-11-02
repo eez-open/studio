@@ -435,7 +435,7 @@ export class ProjectEditorTab implements IHomeTab {
             if (this._filePath) {
                 await DocumentStore.openFile(this._filePath);
             } else {
-                DocumentStore.newProject();
+                await DocumentStore.newProject();
             }
 
             await DocumentStore.loadAllExternalProjects();
@@ -635,7 +635,7 @@ export class ProjectEditorTab implements IHomeTab {
         if (this.DocumentStore) {
             if (await this.DocumentStore.closeWindow()) {
                 this.tabs.removeTab(this);
-                this.DocumentStore.changeProject(undefined);
+                await this.DocumentStore.changeProject(undefined);
             }
             this.DocumentStore = undefined;
         } else {

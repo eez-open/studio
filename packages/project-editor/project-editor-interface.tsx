@@ -29,6 +29,7 @@ import type {
     ScpiCommand,
     ScpiSubsystem
 } from "project-editor/features/scpi/scpi";
+import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 
 export interface IProjectEditor {
     DataContextClass: typeof DataContext;
@@ -57,6 +58,7 @@ export interface IProjectEditor {
     getProject: typeof getProject;
     getFlow: typeof getFlow;
     getNameProperty: typeof getNameProperty;
+    getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

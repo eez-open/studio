@@ -13,7 +13,11 @@ import {
     IEditorState,
     MessageType
 } from "project-editor/core/object";
-import { Message } from "project-editor/core/store";
+import {
+    hideInPropertyGridIfDashboardOrApplet,
+    hideInPropertyGridIfNotV1,
+    Message
+} from "project-editor/core/store";
 import type { Project } from "project-editor/project/project";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { build } from "project-editor/features/action/build";
@@ -462,28 +466,18 @@ export class Action extends Flow {
                         id: "native"
                     }
                 ],
-                hideInPropertyGrid: (object: IEezObject) =>
-                    ProjectEditor.getProject(object).settings.general
-                        .projectVersion !== "v1"
+                hideInPropertyGrid: hideInPropertyGridIfNotV1
             },
             {
                 name: "implementation",
                 type: PropertyType.CPP,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    ProjectEditor.getProject(object).settings.general
-                        .projectVersion !== "v1"
+                hideInPropertyGrid: hideInPropertyGridIfNotV1
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: (object: IEezObject) => {
-                    const DocumentStore = getDocumentStore(object);
-                    return (
-                        DocumentStore.project.isDashboardProject ||
-                        DocumentStore.project.isAppletProject
-                    );
-                }
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             }
         ],
         beforeLoadHook: (action: Action, jsObject: any) => {

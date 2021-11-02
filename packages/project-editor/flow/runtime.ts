@@ -607,6 +607,7 @@ export class FlowState {
 
 export class ComponentState {
     @observable inputsData = new Map<string, any>();
+    @observable unreadInputsData = new Set<string>();
     @observable isRunning: boolean = false;
     @observable runningState: any;
     dispose: (() => void) | undefined = undefined;
@@ -620,6 +621,12 @@ export class ComponentState {
     @action
     setInputData(input: string, inputData: any) {
         this.inputsData.set(input, inputData);
+        this.unreadInputsData.add(input);
+    }
+
+    @action
+    markInputsDataRead() {
+        this.unreadInputsData.clear();
     }
 
     get connectedSequenceInputsSet() {

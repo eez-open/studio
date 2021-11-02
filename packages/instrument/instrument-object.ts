@@ -785,6 +785,19 @@ export class InstrumentObject {
         return this.image;
     }
 
+    get constructorParams() {
+        return this.id;
+    }
+
+    get status() {
+        return {
+            label: this.name,
+            image: this.image,
+            color: this.connectionState.color,
+            error: this.connectionState.error
+        };
+    }
+
     @computed
     get isBB3() {
         return (

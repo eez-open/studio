@@ -3621,7 +3621,7 @@ button.EezStudio_Action {
                     }
 
                     img {
-                        width: 48px;
+                        height: 16px;
                         object-fit: contain;
                     }
                 }
@@ -4095,6 +4095,12 @@ button.EezStudio_Action {
     }
 }
 
+#EezStudio_ModalContent {
+    .EezStudio_ImagePreview {
+        background-color: black;
+    }
+}
+
 .EezStudio_ShortcutsTable {
     th.colColor {
         background-position: 12px center;
@@ -4408,18 +4414,25 @@ button.EezStudio_Action {
     white-space: nowrap;
     display: flex;
     align-items: center;
-    cursor: pointer;
 
-    margin-right: 5px;
+    &:not(.form-control) {
+        cursor: pointer;
+    }
+
     padding: 5px 10px;
 
-    &:hover {
+    > :not(:last-child) {
+        margin-right: 5px;
+    }
+
+    &:hover:not(.form-control) {
         background-color: @hoverBackgroundColor;
         color: @hoverColor;
     }
 
-    > :not(:last-child) {
-        margin-right: 5px;
+    &.form-control {
+        padding: 0 5px;
+        margin: 0;
     }
 
     img,
@@ -4432,6 +4445,11 @@ button.EezStudio_Action {
         border-radius: 8px;
         width: 16px;
         height: 16px;
+    }
+
+    span.hint {
+        opacity: 0.5;
+        font-style: italic;
     }
 }
 

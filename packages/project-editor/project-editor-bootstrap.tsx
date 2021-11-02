@@ -1,9 +1,5 @@
-import React from "react";
-import * as mobx from "mobx";
-
 import { validators } from "eez-studio-shared/validation";
 
-import { theme } from "eez-studio-ui/theme";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import "project-editor/project/builtInFeatures";
@@ -42,17 +38,9 @@ import { extensions } from "eez-studio-shared/extensions/extensions";
 import {
     ActionComponent,
     Component,
-    makeExpressionProperty
+    registerActionComponent
 } from "project-editor/flow/component";
 
-import { RenderVariableStatus } from "project-editor/features/variable/variable";
-import { ObjectType } from "project-editor/features/variable/value-type";
-import {
-    EezClass,
-    makeDerivedClassInfo,
-    registerClass,
-    specificGroup
-} from "project-editor/core/object";
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { Glyph } from "project-editor/features/font/font";
@@ -60,8 +48,16 @@ import { EmbeddedWidget } from "project-editor/flow/components/widgets";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Action } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
+import {
+    getObjectVariableTypeFromType,
+    registerObjectVariableType
+} from "project-editor/features/variable/value-type";
 
 import "project-editor/flow/components/actions/instrument";
+import type {
+    IActionComponentDefinition,
+    IObjectVariableType
+} from "eez-studio-types";
 
 let extensionsInitialized = false;
 
@@ -73,29 +69,29 @@ export async function initExtensions() {
                 if (extension.eezFlowExtensionInit) {
                     try {
                         extension.eezFlowExtensionInit({
-                            React,
-                            mobx,
-                            theme: theme(),
-                            registerClass(aClass: EezClass) {
-                                registerClass(
-                                    `${extension.name}/${aClass.name}`,
-                                    aClass
-                                );
-                            },
-                            makeDerivedClassInfo,
-                            makeExpressionProperty,
-                            ActionComponent,
-                            ObjectType,
-                            getFlow,
+                            registerActionComponent: (
+                                actionComponentDefinition: IActionComponentDefinition
+                            ) =>
+                                registerActionComponent(
+                                    `${extension.name}/${actionComponentDefinition.name}`,
+                                    actionComponentDefinition
+                                ),
+
+                            registerObjectVariableType: (
+                                name: string,
+                                objectVariableType: IObjectVariableType
+                            ) =>
+                                registerObjectVariableType(
+                                    `${extension.name}/${name}`,
+                                    objectVariableType
+                                ),
+
                             showGenericDialog,
+
                             validators: {
                                 required: validators.required,
                                 rangeInclusive: validators.rangeInclusive
-                            },
-                            propertyGridGroups: {
-                                specificGroup
-                            },
-                            RenderVariableStatus
+                            }
                         } as any);
                     } catch (err) {
                         console.error(err);
@@ -145,7 +141,8 @@ export async function initProjectEditor() {
         ScpiSubsystemClass: ScpiSubsystem,
         getProject,
         getFlow,
-        getNameProperty
+        getNameProperty,
+        getObjectVariableTypeFromType
     };
 
     Object.assign(ProjectEditor, projectEditor);

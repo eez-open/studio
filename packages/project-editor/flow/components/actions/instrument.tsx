@@ -14,8 +14,9 @@ import {
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { IListNode, ListItem } from "eez-studio-ui/list";
 import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";
+import * as notification from "eez-studio-ui/notification";
 
-import type { InstrumentObject } from "instrument/instrument-object";
+import { InstrumentObject, instruments } from "instrument/instrument-object";
 
 import {
     ActionComponent,
@@ -25,24 +26,23 @@ import {
 import { FlowState } from "project-editor/flow//runtime";
 import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
-import { getDocumentStore } from "project-editor/core/store";
+import {
+    getDocumentStore,
+    hideInPropertyGridIfApplet
+} from "project-editor/core/store";
 import {
     buildExpression,
     buildAssignableExpression
 } from "project-editor/flow/expression/expression";
-import { RenderVariableStatus } from "project-editor/features/variable/variable";
 import {
-    ObjectType,
+    ConstructorParams,
+    registerObjectVariableType,
     ValueType
 } from "project-editor/features/variable/value-type";
-import type {
-    IDataContext,
-    IVariable
-} from "project-editor/flow/flow-interfaces";
+import type { IVariable } from "project-editor/flow/flow-interfaces";
 
-import * as notification from "eez-studio-ui/notification";
 import { humanize } from "eez-studio-shared/string";
-import { ProjectEditor } from "project-editor/project-editor-interface";
+
 import {
     parseScpi,
     parseScpiString,
@@ -64,8 +64,7 @@ export class SCPIActionComponent extends ActionComponent {
                     name: "instrument",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: SCPIActionComponent) =>
-                        ProjectEditor.getProject(component).isAppletProject
+                    hideInPropertyGrid: hideInPropertyGridIfApplet
                 },
                 "object:Instrument"
             ),
@@ -166,9 +165,21 @@ export class SCPIActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        const instrument = flowState.evalExpression(this, this.instrument);
+        const instrument: InstrumentObject | undefined =
+            flowState.evalExpression(this, this.instrument);
+
         if (!instrument) {
             throw "instrument not found";
+        }
+
+        const CONNECTION_TIMEOUT = 5000;
+        const startTime = Date.now();
+        while (
+            !instrument.isConnected &&
+            startTime - Date.now() < CONNECTION_TIMEOUT
+        ) {
+            instrument.connection.connect();
+            await new Promise<boolean>(resolve => setTimeout(resolve, 10));
         }
 
         if (!instrument.isConnected) {
@@ -396,16 +407,16 @@ export class SelectInstrumentDialog extends React.Component<
 
 export async function showSelectInstrumentDialog(
     name?: string,
-    instrument?: InstrumentObject
+    instrumentId?: string | null
 ) {
-    const { instruments } = await import("instrument/instrument-object");
-
     return new Promise<InstrumentObject | undefined>(resolve =>
         showDialog(
             <SelectInstrumentDialog
                 name={name}
                 instruments={instruments}
-                instrument={instrument}
+                instrument={
+                    instrumentId ? instruments.get(instrumentId) : undefined
+                }
                 callback={instrument => {
                     resolve(instrument);
                 }}
@@ -464,7 +475,6 @@ export class SelectInstrumentActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        const { instruments } = await import("instrument/instrument-object");
         await new Promise<void>(resolve => {
             showDialog(
                 <SelectInstrumentDialog
@@ -547,7 +557,6 @@ export class GetInstrumentActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         const id = flowState.evalExpression(this, "id");
-        const { instruments } = await import("instrument/instrument-object");
         const instrument = instruments.get(id);
         flowState.runtime.propagateValue(
             flowState,
@@ -621,7 +630,9 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        const instrument = flowState.evalExpression(this, this.instrument);
+        const instrument: InstrumentObject | undefined =
+            flowState.evalExpression(this, this.instrument);
+
         if (!instrument) {
             throw "instrument not found";
         }
@@ -654,73 +665,49 @@ async function connectToInstrument(instrument: InstrumentObject) {
     notification.error("Failed to connect to the instrument!");
 }
 
-export class InstrumentVariableType extends ObjectType {
-    static classInfo = makeDerivedClassInfo(ObjectType.classInfo, {
-        properties: [],
-        onObjectVariableConstructor: async (variable: IVariable) => {
-            const instrument = await showSelectInstrumentDialog(
-                variable.description || humanize(variable.name)
-            );
-            if (instrument) {
-                await connectToInstrument(instrument);
-            }
-            return instrument;
-        },
-        onObjectVariableLoad: async (value: any) => {
-            if (typeof value == "string") {
-                const { instruments } = await import(
-                    "instrument/instrument-object"
-                );
-                const instrument = instruments.get(value);
-                if (instrument) {
-                    await connectToInstrument(instrument);
-                }
-                return instrument;
-            }
-            return null;
-        },
-        onObjectVariableSave: async (value: InstrumentObject | null) => {
-            return value != null ? value.id : null;
-        },
-        renderObjectVariableStatus: (
-            variable: IVariable,
-            dataContext: IDataContext
-        ) => {
-            const instrumentObject: InstrumentObject | undefined =
-                dataContext.get(variable.name);
-            return (
-                <RenderVariableStatus
-                    key={variable.name}
-                    variable={variable}
-                    image={instrumentObject?.image}
-                    color={
-                        instrumentObject
-                            ? instrumentObject.connectionState.color
-                            : "red"
-                    }
-                    error={
-                        instrumentObject
-                            ? !!instrumentObject.connectionState.error
-                            : false
-                    }
-                    title={
-                        instrumentObject &&
-                        instrumentObject.connectionState.error
-                    }
-                    onClick={async () => {
-                        const instrument = await showSelectInstrumentDialog(
-                            variable.description || humanize(variable.name),
-                            instrumentObject
-                        );
-                        if (instrument) {
-                            dataContext.set(variable.name, instrument);
-                            await connectToInstrument(instrument);
-                        }
-                    }}
-                />
-            );
-        }
-    });
+function getInstrumentIdFromConstructorParams(
+    constructorParams: ConstructorParams | string | null
+) {
+    return constructorParams == null
+        ? null
+        : typeof constructorParams === "string"
+        ? constructorParams
+        : (constructorParams.id as string);
 }
 
-registerClass("InstrumentVariableType", InstrumentVariableType);
+registerObjectVariableType("Instrument", {
+    constructorFunction: (constructorParams: ConstructorParams) => {
+        const instrumentId =
+            getInstrumentIdFromConstructorParams(constructorParams);
+        if (instrumentId) {
+            const instrument = instruments.get(instrumentId);
+            if (instrument) {
+                connectToInstrument(instrument);
+                return instrument;
+            }
+        }
+        return {
+            constructorParams,
+            status: {
+                label: "Unknown instrument",
+                error: `Instrument with ID [${constructorParams}] is not found`
+            }
+        };
+    },
+
+    editConstructorParams: async (
+        variable: IVariable,
+        constructorParams: ConstructorParams | null
+    ): Promise<ConstructorParams | undefined> => {
+        const instrument = await showSelectInstrumentDialog(
+            variable.description || humanize(variable.name),
+            getInstrumentIdFromConstructorParams(constructorParams)
+        );
+
+        return instrument
+            ? {
+                  id: instrument.id
+              }
+            : undefined;
+    }
+});

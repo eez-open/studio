@@ -14,19 +14,25 @@
       "files": []
     }
   },
-  "data": [],
+  "variables": {
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
   "actions": [],
   "pages": [
     {
       "components": [
         {
           "type": "TextInputWidget",
-          "left": 73,
-          "top": 36,
+          "left": 43,
+          "top": 34,
           "width": 160,
           "height": 32,
           "wireID": "b7bc81ed-8ab6-4af7-bff0-e167467f921e",
-          "asInputProperties": []
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "value"
         },
         {
           "type": "TextWidget",
@@ -35,9 +41,14 @@
           "width": 146,
           "height": 32,
           "wireID": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
-          "asInputProperties": [
-            "data"
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "any"
+            }
           ],
+          "customOutputs": [],
+          "data": "data",
           "style": {
             "inheritFrom": "default"
           },
@@ -47,10 +58,44 @@
           "type": "ConstantActionComponent",
           "left": 58,
           "top": -74,
-          "width": 114,
+          "width": 100,
           "height": 61,
           "wireID": "fad891f0-6fcd-4f3b-d412-f39d4a282728",
+          "customInputs": [],
+          "customOutputs": [],
           "value": "\"Hello, world!\""
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 34,
+          "top": 118,
+          "width": 100,
+          "height": 32,
+          "wireID": "5ad6c982-159a-4ff7-f403-cd639e12cde4",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "Trt",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": 178,
+          "top": 88,
+          "width": 125,
+          "height": 62,
+          "wireID": "efce97d5-920a-44ea-f54e-ad22aadd4134",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "value",
+          "value": "\"mer\""
         }
       ],
       "connectionLines": [
@@ -65,6 +110,20 @@
           "output": "value",
           "target": "35f9e4e2-c8c2-470f-98c1-c0f47d4c5db6",
           "input": "data"
+        },
+        {
+          "source": "5ad6c982-159a-4ff7-f403-cd639e12cde4",
+          "output": "action",
+          "target": "efce97d5-920a-44ea-f54e-ad22aadd4134",
+          "input": "@seqin"
+        }
+      ],
+      "localVariables": [
+        {
+          "name": "value",
+          "type": "string",
+          "defaultValue": "\"Trt\"",
+          "persistent": false
         }
       ],
       "name": "Page",

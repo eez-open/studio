@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed } from "mobx";
+import { observable, computed, decorate } from "mobx";
 
 import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
@@ -27,7 +27,8 @@ import {
     isPropertyHidden,
     getProperty,
     flowGroup,
-    MessageType
+    MessageType,
+    registerClass
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -37,7 +38,9 @@ import {
     findPropertyByNameInObject,
     getAncestorOfType,
     Message,
-    propertyNotSetMessage
+    propertyNotSetMessage,
+    hideInPropertyGridIfDashboard,
+    hideInPropertyGridIfNotDashboard
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/store";
 import {
@@ -87,6 +90,7 @@ import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./editor/ComponentsPalette";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
+import type { IActionComponentDefinition, LogItemType } from "eez-studio-types";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -171,8 +175,7 @@ export function makeStylePropertyInfo(
         propertyGridCollapsable: true,
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
         enumerable: false,
-        hideInPropertyGrid: (object: IEezObject) =>
-            getDocumentStore(object).project.isDashboardProject
+        hideInPropertyGrid: hideInPropertyGridIfDashboard
     };
 }
 
@@ -245,6 +248,16 @@ function getClassFromType(type: string) {
     componentClass = findClass(type);
     if (componentClass) {
         return componentClass;
+    }
+
+    if (type.endsWith("ActionComponent")) {
+        componentClass = findClass(
+            type.substring(0, type.length - "ActionComponent".length)
+        );
+
+        if (componentClass) {
+            return componentClass;
+        }
     }
 
     return NotFoundComponent;
@@ -1528,8 +1541,7 @@ export class Widget extends Component {
                 name: "className",
                 type: PropertyType.String,
                 propertyGridGroup: styleGroup,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    !getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: hideInPropertyGridIfNotDashboard
             }
         ],
 
@@ -2380,4 +2392,145 @@ export class NotFoundComponent extends ActionComponent {
     render(flowContext: IFlowContext): JSX.Element {
         return renderActionComponent(this, flowContext);
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function registerActionComponent(
+    name: string,
+    actionComponentDefinition: IActionComponentDefinition
+) {
+    const properties: PropertyInfo[] = [];
+
+    for (const propertyDefinition of actionComponentDefinition.properties) {
+        if (propertyDefinition.type === "expression") {
+            properties.push(
+                makeExpressionProperty(
+                    {
+                        name: propertyDefinition.name,
+                        displayName: propertyDefinition.displayName,
+                        type: PropertyType.MultilineText,
+                        propertyGridGroup: specificGroup
+                    },
+                    propertyDefinition.valueType
+                )
+            );
+        } else {
+            properties.push({
+                name: propertyDefinition.name,
+                displayName: propertyDefinition.displayName,
+                type: PropertyType.MultilineText,
+                propertyGridGroup: specificGroup,
+                monospaceFont: true
+            });
+        }
+    }
+
+    const actionComponentClass = class extends ActionComponent {
+        static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+            label: () => actionComponentDefinition.name,
+            properties,
+            icon: (
+                <img
+                    src={
+                        "data:image/svg+xml;charset=utf-8," +
+                        actionComponentDefinition.icon
+                    }
+                />
+            ),
+            componentHeaderColor: actionComponentDefinition.componentHeaderColor
+        });
+
+        constructor() {
+            super();
+        }
+
+        getInputs(): ComponentInput[] {
+            return [
+                ...super.getInputs(),
+                {
+                    name: "@seqin",
+                    type: "null",
+                    isSequenceInput: true,
+                    isOptionalInput: true
+                },
+                ...actionComponentDefinition.inputs
+            ];
+        }
+
+        getOutputs(): ComponentOutput[] {
+            return [
+                ...super.getOutputs(),
+                {
+                    name: "@seqout",
+                    type: "null",
+                    isSequenceOutput: true,
+                    isOptionalOutput: true
+                },
+                ...actionComponentDefinition.outputs
+            ];
+        }
+
+        getBody(flowContext: IFlowContext): React.ReactNode {
+            if (!actionComponentDefinition.bodyPropertyName) {
+                return null;
+            }
+            return (
+                <div className="body">
+                    <pre>
+                        {
+                            (this as any)[
+                                actionComponentDefinition.bodyPropertyName
+                            ]
+                        }
+                    </pre>
+                </div>
+            );
+        }
+
+        override async execute(
+            flowState: IFlowState,
+            dispose: (() => void) | undefined
+        ): Promise<(() => void) | undefined | boolean> {
+            const props = [];
+
+            for (const propertyDefinition of actionComponentDefinition.properties) {
+                props.push((this as any)[propertyDefinition.name]);
+            }
+
+            return actionComponentDefinition.execute(
+                {
+                    evalExpression: (expression: string) => {
+                        return flowState.evalExpression(this, expression);
+                    },
+
+                    propagateValue: (output: string, value: any) => {
+                        flowState.runtime.propagateValue(
+                            flowState,
+                            this,
+                            output,
+                            value
+                        );
+                    },
+
+                    log: (type: LogItemType, message: string) => {
+                        flowState.log(type, message, this);
+                    }
+                },
+                ...props
+            );
+        }
+    };
+
+    const decorators: {
+        [propertyName: string]: PropertyDecorator;
+    } = {};
+
+    actionComponentDefinition.properties.forEach(
+        propertyInfo => (decorators[propertyInfo.name] = observable)
+    );
+
+    decorate(actionComponentClass, decorators);
+
+    registerClass(name, actionComponentClass);
 }

@@ -187,14 +187,16 @@ const DebugValue = observer(
             context.document.DocumentStore.runtime &&
             context.document.DocumentStore.runtime.isDebuggerActive &&
             connectionLine.targetComponent &&
-            targetInput &&
-            !targetInput.isSequenceInput
+            targetInput
         ) {
             const inputValue = context.flowState.getInputValue(
                 connectionLine.targetComponent,
                 connectionLine.input
             );
-            if (inputValue != undefined) {
+            if (
+                inputValue !== undefined &&
+                (!targetInput.isSequenceInput || inputValue != null)
+            ) {
                 valueStr = getValueLabel(
                     context.DocumentStore.project,
                     inputValue,
@@ -205,6 +207,10 @@ const DebugValue = observer(
 
         if (!valueStr) {
             return null;
+        }
+
+        if (valueStr.length > 50) {
+            valueStr = valueStr.substring(0, 50) + "...";
         }
 
         return (

@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, action, observable } from "mobx";
+import { computed, action, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
@@ -13,10 +13,13 @@ import {
     EezObject,
     PropertyType,
     NavigationComponent,
-    MessageType
+    MessageType,
+    PropertyProps
 } from "project-editor/core/object";
 import {
     getChildOfObject,
+    hideInPropertyGridIfDashboard,
+    hideInPropertyGridIfDashboardOrApplet,
     Message,
     propertyInvalidValueMessage,
     propertyNotSetMessage
@@ -50,13 +53,17 @@ import {
     isEnumVariable,
     getEnumValues,
     isValueTypeOf,
-    ValueType
+    ValueType,
+    getObjectVariableTypeFromType,
+    IObjectVariableValue,
+    getObjectType
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,6 +85,175 @@ const VariableIcon = (
         <path d="M8 16c1.5 0 3 -2 4 -3.5s2.5 -3.5 4 -3.5" />
     </svg>
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const RenderVariableStatus = observer(
+    ({
+        variable,
+        value,
+        onClick,
+        onClear
+    }: {
+        variable: IVariable;
+        value?: IObjectVariableValue;
+        onClick: () => void;
+        onClear?: () => void;
+    }) => {
+        const image = value?.status.image;
+        const color = value?.status.color;
+        const error = value?.status.error != undefined;
+        const title = value?.status.error;
+
+        let label;
+        let hint;
+        if (onClear) {
+            if (value?.constructorParams != null) {
+                label = value.status.label;
+            } else {
+                hint = `Select ${getObjectType(variable.type)}`;
+            }
+        } else {
+            label = variable.description || humanize(variable.name);
+        }
+
+        const element = (
+            <div
+                className={classNames("EezStudio_CustomVariableStatus", {
+                    "form-control": onClear
+                })}
+                onClick={!onClear ? onClick : undefined}
+                title={title}
+            >
+                {image &&
+                    (typeof image == "string" ? (
+                        <img
+                            src={
+                                image.trim().startsWith("<svg")
+                                    ? "data:image/svg+xml;charset=utf-8," +
+                                      image.trim()
+                                    : image
+                            }
+                            draggable={false}
+                        />
+                    ) : (
+                        image
+                    ))}
+                {color && (
+                    <span
+                        className="status"
+                        style={{
+                            backgroundColor: color
+                        }}
+                    />
+                )}
+                <span className="label">{label}</span>
+                <span className="hint">{hint}</span>
+                {error && (
+                    <Icon className="text-danger" icon="material:error" />
+                )}
+            </div>
+        );
+
+        if (!onClear) {
+            return element;
+        }
+
+        return (
+            <div className="input-group mb-3">
+                {element}
+                <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={onClick}
+                >
+                    &hellip;
+                </button>
+                <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={onClear}
+                    disabled={!value}
+                >
+                    {"\u2715"}
+                </button>
+            </div>
+        );
+    }
+);
+
+@observer
+export class RenderVariableStatusPropertyUI extends React.Component<PropertyProps> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    @observable objectVariableValue: IObjectVariableValue | undefined;
+
+    async updateObjectVariableValue() {
+        const variable = this.props.objects[0] as Variable;
+
+        const value =
+            this.context.runtimeSettings.getObjectVariableValue(variable);
+
+        runInAction(() => (this.objectVariableValue = value));
+    }
+
+    componentDidMount() {
+        this.updateObjectVariableValue();
+    }
+
+    componentDidUpdate(prevProps: PropertyProps) {
+        if (this.props.objects[0] != prevProps.objects[0]) {
+            this.updateObjectVariableValue();
+        }
+    }
+
+    render() {
+        const variable = this.props.objects[0] as Variable;
+
+        const objectVariableType = getObjectVariableTypeFromType(variable.type);
+        if (!objectVariableType) {
+            return null;
+        }
+
+        const objectVariableValue = this.objectVariableValue;
+
+        return (
+            <RenderVariableStatus
+                key={variable.name}
+                variable={variable}
+                value={objectVariableValue}
+                onClick={async () => {
+                    const constructorParams =
+                        await objectVariableType.editConstructorParams(
+                            variable,
+                            objectVariableValue?.constructorParams ?? null
+                        );
+                    if (constructorParams !== undefined) {
+                        this.context.runtimeSettings.setObjectVariableConstructorParams(
+                            variable,
+                            constructorParams
+                        );
+                        this.updateObjectVariableValue();
+                    }
+                }}
+                onClear={async () => {
+                    this.context.runtimeSettings.setObjectVariableConstructorParams(
+                        variable,
+                        undefined
+                    );
+                    this.updateObjectVariableValue();
+                }}
+            />
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function isGlobalVariable(variable: Variable) {
+    return !ProjectEditor.getFlow(variable);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -114,35 +290,46 @@ export class Variable extends EezObject {
             },
             {
                 name: "defaultValueList",
-                type: PropertyType.MultilineText
+                type: PropertyType.MultilineText,
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             },
             {
                 name: "defaultMinValue",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             },
             {
                 name: "defaultMaxValue",
-                type: PropertyType.Number
+                type: PropertyType.Number,
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: (object: IEezObject) =>
-                    getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
                 name: "persistent",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
-                    !isObjectType(variable.type)
+                    !isObjectType(variable.type) || !isGlobalVariable(variable)
+            },
+            {
+                name: "persistedValue",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: RenderVariableStatusPropertyUI,
+                hideInPropertyGrid: (variable: Variable) =>
+                    !variable.persistent ||
+                    !isObjectType(variable.type) ||
+                    !isGlobalVariable(variable)
             }
         ],
         beforeLoadHook: (object: Variable, objectJS: any) => {
@@ -1013,53 +1200,6 @@ export class ProjectVariables extends EezObject {
 }
 
 registerClass("ProjectVariables", ProjectVariables);
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const RenderVariableStatus = observer(
-    ({
-        variable,
-        image,
-        color,
-        error,
-        title,
-        onClick
-    }: {
-        variable: IVariable;
-        image?: React.ReactNode;
-        color: string;
-        error?: boolean;
-        title?: string;
-        onClick: () => void;
-    }) => {
-        return (
-            <div
-                className="EezStudio_CustomVariableStatus"
-                onClick={onClick}
-                title={title}
-            >
-                {image &&
-                    (typeof image == "string" ? (
-                        <img src={image} draggable={false} />
-                    ) : (
-                        image
-                    ))}
-                <span className="label">
-                    {variable.description || humanize(variable.name)}
-                </span>
-                <span
-                    className="status"
-                    style={{
-                        backgroundColor: color
-                    }}
-                />
-                {error && (
-                    <Icon className="text-danger" icon="material:error" />
-                )}
-            </div>
-        );
-    }
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 

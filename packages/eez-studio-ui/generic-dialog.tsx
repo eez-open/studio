@@ -144,7 +144,7 @@ export interface DialogDefinition {
 export interface GenericDialogResult {
     values: any;
     context: any;
-    onPogress: (type: "info" | "error", message: string) => boolean;
+    onProgress: (type: "info" | "error", message: string) => boolean;
 }
 
 interface GenericDialogProps {
@@ -357,7 +357,7 @@ export class GenericDialog extends React.Component<GenericDialogProps> {
         return this.props.onOk({
             values: this.values,
             context: this.fieldContext,
-            onPogress: (type: "info" | "error", message: string) => {
+            onProgress: (type: "info" | "error", message: string) => {
                 if (this.abort) {
                     runInAction(() => {
                         this.progressType = "none";
@@ -599,7 +599,7 @@ export class GenericDialog extends React.Component<GenericDialogProps> {
                             ? this.props.okEnabled({
                                   values: this.values,
                                   context: this.fieldContext,
-                                  onPogress: () => true
+                                  onProgress: () => true
                               })
                             : true
                     }

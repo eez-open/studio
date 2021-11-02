@@ -9,7 +9,6 @@ import { to16bitsColor } from "eez-studio-shared/color";
 import {
     IEezObject,
     registerClass,
-    PropertyInfo,
     PropertyType,
     makeDerivedClassInfo,
     generalGroup,
@@ -21,6 +20,8 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
+    hideInPropertyGridIfDashboardOrApplet,
+    hideInPropertyGridIfNotV1,
     loadObject,
     Message,
     objectToJS,
@@ -1295,7 +1296,8 @@ export class LayoutViewWidget extends EmbeddedWidget {
             }
 
             const componentState = flowState.getComponentState(this);
-            for (let [input, inputData] of componentState.inputsData) {
+            for (let input of componentState.unreadInputsData) {
+                const inputData = componentState.inputsData.get(input);
                 if (input === "@seqin") {
                     for (let component of page.components) {
                         if (component instanceof StartActionComponent) {
@@ -1327,7 +1329,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
                 }
             }
 
-            //componentState.inputsData.clear();
+            componentState.markInputsDataRead();
         }
 
         return false;
@@ -1432,11 +1434,6 @@ enum DisplayOption {
     IntegerAndFraction = 5
 }
 
-const hideIfNotProjectVersion1: Partial<PropertyInfo> = {
-    hideInPropertyGrid: (object: IEezObject) =>
-        getProject(object).settings.general.projectVersion !== "v1"
-};
-
 export class DisplayDataWidget extends EmbeddedWidget {
     @observable focusStyle: Style;
     @observable displayOption: DisplayOption;
@@ -1447,7 +1444,7 @@ export class DisplayDataWidget extends EmbeddedWidget {
         properties: [
             Object.assign(
                 makeStylePropertyInfo("focusStyle"),
-                hideIfNotProjectVersion1,
+                { hideInPropertyGrid: hideInPropertyGridIfNotV1 },
                 {
                     isOptional: true
                 }
@@ -1738,12 +1735,7 @@ export class TextWidget extends EmbeddedWidget {
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid: (widget: TextWidget) => {
-                    const project = ProjectEditor.getProject(widget);
-                    return (
-                        project.isDashboardProject || project.isAppletProject
-                    );
-                }
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             }),
             {
                 name: "ignoreLuminocity",
@@ -1753,7 +1745,7 @@ export class TextWidget extends EmbeddedWidget {
             },
             Object.assign(
                 makeStylePropertyInfo("focusStyle"),
-                hideIfNotProjectVersion1,
+                { hideInPropertyGrid: hideInPropertyGridIfNotV1 },
                 {
                     isOptional: true
                 }
@@ -2718,12 +2710,7 @@ export class ButtonWidget extends EmbeddedWidget {
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid: (widget: TextWidget) => {
-                    const project = ProjectEditor.getProject(widget);
-                    return (
-                        project.isDashboardProject || project.isAppletProject
-                    );
-                }
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             }),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
@@ -3575,18 +3562,15 @@ export class YTGraphWidget extends EmbeddedWidget {
         flowComponentId: WIDGET_TYPE_YT_GRAPH,
 
         properties: [
-            Object.assign(
-                makeStylePropertyInfo("y1Style"),
-                hideIfNotProjectVersion1
-            ),
-            Object.assign(
-                makeStylePropertyInfo("y2Style"),
-                hideIfNotProjectVersion1
-            ),
-            Object.assign(
-                makeDataPropertyInfo("y2Data"),
-                hideIfNotProjectVersion1
-            )
+            Object.assign(makeStylePropertyInfo("y1Style"), {
+                hideInPropertyGrid: hideInPropertyGridIfNotV1
+            }),
+            Object.assign(makeStylePropertyInfo("y2Style"), {
+                hideInPropertyGrid: hideInPropertyGridIfNotV1
+            }),
+            Object.assign(makeDataPropertyInfo("y2Data"), {
+                hideInPropertyGrid: hideInPropertyGridIfNotV1
+            })
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -5068,7 +5052,8 @@ export class TextInputWidget extends Widget {
             makeExpressionProperty(
                 {
                     name: "value",
-                    type: PropertyType.MultilineText
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
                 },
                 "string"
             )

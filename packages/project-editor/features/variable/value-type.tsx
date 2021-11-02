@@ -3,13 +3,9 @@ import { action, observable, autorun, runInAction } from "mobx";
 import { disposeOnUnmount, observer } from "mobx-react";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
 import {
-    ClassInfo,
-    EezObject,
     PropertyType,
     PropertyInfo,
-    PropertyProps,
-    getClassesDerivedFrom,
-    getClassByName
+    PropertyProps
 } from "project-editor/core/object";
 import type { Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
@@ -50,12 +46,6 @@ export type ValueType =
     | `array:object:${string}`
     | `array:struct:${string}`
     | `array:enum:${string}`;
-
-export class ObjectType extends EezObject {
-    static classInfo: ClassInfo = {
-        properties: []
-    };
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -171,41 +161,39 @@ const VariableTypeSelect = observer(
             project: Project;
         }
     >((props, ref) => {
+        const allTypes = new Set<string>();
+
+        function addType(type: string) {
+            allTypes.add(type);
+            return type;
+        }
+
         const { value, onChange, project } = props;
         const basicTypes = basicTypeNames.map(basicTypeName => {
             return (
-                <option key={basicTypeName} value={basicTypeName}>
+                <option key={basicTypeName} value={addType(basicTypeName)}>
                     {humanizeVariableType(basicTypeName)}
                 </option>
             );
         });
+        basicTypes.unshift(<option key="__empty" value={addType("")} />);
 
-        basicTypes.unshift(<option key="__empty" value="" />);
-
-        const objectVariableTypeClasses = getClassesDerivedFrom(ObjectType);
-        const objectVariableTypes = objectVariableTypeClasses.map(
-            objectVariableTypeClass => {
-                let name = objectVariableTypeClass.name;
-                if (name.endsWith("VariableType")) {
-                    name = name.substr(0, name.length - "VariableType".length);
-                }
-
-                return (
-                    <option key={name} value={`object:${name}`}>
-                        {humanizeVariableType(`object:${name}`)}
-                    </option>
-                );
-            }
-        );
+        const objectTypes = [...objectVariableTypes.keys()].map(name => {
+            return (
+                <option key={name} value={addType(`object:${name}`)}>
+                    {humanizeVariableType(`object:${name}`)}
+                </option>
+            );
+        });
 
         const enums = project.variables.enums.map(enumDef => (
-            <option key={enumDef.name} value={`enum:${enumDef.name}`}>
+            <option key={enumDef.name} value={addType(`enum:${enumDef.name}`)}>
                 {humanizeVariableType(`enum:${enumDef.name}`)}
             </option>
         ));
 
         const structures = project.variables.structures.map(struct => (
-            <option key={struct.name} value={`struct:${struct.name}`}>
+            <option key={struct.name} value={addType(`struct:${struct.name}`)}>
                 {humanizeVariableType(`struct:${struct.name}`)}
             </option>
         ));
@@ -214,39 +202,48 @@ const VariableTypeSelect = observer(
             return (
                 <option
                     key={`array:${basicTypeName}`}
-                    value={`array:${basicTypeName}`}
+                    value={addType(`array:${basicTypeName}`)}
                 >
                     {humanizeVariableType(`array:${basicTypeName}`)}
                 </option>
             );
         });
 
-        const arrayOfObjects = objectVariableTypeClasses.map(
-            objectVariableTypeClass => {
-                let name = objectVariableTypeClass.name;
-                if (name.endsWith("VariableType")) {
-                    name = name.substr(0, name.length - "VariableType".length);
-                }
-
-                return (
-                    <option key={name} value={`array:object:${name}`}>
-                        {humanizeVariableType(`array:object:${name}`)}
-                    </option>
-                );
-            }
-        );
+        const arrayOfObjects = [...objectVariableTypes.keys()].map(name => {
+            return (
+                <option key={name} value={addType(`array:object:${name}`)}>
+                    {humanizeVariableType(`array:object:${name}`)}
+                </option>
+            );
+        });
 
         const arrayOfEnums = project.variables.enums.map(enumDef => (
-            <option key={enumDef.name} value={`array:enum:${enumDef.name}`}>
+            <option
+                key={enumDef.name}
+                value={addType(`array:enum:${enumDef.name}`)}
+            >
                 {humanizeVariableType(`array:enum:${enumDef.name}`)}
             </option>
         ));
 
         const arrayOfStructures = project.variables.structures.map(struct => (
-            <option key={struct.name} value={`array:struct:${struct.name}`}>
+            <option
+                key={struct.name}
+                value={addType(`array:struct:${struct.name}`)}
+            >
                 {humanizeVariableType(`array:struct:${struct.name}`)}
             </option>
         ));
+
+        if (!allTypes.has(value)) {
+            basicTypes.splice(
+                1,
+                0,
+                <option key="__notfound" value={value} className="error">
+                    [Not found!] {value}
+                </option>
+            );
+        }
 
         return (
             <select
@@ -256,8 +253,8 @@ const VariableTypeSelect = observer(
                 onChange={event => onChange(event.target.value)}
             >
                 {basicTypes}
-                {objectVariableTypes.length > 0 && (
-                    <optgroup label="Objects">{objectVariableTypes}</optgroup>
+                {objectTypes.length > 0 && (
+                    <optgroup label="Objects">{objectTypes}</optgroup>
                 )}
                 {enums.length > 0 && (
                     <optgroup label="Enumerations">{enums}</optgroup>
@@ -431,7 +428,7 @@ export function isArrayType(type: string) {
 }
 
 export function isObjectType(type: string) {
-    return type && type.match(OBJECT_TYPE_REGEXP) != null;
+    return type && type.match(OBJECT_TYPE_REGEXP) != null ? true : false;
 }
 
 export function getObjectType(type: string) {
@@ -474,18 +471,15 @@ export function getEnumTypeNameFromType(type: string) {
     return result[1];
 }
 
-export function getObjectTypeClassFromType(type: string) {
+export function getObjectVariableTypeFromType(type: string) {
     const result = type.match(OBJECT_TYPE_REGEXP);
     if (result == null) {
-        return null;
+        return undefined;
     }
 
-    let aClass = getClassByName(result[1]);
-    if (!aClass) {
-        aClass = getClassByName(result[1] + "VariableType");
-    }
+    const objectVariableTypeName = result[1];
 
-    return aClass;
+    return objectVariableTypes.get(objectVariableTypeName);
 }
 
 export function isIntegerVariable(variable: IVariable) {
@@ -606,4 +600,43 @@ export function isValueTypeOf(
     }
 
     return `not an ${type}`;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface IObjectVariableValue {
+    constructorParams: any;
+    status: {
+        label?: string;
+        image?: string;
+        color?: string;
+        error?: string;
+    };
+}
+
+export type ObjectVariableConstructorFunction = (
+    constructorParams: any
+) => IObjectVariableValue;
+
+export type ConstructorParams =
+    | string
+    | {
+          [key: string]: ConstructorParams;
+      };
+
+export interface IObjectVariableType {
+    constructorFunction: ObjectVariableConstructorFunction;
+    editConstructorParams: (
+        variable: IVariable,
+        constructorParams: ConstructorParams | null
+    ) => Promise<ConstructorParams | undefined>;
+}
+
+const objectVariableTypes = new Map<string, IObjectVariableType>();
+
+export function registerObjectVariableType(
+    name: string,
+    objectVariableType: IObjectVariableType
+) {
+    objectVariableTypes.set(name, objectVariableType);
 }

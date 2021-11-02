@@ -16,11 +16,6 @@ import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
 import type { ValueType } from "project-editor/features/variable/value-type";
 
-import type {
-    IDataContext,
-    IVariable
-} from "project-editor/flow/flow-interfaces";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export const enum PropertyType {
@@ -327,14 +322,6 @@ export interface ClassInfo {
     flowComponentId?: number;
 
     isFlowExecutableComponent?: boolean;
-
-    onObjectVariableConstructor?: (variable: IVariable) => Promise<any>;
-    onObjectVariableLoad?: (value: any) => Promise<any>;
-    onObjectVariableSave?: (value: any) => Promise<any>;
-    renderObjectVariableStatus?: (
-        variable: IVariable,
-        dataContext: IDataContext
-    ) => React.ReactNode;
 
     getImportedProject?: (object: IEezObject) =>
         | {

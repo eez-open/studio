@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, computed, runInAction, action } from "mobx";
 import { observer } from "mobx-react";
+import css from "css";
 
 import {
     fileExistsSync,
@@ -40,7 +41,9 @@ import {
     propertyNotFoundMessage,
     propertyInvalidValueMessage,
     DocumentStoreClass,
-    getDocumentStore
+    getDocumentStore,
+    hideInPropertyGridIfDashboardOrApplet,
+    hideInPropertyGridIfNotDashboard
 } from "project-editor/core/store";
 
 import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
@@ -594,13 +597,7 @@ export class General extends EezObject {
             {
                 name: "namespace",
                 type: PropertyType.String,
-                hideInPropertyGrid: (general: General) => {
-                    const documentStore = getDocumentStore(general);
-                    return (
-                        documentStore.project.isDashboardProject ||
-                        documentStore.project.isAppletProject
-                    );
-                }
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             },
             {
                 name: "masterProject",
@@ -634,8 +631,7 @@ export class General extends EezObject {
             {
                 name: "css",
                 type: PropertyType.CSS,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    !getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: hideInPropertyGridIfNotDashboard
             }
         ],
         showInNavigation: true,
@@ -654,6 +650,20 @@ export class General extends EezObject {
                             MessageType.ERROR,
                             "File doesn't exists",
                             getChildOfObject(object, "masterProject")
+                        )
+                    );
+                }
+            }
+
+            if (object.css) {
+                try {
+                    css.parse(object.css);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `CSS parse error: ${err}`,
+                            getChildOfObject(object, "css")
                         )
                     );
                 }
@@ -1162,7 +1172,9 @@ export class Project extends EezObject {
     @computed({ keepAlive: true })
     get pagesMap() {
         const map = new Map<String, Page>();
-        this.pages.forEach(page => map.set(page.name, page));
+        if (this.pages) {
+            this.pages.forEach(page => map.set(page.name, page));
+        }
         return map;
     }
 
