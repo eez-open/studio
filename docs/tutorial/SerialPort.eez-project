@@ -146,7 +146,7 @@
           },
           "widgets": [
             {
-              "type": "XTermWidget",
+              "type": "TerminalWidget",
               "left": 15,
               "top": 32,
               "width": 750,

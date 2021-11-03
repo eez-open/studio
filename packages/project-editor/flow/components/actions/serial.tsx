@@ -12,33 +12,6 @@ import { action, observable, reaction, runInAction } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const styleCircle: React.CSSProperties = {
-    opacity: "1",
-    fill: "#800000",
-    fillOpacity: 0,
-    stroke: "#000000",
-    strokeWidth: "1.5",
-    strokeLinecap: "round",
-    strokeLinejoin: "miter",
-    strokeMiterlimit: 4,
-    strokeDasharray: "none",
-    strokeDashoffset: "0",
-    strokeOpacity: 1,
-    paintOrder: "fill markers stroke"
-};
-
-const stylePath: React.CSSProperties = {
-    fill: "none",
-    fillRule: "evenodd",
-    stroke: "#000000",
-    strokeWidth: "1.5",
-    strokeLinecap: "butt",
-    strokeLinejoin: "miter",
-    strokeMiterlimit: 4,
-    strokeDasharray: "none",
-    strokeOpacity: 1
-};
-
 const icon: any = (
     <svg viewBox="0 0 68.792 34.396">
         <g transform="translate(-21.422 -163.072)" fill="none">

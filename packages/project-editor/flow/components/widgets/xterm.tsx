@@ -17,7 +17,7 @@ class RunningState {
     onData: ((value: string) => void) | undefined = undefined;
 }
 
-export class XTermWidget extends Widget {
+export class TerminalWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         properties: [],
         defaultValue: {
@@ -62,7 +62,7 @@ export class XTermWidget extends Widget {
     render(flowContext: IFlowContext): React.ReactNode {
         return (
             <>
-                <XTermElement widget={this} flowContext={flowContext} />
+                <TerminalElement widget={this} flowContext={flowContext} />
                 {super.render(flowContext)}
             </>
         );
@@ -98,12 +98,12 @@ export class XTermWidget extends Widget {
     }
 }
 
-registerClass("XTermWidget", XTermWidget);
+registerClass("TerminalWidget", TerminalWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class XTermElement extends React.Component<{
-    widget: XTermWidget;
+class TerminalElement extends React.Component<{
+    widget: TerminalWidget;
     flowContext: IFlowContext;
 }> {
     ref = React.createRef<HTMLDivElement>();
