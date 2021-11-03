@@ -331,7 +331,7 @@ class SerialConnection {
         return {
             label: `Connected to ${this.constructorParams.port}`,
             image: icon,
-            color: this.error ? "red" : "green",
+            color: this.error ? "red" : this.isConnected ? "green" : "gray",
             error: this.error
         };
     }

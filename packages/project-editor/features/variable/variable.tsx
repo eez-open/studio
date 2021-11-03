@@ -579,9 +579,21 @@ export class DataContext implements IDataContext {
         this.initGlobalVariables();
     }
 
-    @action
     set(variableName: string, value: any) {
-        this.setRuntimeValue(variableName, value);
+        const oldValue = this.get(variableName);
+        if (oldValue) {
+            const variable = this.findVariable(variableName);
+            if (variable) {
+                const objectVariableType = getObjectVariableTypeFromType(
+                    variable.type
+                );
+                if (objectVariableType && objectVariableType.destroy) {
+                    objectVariableType.destroy(oldValue);
+                }
+            }
+        }
+
+        runInAction(() => this.setRuntimeValue(variableName, value));
     }
 
     findVariableDefaultValue(variableName: string): any {

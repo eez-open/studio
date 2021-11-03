@@ -81,14 +81,17 @@ export class XTermWidget extends Widget {
             flowState.setComponentRunningState(this, runningState);
         }
 
-        const value = flowState.evalExpression(this, this.data);
-        if (
-            runningState.onData &&
-            value &&
-            typeof value === "string" &&
-            value.length > 0
-        ) {
-            runningState.onData(value);
+        const componentState = flowState.getComponentState(this);
+        if (componentState.unreadInputsData.has(this.data)) {
+            const value = componentState.inputsData.get(this.data);
+            if (
+                runningState.onData &&
+                value &&
+                typeof value === "string" &&
+                value.length > 0
+            ) {
+                runningState.onData(value);
+            }
         }
 
         return undefined;

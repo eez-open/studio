@@ -1037,6 +1037,12 @@ export class CompareActionComponent extends ActionComponent {
         return [
             ...super.getOutputs(),
             {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
                 name: "True",
                 type: "null",
                 isSequenceOutput: true,
@@ -1185,6 +1191,12 @@ export class IsTrueActionComponent extends ActionComponent {
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
             {
                 name: "True",
                 displayName: "Yes",
