@@ -33,8 +33,8 @@
       "components": [
         {
           "type": "SerialConnect",
-          "left": 51,
-          "top": -103,
+          "left": 285,
+          "top": -85,
           "width": 119,
           "height": 29,
           "wireID": "719b7ced-7690-4b8b-b1f1-e6eadbc238b6",
@@ -43,21 +43,9 @@
           "connection": "serial_connection"
         },
         {
-          "type": "SerialWrite",
-          "left": 328,
-          "top": -103,
-          "width": 150,
-          "height": 62,
-          "wireID": "4d8d389c-9736-4b8f-91bf-d0b454249d0f",
-          "customInputs": [],
-          "customOutputs": [],
-          "connection": "serial_connection",
-          "data": "\"VOLT 3.0\\nVOLT?\\n\""
-        },
-        {
           "type": "SerialDisconnect",
-          "left": 934,
-          "top": -104,
+          "left": 285,
+          "top": -41,
           "width": 136,
           "height": 29,
           "wireID": "cb160c41-aca1-461a-bdb8-d5df98af748c",
@@ -67,11 +55,11 @@
         },
         {
           "type": "ButtonWidget",
-          "left": 328,
-          "top": 70,
+          "left": 35,
+          "top": 8,
           "width": 135,
           "height": 32,
-          "wireID": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "wireID": "fdbdedb7-4591-41f1-e1c9-9a3a86e2775c",
           "customInputs": [
             {
               "name": "enabled",
@@ -82,7 +70,7 @@
           "asOutputProperties": [
             "action"
           ],
-          "data": "\"Test\"",
+          "data": "\"Connect\"",
           "style": {
             "inheritFrom": "default"
           },
@@ -92,75 +80,35 @@
           }
         },
         {
-          "type": "DelayActionComponent",
-          "left": 510,
-          "top": -104,
-          "width": 87,
-          "height": 62,
-          "wireID": "5ec872fb-6f0e-484b-afd4-2ac7a90af436",
-          "customInputs": [],
+          "type": "ButtonWidget",
+          "left": 35,
+          "top": 62,
+          "width": 135,
+          "height": 32,
+          "wireID": "2309a57a-ae96-4b98-b44b-c3244077b617",
+          "customInputs": [
+            {
+              "name": "enabled",
+              "type": "any"
+            }
+          ],
           "customOutputs": [],
-          "milliseconds": "100"
-        },
-        {
-          "type": "DelayActionComponent",
-          "left": 204,
-          "top": -103,
-          "width": 87,
-          "height": 62,
-          "wireID": "2575d977-f17f-455a-e5d9-b59d79cfe730",
-          "customInputs": [],
-          "customOutputs": [],
-          "milliseconds": "10"
-        },
-        {
-          "type": "ConstantActionComponent",
-          "left": -131,
-          "top": 70,
-          "width": 89,
-          "height": 61,
-          "wireID": "1f5a9a0d-4a07-4cc5-abae-16b9e82a4cf1",
-          "customInputs": [],
-          "customOutputs": [],
-          "value": "true"
-        },
-        {
-          "type": "ConstantActionComponent",
-          "left": -58,
-          "top": -103,
-          "width": 89,
-          "height": 61,
-          "wireID": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
-          "customInputs": [],
-          "customOutputs": [],
-          "value": "false"
-        },
-        {
-          "type": "ConstantActionComponent",
-          "left": 1110,
-          "top": -104,
-          "width": 89,
-          "height": 61,
-          "wireID": "0237c159-20bc-4d09-ff4d-323545c17a1f",
-          "customInputs": [],
-          "customOutputs": [],
-          "value": "true"
-        },
-        {
-          "type": "DelayActionComponent",
-          "left": 800,
-          "top": -104,
-          "width": 87,
-          "height": 62,
-          "wireID": "2c251c42-6240-425e-d8b4-54870e67372b",
-          "customInputs": [],
-          "customOutputs": [],
-          "milliseconds": "10"
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Disconnect\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "enabled": "enabled",
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
         },
         {
           "type": "SerialRead",
-          "left": 649,
-          "top": -104,
+          "left": -137,
+          "top": 228,
           "width": 98,
           "height": 61,
           "wireID": "57b36dba-b0f9-4916-facf-64367b571a6d",
@@ -169,102 +117,123 @@
           "connection": "serial_connection"
         },
         {
-          "type": "TextWidget",
-          "left": 295,
-          "top": 200,
-          "width": 325,
-          "height": 32,
-          "wireID": "b2639829-1928-4ab1-aa5c-1f6987afeb7f",
+          "type": "WatchVariableActionComponent",
+          "left": -304,
+          "top": -41,
+          "width": 286,
+          "height": 62,
+          "wireID": "43f37573-e40c-4eed-c16b-c101cb5de99e",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "!serial_connection.isConnected"
+        },
+        {
+          "type": "Container",
+          "left": 35,
+          "top": 110,
+          "width": 750,
+          "height": 324,
+          "wireID": "32ea16a4-d1a7-4888-a79b-c5490f779e34",
           "customInputs": [
             {
-              "name": "data",
+              "name": "visible",
               "type": "any"
             }
           ],
           "customOutputs": [],
-          "data": "data",
           "style": {
             "inheritFrom": "default"
-          }
+          },
+          "widgets": [
+            {
+              "type": "XTermWidget",
+              "left": 0,
+              "top": 0,
+              "width": 750,
+              "height": 324,
+              "wireID": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
+              "customInputs": [
+                {
+                  "name": "data",
+                  "type": "any"
+                }
+              ],
+              "customOutputs": [],
+              "data": "data"
+            }
+          ],
+          "visible": "visible"
+        },
+        {
+          "type": "WatchVariableActionComponent",
+          "left": -318,
+          "top": 110,
+          "width": 279,
+          "height": 62,
+          "wireID": "6611dcfb-d0b1-43c2-f5aa-bf569c120caf",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "serial_connection.isConnected"
+        },
+        {
+          "type": "SerialWrite",
+          "left": 858,
+          "top": 263,
+          "width": 101,
+          "height": 62,
+          "wireID": "f730c72c-9293-4d54-f7ab-1d6da1184511",
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "connection": "serial_connection",
+          "data": "data"
         }
       ],
       "connectionLines": [
         {
-          "source": "4d8d389c-9736-4b8f-91bf-d0b454249d0f",
-          "output": "@seqout",
-          "target": "5ec872fb-6f0e-484b-afd4-2ac7a90af436",
-          "input": "@seqin"
-        },
-        {
-          "source": "5ec872fb-6f0e-484b-afd4-2ac7a90af436",
-          "output": "@seqout",
-          "target": "57b36dba-b0f9-4916-facf-64367b571a6d",
-          "input": "@seqin"
-        },
-        {
-          "source": "719b7ced-7690-4b8b-b1f1-e6eadbc238b6",
-          "output": "@seqout",
-          "target": "2575d977-f17f-455a-e5d9-b59d79cfe730",
-          "input": "@seqin"
-        },
-        {
-          "source": "2575d977-f17f-455a-e5d9-b59d79cfe730",
-          "output": "@seqout",
-          "target": "4d8d389c-9736-4b8f-91bf-d0b454249d0f",
-          "input": "@seqin"
-        },
-        {
-          "source": "1f5a9a0d-4a07-4cc5-abae-16b9e82a4cf1",
-          "output": "value",
-          "target": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
-          "input": "enabled"
-        },
-        {
-          "source": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
-          "output": "value",
-          "target": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
-          "input": "enabled"
-        },
-        {
-          "source": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "source": "fdbdedb7-4591-41f1-e1c9-9a3a86e2775c",
           "output": "action",
-          "target": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
-          "input": "@seqin"
-        },
-        {
-          "source": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
-          "output": "@seqout",
           "target": "719b7ced-7690-4b8b-b1f1-e6eadbc238b6",
           "input": "@seqin"
         },
         {
-          "source": "0237c159-20bc-4d09-ff4d-323545c17a1f",
-          "output": "value",
-          "target": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "source": "43f37573-e40c-4eed-c16b-c101cb5de99e",
+          "output": "variable",
+          "target": "fdbdedb7-4591-41f1-e1c9-9a3a86e2775c",
           "input": "enabled"
         },
         {
-          "source": "cb160c41-aca1-461a-bdb8-d5df98af748c",
-          "output": "@seqout",
-          "target": "0237c159-20bc-4d09-ff4d-323545c17a1f",
-          "input": "@seqin"
+          "source": "6611dcfb-d0b1-43c2-f5aa-bf569c120caf",
+          "output": "variable",
+          "target": "2309a57a-ae96-4b98-b44b-c3244077b617",
+          "input": "enabled"
         },
         {
-          "source": "2c251c42-6240-425e-d8b4-54870e67372b",
-          "output": "@seqout",
+          "source": "2309a57a-ae96-4b98-b44b-c3244077b617",
+          "output": "action",
           "target": "cb160c41-aca1-461a-bdb8-d5df98af748c",
           "input": "@seqin"
         },
         {
-          "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
-          "output": "@seqout",
-          "target": "2c251c42-6240-425e-d8b4-54870e67372b",
-          "input": "@seqin"
+          "source": "6611dcfb-d0b1-43c2-f5aa-bf569c120caf",
+          "output": "variable",
+          "target": "32ea16a4-d1a7-4888-a79b-c5490f779e34",
+          "input": "visible"
+        },
+        {
+          "source": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
+          "output": "onData",
+          "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
+          "input": "data"
         },
         {
           "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
           "output": "data",
-          "target": "b2639829-1928-4ab1-aa5c-1f6987afeb7f",
+          "target": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
           "input": "data"
         }
       ],

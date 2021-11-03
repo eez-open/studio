@@ -8,6 +8,7 @@ import {
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
+import { action, observable, reaction, runInAction } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,21 +128,31 @@ registerActionComponents("Serial Port", [
             }
         ],
         execute: async (flowState, ...[connection]) => {
-            const serialConnection = flowState.evalExpression(connection);
-            if (!serialConnection) {
-                throw `connection "${connection}" not found`;
+            if (flowState.dispose) {
+                return flowState.dispose;
+            }
+
+            let serialConnection: SerialConnection;
+            try {
+                serialConnection = flowState.evalExpression(connection);
+            } catch (err) {
+                return undefined;
             }
 
             if (!(serialConnection instanceof SerialConnection)) {
-                throw `"${connection}" is not SerialConnection`;
+                return undefined;
             }
 
-            const data = serialConnection.read();
-            if (data) {
-                flowState.propagateValue("data", data);
-            }
-
-            return undefined;
+            return reaction(
+                () => {
+                    return serialConnection.read();
+                },
+                data => {
+                    if (data) {
+                        flowState.propagateValue("data", data);
+                    }
+                }
+            );
         }
     },
     {
@@ -310,13 +321,11 @@ class SerialConnection {
     constructor(public constructorParams: SerialConnectionConstructorParams) {}
 
     port: any;
-
-    isConnected = false;
     error: string | undefined = undefined;
-
     dataToWrite: string | undefined;
+    @observable receivedData: string | undefined;
 
-    receivedData: string | undefined;
+    @observable isConnected: boolean = false;
 
     get status() {
         return {
@@ -349,18 +358,24 @@ class SerialConnection {
                             port.on("error", (err: any) => {
                                 console.error(err);
                                 this.port = undefined;
+                                runInAction(() => (this.isConnected = false));
                             });
 
-                            port.on("data", (data: any) => {
-                                if (!this.receivedData) {
-                                    this.receivedData = data.toString("binary");
-                                } else {
-                                    this.receivedData +=
-                                        data.toString("binary");
-                                }
-                            });
+                            port.on(
+                                "data",
+                                action((data: any) => {
+                                    if (!this.receivedData) {
+                                        this.receivedData =
+                                            data.toString("binary");
+                                    } else {
+                                        this.receivedData +=
+                                            data.toString("binary");
+                                    }
+                                })
+                            );
 
                             this.port = port;
+                            runInAction(() => (this.isConnected = true));
 
                             resolve();
                         }
@@ -376,12 +391,13 @@ class SerialConnection {
         if (this.port) {
             this.port.close();
             this.port = undefined;
+            runInAction(() => (this.isConnected = false));
         }
     }
 
     read() {
         const data = this.receivedData;
-        this.receivedData = undefined;
+        runInAction(() => (this.receivedData = undefined));
         return data;
     }
 

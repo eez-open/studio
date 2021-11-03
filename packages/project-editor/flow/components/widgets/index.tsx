@@ -96,7 +96,6 @@ import {
 
 import { FlowState } from "project-editor/flow/runtime";
 
-import "project-editor/flow/components/widgets/plotly";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import { buildWidget } from "project-editor/features/page/build/widgets";
 import {

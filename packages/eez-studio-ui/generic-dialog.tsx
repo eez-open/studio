@@ -367,7 +367,7 @@ export class GenericDialog extends React.Component<GenericDialogProps> {
 
                 runInAction(() => {
                     this.progressType = type;
-                    this.progressMessage = message;
+                    this.progressMessage = message.toString();
                 });
                 return true; // continue
             }
@@ -608,7 +608,7 @@ export class GenericDialog extends React.Component<GenericDialogProps> {
                 >
                     {this.props.dialogDefinition.error && (
                         <div className="alert alert-danger">
-                            {this.props.dialogDefinition.error}
+                            {this.props.dialogDefinition.error.toString()}
                         </div>
                     )}
                     {fields}

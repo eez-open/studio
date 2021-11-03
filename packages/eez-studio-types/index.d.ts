@@ -102,6 +102,8 @@ export interface IFlowState {
     propagateValue(output: string, value: any): void;
 
     log(type: LogItemType, message: string): void;
+
+    dispose: (() => void) | undefined;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

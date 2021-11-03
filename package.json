@@ -66,6 +66,7 @@
         "@types/sha256": "^0.2.0",
         "@types/tinycolor2": "^1.4.2",
         "@types/usb": "^1.5.3",
+        "@types/xterm": "^3.0.0",
         "concurrently": "^5.2.0",
         "electron": "12.1.0",
         "electron-builder": "^22.11.7",
@@ -143,6 +144,8 @@
         "tinycolor2": "^1.4.1",
         "tmp": "0.1.0",
         "usb": "^1.8.0",
-        "xml-formatter": "^1.2.1"
+        "xml-formatter": "^1.2.1",
+        "xterm": "^4.14.1",
+        "xterm-addon-fit": "^0.5.0"
     }
 }

@@ -2521,7 +2521,9 @@ export function registerActionComponent(
 
                     log: (type: LogItemType, message: string) => {
                         flowState.log(type, message, this);
-                    }
+                    },
+
+                    dispose
                 },
                 ...props
             );
