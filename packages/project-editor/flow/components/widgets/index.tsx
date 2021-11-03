@@ -83,7 +83,6 @@ import {
     makeStylePropertyInfo,
     makeTextPropertyInfo,
     migrateStyleProperty,
-    makeExpressionProperty,
     ComponentInput,
     ComponentOutput
 } from "project-editor/flow/component";
