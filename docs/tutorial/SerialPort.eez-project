@@ -1,0 +1,283 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": [],
+      "css": ".main_page { background-color: #eee; }"
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [
+      {
+        "name": "serial_connection",
+        "type": "object:SerialConnection",
+        "defaultValue": "null",
+        "persistent": true
+      }
+    ],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "SerialConnect",
+          "left": 51,
+          "top": -103,
+          "width": 119,
+          "height": 29,
+          "wireID": "719b7ced-7690-4b8b-b1f1-e6eadbc238b6",
+          "customInputs": [],
+          "customOutputs": [],
+          "connection": "serial_connection"
+        },
+        {
+          "type": "SerialWrite",
+          "left": 328,
+          "top": -103,
+          "width": 150,
+          "height": 62,
+          "wireID": "4d8d389c-9736-4b8f-91bf-d0b454249d0f",
+          "customInputs": [],
+          "customOutputs": [],
+          "connection": "serial_connection",
+          "data": "\"VOLT 3.0\\nVOLT?\\n\""
+        },
+        {
+          "type": "SerialDisconnect",
+          "left": 934,
+          "top": -104,
+          "width": 136,
+          "height": 29,
+          "wireID": "cb160c41-aca1-461a-bdb8-d5df98af748c",
+          "customInputs": [],
+          "customOutputs": [],
+          "connection": "serial_connection"
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 328,
+          "top": 70,
+          "width": 135,
+          "height": 32,
+          "wireID": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "customInputs": [
+            {
+              "name": "enabled",
+              "type": "any"
+            }
+          ],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Test\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "enabled": "enabled",
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 510,
+          "top": -104,
+          "width": 87,
+          "height": 62,
+          "wireID": "5ec872fb-6f0e-484b-afd4-2ac7a90af436",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "100"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 204,
+          "top": -103,
+          "width": 87,
+          "height": 62,
+          "wireID": "2575d977-f17f-455a-e5d9-b59d79cfe730",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "10"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -131,
+          "top": 70,
+          "width": 89,
+          "height": 61,
+          "wireID": "1f5a9a0d-4a07-4cc5-abae-16b9e82a4cf1",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "true"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": -58,
+          "top": -103,
+          "width": 89,
+          "height": 61,
+          "wireID": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "false"
+        },
+        {
+          "type": "ConstantActionComponent",
+          "left": 1110,
+          "top": -104,
+          "width": 89,
+          "height": 61,
+          "wireID": "0237c159-20bc-4d09-ff4d-323545c17a1f",
+          "customInputs": [],
+          "customOutputs": [],
+          "value": "true"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 800,
+          "top": -104,
+          "width": 87,
+          "height": 62,
+          "wireID": "2c251c42-6240-425e-d8b4-54870e67372b",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "10"
+        },
+        {
+          "type": "SerialRead",
+          "left": 649,
+          "top": -104,
+          "width": 98,
+          "height": 61,
+          "wireID": "57b36dba-b0f9-4916-facf-64367b571a6d",
+          "customInputs": [],
+          "customOutputs": [],
+          "connection": "serial_connection"
+        },
+        {
+          "type": "TextWidget",
+          "left": 295,
+          "top": 200,
+          "width": 325,
+          "height": 32,
+          "wireID": "b2639829-1928-4ab1-aa5c-1f6987afeb7f",
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "any"
+            }
+          ],
+          "customOutputs": [],
+          "data": "data",
+          "style": {
+            "inheritFrom": "default"
+          }
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "4d8d389c-9736-4b8f-91bf-d0b454249d0f",
+          "output": "@seqout",
+          "target": "5ec872fb-6f0e-484b-afd4-2ac7a90af436",
+          "input": "@seqin"
+        },
+        {
+          "source": "5ec872fb-6f0e-484b-afd4-2ac7a90af436",
+          "output": "@seqout",
+          "target": "57b36dba-b0f9-4916-facf-64367b571a6d",
+          "input": "@seqin"
+        },
+        {
+          "source": "719b7ced-7690-4b8b-b1f1-e6eadbc238b6",
+          "output": "@seqout",
+          "target": "2575d977-f17f-455a-e5d9-b59d79cfe730",
+          "input": "@seqin"
+        },
+        {
+          "source": "2575d977-f17f-455a-e5d9-b59d79cfe730",
+          "output": "@seqout",
+          "target": "4d8d389c-9736-4b8f-91bf-d0b454249d0f",
+          "input": "@seqin"
+        },
+        {
+          "source": "1f5a9a0d-4a07-4cc5-abae-16b9e82a4cf1",
+          "output": "value",
+          "target": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "input": "enabled"
+        },
+        {
+          "source": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
+          "output": "value",
+          "target": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "input": "enabled"
+        },
+        {
+          "source": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "output": "action",
+          "target": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
+          "input": "@seqin"
+        },
+        {
+          "source": "0fcafd6b-a6f0-4a74-f6a9-d25da75cdce0",
+          "output": "@seqout",
+          "target": "719b7ced-7690-4b8b-b1f1-e6eadbc238b6",
+          "input": "@seqin"
+        },
+        {
+          "source": "0237c159-20bc-4d09-ff4d-323545c17a1f",
+          "output": "value",
+          "target": "3cc63cd0-058c-4ca5-c57e-ecf0cfd20fbd",
+          "input": "enabled"
+        },
+        {
+          "source": "cb160c41-aca1-461a-bdb8-d5df98af748c",
+          "output": "@seqout",
+          "target": "0237c159-20bc-4d09-ff4d-323545c17a1f",
+          "input": "@seqin"
+        },
+        {
+          "source": "2c251c42-6240-425e-d8b4-54870e67372b",
+          "output": "@seqout",
+          "target": "cb160c41-aca1-461a-bdb8-d5df98af748c",
+          "input": "@seqin"
+        },
+        {
+          "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
+          "output": "@seqout",
+          "target": "2c251c42-6240-425e-d8b4-54870e67372b",
+          "input": "@seqin"
+        },
+        {
+          "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
+          "output": "data",
+          "target": "b2639829-1928-4ab1-aa5c-1f6987afeb7f",
+          "input": "data"
+        }
+      ],
+      "localVariables": [],
+      "name": "Page",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 450,
+      "css": "main_page"
+    }
+  ],
+  "styles": [],
+  "colors": [],
+  "themes": []
+}

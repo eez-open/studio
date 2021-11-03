@@ -62,7 +62,7 @@
         "@types/ref-napi": "^3.0.4",
         "@types/request": "^2.48.4",
         "@types/request-promise-native": "^1.0.17",
-        "@types/serialport": "^8.0.1",
+        "@types/serialport": "^8.0.2",
         "@types/sha256": "^0.2.0",
         "@types/tinycolor2": "^1.4.2",
         "@types/usb": "^1.5.3",

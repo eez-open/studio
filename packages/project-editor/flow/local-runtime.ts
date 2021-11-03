@@ -50,7 +50,7 @@ export class LocalRuntime extends RuntimeBase {
         });
 
         await this.DocumentStore.runtimeSettings.loadPersistentVariables();
-        await this.constructCustomGlobalVariables();
+        await this.constructObjectGlobalVariables();
 
         for (const flowState of this.flowStates) {
             await this.startFlow(flowState);
@@ -76,7 +76,7 @@ export class LocalRuntime extends RuntimeBase {
         }
     };
 
-    async constructCustomGlobalVariables() {
+    async constructObjectGlobalVariables() {
         for (const variable of this.DocumentStore.project.variables
             .globalVariables) {
             let value = this.DocumentStore.dataContext.get(variable.name);
@@ -105,6 +105,21 @@ export class LocalRuntime extends RuntimeBase {
         }
     }
 
+    async destroyObjectGlobalVariables() {
+        for (const variable of this.DocumentStore.project.variables
+            .globalVariables) {
+            let value = this.DocumentStore.dataContext.get(variable.name);
+            if (value) {
+                const objectVariableType = getObjectVariableTypeFromType(
+                    variable.type
+                );
+                if (objectVariableType && objectVariableType.destroy) {
+                    objectVariableType.destroy(value);
+                }
+            }
+        }
+    }
+
     @computed get isAnyFlowStateRunning() {
         return (
             this.flowStates.find(flowState => flowState.isRunning) != undefined
@@ -126,6 +141,8 @@ export class LocalRuntime extends RuntimeBase {
         }
 
         this.flowStates.forEach(flowState => flowState.finish());
+
+        this.destroyObjectGlobalVariables();
 
         await this.DocumentStore.runtimeSettings.savePersistentVariables();
 

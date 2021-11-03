@@ -2397,8 +2397,9 @@ export class NotFoundComponent extends ActionComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function registerActionComponent(
-    name: string,
-    actionComponentDefinition: IActionComponentDefinition
+    actionComponentDefinition: IActionComponentDefinition,
+    name?: string,
+    componentPaletteGroupName?: string
 ) {
     const properties: PropertyInfo[] = [];
 
@@ -2430,15 +2431,20 @@ export function registerActionComponent(
         static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
             label: () => actionComponentDefinition.name,
             properties,
-            icon: (
-                <img
-                    src={
-                        "data:image/svg+xml;charset=utf-8," +
-                        actionComponentDefinition.icon
-                    }
-                />
-            ),
-            componentHeaderColor: actionComponentDefinition.componentHeaderColor
+            icon:
+                typeof actionComponentDefinition.icon === "string" ? (
+                    <img
+                        src={
+                            "data:image/svg+xml;charset=utf-8," +
+                            actionComponentDefinition.icon
+                        }
+                    />
+                ) : (
+                    actionComponentDefinition.icon
+                ),
+            componentHeaderColor:
+                actionComponentDefinition.componentHeaderColor,
+            componentPaletteGroupName
         });
 
         constructor() {
@@ -2532,5 +2538,18 @@ export function registerActionComponent(
 
     decorate(actionComponentClass, decorators);
 
-    registerClass(name, actionComponentClass);
+    registerClass(name || actionComponentDefinition.name, actionComponentClass);
+}
+
+export function registerActionComponents(
+    componentPaletteGroupName: string,
+    actionComponentDefinitions: IActionComponentDefinition[]
+) {
+    actionComponentDefinitions.forEach(actionComponentDefinition =>
+        registerActionComponent(
+            actionComponentDefinition,
+            undefined,
+            componentPaletteGroupName
+        )
+    );
 }

@@ -54,6 +54,7 @@ import {
 } from "project-editor/features/variable/value-type";
 
 import "project-editor/flow/components/actions/instrument";
+import "project-editor/flow/components/actions/serial";
 import type {
     IActionComponentDefinition,
     IObjectVariableType
@@ -73,8 +74,8 @@ export async function initExtensions() {
                                 actionComponentDefinition: IActionComponentDefinition
                             ) =>
                                 registerActionComponent(
-                                    `${extension.name}/${actionComponentDefinition.name}`,
-                                    actionComponentDefinition
+                                    actionComponentDefinition,
+                                    `${extension.name}/${actionComponentDefinition.name}`
                                 ),
 
                             registerObjectVariableType: (

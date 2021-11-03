@@ -604,8 +604,11 @@ export function isValueTypeOf(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// must be serializable
+export type ConstructorParams = any;
+
 export interface IObjectVariableValue {
-    constructorParams: any;
+    constructorParams: ConstructorParams;
     status: {
         label?: string;
         image?: string;
@@ -618,18 +621,13 @@ export type ObjectVariableConstructorFunction = (
     constructorParams: any
 ) => IObjectVariableValue;
 
-export type ConstructorParams =
-    | string
-    | {
-          [key: string]: ConstructorParams;
-      };
-
 export interface IObjectVariableType {
     constructorFunction: ObjectVariableConstructorFunction;
     editConstructorParams: (
         variable: IVariable,
         constructorParams: ConstructorParams | null
     ) => Promise<ConstructorParams | undefined>;
+    destroy?: (objectValue: any) => void;
 }
 
 const objectVariableTypes = new Map<string, IObjectVariableType>();

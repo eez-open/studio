@@ -106,8 +106,11 @@ export interface IFlowState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// must be serializable
+export type ConstructorParams = any;
+
 export interface IObjectVariableValue {
-    constructorParams: any;
+    constructorParams: ConstructorParams;
     status: {
         label?: string;
         image?: string;
@@ -119,10 +122,6 @@ export interface IObjectVariableValue {
 export type ObjectVariableConstructorFunction = (
     constructorParams: any
 ) => IObjectVariableValue;
-
-export type ConstructorParams = {
-    [key: string]: ConstructorParams;
-};
 
 export interface IObjectVariableType {
     constructorFunction: ObjectVariableConstructorFunction;
