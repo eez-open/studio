@@ -6,7 +6,12 @@ import {
     ProjectType
 } from "project-editor/core/object";
 
-import { ComponentOutput, Widget } from "project-editor/flow/component";
+import {
+    ComponentInput,
+    ComponentOutput,
+    makeDataPropertyInfo,
+    Widget
+} from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { addCssStylesheet } from "eez-studio-shared/dom";
 import { FlowState } from "project-editor/flow/runtime";
@@ -20,7 +25,11 @@ class RunningState {
 
 export class TerminalWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [],
+        properties: [
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: true
+            })
+        ],
         defaultValue: {
             left: 0,
             top: 0,
@@ -48,13 +57,25 @@ export class TerminalWidget extends Widget {
             projectType === ProjectType.DASHBOARD
     });
 
+    getInputs(): ComponentInput[] {
+        return [
+            ...super.getInputs(),
+            {
+                name: "data",
+                type: "string",
+                isOptionalInput: false,
+                isSequenceInput: false
+            }
+        ];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),
             {
                 name: "onData",
                 type: "string",
-                isOptionalOutput: true,
+                isOptionalOutput: false,
                 isSequenceOutput: false
             }
         ];
@@ -70,10 +91,6 @@ export class TerminalWidget extends Widget {
     }
 
     async execute(flowState: FlowState) {
-        if (!this.data) {
-            return undefined;
-        }
-
         let runningState =
             flowState.getComponentRunningState<RunningState>(this);
 
@@ -83,8 +100,8 @@ export class TerminalWidget extends Widget {
         }
 
         const componentState = flowState.getComponentState(this);
-        if (componentState.unreadInputsData.has(this.data)) {
-            const value = componentState.inputsData.get(this.data);
+        if (componentState.unreadInputsData.has("data")) {
+            const value = componentState.inputsData.get("data");
             if (
                 runningState.onData &&
                 value &&

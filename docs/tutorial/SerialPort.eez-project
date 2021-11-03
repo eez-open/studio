@@ -33,9 +33,9 @@
       "components": [
         {
           "type": "SerialConnect",
-          "left": 285,
-          "top": -85,
-          "width": 119,
+          "left": 212,
+          "top": -73,
+          "width": 135,
           "height": 29,
           "wireID": "719b7ced-7690-4b8b-b1f1-e6eadbc238b6",
           "customInputs": [],
@@ -44,9 +44,9 @@
         },
         {
           "type": "SerialDisconnect",
-          "left": 285,
-          "top": -41,
-          "width": 136,
+          "left": 409,
+          "top": -73,
+          "width": 152,
           "height": 29,
           "wireID": "cb160c41-aca1-461a-bdb8-d5df98af748c",
           "customInputs": [],
@@ -54,62 +54,77 @@
           "connection": "serial_connection"
         },
         {
-          "type": "ButtonWidget",
-          "left": 35,
-          "top": 8,
-          "width": 135,
-          "height": 32,
-          "wireID": "fdbdedb7-4591-41f1-e1c9-9a3a86e2775c",
-          "customInputs": [
-            {
-              "name": "enabled",
-              "type": "any"
-            }
-          ],
+          "type": "Container",
+          "left": 0,
+          "top": 0,
+          "width": 790,
+          "height": 72,
+          "wireID": "28b50a04-0640-466b-af82-531054a1bb5a",
+          "customInputs": [],
           "customOutputs": [],
-          "asOutputProperties": [
-            "action"
-          ],
-          "data": "\"Connect\"",
           "style": {
             "inheritFrom": "default"
           },
-          "enabled": "enabled",
-          "disabledStyle": {
-            "inheritFrom": "default"
-          }
-        },
-        {
-          "type": "ButtonWidget",
-          "left": 35,
-          "top": 62,
-          "width": 135,
-          "height": 32,
-          "wireID": "2309a57a-ae96-4b98-b44b-c3244077b617",
-          "customInputs": [
+          "widgets": [
             {
-              "name": "enabled",
-              "type": "any"
+              "type": "ButtonWidget",
+              "left": 20,
+              "top": 20,
+              "width": 135,
+              "height": 32,
+              "wireID": "fdbdedb7-4591-41f1-e1c9-9a3a86e2775c",
+              "customInputs": [
+                {
+                  "name": "enabled",
+                  "type": "any"
+                }
+              ],
+              "customOutputs": [],
+              "asOutputProperties": [
+                "action"
+              ],
+              "data": "\"Connect\"",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "enabled": "enabled",
+              "disabledStyle": {
+                "inheritFrom": "default"
+              }
+            },
+            {
+              "type": "ButtonWidget",
+              "left": 225,
+              "top": 20,
+              "width": 135,
+              "height": 32,
+              "wireID": "2309a57a-ae96-4b98-b44b-c3244077b617",
+              "customInputs": [
+                {
+                  "name": "enabled",
+                  "type": "any"
+                }
+              ],
+              "customOutputs": [],
+              "asOutputProperties": [
+                "action"
+              ],
+              "data": "\"Disconnect\"",
+              "style": {
+                "inheritFrom": "default"
+              },
+              "enabled": "enabled",
+              "disabledStyle": {
+                "inheritFrom": "default"
+              }
             }
-          ],
-          "customOutputs": [],
-          "asOutputProperties": [
-            "action"
-          ],
-          "data": "\"Disconnect\"",
-          "style": {
-            "inheritFrom": "default"
-          },
-          "enabled": "enabled",
-          "disabledStyle": {
-            "inheritFrom": "default"
-          }
+          ]
         },
         {
           "type": "SerialRead",
-          "left": -208,
-          "top": 335,
-          "width": 98,
+          "left": -197,
+          "top": 188,
+          "width": 114,
           "height": 61,
           "wireID": "57b36dba-b0f9-4916-facf-64367b571a6d",
           "customInputs": [],
@@ -118,8 +133,8 @@
         },
         {
           "type": "WatchVariableActionComponent",
-          "left": -304,
-          "top": -41,
+          "left": -369,
+          "top": 0,
           "width": 286,
           "height": 62,
           "wireID": "43f37573-e40c-4eed-c16b-c101cb5de99e",
@@ -129,10 +144,10 @@
         },
         {
           "type": "Container",
-          "left": 35,
-          "top": 94,
-          "width": 765,
-          "height": 356,
+          "left": 0,
+          "top": 72,
+          "width": 790,
+          "height": 344,
           "wireID": "32ea16a4-d1a7-4888-a79b-c5490f779e34",
           "customInputs": [
             {
@@ -147,27 +162,22 @@
           "widgets": [
             {
               "type": "TerminalWidget",
-              "left": 15,
-              "top": 32,
+              "left": 20,
+              "top": 0,
               "width": 750,
               "height": 324,
               "wireID": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
-              "customInputs": [
-                {
-                  "name": "data",
-                  "type": "any"
-                }
-              ],
+              "customInputs": [],
               "customOutputs": [],
-              "data": "data"
+              "data": ""
             }
           ],
           "visible": "visible"
         },
         {
           "type": "WatchVariableActionComponent",
-          "left": -318,
-          "top": 110,
+          "left": -362,
+          "top": 100,
           "width": 279,
           "height": 62,
           "wireID": "6611dcfb-d0b1-43c2-f5aa-bf569c120caf",
@@ -177,9 +187,9 @@
         },
         {
           "type": "SerialWrite",
-          "left": 1193,
-          "top": 231,
-          "width": 101,
+          "left": 880,
+          "top": 188,
+          "width": 117,
           "height": 62,
           "wireID": "f730c72c-9293-4d54-f7ab-1d6da1184511",
           "customInputs": [
@@ -194,8 +204,8 @@
         },
         {
           "type": "IsTrueActionComponent",
-          "left": 894,
-          "top": 293,
+          "left": 605,
+          "top": 435,
           "width": 185,
           "height": 83,
           "wireID": "337f1671-d779-4aad-ade5-d3210fe8d568",
@@ -210,8 +220,8 @@
         },
         {
           "type": "ConstantActionComponent",
-          "left": 881,
-          "top": 480,
+          "left": 425,
+          "top": 584,
           "width": 89,
           "height": 61,
           "wireID": "1d1977c3-6f3d-40eb-fb87-cac61a507e11",
@@ -252,12 +262,6 @@
           "input": "visible"
         },
         {
-          "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
-          "output": "data",
-          "target": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
-          "input": "data"
-        },
-        {
           "source": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
           "output": "onData",
           "target": "337f1671-d779-4aad-ade5-d3210fe8d568",
@@ -270,12 +274,6 @@
           "input": "@seqin"
         },
         {
-          "source": "1d1977c3-6f3d-40eb-fb87-cac61a507e11",
-          "output": "value",
-          "target": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
-          "input": "data"
-        },
-        {
           "source": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
           "output": "onData",
           "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
@@ -286,14 +284,26 @@
           "output": "@seqout",
           "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
           "input": "@seqin"
+        },
+        {
+          "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
+          "output": "data",
+          "target": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
+          "input": "data"
+        },
+        {
+          "source": "1d1977c3-6f3d-40eb-fb87-cac61a507e11",
+          "output": "value",
+          "target": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
+          "input": "data"
         }
       ],
       "localVariables": [],
       "name": "Page",
       "left": 0,
       "top": 0,
-      "width": 800,
-      "height": 450,
+      "width": 790,
+      "height": 416,
       "css": "main_page"
     }
   ],

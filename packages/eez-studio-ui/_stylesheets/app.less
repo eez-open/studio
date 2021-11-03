@@ -4696,9 +4696,24 @@ button.EezStudio_Action {
         }
 
         &.TerminalWidget {
-            overflow: hidden !important;
             .xterm {
+                overflow: hidden !important;
                 cursor: default !important;
+                .xterm-viewport {
+                    overflow-y: auto;
+                }
+            }
+        }
+    }
+}
+
+.EezStudio_FlowViewerCanvasContainer {
+    .EezStudio_ComponentEnclosure {
+        &.TerminalWidget {
+            .xterm {
+                .xterm-viewport {
+                    overflow-y: auto;
+                }
             }
         }
     }

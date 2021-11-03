@@ -56,7 +56,7 @@ import {
 import "project-editor/flow/components/actions/instrument";
 import "project-editor/flow/components/actions/serial";
 import "project-editor/flow/components/widgets/plotly";
-import "project-editor/flow/components/widgets/xterm";
+import "project-editor/flow/components/widgets/terminal";
 
 import type {
     IActionComponentDefinition,
