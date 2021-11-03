@@ -10,6 +10,7 @@ import { ComponentOutput, Widget } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { addCssStylesheet } from "eez-studio-shared/dom";
 import { FlowState } from "project-editor/flow/runtime";
+import { observer } from "mobx-react";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,6 +103,7 @@ registerClass("TerminalWidget", TerminalWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@observer
 class TerminalElement extends React.Component<{
     widget: TerminalWidget;
     flowContext: IFlowContext;
@@ -114,6 +116,7 @@ class TerminalElement extends React.Component<{
     dispose: any;
 
     async componentDidMount() {
+        console.log("componentDidMount");
         if (!this.ref.current) {
             return;
         }
@@ -168,13 +171,12 @@ class TerminalElement extends React.Component<{
     }
 
     render() {
-        const { widget } = this.props;
         return (
             <div
                 ref={this.ref}
                 style={{
-                    width: widget.width,
-                    height: widget.height
+                    width: this.props.widget.width,
+                    height: this.props.widget.height
                 }}
             ></div>
         );
