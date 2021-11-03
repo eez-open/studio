@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, runInAction } from "mobx";
+import { observable, computed, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
@@ -127,7 +127,8 @@ import {
 } from "./widget_types";
 import {
     evalConstantExpression,
-    evalExpression
+    evalExpression,
+    ExpressionEvalError
 } from "project-editor/flow/expression/expression";
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
@@ -1328,8 +1329,6 @@ export class LayoutViewWidget extends EmbeddedWidget {
                     }
                 }
             }
-
-            componentState.markInputsDataRead();
         }
 
         return false;
@@ -1538,7 +1537,8 @@ export class DisplayDataWidget extends EmbeddedWidget {
                         }
                         return "";
                     } catch (err) {
-                        return err.toString();
+                        console.error(err);
+                        return "";
                     }
                 }
 
@@ -1816,7 +1816,8 @@ export class TextWidget extends EmbeddedWidget {
                         }
                         return "";
                     } catch (err) {
-                        return err.toString();
+                        console.error(err);
+                        return "";
                     }
                 }
 
@@ -2785,7 +2786,8 @@ export class ButtonWidget extends EmbeddedWidget {
                         }
                         return "";
                     } catch (err) {
-                        return err.toString();
+                        console.error(err);
+                        return "";
                     }
                 }
 
@@ -5049,14 +5051,9 @@ export class TextInputWidget extends Widget {
                 name: "password",
                 type: PropertyType.Boolean
             },
-            makeExpressionProperty(
-                {
-                    name: "value",
-                    type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
-                },
-                "string"
-            )
+            makeDataPropertyInfo("data", {
+                displayName: "Value"
+            })
         ],
         defaultValue: {
             left: 0,
@@ -5093,7 +5090,6 @@ export class TextInputWidget extends Widget {
     });
 
     @observable password: boolean;
-    @observable value: string;
 
     getOutputs(): ComponentOutput[] {
         return [
@@ -5143,22 +5139,54 @@ export class TextInputWidget extends Widget {
         );
     }
 
-    async execute(flowState: FlowState) {
+    async execute(
+        flowState: FlowState,
+        dispose: (() => void) | undefined
+    ): Promise<(() => void) | undefined | boolean> {
         const runningState =
             flowState.getComponentRunningState<TextInputRunningState>(this);
 
-        const value = flowState.evalExpression(this, this.value);
+        let value = this.data ? flowState.evalExpression(this, this.data) : "";
 
         if (!runningState) {
-            let runningState = new TextInputRunningState(value);
-            flowState.setComponentRunningState(this, runningState);
+            flowState.setComponentRunningState(
+                this,
+                new TextInputRunningState(value)
+            );
         } else {
             if (value != runningState.value) {
                 runInAction(() => (runningState.value = value));
             }
         }
 
-        return undefined;
+        if (dispose) {
+            return dispose;
+        }
+
+        return reaction(
+            () => {
+                try {
+                    return this.data
+                        ? flowState.evalExpression(this, this.data)
+                        : "";
+                } catch (err) {
+                    if (err instanceof ExpressionEvalError) {
+                        return undefined;
+                    } else {
+                        throw err;
+                    }
+                }
+            },
+            value => {
+                const runningState =
+                    flowState.getComponentRunningState<TextInputRunningState>(
+                        this
+                    );
+                if (runningState) {
+                    runInAction(() => (runningState.value = value));
+                }
+            }
+        );
     }
 }
 

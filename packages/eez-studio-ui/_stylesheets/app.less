@@ -3743,8 +3743,16 @@ button.EezStudio_Action {
         }
     }
 
-    .ListWidget {
+    &.ListWidget {
         overflow: hidden !important;
+    }
+
+    &.TextInputWidget {
+        input {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
     }
 
     &.enabled-breakpoint::before,
@@ -4680,6 +4688,14 @@ button.EezStudio_Action {
     .title [data-connection-output-id]:hover {
         color: @lightSelectionColor!important;
         background-color: @lightSelectionBackgroundColor!important;
+    }
+
+    .EezStudio_ComponentEnclosure {
+        &.TextInputWidget {
+            input {
+                cursor: default !important;
+            }
+        }
     }
 }
 

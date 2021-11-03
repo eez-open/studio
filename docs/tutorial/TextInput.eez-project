@@ -3,7 +3,8 @@
     "general": {
       "projectVersion": "v2",
       "projectType": "dashboard",
-      "imports": []
+      "imports": [],
+      "css": ".main { background-color: #eee; }"
     },
     "build": {
       "configurations": [
@@ -77,7 +78,7 @@
           "asOutputProperties": [
             "action"
           ],
-          "data": "Trt",
+          "data": "\"Trt\"",
           "style": {
             "inheritFrom": "default"
           },
@@ -130,7 +131,8 @@
       "left": 0,
       "top": 0,
       "width": 480,
-      "height": 272
+      "height": 272,
+      "css": "main"
     }
   ],
   "colors": [],
