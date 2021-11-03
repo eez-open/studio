@@ -107,6 +107,9 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
 }
 
 function getModuleFirmwareReleases(moduleType: string) {
+    if (moduleType === "DCP405") {
+        return [];
+    }
     return new Promise<ModuleFirmwareRelease[]>((resolve, reject) => {
         let req = new XMLHttpRequest();
         req.responseType = "json";
@@ -156,24 +159,33 @@ async function getModulesInfoFromInstrument(
                 const moduleRevision = removeQuotes(
                     await connection.query(`SYST:SLOT:VERS? ${i + 1}`)
                 );
-                const firmwareVersion = removeQuotes(
-                    await connection.query(`SYST:SLOT:FIRM? ${i + 1}`)
-                );
 
+                let firmwareVersion;
                 let allReleases: ModuleFirmwareRelease[];
-                if (bb3Instrument.isTimeForRefresh || forceRefresh) {
-                    allReleases = await getModuleFirmwareReleases(moduleType);
+                if (moduleType === "DCP405") {
+                    firmwareVersion = "-";
+                    allReleases = [];
                 } else {
-                    const module = bb3Instrument.modules?.find(
-                        module =>
-                            module.moduleType == moduleType &&
-                            module.allReleases &&
-                            module.allReleases.length > 0
+                    firmwareVersion = removeQuotes(
+                        await connection.query(`SYST:SLOT:FIRM? ${i + 1}`)
                     );
-                    if (module) {
-                        allReleases = module.allReleases;
+
+                    if (bb3Instrument.isTimeForRefresh || forceRefresh) {
+                        allReleases = await getModuleFirmwareReleases(
+                            moduleType
+                        );
                     } else {
-                        allReleases = [];
+                        const module = bb3Instrument.modules?.find(
+                            module =>
+                                module.moduleType == moduleType &&
+                                module.allReleases &&
+                                module.allReleases.length > 0
+                        );
+                        if (module) {
+                            allReleases = module.allReleases;
+                        } else {
+                            allReleases = [];
+                        }
                     }
                 }
 

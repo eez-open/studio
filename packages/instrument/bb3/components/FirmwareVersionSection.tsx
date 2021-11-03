@@ -67,7 +67,7 @@ const OtherReleases = observer(
                         </thead>
                         <tbody>
                             {otherReleases.map(release => (
-                                <tr>
+                                <tr key={release.tag_name}>
                                     <td>{release.tag_name}</td>
                                     <td>
                                         <button

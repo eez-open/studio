@@ -12,7 +12,10 @@ export const ListsSectionList = observer(({ lists }: { lists: List[] }) => {
     return (
         <div className="list-group">
             {lists.map(list => (
-                <ListsSectionListItem key={list.baseName} list={list} />
+                <ListsSectionListItem
+                    key={list.studioList ? list.studioList.id : list.baseName}
+                    list={list}
+                />
             ))}
         </div>
     );
