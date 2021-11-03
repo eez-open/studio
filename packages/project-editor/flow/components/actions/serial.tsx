@@ -12,42 +12,92 @@ import { action, observable, reaction, runInAction } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const styleCircle: React.CSSProperties = {
+    opacity: "1",
+    fill: "#800000",
+    fillOpacity: 0,
+    stroke: "#000000",
+    strokeWidth: "1.5",
+    strokeLinecap: "round",
+    strokeLinejoin: "miter",
+    strokeMiterlimit: 4,
+    strokeDasharray: "none",
+    strokeDashoffset: "0",
+    strokeOpacity: 1,
+    paintOrder: "fill markers stroke"
+};
+
+const stylePath: React.CSSProperties = {
+    fill: "none",
+    fillRule: "evenodd",
+    stroke: "#000000",
+    strokeWidth: "1.5",
+    strokeLinecap: "butt",
+    strokeLinejoin: "miter",
+    strokeMiterlimit: 4,
+    strokeDasharray: "none",
+    strokeOpacity: 1
+};
+
 const icon: any = (
-    <svg viewBox="0 0 88.784 88.784">
+    <svg viewBox="0 0 68.792 34.396">
+        <g transform="translate(-21.422 -163.072)" fill="none">
+            <circle
+                style={{
+                    opacity: 1,
+                    fill: "maroon",
+                    fillOpacity: 0,
+                    stroke: "#000",
+                    strokeWidth: "1.5",
+                    strokeLinecap: "round",
+                    strokeLinejoin: "miter",
+                    strokeMiterlimit: 4,
+                    strokeDasharray: "none",
+                    strokeDashoffset: 0,
+                    strokeOpacity: 1,
+                    paintOrder: "fill markers stroke"
+                }}
+                cx="43.765"
+                cy="180.27"
+                r="7.955"
+            />
+            <circle
+                style={{
+                    opacity: 1,
+                    fill: "maroon",
+                    fillOpacity: 0,
+                    stroke: "#000",
+                    strokeWidth: "1.5",
+                    strokeLinecap: "round",
+                    strokeLinejoin: "miter",
+                    strokeMiterlimit: 4,
+                    strokeDasharray: "none",
+                    strokeDashoffset: 0,
+                    strokeOpacity: 1,
+                    paintOrder: "fill markers stroke"
+                }}
+                cx="67.686"
+                cy="180.27"
+                r="7.955"
+            />
+        </g>
         <path
-            fill="#010002"
-            d="M58.74,0H30.027v26.033H58.74C58.74,26.033,58.74,0,58.74,0z M40.173,17.497h-6.281v-6.281h6.281
-			V17.497z M54.875,17.497h-6.277v-6.281h6.277V17.497z"
-        />
-        <path
-            fill="#010002"
-            d="M65.436,28.931c-0.204,0.612-1.027,1.045-2.434,1.045H25.846c-1.525,0-2.412-0.497-2.498-1.199
-			c-0.104,0.39-0.168,0.841-0.168,1.396v28.684c0,4.556,3.819,8.285,8.482,8.285h25.442c4.663,0,8.478-3.729,8.478-8.285V30.173
-			C65.59,29.679,65.518,29.293,65.436,28.931z M50.315,41.762c-0.329-0.004-0.659,0-0.984,0c-0.014,0.029-0.014,0.054-0.014,0.075
-			c0,0.734,0,1.467,0,2.201c0.014,0.701-0.258,1.303-0.719,1.818c-0.286,0.304-0.608,0.58-0.909,0.862
-			c-0.805,0.773-1.614,1.528-2.426,2.301c-0.222,0.208-0.326,0.483-0.369,0.777c-0.007,0.079-0.014,0.157-0.014,0.236
-			c0,1.75,0,3.504,0,5.261c0,0.068,0.014,0.086,0.089,0.107c0.991,0.233,1.725,1.063,1.865,2.083
-			c0.175,1.303-0.727,2.545-2.022,2.759c-1.338,0.222-2.577-0.633-2.856-1.954c-0.258-1.292,0.565-2.584,1.843-2.881
-			c0.079-0.021,0.093-0.054,0.093-0.129c-0.007-0.523-0.007-1.045-0.007-1.568c0-0.354-0.111-0.662-0.329-0.941
-			c-0.021-0.021-0.021-0.036-0.061-0.061c-1.07-1.013-2.158-2.029-3.217-3.06c-0.523-0.515-0.82-1.16-0.82-1.922
-			c0-0.759,0-1.507,0-2.276c0-0.057-0.014-0.082-0.075-0.107c-0.623-0.243-0.988-0.88-0.916-1.521
-			c0.082-0.698,0.608-1.22,1.288-1.313c0.902-0.115,1.714,0.623,1.664,1.539c-0.036,0.619-0.354,1.052-0.931,1.303
-			c-0.054,0.018-0.068,0.047-0.068,0.093c0,0.795,0,1.593,0.007,2.387c0.007,0.401,0.161,0.748,0.447,1.031
-			c0.984,0.934,1.965,1.861,2.949,2.784c0.021,0.014,0.036,0.036,0.057,0.068c0-5.05,0-10.089,0-15.131c-0.39,0-0.798,0-1.217,0
-			c0.58-0.995,1.134-1.976,1.714-2.967c0.58,0.988,1.142,1.968,1.714,2.956c-0.426,0-0.82,0-1.217,0c0,3.808-0.014,7.616,0,11.427
-			c0.014-0.014,0.029-0.029,0.043-0.039c1.013-0.963,2.026-1.904,3.024-2.867c0.211-0.208,0.315-0.465,0.372-0.748
-			c0.014-0.075,0.014-0.15,0.014-0.222c0-0.766,0-1.525,0-2.298c0-0.014,0-0.032,0-0.064c-0.329,0-0.651,0-0.977,0
-			c0-0.991,0-1.979,0-2.956c0.977,0.004,1.958,0,2.956,0C50.315,39.786,50.315,40.77,50.315,41.762z"
-        />
-        <path
-            fill="#010002"
-            d="M47.108,74.182h5.075c1.432,0,2.609-1.17,2.609-2.605v-1.843c0-0.136-0.064-0.251-0.075-0.379
-			h-20.65c-0.025,0.129-0.075,0.247-0.075,0.379v1.843c0,1.428,1.163,2.605,2.602,2.605h5.264c0.161,1.406,0.784,4.32,3.189,7.233
-			c4.03,4.885,10.944,7.369,20.557,7.369v-5.2C50.372,83.58,47.602,76.659,47.108,74.182z"
+            d="M31.674 171.406v17.728M55.726 171.406v17.728M79.96 171.406v17.728"
+            style={{
+                fill: "none",
+                fillRule: "evenodd",
+                stroke: "#000",
+                strokeWidth: "1.5",
+                strokeLinecap: "butt",
+                strokeLinejoin: "miter",
+                strokeMiterlimit: 4,
+                strokeDasharray: "none",
+                strokeOpacity: 1
+            }}
+            transform="translate(-21.422 -163.072)"
         />
     </svg>
 );
-
 const componentHeaderColor = "#cca3ba";
 
 registerActionComponents("Serial Port", [
@@ -260,16 +310,16 @@ async function showConnectDialog(
                         validators: [validators.integer]
                     },
                     {
-                        name: "parity",
-                        type: "enum",
-                        enumItems: ["none", "even", "mark", "odd", "space"],
-                        validators: [validators.required]
-                    },
-                    {
                         name: "stopBits",
                         type: "enum",
                         enumItems: [1, 2],
                         validators: [validators.integer]
+                    },
+                    {
+                        name: "parity",
+                        type: "enum",
+                        enumItems: ["none", "even", "mark", "odd", "space"],
+                        validators: [validators.required]
                     }
                 ],
                 error: undefined
@@ -311,8 +361,8 @@ interface SerialConnectionConstructorParams {
     port: string;
     baudRate: number;
     dataBits: 8 | 7 | 6 | 5;
-    parity: "none" | "even" | "mark" | "odd" | "space";
     stopBits: 1 | 2;
+    parity: "none" | "even" | "mark" | "odd" | "space";
 }
 
 const CONF_CHUNK_SIZE = 64;
@@ -329,7 +379,7 @@ class SerialConnection {
 
     get status() {
         return {
-            label: `Connected to ${this.constructorParams.port}`,
+            label: `Port: ${this.constructorParams.port}, Baud rate: ${this.constructorParams.baudRate}, Data bits: ${this.constructorParams.dataBits}, Stop bits: ${this.constructorParams.stopBits}, Parity: ${this.constructorParams.parity}`,
             image: icon,
             color: this.error ? "red" : this.isConnected ? "green" : "gray",
             error: this.error
