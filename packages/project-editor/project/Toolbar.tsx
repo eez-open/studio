@@ -69,7 +69,8 @@ class GlobalVariableStatuses extends React.Component {
                                 this.context.dataContext.set(
                                     variable.name,
                                     objectVariableType.constructorFunction(
-                                        constructorParams
+                                        constructorParams,
+                                        !!this.context.runtime
                                     )
                                 );
                             }

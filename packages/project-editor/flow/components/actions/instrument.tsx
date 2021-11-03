@@ -176,9 +176,11 @@ export class SCPIActionComponent extends ActionComponent {
         const startTime = Date.now();
         while (
             !instrument.isConnected &&
-            startTime - Date.now() < CONNECTION_TIMEOUT
+            Date.now() - startTime < CONNECTION_TIMEOUT
         ) {
-            instrument.connection.connect();
+            if (!instrument.connection.isTransitionState) {
+                instrument.connection.connect();
+            }
             await new Promise<boolean>(resolve => setTimeout(resolve, 10));
         }
 
@@ -676,13 +678,18 @@ function getInstrumentIdFromConstructorParams(
 }
 
 registerObjectVariableType("Instrument", {
-    constructorFunction: (constructorParams: ConstructorParams) => {
+    constructorFunction: (
+        constructorParams: ConstructorParams,
+        isRuntime: boolean
+    ) => {
         const instrumentId =
             getInstrumentIdFromConstructorParams(constructorParams);
         if (instrumentId) {
             const instrument = instruments.get(instrumentId);
             if (instrument) {
-                connectToInstrument(instrument);
+                if (isRuntime) {
+                    connectToInstrument(instrument);
+                }
                 return instrument;
             }
         }

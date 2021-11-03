@@ -91,10 +91,10 @@ export class LocalRuntime extends RuntimeBase {
                             null
                         );
                     if (constructorParams) {
-                        const value =
-                            objectVariableType.constructorFunction(
-                                constructorParams
-                            );
+                        const value = objectVariableType.constructorFunction(
+                            constructorParams,
+                            true
+                        );
                         this.DocumentStore.dataContext.set(
                             variable.name,
                             value
