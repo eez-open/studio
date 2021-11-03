@@ -32,6 +32,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import { visitObjects } from "project-editor/core/search";
 import { evalAssignableExpression } from "project-editor/flow/expression/expression";
+import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 
 export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -49,6 +50,7 @@ export class LocalRuntime extends RuntimeBase {
         });
 
         await this.DocumentStore.runtimeSettings.loadPersistentVariables();
+        await this.constructCustomGlobalVariables();
 
         for (const flowState of this.flowStates) {
             await this.startFlow(flowState);
@@ -73,6 +75,35 @@ export class LocalRuntime extends RuntimeBase {
             });
         }
     };
+
+    async constructCustomGlobalVariables() {
+        for (const variable of this.DocumentStore.project.variables
+            .globalVariables) {
+            let value = this.DocumentStore.dataContext.get(variable.name);
+            if (value == null) {
+                const objectVariableType = getObjectVariableTypeFromType(
+                    variable.type
+                );
+                if (objectVariableType) {
+                    const constructorParams =
+                        await objectVariableType.editConstructorParams(
+                            variable,
+                            null
+                        );
+                    if (constructorParams) {
+                        const value =
+                            objectVariableType.constructorFunction(
+                                constructorParams
+                            );
+                        this.DocumentStore.dataContext.set(
+                            variable.name,
+                            value
+                        );
+                    }
+                }
+            }
+        }
+    }
 
     @computed get isAnyFlowStateRunning() {
         return (
@@ -590,6 +621,10 @@ export class LocalRuntime extends RuntimeBase {
                 componentState.inputsData.delete(input.name);
             }
         });
+
+        if (componentState.component instanceof Widget) {
+            componentState.markInputsDataRead();
+        }
     }
 
     findCatchErrorOutput(componentState: ComponentState):
