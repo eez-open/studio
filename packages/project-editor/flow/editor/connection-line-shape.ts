@@ -1,6 +1,7 @@
 import { getId, getParent, IEezObject } from "project-editor/core/object";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function getConnectionLineShape(
     context: IFlowContext,
@@ -21,6 +22,9 @@ export function getConnectionLineShape(
         }
         if (context.viewState.isObjectIdSelected(getId(object))) {
             return true;
+        }
+        if (object instanceof ProjectEditor.ActionComponentClass) {
+            return false;
         }
         return isObjectSelected(getParent(object));
     }
