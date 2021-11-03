@@ -122,7 +122,8 @@ export interface IObjectVariableValue {
 }
 
 export type ObjectVariableConstructorFunction = (
-    constructorParams: any
+    constructorParams: any,
+    isRuntime: boolean
 ) => IObjectVariableValue;
 
 export interface IObjectVariableType {

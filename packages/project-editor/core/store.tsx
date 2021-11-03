@@ -957,7 +957,10 @@ class RuntimeSettings {
             return undefined;
         }
 
-        return objectVariableType.constructorFunction(constructorParams);
+        return objectVariableType.constructorFunction(
+            constructorParams,
+            !!this.DocumentStore.runtime
+        );
     }
 
     setObjectVariableConstructorParams(
