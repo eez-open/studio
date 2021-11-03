@@ -187,7 +187,7 @@
         },
         {
           "type": "SerialWrite",
-          "left": 880,
+          "left": 1021,
           "top": 188,
           "width": 117,
           "height": 62,
@@ -228,6 +228,17 @@
           "customInputs": [],
           "customOutputs": [],
           "value": "\"\\n\""
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 840,
+          "top": 354,
+          "width": 87,
+          "height": 62,
+          "wireID": "6338d73d-fdb0-466b-b1af-714b238924eb",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "10"
         }
       ],
       "connectionLines": [
@@ -280,12 +291,6 @@
           "input": "data"
         },
         {
-          "source": "337f1671-d779-4aad-ade5-d3210fe8d568",
-          "output": "@seqout",
-          "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
-          "input": "@seqin"
-        },
-        {
           "source": "57b36dba-b0f9-4916-facf-64367b571a6d",
           "output": "data",
           "target": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
@@ -296,6 +301,18 @@
           "output": "value",
           "target": "e62b2334-9dac-446f-d1a3-14fb6cd03c6e",
           "input": "data"
+        },
+        {
+          "source": "337f1671-d779-4aad-ade5-d3210fe8d568",
+          "output": "@seqout",
+          "target": "6338d73d-fdb0-466b-b1af-714b238924eb",
+          "input": "@seqin"
+        },
+        {
+          "source": "6338d73d-fdb0-466b-b1af-714b238924eb",
+          "output": "@seqout",
+          "target": "f730c72c-9293-4d54-f7ab-1d6da1184511",
+          "input": "@seqin"
         }
       ],
       "localVariables": [],
