@@ -3968,7 +3968,7 @@ export function hideInPropertyGridIfNotDashboard(object: IEezObject) {
 
 export function hideInPropertyGridIfApplet(object: IEezObject) {
     const documentStore = getDocumentStore(object);
-    return documentStore.project.isDashboardProject;
+    return documentStore.project.isAppletProject;
 }
 
 export function hideInPropertyGridIfDashboardOrApplet(object: IEezObject) {
