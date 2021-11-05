@@ -1217,6 +1217,10 @@ export class Component extends EezObject {
             ) {
                 // check properties
                 for (const propertyInfo of getClassInfo(component).properties) {
+                    if (isPropertyHidden(component, propertyInfo)) {
+                        continue;
+                    }
+
                     if (isFlowProperty(DocumentStore, propertyInfo, "input")) {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
