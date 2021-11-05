@@ -55,6 +55,8 @@ import { buildWidget } from "./build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/widgets/widget_types";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { validators } from "eez-studio-shared/validation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -268,13 +270,34 @@ export class Page extends Flow {
         },
         isPropertyMenuSupported: true,
         newItem: (parent: IEezObject) => {
-            return Promise.resolve({
-                name: "Page",
-                left: 0,
-                top: 0,
-                width: 480,
-                height: 272,
-                widgets: []
+            const project = ProjectEditor.getProject(parent);
+
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Page",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {
+                    name: project.pages.length == 0 ? "Main" : ""
+                }
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name,
+                    left: 0,
+                    top: 0,
+                    width: 480,
+                    height: 272,
+                    widgets: []
+                });
             });
         },
         createEditorState: (page: Page) => {
@@ -436,7 +459,7 @@ export class Page extends Flow {
     }
 
     getClassName() {
-        return classNames({
+        return classNames("EezStudio_Page", {
             [this.css]: getDocumentStore(this).project.isDashboardProject
         });
     }

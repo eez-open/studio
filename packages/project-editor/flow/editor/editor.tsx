@@ -170,6 +170,7 @@ function CenterLines({ flowContext }: { flowContext: EditorFlowContext }) {
 
     const CENTER_LINES_COLOR = settingsController.isDarkTheme ? "#444" : "#eee";
     const CENTER_LINES_WIDTH = 1 / transform.scale;
+
     const centerLineStyle = {
         fill: "transparent",
         stroke: CENTER_LINES_COLOR,
@@ -180,8 +181,22 @@ function CenterLines({ flowContext }: { flowContext: EditorFlowContext }) {
 
     const pageRect = transform.clientToPageRect(transform.clientRect);
 
+    let pageFlowRect;
+    if (flowContext.flow instanceof ProjectEditor.PageClass) {
+        pageFlowRect = flowContext.flow.pageRect;
+    }
+
     return (
         <Svg flowContext={flowContext}>
+            {pageFlowRect && (
+                <rect
+                    x={pageFlowRect.left}
+                    y={pageFlowRect.top}
+                    width={pageFlowRect.width}
+                    height={pageFlowRect.height}
+                    style={centerLineStyle}
+                />
+            )}
             <line
                 x1={pageRect.left}
                 y1={center.y}
