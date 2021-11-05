@@ -397,6 +397,9 @@ export class Property extends React.Component<PropertyProps> {
                             onSelect={this.onSelectionChange}
                             style={{ resize: "none" }}
                             readOnly={propertyInfo.computed}
+                            spellCheck={
+                                propertyInfo.disableSpellcheck ? false : true
+                            }
                         />
                         <button
                             className="btn btn-secondary"
@@ -419,6 +422,9 @@ export class Property extends React.Component<PropertyProps> {
                         onChange={this.onChange}
                         style={{ resize: "none" }}
                         readOnly={readOnly || propertyInfo.computed}
+                        spellCheck={
+                            propertyInfo.disableSpellcheck ? false : true
+                        }
                     />
                 );
             }
@@ -536,6 +542,9 @@ export class Property extends React.Component<PropertyProps> {
                         onChange={this.onChange}
                         style={{ resize: "none" }}
                         readOnly={readOnly || propertyInfo.computed}
+                        spellCheck={
+                            propertyInfo.disableSpellcheck ? false : true
+                        }
                     />
                 );
             } else {
@@ -552,6 +561,11 @@ export class Property extends React.Component<PropertyProps> {
                                 onSelect={this.onSelectionChange}
                                 style={{ resize: "none" }}
                                 readOnly={propertyInfo.computed}
+                                spellCheck={
+                                    propertyInfo.disableSpellcheck
+                                        ? false
+                                        : true
+                                }
                             />
                             <button
                                 className="btn btn-secondary"

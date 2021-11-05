@@ -379,7 +379,6 @@ export function makeExpressionProperty(
 
                 return menuItems;
             },
-
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
                 expressionBuilder(object, propertyInfo, {
                     assignableExpression: false,
@@ -387,8 +386,8 @@ export function makeExpressionProperty(
                     width: 400,
                     height: 600
                 }),
-
-            monospaceFont: true
+            monospaceFont: true,
+            disableSpellcheck: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -405,11 +404,12 @@ export function makeAssignableExpressionProperty(
             onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
                 expressionBuilder(object, propertyInfo, {
                     assignableExpression: true,
-                    title: propertyInfo.onSelectTitle!,
+                    title: "Expression Builder",
                     width: 400,
                     height: 600
                 }),
-            onSelectTitle: "Expression Builder"
+            monospaceFont: true,
+            disableSpellcheck: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -1154,6 +1154,7 @@ export class Component extends EezObject {
         check: (component: Component) => {
             let messages: Message[] = [];
 
+            // check connections to inputs
             component.inputs.forEach(componentInput => {
                 if (
                     !ProjectEditor.getFlow(component).connectionLines.find(
@@ -1176,6 +1177,7 @@ export class Component extends EezObject {
                 }
             });
 
+            // check connection from outputs
             const connectionLines =
                 ProjectEditor.getFlow(component).connectionLines;
             component.outputs.forEach(componentOutput => {
@@ -1213,6 +1215,7 @@ export class Component extends EezObject {
                 DocumentStore.project.isAppletProject ||
                 DocumentStore.project.isDashboardProject
             ) {
+                // check properties
                 for (const propertyInfo of getClassInfo(component).properties) {
                     if (isFlowProperty(DocumentStore, propertyInfo, "input")) {
                         const value = getProperty(component, propertyInfo.name);
@@ -2422,7 +2425,8 @@ export function registerActionComponent(
                 displayName: propertyDefinition.displayName,
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup,
-                monospaceFont: true
+                monospaceFont: true,
+                disableSpellcheck: true
             });
         }
     }
@@ -2517,6 +2521,10 @@ export function registerActionComponent(
                             output,
                             value
                         );
+                    },
+
+                    throwError: (message: string) => {
+                        flowState.runtime.throwError(flowState, this, message);
                     },
 
                     log: (type: LogItemType, message: string) => {

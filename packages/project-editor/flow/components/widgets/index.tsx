@@ -262,7 +262,7 @@ export class ContainerWidget extends EmbeddedWidget {
             let value: any;
             try {
                 value = this.visible
-                    ? flowContext.flowState.evalExpression(this, this.visible)
+                    ? evalExpression(flowContext, this, this.visible)
                     : true;
             } catch (err) {
                 console.error(err);
@@ -2847,7 +2847,7 @@ export class ButtonWidget extends EmbeddedWidget {
         if (flowContext.flowState) {
             try {
                 buttonEnabled = this.enabled
-                    ? flowContext.flowState.evalExpression(this, this.enabled)
+                    ? evalExpression(flowContext, this, this.enabled)
                     : true;
             } catch (err) {
                 console.error(err);

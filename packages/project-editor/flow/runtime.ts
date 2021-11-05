@@ -421,6 +421,12 @@ export abstract class RuntimeBase {
         outputName?: string
     ): void;
 
+    abstract throwError(
+        flowState: FlowState,
+        component: Component,
+        message: string
+    ): void;
+
     abstract assignValue(
         flowState: FlowState,
         component: Component,
@@ -546,7 +552,7 @@ export class FlowState {
         return this.dataContext.set(variableName, value);
     }
 
-    @computed get isRunning(): boolean {
+    @computed({ keepAlive: true }) get isRunning(): boolean {
         for (let [_, componentState] of this.componentStates) {
             if (componentState.isRunning) {
                 return true;
@@ -556,6 +562,15 @@ export class FlowState {
         return (
             this.flowStates.find(flowState => flowState.isRunning) != undefined
         );
+    }
+
+    @computed({ keepAlive: true }) get hasAnyDiposableComponent() {
+        for (let [_, componentState] of this.componentStates) {
+            if (componentState.dispose) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @action
@@ -610,7 +625,7 @@ export class ComponentState {
     @observable unreadInputsData = new Set<string>();
     @observable isRunning: boolean = false;
     @observable runningState: any;
-    dispose: (() => void) | undefined = undefined;
+    @observable dispose: (() => void) | undefined = undefined;
 
     constructor(public flowState: FlowState, public component: Component) {}
 

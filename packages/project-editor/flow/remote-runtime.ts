@@ -459,6 +459,8 @@ export class RemoteRuntime extends RuntimeBase {
         outputName?: string
     ) {}
 
+    throwError(flowState: FlowState, component: Component, message: string) {}
+
     assignValue(
         flowState: FlowState,
         component: Component,

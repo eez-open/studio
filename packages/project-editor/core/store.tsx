@@ -1592,6 +1592,7 @@ export class DocumentStoreClass {
     dispose2: mobx.IReactionDisposer;
     dispose3: mobx.IReactionDisposer;
     dispose4: mobx.IReactionDisposer;
+    dispose5: mobx.IReactionDisposer;
 
     watcher: FSWatcher | undefined = undefined;
 
@@ -1673,12 +1674,14 @@ export class DocumentStoreClass {
         if (this.dispose4) {
             this.dispose4();
         }
+        if (this.dispose5) {
+            this.dispose5();
+        }
     }
 
-    async loadAllExternalProjects() {
+    async loadMasterProject() {
         const project = this.project!;
 
-        // load master project
         if (project.settings.general.masterProject) {
             try {
                 await project.loadMasterProject();
@@ -1688,6 +1691,13 @@ export class DocumentStoreClass {
                 );
             }
         }
+    }
+
+    async loadAllExternalProjects() {
+        const project = this.project!;
+
+        // load master project
+        await this.loadMasterProject();
 
         // load imported projects
         for (let i = 0; i < project.settings.general.imports.length; i++) {
@@ -1699,6 +1709,13 @@ export class DocumentStoreClass {
                 );
             }
         }
+
+        this.dispose5 = reaction(
+            () => this.project.settings.general.masterProject,
+            masterProject => {
+                this.loadMasterProject();
+            }
+        );
     }
 
     startBackgroundCheck() {
@@ -1790,6 +1807,11 @@ export class DocumentStoreClass {
             folder = ".";
         }
         return folder;
+    }
+
+    getAbsoluteProjectFolderPath() {
+        const path = EEZStudio.remote.require("path");
+        return path.dirname(this.filePath);
     }
 
     @computed

@@ -61,6 +61,11 @@ export interface IRuntime {
         value: any,
         outputName?: string
     ): void;
+    throwError(
+        flowState: IFlowState,
+        sourceComponent: Component,
+        message: string
+    ): void;
 }
 
 export interface IFlowState {

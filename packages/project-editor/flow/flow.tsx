@@ -37,8 +37,10 @@ import {
 import { Variable } from "project-editor/features/variable/variable";
 import { ValueType } from "project-editor/features/variable/value-type";
 import {
+    EndActionComponent,
     InputActionComponent,
-    OutputActionComponent
+    OutputActionComponent,
+    StartActionComponent
 } from "project-editor/flow/components/actions";
 import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
@@ -568,6 +570,18 @@ export abstract class Flow extends EezObject {
     }
 
     abstract get pageRect(): Rect;
+
+    @computed get startComponent() {
+        return this.components.find(
+            component => component instanceof StartActionComponent
+        );
+    }
+
+    @computed get endComponent() {
+        return this.components.find(
+            component => component instanceof EndActionComponent
+        );
+    }
 
     @computed get inputComponents() {
         return this.components

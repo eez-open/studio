@@ -286,12 +286,16 @@ export class Variable extends EezObject {
             variableTypeProperty,
             {
                 name: "defaultValue",
-                type: PropertyType.MultilineText
+                type: PropertyType.MultilineText,
+                monospaceFont: true,
+                disableSpellcheck: true
             },
             {
                 name: "defaultValueList",
                 type: PropertyType.MultilineText,
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
+                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet,
+                monospaceFont: true,
+                disableSpellcheck: true
             },
             {
                 name: "defaultMinValue",

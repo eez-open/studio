@@ -143,7 +143,7 @@ export class Canvas extends React.Component<{
     }
 
     onWheel = (event: WheelEvent) => {
-        if (event.buttons === 4) {
+        if (event.buttons === 4 || this.props.flowContext.frontFace) {
             // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
             return;
         }

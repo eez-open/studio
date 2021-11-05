@@ -33,6 +33,10 @@ import {
     humanizeVariableType
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import {
+    FLOW_ITERATOR_INDEXES_VARIABLE,
+    FLOW_ITERATOR_INDEX_VARIABLE
+} from "project-editor/features/variable/defs";
 
 export const EXPR_MARK_START = "{<";
 export const EXPR_MARK_END = ">}";
@@ -322,6 +326,33 @@ class SelectItemDialog extends React.Component<{
         }
 
         if (!this.props.assignableExpression) {
+            children.push({
+                id: "system-variables",
+                label: "System variables",
+                children: [
+                    {
+                        id: FLOW_ITERATOR_INDEX_VARIABLE,
+                        label: FLOW_ITERATOR_INDEX_VARIABLE,
+                        children: [],
+                        selected:
+                            this.selection == FLOW_ITERATOR_INDEX_VARIABLE,
+                        expanded: false,
+                        data: FLOW_ITERATOR_INDEX_VARIABLE
+                    },
+                    {
+                        id: FLOW_ITERATOR_INDEXES_VARIABLE,
+                        label: FLOW_ITERATOR_INDEXES_VARIABLE,
+                        children: [],
+                        selected:
+                            this.selection == FLOW_ITERATOR_INDEXES_VARIABLE,
+                        expanded: false,
+                        data: FLOW_ITERATOR_INDEXES_VARIABLE
+                    }
+                ],
+                selected: false,
+                expanded: true
+            });
+
             if (this.context.project.variables.enums.length) {
                 children.push({
                     id: "enumerations",

@@ -72,7 +72,8 @@ export class SCPIActionComponent extends ActionComponent {
                 name: "scpi",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup,
-                monospaceFont: true
+                monospaceFont: true,
+                disableSpellcheck: true
             }
         ],
         beforeLoadHook: (component: SCPIActionComponent, jsObject: any) => {

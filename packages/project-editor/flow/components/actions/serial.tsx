@@ -141,6 +141,7 @@ const disconnectIcon: any = (
         </g>
     </svg>
 );
+
 const readIcon: any = (
     <svg viewBox="0 0 68.792 34.396">
         <g stroke="#000">
@@ -176,6 +177,7 @@ const readIcon: any = (
         </g>
     </svg>
 );
+
 const writeIcon: any = (
     <svg viewBox="0 0 68.792 34.396">
         <g stroke="#000">
@@ -211,6 +213,9 @@ const writeIcon: any = (
         </g>
     </svg>
 );
+
+const listPortsIcon = statusIcon;
+
 const componentHeaderColor = "#cca3ba";
 
 registerActionComponents("Serial Port", [
@@ -352,6 +357,29 @@ registerActionComponents("Serial Port", [
             if (dataValue) {
                 serialConnection.write(dataValue.toString());
             }
+
+            return undefined;
+        }
+    },
+    {
+        name: "SerialListPorts",
+        icon: listPortsIcon,
+        componentHeaderColor,
+        inputs: [],
+        outputs: [
+            {
+                name: "ports",
+                type: "any",
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }
+        ],
+        properties: [],
+        execute: async (flowState, ...[connection, data]) => {
+            flowState.propagateValue(
+                "ports",
+                await SerialConnection.listPorts()
+            );
 
             return undefined;
         }
@@ -594,5 +622,10 @@ class SerialConnection {
             this.dataToWrite = data;
             this.port.drain(this.sendNextChunkCallback);
         }
+    }
+
+    static async listPorts() {
+        const SerialPort = await import("serialport");
+        return await SerialPort.default.list();
     }
 }

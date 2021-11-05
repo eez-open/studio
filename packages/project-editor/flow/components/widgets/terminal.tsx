@@ -90,7 +90,9 @@ export class TerminalWidget extends Widget {
         );
     }
 
-    async execute(flowState: FlowState) {
+    async execute(flowState: FlowState, dispose: (() => void) | undefined) {
+        const { Readable, Duplex } = await import("stream");
+
         let runningState =
             flowState.getComponentRunningState<RunningState>(this);
 
@@ -100,15 +102,27 @@ export class TerminalWidget extends Widget {
         }
 
         const componentState = flowState.getComponentState(this);
+
         if (componentState.unreadInputsData.has("data")) {
             const value = componentState.inputsData.get("data");
-            if (
-                runningState.onData &&
-                value &&
-                typeof value === "string" &&
-                value.length > 0
-            ) {
-                runningState.onData(value);
+            if (runningState.onData && value) {
+                if (typeof value === "string" && value.length > 0) {
+                    runningState.onData(value);
+                } else if (
+                    value instanceof Readable ||
+                    value instanceof Duplex
+                ) {
+                    const onData = (chunk: Buffer) => {
+                        if (runningState && runningState.onData) {
+                            console.log(chunk.toString());
+                            runningState.onData(chunk.toString());
+                        }
+                    };
+                    value.on("data", onData);
+                    return () => {
+                        value.off("data", onData);
+                    };
+                }
             }
         }
 
@@ -133,7 +147,6 @@ class TerminalElement extends React.Component<{
     dispose: any;
 
     async componentDidMount() {
-        console.log("componentDidMount");
         if (!this.ref.current) {
             return;
         }
@@ -142,7 +155,9 @@ class TerminalElement extends React.Component<{
 
         const { Terminal } = await import("xterm");
         const { FitAddon } = await import("xterm-addon-fit");
-        this.terminal = new Terminal();
+        this.terminal = new Terminal({
+            rendererType: "dom"
+        });
         this.fitAddon = new FitAddon();
         this.terminal.loadAddon(this.fitAddon);
         this.terminal.open(this.ref.current);
@@ -167,6 +182,13 @@ class TerminalElement extends React.Component<{
                 this.props.flowContext.flowState.getComponentRunningState<RunningState>(
                     this.props.widget
                 );
+            if (!runningState) {
+                runningState = new RunningState();
+                this.props.flowContext.flowState.setComponentRunningState(
+                    this.props.widget,
+                    runningState
+                );
+            }
             if (runningState) {
                 runningState.onData = data => {
                     this.terminal.write(data);

@@ -13,7 +13,7 @@ import {
     WidgetActionNotDefinedLogItem,
     WidgetActionNotFoundLogItem
 } from "project-editor/flow/debugger/logs";
-import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
+import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import * as notification from "eez-studio-ui/notification";
 import {
     StateMachineAction,
@@ -301,10 +301,15 @@ export class LocalRuntime extends RuntimeBase {
             return;
         }
 
-        const it = flowContext.dataContext.get(FLOW_ITERATOR_INDEX_VARIABLE);
+        let iterators = flowContext.dataContext.get(
+            FLOW_ITERATOR_INDEXES_VARIABLE
+        );
+        if (iterators && iterators.length == 1) {
+            iterators = iterators[0];
+        }
 
         if (widget.isOutputProperty("action")) {
-            this.propagateValue(parentFlowState, widget, "action", it);
+            this.propagateValue(parentFlowState, widget, "action", iterators);
         } else if (widget.action) {
             // execute action given by name
             const action = findAction(
@@ -329,7 +334,7 @@ export class LocalRuntime extends RuntimeBase {
                             newFlowState,
                             component,
                             "@seqout",
-                            it
+                            iterators
                         );
                     }
                 }
@@ -534,90 +539,28 @@ export class LocalRuntime extends RuntimeBase {
                 componentState.dispose
             );
 
-            if (
-                --componentState.flowState.numActiveComponents == 0 &&
-                componentState.flowState.flow instanceof Action
-            ) {
-                runInAction(() => (componentState.flowState.isFinished = true));
-            }
+            --componentState.flowState.numActiveComponents;
 
             if (result == undefined) {
                 propagateThroughSeqout = true;
+                runInAction(() => (componentState.dispose = undefined));
             } else {
                 if (typeof result == "boolean") {
                     propagateThroughSeqout = false;
+                    runInAction(() => (componentState.dispose = undefined));
                 } else {
-                    componentState.dispose = result;
+                    runInAction(() => (componentState.dispose = result));
                     propagateThroughSeqout = true;
                 }
             }
         } catch (err) {
             --componentState.flowState.numActiveComponents;
 
-            runInAction(() => {
-                componentState.flowState.runtime.error =
-                    componentState.flowState.error = err.toString();
-            });
-
-            if (componentState.component instanceof ErrorActionComponent) {
-                componentState.flowState.log(
-                    "error",
-                    `Error: ${err.toString()}`,
-                    componentState.component
-                );
-            } else {
-                componentState.flowState.runtime.logs.addLogItem(
-                    new ExecutionErrorLogItem(
-                        componentState.flowState,
-                        componentState.component,
-                        err
-                    )
-                );
-            }
-
-            const catchErrorOutput = this.findCatchErrorOutput(componentState);
-            if (!componentState.flowState.isFinished && catchErrorOutput) {
-                this.propagateValue(
-                    componentState.flowState,
-                    componentState.component,
-                    "@error",
-                    err
-                );
-            } else {
-                let flowState: FlowState | undefined;
-                if (componentState.component instanceof ErrorActionComponent) {
-                    flowState = componentState.flowState.parentFlowState;
-                } else {
-                    flowState = componentState.flowState;
-                }
-
-                const catchErrorActionComponentState =
-                    flowState && flowState.findCatchErrorActionComponent();
-                if (catchErrorActionComponentState) {
-                    // remove from the queue all the tasks beloging to this flow state
-                    componentState.flowState.runtime.removeQueueTasksForFlowState(
-                        componentState.flowState
-                    );
-
-                    if (
-                        catchErrorActionComponentState.flowState !=
-                        componentState.flowState
-                    ) {
-                        runInAction(
-                            () => (componentState.flowState.isFinished = true)
-                        );
-                    }
-
-                    this.setInputValue(
-                        catchErrorActionComponentState.flowState,
-                        catchErrorActionComponentState.component,
-                        "message",
-                        err
-                    );
-                } else {
-                    componentState.flowState.runtime.stopRuntime(true);
-                }
-            }
+            this.throwError(
+                componentState.flowState,
+                componentState.component,
+                err.toString()
+            );
         } finally {
             runInAction(() => {
                 componentState.isRunning = false;
@@ -641,6 +584,73 @@ export class LocalRuntime extends RuntimeBase {
 
         if (componentState.component instanceof Widget) {
             componentState.markInputsDataRead();
+        }
+
+        if (
+            propagateThroughSeqout &&
+            !componentState.flowState.hasAnyDiposableComponent
+        ) {
+            if (
+                componentState.flowState.numActiveComponents == 0 &&
+                componentState.flowState.flow instanceof Action
+            ) {
+                runInAction(() => (componentState.flowState.isFinished = true));
+            }
+        }
+    }
+
+    throwError(flowState: FlowState, component: Component, message: string) {
+        runInAction(() => {
+            flowState.runtime.error = flowState.error = message;
+        });
+
+        if (component instanceof ErrorActionComponent) {
+            flowState.log("error", `Error: ${message}`, component);
+        } else {
+            flowState.runtime.logs.addLogItem(
+                new ExecutionErrorLogItem(flowState, component, message)
+            );
+        }
+
+        const componentState = flowState.getComponentState(component);
+
+        const catchErrorOutput = this.findCatchErrorOutput(componentState);
+        if (!flowState.isFinished && catchErrorOutput) {
+            this.propagateValue(flowState, component, "@error", message);
+        } else {
+            let flowState: FlowState | undefined;
+            if (component instanceof ErrorActionComponent) {
+                flowState = componentState.flowState.parentFlowState;
+            } else {
+                flowState = componentState.flowState;
+            }
+
+            const catchErrorActionComponentState =
+                flowState && flowState.findCatchErrorActionComponent();
+            if (catchErrorActionComponentState) {
+                // remove from the queue all the tasks beloging to this flow state
+                componentState.flowState.runtime.removeQueueTasksForFlowState(
+                    componentState.flowState
+                );
+
+                if (
+                    catchErrorActionComponentState.flowState !=
+                    componentState.flowState
+                ) {
+                    runInAction(
+                        () => (componentState.flowState.isFinished = true)
+                    );
+                }
+
+                this.setInputValue(
+                    catchErrorActionComponentState.flowState,
+                    catchErrorActionComponentState.component,
+                    "message",
+                    message
+                );
+            } else {
+                componentState.flowState.runtime.stopRuntime(true);
+            }
         }
     }
 

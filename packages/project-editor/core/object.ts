@@ -195,6 +195,7 @@ export interface PropertyInfo {
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
 
     monospaceFont?: boolean;
+    disableSpellcheck?: boolean;
 }
 
 export interface NavigationComponentProps {

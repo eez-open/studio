@@ -487,6 +487,18 @@ export const builtInFunctions: {
         }
     },
 
+    "Array.length": {
+        arity: 1,
+        args: ["array"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0].length,
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+
     "Array.slice": {
         arity: { min: 2, max: 3 },
         args: ["array", "from", "[to]"],
@@ -502,12 +514,22 @@ export const builtInFunctions: {
 
 export const builtInConstants: {
     [name: string]: {
-        value: any;
+        value: (expressionContext?: IExpressionContext) => any;
         valueType: ValueType;
     };
 } = {
+    "System.ProjectFolder": {
+        value: (expressionContext?: IExpressionContext) =>
+            expressionContext?.DocumentStore.getAbsoluteProjectFolderPath(),
+        valueType: "string"
+    },
+    "System.ProjectFile": {
+        value: (expressionContext?: IExpressionContext) =>
+            expressionContext?.DocumentStore.filePath,
+        valueType: "string"
+    },
     "Math.PI": {
-        value: Math.PI,
+        value: () => Math.PI,
         valueType: "double"
     }
 };

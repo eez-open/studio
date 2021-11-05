@@ -273,6 +273,37 @@ export function evalExpressionGetValueType(
     return { value, valueType };
 }
 
+export function evalAssignableExpression(
+    expressionContext: IExpressionContext,
+    component: Component,
+    expression: string
+): AssignableValue {
+    let assignableValue: AssignableValue | undefined;
+
+    if (typeof expression == "string") {
+        let rootNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+
+        findValueTypeInExpressionNode(component, rootNode, false);
+
+        assignableValue = evalAssignableExpressionWithContext(
+            expressionContext,
+            component,
+            rootNode
+        );
+    }
+
+    if (!assignableValue) {
+        return new AssignableValue("null");
+    }
+
+    return assignableValue;
+}
+
 export function parseIdentifier(identifier: string) {
     try {
         const rootNode: ExpressionNode = identifierParser.parse(identifier);
@@ -303,87 +334,6 @@ function checkArity(functionName: string, node: ExpressionNode) {
             throw `In function '${functionName}' call expected ${arity} arguments, but got ${node.arguments.length}`;
         }
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-type AssignableValueType =
-    | "null"
-    | "input"
-    | "output"
-    | "local-variable"
-    | "global-variable"
-    | "flow-value";
-
-class AssignableValue {
-    constructor(
-        private type: AssignableValueType,
-        public name?: any,
-        public object?: any
-    ) {}
-
-    isInput() {
-        return this.type == "input";
-    }
-
-    isOutput() {
-        return this.type == "output";
-    }
-
-    isLocalVariable() {
-        return this.type == "local-variable";
-    }
-
-    isGlobalVariable() {
-        return this.type == "global-variable";
-    }
-
-    isFlowValue() {
-        return this.type == "flow-value";
-    }
-
-    getValue(expressionContext: IExpressionContext) {
-        if (this.isLocalVariable() || this.isGlobalVariable()) {
-            return expressionContext.dataContext.get(this.name);
-        } else if (this.isInput()) {
-            return this.object;
-        } else if (this.isFlowValue()) {
-            return this.object[this.name];
-        } else {
-            return null;
-        }
-    }
-}
-
-export function evalAssignableExpression(
-    expressionContext: IExpressionContext,
-    component: Component,
-    expression: string
-): AssignableValue {
-    let assignableValue: AssignableValue | undefined;
-
-    if (typeof expression == "string") {
-        let rootNode;
-        try {
-            rootNode = expressionParser.parse(expression);
-        } catch (err) {
-            throw `Expression error: ${err}`;
-        }
-
-        findValueTypeInExpressionNode(component, rootNode, false);
-
-        assignableValue = evalAssignableExpressionWithContext(
-            expressionContext,
-            component,
-            rootNode
-        );
-    }
-
-    if (!assignableValue) {
-        return new AssignableValue("null");
-    }
-
-    return assignableValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,12 +415,16 @@ type ExpressionNode =
 
 type NonComputedPropertyExpressionNode = ExpressionNode & { name: string };
 
+////////////////////////////////////////////////////////////////////////////////
+
 function getNodeDescription(node: ExpressionNode) {
     if (node.type == "Identifier") {
         return node.name;
     }
     return node.type;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function findValueTypeInExpressionNode(
     component: Component,
@@ -486,6 +440,8 @@ function findValueTypeInExpressionNode(
             node.valueType = "double";
         } else if (typeof node.value === "string") {
             node.valueType = "string";
+        } else if (node.value === "null") {
+            node.valueType = "null";
         } else {
             node.valueType = "undefined";
         }
@@ -709,16 +665,16 @@ function findValueTypeInExpressionNode(
         node.elements.forEach(element =>
             findValueTypeInExpressionNode(component, element, assignable)
         );
-        // TODO
     } else if (node.type == "ObjectExpression") {
         node.properties.forEach(property =>
             findValueTypeInExpressionNode(component, property.value, assignable)
         );
-        // TODO
     } else {
         throw `Unknown expression node "${node.type}"`;
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
     function checkNode(node: ExpressionNode) {
@@ -824,43 +780,47 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
         if (node.type == "MemberExpression") {
             if (
                 node.object.type == "Identifier" &&
-                node.property.type == "Identifier" &&
-                isEnumType(node.object.valueType)
+                node.property.type == "Identifier"
             ) {
-                const enumDef = project.variables.enumsMap.get(
-                    node.object.name
-                );
-                if (enumDef) {
-                    const enumMember = enumDef.membersMap.get(
-                        node.property.name
+                if (isEnumType(node.object.valueType)) {
+                    const enumDef = project.variables.enumsMap.get(
+                        node.object.name
                     );
-                    if (!enumMember) {
-                        throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
+                    if (enumDef) {
+                        const enumMember = enumDef.membersMap.get(
+                            node.property.name
+                        );
+                        if (!enumMember) {
+                            throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
+                        }
+                    } else {
+                        throw `Unknown enumeration type ${node.object.valueType}`;
                     }
-                    return;
+                } else {
+                    const builtInConstantName = `${node.object.name}.${node.property.name}`;
+                    const buildInConstantValue =
+                        builtInConstants[builtInConstantName];
+                    if (buildInConstantValue != undefined) {
+                        return;
+                    }
                 }
+            }
 
-                const builtInConstantName = `${node.object.name}.${node.property.name}`;
-                const buildInConstantValue =
-                    builtInConstants[builtInConstantName];
-                if (buildInConstantValue != undefined) {
-                    return;
-                }
-            } else {
-                checkNode(node.object);
-                if (node.computed) {
-                    checkNode(node.property);
-                }
+            checkNode(node.object);
+            if (node.computed) {
+                checkNode(node.property);
             }
             return;
         }
 
         if (node.type == "ArrayExpression") {
-            console.log("TODO check ArrayExpression", node);
+            node.elements.forEach(element => checkNode(element));
+            return;
         }
 
         if (node.type == "ObjectExpression") {
-            console.log("TODO check ObjectExpression", node);
+            node.properties.forEach(property => checkNode(property.value));
+            return;
         }
 
         throw `Unknown expression node "${node.type}"`;
@@ -870,6 +830,8 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
 
     checkNode(rootNode);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function checkAssignableExpressionNode(
     component: Component,
@@ -881,6 +843,13 @@ function checkAssignableExpressionNode(
         }
 
         if (node.type == "Identifier") {
+            const input = component.inputs.find(
+                input => input.name == node.name
+            );
+            if (input != undefined) {
+                return;
+            }
+
             const output = component.outputs.find(
                 output => output.name == node.name
             );
@@ -915,7 +884,12 @@ function checkAssignableExpressionNode(
         }
 
         if (node.type == "MemberExpression") {
-            console.log("TODO check MemberExpression", node);
+            checkNode(node.object);
+
+            if (node.computed) {
+                checkNode(node.property);
+            }
+
             return;
         }
 
@@ -934,6 +908,8 @@ function checkAssignableExpressionNode(
 
     checkNode(rootNode);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function buildExpressionNode(
     assets: Assets,
@@ -1114,7 +1090,7 @@ function buildExpressionNode(
                 return [
                     makePushConstantInstruction(
                         assets,
-                        buildInConstantValue.value,
+                        buildInConstantValue.value(),
                         buildInConstantValue.valueType
                     )
                 ];
@@ -1141,13 +1117,22 @@ function buildExpressionNode(
             const structTypeName = getStructTypeNameFromType(
                 node.object.valueType
             )!;
+            if (!structTypeName) {
+                throw `expected structure type got "${node.object.valueType}"`;
+            }
             const project = ProjectEditor.getProject(component);
             const structure = project.variables.structsMap.get(structTypeName)!;
+            if (!structure) {
+                throw `unknown structure "${structTypeName}"`;
+            }
             const fieldName = (node.property as IdentifierExpressionNode).name;
             const fieldIndex = structure.fields
                 .map(field => field.name)
                 .sort()
                 .indexOf(fieldName);
+            if (fieldIndex == -1) {
+                throw `unknown field "${fieldName}"`;
+            }
 
             return [
                 ...buildExpressionNode(
@@ -1164,16 +1149,16 @@ function buildExpressionNode(
 
     if (node.type == "ArrayExpression") {
         console.log("TODO build ArrayExpression", node);
-        return [];
     }
 
     if (node.type == "ObjectExpression") {
         console.log("TODO build ObjectExpression", node);
-        return [];
     }
 
     throw `Unknown expression node "${node.type}"`;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function evalConstantExpressionNode(
     project: Project,
@@ -1278,7 +1263,7 @@ function evalConstantExpressionNode(
                 const buildInConstantValue =
                     builtInConstants[builtInConstantName];
                 if (buildInConstantValue != undefined) {
-                    return buildInConstantValue;
+                    return buildInConstantValue.value();
                 }
 
                 throw `Unknown constant '${builtInConstantName}'`;
@@ -1306,6 +1291,8 @@ function evalConstantExpressionNode(
 
     return evalNode(rootNode);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function evalExpressionWithContext(
     expressionContext: IExpressionContext,
@@ -1428,16 +1415,14 @@ function evalExpressionWithContext(
                 const buildInConstantValue =
                     builtInConstants[builtInConstantName];
                 if (buildInConstantValue != undefined) {
-                    return buildInConstantValue;
+                    return buildInConstantValue.value(expressionContext);
                 }
             }
 
             const object = evalNode(node.object);
 
             if (object == undefined) {
-                throw new ExpressionEvalError(
-                    `${getNodeDescription(node.object)} is undefined`
-                );
+                return undefined;
             }
 
             const property = node.computed
@@ -1454,19 +1439,73 @@ function evalExpressionWithContext(
         }
 
         if (node.type == "ArrayExpression") {
-            console.log("TODO eval_in_flow ArrayExpression", node);
-            return undefined;
+            return node.elements.map(element => evalNode(element));
         }
 
         if (node.type == "ObjectExpression") {
-            console.log("TODO eval_in_flow ObjectExpression", node);
-            return undefined;
+            const object: any = {};
+
+            for (const property of node.properties) {
+                object[property.key.name] = evalNode(property.value);
+            }
+
+            return object;
         }
 
         throw `Unknown expression node "${node.type}"`;
     }
 
     return evalNode(rootNode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+type AssignableValueType =
+    | "null"
+    | "input"
+    | "output"
+    | "local-variable"
+    | "global-variable"
+    | "flow-value";
+
+class AssignableValue {
+    constructor(
+        private type: AssignableValueType,
+        public name?: any,
+        public object?: any
+    ) {}
+
+    isInput() {
+        return this.type == "input";
+    }
+
+    isOutput() {
+        return this.type == "output";
+    }
+
+    isLocalVariable() {
+        return this.type == "local-variable";
+    }
+
+    isGlobalVariable() {
+        return this.type == "global-variable";
+    }
+
+    isFlowValue() {
+        return this.type == "flow-value";
+    }
+
+    getValue(expressionContext: IExpressionContext) {
+        if (this.isLocalVariable() || this.isGlobalVariable()) {
+            return expressionContext.dataContext.get(this.name);
+        } else if (this.isInput()) {
+            return this.object;
+        } else if (this.isFlowValue()) {
+            return this.object[this.name];
+        } else {
+            return null;
+        }
+    }
 }
 
 function evalAssignableExpressionWithContext(
@@ -1570,6 +1609,8 @@ function evalAssignableExpressionWithContext(
 
     return evalNode(rootNode);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class ExpressionEvalError extends Error {
     constructor(message: string) {

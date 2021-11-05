@@ -170,7 +170,6 @@ export class EndActionComponent extends ActionComponent {
                 null
             );
         }
-        flowState.numActiveComponents--;
         return undefined;
     }
 }
@@ -334,12 +333,7 @@ export class OutputActionComponent extends ActionComponent {
     async execute(flowState: FlowState) {
         const componentState = flowState.getComponentState(this);
         const value = componentState.getInputValue("@seqin");
-        if (
-            value &&
-            flowState.parentFlowState &&
-            flowState.component &&
-            this.name
-        ) {
+        if (flowState.parentFlowState && flowState.component && this.name) {
             flowState.parentFlowState.runtime.propagateValue(
                 flowState.parentFlowState,
                 flowState.component,
@@ -445,7 +439,8 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 name: "expression",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup,
-                monospaceFont: true
+                monospaceFont: true,
+                disableSpellcheck: true
             }
         ],
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -575,7 +570,7 @@ export class SetVariableActionComponent extends ActionComponent {
             makeAssignableExpressionProperty(
                 {
                     name: "variable",
-                    type: PropertyType.String,
+                    type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "any"
@@ -735,7 +730,7 @@ export class WatchVariableActionComponent extends ActionComponent {
     async execute(
         flowState: FlowState,
         dispose: (() => void) | undefined
-    ): Promise<(() => void) | undefined | boolean> {
+    ): Promise<(() => void) | undefined> {
         let lastValue: any;
         try {
             lastValue = flowState.evalExpression(this, this.variable);
@@ -1692,20 +1687,20 @@ export class CallActionActionComponent extends ActionComponent {
                     isOptionalInput: false
                 })
             );
+
+            if (action.startComponent) {
+                inputs.unshift({
+                    name: "@seqin",
+                    type: "null" as ValueType,
+                    isSequenceInput: true,
+                    isOptionalInput: false
+                });
+            }
         } else {
             inputs = [];
         }
 
-        return [
-            ...super.getInputs(),
-            {
-                name: "@seqin",
-                type: "null" as ValueType,
-                isSequenceInput: true,
-                isOptionalInput: false
-            },
-            ...inputs
-        ];
+        return [...super.getInputs(), ...inputs];
     }
 
     getOutputs() {
@@ -1724,20 +1719,19 @@ export class CallActionActionComponent extends ActionComponent {
                     isOptionalOutput: true
                 })
             );
+            if (action.endComponent) {
+                outputs.unshift({
+                    name: "@seqout",
+                    type: "null" as ValueType,
+                    isSequenceOutput: true,
+                    isOptionalOutput: true
+                });
+            }
         } else {
             outputs = [];
         }
 
-        return [
-            ...super.getOutputs(),
-            {
-                name: "@seqout",
-                type: "null" as ValueType,
-                isSequenceOutput: true,
-                isOptionalOutput: true
-            },
-            ...outputs
-        ];
+        return [...super.getOutputs(), ...outputs];
     }
 
     async execute(flowState: FlowState) {
@@ -1776,8 +1770,6 @@ export class CallActionActionComponent extends ActionComponent {
         if (actionFlowState.numActiveComponents == 0) {
             actionFlowState.isFinished = true;
             flowState.runtime.propagateValue(flowState, this, "@seqout", null);
-        } else {
-            actionFlowState.numActiveComponents++;
         }
 
         return false;
