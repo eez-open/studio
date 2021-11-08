@@ -4244,15 +4244,72 @@ export class ProgressWidget extends EmbeddedWidget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    getPercent(flowContext: IFlowContext) {
+        if (
+            flowContext.DocumentStore.project.isDashboardProject ||
+            flowContext.DocumentStore.project.isAppletProject
+        ) {
+            if (this.data) {
+                if (flowContext.flowState) {
+                    try {
+                        const value = evalExpression(
+                            flowContext,
+                            this,
+                            this.data
+                        );
+
+                        if (value != null && value != undefined) {
+                            return value;
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                    return 0;
+                }
+
+                if (flowContext.DocumentStore.runtime) {
+                    return 0;
+                }
+
+                try {
+                    const result = evalConstantExpression(
+                        ProjectEditor.getProject(this),
+                        this.data
+                    );
+                    if (typeof result === "string") {
+                        return result;
+                    }
+                } catch (err) {}
+
+                return 25;
+            }
+
+            if (flowContext.flowState) {
+                return 0;
+            }
+
+            return 25;
+        }
+
+        if (this.data) {
+            const result = flowContext.dataContext.get(this.data);
+            if (result != undefined) {
+                return result;
+            }
+        }
+
+        return 25;
+    }
+
     render(flowContext: IFlowContext) {
+        const percent = this.getPercent(flowContext);
+
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let widget = this;
-
                             let isHorizontal = this.width > this.height;
 
                             draw.setColor(this.style.backgroundColorProperty);
@@ -4266,10 +4323,6 @@ export class ProgressWidget extends EmbeddedWidget {
                             );
 
                             // draw thumb
-                            const percent =
-                                (widget.data &&
-                                    flowContext.dataContext.get(widget.data)) ||
-                                25;
                             draw.setColor(this.style.colorProperty);
                             if (isHorizontal) {
                                 draw.fillRect(
