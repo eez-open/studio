@@ -94,7 +94,7 @@ that provides that derivation. They can be used to install the project using
 
 ### Build and run from source (all operating systems)
 
--   Install `Node.JS 8.9.x` or newer
+-   Install `Node.JS 14.x` or newer
 -   Install `node-gyp`, more information at https://github.com/nodejs/node-gyp#installation
 
 #### Only Linux:
