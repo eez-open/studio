@@ -103,6 +103,13 @@ that provides that derivation. They can be used to install the project using
 sudo apt-get install build-essential libudev-dev
 ```
 
+#### Only Raspbian:
+
+```
+sudo apt-get install build-essential libudev-dev libopenjp2-tools ruby-full
+sudo gem install fpm
+```
+
 #### All platforms:
 
 ```
@@ -118,11 +125,18 @@ Start with:
 npm start
 ```
 
-Create distribution packages:
+Create distribution packages (except Raspbian):
 
 ```
 npm run dist
 ```
+
+On Raspbian:
+
+```
+npm run dist-raspbian
+```
+
 
 #### Nix
 To build:
