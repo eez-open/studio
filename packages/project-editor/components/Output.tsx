@@ -60,10 +60,6 @@ class Message extends React.Component<
             selected: this.props.message.selected
         });
 
-        console.log("1", icon);
-        console.log("2", text);
-        console.log("3", objectPath);
-
         return (
             <tr
                 className={className}

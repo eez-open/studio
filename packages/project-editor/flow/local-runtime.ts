@@ -635,7 +635,9 @@ export class LocalRuntime extends RuntimeBase {
 
                 if (
                     catchErrorActionComponentState.flowState !=
-                    componentState.flowState
+                        componentState.flowState &&
+                    componentState.flowState.flow instanceof
+                        ProjectEditor.ActionClass
                 ) {
                     runInAction(
                         () => (componentState.flowState.isFinished = true)
