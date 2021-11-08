@@ -52,6 +52,7 @@ import {
     SCPI_PART_QUERY_WITH_ASSIGNMENT,
     SCPI_PART_STRING
 } from "eez-studio-shared/scpi-parser";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -116,6 +117,12 @@ export class SCPIActionComponent extends ActionComponent {
                         }
                     }
                 }
+            }
+
+            const project = ProjectEditor.getProject(component);
+            if (project.isAppletProject) {
+                console.log(jsObject.instrument);
+                delete jsObject.instrument;
             }
         },
         label: (component: SCPIActionComponent) => {
