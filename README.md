@@ -125,13 +125,13 @@ Start with:
 npm start
 ```
 
-Create distribution packages:
+Create distribution packages (except Raspbian):
 
 ```
 npm run dist
 ```
 
-On Raspbian use:
+On Raspbian:
 
 ```
 npm run dist-raspbian
