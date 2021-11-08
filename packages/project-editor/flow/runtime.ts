@@ -1,15 +1,11 @@
 import { guid } from "eez-studio-shared/guid";
 
 import { action, computed, observable, runInAction } from "mobx";
-import {
-    DocumentStoreClass,
-    findPropertyByNameInObject,
-    getLabel
-} from "project-editor/core/store";
+import { DocumentStoreClass, getLabel } from "project-editor/core/store";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import { CatchErrorActionComponent } from "project-editor/flow/components/actions";
 import { Component, Widget } from "project-editor/flow/component";
-import { IEezObject, PropertyType } from "project-editor/core/object";
+import { IEezObject } from "project-editor/core/object";
 import type {
     IDataContext,
     IFlowContext
@@ -508,29 +504,6 @@ export class FlowState {
         return this.getComponentState(component).getInputValue(input);
     }
 
-    getPropertyValue(component: Component, propertyName: string) {
-        if (component.isInputProperty(propertyName)) {
-            return this.getInputValue(component, propertyName);
-        } else {
-            const value = (component as any)[propertyName];
-
-            if (value == undefined) {
-                return value;
-            }
-
-            let propertyInfo = findPropertyByNameInObject(
-                component,
-                propertyName
-            );
-
-            if (propertyInfo && propertyInfo.type === PropertyType.JSON) {
-                return JSON.parse(value);
-            } else {
-                return value;
-            }
-        }
-    }
-
     evalExpression(component: Component, expression: string): any {
         return evalExpression(this, component, expression);
     }
@@ -576,11 +549,8 @@ export class FlowState {
     @action
     finish() {
         this.flowStates.forEach(flowState => flowState.finish());
-
         this.componentStates.forEach(componentState => componentState.finish());
-
         this.runtime.logs.addLogItem(new ActionEndLogItem(this));
-
         this.isFinished = true;
     }
 

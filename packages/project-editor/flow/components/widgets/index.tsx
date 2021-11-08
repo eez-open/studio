@@ -989,6 +989,7 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
 export class LayoutViewWidget extends EmbeddedWidget {
     @observable layout: string;
     @observable context?: string;
+    @observable visible?: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         flowComponentId: WIDGET_TYPE_LAYOUT_VIEW,
@@ -1216,8 +1217,15 @@ export class LayoutViewWidget extends EmbeddedWidget {
     render(flowContext: IFlowContext): React.ReactNode {
         let visible = true;
 
-        if (flowContext.flowState && this.isInputProperty("visible")) {
-            let value = flowContext.flowState.getPropertyValue(this, "visible");
+        if (flowContext.flowState) {
+            let value: any;
+            try {
+                value = this.visible
+                    ? evalExpression(flowContext, this, this.visible)
+                    : true;
+            } catch (err) {
+                console.error(err);
+            }
             if (typeof value === "boolean") {
                 visible = value;
             } else if (typeof value === "number") {

@@ -793,6 +793,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                         if (!enumMember) {
                             throw `Member '${node.property.name}' does not exist in enum '${node.object.name}'`;
                         }
+                        return;
                     } else {
                         throw `Unknown enumeration type ${node.object.valueType}`;
                     }

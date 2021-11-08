@@ -3,7 +3,7 @@
     "author": "Envox <eez@envox.hr>",
     "keywords": ["eez", "eez-studio", "eez-studio-extension"],
     "description": "This package contains type definitions for developing EEZ Studio extensions",
-    "version": "0.0.45",
+    "version": "0.0.47",
     "license": "GPL-3.0-only",
     "types": "index"
 }

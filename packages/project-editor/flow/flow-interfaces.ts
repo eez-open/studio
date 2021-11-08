@@ -72,7 +72,6 @@ export interface IFlowState {
     getFlowStateByComponent(component: Component): IFlowState | undefined;
 
     getInputValue(component: Component, input: string): any;
-    getPropertyValue(component: Component, propertyName: string): any;
     evalExpression(component: Component, expression: string): any;
 
     getComponentRunningState<T>(component: Component): T | undefined;

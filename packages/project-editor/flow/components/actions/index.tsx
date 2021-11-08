@@ -334,13 +334,25 @@ export class OutputActionComponent extends ActionComponent {
         const componentState = flowState.getComponentState(this);
         const value = componentState.getInputValue("@seqin");
         if (flowState.parentFlowState && flowState.component && this.name) {
-            flowState.parentFlowState.runtime.propagateValue(
-                flowState.parentFlowState,
-                flowState.component,
-                this.wireID,
-                value,
-                this.name
-            );
+            if (
+                flowState.component instanceof DynamicCallActionActionComponent
+            ) {
+                flowState.parentFlowState.runtime.propagateValue(
+                    flowState.parentFlowState,
+                    flowState.component,
+                    this.name,
+                    value,
+                    this.name
+                );
+            } else {
+                flowState.parentFlowState.runtime.propagateValue(
+                    flowState.parentFlowState,
+                    flowState.component,
+                    this.wireID,
+                    value,
+                    this.name
+                );
+            }
         }
         return undefined;
     }
@@ -1683,15 +1695,13 @@ export class CallActionActionComponent extends ActionComponent {
                     component.action
                 );
                 if (!action) {
-                    if (!component.isInputProperty(component.action)) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                `Action "${component.action}" not found`,
-                                getChildOfObject(component, "action")
-                            )
-                        );
-                    }
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Action "${component.action}" not found`,
+                            getChildOfObject(component, "action")
+                        )
+                    );
                 }
             }
 
@@ -1765,8 +1775,7 @@ export class CallActionActionComponent extends ActionComponent {
     }
 
     async execute(flowState: FlowState) {
-        const actionName = flowState.getPropertyValue(this, "action");
-        const action = findAction(getProject(this), actionName);
+        const action = findAction(getProject(this), this.action);
         if (!action) {
             return;
         }
@@ -1795,11 +1804,6 @@ export class CallActionActionComponent extends ActionComponent {
                     }
                 }
             }
-        }
-
-        if (actionFlowState.numActiveComponents == 0) {
-            actionFlowState.isFinished = true;
-            flowState.runtime.propagateValue(flowState, this, "@seqout", null);
         }
 
         return false;
@@ -1847,6 +1851,108 @@ export class CallActionActionComponent extends ActionComponent {
 }
 
 registerClass("CallActionActionComponent", CallActionActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class DynamicCallActionActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "action",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
+        ],
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M7 4a12.25 12.25 0 0 0 0 16"></path>
+                <path d="M17 4a12.25 12.25 0 0 1 0 16"></path>
+            </svg>
+        ),
+        componentHeaderColor: "#C7E9C0",
+        componentPaletteGroupName: "Dashboard Specific"
+    });
+
+    @observable action: string;
+
+    getInputs(): ComponentInput[] {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    async execute(flowState: FlowState) {
+        const actionName = evalExpression(flowState, this, this.action);
+        const action = findAction(getProject(this), actionName);
+        if (!action) {
+            return;
+        }
+
+        const componentState = flowState.getComponentState(this);
+
+        const actionFlowState = new FlowState(
+            flowState.runtime,
+            action,
+            flowState,
+            this
+        );
+        flowState.flowStates.push(actionFlowState);
+
+        actionFlowState.runtime.startFlow(actionFlowState);
+
+        for (const customInput of this.customInputs) {
+            for (let component of action.components) {
+                if (component instanceof InputActionComponent) {
+                    if (component.name === customInput.name) {
+                        actionFlowState.runtime.propagateValue(
+                            actionFlowState,
+                            component,
+                            "@seqout",
+                            componentState.inputsData.get(customInput.name)
+                        );
+                        break;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+}
+
+registerClass(
+    "DynamicCallActionActionComponent",
+    DynamicCallActionActionComponent
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

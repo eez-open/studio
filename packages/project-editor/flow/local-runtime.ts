@@ -539,8 +539,6 @@ export class LocalRuntime extends RuntimeBase {
                 componentState.dispose
             );
 
-            --componentState.flowState.numActiveComponents;
-
             if (result == undefined) {
                 propagateThroughSeqout = true;
                 runInAction(() => (componentState.dispose = undefined));
@@ -554,14 +552,14 @@ export class LocalRuntime extends RuntimeBase {
                 }
             }
         } catch (err) {
-            --componentState.flowState.numActiveComponents;
-
             this.throwError(
                 componentState.flowState,
                 componentState.component,
                 err.toString()
             );
         } finally {
+            --componentState.flowState.numActiveComponents;
+
             runInAction(() => {
                 componentState.isRunning = false;
             });
@@ -592,7 +590,10 @@ export class LocalRuntime extends RuntimeBase {
         ) {
             if (
                 componentState.flowState.numActiveComponents == 0 &&
-                componentState.flowState.flow instanceof Action
+                componentState.flowState.flow instanceof Action &&
+                !componentState.flowState.flowStates.find(
+                    flowState => !flowState.isFinished
+                )
             ) {
                 runInAction(() => (componentState.flowState.isFinished = true));
             }

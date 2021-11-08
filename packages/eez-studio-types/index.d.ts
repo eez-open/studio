@@ -99,7 +99,7 @@ export type LogItemType =
 export interface IFlowState {
     evalExpression(expression: string): any;
     propagateValue(output: string, value: any): void;
-    throwError(err: string);
+    throwError(err: string): void;
     log(type: LogItemType, message: string): void;
     dispose: (() => void) | undefined;
 }
