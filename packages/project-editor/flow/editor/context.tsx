@@ -133,22 +133,31 @@ class ViewState implements IViewState {
     }
 
     selectObject(object: ITreeObjectAdapter) {
-        if (object.isSelectable) {
-            this.document && this.document.flow.selectItem(object);
+        if (object.isSelectable && this.document) {
+            this.document.flow.selectItem(object);
+        }
+    }
+
+    deselectObject(object: ITreeObjectAdapter) {
+        if (this.document) {
+            this.document.flow.deselectItem(object);
         }
     }
 
     @action
     selectObjects(objects: ITreeObjectAdapter[]) {
-        this.document &&
+        if (this.document) {
             this.document.flow.selectItems(
                 objects.filter(object => object.isSelectable)
             );
+        }
     }
 
     @action
     deselectAllObjects(): void {
-        this.document && this.document.flow.selectItems([]);
+        if (this.document) {
+            this.document.flow.selectItems([]);
+        }
     }
 
     moveSelection(

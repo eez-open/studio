@@ -166,6 +166,7 @@ export interface ITreeObjectAdapter
     selectedObjects: IEezObject[];
     selectedItem: ITreeObjectAdapter | undefined;
     selectItem(item: ITreeObjectAdapter): void;
+    deselectItem(item: ITreeObjectAdapter): void;
     selectItems(items: ITreeObjectAdapter[]): void;
     selectObjects(objects: IEezObject[]): void;
     selectObjectIds(objectIds: string[]): void;
@@ -385,6 +386,11 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         ) {
             parent.expanded = true;
         }
+    }
+
+    @action
+    deselectItem(item: ITreeObjectAdapter) {
+        item.selected = false;
     }
 
     @action

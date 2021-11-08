@@ -140,6 +140,8 @@ const DragComponent = observer(
     }
 );
 
+////////////////////////////////////////////////////////////////////////////////
+
 const AllConnectionLines = observer(
     ({ flowContext }: { flowContext: EditorFlowContext }) => {
         return (
@@ -446,7 +448,11 @@ export class Canvas extends React.Component<{
 
             let isMoveable = isSelectionMoveable(flowContext);
 
-            if (closestByClass(event.target, "EezStudio_FlowEditorSelection")) {
+            if (
+                closestByClass(event.target, "EezStudio_FlowEditorSelection") &&
+                !event.shiftKey &&
+                !event.ctrlKey
+            ) {
                 return isMoveable ? new DragMouseHandler() : undefined;
             } else {
                 let point =
@@ -484,15 +490,17 @@ export class Canvas extends React.Component<{
                                 );
                             }
                         } else {
-                            if (
-                                !flowContext.viewState.isObjectSelected(object)
-                            ) {
-                                if (!event.ctrlKey && !event.shiftKey) {
-                                    flowContext.viewState.deselectAllObjects();
-                                }
-                                flowContext.viewState.selectObject(object);
-                                event.preventDefault();
+                            if (!event.ctrlKey && !event.shiftKey) {
+                                flowContext.viewState.deselectAllObjects();
                             }
+                            if (
+                                flowContext.viewState.isObjectSelected(object)
+                            ) {
+                                flowContext.viewState.deselectObject(object);
+                            } else {
+                                flowContext.viewState.selectObject(object);
+                            }
+                            event.preventDefault();
 
                             isMoveable = isSelectionMoveable(flowContext);
 
