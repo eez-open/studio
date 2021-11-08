@@ -94,7 +94,7 @@ that provides that derivation. They can be used to install the project using
 
 ### Build and run from source (all operating systems)
 
--   Install `Node.JS 8.9.x` or newer
+-   Install `Node.JS 14.x` or newer
 -   Install `node-gyp`, more information at https://github.com/nodejs/node-gyp#installation
 
 #### Only Linux:
@@ -104,6 +104,8 @@ sudo apt-get install build-essential libudev-dev
 ```
 
 #### Only Raspbian:
+
+Install Node.js 16 and npm on Raspberry Pi: https://lindevs.com/install-node-js-and-npm-on-raspberry-pi/
 
 ```
 sudo apt-get install build-essential libudev-dev libopenjp2-tools ruby-full
