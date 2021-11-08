@@ -65,7 +65,11 @@ export function getConstantFlowValueType(value: any, valueType?: string) {
     if (typeof value === "boolean") {
         return FLOW_VALUE_TYPE_BOOLEAN;
     } else if (typeof value === "number") {
-        return FLOW_VALUE_TYPE_DOUBLE;
+        if (Number.isInteger(value)) {
+            return FLOW_VALUE_TYPE_INT32;
+        } else {
+            return FLOW_VALUE_TYPE_DOUBLE;
+        }
     } else if (typeof value === "string") {
         return FLOW_VALUE_TYPE_STRING;
     } else if (typeof value === "object") {
