@@ -107,7 +107,11 @@ export class ConnectionProperties extends React.Component<
             if (devices.neverEnumerated) {
                 devices.neverEnumerated = false;
                 await this.refreshSerialPortPaths();
-                await this.refreshUsbDevices();
+
+                // TODO doesn't work on Raspbian
+                if (process.arch != "arm") {
+                    await this.refreshUsbDevices();
+                }
             } else {
                 this.initUsbDevices();
             }

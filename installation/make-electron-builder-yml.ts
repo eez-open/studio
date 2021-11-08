@@ -260,7 +260,10 @@ let files = [
         },
 
         linux: {
-            target: ["deb", "AppImage", "rpm"],
+            target:
+                process.arch == "arm"
+                    ? [{ target: "deb", arch: ["armv7l"] }]
+                    : ["deb", "AppImage", "rpm"],
             icon: "./icon.icns",
             category: "Utility",
             synopsis: packageJson.description,

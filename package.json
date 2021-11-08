@@ -29,7 +29,8 @@
         "build-release-bundle": "node build-release-bundle.js",
         "madge-circular": "madge --circular packages/home/main.tsx > circular.txt",
         "madge-graph": "madge --image source-graph.svg packages/home/main.tsx",
-        "madge-graph-circular": "madge --circular --image source-graph-circular.svg packages/home/main.tsx"
+        "madge-graph-circular": "madge --circular --image source-graph-circular.svg packages/home/main.tsx",
+        "dist-raspbian": "USE_SYSTEM_FPM=true npm run dist"
     },
     "prettier": {
         "printWidth": 80,
