@@ -1125,6 +1125,36 @@ export class CompareActionComponent extends ActionComponent {
         }
         return undefined;
     }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        let condition;
+
+        if (this.operator == "=") {
+            condition = `(${this.A}) == (${this.B})`;
+        } else if (this.operator == "<") {
+            condition = `(${this.A}) < (${this.B})`;
+        } else if (this.operator == ">") {
+            condition = `(${this.A}) > (${this.B})`;
+        } else if (this.operator == "<=") {
+            condition = `(${this.A}) <= (${this.B})`;
+        } else if (this.operator == ">=") {
+            condition = `(${this.A}) >= (${this.B})`;
+        } else if (this.operator == "<>") {
+            condition = `(${this.A}) != (${this.B})`;
+        } else if (this.operator == "NOT") {
+            condition = `!(${this.A})`;
+        } else if (this.operator == "AND") {
+            condition = `(${this.A}) && (${this.B})`;
+        } else if (this.operator == "OR") {
+            condition = `(${this.A}) || (${this.B})`;
+        } else if (this.operator == "XOR") {
+            condition = `((${this.A}) && !(${this.B})) || (!(${this.A}) && (${this.B}))`;
+        } else {
+            condition = `((${this.A}) >= (${this.B})) && ((${this.A}) <= (${this.C}))`;
+        }
+
+        buildExpression(assets, dataBuffer, this, condition);
+    }
 }
 
 registerClass("CompareActionComponent", CompareActionComponent);
