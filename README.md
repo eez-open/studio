@@ -105,6 +105,8 @@ sudo apt-get install build-essential libudev-dev
 
 #### Only Raspbian:
 
+Install Node.js 16 and npm on Raspberry Pi: https://lindevs.com/install-node-js-and-npm-on-raspberry-pi/
+
 ```
 sudo apt-get install build-essential libudev-dev libopenjp2-tools ruby-full
 sudo gem install fpm
