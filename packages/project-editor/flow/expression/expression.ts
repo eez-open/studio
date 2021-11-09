@@ -24,7 +24,10 @@ import {
     makePushLocalVariableInstruction,
     makePushOutputInstruction
 } from "./instructions";
-import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
+import {
+    FLOW_ITERATOR_INDEXES_VARIABLE,
+    FLOW_ITERATOR_INDEX_VARIABLE
+} from "project-editor/features/variable/defs";
 import {
     ValueType as ValueType,
     getArrayElementTypeFromType,
@@ -490,6 +493,11 @@ function findValueTypeInExpressionNode(
             return;
         }
 
+        if (node.name == FLOW_ITERATOR_INDEXES_VARIABLE) {
+            node.valueType = `array:integer`;
+            return;
+        }
+
         // TODO test inputs and outputs (assignable expression)
         // throw `identifier '${node.name}' is neither input or local or global variable or enum`;
 
@@ -706,7 +714,10 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 return;
             }
 
-            if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {
+            if (
+                node.name == FLOW_ITERATOR_INDEX_VARIABLE ||
+                node.name == FLOW_ITERATOR_INDEXES_VARIABLE
+            ) {
                 return;
             }
 

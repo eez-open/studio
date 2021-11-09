@@ -379,13 +379,22 @@ export function makeExpressionProperty(
 
                 return menuItems;
             },
-            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-                expressionBuilder(object, propertyInfo, {
-                    assignableExpression: false,
-                    title: "Expression Builder",
-                    width: 400,
-                    height: 600
-                }),
+            onSelect: (
+                object: IEezObject,
+                propertyInfo: PropertyInfo,
+                params: IOnSelectParams
+            ) =>
+                expressionBuilder(
+                    object,
+                    propertyInfo,
+                    {
+                        assignableExpression: false,
+                        title: "Expression Builder",
+                        width: 400,
+                        height: 600
+                    },
+                    params
+                ),
             monospaceFont: true,
             disableSpellcheck: true
         } as Partial<PropertyInfo>,
@@ -401,13 +410,22 @@ export function makeAssignableExpressionProperty(
         {
             flowProperty: "assignable",
             expressionType,
-            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-                expressionBuilder(object, propertyInfo, {
-                    assignableExpression: true,
-                    title: "Expression Builder",
-                    width: 400,
-                    height: 600
-                }),
+            onSelect: (
+                object: IEezObject,
+                propertyInfo: PropertyInfo,
+                params: IOnSelectParams
+            ) =>
+                expressionBuilder(
+                    object,
+                    propertyInfo,
+                    {
+                        assignableExpression: true,
+                        title: "Expression Builder",
+                        width: 400,
+                        height: 600
+                    },
+                    params
+                ),
             monospaceFont: true,
             disableSpellcheck: true
         } as Partial<PropertyInfo>,
@@ -2485,21 +2503,40 @@ export function registerActionComponent(
             ];
         }
 
-        getBody(flowContext: IFlowContext): React.ReactNode {
-            if (!actionComponentDefinition.bodyPropertyName) {
-                return null;
-            }
-            return (
-                <div className="body">
-                    <pre>
-                        {
-                            (this as any)[
-                                actionComponentDefinition.bodyPropertyName
-                            ]
-                        }
-                    </pre>
-                </div>
+        get _props() {
+            return actionComponentDefinition.properties.map(
+                propertyDefinition => (this as any)[propertyDefinition.name]
             );
+        }
+
+        getBody(flowContext: IFlowContext): React.ReactNode {
+            if (actionComponentDefinition.bodyPropertyName) {
+                return (
+                    <div className="body">
+                        <pre>
+                            {
+                                (this as any)[
+                                    actionComponentDefinition.bodyPropertyName
+                                ]
+                            }
+                        </pre>
+                    </div>
+                );
+            }
+
+            if (actionComponentDefinition.bodyPropertyCallback) {
+                return (
+                    <div className="body">
+                        <pre>
+                            {actionComponentDefinition.bodyPropertyCallback(
+                                ...this._props
+                            )}
+                        </pre>
+                    </div>
+                );
+            }
+
+            return null;
         }
 
         override async execute(
@@ -2514,30 +2551,32 @@ export function registerActionComponent(
 
             return actionComponentDefinition.execute(
                 {
-                    evalExpression: (expression: string) => {
-                        return flowState.evalExpression(this, expression);
-                    },
+                    getComponentRunningState: () =>
+                        flowState.getComponentRunningState(this),
 
-                    propagateValue: (output: string, value: any) => {
+                    setComponentRunningState: runningState =>
+                        flowState.setComponentRunningState(this, runningState),
+
+                    evalExpression: (expression: string) =>
+                        flowState.evalExpression(this, expression),
+
+                    propagateValue: (output: string, value: any) =>
                         flowState.runtime.propagateValue(
                             flowState,
                             this,
                             output,
                             value
-                        );
-                    },
+                        ),
 
-                    throwError: (message: string) => {
-                        flowState.runtime.throwError(flowState, this, message);
-                    },
+                    throwError: (message: string) =>
+                        flowState.runtime.throwError(flowState, this, message),
 
-                    log: (type: LogItemType, message: string) => {
-                        flowState.log(type, message, this);
-                    },
+                    log: (type: LogItemType, message: string) =>
+                        flowState.log(type, message, this),
 
                     dispose
                 },
-                ...props
+                ...this._props
             );
         }
     };

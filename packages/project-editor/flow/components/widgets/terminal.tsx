@@ -114,7 +114,6 @@ export class TerminalWidget extends Widget {
                 ) {
                     const onData = (chunk: Buffer) => {
                         if (runningState && runningState.onData) {
-                            console.log(chunk.toString());
                             runningState.onData(chunk.toString());
                         }
                     };

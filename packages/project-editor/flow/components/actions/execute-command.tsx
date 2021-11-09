@@ -19,7 +19,7 @@ const executeCommandIcon: any = (
     </svg>
 );
 
-const componentHeaderColor = "#cca3ba";
+const componentHeaderColor = "#FFDFD3";
 
 registerActionComponents("Dashboard Specific", [
     {
@@ -44,7 +44,7 @@ registerActionComponents("Dashboard Specific", [
                 name: "finished",
                 type: "integer",
                 isSequenceOutput: false,
-                isOptionalOutput: false
+                isOptionalOutput: true
             }
         ],
         properties: [
@@ -59,7 +59,10 @@ registerActionComponents("Dashboard Specific", [
                 valueType: "array:string"
             }
         ],
-        execute: async (flowState, ...[command, args]) => {
+        bodyPropertyCallback: (command, args) => {
+            return `${command}\n${args}`;
+        },
+        execute: async (flowState, command, args) => {
             const commandValue: any = flowState.evalExpression(command);
             if (typeof commandValue != "string") {
                 throw "command is not a string";

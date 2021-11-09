@@ -110,7 +110,7 @@ export function getValueLabel(
         return "undefined";
     }
 
-    if (value == "null") {
+    if (value === null) {
         return "null";
     }
 

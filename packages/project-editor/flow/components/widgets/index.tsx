@@ -492,35 +492,17 @@ export class ListWidget extends EmbeddedWidget {
         const iterators =
             flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
 
-        return _range(dataValue.length).map(i => {
-            let xListItem = 0;
-            let yListItem = 0;
-
-            const gap = this.gap || 0;
-
-            if (this.listType === "horizontal") {
-                xListItem += i * (itemWidget.width + gap);
-            } else {
-                yListItem += i * (itemWidget.height + gap);
-            }
-
-            // This must be created here, not inline inside Component constructor,
-            // otherwise observer will not work.
-            const overridenFlowContext = flowContext.overrideDataContext({
-                [FLOW_ITERATOR_INDEX_VARIABLE]: i,
-                [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
-            });
-
-            return (
-                <ComponentEnclosure
-                    key={i}
-                    component={itemWidget}
-                    flowContext={overridenFlowContext}
-                    left={xListItem}
-                    top={yListItem}
-                />
-            );
-        });
+        return _range(dataValue.length).map(i => (
+            <ListWidgetItem
+                key={i}
+                flowContext={flowContext}
+                listWidget={this}
+                itemWidget={itemWidget}
+                i={i}
+                gap={this.gap || 0}
+                iterators={iterators}
+            />
+        ));
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -547,6 +529,44 @@ export class ListWidget extends EmbeddedWidget {
 }
 
 registerClass("ListWidget", ListWidget);
+
+@observer
+class ListWidgetItem extends React.Component<{
+    flowContext: IFlowContext;
+    listWidget: ListWidget;
+    itemWidget: Widget;
+    i: number;
+    gap: number;
+    iterators: any;
+}> {
+    render() {
+        const { flowContext, listWidget, itemWidget, i, gap, iterators } =
+            this.props;
+        let xListItem = 0;
+        let yListItem = 0;
+
+        if (listWidget.listType === "horizontal") {
+            xListItem += i * (itemWidget.width + gap);
+        } else {
+            yListItem += i * (itemWidget.height + gap);
+        }
+
+        const overridenFlowContext = flowContext.overrideDataContext({
+            [FLOW_ITERATOR_INDEX_VARIABLE]: i,
+            [FLOW_ITERATOR_INDEXES_VARIABLE]: [i, ...iterators]
+        });
+
+        return (
+            <ComponentEnclosure
+                key={i}
+                component={itemWidget}
+                flowContext={overridenFlowContext}
+                left={xListItem}
+                top={yListItem}
+            />
+        );
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4246,10 +4266,7 @@ export class ProgressWidget extends EmbeddedWidget {
             height: 32
         },
 
-        icon: "../home/_images/widgets/Progress.png",
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        icon: "../home/_images/widgets/Progress.png"
     });
 
     getPercent(flowContext: IFlowContext) {
@@ -4314,7 +4331,15 @@ export class ProgressWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? (
+                    <div className="progress">
+                        <div
+                            className="progress-bar"
+                            role="progressbar"
+                            style={{ width: percent + "%" }}
+                        ></div>
+                    </div>
+                ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {

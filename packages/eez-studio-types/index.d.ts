@@ -96,7 +96,9 @@ export type LogItemType =
     | "info"
     | "debug";
 
-export interface IFlowState {
+export interface IComponentFlowState {
+    getComponentRunningState<T>(): T | undefined;
+    setComponentRunningState<T>(runningState: T): void;
     evalExpression(expression: string): any;
     propagateValue(output: string, value: any): void;
     throwError(err: string): void;
@@ -177,6 +179,7 @@ export interface IActionComponentDefinition {
     componentHeaderColor: string;
 
     bodyPropertyName?: string;
+    bodyPropertyCallback?: (...props: string[]) => string;
 
     inputs: IComponentInput[];
     outputs: IComponentOutput[];
@@ -184,7 +187,7 @@ export interface IActionComponentDefinition {
     properties: IComponentProperty[];
 
     execute(
-        flowState: IFlowState,
+        flowState: IComponentFlowState,
         ...props: string[]
     ): Promise<IDisposeComponentState | IComponentIsRunning | undefined>;
 }

@@ -401,7 +401,7 @@ export class LocalRuntime extends RuntimeBase {
         value: any,
         outputName?: string
     ) {
-        flowState.flow.connectionLines.forEach(connectionLine => {
+        for (const connectionLine of flowState.flow.connectionLines) {
             if (
                 connectionLine.sourceComponent === sourceComponent &&
                 connectionLine.output === output &&
@@ -426,7 +426,7 @@ export class LocalRuntime extends RuntimeBase {
                     connectionLine
                 );
             }
-        });
+        }
     }
 
     setInputValue(
@@ -531,7 +531,7 @@ export class LocalRuntime extends RuntimeBase {
 
         try {
             if (componentState.flowState.isFinished) {
-                throw "The flow has already completed execution.";
+                //throw "The flow has already finished execution.";
             }
 
             const result = await componentState.component.execute(
@@ -580,9 +580,7 @@ export class LocalRuntime extends RuntimeBase {
             }
         });
 
-        if (componentState.component instanceof Widget) {
-            componentState.markInputsDataRead();
-        }
+        componentState.markInputsDataRead();
 
         if (
             propagateThroughSeqout &&
