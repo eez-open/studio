@@ -334,6 +334,19 @@ export const builtInFunctions: {
         getValueType: (...args: ValueType[]) => ValueType;
     };
 } = {
+    "System.getTick": {
+        arity: 0,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return Date.now();
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
     "Flow.index": {
         arity: 1,
         args: ["index"],

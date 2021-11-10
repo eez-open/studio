@@ -301,7 +301,7 @@ export function evalAssignableExpression(
     }
 
     if (!assignableValue) {
-        return new AssignableValue("null");
+        return new AssignableValue("null", "null");
     }
 
     return assignableValue;
@@ -1483,6 +1483,7 @@ type AssignableValueType =
 class AssignableValue {
     constructor(
         private type: AssignableValueType,
+        public valueType: ValueType,
         public name?: any,
         public object?: any
     ) {}
@@ -1537,6 +1538,7 @@ function evalAssignableExpressionWithContext(
             if (input != undefined) {
                 return new AssignableValue(
                     "input",
+                    input.type,
                     undefined,
                     expressionContext.flowState?.getInputValue(
                         component,
@@ -1549,7 +1551,7 @@ function evalAssignableExpressionWithContext(
                 output => output.name == node.name
             );
             if (output != undefined) {
-                return new AssignableValue("output", output.name);
+                return new AssignableValue("output", output.type, output.name);
             }
 
             const flow = ProjectEditor.getFlow(component);
@@ -1559,6 +1561,7 @@ function evalAssignableExpressionWithContext(
             if (localVariable) {
                 return new AssignableValue(
                     "local-variable",
+                    localVariable.type,
                     localVariable.name
                 );
             }
@@ -1571,11 +1574,12 @@ function evalAssignableExpressionWithContext(
                 node.valueType = globalVariable.type as ValueType;
                 return new AssignableValue(
                     "global-variable",
+                    globalVariable.type,
                     globalVariable.name
                 );
             }
 
-            return new AssignableValue("null");
+            return new AssignableValue("null", "null");
         }
 
         if (node.type == "ConditionalExpression") {
@@ -1597,23 +1601,24 @@ function evalAssignableExpressionWithContext(
                 if (property != undefined) {
                     return new AssignableValue(
                         "flow-value",
+                        node.valueType,
                         property,
                         object.getValue(expressionContext)
                     );
                 }
             }
 
-            return new AssignableValue("null");
+            return new AssignableValue("null", "null");
         }
 
         if (node.type == "ArrayExpression") {
             console.log("TODO eval_in_flow ArrayExpression", node);
-            return new AssignableValue("null");
+            return new AssignableValue("null", "null");
         }
 
         if (node.type == "ObjectExpression") {
             console.log("TODO eval_in_flow ObjectExpression", node);
-            return new AssignableValue("null");
+            return new AssignableValue("null", "null");
         }
 
         throw `Unknown expression node "${node.type}"`;
