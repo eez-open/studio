@@ -2013,10 +2013,17 @@ export class DelayActionComponent extends ActionComponent {
 
     async execute(flowState: FlowState) {
         const milliseconds = flowState.evalExpression(this, this.milliseconds);
-        await new Promise<void>(resolve =>
-            setTimeout(resolve, milliseconds ?? 0)
+        setTimeout(
+            () =>
+                flowState.runtime.propagateValue(
+                    flowState,
+                    this,
+                    "@seqout",
+                    null
+                ),
+            milliseconds ?? 0
         );
-        return undefined;
+        return false;
     }
 }
 
