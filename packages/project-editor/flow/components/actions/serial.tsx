@@ -8,7 +8,7 @@ import {
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { action, observable, reaction, runInAction } from "mobx";
+import { action, observable, runInAction } from "mobx";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -223,6 +223,7 @@ registerActionComponents("Serial Port", [
         name: "SerialConnect",
         icon: connectIcon,
         componentHeaderColor,
+        bodyPropertyName: "connection",
         inputs: [],
         outputs: [],
         properties: [
@@ -251,6 +252,7 @@ registerActionComponents("Serial Port", [
         name: "SerialDisconnect",
         icon: disconnectIcon,
         componentHeaderColor,
+        bodyPropertyName: "connection",
         inputs: [],
         outputs: [],
         properties: [
@@ -311,16 +313,24 @@ registerActionComponents("Serial Port", [
                 return undefined;
             }
 
-            return reaction(
-                () => {
-                    return serialConnection.read();
-                },
-                data => {
-                    if (data) {
-                        flowState.propagateValue("data", data);
-                    }
-                }
-            );
+            if (!serialConnection.isConnected) {
+                throw `"${connection}" is not connected`;
+            }
+
+            flowState.propagateValue("data", serialConnection.port);
+
+            // return reaction(
+            //     () => {
+            //         return serialConnection.read();
+            //     },
+            //     data => {
+            //         if (data) {
+            //             flowState.propagateValue("data", data);
+            //         }
+            //     }
+            // );
+
+            return undefined;
         }
     },
     {
@@ -350,6 +360,10 @@ registerActionComponents("Serial Port", [
 
             if (!(serialConnection instanceof SerialConnection)) {
                 throw `"${connection}" is not SerialConnection`;
+            }
+
+            if (!serialConnection.isConnected) {
+                throw `"${connection}" is not connected`;
             }
 
             const dataValue = flowState.evalExpression(data);
