@@ -32,7 +32,10 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import { visitObjects } from "project-editor/core/search";
 import { evalAssignableExpression } from "project-editor/flow/expression/expression";
-import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
+import {
+    getObjectVariableTypeFromType,
+    isObjectType
+} from "project-editor/features/variable/value-type";
 
 export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -109,6 +112,20 @@ export class LocalRuntime extends RuntimeBase {
         for (const variable of this.DocumentStore.project.variables
             .globalVariables) {
             let value = this.DocumentStore.dataContext.get(variable.name);
+            if (value) {
+                const objectVariableType = getObjectVariableTypeFromType(
+                    variable.type
+                );
+                if (objectVariableType && objectVariableType.destroy) {
+                    objectVariableType.destroy(value);
+                }
+            }
+        }
+    }
+
+    async destroyObjectLocalVariables(flowState: FlowState) {
+        for (const variable of flowState.flow.localVariables) {
+            let value = flowState.dataContext.get(variable.name);
             if (value) {
                 const objectVariableType = getObjectVariableTypeFromType(
                     variable.type
@@ -698,6 +715,16 @@ export class LocalRuntime extends RuntimeBase {
             component,
             assignableExpression
         );
+
+        if (isObjectType(result.valueType) && value != null) {
+            const objectVariableType = getObjectVariableTypeFromType(
+                result.valueType
+            );
+            if (objectVariableType) {
+                value = objectVariableType?.constructorFunction(value, true);
+            }
+        }
+
         if (result.isOutput()) {
             this.propagateValue(flowState, component, result.name, value);
         } else if (result.isLocalVariable()) {

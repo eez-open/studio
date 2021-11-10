@@ -429,6 +429,8 @@ export abstract class RuntimeBase {
         assignableExpression: string,
         value: any
     ): void;
+
+    abstract destroyObjectLocalVariables(flowState: FlowState): void;
 }
 
 export class FlowState {
@@ -548,6 +550,7 @@ export class FlowState {
 
     @action
     finish() {
+        this.runtime.destroyObjectLocalVariables(this);
         this.flowStates.forEach(flowState => flowState.finish());
         this.componentStates.forEach(componentState => componentState.finish());
         this.runtime.logs.addLogItem(new ActionEndLogItem(this));

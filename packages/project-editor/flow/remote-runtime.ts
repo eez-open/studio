@@ -467,6 +467,8 @@ export class RemoteRuntime extends RuntimeBase {
         assignableExpression: string,
         value: any
     ) {}
+
+    destroyObjectLocalVariables(flowState: FlowState): void {}
 }
 
 class DebuggerConnection {
