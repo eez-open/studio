@@ -54,6 +54,7 @@ import {
 } from "project-editor/features/variable/value-type";
 
 import "project-editor/flow/components/actions/execute-command";
+import "project-editor/flow/components/actions/file";
 import "project-editor/flow/components/actions/instrument";
 import "project-editor/flow/components/actions/regexp";
 import "project-editor/flow/components/actions/serial";

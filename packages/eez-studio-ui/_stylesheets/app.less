@@ -3760,6 +3760,15 @@ button.EezStudio_Action {
         }
     }
 
+    &.CheckboxWidget {
+        .form-check {
+            padding-left: 0;
+            label {
+                padding-left: 4px;
+            }
+        }
+    }
+
     &.enabled-breakpoint::before,
     &.disabled-breakpoint::before {
         content: "BREAKPOINT";
@@ -4695,6 +4704,14 @@ button.EezStudio_Action {
     }
 
     .EezStudio_ComponentEnclosure {
+        overflow: visible;
+
+        &.ButtonWidget {
+            button {
+                cursor: default !important;
+            }
+        }
+
         &.TextInputWidget {
             input {
                 cursor: default !important;
@@ -4715,12 +4732,24 @@ button.EezStudio_Action {
 
 .EezStudio_FlowViewerCanvasContainer {
     .EezStudio_ComponentEnclosure {
+        overflow: visible;
+
         &.TerminalWidget {
             .xterm {
                 .xterm-viewport {
                     overflow-y: auto;
                 }
             }
+        }
+    }
+}
+
+.EezStudio_ComponentEnclosure {
+    &.ButtonWidget {
+        button {
+            padding: 0;
+            line-height: 0;
+            display: block;
         }
     }
 }

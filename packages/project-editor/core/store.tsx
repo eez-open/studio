@@ -941,38 +941,32 @@ class RuntimeSettings {
 
     constructor(public DocumentStore: DocumentStoreClass) {}
 
-    getObjectVariableValue(variable: IVariable) {
-        const objectVariableType = ProjectEditor.getObjectVariableTypeFromType(
-            variable.type
-        );
-        if (!objectVariableType) {
-            return undefined;
-        }
-
+    getVariableValue(variable: IVariable) {
         const persistentVariables: any =
             this.settings.__persistentVariables || {};
 
-        let constructorParams = persistentVariables[variable.name];
-        if (constructorParams == null) {
-            return undefined;
-        }
+        let value = persistentVariables[variable.name];
 
-        return objectVariableType.constructorFunction(
-            constructorParams,
-            !!this.DocumentStore.runtime
+        const objectVariableType = ProjectEditor.getObjectVariableTypeFromType(
+            variable.type
         );
+        if (objectVariableType) {
+            const constructorParams = value;
+            return objectVariableType.constructorFunction(
+                constructorParams,
+                !!this.DocumentStore.runtime
+            );
+        } else {
+            return value;
+        }
     }
 
-    setObjectVariableConstructorParams(
-        variable: IVariable,
-        constructorParams: any
-    ) {
+    setVariableValue(variable: IVariable, value: any) {
         runInAction(() => {
             if (!this.settings.__persistentVariables) {
                 this.settings.__persistentVariables = {};
             }
-            this.settings.__persistentVariables[variable.name] =
-                constructorParams;
+            this.settings.__persistentVariables[variable.name] = value;
         });
     }
 
@@ -982,8 +976,10 @@ class RuntimeSettings {
         const dataContext = DocumentStore.dataContext;
         for (const variable of globalVariables) {
             if (variable.persistent) {
-                const value = this.getObjectVariableValue(variable);
-                dataContext.set(variable.name, value);
+                const value = this.getVariableValue(variable);
+                if (value !== undefined) {
+                    dataContext.set(variable.name, value);
+                }
             }
         }
     }
@@ -1002,17 +998,14 @@ class RuntimeSettings {
                     if (objectVariableType) {
                         const objectVariableValue:
                             | IObjectVariableValue
-                            | undefined = this.DocumentStore.dataContext.get(
-                            variable.name
-                        );
+                            | undefined = value;
 
                         const constructorParams =
                             objectVariableValue?.constructorParams ?? null;
 
-                        this.setObjectVariableConstructorParams(
-                            variable,
-                            constructorParams
-                        );
+                        this.setVariableValue(variable, constructorParams);
+                    } else {
+                        this.setVariableValue(variable, value);
                     }
                 }
             }

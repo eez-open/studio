@@ -17,7 +17,6 @@ import {
     geometryGroup,
     styleGroup,
     specificGroup,
-    IPropertyGridGroupDefinition,
     areAllChildrenOfTheSameParent,
     IOnSelectParams,
     getParent,
@@ -144,22 +143,23 @@ export function makeDataPropertyInfo(
 
 export function makeActionPropertyInfo(
     name: string,
-    displayName?: string,
-    propertyGridGroup?: IPropertyGridGroupDefinition
+    props?: Partial<PropertyInfo>
 ): PropertyInfo {
-    return makeToggablePropertyToOutput({
-        name,
-        displayName,
-        type: PropertyType.ObjectReference,
-        referencedObjectCollectionPath: "actions",
-        propertyGridGroup: propertyGridGroup || specificGroup,
-        onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-            onSelectItem(object, propertyInfo, {
-                title: propertyInfo.onSelectTitle!,
-                width: 800
-            }),
-        onSelectTitle: "Select Action"
-    });
+    return Object.assign(
+        makeToggablePropertyToOutput({
+            name,
+            type: PropertyType.ObjectReference,
+            referencedObjectCollectionPath: "actions",
+            propertyGridGroup: specificGroup,
+            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
+                onSelectItem(object, propertyInfo, {
+                    title: propertyInfo.onSelectTitle!,
+                    width: 800
+                }),
+            onSelectTitle: "Select Action"
+        }),
+        props
+    );
 }
 
 export function makeStylePropertyInfo(

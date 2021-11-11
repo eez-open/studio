@@ -100,7 +100,6 @@ export class ComponentEnclosure extends React.Component<{
             style.height = component.height;
         }
 
-        style.overflow = "visible";
         component.styleHook(style, flowContext);
 
         // className

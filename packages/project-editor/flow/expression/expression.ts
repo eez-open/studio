@@ -536,6 +536,7 @@ function findValueTypeInExpressionNode(
         findValueTypeInExpressionNode(component, node.argument, assignable);
         node.valueType = operator.getValueType(node.argument.valueType);
     } else if (node.type == "ConditionalExpression") {
+        findValueTypeInExpressionNode(component, node.test, assignable);
         findValueTypeInExpressionNode(component, node.consequent, assignable);
         findValueTypeInExpressionNode(component, node.alternate, assignable);
         if (node.consequent.valueType != node.alternate.valueType) {
@@ -1591,13 +1592,19 @@ function evalAssignableExpressionWithContext(
         if (node.type == "MemberExpression") {
             const object = evalNode(node.object);
             if (object != undefined) {
-                const property = node.computed
-                    ? evalExpressionWithContext(
-                          expressionContext,
-                          component,
-                          node.property
-                      )
-                    : (node.property as NonComputedPropertyExpressionNode).name;
+                let property;
+
+                if (node.computed) {
+                    property = evalExpressionWithContext(
+                        expressionContext,
+                        component,
+                        node.property
+                    );
+                } else {
+                    property = (
+                        node.property as NonComputedPropertyExpressionNode
+                    ).name;
+                }
                 if (property != undefined) {
                     return new AssignableValue(
                         "flow-value",

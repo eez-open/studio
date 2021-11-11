@@ -18,7 +18,10 @@ import {
 } from "project-editor/flow/debugger/logs";
 import { LogItemType } from "project-editor/flow/flow-interfaces";
 import { valueToString } from "project-editor/flow/debugger/WatchPanel";
-import { evalExpression } from "project-editor/flow/expression/expression";
+import {
+    evalExpression,
+    IExpressionContext
+} from "project-editor/flow/expression/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -401,7 +404,8 @@ export abstract class RuntimeBase {
 
     abstract executeWidgetAction(
         flowContext: IFlowContext,
-        widget: Widget
+        widget: Widget,
+        value?: any
     ): void;
 
     abstract readSettings(key: string): any;
@@ -424,7 +428,7 @@ export abstract class RuntimeBase {
     ): void;
 
     abstract assignValue(
-        flowState: FlowState,
+        expressionContext: IExpressionContext,
         component: Component,
         assignableExpression: string,
         value: any

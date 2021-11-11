@@ -2273,8 +2273,19 @@ export class LoopActionComponent extends ActionComponent {
                     propertyGridGroup: specificGroup
                 },
                 "integer"
-            )
+            ),
+            {
+                name: "version",
+                type: PropertyType.Number,
+                hideInPropertyGrid: true
+            }
         ],
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (jsObject.version == undefined) {
+                jsObject.version = 1;
+                jsObject.to = jsObject.to + " - 1";
+            }
+        },
         icon: (
             <svg
                 viewBox="0 0 24 24"
@@ -2296,7 +2307,8 @@ export class LoopActionComponent extends ActionComponent {
         componentHeaderColor: "#E2D96E",
         defaultValue: {
             from: "0",
-            step: "1"
+            step: "1",
+            version: 1
         }
     });
 
@@ -2345,8 +2357,7 @@ export class LoopActionComponent extends ActionComponent {
         return (
             <div className="body">
                 <pre>
-                    {this.variable} <LeftArrow />[ {this.from} ... {this.to}{" "}
-                    &gt;
+                    {this.variable} <LeftArrow />[ {this.from} ... {this.to} ]
                     {this.step !== "1" ? ` step ${this.step}` : ""}
                 </pre>
             </div>
@@ -2380,7 +2391,11 @@ export class LoopActionComponent extends ActionComponent {
         } else {
             runningState.value += runningState.step;
 
-            if (runningState.value >= runningState.to) {
+            if (
+                (runningState.step > 0 &&
+                    runningState.value > runningState.to) ||
+                (runningState.step < 0 && runningState.value < runningState.to)
+            ) {
                 flowState.runtime.propagateValue(flowState, this, "done", null);
                 flowState.setComponentRunningState(this, undefined);
                 return false;
@@ -2412,7 +2427,8 @@ export class ShowPageActionComponent extends ActionComponent {
         properties: [
             {
                 name: "page",
-                type: PropertyType.String
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
             }
         ],
         icon: (

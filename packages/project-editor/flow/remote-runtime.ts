@@ -29,6 +29,7 @@ import { DocumentStoreClass } from "project-editor/core/store";
 import net from "net";
 import { getObjectFromStringPath } from "project-editor/core/store";
 import { ConnectionBase } from "instrument/connection/connection-base";
+import { IExpressionContext } from "./expression/expression";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -444,7 +445,11 @@ export class RemoteRuntime extends RuntimeBase {
         }
     }
 
-    executeWidgetAction(flowContext: IFlowContext, widget: Widget) {}
+    executeWidgetAction(
+        flowContext: IFlowContext,
+        widget: Widget,
+        value?: any
+    ) {}
 
     readSettings(key: string) {}
     writeSettings(key: string, value: any) {}
@@ -462,7 +467,7 @@ export class RemoteRuntime extends RuntimeBase {
     throwError(flowState: FlowState, component: Component, message: string) {}
 
     assignValue(
-        flowState: FlowState,
+        expressionContext: IExpressionContext,
         component: Component,
         assignableExpression: string,
         value: any

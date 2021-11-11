@@ -192,8 +192,7 @@ export class RenderVariableStatusPropertyUI extends React.Component<PropertyProp
     async updateObjectVariableValue() {
         const variable = this.props.objects[0] as Variable;
 
-        const value =
-            this.context.runtimeSettings.getObjectVariableValue(variable);
+        const value = this.context.runtimeSettings.getVariableValue(variable);
 
         runInAction(() => (this.objectVariableValue = value));
     }
@@ -230,7 +229,7 @@ export class RenderVariableStatusPropertyUI extends React.Component<PropertyProp
                             objectVariableValue?.constructorParams ?? null
                         );
                     if (constructorParams !== undefined) {
-                        this.context.runtimeSettings.setObjectVariableConstructorParams(
+                        this.context.runtimeSettings.setVariableValue(
                             variable,
                             constructorParams
                         );
@@ -238,7 +237,7 @@ export class RenderVariableStatusPropertyUI extends React.Component<PropertyProp
                     }
                 }}
                 onClear={async () => {
-                    this.context.runtimeSettings.setObjectVariableConstructorParams(
+                    this.context.runtimeSettings.setVariableValue(
                         variable,
                         undefined
                     );
@@ -323,7 +322,7 @@ export class Variable extends EezObject {
                 name: "persistent",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
-                    !isObjectType(variable.type) || !isGlobalVariable(variable)
+                    !isGlobalVariable(variable)
             },
             {
                 name: "persistedValue",

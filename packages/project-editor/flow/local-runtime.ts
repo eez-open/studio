@@ -10,8 +10,7 @@ import {
     ExecutionErrorLogItem,
     NoStartActionComponentLogItem,
     OutputValueLogItem,
-    WidgetActionNotDefinedLogItem,
-    WidgetActionNotFoundLogItem
+    WidgetActionNotDefinedLogItem
 } from "project-editor/flow/debugger/logs";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import * as notification from "eez-studio-ui/notification";
@@ -31,7 +30,10 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { ConnectionLine } from "project-editor/flow/flow";
 import { visitObjects } from "project-editor/core/search";
-import { evalAssignableExpression } from "project-editor/flow/expression/expression";
+import {
+    evalAssignableExpression,
+    IExpressionContext
+} from "project-editor/flow/expression/expression";
 import {
     getObjectVariableTypeFromType,
     isObjectType
@@ -308,7 +310,11 @@ export class LocalRuntime extends RuntimeBase {
     }
 
     @action
-    executeWidgetAction(flowContext: IFlowContext, widget: Widget) {
+    executeWidgetAction(
+        flowContext: IFlowContext,
+        widget: Widget,
+        value?: any
+    ) {
         if (this.isStopped) {
             return;
         }
@@ -318,15 +324,37 @@ export class LocalRuntime extends RuntimeBase {
             return;
         }
 
-        let iterators = flowContext.dataContext.get(
+        let outputValue;
+        let indexValue = flowContext.dataContext.get(
             FLOW_ITERATOR_INDEXES_VARIABLE
         );
-        if (iterators && iterators.length == 1) {
-            iterators = iterators[0];
+        if (indexValue) {
+            if (indexValue.length == 0) {
+                outputValue = value;
+            } else if (indexValue.length == 1) {
+                indexValue = indexValue[0];
+                outputValue =
+                    value !== undefined
+                        ? {
+                              value,
+                              index: indexValue
+                          }
+                        : indexValue;
+            } else {
+                outputValue =
+                    value !== undefined
+                        ? {
+                              value,
+                              indexes: indexValue
+                          }
+                        : indexValue;
+            }
+        } else {
+            outputValue = value;
         }
 
         if (widget.isOutputProperty("action")) {
-            this.propagateValue(parentFlowState, widget, "action", iterators);
+            this.propagateValue(parentFlowState, widget, "action", outputValue);
         } else if (widget.action) {
             // execute action given by name
             const action = findAction(
@@ -351,8 +379,9 @@ export class LocalRuntime extends RuntimeBase {
                             newFlowState,
                             component,
                             "@seqout",
-                            iterators
+                            outputValue
                         );
+                        break;
                     }
                 }
 
@@ -360,9 +389,7 @@ export class LocalRuntime extends RuntimeBase {
 
                 this.executeStartAction(newFlowState);
             } else {
-                this.logs.addLogItem(
-                    new WidgetActionNotFoundLogItem(undefined, widget)
-                );
+                throw `Widget action "${widget.action}" not found`;
             }
         } else {
             this.logs.addLogItem(
@@ -705,13 +732,13 @@ export class LocalRuntime extends RuntimeBase {
     }
 
     assignValue(
-        flowState: FlowState,
+        expressionContext: IExpressionContext | FlowState,
         component: Component,
         assignableExpression: string,
         value: any
     ) {
         const result = evalAssignableExpression(
-            flowState,
+            expressionContext,
             component,
             assignableExpression
         );
@@ -725,16 +752,25 @@ export class LocalRuntime extends RuntimeBase {
             }
         }
 
-        if (result.isOutput()) {
-            this.propagateValue(flowState, component, result.name, value);
-        } else if (result.isLocalVariable()) {
-            flowState.dataContext.set(result.name, value);
-        } else if (result.isGlobalVariable()) {
-            flowState.dataContext.set(result.name, value);
-        } else if (result.isFlowValue()) {
-            runInAction(() => (result.object[result.name] = value));
+        let flowState =
+            expressionContext instanceof FlowState
+                ? expressionContext
+                : (expressionContext.flowState as FlowState);
+
+        if (flowState) {
+            if (result.isOutput()) {
+                this.propagateValue(flowState, component, result.name, value);
+            } else if (result.isLocalVariable()) {
+                flowState.dataContext.set(result.name, value);
+            } else if (result.isGlobalVariable()) {
+                flowState.dataContext.set(result.name, value);
+            } else if (result.isFlowValue()) {
+                runInAction(() => (result.object[result.name] = value));
+            } else {
+                throw "Not an assignable expression";
+            }
         } else {
-            throw "Not an assignable expression";
+            throw "Missing flow state";
         }
     }
 }
