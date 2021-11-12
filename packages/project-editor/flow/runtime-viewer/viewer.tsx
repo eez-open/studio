@@ -31,6 +31,7 @@ import {
 } from "project-editor/flow/editor/mouse-handler";
 
 import { Selection } from "project-editor/flow/runtime-viewer/selection";
+import classNames from "classnames";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -382,9 +383,17 @@ export class Canvas extends React.Component<{
         const xt = Math.round(
             transform.translate.x + transform.clientRect.width / 2
         );
-        const yt = Math.round(
+        let yt = Math.round(
             transform.translate.y + transform.clientRect.height / 2
         );
+
+        const runMode =
+            this.props.flowContext.DocumentStore.runtime &&
+            !this.props.flowContext.DocumentStore.runtime.isDebuggerActive;
+
+        if (yt < 0 && runMode) {
+            yt = 0;
+        }
 
         if (
             transform.clientRect.width <= 1 ||
@@ -563,9 +572,15 @@ export class FlowViewer
     render() {
         const flow = this.props.tabState.widgetContainer.object as Flow;
 
+        const runMode =
+            this.flowContext.DocumentStore.runtime &&
+            !this.flowContext.DocumentStore.runtime.isDebuggerActive;
+
         return (
             <div
-                className="EezStudio_FlowViewerCanvasContainer"
+                className={classNames("EezStudio_FlowViewerCanvasContainer", {
+                    runMode
+                })}
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
                 onFocus={this.focusHander}

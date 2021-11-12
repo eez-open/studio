@@ -4742,6 +4742,22 @@ button.EezStudio_Action {
             }
         }
     }
+
+    /* Some CSS layout tricks to support page scrolling in run mode
+       when page doesn't fit in available space. */
+    &.runMode {
+        & > div {
+            overflow: auto;
+            & > .eez-canvas {
+                & > div {
+                    position: relative !important;
+                    & > .EezStudio_Page {
+                        position: relative !important;
+                    }
+                }
+            }
+        }
+    }
 }
 
 .EezStudio_ComponentEnclosure {
