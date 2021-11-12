@@ -3803,7 +3803,7 @@ button.EezStudio_Action {
 }
 
 .EezStudio_FlowViewerCanvasContainer {
-    position: absolute;
+    position: relative;
     width: 100%;
     height: 100%;
     background-color: @backgroundColor;
@@ -4751,6 +4751,10 @@ button.EezStudio_Action {
             line-height: 0;
             display: block;
         }
+    }
+
+    &.MarkdownWidget {
+        overflow: auto;
     }
 }
 

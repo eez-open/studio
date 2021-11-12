@@ -99,14 +99,10 @@ export class PageEditor extends EditorComponent implements IPanel {
     }
 
     render() {
-        const editor = (
-            <div>
-                {this.pageTabState.isRuntime ? (
-                    <FlowViewer tabState={this.pageTabState} />
-                ) : (
-                    <FlowEditor tabState={this.pageTabState} />
-                )}
-            </div>
+        const editor = this.pageTabState.isRuntime ? (
+            <FlowViewer tabState={this.pageTabState} />
+        ) : (
+            <FlowEditor tabState={this.pageTabState} />
         );
 
         if (this.pageTabState.isRuntime) {

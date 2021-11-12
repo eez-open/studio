@@ -53,12 +53,14 @@ import {
     registerObjectVariableType
 } from "project-editor/features/variable/value-type";
 
+import "project-editor/flow/components/actions/stream";
 import "project-editor/flow/components/actions/execute-command";
 import "project-editor/flow/components/actions/file";
 import "project-editor/flow/components/actions/instrument";
 import "project-editor/flow/components/actions/regexp";
 import "project-editor/flow/components/actions/serial";
 
+import "project-editor/flow/components/widgets/markdown";
 import "project-editor/flow/components/widgets/plotly";
 import "project-editor/flow/components/widgets/terminal";
 
