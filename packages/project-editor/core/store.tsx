@@ -952,13 +952,14 @@ class RuntimeSettings {
         );
         if (objectVariableType) {
             const constructorParams = value;
-            return objectVariableType.constructorFunction(
-                constructorParams,
-                !!this.DocumentStore.runtime
-            );
-        } else {
-            return value;
+            if (value) {
+                return objectVariableType.constructorFunction(
+                    constructorParams,
+                    !!this.DocumentStore.runtime
+                );
+            }
         }
+        return value;
     }
 
     setVariableValue(variable: IVariable, value: any) {
