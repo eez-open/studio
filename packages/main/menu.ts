@@ -52,6 +52,16 @@ export function openProject(projectFilePath: string, focusedWindow?: any) {
     }
 }
 
+export function loadDebugInfo(debugInfoFilePath: string, focusedWindow?: any) {
+    if (!focusedWindow) {
+        focusedWindow = BrowserWindow.getFocusedWindow();
+    }
+
+    if (focusedWindow) {
+        focusedWindow.webContents.send("load-debug-info", debugInfoFilePath);
+    }
+}
+
 function createNewProject() {
     BrowserWindow.getFocusedWindow()!.webContents.send("new-project");
 }
@@ -139,6 +149,10 @@ function buildFileMenu(win: IWindow | undefined) {
                     properties: ["openFile"],
                     filters: [
                         { name: "EEZ Project", extensions: ["eez-project"] },
+                        {
+                            name: "EEZ Dashboard",
+                            extensions: ["eez-dashboard"]
+                        },
                         { name: "All Files", extensions: ["*"] }
                     ]
                 });
@@ -177,7 +191,41 @@ function buildFileMenu(win: IWindow | undefined) {
                     }
                 }
             }))
-        },
+        }
+    );
+
+    if (win?.activeTabType === "project") {
+        fileMenuSubmenu.push(
+            {
+                type: "separator"
+            },
+            {
+                label: "Load Debug Info...",
+                click: async function (item: any, focusedWindow: any) {
+                    const result = await dialog.showOpenDialog({
+                        properties: ["openFile"],
+                        filters: [
+                            {
+                                name: "EEZ Debug Info",
+                                extensions: ["eez-debug-info"]
+                            },
+                            {
+                                name: "EEZ Debug Info",
+                                extensions: ["eez-debug-info"]
+                            },
+                            { name: "All Files", extensions: ["*"] }
+                        ]
+                    });
+                    const filePaths = result.filePaths;
+                    if (filePaths && filePaths[0]) {
+                        loadDebugInfo(filePaths[0], focusedWindow);
+                    }
+                }
+            }
+        );
+    }
+
+    fileMenuSubmenu.push(
         {
             type: "separator"
         },

@@ -162,14 +162,17 @@ class LogItemRow extends React.Component<{
                 selectInEditor: false
             });
 
-            const editorState = this.context.editorsStore.activeEditor?.state;
-            if (editorState instanceof FlowTabState) {
-                // select other object in the same editor
-                editorState.selectObjects(objects);
+            setTimeout(() => {
+                const editorState =
+                    this.context.editorsStore.activeEditor?.state;
+                if (editorState instanceof FlowTabState) {
+                    // select other object in the same editor
+                    editorState.selectObjects(objects);
 
-                // ensure objects are visible on the screen
-                editorState.ensureSelectionVisible();
-            }
+                    // ensure objects are visible on the screen
+                    editorState.ensureSelectionVisible();
+                }
+            }, 50);
         } else if (logItem.flowState?.flow) {
             this.context.navigationStore.showObject(logItem.flowState?.flow);
         }

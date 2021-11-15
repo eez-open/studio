@@ -15,7 +15,7 @@ import { showAboutBox } from "eez-studio-ui/about-box";
 import type * as ImportInstrumentDefinitionModule from "instrument/import-instrument-definition";
 
 import { handleDragAndDrop } from "home/drag-and-drop";
-import { loadTabs, tabs } from "home/tabs-store";
+import { loadTabs, ProjectEditorTab, tabs } from "home/tabs-store";
 import { settingsController } from "home/settings";
 import { App } from "home/app";
 
@@ -89,6 +89,20 @@ EEZStudio.electron.ipcRenderer.on(
             }
             if (tab) {
                 tab.makeActive();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+);
+
+EEZStudio.electron.ipcRenderer.on(
+    "load-debug-info",
+    async (sender: any, filePath: any) => {
+        try {
+            let tab = tabs.activeTab;
+            if (tab instanceof ProjectEditorTab) {
+                tab.loadDebugInfo(filePath);
             }
         } catch (err) {
             console.error(err);

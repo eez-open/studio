@@ -1,7 +1,14 @@
+import path from "path";
+
 import { guid } from "eez-studio-shared/guid";
 
-import { action, computed, observable, runInAction } from "mobx";
-import { DocumentStoreClass, getLabel } from "project-editor/core/store";
+import { action, computed, observable, runInAction, toJS } from "mobx";
+import {
+    DocumentStoreClass,
+    getLabel,
+    getObjectFromStringPath,
+    getObjectPathAsString
+} from "project-editor/core/store";
 import { ConnectionLine, Flow, FlowTabState } from "project-editor/flow/flow";
 import { CatchErrorActionComponent } from "project-editor/flow/components/actions";
 import { Component, Widget } from "project-editor/flow/component";
@@ -138,8 +145,6 @@ export abstract class RuntimeBase {
         this.transition(StateMachineAction.STOP);
 
         await this.doStopRuntime(notifyUser);
-
-        this.DocumentStore.dataContext.clear();
     }
 
     @action
@@ -344,10 +349,13 @@ export abstract class RuntimeBase {
             selectInEditor: false
         });
 
-        const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
-        if (editorState instanceof FlowTabState) {
-            editorState.ensureSelectionVisible();
-        }
+        setTimeout(() => {
+            const editorState =
+                this.DocumentStore.editorsStore.activeEditor?.state;
+            if (editorState instanceof FlowTabState) {
+                editorState.ensureSelectionVisible();
+            }
+        }, 50);
     }
 
     showQueueTask(queueTask: QueueTask) {
@@ -371,14 +379,17 @@ export abstract class RuntimeBase {
             selectInEditor: false
         });
 
-        const editorState = this.DocumentStore.editorsStore.activeEditor?.state;
-        if (editorState instanceof FlowTabState) {
-            // select other object in the same editor
-            editorState.selectObjects(objects);
+        setTimeout(() => {
+            const editorState =
+                this.DocumentStore.editorsStore.activeEditor?.state;
+            if (editorState instanceof FlowTabState) {
+                // select other object in the same editor
+                editorState.selectObjects(objects);
 
-            // ensure objects are visible on the screen
-            editorState.ensureSelectionVisible();
-        }
+                // ensure objects are visible on the screen
+                editorState.ensureSelectionVisible();
+            }
+        }, 50);
     }
 
     onBreakpointAdded(component: Component) {}
@@ -435,6 +446,221 @@ export abstract class RuntimeBase {
     ): void;
 
     abstract destroyObjectLocalVariables(flowState: FlowState): void;
+
+    get debugInfo() {
+        return {
+            state: this.state,
+            error: this.error,
+            flowStates: this.flowStates.map(flowState => flowState.debugInfo),
+            queue: this.queue.map(queueTask => ({
+                id: queueTask.id,
+                flowState: queueTask.flowState.id,
+                component: getObjectPathAsString(queueTask.component),
+                connectionLine: queueTask.connectionLine
+                    ? getObjectPathAsString(queueTask.connectionLine)
+                    : undefined
+            })),
+            logs: this.logs.debugInfo,
+            dataContext: this.DocumentStore.dataContext.debugInfo
+        };
+    }
+
+    set debugInfo(debugInfo: any) {
+        runInAction(() => {
+            this.state = debugInfo.state;
+            this.error = debugInfo.error;
+
+            this.loadFlowStatesFromDebugInfo(
+                this.flowStates,
+                debugInfo.flowStates
+            );
+
+            for (const queueTask of debugInfo.queue) {
+                const component = getObjectFromStringPath(
+                    this.DocumentStore.project,
+                    queueTask.component
+                ) as Component;
+                if (!component) {
+                    console.error("Can't find component", queueTask.component);
+                    continue;
+                }
+
+                const flowState = this.findFlowStateById(queueTask.flowState);
+                if (!flowState) {
+                    console.error("Can't find flow by id", queueTask.flowState);
+                    continue;
+                }
+
+                let connectionLine;
+                if (queueTask.connectionLine) {
+                    connectionLine = getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        queueTask.connectionLine
+                    ) as ConnectionLine;
+                    if (!connectionLine) {
+                        console.error(
+                            "Can't find connection line",
+                            queueTask.connectionLine
+                        );
+                        continue;
+                    }
+                }
+
+                this.queue.push({
+                    id: queueTask.id,
+                    flowState,
+                    component,
+                    connectionLine
+                });
+            }
+
+            this.logs.loadDebugInfo(this, debugInfo.logs);
+
+            this.DocumentStore.dataContext.debugInfo = debugInfo.dataContext;
+        });
+    }
+
+    loadFlowStatesFromDebugInfo(flowStates: FlowState[], flowStatesJS: any) {
+        for (const flowStateJS of flowStatesJS) {
+            const flow = getObjectFromStringPath(
+                this.DocumentStore.project,
+                flowStateJS.flow
+            ) as Flow;
+            if (!flow) {
+                console.error("Can't find flow", flowStateJS.flow);
+                continue;
+            }
+
+            let component;
+            if (flowStateJS.component) {
+                component = getObjectFromStringPath(
+                    this.DocumentStore.project,
+                    flowStateJS.component
+                ) as Component;
+                if (!component) {
+                    console.error(
+                        "Can't find component",
+                        flowStateJS.component
+                    );
+                    continue;
+                }
+            }
+
+            let parentFlowState;
+            if (flowStateJS.parentFlowState) {
+                parentFlowState = this.findFlowStateById(
+                    flowStateJS.parentFlowState
+                );
+                if (!parentFlowState) {
+                    console.error(
+                        "Can't find parentFlowState by id",
+                        flowStateJS.parentFlowState
+                    );
+                    continue;
+                }
+            }
+
+            const flowState = new FlowState(
+                this,
+                flow,
+                parentFlowState,
+                component
+            );
+
+            flowStates.push(flowState);
+
+            flowState.debugInfo = flowStateJS;
+        }
+    }
+
+    findFlowStateById(id: string): FlowState | undefined {
+        for (const flowState of this.flowStates) {
+            if (flowState.id == id) {
+                return flowState;
+            }
+
+            const childFlowState = flowState.findFlowStateById(id);
+            if (childFlowState) {
+                return childFlowState;
+            }
+        }
+
+        return undefined;
+    }
+
+    async saveDebugInfo() {
+        let defaultPath;
+        if (this.DocumentStore.filePath?.endsWith(".eez-project")) {
+            defaultPath = path.basename(
+                this.DocumentStore.filePath!,
+                ".eez-project"
+            );
+        } else {
+            defaultPath = path.basename(
+                this.DocumentStore.filePath!,
+                ".eez-dashboard"
+            );
+        }
+
+        const result = await EEZStudio.remote.dialog.showSaveDialog(
+            EEZStudio.remote.getCurrentWindow(),
+            {
+                defaultPath,
+                filters: [
+                    {
+                        name: "EEZ Debug Info",
+                        extensions: ["eez-debug-info"]
+                    },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            }
+        );
+        let filePath = result.filePath;
+        if (filePath) {
+            await new Promise<void>((resolve, reject) => {
+                const fs = EEZStudio.remote.require("fs");
+                const path = EEZStudio.remote.require("path");
+                const archiver = require("archiver");
+
+                var archive = archiver("zip", {
+                    zlib: {
+                        level: 9
+                    }
+                });
+
+                var output = fs.createWriteStream(filePath);
+
+                output.on("close", function () {
+                    resolve();
+                });
+
+                archive.on("warning", function (err: any) {
+                    reject(err);
+                });
+
+                archive.on("error", function (err: any) {
+                    reject(err);
+                });
+
+                archive.pipe(output);
+
+                let json;
+                try {
+                    json = JSON.stringify(toJS(this.debugInfo));
+                } catch (err) {
+                    reject(err);
+                }
+
+                archive.append(json, { name: path.basename(filePath) });
+
+                archive.finalize();
+            });
+
+            return true;
+        }
+
+        return false;
+    }
 }
 
 export class FlowState {
@@ -468,6 +694,20 @@ export class FlowState {
 
     get label() {
         return getLabel(this.flow);
+    }
+
+    findFlowStateById(id: string): FlowState | undefined {
+        for (const flowState of this.flowStates) {
+            if (flowState.id == id) {
+                return flowState;
+            }
+
+            const childFlowState = flowState.findFlowStateById(id);
+            if (childFlowState) {
+                return childFlowState;
+            }
+        }
+        return undefined;
     }
 
     getFlowState(flow: Flow): FlowState | undefined {
@@ -593,6 +833,59 @@ export class FlowState {
             new LogItem("scpi", valueToString(value), this, component)
         );
     }
+
+    get debugInfo(): any {
+        return {
+            id: this.id,
+            flow: getObjectPathAsString(this.flow),
+            component: this.component
+                ? getObjectPathAsString(this.component)
+                : undefined,
+            parentFlowState: this.parentFlowState?.id,
+            flowStates: this.flowStates.map(flowState => flowState.debugInfo),
+            componentStates: [...this.componentStates.values()].map(
+                componentState => componentState.debugInfo
+            ),
+            dataContext: this.dataContext.debugInfo,
+            error: this.error,
+            isFinished: this.isFinished
+        };
+    }
+
+    set debugInfo(debugInfo: any) {
+        runInAction(() => {
+            this.id = debugInfo.id;
+
+            this.runtime.loadFlowStatesFromDebugInfo(
+                this.flowStates,
+                debugInfo.flowStates
+            );
+
+            for (const componentStateJS of debugInfo.componentStates) {
+                const component = getObjectFromStringPath(
+                    this.DocumentStore.project,
+                    componentStateJS.component
+                ) as Component;
+                if (!component) {
+                    console.error(
+                        "Can't find component",
+                        componentStateJS.component
+                    );
+                    continue;
+                }
+
+                const componentState = new ComponentState(this, component);
+                this.componentStates.set(component, componentState);
+
+                componentState.debugInfo = componentStateJS;
+            }
+
+            this.dataContext.debugInfo = debugInfo.dataContext;
+
+            this.error = debugInfo.error;
+            this.isFinished = debugInfo.isFinished;
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -650,5 +943,32 @@ export class ComponentState {
         if (this.dispose) {
             this.dispose();
         }
+    }
+
+    get debugInfo() {
+        const inputsData: any = {};
+        for (const [name, value] of this.inputsData) {
+            try {
+                const valueJS = toJS(value);
+                JSON.stringify(valueJS);
+                inputsData[name] = valueJS;
+            } catch (err) {}
+        }
+
+        return {
+            component: getObjectPathAsString(this.component),
+            inputsData,
+            isRunning: this.isRunning
+        };
+    }
+
+    set debugInfo(debugInfo: any) {
+        runInAction(() => {
+            for (const name in debugInfo.inputsData) {
+                this.inputsData.set(name, debugInfo.inputsData[name]);
+            }
+
+            this.isRunning = debugInfo.isRunning;
+        });
     }
 }

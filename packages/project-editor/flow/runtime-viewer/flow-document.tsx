@@ -28,7 +28,10 @@ export class FlowDocument implements IDocument {
         if (
             this.DocumentStore.runtime &&
             (!this.DocumentStore.runtime.isDebuggerActive ||
-                !this.DocumentStore.runtime.isPaused)
+                !(
+                    this.DocumentStore.runtime.isPaused ||
+                    this.DocumentStore.runtime.isStopped
+                ))
         ) {
             return [];
         }
@@ -42,7 +45,10 @@ export class FlowDocument implements IDocument {
         if (
             this.DocumentStore.runtime &&
             (!this.DocumentStore.runtime.isDebuggerActive ||
-                !this.DocumentStore.runtime.isPaused)
+                !(
+                    this.DocumentStore.runtime.isPaused ||
+                    this.DocumentStore.runtime.isStopped
+                ))
         ) {
             return this.connectionLines;
         }

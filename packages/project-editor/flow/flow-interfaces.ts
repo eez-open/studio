@@ -43,6 +43,8 @@ export interface IDataContext {
     getValueList(variableName: string): string[];
     getMin(variableName: string): number;
     getMax(variableName: string): number;
+
+    debugInfo: any;
 }
 
 export type LogItemType =

@@ -1208,31 +1208,41 @@ export async function load(
     DocumentStore: DocumentStoreClass,
     filePath: string
 ) {
-    return new Promise<Project>((resolve, reject) => {
-        fetch(filePath)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("HTTP error " + response.status);
-                }
-                return response.json();
-            })
-            .then(projectJs => {
-                let project = loadObject(
-                    DocumentStore,
-                    undefined,
-                    projectJs,
-                    ProjectEditor.ProjectClass
-                ) as Project;
-                resolve(project);
-                //console.timeEnd("load");
-            })
-            .catch(function (err) {
-                reject(err);
-            });
-    });
+    const response = await fetch(filePath);
+
+    if (!response.ok) {
+        throw new Error("File read error " + response.status);
+    }
+
+    const isDashboardBuild = filePath.endsWith(".eez-dashboard");
+
+    let projectJs;
+    if (filePath.endsWith(".eez-dashboard")) {
+        const decompress = require("decompress");
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const files = await decompress(buffer);
+        projectJs = files[0].data.toString("utf8");
+    } else {
+        projectJs = await response.json();
+    }
+
+    const project: Project = loadObject(
+        DocumentStore,
+        undefined,
+        projectJs,
+        ProjectEditor.ProjectClass
+    ) as Project;
+
+    project.isDashboardBuild = isDashboardBuild;
+
+    return project;
 }
 
-export function save(DocumentStore: DocumentStoreClass, filePath: string) {
+export function getJSON(
+    DocumentStore: DocumentStoreClass,
+    tabWidth: number = 2
+) {
     const toJsHook = (jsObject: any, object: IEezObject) => {
         let projectFeatures = ProjectEditor.extensions;
         for (let projectFeature of projectFeatures) {
@@ -1250,9 +1260,15 @@ export function save(DocumentStore: DocumentStoreClass, filePath: string) {
 
     (DocumentStore.project as any)._DocumentStore = undefined;
 
-    const json = objectToJson(DocumentStore.project, 2, toJsHook);
+    const json = objectToJson(DocumentStore.project, tabWidth, toJsHook);
 
     DocumentStore.project._DocumentStore = DocumentStore;
+
+    return json;
+}
+
+export function save(DocumentStore: DocumentStoreClass, filePath: string) {
+    const json = getJSON(DocumentStore);
 
     return new Promise<void>((resolve, reject) => {
         fs.writeFile(filePath, json, "utf8", (err: any) => {
@@ -1826,9 +1842,11 @@ export class DocumentStoreClass {
     }
 
     async doSave() {
-        await save(this, this.filePath!);
-        this.uiStateStore.save();
-        this.runtimeSettings.save();
+        if (!this.project.isDashboardBuild) {
+            await save(this, this.filePath!);
+            await this.uiStateStore.save();
+        }
+        await this.runtimeSettings.save();
         this.setModified(false);
     }
 
@@ -1902,13 +1920,17 @@ export class DocumentStoreClass {
     }
 
     async saveModified() {
-        this.uiStateStore.save();
-        this.runtimeSettings.save();
+        if (this.project.isDashboardBuild) {
+            await this.runtimeSettings.save();
+            return true;
+        }
 
         if (this.project && this.modified) {
             return new Promise<boolean>(resolve => {
                 confirmSave({
                     saveCallback: async () => {
+                        await this.uiStateStore.save();
+                        await this.runtimeSettings.save();
                         resolve(await this.saveToFile(false));
                     },
                     dontSaveCallback: () => resolve(true),
@@ -1945,6 +1967,7 @@ export class DocumentStoreClass {
     async closeWindow() {
         if (this.runtime) {
             await this.runtime.stopRuntime(false);
+            this.dataContext.clear();
         }
 
         if (this.project) {
@@ -2266,6 +2289,7 @@ export class DocumentStoreClass {
     setEditorMode() {
         if (this.runtime) {
             this.runtime.stopRuntime(false);
+            this.dataContext.clear();
 
             if (this.runtime.isDebuggerActive) {
                 const editorState = this.editorsStore.activeEditor?.state;
@@ -2304,10 +2328,26 @@ export class DocumentStoreClass {
         }
     };
 
+    onRestart = () => {
+        this.setRuntimeMode(false);
+    };
+
     onRestartRuntimeWithDebuggerActive = () => {
         this.onSetEditorMode();
         this.setRuntimeMode(true);
     };
+
+    loadDebugInfo(filePath: string) {
+        if (this.runtime) {
+            this.runtime.stopRuntime(false);
+            this.dataContext.clear();
+        }
+
+        const runtime = new ProjectEditor.DebugInfoRuntimeClass(this);
+        runtime.startRuntime(true);
+        runtime.loadDebugInfo(filePath);
+        runInAction(() => (this.runtime = runtime));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

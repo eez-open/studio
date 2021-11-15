@@ -429,7 +429,7 @@ export class ProjectEditorTab implements IHomeTab {
 
             this.ProjectEditor = ProjectEditor;
 
-            await initProjectEditor();
+            await initProjectEditor(tabs);
             const DocumentStore = await DocumentStoreClass.create();
 
             if (this._filePath) {
@@ -442,7 +442,12 @@ export class ProjectEditorTab implements IHomeTab {
             runInAction(() => {
                 DocumentStore.project._fullyLoaded = true;
             });
-            DocumentStore.startBackgroundCheck();
+
+            if (!DocumentStore.project.isDashboardBuild) {
+                DocumentStore.startBackgroundCheck();
+            } else {
+                DocumentStore.setRuntimeMode(false);
+            }
 
             if (!this.closed) {
                 runInAction(() => {
@@ -658,6 +663,12 @@ export class ProjectEditorTab implements IHomeTab {
             this.DocumentStore.uiStateStore.showCommandPalette = true;
         }
     }
+
+    loadDebugInfo(filePath: string) {
+        if (this.DocumentStore) {
+            this.DocumentStore.loadDebugInfo(filePath);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -675,7 +686,7 @@ interface ISavedTab {
     active: boolean;
 }
 
-class Tabs {
+export class Tabs {
     @observable tabs: IHomeTab[] = [];
     @observable activeTab: IHomeTab | undefined;
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, action, observable, runInAction } from "mobx";
+import { computed, action, observable, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 
 import { validators } from "eez-studio-shared/validation";
@@ -100,10 +100,10 @@ export const RenderVariableStatus = observer(
         onClick: () => void;
         onClear?: () => void;
     }) => {
-        const image = value?.status.image;
-        const color = value?.status.color;
-        const error = value?.status.error != undefined;
-        const title = value?.status.error;
+        const image = value?.status?.image;
+        const color = value?.status?.color;
+        const error = value?.status?.error != undefined;
+        const title = value?.status?.error;
 
         let label;
         let hint;
@@ -821,6 +821,29 @@ export class DataContext implements IDataContext {
         }
 
         return [];
+    }
+
+    get debugInfo(): any {
+        const runtimeValues: any = {};
+        for (const [name, value] of this.runtimeValues) {
+            try {
+                const valueJS = toJS(value);
+                JSON.stringify(valueJS);
+                runtimeValues[name] = valueJS;
+            } catch (err) {}
+        }
+
+        return {
+            runtimeValues
+        };
+    }
+
+    set debugInfo(debugInfo: any) {
+        runInAction(() => {
+            for (const name in debugInfo.runtimeValues) {
+                this.runtimeValues.set(name, debugInfo.runtimeValues[name]);
+            }
+        });
     }
 }
 

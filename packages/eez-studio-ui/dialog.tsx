@@ -76,6 +76,7 @@ export class Dialog extends React.Component<
         modal?: boolean;
         open?: boolean;
         title?: string;
+        titleIcon?: React.ReactNode;
         size?: "small" | "medium" | "large";
         okButtonText?: string;
         cancelButtonText?: string;
@@ -85,6 +86,7 @@ export class Dialog extends React.Component<
         cancelDisabled?: boolean;
         additionalButton?: IDialogButton;
         additionalFooterControl?: React.ReactNode;
+        backdrop?: "static" | boolean;
     },
     {}
 > {
@@ -166,12 +168,14 @@ export class Dialog extends React.Component<
                 }
                 size={this.props.size}
                 title={this.props.title}
+                titleIcon={this.props.titleIcon}
                 onSubmit={this.handleSubmit}
                 onCancel={this.onCancel}
                 cancelDisabled={this.props.cancelDisabled}
                 disableButtons={this.disableButtons}
                 buttons={buttons}
                 additionalFooterControl={this.props.additionalFooterControl}
+                backdrop={this.props.backdrop}
             >
                 {this.props.children}
             </BootstrapDialog>
@@ -199,6 +203,7 @@ export class BootstrapDialog extends React.Component<{
     open: boolean;
     size?: "small" | "medium" | "large";
     title?: string;
+    titleIcon?: React.ReactNode;
     onSubmit?: (event: React.FormEvent) => void;
     onCancel: () => void;
     cancelDisabled?: boolean;
@@ -207,6 +212,7 @@ export class BootstrapDialog extends React.Component<{
     buttons?: IDialogButton[];
     children: React.ReactNode;
     additionalFooterControl?: React.ReactNode;
+    backdrop?: "static" | boolean;
 }> {
     div: HTMLDivElement | null = null;
     form: HTMLFormElement | null = null;
@@ -239,7 +245,9 @@ export class BootstrapDialog extends React.Component<{
                 this.props.onCancel();
             });
 
-            this.modal = new bootstrap.Modal(div);
+            this.modal = new bootstrap.Modal(div, {
+                backdrop: this.props.backdrop ?? true
+            });
             this.modal.show();
         }
     }
@@ -277,7 +285,8 @@ export class BootstrapDialog extends React.Component<{
                                   "btn-primary": button.type === "primary",
                                   "btn-secondary": button.type === "secondary",
                                   "btn-danger": button.type === "danger",
-                                  "float-left": button.position === "left"
+                                  "float-left": button.position === "left",
+                                  "float-right": button.position !== "left"
                               }
                             : "btn-outline-secondary"
                     )}
@@ -343,8 +352,12 @@ export class BootstrapDialog extends React.Component<{
                     <div className="modal-content">
                         {props.title && (
                             <div className="modal-header">
-                                <h5 className="modal-title" id="myModalLabel">
-                                    {props.title}
+                                <h5
+                                    className="modal-title d-flex align-items-center"
+                                    id="myModalLabel"
+                                >
+                                    {props.titleIcon}
+                                    <span>{props.title}</span>
                                 </h5>
                                 {!this.props.cancelDisabled && (
                                     <button
@@ -360,10 +373,7 @@ export class BootstrapDialog extends React.Component<{
                         <div className="modal-body">{props.children}</div>
 
                         {(buttons || this.props.additionalFooterControl) && (
-                            <div
-                                className="modal-footer"
-                                style={{ justifyContent: "flex-start" }}
-                            >
+                            <div className="modal-footer">
                                 {this.props.additionalFooterControl}
                                 {buttons}
                             </div>

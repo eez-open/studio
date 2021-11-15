@@ -950,6 +950,8 @@ export class Project extends EezObject {
     _DocumentStore!: DocumentStoreClass;
     _isReadOnly: boolean = false;
 
+    isDashboardBuild: boolean = false;
+
     @observable _fullyLoaded = false;
 
     @observable settings: Settings;

@@ -22,10 +22,15 @@ export class Toolbar extends React.Component {
     render() {
         return (
             <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                <Controls />
+                {!this.context.project.isDashboardBuild ? (
+                    <Controls />
+                ) : (
+                    <div />
+                )}
 
-                {this.context.project.isDashboardProject ||
-                this.context.project.isAppletProject ? (
+                {!this.context.project.isDashboardBuild &&
+                (this.context.project.isDashboardProject ||
+                    this.context.project.isAppletProject) ? (
                     <RunEditSwitchControls />
                 ) : (
                     <div />
@@ -203,23 +208,24 @@ class Controls extends React.Component {
                         </div>
                     )}
 
-                {!this.context.runtime &&
-                    !this.context.project.isDashboardProject && (
-                        <div className="btn-group" role="group">
+                {!this.context.runtime && (
+                    <div className="btn-group" role="group">
+                        {!this.context.project.isDashboardProject && (
                             <IconAction
                                 title="Check"
                                 icon="material:check"
                                 onClick={() => this.context.check()}
                                 enabled={this.context.project._fullyLoaded}
                             />
-                            <IconAction
-                                title="Build"
-                                icon="material:build"
-                                onClick={() => this.context.build()}
-                                enabled={this.context.project._fullyLoaded}
-                            />
-                        </div>
-                    )}
+                        )}
+                        <IconAction
+                            title="Build"
+                            icon="material:build"
+                            onClick={() => this.context.build()}
+                            enabled={this.context.project._fullyLoaded}
+                        />
+                    </div>
+                )}
 
                 <div className="btn-group" role="group">
                     {this.pageTabState && (

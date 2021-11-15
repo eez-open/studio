@@ -209,6 +209,12 @@ let files = [
                 name: "EEZ Studio Project",
                 role: "Editor",
                 mimeType: "application/x-eez-project"
+            },
+            {
+                ext: "eez-dashboard",
+                name: "EEZ Dashboard",
+                role: "Editor",
+                mimeType: "application/x-eez-dashboard"
             }
         ],
 

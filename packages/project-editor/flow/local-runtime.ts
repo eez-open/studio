@@ -38,6 +38,7 @@ import {
     getObjectVariableTypeFromType,
     isObjectType
 } from "project-editor/features/variable/value-type";
+import { showErrorBox } from "project-editor/flow/error-box";
 
 export class LocalRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -75,9 +76,11 @@ export class LocalRuntime extends RuntimeBase {
         }
 
         if (!this.isStopped) {
-            notification.success(`Flow started`, {
-                autoClose: 1000
-            });
+            if (!this.DocumentStore.project.isDashboardBuild) {
+                notification.success(`Flow started`, {
+                    autoClose: 1000
+                });
+            }
         }
     };
 
@@ -168,12 +171,18 @@ export class LocalRuntime extends RuntimeBase {
         EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
 
         if (notifyUser) {
-            if (this.error) {
-                notification.error(`Flow stopped with error: ${this.error}`);
+            if (!this.DocumentStore.project.isDashboardBuild) {
+                if (this.error) {
+                    notification.error(
+                        `Flow stopped with error: ${this.error}`
+                    );
+                } else {
+                    notification.success("Flow stopped", {
+                        autoClose: 1000
+                    });
+                }
             } else {
-                notification.success("Flow stopped", {
-                    autoClose: 1000
-                });
+                showErrorBox(this);
             }
         }
     }

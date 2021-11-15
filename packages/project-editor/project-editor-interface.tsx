@@ -1,8 +1,10 @@
+import type { Tabs } from "home/tabs-store";
 import type { Extension } from "project-editor/core/extensions";
 import type { IDocumentSearch } from "project-editor/core/search";
 import type { DataContext } from "project-editor/features/variable/variable";
 import type { LocalRuntime } from "project-editor/flow/local-runtime";
 import type { RemoteRuntime } from "project-editor/flow/remote-runtime";
+import type { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
 import type {
     build,
     backgroundCheck,
@@ -32,11 +34,13 @@ import type {
 import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 
 export interface IProjectEditor {
+    homeTabs: Tabs;
     DataContextClass: typeof DataContext;
     extensions: Extension[];
     documentSearch: IDocumentSearch;
     LocalRuntimeClass: typeof LocalRuntime;
     RemoteRuntimeClass: typeof RemoteRuntime;
+    DebugInfoRuntimeClass: typeof DebugInfoRuntime;
     build: {
         buildProject: typeof build;
         backgroundCheck: typeof backgroundCheck;

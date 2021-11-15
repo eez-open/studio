@@ -21,7 +21,8 @@ import {
     isArray,
     getArrayAndObjectProperties,
     getClassInfo,
-    Section
+    Section,
+    getJSON
 } from "project-editor/core/store";
 
 import type { BuildConfiguration } from "project-editor/project/project";
@@ -315,7 +316,8 @@ async function generateFiles(
 function anythingToBuild(DocumentStore: DocumentStoreClass) {
     return (
         DocumentStore.project.settings.build.files.length > 0 ||
-        DocumentStore.masterProject
+        DocumentStore.masterProject ||
+        DocumentStore.project.isDashboardProject
     );
 }
 
@@ -359,54 +361,60 @@ export async function build(
                 throw new BuildException("Cannot find destination folder.");
             }
 
-            sectionNames = getSectionNames(DocumentStore);
+            if (!DocumentStore.project.isDashboardProject) {
+                sectionNames = getSectionNames(DocumentStore);
+            }
         }
 
         let configurationBuildResuts: {
             [configurationName: string]: BuildResult[];
         } = {};
 
-        if (
-            DocumentStore.project.settings.general.projectVersion !== "v1" &&
-            DocumentStore.project.settings.build.configurations.length > 0 &&
-            !DocumentStore.masterProject
-        ) {
-            for (const configuration of DocumentStore.project.settings.build
-                .configurations) {
-                OutputSections.write(
-                    Section.OUTPUT,
-                    MessageType.INFO,
-                    `Building ${configuration.name} configuration`
-                );
-                configurationBuildResuts[configuration.name] =
-                    await getBuildResults(
-                        DocumentStore,
-                        sectionNames,
-                        configuration
+        if (!DocumentStore.project.isDashboardProject) {
+            if (
+                DocumentStore.project.settings.general.projectVersion !==
+                    "v1" &&
+                DocumentStore.project.settings.build.configurations.length >
+                    0 &&
+                !DocumentStore.masterProject
+            ) {
+                for (const configuration of DocumentStore.project.settings.build
+                    .configurations) {
+                    OutputSections.write(
+                        Section.OUTPUT,
+                        MessageType.INFO,
+                        `Building ${configuration.name} configuration`
                     );
-            }
-        } else {
-            const selectedBuildConfiguration =
-                DocumentStore.selectedBuildConfiguration ||
-                DocumentStore.project.settings.build.configurations[0];
-            if (selectedBuildConfiguration) {
-                OutputSections.write(
-                    Section.OUTPUT,
-                    MessageType.INFO,
-                    `Building ${selectedBuildConfiguration.name} configuration`
-                );
-                configurationBuildResuts[selectedBuildConfiguration.name] =
-                    await getBuildResults(
-                        DocumentStore,
-                        sectionNames,
-                        selectedBuildConfiguration
-                    );
+                    configurationBuildResuts[configuration.name] =
+                        await getBuildResults(
+                            DocumentStore,
+                            sectionNames,
+                            configuration
+                        );
+                }
             } else {
-                configurationBuildResuts["default"] = await getBuildResults(
-                    DocumentStore,
-                    sectionNames,
-                    undefined
-                );
+                const selectedBuildConfiguration =
+                    DocumentStore.selectedBuildConfiguration ||
+                    DocumentStore.project.settings.build.configurations[0];
+                if (selectedBuildConfiguration) {
+                    OutputSections.write(
+                        Section.OUTPUT,
+                        MessageType.INFO,
+                        `Building ${selectedBuildConfiguration.name} configuration`
+                    );
+                    configurationBuildResuts[selectedBuildConfiguration.name] =
+                        await getBuildResults(
+                            DocumentStore,
+                            sectionNames,
+                            selectedBuildConfiguration
+                        );
+                } else {
+                    configurationBuildResuts["default"] = await getBuildResults(
+                        DocumentStore,
+                        sectionNames,
+                        undefined
+                    );
+                }
             }
         }
 
@@ -416,11 +424,55 @@ export async function build(
             return undefined;
         }
 
-        parts = await generateFiles(
-            DocumentStore,
-            destinationFolderPath,
-            configurationBuildResuts
-        );
+        if (!DocumentStore.project.isDashboardProject) {
+            parts = await generateFiles(
+                DocumentStore,
+                destinationFolderPath,
+                configurationBuildResuts
+            );
+        } else {
+            const path = EEZStudio.remote.require("path");
+
+            const baseName = path.basename(
+                DocumentStore.filePath,
+                ".eez-project"
+            );
+
+            const destinationFilePahth =
+                destinationFolderPath + "/" + baseName + ".eez-dashboard";
+
+            await new Promise<void>((resolve, reject) => {
+                const fs = EEZStudio.remote.require("fs");
+                const archiver = require("archiver");
+
+                var archive = archiver("zip", {
+                    zlib: {
+                        level: 9
+                    }
+                });
+
+                var output = fs.createWriteStream(destinationFilePahth);
+
+                output.on("close", function () {
+                    resolve();
+                });
+
+                archive.on("warning", function (err: any) {
+                    reject(err);
+                });
+
+                archive.on("error", function (err: any) {
+                    reject(err);
+                });
+
+                archive.pipe(output);
+
+                const json = getJSON(DocumentStore, 0);
+                archive.append(json, { name: baseName + ".eez-project" });
+
+                archive.finalize();
+            });
+        }
 
         OutputSections.write(
             Section.OUTPUT,

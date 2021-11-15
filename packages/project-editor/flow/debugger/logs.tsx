@@ -2,9 +2,13 @@ import { observable, action } from "mobx";
 
 import { guid } from "eez-studio-shared/guid";
 
-import { getLabel } from "project-editor/core/store";
+import {
+    getLabel,
+    getObjectFromStringPath,
+    getObjectPathAsString
+} from "project-editor/core/store";
 import type { ConnectionLine } from "project-editor/flow/flow";
-import type { FlowState } from "project-editor/flow/runtime";
+import type { FlowState, RuntimeBase } from "project-editor/flow/runtime";
 import {
     Component,
     getInputDisplayName,
@@ -201,5 +205,48 @@ export class RuntimeLogs {
     @action.bound
     clear() {
         this.logs = [];
+    }
+
+    get debugInfo() {
+        return this.logs.map(logItem => ({
+            id: logItem.id,
+            date: logItem.date.getTime(),
+            type: logItem.type,
+            label: logItem.label,
+            flowState: logItem.flowState?.id,
+            component: logItem.component
+                ? getObjectPathAsString(logItem.component)
+                : undefined,
+            connectionLine: logItem.connectionLine
+                ? getObjectPathAsString(logItem.connectionLine)
+                : undefined
+        }));
+    }
+
+    @action loadDebugInfo(runtime: RuntimeBase, debugInfo: any) {
+        this.logs = debugInfo.map((logItemDebugInfo: any) => {
+            const logItem = new LogItem(
+                logItemDebugInfo.type,
+                logItemDebugInfo.label,
+                runtime.findFlowStateById(logItemDebugInfo.flowState),
+                logItemDebugInfo.component
+                    ? (getObjectFromStringPath(
+                          runtime.DocumentStore.project,
+                          logItemDebugInfo.component
+                      ) as Component)
+                    : undefined,
+                logItemDebugInfo.connectionLine
+                    ? (getObjectFromStringPath(
+                          runtime.DocumentStore.project,
+                          logItemDebugInfo.connectionLine
+                      ) as ConnectionLine)
+                    : undefined
+            );
+
+            logItem.id = logItemDebugInfo.id;
+            logItem.date = new Date(logItemDebugInfo.date);
+
+            return logItem;
+        });
     }
 }

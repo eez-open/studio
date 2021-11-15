@@ -4,6 +4,8 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
 import "project-editor/project/builtInFeatures";
 
+import type { Tabs } from "home/tabs-store";
+
 import { getProjectFeatures } from "project-editor/core/extensions";
 import {
     CurrentSearch,
@@ -16,8 +18,9 @@ import {
     ProjectEditor,
     IProjectEditor
 } from "project-editor/project-editor-interface";
-import { RemoteRuntime } from "project-editor/flow/remote-runtime";
 import { LocalRuntime } from "project-editor/flow/local-runtime";
+import { RemoteRuntime } from "project-editor/flow/remote-runtime";
+import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
 import {
     build as buildProject,
     backgroundCheck,
@@ -112,7 +115,7 @@ export async function initExtensions() {
     }
 }
 
-export async function initProjectEditor() {
+export async function initProjectEditor(homeTabs: Tabs) {
     if (ProjectEditor.DataContextClass) {
         return;
     }
@@ -120,6 +123,7 @@ export async function initProjectEditor() {
     await initExtensions();
 
     const projectEditor: IProjectEditor = {
+        homeTabs,
         DataContextClass: DataContext,
         extensions: getProjectFeatures(),
         documentSearch: {
@@ -131,6 +135,7 @@ export async function initProjectEditor() {
         },
         LocalRuntimeClass: LocalRuntime,
         RemoteRuntimeClass: RemoteRuntime,
+        DebugInfoRuntimeClass: DebugInfoRuntime,
         build: {
             buildProject,
             backgroundCheck,
