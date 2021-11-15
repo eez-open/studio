@@ -76,7 +76,7 @@ export class LocalRuntime extends RuntimeBase {
         }
 
         if (!this.isStopped) {
-            if (!this.DocumentStore.project.isDashboardBuild) {
+            if (!this.DocumentStore.project._isDashboardBuild) {
                 notification.success(`Flow started`, {
                     autoClose: 1000
                 });
@@ -171,7 +171,7 @@ export class LocalRuntime extends RuntimeBase {
         EEZStudio.electron.ipcRenderer.send("preventAppSuspension", false);
 
         if (notifyUser) {
-            if (!this.DocumentStore.project.isDashboardBuild) {
+            if (!this.DocumentStore.project._isDashboardBuild) {
                 if (this.error) {
                     notification.error(
                         `Flow stopped with error: ${this.error}`

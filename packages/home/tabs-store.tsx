@@ -443,7 +443,7 @@ export class ProjectEditorTab implements IHomeTab {
                 DocumentStore.project._fullyLoaded = true;
             });
 
-            if (!DocumentStore.project.isDashboardBuild) {
+            if (!DocumentStore.project._isDashboardBuild) {
                 DocumentStore.startBackgroundCheck();
             } else {
                 DocumentStore.setRuntimeMode(false);
@@ -590,7 +590,20 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get title() {
-        return path.parse(this.filePath || "").name || "Untitled project";
+        if (this.DocumentStore) {
+            return this.DocumentStore.title;
+        }
+
+        if (this.filePath) {
+            if (this.filePath.endsWith(".eez-project")) {
+                return path.basename(this.filePath, ".eez-project");
+            }
+            return (
+                path.basename(this.filePath, ".eez-dashboard") + " dashboard"
+            );
+        }
+
+        return "Untitled project";
     }
 
     get titleStr() {

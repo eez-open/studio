@@ -38,7 +38,10 @@ app.on("ready", async function () {
 
         const projectFilePath = commandLine[commandLine.length - 1];
         const { openProject } = require("main/menu");
-        if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
+        if (
+            projectFilePath.toLowerCase().endsWith(".eez-project") ||
+            projectFilePath.toLowerCase().endsWith(".eez-dashboard")
+        ) {
             openProject(projectFilePath);
         }
     });

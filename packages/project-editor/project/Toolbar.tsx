@@ -22,13 +22,13 @@ export class Toolbar extends React.Component {
     render() {
         return (
             <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                {!this.context.project.isDashboardBuild ? (
+                {!this.context.project._isDashboardBuild ? (
                     <Controls />
                 ) : (
                     <div />
                 )}
 
-                {!this.context.project.isDashboardBuild &&
+                {!this.context.project._isDashboardBuild &&
                 (this.context.project.isDashboardProject ||
                     this.context.project.isAppletProject) ? (
                     <RunEditSwitchControls />

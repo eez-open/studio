@@ -1234,7 +1234,7 @@ export async function load(
         ProjectEditor.ProjectClass
     ) as Project;
 
-    project.isDashboardBuild = isDashboardBuild;
+    project._isDashboardBuild = isDashboardBuild;
 
     return project;
 }
@@ -1740,24 +1740,34 @@ export class DocumentStoreClass {
         });
     }
 
-    updateProjectWindowState() {
+    get title() {
         const path = EEZStudio.remote.require("path");
 
+        if (this.filePath) {
+            if (this.filePath.endsWith(".eez-project")) {
+                return path.basename(this.filePath, ".eez-project");
+            } else {
+                return (
+                    path.basename(this.filePath, ".eez-dashboard") +
+                    " dashboard"
+                );
+            }
+        } else {
+            return "Untitled project";
+        }
+    }
+
+    updateProjectWindowState() {
         let title = "";
 
         if (this.project) {
             if (this.modified) {
                 title += "\u25CF ";
             }
-
-            if (this.filePath) {
-                title += path.basename(this.filePath) + " - ";
-            } else {
-                title += "untitled - ";
-            }
+            title += this.title + " - ";
         }
 
-        title += " - EEZ Studio";
+        title += "EEZ Studio";
 
         if (title != document.title) {
             document.title = title;
@@ -1842,7 +1852,7 @@ export class DocumentStoreClass {
     }
 
     async doSave() {
-        if (!this.project.isDashboardBuild) {
+        if (!this.project._isDashboardBuild) {
             await save(this, this.filePath!);
             await this.uiStateStore.save();
         }
@@ -1920,7 +1930,7 @@ export class DocumentStoreClass {
     }
 
     async saveModified() {
-        if (this.project.isDashboardBuild) {
+        if (this.project._isDashboardBuild) {
             await this.runtimeSettings.save();
             return true;
         }
