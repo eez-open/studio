@@ -1,0 +1,39 @@
+{
+  "viewOptions": {
+    "outputVisible": true,
+    "themesVisible": true
+  },
+  "navigationMap": {
+    "/": "/pages",
+    "/pages": "/pages/0"
+  },
+  "settingsNavigationState": {},
+  "editors": [
+    {
+      "object": "/pages/0",
+      "active": true,
+      "permanent": false
+    }
+  ],
+  "objects": {
+    "/pages/0[flow-state]": {
+      "selection": {
+        "0": {
+          "$selected": true
+        }
+      },
+      "transform": {
+        "translate": {
+          "x": -320,
+          "y": -240
+        },
+        "scale": 1
+      }
+    }
+  },
+  "activeOutputSection": 0,
+  "pageEditorFrontFace": false,
+  "pageRuntimeFrontFace": true,
+  "breakpoints": {},
+  "watchExpressions": []
+}

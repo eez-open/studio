@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, computed, action, runInAction } from "mobx";
+import { observable, computed, action, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react";
 import moment from "moment";
 import classNames from "classnames";
@@ -58,6 +58,44 @@ const setIsDarkTheme = function (value: boolean) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface IMruItem {
+    filePath: string;
+}
+const getMRU: () => IMruItem[] = function () {
+    return EEZStudio.electron.ipcRenderer.sendSync("getMRU");
+};
+
+const setMRU = function (value: IMruItem[]) {
+    EEZStudio.electron.ipcRenderer.send("setMRU", toJS(value));
+};
+
+EEZStudio.electron.ipcRenderer.on(
+    "mru-changed",
+    async (sender: any, mru: IMruItem[]) => {
+        function isMruChanged(mru1: IMruItem[], mru2: IMruItem[]) {
+            if (!!mru1 != !!mru) {
+                return true;
+            }
+
+            if (mru1.length != mru2.length) {
+                return true;
+            }
+            for (let i = 0; i < mru1.length; i++) {
+                if (mru1[i].filePath != mru2[i].filePath) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (isMruChanged(mru, settingsController.mru)) {
+            runInAction(() => (settingsController.mru = mru));
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 class SettingsController {
     activeDatabasePath = getDbPath();
     activetLocale = getLocale();
@@ -72,6 +110,7 @@ class SettingsController {
     @observable timeOfLastDatabaseCompactOperation: Date;
     @observable _isCompactDatabaseAdvisable: boolean;
     @observable isDarkTheme: boolean = getIsDarkTheme();
+    @observable mru: IMruItem[] = getMRU();
 
     constructor() {
         var fs = require("fs");
@@ -198,6 +237,15 @@ class SettingsController {
         setTimeout(() => {
             content.style.opacity = "";
         }, 200);
+    }
+
+    @action
+    removeItemFromMRU(mruItem: IMruItem) {
+        const i = this.mru.indexOf(mruItem);
+        if (i != -1) {
+            this.mru.splice(i, 1);
+            setMRU(this.mru);
+        }
     }
 
     createNewDatabase = async () => {

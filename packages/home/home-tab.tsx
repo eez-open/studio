@@ -1,3 +1,4 @@
+import path from "path";
 import React from "react";
 import { computed, action, observable, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
@@ -5,17 +6,17 @@ import { observer } from "mobx-react";
 import {
     VerticalHeaderWithBody,
     Header,
-    Body
+    Body,
+    ToolbarHeader
 } from "eez-studio-ui/header-with-body";
 import { Splitter } from "eez-studio-ui/splitter";
-import { Toolbar } from "eez-studio-ui/toolbar";
-import { ButtonAction } from "eez-studio-ui/action";
+import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
 import type * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
 import type * as DeletedInstrumentsDialogModule from "instrument/deleted-instruments-dialog";
 
-import { HistorySection } from "home/history";
+import { getAppStore, HistorySection } from "home/history";
 
 import classNames from "classnames";
 import { stringCompare } from "eez-studio-shared/string";
@@ -31,6 +32,11 @@ import {
     InstrumentDetails,
     installExtension
 } from "instrument/instrument-object-details";
+import { tabs } from "home/tabs-store";
+import { SessionInfo } from "instrument/window/history/session/info-view";
+import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
+import { settingsController } from "home/settings";
+import { IMruItem } from "main/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -244,7 +250,7 @@ export class WorkbenchToolbar extends React.Component {
                 id: "show-deleted-instruments",
                 label: "Deleted Instruments",
                 title: "Show deleted instruments",
-                className: "btn-default",
+                className: "btn-secondary",
                 onClick: () => {
                     showDeletedInstrumentsDialog(selectedInstrument);
                 }
@@ -256,17 +262,20 @@ export class WorkbenchToolbar extends React.Component {
 
     render() {
         return (
-            <Toolbar className="EezStudio_ToolbarHeader">
-                {this.buttons.map(button => (
-                    <ButtonAction
-                        key={button.id}
-                        text={button.label}
-                        title={button.title}
-                        className={button.className}
-                        onClick={button.onClick}
-                    />
-                ))}
-            </Toolbar>
+            <ToolbarHeader>
+                <h5>Instruments</h5>
+                <div>
+                    {this.buttons.map(button => (
+                        <ButtonAction
+                            key={button.id}
+                            text={button.label}
+                            title={button.title}
+                            className={button.className}
+                            onClick={button.onClick}
+                        />
+                    ))}
+                </div>
+            </ToolbarHeader>
         );
     }
 }
@@ -462,6 +471,212 @@ export class Workbench extends React.Component<{}, {}> {
                     </Splitter>
                 </Body>
             </VerticalHeaderWithBody>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class AddTabPopupStuff {
+    @computed get sessionInfo() {
+        const appStore = getAppStore();
+        return !appStore.history.sessions.activeSession;
+    }
+}
+
+const theAddTabPopupStuff = new AddTabPopupStuff();
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+class Projects extends React.Component {
+    @observable selectedFilePath: string | undefined;
+
+    render() {
+        return (
+            <VerticalHeaderWithBody>
+                <Header>
+                    <ToolbarHeader>
+                        <h5>Projects</h5>
+                        <div>
+                            <ButtonAction
+                                text="New Project"
+                                title="New Project"
+                                className="btn-success"
+                                onClick={async () => {
+                                    const { showNewProjectWizard } =
+                                        await import(
+                                            "project-editor/project/Wizard"
+                                        );
+                                    showNewProjectWizard();
+                                }}
+                            />
+                            <ButtonAction
+                                text="Open Project"
+                                title="Open Project"
+                                className="btn-primary"
+                                onClick={() => {
+                                    EEZStudio.electron.ipcRenderer.send(
+                                        "open-project"
+                                    );
+                                }}
+                            />
+                        </div>
+                    </ToolbarHeader>
+                </Header>
+                <Body>
+                    <ListContainer tabIndex={0}>
+                        <List
+                            nodes={settingsController.mru.map(mruItem => ({
+                                id: mruItem.filePath,
+                                data: mruItem,
+                                selected:
+                                    mruItem.filePath == this.selectedFilePath
+                            }))}
+                            renderNode={(node: IListNode<IMruItem>) => {
+                                let mruItem = node.data;
+
+                                const isProject =
+                                    mruItem.filePath.endsWith(".eez-project");
+
+                                let extension = isProject
+                                    ? ".eez-project"
+                                    : ".eez-dashboard";
+
+                                const baseName = path.basename(
+                                    mruItem.filePath,
+                                    extension
+                                );
+
+                                return (
+                                    <ListItem
+                                        leftIcon={
+                                            isProject
+                                                ? "../eez-studio-ui/_images/eez-project.png"
+                                                : "../eez-studio-ui/_images/eez-dashboard.png"
+                                        }
+                                        leftIconSize={48}
+                                        label={
+                                            <div className="EezStudio_HomeTab_ProjectItem">
+                                                <div className="fist-line">
+                                                    <span className="fw-bolder">
+                                                        {baseName}
+                                                    </span>
+                                                    <span>{extension}</span>
+                                                </div>
+                                                <div className="text-secondary">
+                                                    {path.dirname(
+                                                        mruItem.filePath
+                                                    )}
+                                                </div>
+                                                <IconAction
+                                                    icon="material:close"
+                                                    title="Remove project from the list"
+                                                    className="btn-secondary"
+                                                    onClick={() => {
+                                                        settingsController.removeItemFromMRU(
+                                                            mruItem
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
+                                        }
+                                    />
+                                );
+                            }}
+                            selectNode={(node: IListNode<IMruItem>) => {
+                                runInAction(
+                                    () =>
+                                        (this.selectedFilePath =
+                                            node.data.filePath)
+                                );
+
+                                EEZStudio.electron.ipcRenderer.send(
+                                    "open-file",
+                                    node.data.filePath
+                                );
+                            }}
+                        ></List>
+                    </ListContainer>
+                </Body>
+            </VerticalHeaderWithBody>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class Home extends React.Component<{}, {}> {
+    @action.bound
+    selectInstrument(instrument: InstrumentObject) {
+        selectedInstrument.set(instrument.id);
+    }
+
+    render() {
+        let allTabs = (
+            <div className="EezStudio_HomeTab_TabsContainer">
+                {tabs.allTabs
+                    .filter(tab => tab.instance.id != "home")
+                    .map(tab => {
+                        let icon;
+                        if (typeof tab.instance.icon == "string") {
+                            icon = <Icon icon={tab.instance.icon} />;
+                        } else {
+                            icon = tab.instance.icon;
+                        }
+                        return (
+                            <button
+                                key={tab.instance.id}
+                                className="btn btn btn-secondary"
+                                onClick={() => tab.open().makeActive()}
+                                title={
+                                    tab.instance.tooltipTitle
+                                        ? tab.instance.tooltipTitle
+                                        : `Show ${tab.instance.title} Tab`
+                                }
+                            >
+                                {icon}
+                                <span>{tab.instance.title}</span>
+                            </button>
+                        );
+                    })}
+            </div>
+        );
+
+        let sessionInfo;
+        const appStore = getAppStore();
+        if (theAddTabPopupStuff.sessionInfo) {
+            sessionInfo = (
+                <div className="EezStudio_SessionInfoContainer">
+                    <SessionInfo appStore={appStore} />
+                </div>
+            );
+        }
+
+        return (
+            <div className="EezStudio_HomeTab">
+                <div className="EezStudio_HomeTab_Tabs_And_SessionInfo">
+                    {allTabs}
+                    {sessionInfo}
+                </div>
+                <div className="EezStudio_HomeTab_Projects_And_Instruments">
+                    <Splitter
+                        type="horizontal"
+                        sizes={"35%|65%"}
+                        persistId={
+                            "home/home-tab/projects-and-instruments-splitter"
+                        }
+                    >
+                        <div className="EezStudio_HomeTab_Projects">
+                            <Projects />
+                        </div>
+                        <div className="EezStudio_HomeTab_Instruments">
+                            <Workbench />
+                        </div>
+                    </Splitter>
+                </div>
+            </div>
         );
     }
 }

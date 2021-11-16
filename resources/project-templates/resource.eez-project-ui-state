@@ -1,0 +1,42 @@
+{
+  "viewOptions": {
+    "outputVisible": true,
+    "themesVisible": true
+  },
+  "navigationMap": {
+    "/": "/micropython",
+    "/pages": "/pages/0",
+    "/pages/0/components": "/pages/0/components/1",
+    "/pages/0": "/pages/0/components",
+    "/pages/0/components/1/widgets": "/pages/0/components/1/widgets/1",
+    "/pages/0/components/1": "/pages/0/components/1/widgets",
+    "/actions": "/actions/0"
+  },
+  "settingsNavigationState": {},
+  "editors": [
+    {
+      "object": "/pages/0",
+      "active": true,
+      "permanent": false
+    }
+  ],
+  "selectedBuildConfiguration": "Default",
+  "features": {},
+  "objects": {
+    "/pages/0[flow-state]": {
+      "selection": {},
+      "transform": {
+        "translate": {
+          "x": -240,
+          "y": -136
+        },
+        "scale": 1
+      }
+    }
+  },
+  "activeOutputSection": 1,
+  "pageEditorFrontFace": false,
+  "pageRuntimeFrontFace": true,
+  "breakpoints": {},
+  "watchExpressions": []
+}

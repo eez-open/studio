@@ -15,6 +15,7 @@ const { Menu, MenuItem } = EEZStudio.remote || {};
 export interface ITab {
     active: boolean;
     permanent: boolean;
+    dragDisabled?: boolean;
     id: string | number;
     title: React.ReactNode;
     tooltipTitle?: string;
@@ -178,7 +179,7 @@ export const TabView: React.FC<TabViewProps> = observer(
             })
         });
 
-        if (moveTab) {
+        if (moveTab && !tab.dragDisabled) {
             drag(drop(ref));
         }
 
@@ -258,64 +259,25 @@ export const TabView: React.FC<TabViewProps> = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const AddTabButton = observer(
-    ({ popup, attention }: { popup: React.ReactNode; attention?: boolean }) => {
-        const [open, setOpen] = React.useState<boolean>(false);
-        const [alignRight, setAlignRight] = React.useState<boolean>(false);
-
-        const popupContainerRef = React.useRef<HTMLDivElement>(null);
-
-        React.useEffect(() => {
-            setTimeout(() => {
-                if (open && popupContainerRef && popupContainerRef.current) {
-                    var bounding =
-                        popupContainerRef.current.getBoundingClientRect();
-                    setAlignRight(bounding.right > window.innerWidth);
-                } else {
-                    setAlignRight(false);
-                }
-            });
-        }, [open, popupContainerRef, popupContainerRef.current]);
-
-        React.useEffect(() => {
-            if (!open) {
-                return;
-            }
-
-            const onClick = (event: MouseEvent) => {
-                setOpen(false);
-            };
-
-            const element = document.createElement("div");
-            element.style.position = "fixed";
-            element.style.left = "0";
-            element.style.top = "0";
-            element.style.width = "100%";
-            element.style.height = "100%";
-            element.style.zIndex = "999";
-            element.style.background = "rgba(0,0,0,0.2)";
-            document.body.appendChild(element);
-
-            window.addEventListener("click", onClick, true);
-
-            return () => {
-                window.removeEventListener("click", onClick, true);
-                element.remove();
-            };
-        }, [open]);
-
-        const addTabPopupClassName = classNames({ open, alignRight });
-
+    ({
+        addTabTitle,
+        addTabIcon,
+        addTabCallback,
+        attention
+    }: {
+        addTabTitle?: string;
+        addTabIcon?: string;
+        addTabCallback: () => void;
+        attention?: boolean;
+    }) => {
         return (
             <div className="EezStudio_AddTab">
                 <IconAction
-                    icon="material:add"
+                    icon={addTabIcon || "material:add"}
                     attention={attention}
-                    onClick={() => setOpen(!open)}
-                    title="Add Tab"
+                    onClick={addTabCallback}
+                    title={addTabTitle || "Add Tab"}
                 />
-                <div ref={popupContainerRef} className={addTabPopupClassName}>
-                    <div>{popup}</div>
-                </div>
             </div>
         );
     }
@@ -324,7 +286,9 @@ const AddTabButton = observer(
 @observer
 export class TabsView extends React.Component<{
     tabs: ITab[];
-    addTabPopup?: React.ReactNode;
+    addTabTitle?: string;
+    addTabIcon?: string;
+    addTabCallback?: () => void;
     addTabAttention?: boolean;
     moveTab?: (dragIndex: number, hoverIndex: number) => void;
 }> {
@@ -339,9 +303,11 @@ export class TabsView extends React.Component<{
                         moveTab={this.props.moveTab}
                     />
                 ))}
-                {this.props.addTabPopup && (
+                {this.props.addTabCallback && (
                     <AddTabButton
-                        popup={this.props.addTabPopup}
+                        addTabTitle={this.props.addTabTitle}
+                        addTabIcon={this.props.addTabIcon}
+                        addTabCallback={this.props.addTabCallback}
                         attention={this.props.addTabAttention}
                     />
                 )}

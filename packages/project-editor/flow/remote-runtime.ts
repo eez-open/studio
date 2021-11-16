@@ -123,10 +123,7 @@ export class RemoteRuntime extends RuntimeBase {
             autoClose: false
         });
 
-        instrument.connection.connect();
-
         const connection = instrument.connection;
-
         connection.connect();
 
         for (let i = 0; i < 10; i++) {
@@ -136,7 +133,7 @@ export class RemoteRuntime extends RuntimeBase {
             await new Promise<void>(resolve => setTimeout(resolve, 100));
         }
 
-        if (!connection || !instrument.isConnected) {
+        if (!instrument.isConnected) {
             notification.update(toastId, {
                 type: notification.ERROR,
                 render: `Instrument not connected`,

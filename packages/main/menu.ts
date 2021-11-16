@@ -42,11 +42,28 @@ function enableMenuItem(
     }
 }
 
-export function openProject(projectFilePath: string, focusedWindow?: any) {
-    if (!focusedWindow) {
-        focusedWindow = BrowserWindow.getFocusedWindow();
+async function openProjectWithFileDialog(focusedWindow: BrowserWindow) {
+    const result = await dialog.showOpenDialog({
+        properties: ["openFile"],
+        filters: [
+            { name: "EEZ Project", extensions: ["eez-project"] },
+            {
+                name: "EEZ Dashboard",
+                extensions: ["eez-dashboard"]
+            },
+            { name: "All Files", extensions: ["*"] }
+        ]
+    });
+    const filePaths = result.filePaths;
+    if (filePaths && filePaths[0]) {
+        openProject(filePaths[0], focusedWindow);
     }
+}
 
+export function openProject(
+    projectFilePath: string,
+    focusedWindow: BrowserWindow
+) {
     if (focusedWindow) {
         focusedWindow.webContents.send("open-project", projectFilePath);
     }
@@ -144,21 +161,14 @@ function buildFileMenu(win: IWindow | undefined) {
         {
             label: "Open...",
             accelerator: "CmdOrCtrl+O",
-            click: async function (item: any, focusedWindow: any) {
-                const result = await dialog.showOpenDialog({
-                    properties: ["openFile"],
-                    filters: [
-                        { name: "EEZ Project", extensions: ["eez-project"] },
-                        {
-                            name: "EEZ Dashboard",
-                            extensions: ["eez-dashboard"]
-                        },
-                        { name: "All Files", extensions: ["*"] }
-                    ]
-                });
-                const filePaths = result.filePaths;
-                if (filePaths && filePaths[0]) {
-                    openProject(filePaths[0], focusedWindow);
+            click: (item, focusedWindow) => {
+                if (!focusedWindow) {
+                    focusedWindow =
+                        BrowserWindow.getFocusedWindow() || undefined;
+                }
+
+                if (focusedWindow) {
+                    openProjectWithFileDialog(focusedWindow);
                 }
             }
         },
@@ -168,7 +178,10 @@ function buildFileMenu(win: IWindow | undefined) {
                 label: mru.filePath,
                 click: function () {
                     if (fs.existsSync(mru.filePath)) {
-                        openProject(mru.filePath);
+                        const focusedWindow = BrowserWindow.getFocusedWindow();
+                        if (focusedWindow) {
+                            openProject(mru.filePath, focusedWindow);
+                        }
                     } else {
                         // file not found, remove from mru
                         var i = settings.mru.indexOf(mru);
@@ -496,10 +509,18 @@ function buildViewMenu(win: IWindow | undefined) {
 
     viewSubmenu.push(
         {
-            label: "Workbench",
+            label: "Home",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
-                    focusedWindow.webContents.send("openTab", "workbench");
+                    focusedWindow.webContents.send("openTab", "home");
+                }
+            }
+        },
+        {
+            label: "History",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("openTab", "history");
                 }
             }
         },
@@ -789,7 +810,24 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
 });
 
 ipcMain.on("open-file", function (event, path) {
-    if (path.toLowerCase().endsWith(".eez-project")) {
-        openProject(path);
+    if (
+        path.toLowerCase().endsWith(".eez-project") ||
+        path.toLowerCase().endsWith(".eez-dashboard")
+    ) {
+        const focusedWindow = BrowserWindow.getFocusedWindow();
+        if (focusedWindow) {
+            openProject(path, focusedWindow);
+        }
+    }
+});
+
+ipcMain.on("new-project", function (event) {
+    createNewProject();
+});
+
+ipcMain.on("open-project", function (event) {
+    const focusedWindow = BrowserWindow.getFocusedWindow();
+    if (focusedWindow) {
+        openProjectWithFileDialog(focusedWindow);
     }
 });

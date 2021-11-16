@@ -35,6 +35,7 @@ class AddInstrumentDialog extends React.Component<
                 onCancel={this.onCancel}
                 disableButtons={true}
                 okEnabled={() => false}
+                backdrop="static"
             >
                 <Setup
                     onAddCallback={this.onAdd}

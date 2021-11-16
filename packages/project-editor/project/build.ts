@@ -261,6 +261,19 @@ async function generateFiles(
                 path.basename(DocumentStore.filePath, ".eez-project") +
                 (DocumentStore.project.isAppletProject ? ".app" : ".res")
         );
+
+        if (
+            DocumentStore.project.isResourceProject &&
+            DocumentStore.project.micropython
+        ) {
+            await writeTextFile(
+                destinationFolderPath +
+                    "/" +
+                    path.basename(DocumentStore.filePath, ".eez-project") +
+                    ".py",
+                DocumentStore.project.micropython.code
+            );
+        }
     } else {
         const build = DocumentStore.project.settings.build;
 

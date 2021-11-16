@@ -1,0 +1,17 @@
+{
+  "settings": {
+    "general": {
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "colors": [],
+  "themes": []
+}

@@ -1,0 +1,116 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "resource",
+      "masterProject": "..\\..\\..\\modular-psu-firmware\\modular-psu-firmware.eez-project",
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [
+    {
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "name": "close_script"
+    }
+  ],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "TextWidget",
+          "left": 180,
+          "top": 104,
+          "width": 120,
+          "height": 32,
+          "wireID": "78f977fc-bd15-46c9-8711-f680ee0bfa0c",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "",
+          "style": {
+            "inheritFrom": "default_S"
+          },
+          "text": "Hello, world!"
+        },
+        {
+          "type": "Container",
+          "left": 0,
+          "top": 240,
+          "width": 480,
+          "height": 32,
+          "wireID": "7ed10765-0cc0-4b5b-b2aa-7546eb6d7c09",
+          "customInputs": [],
+          "customOutputs": [],
+          "resizing": {
+            "pinToEdge": 11,
+            "fixSize": 0
+          },
+          "style": {
+            "inheritFrom": "default"
+          },
+          "widgets": [
+            {
+              "type": "Text",
+              "left": 0,
+              "top": 0,
+              "width": 64,
+              "height": 32,
+              "wireID": "9e46d8d3-576e-4449-f5e3-963583f6e291",
+              "customInputs": [],
+              "customOutputs": [],
+              "action": "close_script",
+              "style": {
+                "inheritFrom": "status_icon_enabled"
+              },
+              "text": "E"
+            },
+            {
+              "type": "Text",
+              "left": 64,
+              "top": 0,
+              "width": 416,
+              "height": 32,
+              "wireID": "b5729359-86a7-4b3e-84ab-71d8746b5983",
+              "customInputs": [],
+              "customOutputs": [],
+              "style": {
+                "inheritFrom": "status_title",
+                "alignHorizontal": "center"
+              },
+              "text": "title"
+            }
+          ]
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "name": "Main",
+      "left": 0,
+      "top": 0,
+      "width": 480,
+      "height": 272
+    }
+  ],
+  "styles": [],
+  "fonts": [],
+  "bitmaps": [],
+  "micropython": {
+    "code": "# TODO add description\r\n\r\nfrom eez import scpi\r\n\r\ndef main():\r\n  # Save state and set in known (default) state.  \r\n  scpi(\"*SAV 10\")\r\n  scpi(\"MEM:STATE:FREEZE ON\")\r\n  scpi(\"*RST\")\r\n  \r\n  # From now on we always restore the state in case of an error.  \r\n  try:\r\n    scpi(\"DISP:DIAL:OPEN \\\"Scripts/resource.res\\\"\")\r\n\r\n    while True:\r\n      action = scpi(\"DISP:DIALOG:ACTION?\")\r\n      if action == \"close_script\" or action == 0:\r\n        break\r\n  finally:\r\n    # Turn off channels, etc.\r\n    scpi(\"OUTP 0\")\r\n    scpi(\"DISP:DIAL:CLOSE\")\r\n    scpi(\"*RCL 10\")\r\n    scpi(\"MEM:STATE:FREEZE OFF\")\r\n\r\nmain()\r\n"
+  },
+  "colors": [],
+  "themes": []
+}

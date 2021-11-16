@@ -56,6 +56,7 @@ import type {
 import type { Scpi } from "project-editor/features/scpi/scpi";
 import type { Shortcuts } from "project-editor/features/shortcuts/project-shortcuts";
 import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
+import type { MicroPython } from "project-editor/features/micropython/micropython";
 
 import {
     usage,
@@ -962,6 +963,7 @@ export class Project extends EezObject {
     @observable bitmaps: Bitmap[];
     @observable scpi: Scpi;
     @observable shortcuts: Shortcuts;
+    @observable micropython: MicroPython;
     @observable extensionDefinitions: ExtensionDefinition[];
     @observable colors: Color[];
     @observable themes: Theme[];
@@ -996,6 +998,10 @@ export class Project extends EezObject {
 
     get isAppletProject() {
         return this.settings.general.projectType === ProjectType.APPLET;
+    }
+
+    get isResourceProject() {
+        return this.settings.general.projectType === ProjectType.RESOURCE;
     }
 
     @computed

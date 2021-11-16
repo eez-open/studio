@@ -14,6 +14,26 @@ import { PageTabState } from "project-editor/features/page/PagesNavigation";
 import { objectToString } from "project-editor/core/store";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
 
+const RUN_ICON = (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <circle cx="13" cy="4" r="1"></circle>
+        <path d="M4 17l5 1l.75 -1.5"></path>
+        <path d="M15 21l0 -4l-4 -3l1 -6"></path>
+        <path d="M7 12l0 -3l5 -1l3 3l3 1"></path>
+    </svg>
+);
+
 @observer
 export class Toolbar extends React.Component {
     static contextType = ProjectContext;
@@ -227,26 +247,44 @@ class Controls extends React.Component {
                     </div>
                 )}
 
-                <div className="btn-group" role="group">
-                    {this.pageTabState && (
-                        <IconAction
-                            title="Show front face"
-                            icon="material:flip_to_front"
-                            iconSize={20}
-                            onClick={() => this.setFrontFace(true)}
-                            selected={this.pageTabState.frontFace}
-                        />
+                {this.context.project.isResourceProject &&
+                    this.context.project.micropython && (
+                        <div className="btn-group" role="group">
+                            <IconAction
+                                title="Run MicroPython Script"
+                                icon={RUN_ICON}
+                                iconSize={28}
+                                onClick={() =>
+                                    this.context.project.micropython.runScript()
+                                }
+                                enabled={this.context.project._fullyLoaded}
+                            />
+                        </div>
                     )}
-                    {this.pageTabState && (
-                        <IconAction
-                            title="Show back face"
-                            icon="material:flip_to_back"
-                            iconSize={20}
-                            onClick={() => this.setFrontFace(false)}
-                            selected={!this.pageTabState.frontFace}
-                        />
-                    )}
-                </div>
+
+                {(this.context.project.isAppletProject ||
+                    this.context.project.isDashboardProject) && (
+                    <div className="btn-group" role="group">
+                        {this.pageTabState && (
+                            <IconAction
+                                title="Show front face"
+                                icon="material:flip_to_front"
+                                iconSize={20}
+                                onClick={() => this.setFrontFace(true)}
+                                selected={this.pageTabState.frontFace}
+                            />
+                        )}
+                        {this.pageTabState && (
+                            <IconAction
+                                title="Show back face"
+                                icon="material:flip_to_back"
+                                iconSize={20}
+                                onClick={() => this.setFrontFace(false)}
+                                selected={!this.pageTabState.frontFace}
+                            />
+                        )}
+                    </div>
+                )}
             </div>
         );
     }
@@ -273,29 +311,7 @@ class RunEditSwitchControls extends React.Component {
                 <ButtonAction
                     text="Run"
                     title="Enter run mode"
-                    icon={
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            strokeWidth="2"
-                            stroke="currentColor"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <path
-                                stroke="none"
-                                d="M0 0h24v24H0z"
-                                fill="none"
-                            ></path>
-                            <circle cx="13" cy="4" r="1"></circle>
-                            <path d="M4 17l5 1l.75 -1.5"></path>
-                            <path d="M15 21l0 -4l-4 -3l1 -6"></path>
-                            <path d="M7 12l0 -3l5 -1l3 3l3 1"></path>
-                        </svg>
-                    }
+                    icon={RUN_ICON}
                     iconSize={iconSize}
                     onClick={this.context.onSetRuntimeMode}
                     selected={

@@ -127,7 +127,7 @@ function renderExtension(node: IListNode) {
 
 function onSkip() {
     runInAction(() => firstTime.set(false));
-    tabs.openTabById("workbench", true);
+    tabs.openTabById("home", true);
 }
 
 async function onAdd(onAddCallback?: (instrumentId: string) => void) {

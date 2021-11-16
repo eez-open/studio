@@ -152,7 +152,11 @@ class NavigationMenuItem extends React.Component<NavigationMenuItemProps, {}> {
                 title={objectToString(this.props.item)}
                 onClick={this.onClick}
             >
-                <i className="material-icons md-24">{icon}</i>
+                {typeof icon == "string" ? (
+                    <i className="material-icons md-24">{icon}</i>
+                ) : (
+                    icon
+                )}
                 <span>{objectToString(this.props.item)}</span>
             </div>
         );

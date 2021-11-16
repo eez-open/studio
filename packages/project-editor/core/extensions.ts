@@ -22,6 +22,7 @@ import fontFeature from "project-editor/features/font/font";
 import bitmapFeature from "project-editor/features/bitmap/bitmap";
 import scpiFeature from "project-editor/features/scpi/scpi";
 import shortcutsFeature from "project-editor/features/shortcuts/project-shortcuts";
+import microPythonFeature from "project-editor/features/micropython/micropython";
 
 export type BuildResult = { [key: string]: string };
 
@@ -72,6 +73,7 @@ let extensions: Extension[] = [
     styleFeature,
     fontFeature,
     bitmapFeature,
+    microPythonFeature,
     extensionDefinitionsFeature,
     scpiFeature,
     shortcutsFeature

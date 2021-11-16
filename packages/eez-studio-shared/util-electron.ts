@@ -41,6 +41,10 @@ export function getUserDataPath(relativePath: string) {
     return app.getPath("userData") + path.sep + relativePath;
 }
 
+export function getHomePath(relativePath: string) {
+    return app.getPath("home") + path.sep + relativePath;
+}
+
 export function localPathToFileUrl(localPath: string) {
     return "file://" + localPath.replace(/(\\|\/)/g, "/");
 }

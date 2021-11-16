@@ -28,3 +28,5 @@ tools/freetype-tools/FreeType-Emscripten
 
 bundle-meta.json
 circular.txt
+
+!resources/project-templates/*.eez-project-ui-state

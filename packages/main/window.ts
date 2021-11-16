@@ -23,7 +23,7 @@ export interface IWindowParams {
 type ActiveTabType =
     | "instrument"
     | "project"
-    | "workbench"
+    | "home"
     | "history"
     | "shortcutsAndGroups"
     | "extensions"

@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": [],
+      "css": ".page {\n    background-color: #e0e0e0;\n}"
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "TextWidget",
+          "left": 357,
+          "top": 209,
+          "width": 86,
+          "height": 32,
+          "wireID": "ea7eb013-6c4a-4647-ff9f-0f2f5df1d137",
+          "customInputs": [],
+          "customOutputs": [],
+          "data": "\"Hello, world!\"",
+          "style": {
+            "inheritFrom": "default"
+          }
+        }
+      ],
+      "connectionLines": [],
+      "localVariables": [],
+      "name": "Main",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 450,
+      "css": "page"
+    }
+  ],
+  "colors": [],
+  "themes": []
+}

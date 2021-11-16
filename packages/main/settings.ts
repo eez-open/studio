@@ -1,6 +1,6 @@
 import fs from "fs";
-import { app, screen, ipcMain } from "electron";
-import { observable, action, runInAction } from "mobx";
+import { app, screen, ipcMain, BrowserWindow } from "electron";
+import { observable, action, runInAction, autorun, toJS } from "mobx";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { SETTINGS_FILE_NAME, DEFAULT_DB_NAME } from "eez-studio-shared/conf";
@@ -15,7 +15,7 @@ interface WindowState {
     isFullScreen?: boolean;
 }
 
-interface IMruItem {
+export interface IMruItem {
     filePath: string;
 }
 
@@ -86,6 +86,13 @@ export function loadSettings() {
             );
         }
     })();
+
+    autorun(() => {
+        const mru = toJS(settings.mru);
+        BrowserWindow.getAllWindows().forEach(window =>
+            window.webContents.send("mru-changed", mru)
+        );
+    });
 }
 
 export function saveSettings() {
@@ -214,11 +221,6 @@ export function settingsRegisterWindow(
     window.on("move", stateChangeHandler);
     window.on("close", closeHandler);
 }
-
-ipcMain.on("getMruFilePath", function (event: any) {
-    var mruItem = settings.mru[0];
-    event.returnValue = mruItem ? mruItem.filePath : null;
-});
 
 ipcMain.on("setMruFilePath", function (event: any, mruItemFilePath: string) {
     action(() => {
@@ -355,4 +357,29 @@ ipcMain.on("getIsDarkTheme", function (event: any) {
 
 ipcMain.on("setIsDarkTheme", function (event: any, value: boolean) {
     setIsDarkTheme(value);
+});
+
+ipcMain.on("getMRU", function (event: any) {
+    event.returnValue = toJS(settings.mru);
+});
+
+ipcMain.on("setMRU", function (event: any, mru: IMruItem[]) {
+    function isMruChanged(mru1: IMruItem[], mru2: IMruItem[]) {
+        if (!!mru1 != !!mru) {
+            return true;
+        }
+        if (mru1.length != mru2.length) {
+            return true;
+        }
+        for (let i = 0; i < mru1.length; i++) {
+            if (mru1[i].filePath != mru2[i].filePath) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (isMruChanged(mru, settings.mru)) {
+        runInAction(() => (settings.mru = mru));
+    }
 });

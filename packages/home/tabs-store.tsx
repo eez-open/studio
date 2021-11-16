@@ -26,7 +26,7 @@ import {
 } from "instrument/window/history/history-view";
 
 import { instruments, InstrumentObject } from "instrument/instrument-object";
-import type * as WorkbenchModule from "home/workbench";
+import type * as HomeTabModule from "home/home-tab";
 import type * as HistoryModule from "home/history";
 import type * as ShortcutsModule from "home/shortcuts";
 import type * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
@@ -57,34 +57,30 @@ export interface IHomeTab extends ITab {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class WorkbenchTab implements IHomeTab {
+class HomeTab implements IHomeTab {
     constructor(public tabs: Tabs) {}
 
     permanent: boolean = true;
+    dragDisabled: boolean = true;
     @observable active: boolean = false;
     loading: boolean = false;
 
-    id = "workbench";
-    title = "Workbench";
-    icon = "material:developer_board";
+    id = "home";
+    title = "Home";
+    icon = "material:home";
 
     get titleStr() {
         return this.title;
     }
 
     render() {
-        const { Workbench } =
-            require("home/workbench") as typeof WorkbenchModule;
-        return <Workbench />;
+        const { Home } = require("home/home-tab") as typeof HomeTabModule;
+        return <Home />;
     }
 
     @action
     makeActive(): void {
         this.tabs.makeActive(this);
-    }
-
-    close() {
-        this.tabs.removeTab(this);
     }
 }
 
@@ -703,135 +699,6 @@ export class Tabs {
     @observable tabs: IHomeTab[] = [];
     @observable activeTab: IHomeTab | undefined;
 
-    constructor() {
-        loadPreinstalledExtension("instrument").then(async () => {
-            if (!firstTime.get()) {
-                if (location.search) {
-                    const instrumentId = location.search.substring(1);
-                    if (instruments.get(instrumentId)) {
-                        this.openTabById(instrumentId, true);
-                        return;
-                    }
-                }
-
-                const tabsJSON = window.localStorage.getItem("home/tabs");
-                if (tabsJSON) {
-                    const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
-
-                    for (const savedTab of savedTabs) {
-                        if (savedTab.id) {
-                            try {
-                                await this.openTabById(
-                                    savedTab.id,
-                                    savedTab.active
-                                );
-                            } catch (err) {
-                                console.error(err);
-                            }
-                        }
-                    }
-                }
-
-                if (this.tabs.length == 0) {
-                    this.openTabById("workbench", true);
-                }
-            }
-        });
-
-        reaction(
-            () =>
-                this.tabs.map(
-                    tab =>
-                        ({
-                            id: tab.id,
-                            active: tab.active
-                        } as ISavedTab)
-                ),
-            tabs => {
-                const tabsJSON = JSON.stringify(tabs);
-                window.localStorage.setItem("home/tabs", tabsJSON);
-                EEZStudio.electron.ipcRenderer.send("tabs-change", tabs);
-            }
-        );
-
-        autorun(() => {
-            const tabsToClose = this.tabs.filter(
-                tab => tab instanceof InstrumentTab && !instruments.get(tab.id)
-            ) as InstrumentTab[];
-
-            tabsToClose.forEach(tab => tab.close());
-        });
-
-        EEZStudio.electron.ipcRenderer.on(
-            "openTab",
-            action((sender: any, tabId: string) => {
-                this.openTabById(tabId, true);
-            })
-        );
-
-        autorun(() => {
-            if (this.activeTab) {
-                document.title = `${this.activeTab.titleStr} - EEZ Studio`;
-            } else {
-                document.title = `EEZ Studio`;
-            }
-        });
-
-        autorun(() => {
-            if (
-                this.activeTab &&
-                this.activeTab.id === "history" &&
-                this.mainHistoryView &&
-                this.mainHistoryView.props.appStore.deletedItemsHistory
-                    .deletedCount === 0
-            ) {
-                runInAction(() => (this.viewDeletedHistory = false));
-            }
-        });
-
-        onSimpleMessage(
-            "home/show-section",
-            (args: { sectionId: string; itemId?: string }) => {
-                EEZStudio.remote.getCurrentWindow().show();
-                this.navigateToTab(args.sectionId, args.itemId);
-            }
-        );
-    }
-
-    findTabDefinition(tabId: string) {
-        return this.allTabs.find(
-            tab =>
-                tab.instance.id == tabId ||
-                tab.instance.id == "homeSection_" + tabId
-        );
-    }
-
-    async openTabById(tabId: string, makeActive: boolean) {
-        let tab = this.findTab(tabId);
-
-        if (!tab) {
-            const tabDefinition = this.findTabDefinition(tabId);
-            if (tabDefinition) {
-                tab = tabDefinition.open();
-            } else if (tabId.startsWith(PROJECT_TAB_ID_PREFIX)) {
-                const filePath = tabId.substr(PROJECT_TAB_ID_PREFIX.length);
-                if (filePath === "undefined") {
-                    return;
-                }
-                tab = this.addProjectTab(filePath);
-            } else {
-                const instrument = instruments.get(tabId);
-                if (instrument) {
-                    tab = this.addInstrumentTab(instrument);
-                }
-            }
-        }
-
-        if (tab && makeActive) {
-            tab.makeActive();
-        }
-    }
-
     @computed
     get allTabs() {
         const TabClassToTabDefinition = (TabClass: any) => ({
@@ -843,14 +710,13 @@ export class Tabs {
                     }
                 }
                 const tab = new TabClass(this);
-                this.tabs.push(tab);
+                this.addTab(tab);
                 return tab;
             })
         });
 
         const allTabs: ITabDefinition[] = [
-            // HomeTab,
-            WorkbenchTab,
+            HomeTab,
             HistoryTab,
             ShortcutsAndGroupsTab
         ].map(TabClassToTabDefinition);
@@ -881,7 +747,142 @@ export class Tabs {
         );
     }
 
+    constructor() {
+        loadPreinstalledExtension("instrument").then(async () => {
+            await this.openTabById("home", true);
+
+            if (!firstTime.get()) {
+                if (location.search) {
+                    const instrumentId = location.search.substring(1);
+                    if (instruments.get(instrumentId)) {
+                        this.openTabById(instrumentId, true);
+                        return;
+                    }
+                }
+
+                const tabsJSON = window.localStorage.getItem("home/tabs");
+                if (tabsJSON) {
+                    const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
+
+                    for (const savedTab of savedTabs) {
+                        if (savedTab.id) {
+                            try {
+                                await this.openTabById(
+                                    savedTab.id,
+                                    savedTab.active
+                                );
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        }
+                    }
+                }
+            }
+
+            reaction(
+                () =>
+                    this.tabs.map(
+                        tab =>
+                            ({
+                                id: tab.id,
+                                active: tab.active
+                            } as ISavedTab)
+                    ),
+                tabs => {
+                    const tabsJSON = JSON.stringify(tabs);
+                    window.localStorage.setItem("home/tabs", tabsJSON);
+                    EEZStudio.electron.ipcRenderer.send("tabs-change", tabs);
+                }
+            );
+
+            autorun(() => {
+                const tabsToClose = this.tabs.filter(
+                    tab =>
+                        tab instanceof InstrumentTab && !instruments.get(tab.id)
+                ) as InstrumentTab[];
+
+                tabsToClose.forEach(tab => tab.close());
+            });
+
+            EEZStudio.electron.ipcRenderer.on(
+                "openTab",
+                action((sender: any, tabId: string) => {
+                    this.openTabById(tabId, true);
+                })
+            );
+
+            autorun(() => {
+                if (this.activeTab) {
+                    document.title = `${this.activeTab.titleStr} - EEZ Studio`;
+                } else {
+                    document.title = `EEZ Studio`;
+                }
+            });
+
+            autorun(() => {
+                if (
+                    this.activeTab &&
+                    this.activeTab.id === "history" &&
+                    this.mainHistoryView &&
+                    this.mainHistoryView.props.appStore.deletedItemsHistory
+                        .deletedCount === 0
+                ) {
+                    runInAction(() => (this.viewDeletedHistory = false));
+                }
+            });
+
+            onSimpleMessage(
+                "home/show-section",
+                (args: { sectionId: string; itemId?: string }) => {
+                    EEZStudio.remote.getCurrentWindow().show();
+                    this.navigateToTab(args.sectionId, args.itemId);
+                }
+            );
+        });
+    }
+
+    findTabDefinition(tabId: string) {
+        return this.allTabs.find(
+            tab =>
+                tab.instance.id == tabId ||
+                tab.instance.id == "homeSection_" + tabId
+        );
+    }
+
+    addTab(tab: IHomeTab) {
+        this.tabs.push(tab);
+    }
+
+    async openTabById(tabId: string, makeActive: boolean) {
+        let tab = this.findTab(tabId);
+
+        if (!tab) {
+            const tabDefinition = this.findTabDefinition(tabId);
+            if (tabDefinition) {
+                tab = tabDefinition.open();
+            } else if (tabId.startsWith(PROJECT_TAB_ID_PREFIX)) {
+                const filePath = tabId.substr(PROJECT_TAB_ID_PREFIX.length);
+                if (filePath === "undefined") {
+                    return;
+                }
+                tab = this.addProjectTab(filePath);
+            } else {
+                const instrument = instruments.get(tabId);
+                if (instrument) {
+                    tab = this.addInstrumentTab(instrument);
+                }
+            }
+        }
+
+        if (tab && makeActive) {
+            tab.makeActive();
+        }
+    }
+
     findTab(id: string) {
+        if (id == "workbench") {
+            id = "home";
+        }
         for (let tabIndex = 0; tabIndex < this.tabs.length; tabIndex++) {
             const tab = this.tabs[tabIndex];
             if (tab.id === id) {
@@ -900,21 +901,21 @@ export class Tabs {
         }
 
         const tab = new InstrumentTab(this, instrument);
-        this.tabs.push(tab);
+        this.addTab(tab);
         return tab;
     }
 
     @action
     addProjectTab(filePath: string | undefined) {
         const tab = new ProjectEditorTab(this, filePath);
-        this.tabs.push(tab);
+        this.addTab(tab);
         return tab;
     }
 
     @action
     removeTab(tab: IHomeTab) {
         const tabIndex = this.tabs.indexOf(tab);
-        if (tabIndex !== -1) {
+        if (tabIndex > 0) {
             const tab = this.tabs[tabIndex];
             this.tabs.splice(tabIndex, 1);
             if (tab.active) {
@@ -922,9 +923,11 @@ export class Tabs {
                     this.makeActive(this.tabs[this.tabs.length - 1]);
                 } else if (this.tabs.length > 0) {
                     this.makeActive(this.tabs[tabIndex]);
-                } else {
-                    this.makeActive(undefined);
                 }
+            }
+
+            if (this.tabs.length === 0) {
+                this.openTabById("home", true);
             }
         }
     }

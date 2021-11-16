@@ -342,6 +342,9 @@ input::-webkitcalendar-picker-indicator {
 .EezStudio_ButtonAction {
     display: flex;
     align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .EezStudio_Ballon {
@@ -1248,33 +1251,6 @@ button.EezStudio_Action {
     padding-top: 10px;
     margin-bottom: 5px;
     font-weight: bold;
-}
-
-.EezStudio_AddTabPopupContainer {
-    display: grid;
-    grid-column-gap: 1rem;
-    grid-row-gap: 1rem;
-    grid-template-columns: auto auto;
-
-    & > div.EezStudio_ListContainer {
-        min-width: 400px;
-        height: 240px;
-        grid-column-start: span 2;
-    }
-
-    & > button {
-        min-width: 200px;
-        display: flex;
-        align-items: center;
-        & > span {
-            padding-left: 5px;
-            white-space: nowrap;
-        }
-    }
-
-    & > div.EezStudio_SessionInfoContainer {
-        grid-column-start: span 2;
-    }
 }
 
 .EezStudio_SessionInfoContainer {
@@ -4776,4 +4752,117 @@ button.EezStudio_Action {
 
 .EezStudio_ListHeader {
     justify-content: start;
+}
+
+.EezStudio_HomeTab {
+    padding: 10px;
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: 40px auto;
+    grid-gap: 10px;
+
+    .EezStudio_HomeTab_Tabs_And_SessionInfo {
+        justify-self: start;
+        align-self: center;
+
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+
+        .EezStudio_HomeTab_TabsContainer {
+            button {
+                margin-right: 10px;
+            }
+
+            button:last-child {
+                margin-right: 0;
+            }
+        }
+
+        .EezStudio_SessionInfoContainer {
+            grid-column-start: 1;
+            grid-column-end: 2;
+            justify-self: center;
+            align-self: center;
+        }
+    }
+
+    .EezStudio_HomeTab_Projects_And_Instruments {
+        display: flex;
+        border: 1px solid @borderColor;
+
+        .EezStudio_HomeTab_Projects,
+        .EezStudio_HomeTab_Instruments {
+            display: flex;
+            flex-grow: 1;
+
+            .EezStudio_ToolbarHeader {
+                justify-content: space-between;
+                padding: 10px;
+
+                h5 {
+                    margin-bottom: 0;
+                }
+
+                div {
+                    flex-grow: 1;
+                    display: flex;
+                    justify-content: flex-end;
+
+                    button {
+                        margin-right: 10px;
+                    }
+
+                    button:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
+        }
+
+        .EezStudio_HomeTab_Projects {
+            .EezStudio_ListContainer {
+                max-height: inherit;
+                flex-grow: 1;
+
+                .EezStudio_ListItem {
+                    margin-bottom: 10px;
+
+                    .EezStudio_HomeTab_ProjectItem {
+                        position: relative;
+                        display: flex;
+                        flex-direction: column;
+
+                        div.fist-line {
+                            font-size: 110%;
+                        }
+
+                        div.text-secondary {
+                            color: @actionDisabledColor;
+                        }
+
+                        .EezStudio_Action {
+                            position: absolute;
+                            right: 0;
+                            top: 0;
+                            display: none;
+                            &:hover {
+                                color: red;
+                                background-color: @backgroundColor;
+                            }
+                        }
+                        &:hover {
+                            .EezStudio_Action {
+                                display: block;
+                            }
+                        }
+                    }
+                }
+
+                .EezStudio_ListItem:last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+    }
 }
