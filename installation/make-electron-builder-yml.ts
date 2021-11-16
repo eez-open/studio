@@ -149,12 +149,28 @@ async function getExtraResource() {
         "./installation/extra-resources/catalog.json"
     ]
         .concat(extensions)
-        .concat(["./resources/expression-grammar.pegjs"]);
+        .concat(["./resources/expression-grammar.pegjs"])
+        .concat(["./resources/project-templates/*"]);
 
-    return extraResource.map((extraResourcePath: string) => ({
+    const extraResources = extraResource.map((extraResourcePath: string) => ({
         from: extraResourcePath,
         to: path.basename(extraResourcePath)
     }));
+
+    let projectTemplates = (
+        await fs.promises.readdir("./resources/project-templates")
+    )
+        .filter(
+            file =>
+                file.endsWith(".eez-project") ||
+                file.endsWith(".eez-project-ui-state")
+        )
+        .map(file => ({
+            from: "./resources/project-templates/" + file,
+            to: "project-templates/" + file
+        }));
+
+    return [...extraResources, ...projectTemplates];
 }
 
 const productName = "EEZ Studio";
