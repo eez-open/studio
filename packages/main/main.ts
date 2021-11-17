@@ -18,7 +18,6 @@ configure({ enforceActions: "observed" });
 ////////////////////////////////////////////////////////////////////////////////
 
 let setupFinished: boolean = false;
-let projectFilePath: string | undefined;
 
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 
@@ -72,18 +71,6 @@ app.on("ready", async function () {
 
     await import("main/menu");
 
-    if (!projectFilePath) {
-        projectFilePath = process.argv[process.argv.length - 1];
-    }
-
-    if (
-        projectFilePath.toLowerCase().endsWith(".eez-project") ||
-        projectFilePath.toLowerCase().endsWith(".eez-dashboard")
-    ) {
-        const { openProject } = await import("main/menu");
-        openProject(projectFilePath);
-    }
-
     setupFinished = true;
 });
 
@@ -99,21 +86,28 @@ app.on("quit", function () {
     saveSettings();
 });
 
-app.on("will-finish-launching", function () {
+app.on("will-finish-launching", async function () {
     app.on("open-file", async function (event, path) {
         event.preventDefault();
         if (
             path.toLowerCase().endsWith(".eez-project") ||
             path.toLowerCase().endsWith(".eez-dashboard")
         ) {
-            if (app.isReady()) {
-                const { openProject } = await import("main/menu");
-                openProject(path);
-            } else {
-                projectFilePath = path;
-            }
+            const { openProject } = await import("main/menu");
+            openProject(path);
         }
     });
+});
+
+ipcMain.once("open-command-line-project", async function () {
+    const projectFilePath = process.argv[process.argv.length - 1];
+    if (
+        projectFilePath.toLowerCase().endsWith(".eez-project") ||
+        projectFilePath.toLowerCase().endsWith(".eez-dashboard")
+    ) {
+        const { openProject } = await import("main/menu");
+        openProject(projectFilePath);
+    }
 });
 
 let powerSaveBlockerId: number | undefined = undefined;

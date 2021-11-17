@@ -151,6 +151,8 @@ async function main() {
     );
 
     handleDragAndDrop();
+
+    EEZStudio.electron.ipcRenderer.send("open-command-line-project");
 }
 
 main();
