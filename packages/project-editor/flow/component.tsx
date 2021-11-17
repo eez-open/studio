@@ -1557,6 +1557,8 @@ export class Widget extends Component {
     @observable resizing: IResizing;
     @observable className: string;
 
+    @observable allowOutside: boolean;
+
     static classInfo: ClassInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
@@ -1567,6 +1569,12 @@ export class Widget extends Component {
                 type: PropertyType.String,
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: hideInPropertyGridIfNotDashboard
+            },
+            {
+                name: "allowOutside",
+                displayName: `Hide "Widget is outside of its parent" warning`,
+                type: PropertyType.Boolean,
+                propertyGridGroup: geometryGroup
             }
         ],
 
@@ -1669,11 +1677,11 @@ export class Widget extends Component {
         check: (object: Component) => {
             let messages: Message[] = [];
 
-            if (!(object instanceof ActionComponent)) {
+            if (object instanceof Widget && !object.allowOutside) {
                 if (object.left < 0) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "left")
                         )
@@ -1683,7 +1691,7 @@ export class Widget extends Component {
                 if (object.top < 0) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "top")
                         )
@@ -1696,7 +1704,7 @@ export class Widget extends Component {
                 ) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "width")
                         )
@@ -1709,7 +1717,7 @@ export class Widget extends Component {
                 ) {
                     messages.push(
                         new Message(
-                            MessageType.ERROR,
+                            MessageType.WARNING,
                             "Widget is outside of its parent",
                             getChildOfObject(object, "height")
                         )
