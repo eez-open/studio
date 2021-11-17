@@ -68,8 +68,9 @@ export class BreakpointsPanel extends React.Component<{
     });
 
     removeAll = action(() => {
-        this.context.uiStateStore.breakpoints.clear();
-        this.context.uiStateStore.selectedBreakpoint.set(undefined);
+        [...this.context.uiStateStore.breakpoints.keys()].forEach(breakpoint =>
+            this.context.uiStateStore.removeBreakpoint(breakpoint)
+        );
     });
 
     render() {
