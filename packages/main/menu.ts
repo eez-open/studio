@@ -62,8 +62,12 @@ async function openProjectWithFileDialog(focusedWindow: BrowserWindow) {
 
 export function openProject(
     projectFilePath: string,
-    focusedWindow: BrowserWindow
+    focusedWindow?: BrowserWindow
 ) {
+    if (!focusedWindow) {
+        focusedWindow = BrowserWindow.getFocusedWindow() || undefined;
+    }
+
     if (focusedWindow) {
         focusedWindow.webContents.send("open-project", projectFilePath);
     }
@@ -178,10 +182,7 @@ function buildFileMenu(win: IWindow | undefined) {
                 label: mru.filePath,
                 click: function () {
                     if (fs.existsSync(mru.filePath)) {
-                        const focusedWindow = BrowserWindow.getFocusedWindow();
-                        if (focusedWindow) {
-                            openProject(mru.filePath, focusedWindow);
-                        }
+                        openProject(mru.filePath);
                     } else {
                         // file not found, remove from mru
                         var i = settings.mru.indexOf(mru);
@@ -814,10 +815,7 @@ ipcMain.on("open-file", function (event, path) {
         path.toLowerCase().endsWith(".eez-project") ||
         path.toLowerCase().endsWith(".eez-dashboard")
     ) {
-        const focusedWindow = BrowserWindow.getFocusedWindow();
-        if (focusedWindow) {
-            openProject(path, focusedWindow);
-        }
+        openProject(path);
     }
 });
 

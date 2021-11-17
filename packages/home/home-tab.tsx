@@ -497,7 +497,7 @@ class Projects extends React.Component {
             <VerticalHeaderWithBody>
                 <Header>
                     <ToolbarHeader>
-                        <h5>Projects</h5>
+                        <h5>Recent projects</h5>
                         <div>
                             <ButtonAction
                                 text="New Project"
