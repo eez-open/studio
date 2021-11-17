@@ -1,6 +1,8 @@
 {
   "settings": {
     "general": {
+      "projectVersion": "v3",
+      "projectType": "master",
       "imports": []
     },
     "build": {

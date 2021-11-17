@@ -20,24 +20,20 @@
   "objects": {
     "/pages/0[flow-state]": {
       "selection": {
-        "1": {
-          "1": {
-            "$selected": true
-          }
+        "0": {
+          "$selected": true
         }
       },
       "transform": {
         "translate": {
-          "x": -293.75,
-          "y": -268.75
+          "x": -240,
+          "y": -136
         },
-        "scale": 1.5
+        "scale": 1
       }
     }
   },
   "activeOutputSection": 0,
-  "pageEditorFrontFace": false,
-  "pageRuntimeFrontFace": true,
   "breakpoints": {},
   "watchExpressions": []
 }

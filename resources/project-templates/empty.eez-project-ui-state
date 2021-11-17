@@ -6,10 +6,10 @@
   "navigationMap": {},
   "settingsNavigationState": {},
   "editors": [],
+  "selectedBuildConfiguration": "Default",
+  "features": {},
   "objects": {},
   "activeOutputSection": 0,
-  "pageEditorFrontFace": false,
-  "pageRuntimeFrontFace": true,
   "breakpoints": {},
   "watchExpressions": []
 }

@@ -84,7 +84,7 @@ export class InstrumentObject {
 
     _creationDate: Date | null | undefined;
 
-    commandsTree: CommandsTree;
+    _commandsTree: CommandsTree;
 
     constructor(props: IInstrumentObjectProps) {
         this.id = props.id;
@@ -110,9 +110,6 @@ export class InstrumentObject {
             const { createRendererProcessConnection } =
                 require("instrument/connection/connection-renderer") as typeof ConnectionRendererModule;
             this.connection = createRendererProcessConnection(this);
-            if (this.instrumentExtensionId) {
-                this.commandsTree = getCommandsTree(this.instrumentExtensionId);
-            }
         } else {
             const { createMainProcessConnection } =
                 require("instrument/connection/connection-main") as typeof ConnectionMainModule;
@@ -204,6 +201,19 @@ export class InstrumentObject {
         }
 
         return extension;
+    }
+
+    get commandsTree() {
+        if (!this._commandsTree) {
+            if (this.instrumentExtensionId) {
+                this._commandsTree = getCommandsTree(
+                    this.instrumentExtensionId
+                );
+            } else {
+                this._commandsTree = new CommandsTree();
+            }
+        }
+        return this._commandsTree;
     }
 
     @computed

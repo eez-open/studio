@@ -15,6 +15,8 @@
       "permanent": false
     }
   ],
+  "selectedBuildConfiguration": "Default",
+  "features": {},
   "objects": {
     "/pages/0[flow-state]": {
       "selection": {
@@ -24,16 +26,14 @@
       },
       "transform": {
         "translate": {
-          "x": -320,
-          "y": -240
+          "x": -400,
+          "y": -225
         },
         "scale": 1
       }
     }
   },
   "activeOutputSection": 0,
-  "pageEditorFrontFace": false,
-  "pageRuntimeFrontFace": true,
   "breakpoints": {},
   "watchExpressions": []
 }

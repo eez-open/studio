@@ -938,6 +938,7 @@ class UIStateStore {
 
 class RuntimeSettings {
     @observable settings: any = {};
+    modified = false;
 
     constructor(public DocumentStore: DocumentStoreClass) {}
 
@@ -969,6 +970,7 @@ class RuntimeSettings {
             }
             this.settings.__persistentVariables[variable.name] = value;
         });
+        this.modified = true;
     }
 
     async loadPersistentVariables() {
@@ -1040,6 +1042,10 @@ class RuntimeSettings {
     }
 
     async save() {
+        if (!this.modified) {
+            return;
+        }
+
         const filePath = this.getSettingsFilePath();
         if (!filePath) {
             return;

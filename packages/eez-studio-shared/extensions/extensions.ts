@@ -175,8 +175,6 @@ async function loadAndRegisterExtension(folder: string) {
 function yarnFn(args: string[]) {
     const yarn = sourceRootDir() + "/../libs/yarn-1.22.10.js";
     const cp = require("child_process");
-    const queue = require("queue");
-    const spawnQueue = queue({ concurrency: 1 });
 
     return new Promise<void>((resolve, reject) => {
         const env = {
@@ -184,34 +182,28 @@ function yarnFn(args: string[]) {
             ELECTRON_RUN_AS_NODE: "true"
         };
 
-        spawnQueue.push((end: any) => {
-            const cmd = [process.execPath, yarn].concat(args).join(" ");
+        const cmd = [process.execPath, yarn].concat(args).join(" ");
 
-            console.log("Launching yarn:", cmd);
+        console.log("Launching yarn:", cmd);
 
-            cp.execFile(
-                process.execPath,
-                [yarn].concat(args),
-                {
-                    cwd: extensionsFolderPath,
-                    env,
-                    timeout: 10 * 1000, // 10 seconds
-                    maxBuffer: 1024 * 1024
-                },
-                (err: any, stdout: any, stderr: any) => {
-                    if (err) {
-                        reject(stderr);
-                    } else {
-                        console.log("yarn", stdout);
-                        resolve();
-                    }
-                    end?.();
-                    spawnQueue.start();
+        cp.execFile(
+            process.execPath,
+            [yarn].concat(args),
+            {
+                cwd: extensionsFolderPath,
+                env,
+                timeout: 10 * 1000, // 10 seconds
+                maxBuffer: 1024 * 1024
+            },
+            (err: any, stdout: any, stderr: any) => {
+                if (err) {
+                    reject(stderr);
+                } else {
+                    console.log("yarn", stdout);
+                    resolve();
                 }
-            );
-        });
-
-        spawnQueue.start();
+            }
+        );
     });
 }
 
@@ -344,7 +336,7 @@ export async function loadExtensions() {
     }
 
     if (isRenderer()) {
-        yarnInstall();
+        setTimeout(yarnInstall, 1000);
     }
 }
 

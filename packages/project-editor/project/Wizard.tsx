@@ -23,6 +23,7 @@ class NameInput extends React.Component<{
                 className="form-control"
                 value={this.props.value || ""}
                 onChange={event => this.props.onChange(event.target.value)}
+                spellCheck={false}
             />
         );
     }
@@ -50,6 +51,7 @@ class DirectoryBrowserInput extends React.Component<{
                     className="form-control"
                     value={this.props.value || ""}
                     onChange={event => this.props.onChange(event.target.value)}
+                    spellCheck={false}
                 />
                 <>
                     <button
@@ -91,6 +93,7 @@ class FileBrowserInput extends React.Component<{
                     className="form-control"
                     value={this.props.value || ""}
                     onChange={event => this.props.onChange(event.target.value)}
+                    spellCheck={false}
                 />
                 <>
                     <button
@@ -286,11 +289,6 @@ class NewProjectWizard extends React.Component {
         const location = this.location?.trim();
         if (!location) {
             this.locationError = "This field is required.";
-            return;
-        }
-
-        if (!fs.existsSync(location)) {
-            this.locationError = "This location doesn't exists.";
             return;
         }
 
@@ -495,7 +493,7 @@ class NewProjectWizard extends React.Component {
                         : "")
                 }
                 size={"large"}
-                onSubmit={() => {}}
+                onSubmit={this.onOk}
                 onCancel={this.onCancel}
                 cancelDisabled={false}
                 okEnabled={() => false}
@@ -620,6 +618,7 @@ class NewProjectWizard extends React.Component {
                                     className="form-control"
                                     value={this.projectFilePath || ""}
                                     readOnly
+                                    spellCheck={false}
                                 />
                             </div>
                         </div>

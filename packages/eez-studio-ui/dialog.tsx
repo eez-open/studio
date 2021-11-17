@@ -218,24 +218,29 @@ export class BootstrapDialog extends React.Component<{
     form: HTMLFormElement | null = null;
     modal: bootstrap.Modal | null = null;
 
+    setFocus = () => {
+        const div = this.div;
+        if (div) {
+            let element = $(div).find(".ql-editor")[0];
+            if (element) {
+                element.focus();
+            } else {
+                $(div)
+                    .find(".modal-body")
+                    .find(
+                        "input, textarea, select, .EezStudio_ListContainer, button"
+                    )
+                    .first()
+                    .trigger("focus");
+            }
+        }
+    };
+
     componentDidMount() {
         const div = this.div;
         if (div) {
             $(div).on("shown.bs.modal", () => {
-                setTimeout(() => {
-                    let element = $(div).find(".ql-editor")[0];
-                    if (element) {
-                        element.focus();
-                    } else {
-                        $(div)
-                            .find(".modal-body")
-                            .find(
-                                "input, textarea, select, .EezStudio_ListContainer, button"
-                            )
-                            .first()
-                            .focus();
-                    }
-                });
+                setTimeout(this.setFocus);
             });
 
             $(div).on("hidden.bs.modal", () => {
@@ -255,6 +260,21 @@ export class BootstrapDialog extends React.Component<{
     componentDidUpdate() {
         if (!this.props.open && this.modal) {
             this.modal.hide();
+        } else {
+            const element = document.activeElement;
+            if (
+                !element ||
+                (!element.classList.contains(".ql-editor") &&
+                    !element.classList.contains(".EezStudio_ListContainer") &&
+                    !(
+                        element instanceof HTMLInputElement ||
+                        element instanceof HTMLTextAreaElement ||
+                        element instanceof HTMLSelectElement ||
+                        element instanceof HTMLButtonElement
+                    ))
+            ) {
+                this.setFocus();
+            }
         }
     }
 
@@ -277,7 +297,7 @@ export class BootstrapDialog extends React.Component<{
             button.text ? (
                 <button
                     key={button.id}
-                    type="button"
+                    type={"button"}
                     className={classNames(
                         "btn",
                         button.text
@@ -365,6 +385,7 @@ export class BootstrapDialog extends React.Component<{
                                         className="btn-close float-right"
                                         disabled={props.disableButtons}
                                         aria-label="Close"
+                                        onClick={props.onCancel}
                                     ></button>
                                 )}
                             </div>

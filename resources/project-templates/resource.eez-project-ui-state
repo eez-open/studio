@@ -4,13 +4,8 @@
     "themesVisible": true
   },
   "navigationMap": {
-    "/": "/micropython",
-    "/pages": "/pages/0",
-    "/pages/0/components": "/pages/0/components/1",
-    "/pages/0": "/pages/0/components",
-    "/pages/0/components/1/widgets": "/pages/0/components/1/widgets/1",
-    "/pages/0/components/1": "/pages/0/components/1/widgets",
-    "/actions": "/actions/0"
+    "/": "/pages",
+    "/pages": "/pages/0"
   },
   "settingsNavigationState": {},
   "editors": [
@@ -24,7 +19,11 @@
   "features": {},
   "objects": {
     "/pages/0[flow-state]": {
-      "selection": {},
+      "selection": {
+        "0": {
+          "$selected": true
+        }
+      },
       "transform": {
         "translate": {
           "x": -240,
@@ -34,9 +33,7 @@
       }
     }
   },
-  "activeOutputSection": 1,
-  "pageEditorFrontFace": false,
-  "pageRuntimeFrontFace": true,
+  "activeOutputSection": 0,
   "breakpoints": {},
   "watchExpressions": []
 }

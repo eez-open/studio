@@ -113,14 +113,10 @@ EEZStudio.electron.ipcRenderer.on(
 EEZStudio.electron.ipcRenderer.on(
     "new-project",
     async (sender: any, filePath: any) => {
-        try {
-            const tab = tabs.addProjectTab(undefined);
-            if (tab) {
-                tab.makeActive();
-            }
-        } catch (err) {
-            console.error(err);
-        }
+        const { showNewProjectWizard } = await import(
+            "project-editor/project/Wizard"
+        );
+        showNewProjectWizard();
     }
 );
 
