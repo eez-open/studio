@@ -60,29 +60,29 @@ app.on("ready", async function () {
         );
     }
 
-    const { loadSettings } = require("main/settings") as typeof SettingsModule;
+    const { loadSettings } = await import("main/settings");
     loadSettings();
 
     await setup();
 
     require("eez-studio-shared/service");
 
-    const { openProject } = require("main/menu");
+    const { openHomeWindow } = await import("main/home-window");
+    openHomeWindow();
 
-    if (projectFilePath) {
-        openProject(projectFilePath);
-    } else {
-        const projectFilePath = process.argv[process.argv.length - 1];
-        if (projectFilePath.toLowerCase().endsWith(".eez-project")) {
-            openProject(projectFilePath);
-        } else {
-            const { openHomeWindow } =
-                require("main/home-window") as typeof HomeWindowModule;
-            openHomeWindow();
-        }
+    await import("main/menu");
+
+    if (!projectFilePath) {
+        projectFilePath = process.argv[process.argv.length - 1];
     }
 
-    require("main/menu");
+    if (
+        projectFilePath.toLowerCase().endsWith(".eez-project") ||
+        projectFilePath.toLowerCase().endsWith(".eez-dashboard")
+    ) {
+        const { openProject } = await import("main/menu");
+        openProject(projectFilePath);
+    }
 
     setupFinished = true;
 });
@@ -100,11 +100,14 @@ app.on("quit", function () {
 });
 
 app.on("will-finish-launching", function () {
-    app.on("open-file", function (event, path) {
+    app.on("open-file", async function (event, path) {
         event.preventDefault();
-        if (path.toLowerCase().endsWith(".eez-project")) {
+        if (
+            path.toLowerCase().endsWith(".eez-project") ||
+            path.toLowerCase().endsWith(".eez-dashboard")
+        ) {
             if (app.isReady()) {
-                const { openProject } = require("main/menu");
+                const { openProject } = await import("main/menu");
                 openProject(path);
             } else {
                 projectFilePath = path;
