@@ -121,8 +121,7 @@ export class SCPIActionComponent extends ActionComponent {
 
             const project = ProjectEditor.getProject(component);
             if (project.isAppletProject) {
-                console.log(jsObject.instrument);
-                delete jsObject.instrument;
+                jsObject.instrument = undefined;
             }
         },
         label: (component: SCPIActionComponent) => {
