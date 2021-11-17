@@ -90,8 +90,8 @@ export class MarkdownWidget extends Widget {
                         ProjectEditor.getProject(this),
                         this.text
                     );
-                    if (typeof result === "string") {
-                        return result;
+                    if (typeof result.value === "string") {
+                        return result.value;
                     }
                 } catch (err) {}
 

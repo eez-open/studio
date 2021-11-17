@@ -267,6 +267,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
         flow.localVariables,
         localVariable =>
             buildVariableFlowValue(
+                assets,
                 dataBuffer,
                 getVariableFlowValue(assets, localVariable)
             ),
@@ -344,7 +345,8 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             dataBuffer.writeFutureArray(() =>
                 dataBuffer.writeArray(
                     assets.constants,
-                    constant => buildConstantFlowValue(dataBuffer, constant),
+                    constant =>
+                        buildConstantFlowValue(assets, dataBuffer, constant),
                     8
                 )
             );
@@ -360,6 +362,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                 assets.globalVariables,
                 globalVariable =>
                     buildVariableFlowValue(
+                        assets,
                         dataBuffer,
                         getVariableFlowValue(assets, globalVariable)
                     ),

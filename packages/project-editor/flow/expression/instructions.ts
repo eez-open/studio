@@ -1,4 +1,5 @@
 import type { Assets } from "project-editor/features/page/build/assets";
+import { ValueType } from "project-editor/features/variable/value-type";
 
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT = 0 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_INPUT = 1 << 13;
@@ -12,7 +13,7 @@ const EXPR_EVAL_INSTRUCTION_TYPE_END = 7 << 13;
 export function makePushConstantInstruction(
     assets: Assets,
     value: any,
-    valueType?: string
+    valueType: ValueType
 ) {
     return (
         EXPR_EVAL_INSTRUCTION_TYPE_PUSH_CONSTANT |

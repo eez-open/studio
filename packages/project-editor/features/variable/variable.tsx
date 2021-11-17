@@ -400,7 +400,7 @@ export class Variable extends EezObject {
                     DocumentStore.project.isDashboardProject
                 ) {
                     try {
-                        const value = evalConstantExpression(
+                        const { value } = evalConstantExpression(
                             DocumentStore.project,
                             variable.defaultValue
                         );
@@ -462,7 +462,7 @@ export class DataContext implements IDataContext {
         if (this.localVariables) {
             this.localVariables.forEach(variable => {
                 try {
-                    const value = evalConstantExpression(
+                    const { value } = evalConstantExpression(
                         project,
                         variable.defaultValue
                     );
@@ -485,7 +485,7 @@ export class DataContext implements IDataContext {
         if (this.project.variables) {
             this.project.variables.globalVariables.forEach(variable => {
                 try {
-                    const value = evalConstantExpression(
+                    const { value } = evalConstantExpression(
                         this.project,
                         variable.defaultValue
                     );
@@ -851,7 +851,7 @@ export class DataContext implements IDataContext {
 
 export class StructureField extends EezObject {
     @observable name: string;
-    @observable type: string;
+    @observable type: ValueType;
 
     static classInfo: ClassInfo = {
         properties: [

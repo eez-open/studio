@@ -4,9 +4,12 @@ import type {
 } from "project-editor/features/page/build/assets";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
+    getArrayElementTypeFromType,
+    getStructureFromType,
     isArrayType,
     isEnumType,
-    isStructType
+    isStructType,
+    ValueType
 } from "project-editor/features/variable/value-type";
 import { evalConstantExpression } from "project-editor/flow/expression/expression";
 import { Section } from "project-editor/core/store";
@@ -31,17 +34,22 @@ export const FLOW_VALUE_TYPE_ARRAY = 14;
 export interface FlowValue {
     type: number;
     value: any;
+    valueType: ValueType;
 }
 
-function getValueType(valueType: string) {
-    if (valueType == "boolean") {
-        return FLOW_VALUE_TYPE_BOOLEAN;
+export function getValueType(valueType: ValueType) {
+    if (valueType == "undefined") {
+        return FLOW_VALUE_TYPE_UNDEFINED;
+    } else if (valueType == "null") {
+        return FLOW_VALUE_TYPE_NULL;
     } else if (valueType == "integer") {
         return FLOW_VALUE_TYPE_INT32;
     } else if (valueType == "float") {
         return FLOW_VALUE_TYPE_FLOAT;
     } else if (valueType == "double") {
         return FLOW_VALUE_TYPE_DOUBLE;
+    } else if (valueType == "boolean") {
+        return FLOW_VALUE_TYPE_BOOLEAN;
     } else if (valueType == "string") {
         return FLOW_VALUE_TYPE_STRING;
     } else if (isEnumType(valueType)) {
@@ -53,35 +61,10 @@ function getValueType(valueType: string) {
     }
 }
 
-export function getConstantFlowValueType(value: any, valueType?: string) {
-    if (value === null) {
-        return FLOW_VALUE_TYPE_NULL;
-    }
-
-    if (valueType) {
-        return getValueType(valueType);
-    }
-
-    if (typeof value === "boolean") {
-        return FLOW_VALUE_TYPE_BOOLEAN;
-    } else if (typeof value === "number") {
-        if (Number.isInteger(value)) {
-            return FLOW_VALUE_TYPE_INT32;
-        } else {
-            return FLOW_VALUE_TYPE_DOUBLE;
-        }
-    } else if (typeof value === "string") {
-        return FLOW_VALUE_TYPE_STRING;
-    } else if (typeof value === "object") {
-        return FLOW_VALUE_TYPE_ARRAY;
-    } else if (typeof value === "undefined") {
-        return FLOW_VALUE_TYPE_UNDEFINED;
-    }
-
-    return FLOW_VALUE_TYPE_NULL;
-}
-
-export function getVariableFlowValue(assets: Assets, variable: Variable) {
+export function getVariableFlowValue(
+    assets: Assets,
+    variable: Variable
+): FlowValue {
     let type;
 
     if (variable.type) {
@@ -97,14 +80,15 @@ export function getVariableFlowValue(assets: Assets, variable: Variable) {
     }
 
     try {
-        let value = evalConstantExpression(
+        const { value } = evalConstantExpression(
             assets.rootProject,
             variable.defaultValue
         );
 
         return {
             type,
-            value
+            value,
+            valueType: variable.type
         };
     } catch (err) {
         assets.DocumentStore.outputSectionsStore.write(
@@ -116,26 +100,33 @@ export function getVariableFlowValue(assets: Assets, variable: Variable) {
 
         return {
             type,
-            value: null
+            value: null,
+            valueType: "null"
         };
     }
 }
 
 export function buildConstantFlowValue(
+    assets: Assets,
     dataBuffer: DataBuffer,
     flowValue: FlowValue
 ) {
-    buildFlowValue(dataBuffer, flowValue);
+    buildFlowValue(assets, dataBuffer, flowValue);
 }
 
 export function buildVariableFlowValue(
+    assets: Assets,
     dataBuffer: DataBuffer,
     flowValue: FlowValue
 ) {
-    buildFlowValue(dataBuffer, flowValue);
+    buildFlowValue(assets, dataBuffer, flowValue);
 }
 
-function buildFlowValue(dataBuffer: DataBuffer, flowValue: FlowValue) {
+function buildFlowValue(
+    assets: Assets,
+    dataBuffer: DataBuffer,
+    flowValue: FlowValue
+) {
     if (flowValue.value === undefined) {
         dataBuffer.writeUint8(FLOW_VALUE_TYPE_UNDEFINED); // type_
         dataBuffer.writeUint8(0); // unit_
@@ -175,19 +166,46 @@ function buildFlowValue(dataBuffer: DataBuffer, flowValue: FlowValue) {
         } else if (flowValue.type == FLOW_VALUE_TYPE_ARRAY) {
             dataBuffer.writeObjectOffset(() => {
                 let elements: FlowValue[];
+
                 if (Array.isArray(flowValue.value)) {
+                    const elementType = (getArrayElementTypeFromType(
+                        flowValue.valueType
+                    ) || "any") as ValueType;
+
                     elements = flowValue.value.map((element: any) => ({
-                        type: getConstantFlowValueType(element),
-                        value: element
+                        type: getValueType(elementType),
+                        value: element,
+                        valueType: elementType
                     }));
                 } else {
+                    const elementType = getStructureFromType(
+                        assets.DocumentStore.project,
+                        flowValue.valueType
+                    );
+
                     elements = [];
                     const sortedKeys = Object.keys(flowValue.value).sort();
                     for (const key of sortedKeys) {
                         const element = flowValue.value[key];
+
+                        let fieldValueType: ValueType;
+                        if (elementType) {
+                            const field = elementType.fields.find(
+                                field => field.name == key
+                            );
+                            if (field) {
+                                fieldValueType = field.type;
+                            } else {
+                                fieldValueType = "any";
+                            }
+                        } else {
+                            fieldValueType = "any";
+                        }
+
                         elements.push({
-                            type: getConstantFlowValueType(element),
-                            value: element
+                            type: getValueType(fieldValueType),
+                            value: element,
+                            valueType: fieldValueType
                         });
                     }
                 }
@@ -195,7 +213,7 @@ function buildFlowValue(dataBuffer: DataBuffer, flowValue: FlowValue) {
                 dataBuffer.writeUint32(elements.length); // arraySize
                 dataBuffer.writeUint32(0); // reserved
                 elements.forEach(element =>
-                    buildFlowValue(dataBuffer, element)
+                    buildFlowValue(assets, dataBuffer, element)
                 );
             }, 8);
             dataBuffer.writeUint32(0);

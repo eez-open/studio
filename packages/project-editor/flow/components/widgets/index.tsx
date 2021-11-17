@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
-import { to16bitsColor } from "eez-studio-shared/color";
 
 import {
     IEezObject,
@@ -185,10 +184,10 @@ export class EmbeddedWidget extends Widget {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        if (!flowContext.DocumentStore.project.isDashboardProject) {
-            const backgroundColor = this.style.backgroundColorProperty;
-            style.backgroundColor = to16bitsColor(backgroundColor);
-        }
+        // if (!flowContext.DocumentStore.project.isDashboardProject) {
+        //     const backgroundColor = this.style.backgroundColorProperty;
+        //     style.backgroundColor = to16bitsColor(backgroundColor);
+        // }
     }
 }
 
@@ -1580,8 +1579,8 @@ export class DisplayDataWidget extends EmbeddedWidget {
                         ProjectEditor.getProject(this),
                         this.data
                     );
-                    if (typeof result === "string") {
-                        return result;
+                    if (typeof result.value === "string") {
+                        return result.value;
                     }
                 } catch (err) {}
 
@@ -1863,8 +1862,8 @@ export class TextWidget extends EmbeddedWidget {
                         ProjectEditor.getProject(this),
                         this.data
                     );
-                    if (typeof result === "string") {
-                        return result;
+                    if (typeof result.value === "string") {
+                        return result.value;
                     }
                 } catch (err) {}
 
@@ -2829,8 +2828,8 @@ export class ButtonWidget extends EmbeddedWidget {
                         ProjectEditor.getProject(this),
                         this.data
                     );
-                    if (typeof result === "string") {
-                        return result;
+                    if (typeof result.value === "string") {
+                        return result.value;
                     }
                 } catch (err) {}
 
@@ -4303,8 +4302,8 @@ export class ProgressWidget extends EmbeddedWidget {
                         ProjectEditor.getProject(this),
                         this.data
                     );
-                    if (typeof result === "string") {
-                        return result;
+                    if (typeof result.value === "string") {
+                        return result.value;
                     }
                 } catch (err) {}
 
@@ -4920,10 +4919,10 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
 
     @observable password: boolean;
 
-    @observable min: number;
-    @observable max: number;
+    @observable min: string;
+    @observable max: string;
 
-    @observable precision: number;
+    @observable precision: string;
     @observable unit: string;
 
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
@@ -5064,9 +5063,30 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
                                 text = `{${this.data}}`;
                             }
 
+                            let unit;
+
+                            if (flowContext.flowState) {
+                                if (this.unit) {
+                                    try {
+                                        unit = evalExpression(
+                                            flowContext,
+                                            this,
+                                            this.unit
+                                        );
+                                    } catch (err) {
+                                        console.error(err);
+                                        unit = "";
+                                    }
+                                } else {
+                                    unit = "";
+                                }
+                            } else {
+                                unit = "";
+                            }
+
                             drawText(
                                 ctx,
-                                text,
+                                text + (unit ? " " + unit : ""),
                                 0,
                                 0,
                                 this.width,

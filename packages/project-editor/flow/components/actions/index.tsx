@@ -1354,17 +1354,18 @@ export class ConstantActionComponent extends ActionComponent {
             this,
             "value",
             evalConstantExpression(ProjectEditor.getProject(this), this.value)
+                .value
         );
         return undefined;
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         try {
-            dataBuffer.writeUint16(
-                assets.getConstantIndex(
-                    evalConstantExpression(assets.rootProject, this.value)
-                )
+            const { value, valueType } = evalConstantExpression(
+                assets.rootProject,
+                this.value
             );
+            dataBuffer.writeUint16(assets.getConstantIndex(value, valueType));
         } catch (err) {
             assets.DocumentStore.outputSectionsStore.write(
                 Section.OUTPUT,
@@ -1372,7 +1373,7 @@ export class ConstantActionComponent extends ActionComponent {
                 err.toString(),
                 getChildOfObject(this, "value")
             );
-            dataBuffer.writeUint16(assets.getConstantIndex(null));
+            dataBuffer.writeUint16(assets.getConstantIndex(null, "null"));
         }
     }
 }

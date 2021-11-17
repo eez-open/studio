@@ -39,13 +39,14 @@ import { buildVariableNames } from "project-editor/features/page/build/variables
 import { buildFlowData } from "project-editor/features/page/build/flows";
 import {
     FlowValue,
-    getConstantFlowValueType
+    getValueType
 } from "project-editor/features/page/build/value";
 import {
     getObjectPathAsString,
     propertyNotFoundMessage,
     Section
 } from "project-editor/core/store";
+import { ValueType } from "project-editor/features/variable/value-type";
 
 export const PATH_SEPARATOR = "//";
 
@@ -138,8 +139,8 @@ export class Assets {
         public rootProject: Project,
         buildConfiguration: BuildConfiguration | undefined
     ) {
-        this.getConstantIndex(undefined); // undefined has value index 0
-        this.getConstantIndex(null); // null has value index 1
+        this.getConstantIndex(undefined, "undefined"); // undefined has value index 0
+        this.getConstantIndex(null, "null"); // null has value index 1
 
         this.projects = [];
         this.collectProjects(rootProject);
@@ -574,13 +575,14 @@ export class Assets {
         return this.getFlowState(flow).index;
     }
 
-    getConstantIndex(value: any, valueType?: string) {
+    getConstantIndex(value: any, valueType: ValueType) {
         let index = this.constantsMap.get(value);
         if (index == undefined) {
             index = this.constants.length;
             this.constants.push({
-                type: getConstantFlowValueType(value, valueType),
-                value
+                type: getValueType(valueType),
+                value,
+                valueType
             });
             this.constantsMap.set(value, index);
         }

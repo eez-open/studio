@@ -65,7 +65,12 @@ export function checkExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
-        findValueTypeInExpressionNode(component, rootNode, assignable);
+        findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            assignable
+        );
         checkExpressionNode(component, rootNode);
     }
 }
@@ -89,6 +94,7 @@ export function checkAssignableExpression(
             throw `Expression error: ${err}`;
         }
         findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
             component,
             rootNode,
             assignableExpression
@@ -112,9 +118,13 @@ export function buildExpression(
         expression == undefined ||
         (typeof expression == "string" && expression.length == 0)
     ) {
-        instructions = [makePushConstantInstruction(assets, undefined)];
+        instructions = [
+            makePushConstantInstruction(assets, undefined, "undefined")
+        ];
     } else if (typeof expression == "number") {
-        instructions = [makePushConstantInstruction(assets, expression)];
+        instructions = [
+            makePushConstantInstruction(assets, expression, "double")
+        ];
     } else {
         let rootNode;
         try {
@@ -122,7 +132,12 @@ export function buildExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
-        findValueTypeInExpressionNode(component, rootNode, false);
+        findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            false
+        );
         instructions = buildExpressionNode(assets, component, rootNode, false);
     }
 
@@ -166,7 +181,12 @@ export function buildAssignableExpression(
         throw `Expression error: ${err}`;
     }
 
-    findValueTypeInExpressionNode(component, rootNode, true);
+    findValueTypeInExpressionNode(
+        ProjectEditor.getProject(component),
+        component,
+        rootNode,
+        true
+    );
 
     if (!isAssignableExpression(rootNode)) {
         console.log("Expression is not assignable", rootNode);
@@ -188,16 +208,21 @@ export function evalConstantExpression(project: Project, expression: string) {
     }
 
     let value;
+    let valueType;
     if (expression == undefined) {
         value = undefined;
+        valueType = "undefined";
     } else if (typeof expression == "number") {
         value = expression;
+        valueType = "double";
     } else {
         let rootNode = expressionParser.parse(expression);
+        findValueTypeInExpressionNode(project, undefined, rootNode, false);
         value = evalConstantExpressionNode(project, rootNode);
+        valueType = rootNode.valueType;
     }
 
-    return value;
+    return { value, valueType };
 }
 
 export interface IExpressionContext {
@@ -229,7 +254,12 @@ export function evalExpression(
             throw `Expression error: ${err}`;
         }
 
-        findValueTypeInExpressionNode(component, rootNode, false);
+        findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            false
+        );
 
         value = evalExpressionWithContext(
             expressionContext,
@@ -263,7 +293,12 @@ export function evalExpressionGetValueType(
             throw `Expression error: ${err}`;
         }
 
-        findValueTypeInExpressionNode(component, rootNode, false);
+        findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            false
+        );
 
         value = evalExpressionWithContext(
             expressionContext,
@@ -291,7 +326,12 @@ export function evalAssignableExpression(
             throw `Expression error: ${err}`;
         }
 
-        findValueTypeInExpressionNode(component, rootNode, false);
+        findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            false
+        );
 
         assignableValue = evalAssignableExpressionWithContext(
             expressionContext,
@@ -430,12 +470,11 @@ function getNodeDescription(node: ExpressionNode) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function findValueTypeInExpressionNode(
-    component: Component,
+    project: Project,
+    component: Component | undefined,
     node: ExpressionNode,
     assignable: boolean
 ) {
-    const project = ProjectEditor.getProject(component);
-
     if (node.type == "Literal") {
         if (typeof node.value === "boolean") {
             node.valueType = "boolean";
@@ -450,7 +489,7 @@ function findValueTypeInExpressionNode(
         }
     } else if (node.type == "Identifier") {
         if (assignable) {
-            const output = component.outputs.find(
+            const output = component?.outputs.find(
                 output => output.name === node.name
             );
             if (output) {
@@ -459,19 +498,21 @@ function findValueTypeInExpressionNode(
             }
         }
 
-        const input = component.inputs.find(input => input.name == node.name);
+        const input = component?.inputs.find(input => input.name == node.name);
         if (input) {
             node.valueType = input.type;
             return;
         }
 
-        const flow = ProjectEditor.getFlow(component);
-        let localVariable = flow.localVariables.find(
-            localVariable => localVariable.name == node.name
-        );
-        if (localVariable) {
-            node.valueType = localVariable.type as ValueType;
-            return;
+        if (component) {
+            const flow = ProjectEditor.getFlow(component);
+            let localVariable = flow.localVariables.find(
+                localVariable => localVariable.name == node.name
+            );
+            if (localVariable) {
+                node.valueType = localVariable.type as ValueType;
+                return;
+            }
         }
 
         let globalVariable = project.variables.globalVariables.find(
@@ -511,8 +552,18 @@ function findValueTypeInExpressionNode(
                 throw `Unknown binary operator '${node.operator}'`;
             }
         }
-        findValueTypeInExpressionNode(component, node.left, assignable);
-        findValueTypeInExpressionNode(component, node.right, assignable);
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.left,
+            assignable
+        );
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.right,
+            assignable
+        );
         node.valueType = operator.getValueType(
             node.left.valueType,
             node.right.valueType
@@ -522,8 +573,18 @@ function findValueTypeInExpressionNode(
         if (!operator) {
             throw `Unknown logical operator '${node.operator}'`;
         }
-        findValueTypeInExpressionNode(component, node.left, assignable);
-        findValueTypeInExpressionNode(component, node.right, assignable);
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.left,
+            assignable
+        );
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.right,
+            assignable
+        );
         node.valueType = operator.getValueType(
             node.left.valueType,
             node.right.valueType
@@ -533,12 +594,32 @@ function findValueTypeInExpressionNode(
         if (!operator) {
             throw `Unknown unary operator '${node.operator}'`;
         }
-        findValueTypeInExpressionNode(component, node.argument, assignable);
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.argument,
+            assignable
+        );
         node.valueType = operator.getValueType(node.argument.valueType);
     } else if (node.type == "ConditionalExpression") {
-        findValueTypeInExpressionNode(component, node.test, assignable);
-        findValueTypeInExpressionNode(component, node.consequent, assignable);
-        findValueTypeInExpressionNode(component, node.alternate, assignable);
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.test,
+            assignable
+        );
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.consequent,
+            assignable
+        );
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.alternate,
+            assignable
+        );
         if (node.consequent.valueType != node.alternate.valueType) {
             throw "different types in conditional";
         }
@@ -562,15 +643,30 @@ function findValueTypeInExpressionNode(
         checkArity(functionName, node);
 
         node.arguments.forEach(argument =>
-            findValueTypeInExpressionNode(component, argument, assignable)
+            findValueTypeInExpressionNode(
+                project,
+                component,
+                argument,
+                assignable
+            )
         );
 
         node.valueType = builtInFunction.getValueType(
             ...node.arguments.map(node => node.valueType)
         );
     } else if (node.type == "MemberExpression") {
-        findValueTypeInExpressionNode(component, node.object, assignable);
-        findValueTypeInExpressionNode(component, node.property, assignable);
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.object,
+            assignable
+        );
+        findValueTypeInExpressionNode(
+            project,
+            component,
+            node.property,
+            assignable
+        );
         if (isEnumType(node.object.valueType)) {
             const enumName = getEnumTypeNameFromType(node.object.valueType)!;
             const enumDef = project.variables.enumsMap.get(enumName)!;
@@ -596,8 +692,6 @@ function findValueTypeInExpressionNode(
                     node.valueType = valueType as ValueType;
                 }
             } else {
-                const project = ProjectEditor.getProject(component);
-
                 if (
                     node.object.type == "Identifier" &&
                     node.property.type == "Identifier"
@@ -672,11 +766,21 @@ function findValueTypeInExpressionNode(
         }
     } else if (node.type == "ArrayExpression") {
         node.elements.forEach(element =>
-            findValueTypeInExpressionNode(component, element, assignable)
+            findValueTypeInExpressionNode(
+                project,
+                component,
+                element,
+                assignable
+            )
         );
     } else if (node.type == "ObjectExpression") {
         node.properties.forEach(property =>
-            findValueTypeInExpressionNode(component, property.value, assignable)
+            findValueTypeInExpressionNode(
+                project,
+                component,
+                property.value,
+                assignable
+            )
         );
     } else {
         throw `Unknown expression node "${node.type}"`;
@@ -931,7 +1035,9 @@ function buildExpressionNode(
     assignable: boolean
 ): number[] {
     if (node.type == "Literal") {
-        return [makePushConstantInstruction(assets, node.value)];
+        return [
+            makePushConstantInstruction(assets, node.value, node.valueType)
+        ];
     }
 
     if (node.type == "Identifier") {
@@ -972,7 +1078,7 @@ function buildExpressionNode(
 
         if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {
             return [
-                makePushConstantInstruction(assets, 0, "number"),
+                makePushConstantInstruction(assets, 0, "integer"),
                 makeOperationInstruction(operationIndexes["Flow.index"])
             ];
         }
@@ -1154,7 +1260,7 @@ function buildExpressionNode(
                     node.object,
                     assignable
                 ),
-                makePushConstantInstruction(assets, fieldIndex),
+                makePushConstantInstruction(assets, fieldIndex, "integer"),
                 makeArrayElementInstruction()
             ];
         }
