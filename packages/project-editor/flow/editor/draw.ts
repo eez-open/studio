@@ -247,7 +247,7 @@ export function drawBitmap(
     width: number,
     height: number
 ) {
-    ctx.drawImage(bitmap, x + 0.5, y + 0.5, width, height);
+    ctx.drawImage(bitmap, x, y, width, height);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -50,7 +50,9 @@ enum MessagesToDebugger {
 
     MESSAGE_TO_DEBUGGER_FLOW_STATE_ERROR, // FLOW_STATE_INDEX, COMPONENT_INDEX, ERROR_MESSAGE
 
-    MESSAGE_TO_DEBUGGER_LOG // LOG_ITEM_TYPE, FLOW_STATE_INDEX, COMPONENT_INDEX, MESSAGE
+    MESSAGE_TO_DEBUGGER_LOG, // LOG_ITEM_TYPE, FLOW_STATE_INDEX, COMPONENT_INDEX, MESSAGE
+
+    MESSAGE_TO_DEBUGGER_PAGE_CHANGED // PAGE_ID
 }
 
 enum MessagesFromDebugger {
@@ -1334,6 +1336,22 @@ class DebuggerConnection {
                             message,
                             component
                         );
+                    }
+                    break;
+
+                case MessagesToDebugger.MESSAGE_TO_DEBUGGER_PAGE_CHANGED:
+                    {
+                        const pageId = parseInt(messageParameters[1]);
+                        if (
+                            pageId < 0 &&
+                            pageId >=
+                                this.runtime.DocumentStore.project.pages.length
+                        ) {
+                            console.error("UNEXPECTED!");
+                            return;
+                        }
+                        this.runtime.selectedPage =
+                            this.runtime.DocumentStore.project.pages[pageId];
                     }
                     break;
             }

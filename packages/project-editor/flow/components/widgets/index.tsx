@@ -2659,8 +2659,11 @@ export class BitmapWidget extends EmbeddedWidget {
                                         x2 - style.paddingRect.right - width;
                                 } else {
                                     x_offset = Math.floor(
-                                        x1 + (x2 - x1 - width) / 2
+                                        x1 + (x2 - x1 + 1 - width) / 2
                                     );
+                                }
+                                if (x_offset < x1) {
+                                    x_offset = x1;
                                 }
 
                                 let y_offset: number;
@@ -2671,8 +2674,11 @@ export class BitmapWidget extends EmbeddedWidget {
                                         y2 - style.paddingRect.bottom - height;
                                 } else {
                                     y_offset = Math.floor(
-                                        y1 + (y2 - y1 - height) / 2
+                                        y1 + (y2 - y1 + 1 - height) / 2
                                     );
+                                }
+                                if (y_offset < y1) {
+                                    y_offset = y1;
                                 }
 
                                 if (inverse) {
