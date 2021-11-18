@@ -4729,12 +4729,14 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             ctx.beginPath();
             ctx.strokeStyle = barStyle.colorProperty;
             ctx.lineWidth = BAR_WIDTH;
+            ctx.save();
             ctx.setLineDash([
                 (radBar * angle * Math.PI) / 180,
                 radBar * Math.PI
             ]);
             arcBar(ctx, xCenter, yCenter, radBar);
             ctx.stroke();
+            ctx.restore();
 
             // draw threshold
             const thresholdAngleDeg = remap(threshold, min, 180.0, max, 0);
