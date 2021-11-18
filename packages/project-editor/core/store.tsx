@@ -246,6 +246,10 @@ class NavigationStore implements INavigationStore {
                 item = getProperty(navigationObject, defaultNavigationKey);
             }
         }
+
+        if (item && !isObjectExists(item)) {
+            item = undefined;
+        }
         return item;
     }
 
@@ -362,6 +366,8 @@ class NavigationStore implements INavigationStore {
         }
         return {};
     }
+
+    unmount() {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1692,6 +1698,8 @@ export class DocumentStoreClass {
         if (this.dispose5) {
             this.dispose5();
         }
+
+        this.navigationStore.unmount();
     }
 
     async loadMasterProject() {
@@ -1859,9 +1867,7 @@ export class DocumentStoreClass {
     async doSave() {
         if (!this.project._isDashboardBuild) {
             await save(this, this.filePath!);
-            await this.uiStateStore.save();
         }
-        await this.runtimeSettings.save();
         this.setModified(false);
     }
 
@@ -1936,7 +1942,6 @@ export class DocumentStoreClass {
 
     async saveModified() {
         if (this.project._isDashboardBuild) {
-            await this.runtimeSettings.save();
             return true;
         }
 
@@ -1944,8 +1949,6 @@ export class DocumentStoreClass {
             return new Promise<boolean>(resolve => {
                 confirmSave({
                     saveCallback: async () => {
-                        await this.uiStateStore.save();
-                        await this.runtimeSettings.save();
                         resolve(await this.saveToFile(false));
                     },
                     dontSaveCallback: () => resolve(true),
@@ -1984,10 +1987,16 @@ export class DocumentStoreClass {
             await this.runtime.stopRuntime(false);
             this.dataContext.clear();
         }
+        await this.runtimeSettings.save();
+
+        if (!this.project._isDashboardBuild) {
+            await this.uiStateStore.save();
+        }
 
         if (this.project) {
             return await this.saveModified();
         }
+
         return true;
     }
 
