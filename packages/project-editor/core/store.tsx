@@ -3591,6 +3591,7 @@ class UpdateCommand implements ICommand {
         lastCommand?: UpdateCommand
     ) {
         if (lastCommand) {
+            values = Object.assign(lastCommand.newValues, values);
             this.oldValues = lastCommand.oldValues;
         }
 
@@ -3598,7 +3599,7 @@ class UpdateCommand implements ICommand {
             let propertyInfo = findPropertyByNameInObject(object, propertyName);
 
             if (propertyInfo) {
-                if (!lastCommand) {
+                if (!(propertyName in this.oldValues)) {
                     this.oldValues[propertyName] = getProperty(
                         object,
                         propertyName
