@@ -509,6 +509,10 @@ export class Page extends Flow {
             flags |= 2;
         }
 
+        if (this.isUsedAsCustomWidget) {
+            flags |= 4;
+        }
+
         dataBuffer.writeUint16(flags);
 
         // overlay
