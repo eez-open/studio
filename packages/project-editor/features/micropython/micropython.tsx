@@ -94,7 +94,7 @@ export class MicroPython extends EezObject {
             return;
         }
 
-        const toastId = notification.info("Uploading app...", {
+        const toastId = notification.info("Uploading ...", {
             autoClose: false
         });
 

@@ -2492,6 +2492,15 @@ export class ShowPageActionComponent extends ActionComponent {
 
         return undefined;
     }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // page
+        let page: number = 0;
+        if (this.page) {
+            page = assets.getPageIndex(this, "page");
+        }
+        dataBuffer.writeInt16(page);
+    }
 }
 
 registerClass("ShowPageActionComponent", ShowPageActionComponent);

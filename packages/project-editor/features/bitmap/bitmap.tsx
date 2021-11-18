@@ -380,6 +380,7 @@ export default {
                     }
 
                     if (
+                        !ProjectEditor.getProject(object).isDashboardProject &&
                         !findStyle(getDocumentStore(object).project, "default")
                     ) {
                         messages.push(

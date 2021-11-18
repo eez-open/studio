@@ -2594,10 +2594,7 @@ export class BitmapWidget extends EmbeddedWidget {
             }
 
             return messages;
-        },
-
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.DASHBOARD
+        }
     });
 
     @computed
@@ -2614,19 +2611,21 @@ export class BitmapWidget extends EmbeddedWidget {
     }
 
     render(flowContext: IFlowContext) {
+        const bitmap = this.getBitmapObject(flowContext.dataContext);
+
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? (
+                    bitmap ? (
+                        <img src={bitmap.image} />
+                    ) : null
+                ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
                             const w = this.width;
                             const h = this.height;
                             const style = this.style;
-
-                            const bitmap = this.getBitmapObject(
-                                flowContext.dataContext
-                            );
 
                             const inverse = false;
 
