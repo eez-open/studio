@@ -620,9 +620,9 @@ function findValueTypeInExpressionNode(
             node.alternate,
             assignable
         );
-        if (node.consequent.valueType != node.alternate.valueType) {
-            throw "different types in conditional";
-        }
+        // if (node.consequent.valueType != node.alternate.valueType) {
+        //     throw "different types in conditional";
+        // }
         node.valueType = node.consequent.valueType;
     } else if (node.type == "CallExpression") {
         if (
