@@ -1214,23 +1214,22 @@ export async function load(
     DocumentStore: DocumentStoreClass,
     filePath: string
 ) {
-    const response = await fetch(filePath);
-
-    if (!response.ok) {
-        throw new Error("File read error " + response.status);
+    let fileData: Buffer;
+    try {
+        fileData = await fs.promises.readFile(filePath);
+    } catch (err) {
+        throw new Error(`File read error: ${err.toString()}`);
     }
 
     const isDashboardBuild = filePath.endsWith(".eez-dashboard");
 
     let projectJs;
-    if (filePath.endsWith(".eez-dashboard")) {
+    if (isDashboardBuild) {
         const decompress = require("decompress");
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const files = await decompress(buffer);
+        const files = await decompress(fileData);
         projectJs = files[0].data.toString("utf8");
     } else {
-        projectJs = await response.json();
+        projectJs = fileData.toString("utf8");
     }
 
     const project: Project = loadObject(

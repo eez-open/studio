@@ -1599,12 +1599,12 @@ class Assets {
         this.styles = [undefined];
         if (!this.DocumentStore.masterProject) {
             this.getAssets<Style>(
-                project => project.styles,
+                project => project.styles || [],
                 style => style.id != undefined
             ).forEach(style => this.addStyle(style));
 
             this.getAssets<Style>(
-                project => project.styles,
+                project => project.styles || [],
                 style => style.alwaysBuild
             ).forEach(style => this.addStyle(style));
         }
@@ -1614,12 +1614,12 @@ class Assets {
                 asset.alwaysBuild;
 
             this.fonts = this.getAssets<Font>(
-                project => project.fonts,
+                project => project.fonts || [],
                 assetIncludePredicate
             );
 
             this.bitmaps = this.getAssets<Bitmap>(
-                project => project.bitmaps,
+                project => project.bitmaps || [],
                 assetIncludePredicate
             );
         }
@@ -1830,7 +1830,7 @@ class Assets {
 
     reportUnusedAssets() {
         this.projects.forEach(project => {
-            project.styles.forEach(style => {
+            project.styles?.forEach(style => {
                 if (
                     !this.styles.find(usedStyle => {
                         if (!usedStyle) {
@@ -1867,7 +1867,7 @@ class Assets {
                 }
             });
 
-            project.fonts.forEach(font => {
+            project.fonts?.forEach(font => {
                 if (this.fonts.indexOf(font) === -1) {
                     this.DocumentStore.outputSectionsStore.write(
                         Section.OUTPUT,
@@ -1878,7 +1878,7 @@ class Assets {
                 }
             });
 
-            project.bitmaps.forEach(bitmap => {
+            project.bitmaps?.forEach(bitmap => {
                 if (this.bitmaps.indexOf(bitmap) === -1) {
                     this.DocumentStore.outputSectionsStore.write(
                         Section.OUTPUT,
