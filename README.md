@@ -8,7 +8,7 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 ## Introduction
 
-The EEZ Studio is an open source cross-platform modular visual tool aimed to address various programming and management tasks for [EEZ BB3](https://github.com/eez-open/modular-psu) open source T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other T&M devices that support SCPI from manufacturers such as Keysight, Rigol, Siglent, etc.
+The EEZ Studio is an open source cross-platform modular visual low-code development tool and [SCPI](https://www.ivifoundation.org/scpi/) controller for [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other T&M devices that support SCPI from manufacturers such as Keysight, Rigol, Siglent, etc.
 
 ### EEZ _Flow_ (ex. Studio Project Editor or ESP)
 
