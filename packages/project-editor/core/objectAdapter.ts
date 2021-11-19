@@ -1616,10 +1616,22 @@ export class ListAdapter implements ITreeAdapter {
 
             const DocumentStore = getDocumentStore(this.object);
 
+            let aNewObject: IEezObject | undefined;
+
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
-                DocumentStore.insertObjectBefore(dropItem.object, object);
+                aNewObject = DocumentStore.insertObjectBefore(
+                    dropItem.object,
+                    object
+                );
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
-                DocumentStore.insertObjectAfter(dropItem.object, object);
+                aNewObject = DocumentStore.insertObjectAfter(
+                    dropItem.object,
+                    object
+                );
+            }
+
+            if (aNewObject) {
+                this.selectObject(aNewObject);
             }
         }
 

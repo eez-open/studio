@@ -68,10 +68,13 @@ export class PropertiesPanel extends React.Component<{
 
     render() {
         let title;
-        if (this.objects.length == 0) {
+
+        const objects = this.objects.filter(object => object != undefined);
+
+        if (objects.length == 0) {
             title = "Properties";
-        } else if (this.objects.length == 1) {
-            let object = this.objects[0];
+        } else if (objects.length == 1) {
+            let object = objects[0];
             if (object instanceof EezValueObject) {
                 object = getParent(object);
             }
@@ -86,7 +89,7 @@ export class PropertiesPanel extends React.Component<{
                 title={title}
                 body={
                     <PropertyGrid
-                        objects={this.objects}
+                        objects={objects}
                         readOnly={this.props.readOnly}
                     />
                 }

@@ -862,6 +862,19 @@ export class StructureField extends EezObject {
             },
             variableTypeProperty
         ],
+        check: (structureField: StructureField) => {
+            let messages: Message[] = [];
+
+            if (!structureField.name) {
+                messages.push(propertyNotSetMessage(structureField, "name"));
+            }
+
+            if (!structureField.type) {
+                messages.push(propertyNotSetMessage(structureField, "type"));
+            }
+
+            return messages;
+        },
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
         },
@@ -1040,6 +1053,19 @@ export class EnumMember extends EezObject {
                 type: PropertyType.Number
             }
         ],
+        check: (enumMember: EnumMember) => {
+            let messages: Message[] = [];
+
+            if (!enumMember.name) {
+                messages.push(propertyNotSetMessage(enumMember, "name"));
+            }
+
+            if (enumMember.value == undefined) {
+                messages.push(propertyNotSetMessage(enumMember, "value"));
+            }
+
+            return messages;
+        },
         defaultValue: {},
         newItem: (parent: IEezObject) => {
             return showGenericDialog({
