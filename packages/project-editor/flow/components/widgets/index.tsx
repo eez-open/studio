@@ -787,7 +787,7 @@ export class SelectWidget extends EmbeddedWidget {
                 if (variable) {
                     let enumItems: string[] = [];
                     if (isEnumVariable(variable)) {
-                        const project = getProject(object);
+                        const project = getProject(variable);
                         const enumName = getEnumTypeNameFromVariable(variable);
                         enumItems = enumName
                             ? project.variables.enumsMap
@@ -1672,12 +1672,12 @@ export class DisplayDataWidget extends EmbeddedWidget {
         const result = this.getText(flowContext);
         let text: string;
         let node: React.ReactNode | null;
-        if (typeof result == "string") {
-            text = result;
-            node = null;
-        } else {
+        if (typeof result == "object") {
             text = result.text;
             node = result.node;
+        } else {
+            text = result;
+            node = null;
         }
 
         text = this.applyDisplayOption(text);
@@ -1907,12 +1907,12 @@ export class TextWidget extends EmbeddedWidget {
         const result = this.getText(flowContext);
         let text: string;
         let node: React.ReactNode | null;
-        if (typeof result == "string") {
-            text = result;
-            node = null;
-        } else {
+        if (typeof result == "object") {
             text = result.text;
             node = result.node;
+        } else {
+            text = result;
+            node = null;
         }
 
         return (
@@ -2870,12 +2870,12 @@ export class ButtonWidget extends EmbeddedWidget {
         const result = this.getText(flowContext);
         let text: string;
         let node: React.ReactNode | null;
-        if (typeof result == "string") {
-            text = result;
-            node = null;
-        } else {
+        if (typeof result == "object") {
             text = result.text;
             node = result.node;
+        } else {
+            text = result;
+            node = null;
         }
 
         let buttonEnabled;

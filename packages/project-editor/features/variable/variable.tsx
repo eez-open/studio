@@ -386,9 +386,7 @@ export class Variable extends EezObject {
             let messages: Message[] = [];
 
             if (!variable.type) {
-                messages.push(
-                    propertyNotSetMessage(variable, "variableTypeUI")
-                );
+                messages.push(propertyNotSetMessage(variable, "type"));
             }
 
             if (!variable.defaultValue) {
