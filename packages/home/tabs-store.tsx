@@ -487,6 +487,11 @@ export class ProjectEditorTab implements IHomeTab {
             return;
         }
 
+        if (this.removeListeners) {
+            this.removeListeners();
+            this.removeListeners = undefined;
+        }
+
         const save = () => {
             DocumentStore.save();
         };

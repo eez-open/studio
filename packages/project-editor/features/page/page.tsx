@@ -472,7 +472,7 @@ export class Page extends Flow {
         if (pageStyle && pageStyle.backgroundColorProperty) {
             style.backgroundColor = to16bitsColor(
                 getThemedColor(
-                    getDocumentStore(style),
+                    flowContext.DocumentStore,
                     pageStyle.backgroundColorProperty
                 )
             );
