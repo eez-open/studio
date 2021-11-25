@@ -1003,7 +1003,7 @@ export class DataBuffer {
         const lz4ModuleName = "lz4";
         const LZ4 = require(lz4ModuleName);
         var compressedBuffer = Buffer.alloc(LZ4.encodeBound(this.size));
-        var compressedSize = LZ4.encodeBlock(this.buffer, compressedBuffer);
+        var compressedSize = LZ4.encodeBlockHC(this.buffer, compressedBuffer);
         return { compressedBuffer, compressedSize };
     }
 }
