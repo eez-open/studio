@@ -44,7 +44,7 @@ export const enum PropertyType {
 }
 
 export const enum ProjectType {
-    MASTER_FIRMWARE = "master",
+    FIRMWARE = "firmware",
     FIRMWARE_MODULE = "firmware-module",
     RESOURCE = "resource",
     APPLET = "applet",

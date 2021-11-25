@@ -42,7 +42,6 @@ import {
     propertyInvalidValueMessage,
     DocumentStoreClass,
     getDocumentStore,
-    hideInPropertyGridIfDashboardOrApplet,
     hideInPropertyGridIfNotDashboard
 } from "project-editor/core/store";
 
@@ -581,7 +580,7 @@ export class General extends EezObject {
                 name: "projectType",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: ProjectType.MASTER_FIRMWARE },
+                    { id: ProjectType.FIRMWARE },
                     { id: ProjectType.FIRMWARE_MODULE },
                     { id: ProjectType.RESOURCE },
                     { id: ProjectType.APPLET },
@@ -598,7 +597,11 @@ export class General extends EezObject {
             {
                 name: "namespace",
                 type: PropertyType.String,
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
+                hideInPropertyGrid: (general: General) => {
+                    return !(
+                        general.projectType == ProjectType.FIRMWARE_MODULE
+                    );
+                }
             },
             {
                 name: "masterProject",
@@ -608,10 +611,9 @@ export class General extends EezObject {
                     { name: "All Files", extensions: ["*"] }
                 ],
                 hideInPropertyGrid: (general: General) => {
-                    const documentStore = getDocumentStore(general);
-                    return (
-                        general.imports.length > 0 ||
-                        documentStore.project.isDashboardProject
+                    return !(
+                        general.projectType == ProjectType.RESOURCE ||
+                        general.projectType == ProjectType.APPLET
                     );
                 }
             },
@@ -675,7 +677,7 @@ export class General extends EezObject {
         beforeLoadHook(object: IEezObject, jsObject: any) {
             if (!jsObject.projectType) {
                 if (jsObject.projectVersion === "v1") {
-                    jsObject.projectType = ProjectType.MASTER_FIRMWARE;
+                    jsObject.projectType = ProjectType.FIRMWARE;
                 } else {
                     if (!jsObject.projectVersion) {
                         jsObject.projectVersion = "v3";
@@ -686,8 +688,12 @@ export class General extends EezObject {
                     } else if (jsObject.namespace) {
                         jsObject.projectType = ProjectType.FIRMWARE_MODULE;
                     } else {
-                        jsObject.projectType = ProjectType.MASTER_FIRMWARE;
+                        jsObject.projectType = ProjectType.FIRMWARE;
                     }
+                }
+            } else {
+                if (jsObject.projectType == "master") {
+                    jsObject.projectType = ProjectType.FIRMWARE;
                 }
             }
         }
@@ -695,7 +701,7 @@ export class General extends EezObject {
 
     getProjectTypeAsNumber() {
         switch (this.projectType) {
-            case ProjectType.MASTER_FIRMWARE:
+            case ProjectType.FIRMWARE:
                 return 1;
             case ProjectType.FIRMWARE_MODULE:
                 return 2;

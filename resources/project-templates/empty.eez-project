@@ -2,7 +2,7 @@
   "settings": {
     "general": {
       "projectVersion": "v3",
-      "projectType": "master",
+      "projectType": "firmware",
       "imports": []
     },
     "build": {
