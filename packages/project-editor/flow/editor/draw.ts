@@ -284,14 +284,15 @@ export function drawBackground(
     width: number,
     height: number,
     style: Style,
-    inverse: boolean
+    inverse: boolean,
+    color?: string
 ) {
-    if (width > 0 && height > 0) {
-        let x1 = x;
-        let y1 = y;
-        let x2 = width - 1;
-        let y2 = height - 1;
+    let x1 = x;
+    let y1 = y;
+    let x2 = width - 1;
+    let y2 = height - 1;
 
+    if (width > 0 && height > 0) {
         const borderSize = style.borderSizeRect;
         let borderRadius = styleGetBorderRadius(style) || 0;
         if (
@@ -318,9 +319,11 @@ export function drawBackground(
             );
         }
 
-        const color = inverse
-            ? style.backgroundColorProperty
-            : style.colorProperty;
+        if (color == undefined) {
+            color = inverse
+                ? style.backgroundColorProperty
+                : style.colorProperty;
+        }
 
         setColor(color);
         fillRect(ctx, x1, y1, x2, y2, borderRadius);
@@ -336,6 +339,8 @@ export function drawBackground(
             }
         }
     }
+
+    return { x1, y1, x2, y2 };
 }
 
 export function drawText(
@@ -349,46 +354,22 @@ export function drawText(
     inverse: boolean,
     overrideBackgroundColor?: string
 ) {
-    let x1 = x;
-    let y1 = y;
-    let x2 = x + w - 1;
-    let y2 = y + h - 1;
-
-    const borderSize = style.borderSizeRect;
-    let borderRadius = styleGetBorderRadius(style) || 0;
-    if (
-        borderSize.top > 0 ||
-        borderSize.right > 0 ||
-        borderSize.bottom > 0 ||
-        borderSize.left > 0
-    ) {
-        setColor(style.borderColorProperty);
-        fillRect(ctx, x1, y1, x2, y2, borderRadius);
-        x1 += borderSize.left;
-        y1 += borderSize.top;
-        x2 -= borderSize.right;
-        y2 -= borderSize.bottom;
-        borderRadius = Math.max(
-            borderRadius -
-                Math.max(
-                    borderSize.top,
-                    borderSize.right,
-                    borderSize.bottom,
-                    borderSize.left
-                ),
-            0
-        );
-    }
-
     const styleColor = style.colorProperty;
     const styleBackgroundColor =
         overrideBackgroundColor !== undefined
             ? overrideBackgroundColor
             : style.backgroundColorProperty;
 
-    let backgroundColor = inverse ? styleColor : styleBackgroundColor;
-    setColor(backgroundColor);
-    fillRect(ctx, x1, y1, x2, y2, borderRadius);
+    let { x1, y1, x2, y2 } = drawBackground(
+        ctx,
+        x,
+        y,
+        w,
+        h,
+        style,
+        false,
+        inverse ? styleColor : styleBackgroundColor
+    );
 
     const font = styleGetFont(style);
     if (!font) {
