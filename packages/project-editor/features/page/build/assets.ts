@@ -442,6 +442,10 @@ export class Assets {
     ) {
         let color = getStyleProperty(style, propertyName, false);
 
+        if (color == "transparent") {
+            return 65535;
+        }
+
         // TODO: currently all colors are available from master project,
         // we should add support for exporting colors (internal and exported),
         // like we are doing for styles
