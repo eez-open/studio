@@ -137,6 +137,13 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(style.marginRect.right);
         dataBuffer.writeUint8(style.marginRect.bottom);
         dataBuffer.writeUint8(style.marginRect.left);
+
+        // backgroundImage
+        let backgroundImage: number = 0;
+        if (style.backgroundImageProperty) {
+            backgroundImage = assets.getBitmapIndex(style, "backgroundImage");
+        }
+        dataBuffer.writeInt16(backgroundImage);
     }
 
     const styles = assets.styles.filter(style => !!style);

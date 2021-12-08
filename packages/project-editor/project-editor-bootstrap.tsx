@@ -71,6 +71,7 @@ import type {
     IActionComponentDefinition,
     IObjectVariableType
 } from "eez-studio-types";
+import { findBitmap } from "project-editor/features/bitmap/bitmap";
 
 let extensionsInitialized = false;
 
@@ -157,7 +158,8 @@ export async function initProjectEditor(homeTabs: Tabs) {
         getProject,
         getFlow,
         getNameProperty,
-        getObjectVariableTypeFromType
+        getObjectVariableTypeFromType,
+        findBitmap
     };
 
     Object.assign(ProjectEditor, projectEditor);

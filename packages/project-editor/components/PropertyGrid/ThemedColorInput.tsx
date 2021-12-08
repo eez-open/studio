@@ -9,6 +9,7 @@ import { getEezStudioDataFromDragEvent } from "project-editor/core/store";
 import { getThemedColor } from "project-editor/features/style/theme";
 
 import { ProjectContext } from "project-editor/project/context";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +56,12 @@ export class ThemedColorInput extends React.Component<{
     render() {
         const { value, readOnly } = this.props;
 
-        const color = getThemedColor(this.context, value);
+        const color =
+            value == "transparent"
+                ? settingsController.isDarkTheme
+                    ? "black"
+                    : "white"
+                : getThemedColor(this.context, value);
 
         return (
             <label

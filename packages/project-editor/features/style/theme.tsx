@@ -31,6 +31,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import type { Project } from "project-editor/project/project";
+import { getName, NamingConvention } from "project-editor/project/build";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -331,7 +332,30 @@ export class Color extends EezObject implements IColor {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.unique({}, parent)
+                                validators.unique({}, parent),
+                                function (object: any, ruleName: string) {
+                                    const name = getName(
+                                        "COLOR_ID_",
+                                        object[ruleName],
+                                        NamingConvention.UnderscoreUpperCase
+                                    );
+
+                                    const KEYWORDS = ["transparent"];
+
+                                    for (let i = 0; i < KEYWORDS.length; i++) {
+                                        if (
+                                            name ==
+                                            getName(
+                                                "COLOR_ID_",
+                                                KEYWORDS[i],
+                                                NamingConvention.UnderscoreUpperCase
+                                            )
+                                        ) {
+                                            return `Name "${KEYWORDS[i]}" is reserved.`;
+                                        }
+                                    }
+                                    return null;
+                                }
                             ]
                         }
                     ]
@@ -506,6 +530,10 @@ export function getThemedColor(
 ): string {
     if (colorValue.startsWith("#")) {
         return colorValue;
+    }
+
+    if (colorValue == "transparent") {
+        return `rgba(0, 0, 0, 0)`;
     }
 
     const project = getProjectWithThemes(DocumentStore);

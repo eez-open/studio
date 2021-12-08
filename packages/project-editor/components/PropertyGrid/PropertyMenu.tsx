@@ -23,27 +23,27 @@ export class PropertyMenu extends React.Component<PropertyProps> {
 
         if (this.props.propertyInfo.propertyMenu) {
             menuItems = this.props.propertyInfo.propertyMenu(this.props);
-        } else {
-            if (this.sourceInfo.source === "modified") {
-                if (menuItems.length > 0) {
-                    menuItems.push(
-                        new MenuItem({
-                            type: "separator"
-                        })
-                    );
-                }
+        }
 
+        if (this.sourceInfo.source === "modified") {
+            if (menuItems.length > 0) {
                 menuItems.push(
                     new MenuItem({
-                        label: "Reset",
-                        click: () => {
-                            this.props.updateObject({
-                                [this.props.propertyInfo.name]: undefined
-                            });
-                        }
+                        type: "separator"
                     })
                 );
             }
+
+            menuItems.push(
+                new MenuItem({
+                    label: "Reset",
+                    click: () => {
+                        this.props.updateObject({
+                            [this.props.propertyInfo.name]: undefined
+                        });
+                    }
+                })
+            );
         }
 
         if (menuItems.length > 0) {

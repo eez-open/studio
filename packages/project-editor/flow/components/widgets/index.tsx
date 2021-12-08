@@ -22,6 +22,7 @@ import {
 import {
     hideInPropertyGridIfDashboardOrApplet,
     hideInPropertyGridIfNotV1,
+    hideInPropertyGridIfV3OrNewer,
     loadObject,
     Message,
     objectToJS,
@@ -280,64 +281,20 @@ export class ContainerWidget extends EmbeddedWidget {
 
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {!visible ||
+                flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            const w = this.width;
-                            const h = this.height;
-                            const style = this.style;
-
-                            if (w > 0 && h > 0) {
-                                let x1 = 0;
-                                let y1 = 0;
-                                let x2 = w - 1;
-                                let y2 = h - 1;
-
-                                const borderSize = style.borderSizeRect;
-                                let borderRadius =
-                                    styleGetBorderRadius(style) || 0;
-                                if (
-                                    borderSize.top > 0 ||
-                                    borderSize.right > 0 ||
-                                    borderSize.bottom > 0 ||
-                                    borderSize.left > 0
-                                ) {
-                                    draw.setColor(style.borderColorProperty);
-                                    draw.fillRect(
-                                        ctx,
-                                        x1,
-                                        y1,
-                                        x2,
-                                        y2,
-                                        borderRadius
-                                    );
-                                    x1 += borderSize.left;
-                                    y1 += borderSize.top;
-                                    x2 -= borderSize.right;
-                                    y2 -= borderSize.bottom;
-                                    borderRadius = Math.max(
-                                        borderRadius -
-                                            Math.max(
-                                                borderSize.top,
-                                                borderSize.right,
-                                                borderSize.bottom,
-                                                borderSize.left
-                                            ),
-                                        0
-                                    );
-                                }
-
-                                draw.setColor(style.backgroundColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    x1,
-                                    y1,
-                                    x2,
-                                    y2,
-                                    borderRadius
-                                );
-                            }
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                true
+                            );
                         }}
                     />
                 )}
@@ -2351,7 +2308,8 @@ export class RectangleWidget extends EmbeddedWidget {
                 name: "invertColors",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
-                defaultValue: false
+                defaultValue: false,
+                hideInPropertyGrid: hideInPropertyGridIfV3OrNewer
             },
             {
                 name: "ignoreLuminocity",
@@ -2385,71 +2343,25 @@ export class RectangleWidget extends EmbeddedWidget {
     });
 
     render(flowContext: IFlowContext) {
+        const invertColors = hideInPropertyGridIfV3OrNewer(this)
+            ? true
+            : this.invertColors;
+
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            const w = this.width;
-                            const h = this.height;
-                            const style = this.style;
-                            const inverse = this.invertColors;
-
-                            if (w > 0 && h > 0) {
-                                let x1 = 0;
-                                let y1 = 0;
-                                let x2 = w - 1;
-                                let y2 = h - 1;
-
-                                const borderSize = style.borderSizeRect;
-                                let borderRadius =
-                                    styleGetBorderRadius(style) || 0;
-                                if (
-                                    borderSize.top > 0 ||
-                                    borderSize.right > 0 ||
-                                    borderSize.bottom > 0 ||
-                                    borderSize.left > 0
-                                ) {
-                                    draw.setColor(style.borderColorProperty);
-                                    draw.fillRect(
-                                        ctx,
-                                        x1,
-                                        y1,
-                                        x2,
-                                        y2,
-                                        borderRadius
-                                    );
-                                    x1 += borderSize.left;
-                                    y1 += borderSize.top;
-                                    x2 -= borderSize.right;
-                                    y2 -= borderSize.bottom;
-                                    borderRadius = Math.max(
-                                        borderRadius -
-                                            Math.max(
-                                                borderSize.top,
-                                                borderSize.right,
-                                                borderSize.bottom,
-                                                borderSize.left
-                                            ),
-                                        0
-                                    );
-                                }
-
-                                draw.setColor(
-                                    inverse
-                                        ? style.backgroundColorProperty
-                                        : style.colorProperty
-                                );
-                                draw.fillRect(
-                                    ctx,
-                                    x1,
-                                    y1,
-                                    x2,
-                                    y2,
-                                    borderRadius
-                                );
-                            }
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                invertColors
+                            );
                         }}
                     />
                 )}
@@ -2487,10 +2399,13 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
     }
 
     resizeToFitBitmap = () => {
-        getDocumentStore(this).updateObject(this.props.objects[0], {
-            width: this.bitmapWidget.bitmapObject!.imageElement!.width,
-            height: this.bitmapWidget.bitmapObject!.imageElement!.height
-        });
+        getDocumentStore(this.props.objects[0]).updateObject(
+            this.props.objects[0],
+            {
+                width: this.bitmapWidget.bitmapObject!.imageElement!.width,
+                height: this.bitmapWidget.bitmapObject!.imageElement!.height
+            }
+        );
     };
 
     render() {

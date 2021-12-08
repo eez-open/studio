@@ -147,7 +147,7 @@ export class ComponentEnclosure extends React.Component<{
 
 @observer
 export class ComponentCanvas extends React.Component<{
-    component: Component;
+    component: Page | Component;
     draw: (ctx: CanvasRenderingContext2D) => void;
 }> {
     elRef = React.createRef<HTMLDivElement>();

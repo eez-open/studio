@@ -26,7 +26,8 @@ import {
     Message,
     propertyInvalidValueMessage,
     propertyNotFoundMessage,
-    propertyNotUniqueMessage
+    propertyNotUniqueMessage,
+    updateObject
 } from "project-editor/core/store";
 import {
     SimpleNavigationStoreClass,
@@ -208,6 +209,42 @@ export class StylesNavigation extends NavigationComponent {
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+const backgroundColorPropertyMenu = (
+    props: PropertyProps
+): Electron.MenuItem[] => {
+    let menuItems: Electron.MenuItem[] = [];
+
+    menuItems.push(
+        new MenuItem({
+            label: "Transparent",
+            click: () => {
+                const DocumentStore = getDocumentStore(props.objects[0]);
+
+                const propertyValues: any = {};
+                properties.forEach(propertyInfo => {
+                    if (propertyInfo.inheritable) {
+                        propertyValues[propertyInfo.name] = undefined;
+                    }
+                });
+
+                DocumentStore.undoManager.setCombineCommands(true);
+
+                props.objects.forEach(object =>
+                    updateObject(object, {
+                        [props.propertyInfo.name]: "transparent"
+                    })
+                );
+
+                DocumentStore.undoManager.setCombineCommands(false);
+            }
+        })
+    );
+
+    return menuItems;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -443,6 +480,14 @@ const backgroundColorProperty: PropertyInfo = {
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: "#ffffff",
+    inheritable: true,
+    propertyMenu: backgroundColorPropertyMenu
+};
+
+const backgroundImageProperty: PropertyInfo = {
+    name: "backgroundImage",
+    type: PropertyType.ObjectReference,
+    referencedObjectCollectionPath: "bitmaps",
     inheritable: true
 };
 
@@ -461,7 +506,8 @@ const activeBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: hideInPropertyGridIfV1
+    hideInPropertyGrid: hideInPropertyGridIfV1,
+    propertyMenu: backgroundColorPropertyMenu
 };
 
 const focusColorProperty: PropertyInfo = {
@@ -479,7 +525,8 @@ const focusBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
     inheritable: true,
-    hideInPropertyGrid: hideInPropertyGridIfV1
+    hideInPropertyGrid: hideInPropertyGridIfV1,
+    propertyMenu: backgroundColorPropertyMenu
 };
 
 const borderSizeProperty: PropertyInfo = {
@@ -550,6 +597,7 @@ const properties = [
     alignVerticalProperty,
     colorProperty,
     backgroundColorProperty,
+    backgroundImageProperty,
     activeColorProperty,
     activeBackgroundColorProperty,
     focusColorProperty,
@@ -675,9 +723,26 @@ export class Style extends EezObject {
             }
         },
         isPropertyMenuSupported: true,
-        newItem: (object: IEezObject) => {
-            return Promise.resolve({
-                name: "Style"
+        newItem: (parent: IEezObject) => {
+            return showGenericDialog({
+                dialogDefinition: {
+                    title: "New Style",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            }).then(result => {
+                return Promise.resolve({
+                    name: result.values.name
+                });
             });
         },
         getInheritedValue: (styleObject: Style, propertyName: string) =>
@@ -1090,6 +1155,13 @@ export class Style extends EezObject {
     @computed({
         keepAlive: true
     })
+    get backgroundImageProperty(): string {
+        return getStyleProperty(this, "backgroundImage");
+    }
+
+    @computed({
+        keepAlive: true
+    })
     get activeColorProperty(): string {
         return getStyleProperty(this, "activeColor");
     }
@@ -1212,6 +1284,8 @@ export class Style extends EezObject {
             this.colorProperty === otherStyle.colorProperty &&
             this.backgroundColorProperty ===
                 otherStyle.backgroundColorProperty &&
+            this.backgroundImageProperty ===
+                otherStyle.backgroundImageProperty &&
             this.activeColorProperty === otherStyle.activeColorProperty &&
             this.activeBackgroundColorProperty ===
                 otherStyle.activeBackgroundColorProperty &&

@@ -43,7 +43,7 @@ function* visitWithPause(
         for (const propertyInfo of getClassInfo(parentObject).properties) {
             if (!propertyInfo.skipSearch) {
                 let value = getProperty(parentObject, propertyInfo.name);
-                if (value) {
+                if (value != undefined) {
                     if (
                         propertyInfo.type === PropertyType.Object ||
                         propertyInfo.type === PropertyType.Array
@@ -76,7 +76,7 @@ function* visitWithoutPause(
         for (const propertyInfo of getClassInfo(parentObject).properties) {
             if (!propertyInfo.skipSearch) {
                 let value = getProperty(parentObject, propertyInfo.name);
-                if (value) {
+                if (value != undefined) {
                     if (
                         propertyInfo.type === PropertyType.Object ||
                         propertyInfo.type === PropertyType.Array
@@ -154,7 +154,7 @@ export function* searchForPattern(
 
         if (visitResult.value) {
             let valueObject = visitResult.value;
-            if (valueObject.value) {
+            if (valueObject.value != undefined) {
                 let name = humanize(valueObject.propertyInfo.name);
                 let value = valueObject.value.toString();
 

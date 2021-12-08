@@ -1,13 +1,10 @@
 import tinycolor from "tinycolor2";
 
-import {
-    blendColor,
-    getColorRGB,
-    to16bitsColor
-} from "eez-studio-shared/color";
+import { getColorRGB, to16bitsColor } from "eez-studio-shared/color";
 
 import type { Style } from "project-editor/features/style/style";
 import type { Font, IGlyphBitmap } from "project-editor/features/font/font";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -168,19 +165,12 @@ export function drawGlyph(
             if (font.bpp === 8) {
                 let pixelArrayIndex = 0;
                 const pixelArrayOffset = glyph.glyphBitmap.width - width;
-                const mixedColor = { r: 0, g: 0, b: 0 };
                 for (let y = 0; y < height; y++) {
                     for (let x = 0; x < width; x++) {
-                        const color = blendColor(
-                            fgColorRgb,
-                            bgColorRgb,
-                            pixelArray[pixelArrayIndex++] / 255,
-                            mixedColor
-                        );
-                        pixelData[i++] = color.r;
-                        pixelData[i++] = color.g;
-                        pixelData[i++] = color.b;
-                        i++;
+                        pixelData[i++] = fgColorRgb.r;
+                        pixelData[i++] = fgColorRgb.g;
+                        pixelData[i++] = fgColorRgb.b;
+                        pixelData[i++] = pixelArray[pixelArrayIndex++];
                     }
                     i += offset;
                     pixelArrayIndex += pixelArrayOffset;
@@ -213,12 +203,21 @@ export function drawGlyph(
                     pixelData[i++] = bgColorRgb.r;
                     pixelData[i++] = bgColorRgb.g;
                     pixelData[i++] = bgColorRgb.b;
-                    i++;
+                    pixelData[i++] = bgColorRgb.a;
                 }
                 i += offset;
             }
         }
-        ctx.putImageData(pixelImageData, x_glyph, y_glyph, 0, 0, width, height);
+        ctx.fillStyle = bgColor;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas
+            .getContext("2d")!
+            .putImageData(pixelImageData, 0, 0, 0, 0, width, height);
+
+        ctx.drawImage(canvas, x_glyph, y_glyph);
     }
 
     return glyph.dx || 0;
@@ -277,6 +276,67 @@ export function styleGetFont(style: Style) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export function drawBackground(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    style: Style,
+    inverse: boolean
+) {
+    if (width > 0 && height > 0) {
+        let x1 = x;
+        let y1 = y;
+        let x2 = width - 1;
+        let y2 = height - 1;
+
+        const borderSize = style.borderSizeRect;
+        let borderRadius = styleGetBorderRadius(style) || 0;
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
+            setColor(style.borderColorProperty);
+            fillRect(ctx, x1, y1, x2, y2, borderRadius);
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+            borderRadius = Math.max(
+                borderRadius -
+                    Math.max(
+                        borderSize.top,
+                        borderSize.right,
+                        borderSize.bottom,
+                        borderSize.left
+                    ),
+                0
+            );
+        }
+
+        const color = inverse
+            ? style.backgroundColorProperty
+            : style.colorProperty;
+
+        setColor(color);
+        fillRect(ctx, x1, y1, x2, y2, borderRadius);
+
+        if (style.backgroundImageProperty) {
+            const bitmap = ProjectEditor.findBitmap(
+                ProjectEditor.getProject(style),
+                style.backgroundImageProperty
+            );
+            const imageElement = bitmap?.imageElement;
+            if (imageElement) {
+                drawBitmap(ctx, imageElement, 0, 0, width, height);
+            }
+        }
+    }
+}
 
 export function drawText(
     ctx: CanvasRenderingContext2D,

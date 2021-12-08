@@ -20,14 +20,27 @@ export function buildGuiThemesEnum(assets: Assets) {
 }
 
 export function buildGuiColorsEnum(assets: Assets) {
-    let colors = assets.rootProject.colors.map(
-        (color, i) =>
-            `${projectBuild.TAB}${projectBuild.getName(
-                "COLOR_ID_",
-                color,
-                projectBuild.NamingConvention.UnderscoreUpperCase
-            )} = ${i}`
-    );
+    let colors = [
+        `${projectBuild.TAB}COLOR_ID_TRANSPARENT = 65535`,
+
+        ...assets.rootProject.colors.map(
+            (color, i) =>
+                `${projectBuild.TAB}${projectBuild.getName(
+                    "COLOR_ID_",
+                    color,
+                    projectBuild.NamingConvention.UnderscoreUpperCase
+                )} = ${i}`
+        ),
+
+        ...assets.colors.map(
+            (color, i) =>
+                `${projectBuild.TAB}${projectBuild.getName(
+                    "COLOR_ID_CUSTOM_",
+                    color.slice(1),
+                    projectBuild.NamingConvention.UnderscoreUpperCase
+                )} = ${assets.rootProject.colors.length + i}`
+        )
+    ];
 
     return `enum ColorsEnum {\n${colors.join(",\n")}\n};`;
 }

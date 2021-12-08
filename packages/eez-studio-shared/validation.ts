@@ -4,19 +4,28 @@ import { UNITS } from "eez-studio-shared/units";
 
 const VALIDATION_MESSAGE_INVALID_VALUE = "Invalid value.";
 export const VALIDATION_MESSAGE_REQUIRED = "Please fill out this field.";
-const VALIDATION_MESSAGE_RANGE_INCLUSIVE = "Please enter value between ${min} and ${max}.";
+const VALIDATION_MESSAGE_RANGE_INCLUSIVE =
+    "Please enter value between ${min} and ${max}.";
 const VALIDATION_MESSAGE_RANGE_INCLUSIVE_WITHOUT_MAX =
     "Please enter value greater than or equal to ${min}.";
 const VALIDATION_MESSAGE_RANGE_EXCLUSIVE =
     "Please enter value between (not included) ${min} and ${max}.";
-const VALIDATION_MESSAGE_RANGE_EXCLUSIVE_WITHOUT_MAX = "Please enter value greater than ${min}.";
+const VALIDATION_MESSAGE_RANGE_EXCLUSIVE_WITHOUT_MAX =
+    "Please enter value greater than ${min}.";
 const VALIDATION_MESSAGE_NOT_UNIQUE = "This field has no unique value.";
 
 import { filterInteger } from "eez-studio-shared/validation-filters";
 
-export { filterInteger, filterFloat, filterNumber } from "eez-studio-shared/validation-filters";
+export {
+    filterInteger,
+    filterFloat,
+    filterNumber
+} from "eez-studio-shared/validation-filters";
 
-export type Rule = (object: any, ruleName: string) => Promise<string | null> | string | null;
+export type Rule = (
+    object: any,
+    ruleName: string
+) => Promise<string | null> | string | null;
 
 interface Rules {
     [ruleName: string]: Rule | Rule[];
@@ -83,7 +92,8 @@ export const validators = {
             const value = object[ruleName];
             if (
                 collection.find(
-                    (element: any) => element !== origObject && element[ruleName] === value
+                    (element: any) =>
+                        element !== origObject && element[ruleName] === value
                 )
             ) {
                 return message || VALIDATION_MESSAGE_NOT_UNIQUE;

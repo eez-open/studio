@@ -32,7 +32,8 @@ import type {
 import {
     ComponentsContainerEnclosure,
     ComponentGeometry,
-    ComponentEnclosure
+    ComponentEnclosure,
+    ComponentCanvas
 } from "project-editor/flow/editor/render";
 
 import type { Project } from "project-editor/project/project";
@@ -57,6 +58,7 @@ import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
+import * as draw from "project-editor/flow/editor/draw";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -442,19 +444,47 @@ export class Page extends Flow {
     }
 
     render(flowContext: IFlowContext) {
+        const pageStyle = findStyle(
+            ProjectEditor.getProject(this),
+            this.style || "default"
+        );
+
+        console.log(pageStyle);
+
         return (
-            <ComponentsContainerEnclosure
-                components={this.components.filter(
-                    component => component instanceof Widget
+            <>
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            if (pageStyle) {
+                                draw.drawBackground(
+                                    ctx,
+                                    0,
+                                    0,
+                                    this.width,
+                                    this.height,
+                                    pageStyle,
+                                    true
+                                );
+                            }
+                        }}
+                    />
                 )}
-                flowContext={
-                    flowContext.flowState
-                        ? flowContext
-                        : flowContext.overrideDataContext(
-                              this.dataContextOverridesObject
-                          )
-                }
-            />
+
+                <ComponentsContainerEnclosure
+                    components={this.components.filter(
+                        component => component instanceof Widget
+                    )}
+                    flowContext={
+                        flowContext.flowState
+                            ? flowContext
+                            : flowContext.overrideDataContext(
+                                  this.dataContextOverridesObject
+                              )
+                    }
+                />
+            </>
         );
     }
 
@@ -505,12 +535,18 @@ export class Page extends Flow {
         // flags
         let flags = 0;
 
+        const CLOSE_PAGE_IF_TOUCHED_OUTSIDE_FLAG = 1 << 1;
+        const PAGE_IS_USED_AS_CUSTOM_WIDGET = 1 << 2;
+        const PAGE_CONTAINER = 1 << 3;
+
         if (this.closePageIfTouchedOutside) {
-            flags |= 2;
+            flags |= CLOSE_PAGE_IF_TOUCHED_OUTSIDE_FLAG;
         }
 
         if (this.isUsedAsCustomWidget) {
-            flags |= 4;
+            flags |= PAGE_IS_USED_AS_CUSTOM_WIDGET;
+        } else {
+            flags |= PAGE_CONTAINER;
         }
 
         dataBuffer.writeUint16(flags);

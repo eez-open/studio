@@ -49,14 +49,22 @@ export function to16bitsColor(colorStr: string) {
     const r = rgb.r & 0b11111000;
     const g = rgb.g & 0b11111100;
     const b = rgb.b & 0b11111000;
-    return tinycolor({ r, g, b }).toHexString();
+    const a = rgb.a;
+    if (rgb.a == 255) {
+        return tinycolor({ r, g, b }).toHexString();
+    } else {
+        return tinycolor({ r, g, b, a }).toRgbString();
+    }
 }
 
 export function compareColors(color1: string, color2: string) {
     const color1rgb = tinycolor(color1).toRgb();
     const color2rgb = tinycolor(color2).toRgb();
     return (
-        color1rgb.r === color2rgb.r && color1rgb.g === color2rgb.g && color1rgb.b === color2rgb.b
+        color1rgb.r === color2rgb.r &&
+        color1rgb.g === color2rgb.g &&
+        color1rgb.b === color2rgb.b &&
+        color1rgb.a === color2rgb.a
     );
 }
 

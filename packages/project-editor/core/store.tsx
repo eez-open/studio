@@ -1820,6 +1820,9 @@ export class DocumentStoreClass {
     }
 
     getAbsoluteFilePath(relativeFilePath: string, project?: Project) {
+        if (!relativeFilePath) {
+            relativeFilePath = "";
+        }
         const path = EEZStudio.remote.require("path");
         const filePath = this.getProjectFilePath(project ?? this.project);
         return filePath
@@ -3367,7 +3370,7 @@ export function getPropertySourceInfo(
         object: IEezObject,
         propertyInfo: PropertyInfo
     ): PropertyValueSourceInfo {
-        if (props.propertyInfo.propertyMenu) {
+        if (props.propertyInfo.propertyMenu && !propertyInfo.inheritable) {
             return {
                 source: ""
             };
@@ -4068,4 +4071,9 @@ export function hideInPropertyGridIfV1(object: IEezObject) {
 export function hideInPropertyGridIfNotV1(object: IEezObject) {
     const documentStore = getDocumentStore(object);
     return documentStore.project.settings.general.projectVersion !== "v1";
+}
+
+export function hideInPropertyGridIfV3OrNewer(object: IEezObject) {
+    const documentStore = getDocumentStore(object);
+    return documentStore.project.settings.general.projectVersion !== "v1" && documentStore.project.settings.general.projectVersion !== "v2";
 }
