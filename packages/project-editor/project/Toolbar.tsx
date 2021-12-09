@@ -136,14 +136,15 @@ class Controls extends React.Component {
     }
 
     get isBuildConfigurationSelectorVisible() {
-        return (
-            !this.context.project.isDashboardProject &&
-            !this.context.project.isAppletProject &&
-            (this.context.project.pages ||
-                this.context.project.actions ||
-                (this.context.project.variables &&
-                    this.context.project.variables.globalVariables))
-        );
+        // return (
+        //     !this.context.project.isDashboardProject &&
+        //     !this.context.project.isAppletProject &&
+        //     (this.context.project.pages ||
+        //         this.context.project.actions ||
+        //         (this.context.project.variables &&
+        //             this.context.project.variables.globalVariables))
+        // );
+        return false;
     }
 
     onSelectedBuildConfigurationChange(event: any) {
@@ -263,6 +264,7 @@ class Controls extends React.Component {
                     )}
 
                 {(this.context.project.isAppletProject ||
+                    this.context.project.isFirmwareWithFlowSupportProject ||
                     this.context.project.isDashboardProject) && (
                     <div className="btn-group" role="group">
                         {this.pageTabState && (

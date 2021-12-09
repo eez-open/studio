@@ -219,7 +219,8 @@ export class ComponentsPalette extends React.Component<{
                 ? ProjectEditor.ActionComponentClass
                 : ProjectEditor.ComponentClass
         ).filter(objectClassInfo =>
-            this.context.project.isAppletProject
+            this.context.project.isAppletProject ||
+            this.context.project.isFirmwareWithFlowSupportProject
                 ? objectClassInfo.objectClass.classInfo.flowComponentId !=
                   undefined
                 : true

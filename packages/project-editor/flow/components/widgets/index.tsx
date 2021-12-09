@@ -20,7 +20,7 @@ import {
     getId
 } from "project-editor/core/object";
 import {
-    hideInPropertyGridIfDashboardOrApplet,
+    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject,
     hideInPropertyGridIfNotV1,
     hideInPropertyGridIfV3OrNewer,
     loadObject,
@@ -432,6 +432,8 @@ export class ListWidget extends EmbeddedWidget {
         if (this.data) {
             if (
                 flowContext.DocumentStore.project.isAppletProject ||
+                flowContext.DocumentStore.project
+                    .isFirmwareWithFlowSupportProject ||
                 flowContext.DocumentStore.project.isDashboardProject
             ) {
                 try {
@@ -1506,7 +1508,8 @@ export class DisplayDataWidget extends EmbeddedWidget {
     ): { text: string; node: React.ReactNode } | string {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 if (flowContext.flowState) {
@@ -1687,7 +1690,11 @@ export class TextWidget extends EmbeddedWidget {
         label: (widget: TextWidget) => {
             const project = ProjectEditor.getProject(widget);
 
-            if (!project.isDashboardProject && !project.isAppletProject) {
+            if (
+                !project.isDashboardProject &&
+                !project.isAppletProject &&
+                !project.isFirmwareWithFlowSupportProject
+            ) {
                 if (widget.text) {
                     return `${humanize(widget.type)}: ${widget.text}`;
                 }
@@ -1713,14 +1720,19 @@ export class TextWidget extends EmbeddedWidget {
             makeDataPropertyInfo("data", {
                 displayName: (widget: TextWidget) => {
                     const project = ProjectEditor.getProject(widget);
-                    if (project.isDashboardProject || project.isAppletProject) {
+                    if (
+                        project.isDashboardProject ||
+                        project.isAppletProject ||
+                        project.isFirmwareWithFlowSupportProject
+                    ) {
                         return "Text";
                     }
                     return "Data";
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
+                hideInPropertyGrid:
+                    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject
             }),
             {
                 name: "ignoreLuminocity",
@@ -1740,7 +1752,11 @@ export class TextWidget extends EmbeddedWidget {
         beforeLoadHook: (widget: Widget, jsObject: any) => {
             if (jsObject.text) {
                 const project = ProjectEditor.getProject(widget);
-                if (project.isDashboardProject || project.isAppletProject) {
+                if (
+                    project.isDashboardProject ||
+                    project.isAppletProject ||
+                    project.isFirmwareWithFlowSupportProject
+                ) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
                     }
@@ -1763,7 +1779,11 @@ export class TextWidget extends EmbeddedWidget {
 
             const project = ProjectEditor.getProject(widget);
 
-            if (!project.isDashboardProject && !project.isAppletProject) {
+            if (
+                !project.isDashboardProject &&
+                !project.isAppletProject &&
+                !project.isFirmwareWithFlowSupportProject
+            ) {
                 if (!widget.text && !widget.data) {
                     messages.push(propertyNotSetMessage(widget, "text"));
                 }
@@ -1782,7 +1802,8 @@ export class TextWidget extends EmbeddedWidget {
     ): { text: string; node: React.ReactNode } | string {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 if (flowContext.flowState) {
@@ -2652,14 +2673,19 @@ export class ButtonWidget extends EmbeddedWidget {
             makeDataPropertyInfo("data", {
                 displayName: (widget: TextWidget) => {
                     const project = ProjectEditor.getProject(widget);
-                    if (project.isDashboardProject || project.isAppletProject) {
+                    if (
+                        project.isDashboardProject ||
+                        project.isAppletProject ||
+                        project.isFirmwareWithFlowSupportProject
+                    ) {
                         return "Text";
                     }
                     return "Data";
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
+                hideInPropertyGrid:
+                    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject
             }),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
@@ -2668,7 +2694,11 @@ export class ButtonWidget extends EmbeddedWidget {
         beforeLoadHook: (widget: IEezObject, jsObject: any) => {
             if (jsObject.text) {
                 const project = ProjectEditor.getProject(widget);
-                if (project.isDashboardProject || project.isAppletProject) {
+                if (
+                    project.isDashboardProject ||
+                    project.isAppletProject ||
+                    project.isFirmwareWithFlowSupportProject
+                ) {
                     if (!jsObject.data) {
                         jsObject.data = `"${jsObject.text}"`;
                     }
@@ -2693,7 +2723,11 @@ export class ButtonWidget extends EmbeddedWidget {
 
             const project = ProjectEditor.getProject(widget);
 
-            if (!project.isDashboardProject && !project.isAppletProject) {
+            if (
+                !project.isDashboardProject &&
+                !project.isAppletProject &&
+                !project.isFirmwareWithFlowSupportProject
+            ) {
                 if (
                     !widget.text &&
                     !widget.data &&
@@ -2718,7 +2752,8 @@ export class ButtonWidget extends EmbeddedWidget {
     ): { text: string; node: React.ReactNode } | string {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 if (flowContext.flowState) {
@@ -4193,7 +4228,8 @@ export class ProgressWidget extends EmbeddedWidget {
     getPercent(flowContext: IFlowContext) {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 if (flowContext.flowState) {
@@ -5266,7 +5302,8 @@ export class CheckboxWidget extends Widget {
     getChecked(flowContext: IFlowContext) {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
         ) {
             if (this.data) {
                 try {
@@ -5289,7 +5326,8 @@ export class CheckboxWidget extends Widget {
     getLabel(flowContext: IFlowContext) {
         if (
             flowContext.DocumentStore.project.isDashboardProject ||
-            flowContext.DocumentStore.project.isAppletProject
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
         ) {
             if (this.label) {
                 try {

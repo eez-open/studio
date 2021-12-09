@@ -512,7 +512,9 @@ export class Action extends Flow {
                             name: result.values.name
                         },
                         DocumentStore.project.isDashboardProject ||
-                            DocumentStore.project.isAppletProject
+                            DocumentStore.project.isAppletProject ||
+                            DocumentStore.project
+                                .isFirmwareWithFlowSupportProject
                             ? ({
                                   implementationType: "flow",
                                   components: [],

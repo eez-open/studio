@@ -28,7 +28,7 @@ import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
     getDocumentStore,
-    hideInPropertyGridIfApplet
+    hideInPropertyGridIfAppletOrFirmwareWithFlowSupportProject
 } from "project-editor/core/store";
 import {
     buildExpression,
@@ -65,7 +65,8 @@ export class SCPIActionComponent extends ActionComponent {
                     name: "instrument",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: hideInPropertyGridIfApplet
+                    hideInPropertyGrid:
+                        hideInPropertyGridIfAppletOrFirmwareWithFlowSupportProject
                 },
                 "object:Instrument"
             ),
@@ -120,13 +121,19 @@ export class SCPIActionComponent extends ActionComponent {
             }
 
             const project = ProjectEditor.getProject(component);
-            if (project.isAppletProject) {
+            if (
+                project.isAppletProject ||
+                project.isFirmwareWithFlowSupportProject
+            ) {
                 jsObject.instrument = undefined;
             }
         },
         label: (component: SCPIActionComponent) => {
+            const project = getDocumentStore(component).project;
+
             if (
-                !getDocumentStore(component).project.isAppletProject &&
+                !project.isAppletProject &&
+                !project.isFirmwareWithFlowSupportProject &&
                 component.instrument
             ) {
                 return `SCPI ${component.instrument}`;

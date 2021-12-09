@@ -20,6 +20,7 @@ import {
     getChildOfObject,
     hideInPropertyGridIfDashboard,
     hideInPropertyGridIfDashboardOrApplet,
+    hideInPropertyGridIfNotFirmwareWithFlowSupportProject,
     Message,
     propertyInvalidValueMessage,
     propertyNotSetMessage
@@ -271,6 +272,8 @@ export class Variable extends EezObject {
 
     @observable persistent: boolean;
 
+    @observable native: boolean;
+
     static classInfo: ClassInfo = {
         properties: [
             {
@@ -283,6 +286,14 @@ export class Variable extends EezObject {
                 type: PropertyType.MultilineText
             },
             variableTypeProperty,
+            {
+                name: "native",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: (variable: Variable) =>
+                    hideInPropertyGridIfNotFirmwareWithFlowSupportProject(
+                        variable
+                    ) || !isGlobalVariable(variable)
+            },
             {
                 name: "defaultValue",
                 type: PropertyType.MultilineText,
@@ -322,7 +333,7 @@ export class Variable extends EezObject {
                 name: "persistent",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
-                    !isGlobalVariable(variable)
+                    !isGlobalVariable(variable) || variable.native
             },
             {
                 name: "persistedValue",
@@ -395,6 +406,8 @@ export class Variable extends EezObject {
                 const DocumentStore = getDocumentStore(variable);
                 if (
                     DocumentStore.project.isAppletProject ||
+                    (DocumentStore.project.isFirmwareWithFlowSupportProject &&
+                        !variable.native) ||
                     DocumentStore.project.isDashboardProject
                 ) {
                     try {
@@ -494,6 +507,10 @@ export class DataContext implements IDataContext {
                     }
                     if (
                         !this.project.isAppletProject &&
+                        !(
+                            this.project.isFirmwareWithFlowSupportProject &&
+                            !variable.native
+                        ) &&
                         !this.project.isDashboardProject
                     ) {
                         const value = this.project.allAssets.get(

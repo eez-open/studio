@@ -114,6 +114,8 @@ export function makeDataPropertyInfo(
                     const DocumentStore = getDocumentStore(object);
                     if (
                         DocumentStore.project.isAppletProject ||
+                        DocumentStore.project
+                            .isFirmwareWithFlowSupportProject ||
                         DocumentStore.project.isDashboardProject
                     ) {
                         return expressionBuilder(
@@ -910,6 +912,7 @@ function addBreakpointMenuItems(
 
     if (
         DocumentStore.project.isAppletProject ||
+        DocumentStore.project.isFirmwareWithFlowSupportProject ||
         DocumentStore.project.isDashboardProject
     ) {
         if (uiStateStore.isBreakpointAddedForComponent(component)) {
@@ -1231,6 +1234,7 @@ export class Component extends EezObject {
 
             if (
                 DocumentStore.project.isAppletProject ||
+                DocumentStore.project.isFirmwareWithFlowSupportProject ||
                 DocumentStore.project.isDashboardProject
             ) {
                 // check properties
@@ -1729,6 +1733,7 @@ export class Widget extends Component {
 
             if (
                 !DocumentStore.project.isAppletProject &&
+                !DocumentStore.project.isFirmwareWithFlowSupportProject &&
                 !DocumentStore.project.isDashboardProject
             ) {
                 ProjectEditor.documentSearch.checkObjectReference(

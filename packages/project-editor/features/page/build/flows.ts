@@ -26,7 +26,6 @@ import {
     operationIndexes
 } from "project-editor/flow/expression/expression";
 import {
-    getVariableFlowValue,
     buildConstantFlowValue,
     buildVariableFlowValue
 } from "project-editor/features/page/build/value";
@@ -266,11 +265,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
     dataBuffer.writeArray(
         flow.localVariables,
         localVariable =>
-            buildVariableFlowValue(
-                assets,
-                dataBuffer,
-                getVariableFlowValue(assets, localVariable)
-            ),
+            buildVariableFlowValue(assets, dataBuffer, localVariable),
         8
     );
 
@@ -334,7 +329,10 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 }
 
 export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
-    if (assets.DocumentStore.project.isAppletProject) {
+    if (
+        assets.DocumentStore.project.isAppletProject ||
+        assets.DocumentStore.project.isFirmwareWithFlowSupportProject
+    ) {
         dataBuffer.writeObjectOffset(() => {
             // flows
             dataBuffer.writeArray(assets.flows, flow =>
@@ -359,13 +357,11 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                 })
             );
             dataBuffer.writeArray(
-                assets.globalVariables,
+                assets.globalVariables.filter(
+                    globalVariable => !globalVariable.native // only non-native variables
+                ),
                 globalVariable =>
-                    buildVariableFlowValue(
-                        assets,
-                        dataBuffer,
-                        getVariableFlowValue(assets, globalVariable)
-                    ),
+                    buildVariableFlowValue(assets, dataBuffer, globalVariable),
                 8
             );
         });

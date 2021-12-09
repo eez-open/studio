@@ -61,10 +61,7 @@ export function getValueType(valueType: ValueType) {
     }
 }
 
-export function getVariableFlowValue(
-    assets: Assets,
-    variable: Variable
-): FlowValue {
+function getVariableFlowValue(assets: Assets, variable: Variable): FlowValue {
     let type;
 
     if (variable.type) {
@@ -117,9 +114,9 @@ export function buildConstantFlowValue(
 export function buildVariableFlowValue(
     assets: Assets,
     dataBuffer: DataBuffer,
-    flowValue: FlowValue
+    variable: Variable
 ) {
-    buildFlowValue(assets, dataBuffer, flowValue);
+    buildFlowValue(assets, dataBuffer, getVariableFlowValue(assets, variable));
 }
 
 function buildFlowValue(

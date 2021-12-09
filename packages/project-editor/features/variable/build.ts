@@ -68,7 +68,7 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
-        const projectVariables = project.variables.globalVariables.filter(
+        let projectVariables = project.variables.globalVariables.filter(
             variable =>
                 !buildConfiguration ||
                 !variable.usedIn ||
@@ -86,6 +86,13 @@ export function build(
                     )
                 );
             }
+        }
+
+        if (project.isFirmwareWithFlowSupportProject) {
+            // only native
+            projectVariables = projectVariables.filter(
+                variable => variable.native
+            );
         }
 
         if (!sectionNames || sectionNames.indexOf("DATA_ENUM") !== -1) {

@@ -449,8 +449,6 @@ export class Page extends Flow {
             this.style || "default"
         );
 
-        console.log(pageStyle);
-
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (

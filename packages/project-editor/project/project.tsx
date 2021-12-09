@@ -567,6 +567,7 @@ export class General extends EezObject {
     @observable masterProject: string;
     @observable imports: ImportDirective[];
     @observable css: string;
+    @observable flowSupport: boolean;
 
     static classInfo: ClassInfo = {
         label: () => "General",
@@ -635,6 +636,16 @@ export class General extends EezObject {
                 name: "css",
                 type: PropertyType.CSS,
                 hideInPropertyGrid: hideInPropertyGridIfNotDashboard
+            },
+            {
+                name: "flowSupport",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: (general: General) => {
+                    return (
+                        general.projectType != ProjectType.FIRMWARE &&
+                        general.projectType != ProjectType.FIRMWARE_MODULE
+                    );
+                }
             }
         ],
         showInNavigation: true,
@@ -996,6 +1007,15 @@ export class Project extends EezObject {
         }
 
         throw "unknown project";
+    }
+
+    get isFirmwareWithFlowSupportProject() {
+        return (
+            (this.settings.general.projectType === ProjectType.FIRMWARE ||
+                this.settings.general.projectType ===
+                    ProjectType.FIRMWARE_MODULE) &&
+            this.settings.general.flowSupport
+        );
     }
 
     get isDashboardProject() {

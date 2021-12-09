@@ -158,10 +158,24 @@ export class Assets {
 
             this.flows.forEach(flow => this.getFlowState(flow));
 
-            this.globalVariables = this.getAssets<Variable>(
-                project => project.variables.globalVariables,
-                assetIncludePredicate
-            );
+            this.globalVariables = [
+                // first non-native
+                ...this.getAssets<Variable>(
+                    project =>
+                        project.variables.globalVariables.filter(
+                            globalVariable => !globalVariable.native
+                        ),
+                    assetIncludePredicate
+                ),
+                // than native
+                ...this.getAssets<Variable>(
+                    project =>
+                        project.variables.globalVariables.filter(
+                            globalVariable => globalVariable.native
+                        ),
+                    assetIncludePredicate
+                )
+            ];
 
             this.actions = this.getAssets<Action>(
                 project => project.actions,
@@ -246,7 +260,10 @@ export class Assets {
     }
 
     getWidgetDataItemIndex(object: any, propertyName: string) {
-        if (this.DocumentStore.project.isAppletProject) {
+        if (
+            this.DocumentStore.project.isAppletProject ||
+            this.DocumentStore.project.isFirmwareWithFlowSupportProject
+        ) {
             return this.getFlowWidgetDataItemIndex(object, propertyName);
         }
 
@@ -263,7 +280,10 @@ export class Assets {
     }
 
     getWidgetActionIndex(object: any, propertyName: string) {
-        if (this.DocumentStore.project.isAppletProject) {
+        if (
+            this.DocumentStore.project.isAppletProject ||
+            this.DocumentStore.project.isFirmwareWithFlowSupportProject
+        ) {
             return this.getFlowWidgetActionIndex(object, propertyName);
         }
 

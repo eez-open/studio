@@ -289,8 +289,8 @@ export function drawBackground(
 ) {
     let x1 = x;
     let y1 = y;
-    let x2 = width - 1;
-    let y2 = height - 1;
+    let x2 = x + width - 1;
+    let y2 = y + height - 1;
 
     if (width > 0 && height > 0) {
         const borderSize = style.borderSizeRect;

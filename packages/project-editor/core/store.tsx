@@ -4050,9 +4050,14 @@ export function hideInPropertyGridIfNotDashboard(object: IEezObject) {
     return !documentStore.project.isDashboardProject;
 }
 
-export function hideInPropertyGridIfApplet(object: IEezObject) {
+export function hideInPropertyGridIfAppletOrFirmwareWithFlowSupportProject(
+    object: IEezObject
+) {
     const documentStore = getDocumentStore(object);
-    return documentStore.project.isAppletProject;
+    return (
+        documentStore.project.isAppletProject ||
+        documentStore.project.isFirmwareWithFlowSupportProject
+    );
 }
 
 export function hideInPropertyGridIfDashboardOrApplet(object: IEezObject) {
@@ -4060,6 +4065,17 @@ export function hideInPropertyGridIfDashboardOrApplet(object: IEezObject) {
     return (
         documentStore.project.isDashboardProject ||
         documentStore.project.isAppletProject
+    );
+}
+
+export function hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject(
+    object: IEezObject
+) {
+    const documentStore = getDocumentStore(object);
+    return (
+        documentStore.project.isDashboardProject ||
+        documentStore.project.isAppletProject ||
+        documentStore.project.isFirmwareWithFlowSupportProject
     );
 }
 
@@ -4075,5 +4091,15 @@ export function hideInPropertyGridIfNotV1(object: IEezObject) {
 
 export function hideInPropertyGridIfV3OrNewer(object: IEezObject) {
     const documentStore = getDocumentStore(object);
-    return documentStore.project.settings.general.projectVersion !== "v1" && documentStore.project.settings.general.projectVersion !== "v2";
+    return (
+        documentStore.project.settings.general.projectVersion !== "v1" &&
+        documentStore.project.settings.general.projectVersion !== "v2"
+    );
+}
+
+export function hideInPropertyGridIfNotFirmwareWithFlowSupportProject(
+    object: IEezObject
+) {
+    const documentStore = getDocumentStore(object);
+    return !documentStore.project.isFirmwareWithFlowSupportProject;
 }
