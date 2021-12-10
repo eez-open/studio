@@ -1252,6 +1252,23 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
         return (
             <>
+                {!visible ||
+                flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                true
+                            );
+                        }}
+                    />
+                )}
                 {element}
                 {super.render(flowContext)}
             </>
@@ -4382,16 +4399,14 @@ export class CanvasWidget extends EmbeddedWidget {
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let widget = this;
-                            let style = widget.style;
-
-                            let x1 = 0;
-                            let y1 = 0;
-                            let x2 = this.width - 1;
-                            let y2 = this.height - 1;
-
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(ctx, x1, y1, x2, y2, 0);
+                            draw.setColor(this.style.backgroundColorProperty);
+                            draw.fillRect(
+                                ctx,
+                                0,
+                                0,
+                                this.width - 1,
+                                this.height - 1
+                            );
                         }}
                     />
                 )}
