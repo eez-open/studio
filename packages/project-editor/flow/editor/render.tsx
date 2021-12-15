@@ -154,7 +154,7 @@ export class ComponentCanvas extends React.Component<{
 
     canvas: HTMLCanvasElement;
 
-    drawCanvas() {
+    addCanvasToDOM() {
         if (!this.elRef.current) {
             return;
         }
@@ -170,11 +170,11 @@ export class ComponentCanvas extends React.Component<{
     }
 
     componentDidMount() {
-        this.drawCanvas();
+        this.addCanvasToDOM();
     }
 
     componentDidUpdate() {
-        this.drawCanvas();
+        this.addCanvasToDOM();
     }
 
     render() {

@@ -3,10 +3,6 @@
 @import "animate";
 @import "../../../node_modules/react-toastify/dist/ReactToastify.css";
 
-html {
-    font-size: 14px;
-}
-
 * {
     user-select: none;
 }
@@ -17,6 +13,16 @@ html {
 
 body {
     overflow: hidden;
+    font-size: 0.8rem;
+}
+
+/* make font-size a little bit smaller than bootstrap default of 1rem */
+body,
+.btn,
+.form-control,
+.form-select,
+.jsPanel .jsPanel-content {
+    font-size: 0.8rem;
 }
 
 input.error,
@@ -3779,6 +3785,8 @@ button.EezStudio_Action {
 }
 
 .EezStudio_FlowViewerCanvasContainer {
+    font-size: 0.8rem;
+
     position: relative;
     width: 100%;
     height: 100%;

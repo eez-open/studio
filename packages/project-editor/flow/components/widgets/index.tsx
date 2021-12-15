@@ -65,7 +65,6 @@ import {
 } from "project-editor/features/variable/value-type";
 import {
     drawText,
-    styleGetBorderRadius,
     styleIsHorzAlignLeft,
     styleIsHorzAlignRight,
     styleIsVertAlignTop,
@@ -1972,7 +1971,6 @@ class MultilineTextRender {
         private x2: number,
         private y2: number,
         private style: Style,
-        private inverse: boolean,
         private firstLineIndent: number,
         private hangingIndent: number
     ) {}
@@ -2005,13 +2003,8 @@ class MultilineTextRender {
                         );
                 }
 
-                if (this.inverse) {
-                    draw.setBackColor(this.style.colorProperty);
-                    draw.setColor(this.style.backgroundColorProperty);
-                } else {
-                    draw.setBackColor(this.style.backgroundColorProperty);
-                    draw.setColor(this.style.colorProperty);
-                }
+                draw.setBackColor(this.style.backgroundColorProperty);
+                draw.setColor(this.style.colorProperty);
 
                 drawStr(
                     this.ctx,
@@ -2114,51 +2107,19 @@ class MultilineTextRender {
     }
 
     render() {
-        const borderSize = this.style.borderSizeRect;
-        let borderRadius = styleGetBorderRadius(this.style) || 0;
-        if (
-            borderSize.top > 0 ||
-            borderSize.right > 0 ||
-            borderSize.bottom > 0 ||
-            borderSize.left > 0
-        ) {
-            draw.setColor(this.style.borderColorProperty);
-            draw.fillRect(
-                this.ctx,
-                this.x1,
-                this.y1,
-                this.x2,
-                this.y2,
-                borderRadius
-            );
-            this.x1 += borderSize.left;
-            this.y1 += borderSize.top;
-            this.x2 -= borderSize.right;
-            this.y2 -= borderSize.bottom;
-            borderRadius = Math.max(
-                borderRadius -
-                    Math.max(
-                        borderSize.top,
-                        borderSize.right,
-                        borderSize.bottom,
-                        borderSize.left
-                    ),
-                0
-            );
-        }
-
-        let backgroundColor = this.inverse
-            ? this.style.colorProperty
-            : this.style.backgroundColorProperty;
-        draw.setColor(backgroundColor);
-        draw.fillRect(
+        let x1 = this.x1;
+        let y1 = this.y1;
+        let x2 = this.x2;
+        let y2 = this.y2;
+        ({ x1, y1, x2, y2 } = draw.drawBackground(
             this.ctx,
-            this.x1,
-            this.y1,
-            this.x2,
-            this.y2,
-            borderRadius
-        );
+            x1,
+            y1,
+            x2,
+            y2,
+            this.style,
+            true
+        ));
 
         const font = styleGetFont(this.style);
         if (!font) {
@@ -2172,10 +2133,7 @@ class MultilineTextRender {
 
         try {
             this.text = JSON.parse('"' + this.text + '"');
-        } catch (e) {
-            console.error(e, this.text);
-            return;
-        }
+        } catch (e) {}
 
         this.font = font;
         this.lineHeight = lineHeight;
@@ -2209,6 +2167,7 @@ export const indentationGroup: IPropertyGridGroupDefinition = {
 };
 
 export class MultilineTextWidget extends EmbeddedWidget {
+    @observable name: string;
     @observable text?: string;
     @observable firstLineIndent: number;
     @observable hangingIndent: number;
@@ -2217,8 +2176,20 @@ export class MultilineTextWidget extends EmbeddedWidget {
         flowComponentId: WIDGET_TYPE_MULTILINE_TEXT,
 
         label: (widget: TextWidget) => {
-            if (widget.text) {
-                return `${humanize(widget.type)}: ${widget.text}`;
+            const project = ProjectEditor.getProject(widget);
+
+            if (
+                !project.isDashboardProject &&
+                !project.isAppletProject &&
+                !project.isFirmwareWithFlowSupportProject
+            ) {
+                if (widget.text) {
+                    return `${humanize(widget.type)}: ${widget.text}`;
+                }
+            }
+
+            if (widget.name) {
+                return `${humanize(widget.type)}: ${widget.name}`;
             }
 
             if (widget.data) {
@@ -2229,7 +2200,28 @@ export class MultilineTextWidget extends EmbeddedWidget {
         },
 
         properties: [
-            makeTextPropertyInfo("text"),
+            {
+                name: "name",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup
+            },
+            makeDataPropertyInfo("data", {
+                displayName: (widget: TextWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    if (
+                        project.isDashboardProject ||
+                        project.isAppletProject ||
+                        project.isFirmwareWithFlowSupportProject
+                    ) {
+                        return "Text";
+                    }
+                    return "Data";
+                }
+            }),
+            makeTextPropertyInfo("text", {
+                hideInPropertyGrid:
+                    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject
+            }),
             {
                 name: "firstLineIndent",
                 displayName: "First line",
@@ -2244,6 +2236,22 @@ export class MultilineTextWidget extends EmbeddedWidget {
             }
         ],
 
+        beforeLoadHook: (widget: Widget, jsObject: any) => {
+            if (jsObject.text) {
+                const project = ProjectEditor.getProject(widget);
+                if (
+                    project.isDashboardProject ||
+                    project.isAppletProject ||
+                    project.isFirmwareWithFlowSupportProject
+                ) {
+                    if (!jsObject.data) {
+                        jsObject.data = `"${jsObject.text}"`;
+                    }
+                    delete jsObject.text;
+                }
+            }
+        },
+
         defaultValue: {
             text: "Multiline text",
             left: 0,
@@ -2256,11 +2264,23 @@ export class MultilineTextWidget extends EmbeddedWidget {
 
         icon: "../home/_images/widgets/MultilineText.png",
 
-        check: (object: MultilineTextWidget) => {
+        check: (widget: MultilineTextWidget) => {
             let messages: Message[] = [];
 
-            if (!object.text && !object.data) {
-                messages.push(propertyNotSetMessage(object, "text"));
+            const project = ProjectEditor.getProject(widget);
+
+            if (
+                !project.isDashboardProject &&
+                !project.isAppletProject &&
+                !project.isFirmwareWithFlowSupportProject
+            ) {
+                if (!widget.text && !widget.data) {
+                    messages.push(propertyNotSetMessage(widget, "text"));
+                }
+            } else {
+                if (!widget.data) {
+                    messages.push(propertyNotSetMessage(widget, "text"));
+                }
             }
 
             return messages;
@@ -2270,40 +2290,118 @@ export class MultilineTextWidget extends EmbeddedWidget {
             projectType !== ProjectType.DASHBOARD
     });
 
+    getText(
+        flowContext: IFlowContext
+    ): { text: string; node: React.ReactNode } | string {
+        if (
+            flowContext.DocumentStore.project.isDashboardProject ||
+            flowContext.DocumentStore.project.isAppletProject ||
+            flowContext.DocumentStore.project.isFirmwareWithFlowSupportProject
+        ) {
+            if (this.data) {
+                if (flowContext.flowState) {
+                    try {
+                        const value = evalExpression(
+                            flowContext,
+                            this,
+                            this.data
+                        );
+
+                        if (
+                            typeof value == "string" ||
+                            typeof value == "number"
+                        ) {
+                            return value.toString();
+                        }
+                        return "";
+                    } catch (err) {
+                        console.error(err);
+                        return "";
+                    }
+                }
+
+                if (flowContext.DocumentStore.runtime) {
+                    return "";
+                }
+
+                if (this.name) {
+                    return this.name;
+                }
+
+                try {
+                    const result = evalConstantExpression(
+                        ProjectEditor.getProject(this),
+                        this.data
+                    );
+                    if (typeof result.value === "string") {
+                        return result.value;
+                    }
+                } catch (err) {}
+
+                return {
+                    text: this.data,
+                    node: <span className="expression">{this.data}</span>
+                };
+            }
+
+            if (flowContext.flowState) {
+                return "";
+            }
+
+            if (this.name) {
+                return this.name;
+            }
+
+            return "<no text>";
+        }
+
+        if (this.text) {
+            return this.text;
+        }
+
+        if (this.name) {
+            return this.name;
+        }
+
+        if (this.data) {
+            const result = flowContext.dataContext.get(this.data);
+            if (result != undefined) {
+                return result;
+            }
+            return this.data;
+        }
+
+        return "<no text>";
+    }
+
     render(flowContext: IFlowContext) {
+        const result = this.getText(flowContext);
+        let text: string;
+        let node: React.ReactNode | null;
+        if (typeof result == "object") {
+            text = result.text;
+            node = result.node;
+        } else {
+            text = result;
+            node = null;
+        }
+
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                {flowContext.DocumentStore.project.isDashboardProject ? (
+                    node || text
+                ) : (
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let text = this.text
-                                ? this.text
-                                : this.data
-                                ? (flowContext.dataContext.get(
-                                      this.data
-                                  ) as string)
-                                : "";
-
-                            const w = this.width;
-                            const h = this.height;
-                            const style = this.style;
-                            const inverse = false;
-
-                            let x1 = 0;
-                            let y1 = 0;
-                            let x2 = w - 1;
-                            let y2 = h - 1;
-
                             var multilineTextRender = new MultilineTextRender(
                                 ctx,
                                 text,
-                                x1,
-                                y1,
-                                x2,
-                                y2,
-                                style,
-                                inverse,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
                                 this.firstLineIndent || 0,
                                 this.hangingIndent || 0
                             );
@@ -2413,7 +2511,7 @@ export class RectangleWidget extends EmbeddedWidget {
         let flags: number = 0;
 
         // invertColors
-        if (this.invertColors) {
+        if (hideInPropertyGridIfV3OrNewer(this) || this.invertColors) {
             flags |= 1 << 0;
         }
 
@@ -2592,14 +2690,6 @@ export class BitmapWidget extends EmbeddedWidget {
                                 let y1 = 0;
                                 let x2 = w - 1;
                                 let y2 = h - 1;
-
-                                if (bitmap.bpp !== 32) {
-                                    let backgroundColor = inverse
-                                        ? style.colorProperty
-                                        : style.backgroundColorProperty;
-                                    draw.setColor(backgroundColor);
-                                    draw.fillRect(ctx, x1, y1, x2, y2, 0);
-                                }
 
                                 let width = imageElement.width;
                                 let height = imageElement.height;
@@ -3623,49 +3713,15 @@ export class YTGraphWidget extends EmbeddedWidget {
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let ytGraphWidget = this;
-                            let style = ytGraphWidget.style;
-
-                            let x1 = 0;
-                            let y1 = 0;
-                            let x2 = this.width - 1;
-                            let y2 = this.height - 1;
-
-                            const borderSize = style.borderSizeRect;
-                            let borderRadius = styleGetBorderRadius(style) || 0;
-                            if (
-                                borderSize.top > 0 ||
-                                borderSize.right > 0 ||
-                                borderSize.bottom > 0 ||
-                                borderSize.left > 0
-                            ) {
-                                draw.setColor(style.borderColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    x1,
-                                    y1,
-                                    x2,
-                                    y2,
-                                    borderRadius
-                                );
-                                x1 += borderSize.left;
-                                y1 += borderSize.top;
-                                x2 -= borderSize.right;
-                                y2 -= borderSize.bottom;
-                                borderRadius = Math.max(
-                                    borderRadius -
-                                        Math.max(
-                                            borderSize.top,
-                                            borderSize.right,
-                                            borderSize.bottom,
-                                            borderSize.left
-                                        ),
-                                    0
-                                );
-                            }
-
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                true
+                            );
                         }}
                     />
                 )}
@@ -3907,49 +3963,15 @@ export class ListGraphWidget extends EmbeddedWidget {
                     <ComponentCanvas
                         component={this}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            let listGraphWidget = this;
-                            let style = listGraphWidget.style;
-
-                            let x1 = 0;
-                            let y1 = 0;
-                            let x2 = this.width - 1;
-                            let y2 = this.height - 1;
-
-                            const borderSize = style.borderSizeRect;
-                            let borderRadius = styleGetBorderRadius(style) || 0;
-                            if (
-                                borderSize.top > 0 ||
-                                borderSize.right > 0 ||
-                                borderSize.bottom > 0 ||
-                                borderSize.left > 0
-                            ) {
-                                draw.setColor(style.borderColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    x1,
-                                    y1,
-                                    x2,
-                                    y2,
-                                    borderRadius
-                                );
-                                x1 += borderSize.left;
-                                y1 += borderSize.top;
-                                x2 -= borderSize.right;
-                                y2 -= borderSize.bottom;
-                                borderRadius = Math.max(
-                                    borderRadius -
-                                        Math.max(
-                                            borderSize.top,
-                                            borderSize.right,
-                                            borderSize.bottom,
-                                            borderSize.left
-                                        ),
-                                    0
-                                );
-                            }
-
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                true
+                            );
                         }}
                     />
                 )}
@@ -4143,8 +4165,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
                                 x,
                                 y,
                                 x + width - 1,
-                                y + height - 1,
-                                0
+                                y + height - 1
                             );
 
                             // draw thumb
@@ -4182,8 +4203,7 @@ export class ScrollBarWidget extends EmbeddedWidget {
                                 xThumb,
                                 yThumb,
                                 xThumb + widthThumb - 1,
-                                yThumb + heightThumb - 1,
-                                0
+                                yThumb + heightThumb - 1
                             );
 
                             // draw right button
@@ -4325,8 +4345,7 @@ export class ProgressWidget extends EmbeddedWidget {
                                 0,
                                 0,
                                 this.width - 1,
-                                this.height - 1,
-                                0
+                                this.height - 1
                             );
 
                             // draw thumb
@@ -4337,8 +4356,7 @@ export class ProgressWidget extends EmbeddedWidget {
                                     0,
                                     0,
                                     (percent * this.width) / 100 - 1,
-                                    this.height - 1,
-                                    0
+                                    this.height - 1
                                 );
                             } else {
                                 draw.fillRect(
@@ -4346,8 +4364,7 @@ export class ProgressWidget extends EmbeddedWidget {
                                     0,
                                     this.height - (percent * this.height) / 100,
                                     this.width - 1,
-                                    this.height - 1,
-                                    0
+                                    this.height - 1
                                 );
                             }
                         }}
@@ -4630,42 +4647,15 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
             let w = this.width;
             let h = this.height;
 
-            // frame
-            if (w > 0 && h > 0) {
-                let x1 = 0;
-                let y1 = 0;
-                let x2 = w - 1;
-                let y2 = h - 1;
-
-                const borderSize = style.borderSizeRect;
-                let borderRadius = styleGetBorderRadius(style) || 0;
-                if (
-                    borderSize.top > 0 ||
-                    borderSize.right > 0 ||
-                    borderSize.bottom > 0 ||
-                    borderSize.left > 0
-                ) {
-                    draw.setColor(style.borderColorProperty);
-                    draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-                    x1 += borderSize.left;
-                    y1 += borderSize.top;
-                    x2 -= borderSize.right;
-                    y2 -= borderSize.bottom;
-                    borderRadius = Math.max(
-                        borderRadius -
-                            Math.max(
-                                borderSize.top,
-                                borderSize.right,
-                                borderSize.bottom,
-                                borderSize.left
-                            ),
-                        0
-                    );
-                }
-
-                draw.setColor(style.backgroundColorProperty);
-                draw.fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            }
+            draw.drawBackground(
+                ctx,
+                0,
+                0,
+                this.width,
+                this.height,
+                this.style,
+                true
+            );
 
             const PADDING_HORZ = 56;
             const TICK_LINE_LENGTH = 5;

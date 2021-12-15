@@ -1339,7 +1339,7 @@ export function drawStylePreview(
                 text,
                 0,
                 0,
-                canvas.width / 2,
+                canvas.width / 2 - 4,
                 canvas.height,
                 style,
                 false
@@ -1347,9 +1347,9 @@ export function drawStylePreview(
             drawText(
                 ctx,
                 text,
-                canvas.width / 2,
+                canvas.width / 2 + 4,
                 0,
-                canvas.width / 2,
+                canvas.width / 2 - 4,
                 canvas.height,
                 style,
                 true
@@ -1361,7 +1361,7 @@ export function drawStylePreview(
                 0,
                 0,
                 canvas.width,
-                canvas.height / 2,
+                canvas.height / 2 - 4,
                 style,
                 false
             );
@@ -1369,9 +1369,9 @@ export function drawStylePreview(
                 ctx,
                 text,
                 0,
-                canvas.height / 2,
+                canvas.height / 2 + 4,
                 canvas.width,
-                canvas.height / 2,
+                canvas.height / 2 - 4,
                 style,
                 true
             );

@@ -152,7 +152,12 @@ export class Assets {
                 asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
             this.flows = this.getAssets<Page | Action>(
-                project => [...project.pages, ...project.actions],
+                project => [
+                    ...project.pages,
+                    ...project.actions.filter(
+                        action => action.implementationType == "flow"
+                    )
+                ],
                 assetIncludePredicate
             );
 
@@ -189,20 +194,24 @@ export class Assets {
         }
 
         this.styles = [undefined];
-        this.getAssets<Style>(
-            project => project.styles,
-            style => style.id != undefined
-        ).forEach(style => this.addStyle(style));
+        if (!this.DocumentStore.masterProject) {
+            this.getAssets<Style>(
+                project => project.styles,
+                style => style.id != undefined
+            ).forEach(style => this.addStyle(style));
+        }
         this.getAssets<Style>(
             project => project.styles,
             style => style.alwaysBuild
         ).forEach(style => this.addStyle(style));
 
         this.fonts = [undefined];
-        this.getAssets<Font>(
-            project => project.fonts,
-            font => font.id != undefined
-        ).forEach(font => this.addFont(font));
+        if (!this.DocumentStore.masterProject) {
+            this.getAssets<Font>(
+                project => project.fonts,
+                font => font.id != undefined
+            ).forEach(font => this.addFont(font));
+        }
         this.getAssets<Font>(
             project => project.fonts,
             (font: Font) => font.alwaysBuild
@@ -323,18 +332,18 @@ export class Assets {
     addFont(font: Font) {
         if (font.id != undefined) {
             this.fonts[font.id] = font;
-            return;
+            return font.id;
         }
 
         for (let i = 1; i < this.fonts.length; i++) {
             if (this.fonts[i] == undefined) {
                 this.fonts[i] = font;
-                return;
+                return i;
             }
         }
 
         this.fonts.push(font);
-        return;
+        return this.fonts.length - 1;
     }
 
     doGetStyleIndex(
@@ -353,15 +362,16 @@ export class Assets {
 
             const style = findStyle(project, styleName);
             if (style) {
-                const isMasterProjectStyle =
-                    this.DocumentStore.masterProject &&
-                    getProject(style) == this.DocumentStore.masterProject;
-
                 if (style.id != undefined) {
                     return style.id;
                 }
 
-                if (!isMasterProjectStyle) {
+                const isMasterProjectStyle =
+                    this.DocumentStore.masterProject &&
+                    getProject(style) == this.DocumentStore.masterProject;
+                if (isMasterProjectStyle) {
+                    // master project style without ID can not be used
+                } else {
                     const styleIndex = this.addStyle(style);
                     return this.DocumentStore.masterProject
                         ? -styleIndex
@@ -397,8 +407,9 @@ export class Assets {
             const isMasterProjectStyle =
                 this.DocumentStore.masterProject &&
                 getProject(style) == this.DocumentStore.masterProject;
-
-            if (!isMasterProjectStyle) {
+            if (isMasterProjectStyle) {
+                // master project style without ID can not be used
+            } else {
                 const styleIndex = this.addStyle(style);
                 return this.DocumentStore.masterProject
                     ? -styleIndex
@@ -435,6 +446,18 @@ export class Assets {
         if (font) {
             if (font.id != undefined) {
                 return font.id;
+            }
+
+            const isMasterProjectFont =
+                this.DocumentStore.masterProject &&
+                getProject(font) == this.DocumentStore.masterProject;
+            if (isMasterProjectFont) {
+                // master project font without ID can not be used
+            } else {
+                const fontIndex = this.addFont(font);
+                return this.DocumentStore.masterProject
+                    ? -fontIndex
+                    : fontIndex;
             }
         }
         return 0;
@@ -670,8 +693,21 @@ export class Assets {
             !widget.asOutputProperties ||
             widget.asOutputProperties.indexOf(propertyName) == -1
         ) {
-            if (!getProperty(widget, propertyName)) {
+            const actionName = getProperty(widget, propertyName);
+            if (!actionName) {
                 return 0;
+            }
+
+            if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
+                const actionIndex = this.actions.findIndex(
+                    action => action.name == actionName
+                );
+                if (actionIndex == -1) {
+                    return 0;
+                }
+                if (this.actions[actionIndex].implementationType === "native") {
+                    return actionIndex + 1;
+                }
             }
         }
 

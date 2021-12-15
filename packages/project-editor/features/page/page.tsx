@@ -449,26 +449,38 @@ export class Page extends Flow {
             this.style || "default"
         );
 
+        const isLayoutViewWidgetPage =
+            !flowContext.document.findObjectById(getId(this)) &&
+            !flowContext.DocumentStore.runtime;
+
+        let pageBackground;
+        if (
+            !flowContext.DocumentStore.project.isDashboardProject &&
+            !isLayoutViewWidgetPage
+        ) {
+            pageBackground = (
+                <ComponentCanvas
+                    component={this}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        if (pageStyle) {
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                pageStyle,
+                                true
+                            );
+                        }
+                    }}
+                />
+            );
+        }
+
         return (
             <>
-                {flowContext.DocumentStore.project.isDashboardProject ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            if (pageStyle) {
-                                draw.drawBackground(
-                                    ctx,
-                                    0,
-                                    0,
-                                    this.width,
-                                    this.height,
-                                    pageStyle,
-                                    true
-                                );
-                            }
-                        }}
-                    />
-                )}
+                {pageBackground}
 
                 <ComponentsContainerEnclosure
                     components={this.components.filter(
@@ -493,26 +505,27 @@ export class Page extends Flow {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        const pageStyle = findStyle(
-            ProjectEditor.getProject(this),
-            this.style || "default"
-        );
-        if (pageStyle && pageStyle.backgroundColorProperty) {
-            style.backgroundColor = to16bitsColor(
-                getThemedColor(
-                    flowContext.DocumentStore,
-                    pageStyle.backgroundColorProperty
-                )
-            );
-        }
-
-        if (
+        const isLayoutViewWidgetPage =
             !flowContext.document.findObjectById(getId(this)) &&
-            !flowContext.DocumentStore.runtime
-        ) {
-            // this is layout widget page,
-            // forbid interaction with the content
+            !flowContext.DocumentStore.runtime;
+        if (isLayoutViewWidgetPage) {
+            // this is LayoutViewWidget page, forbid interaction with the content
+            // and do not draw background (it is drawn by LayoutViewWidget)
             style.pointerEvents = "none";
+        } else {
+            const pageStyle = findStyle(
+                ProjectEditor.getProject(this),
+                this.style || "default"
+            );
+
+            if (pageStyle && pageStyle.backgroundColorProperty) {
+                style.backgroundColor = to16bitsColor(
+                    getThemedColor(
+                        flowContext.DocumentStore,
+                        pageStyle.backgroundColorProperty
+                    )
+                );
+            }
         }
     }
 

@@ -109,7 +109,7 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(style.borderSizeRect.bottom);
         dataBuffer.writeUint8(style.borderSizeRect.left);
 
-        dataBuffer.writeUint16(style.borderRadius || 0);
+        dataBuffer.writeUint16(style.borderRadiusProperty || 0);
 
         let borderColor = assets.getColorIndex(style, "borderColor");
         if (isNaN(borderColor)) {

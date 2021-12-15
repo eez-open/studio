@@ -324,12 +324,6 @@ export class Variable extends EezObject {
                 hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
-                name: "usedIn",
-                type: PropertyType.ConfigurationReference,
-                referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: hideInPropertyGridIfDashboard
-            },
-            {
                 name: "persistent",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>

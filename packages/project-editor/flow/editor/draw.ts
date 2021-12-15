@@ -27,49 +27,60 @@ export function setBackColor(color: string) {
     bgColor = to16bitsColor(color);
 }
 
-export function drawRect(
+export function fillRect(
     ctx: CanvasRenderingContext2D,
     x1: number,
     y1: number,
     x2: number,
     y2: number
 ) {
-    ctx.beginPath();
-    ctx.rect(x1 + 0.5, y1 + 0.5, x2 - x1 + 1, y2 - y1 + 1);
-    ctx.strokeStyle = fgColor;
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.fillStyle = fgColor;
+    ctx.fillRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
 }
 
-export function fillRect(
+export function fillRoundedRect(
     ctx: CanvasRenderingContext2D,
     x1: number,
     y1: number,
     x2: number,
     y2: number,
-    r: number = 0
+    lineWidth: number,
+    r: number
 ) {
-    if (r == 0) {
-        ctx.beginPath();
-        ctx.rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
-        ctx.fillStyle = fgColor;
-        ctx.fill();
-    } else {
-        // draw rounded rect
-        fillRect(ctx, x1 + r, y1, x2 - r, y1 + r - 1);
-        fillRect(ctx, x1, y1 + r, x1 + r - 1, y2 - r);
-        fillRect(ctx, x2 + 1 - r, y1 + r, x2, y2 - r);
-        fillRect(ctx, x1 + r, y2 - r + 1, x2 - r, y2);
-        fillRect(ctx, x1 + r, y1 + r, x2 - r, y2 - r);
+    const radius = {
+        tl: r,
+        tr: r,
+        bl: r,
+        br: r
+    };
 
-        for (let ry = 0; ry <= r; ry++) {
-            let rx = Math.round(Math.sqrt(r * r - ry * ry));
-            drawHLine(ctx, x2 - r, y2 - r + ry, rx);
-            drawHLine(ctx, x1 + r - rx, y2 - r + ry, rx);
-            drawHLine(ctx, x2 - r, y1 + r - ry, rx);
-            drawHLine(ctx, x1 + r - rx, y1 + r - ry, rx);
-        }
-    }
+    const x = x1 + lineWidth / 2;
+    const y = y1 + lineWidth / 2;
+    const width = x2 - x1 + 1 - lineWidth;
+    const height = y2 - y1 + 1 - lineWidth;
+
+    ctx.beginPath();
+    ctx.moveTo(x + radius.tl, y);
+    ctx.lineTo(x + width - radius.tr, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+    ctx.lineTo(x + width, y + height - radius.br);
+    ctx.quadraticCurveTo(
+        x + width,
+        y + height,
+        x + width - radius.br,
+        y + height
+    );
+    ctx.lineTo(x + radius.bl, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+    ctx.lineTo(x, y + radius.tl);
+    ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+    ctx.closePath();
+
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+    ctx.strokeStyle = fgColor;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
 }
 
 export function drawHLine(
@@ -293,31 +304,8 @@ export function drawBackground(
     let y2 = y + height - 1;
 
     if (width > 0 && height > 0) {
-        const borderSize = style.borderSizeRect;
-        let borderRadius = styleGetBorderRadius(style) || 0;
-        if (
-            borderSize.top > 0 ||
-            borderSize.right > 0 ||
-            borderSize.bottom > 0 ||
-            borderSize.left > 0
-        ) {
-            setColor(style.borderColorProperty);
-            fillRect(ctx, x1, y1, x2, y2, borderRadius);
-            x1 += borderSize.left;
-            y1 += borderSize.top;
-            x2 -= borderSize.right;
-            y2 -= borderSize.bottom;
-            borderRadius = Math.max(
-                borderRadius -
-                    Math.max(
-                        borderSize.top,
-                        borderSize.right,
-                        borderSize.bottom,
-                        borderSize.left
-                    ),
-                0
-            );
-        }
+        const savedGlobalAlpha = ctx.globalAlpha;
+        ctx.globalAlpha = style.opacity / 255;
 
         if (color == undefined) {
             color = inverse
@@ -325,8 +313,63 @@ export function drawBackground(
                 : style.colorProperty;
         }
 
+        const borderSize = style.borderSizeRect;
+        if (
+            borderSize.top > 0 ||
+            borderSize.right > 0 ||
+            borderSize.bottom > 0 ||
+            borderSize.left > 0
+        ) {
+            setColor(style.borderColorProperty);
+
+            let borderRadius = styleGetBorderRadius(style) || 0;
+            if (borderRadius > 0) {
+                setBackColor(color);
+
+                let lineWidth = borderSize.top;
+                if (lineWidth < borderSize.right) {
+                    lineWidth = borderSize.right;
+                }
+                if (lineWidth < borderSize.bottom) {
+                    lineWidth = borderSize.bottom;
+                }
+                if (lineWidth < borderSize.left) {
+                    lineWidth = borderSize.left;
+                }
+
+                fillRoundedRect(ctx, x1, y1, x2, y2, lineWidth, borderRadius);
+
+                ctx.globalAlpha = savedGlobalAlpha;
+
+                return {
+                    x1: x1 + lineWidth,
+                    y1: y1 + lineWidth,
+                    x2: x2 - lineWidth,
+                    y2: y2 - lineWidth
+                };
+            }
+
+            if (borderSize.left > 0) {
+                fillRect(ctx, x1, y1, x1 + borderSize.left - 1, y2);
+            }
+            if (borderSize.top > 0) {
+                fillRect(ctx, x1, y1, x2, y1 + borderSize.top - 1);
+            }
+            if (borderSize.right > 0) {
+                fillRect(ctx, x2 - (borderSize.right - 1), y1, x2, y2);
+            }
+            if (borderSize.bottom > 0) {
+                fillRect(ctx, x1, y2 - (borderSize.bottom - 1), x2, y2);
+            }
+
+            x1 += borderSize.left;
+            y1 += borderSize.top;
+            x2 -= borderSize.right;
+            y2 -= borderSize.bottom;
+        }
+
         setColor(color);
-        fillRect(ctx, x1, y1, x2, y2, borderRadius);
+        fillRect(ctx, x1, y1, x2, y2);
 
         if (style.backgroundImageProperty) {
             const bitmap = ProjectEditor.findBitmap(
@@ -338,6 +381,8 @@ export function drawBackground(
                 drawBitmap(ctx, imageElement, 0, 0, width, height);
             }
         }
+
+        ctx.globalAlpha = savedGlobalAlpha;
     }
 
     return { x1, y1, x2, y2 };

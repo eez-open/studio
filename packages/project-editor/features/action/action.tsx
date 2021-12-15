@@ -15,6 +15,7 @@ import {
 } from "project-editor/core/object";
 import {
     hideInPropertyGridIfDashboardOrApplet,
+    hideInPropertyGridIfNotFirmwareWithFlowSupportProject,
     hideInPropertyGridIfNotV1,
     Message
 } from "project-editor/core/store";
@@ -464,9 +465,16 @@ export class Action extends Flow {
                 enumItems: [
                     {
                         id: "native"
+                    },
+                    {
+                        id: "flow"
                     }
                 ],
-                hideInPropertyGrid: hideInPropertyGridIfNotV1
+                hideInPropertyGrid: (action: Action) =>
+                    hideInPropertyGridIfNotV1(action) &&
+                    hideInPropertyGridIfNotFirmwareWithFlowSupportProject(
+                        action
+                    )
             },
             {
                 name: "implementation",
