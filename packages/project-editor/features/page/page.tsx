@@ -245,6 +245,12 @@ export class Page extends Flow {
                     !getDocumentStore(object).project.isDashboardProject
             }
         ],
+        label: (page: Page) => {
+            if (page.isUsedAsCustomWidget) {
+                return "[CUSTOM WIDGET] " + page.name;
+            }
+            return page.name;
+        },
         beforeLoadHook: (page: Page, jsObject: any) => {
             if (jsObject.widgets) {
                 jsObject.components = jsObject.widgets;

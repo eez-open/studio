@@ -88,7 +88,7 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
-        const projectActions = project.actions.filter(
+        let projectActions = project.actions.filter(
             action =>
                 !buildConfiguration ||
                 !action.usedIn ||
@@ -106,6 +106,13 @@ export function build(
                     )
                 );
             }
+        }
+
+        if (project.isFirmwareWithFlowSupportProject) {
+            // only native
+            projectActions = projectActions.filter(
+                action => action.implementationType == "native"
+            );
         }
 
         if (!sectionNames || sectionNames.indexOf("ACTIONS_ENUM") !== -1) {

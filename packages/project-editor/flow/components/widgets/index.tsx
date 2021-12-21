@@ -148,15 +148,28 @@ const BAR_GRAPH_ORIENTATION_TOP_BOTTOM = 3;
 const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
-function buildWidgetText(text: string | undefined, defaultValue: string = "") {
-    if (!text) {
-        return defaultValue;
+function buildWidgetText(
+    assets: Assets,
+    dataBuffer: DataBuffer,
+    text: string | undefined,
+    defaultValue?: string
+) {
+    if (text == undefined) {
+        text = defaultValue;
     }
-    try {
-        return JSON.parse('"' + text + '"');
-    } catch (e) {}
 
-    return text;
+    if (text != undefined) {
+        try {
+            text = JSON.parse('"' + text + '"');
+        } catch (e) {}
+    }
+
+    if (text != undefined) {
+        const writeText = text;
+        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(writeText));
+    } else {
+        dataBuffer.writeUint32(0);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -330,8 +343,10 @@ export class ContainerWidget extends EmbeddedWidget {
         // flags
         let flags = 0;
 
+        const SHADOW_FLAG = 1 << 0;
+
         if (overlay && this.shadow) {
-            flags |= 1;
+            flags |= SHADOW_FLAG;
         }
 
         dataBuffer.writeUint16(flags);
@@ -1937,9 +1952,7 @@ export class TextWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // text
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.text))
-        );
+        buildWidgetText(assets, dataBuffer, this.text);
 
         // flags
         let flags: number = 0;
@@ -2416,9 +2429,7 @@ export class MultilineTextWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // text
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.text))
-        );
+        buildWidgetText(assets, dataBuffer, this.text);
 
         // first line
         dataBuffer.writeInt16(this.firstLineIndent || 0);
@@ -2995,9 +3006,7 @@ export class ButtonWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // text
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.text))
-        );
+        buildWidgetText(assets, dataBuffer, this.text);
 
         // enabled
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "enabled"));
@@ -3089,14 +3098,10 @@ export class ToggleButtonWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // text 1
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.text1))
-        );
+        buildWidgetText(assets, dataBuffer, this.text1);
 
         // text 2
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.text2))
-        );
+        buildWidgetText(assets, dataBuffer, this.text2);
     }
 }
 
@@ -3851,14 +3856,10 @@ export class UpDownWidget extends EmbeddedWidget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // down button text
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.downButtonText, "<"))
-        );
+        buildWidgetText(assets, dataBuffer, this.downButtonText, "<");
 
         // up button text
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.upButtonText, ">"))
-        );
+        buildWidgetText(assets, dataBuffer, this.upButtonText, ">");
 
         // buttonStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "buttonsStyle"));
@@ -4233,14 +4234,10 @@ export class ScrollBarWidget extends EmbeddedWidget {
         dataBuffer.writeInt16(assets.getStyleIndex(this, "buttonsStyle"));
 
         // down button text
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.leftButtonText, "<"))
-        );
+        buildWidgetText(assets, dataBuffer, this.leftButtonText, "<");
 
         // up button text
-        dataBuffer.writeObjectOffset(() =>
-            dataBuffer.writeString(buildWidgetText(this.rightButtonText, ">"))
-        );
+        buildWidgetText(assets, dataBuffer, this.rightButtonText, ">");
     }
 }
 

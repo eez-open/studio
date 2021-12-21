@@ -376,6 +376,26 @@ export const builtInFunctions: {
             return "integer";
         }
     },
+    "Flow.isPageActive": {
+        arity: 0,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            if (!expressionContext) {
+                return false;
+            }
+            return (
+                expressionContext.flowState &&
+                expressionContext.flowState.flow ==
+                    expressionContext.flowState.runtime.selectedPage
+            );
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
     "Math.sin": {
         arity: 1,
         args: ["value"],

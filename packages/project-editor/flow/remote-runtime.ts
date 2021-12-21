@@ -908,7 +908,7 @@ class DebuggerConnection {
                         }
 
                         const globalVariable =
-                            runtime.DocumentStore.project.variables.globalVariables.find(
+                            runtime.DocumentStore.project.allGlobalVariables.find(
                                 globalVariable =>
                                     globalVariable.name ==
                                     globalVariableInAssetsMap.name

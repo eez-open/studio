@@ -1717,25 +1717,36 @@ export class CallActionActionComponent extends ActionComponent {
 
         const action = findAction(getProject(this), this.action);
         if (action) {
-            inputs = action.inputComponents.map(
-                (inputActionComponent: InputActionComponent) => ({
-                    name: inputActionComponent.wireID,
-                    displayName: inputActionComponent.name
-                        ? inputActionComponent.name
-                        : NOT_NAMED_LABEL,
-                    type: inputActionComponent.inputType,
-                    isSequenceInput: false,
-                    isOptionalInput: false
-                })
-            );
+            if (action.implementationType == "native") {
+                inputs = [
+                    {
+                        name: "@seqin",
+                        type: "null" as ValueType,
+                        isSequenceInput: true,
+                        isOptionalInput: false
+                    }
+                ];
+            } else {
+                inputs = action.inputComponents.map(
+                    (inputActionComponent: InputActionComponent) => ({
+                        name: inputActionComponent.wireID,
+                        displayName: inputActionComponent.name
+                            ? inputActionComponent.name
+                            : NOT_NAMED_LABEL,
+                        type: inputActionComponent.inputType,
+                        isSequenceInput: false,
+                        isOptionalInput: false
+                    })
+                );
 
-            if (action.startComponent) {
-                inputs.unshift({
-                    name: "@seqin",
-                    type: "null" as ValueType,
-                    isSequenceInput: true,
-                    isOptionalInput: false
-                });
+                if (action.startComponent) {
+                    inputs.unshift({
+                        name: "@seqin",
+                        type: "null" as ValueType,
+                        isSequenceInput: true,
+                        isOptionalInput: false
+                    });
+                }
             }
         } else {
             inputs = [];
@@ -1749,24 +1760,35 @@ export class CallActionActionComponent extends ActionComponent {
 
         const action = findAction(getProject(this), this.action);
         if (action) {
-            outputs = action.outputComponents.map(
-                (outputActionComponent: OutputActionComponent) => ({
-                    name: outputActionComponent.wireID,
-                    displayName: outputActionComponent.name
-                        ? outputActionComponent.name
-                        : NOT_NAMED_LABEL,
-                    type: outputActionComponent.outputType,
-                    isSequenceOutput: false,
-                    isOptionalOutput: true
-                })
-            );
-            if (action.endComponent) {
-                outputs.unshift({
-                    name: "@seqout",
-                    type: "null" as ValueType,
-                    isSequenceOutput: true,
-                    isOptionalOutput: true
-                });
+            if (action.implementationType == "native") {
+                outputs = [
+                    {
+                        name: "@seqout",
+                        type: "null" as ValueType,
+                        isSequenceOutput: true,
+                        isOptionalOutput: true
+                    }
+                ];
+            } else {
+                outputs = action.outputComponents.map(
+                    (outputActionComponent: OutputActionComponent) => ({
+                        name: outputActionComponent.wireID,
+                        displayName: outputActionComponent.name
+                            ? outputActionComponent.name
+                            : NOT_NAMED_LABEL,
+                        type: outputActionComponent.outputType,
+                        isSequenceOutput: false,
+                        isOptionalOutput: true
+                    })
+                );
+                if (action.endComponent) {
+                    outputs.unshift({
+                        name: "@seqout",
+                        type: "null" as ValueType,
+                        isSequenceOutput: true,
+                        isOptionalOutput: true
+                    });
+                }
             }
         } else {
             outputs = [];
@@ -1820,28 +1842,38 @@ export class CallActionActionComponent extends ActionComponent {
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const action = findAction(getProject(this), this.action);
         if (action) {
-            const flowIndex = assets.flows.indexOf(action);
-            dataBuffer.writeInt16(flowIndex);
-
-            if (action.inputComponents.length > 0) {
-                dataBuffer.writeUint8(
-                    this.buildInputs.findIndex(
-                        input => input.name == action.inputComponents[0].wireID
-                    )
+            if (action.implementationType == "native") {
+                dataBuffer.writeInt16(
+                    assets.flows.length +
+                        assets.getWidgetActionIndex(this, "action")
                 );
-            } else {
                 dataBuffer.writeUint8(0);
-            }
+                dataBuffer.writeUint8(0);
+            } else {
+                const flowIndex = assets.flows.indexOf(action);
+                dataBuffer.writeInt16(flowIndex);
 
-            if (action.outputComponents.length > 0) {
-                dataBuffer.writeUint8(
-                    this.buildOutputs.findIndex(
-                        output =>
-                            output.name == action.outputComponents[0].wireID
-                    )
-                );
-            } else {
-                dataBuffer.writeUint8(0);
+                if (action.inputComponents.length > 0) {
+                    dataBuffer.writeUint8(
+                        this.buildInputs.findIndex(
+                            input =>
+                                input.name == action.inputComponents[0].wireID
+                        )
+                    );
+                } else {
+                    dataBuffer.writeUint8(0);
+                }
+
+                if (action.outputComponents.length > 0) {
+                    dataBuffer.writeUint8(
+                        this.buildOutputs.findIndex(
+                            output =>
+                                output.name == action.outputComponents[0].wireID
+                        )
+                    );
+                } else {
+                    dataBuffer.writeUint8(0);
+                }
             }
         } else {
             dataBuffer.writeInt16(-1);

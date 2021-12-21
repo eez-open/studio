@@ -385,8 +385,7 @@ class WatchTable extends React.Component<{
             type: "",
             children: () =>
                 this.getVariableTreeNodes(
-                    this.props.runtime.DocumentStore.project.variables
-                        .globalVariables
+                    this.props.runtime.DocumentStore.project.allGlobalVariables
                 ),
             selected: false,
             expanded: true

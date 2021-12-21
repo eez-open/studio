@@ -981,7 +981,7 @@ class RuntimeSettings {
 
     async loadPersistentVariables() {
         const DocumentStore = this.DocumentStore;
-        const globalVariables = DocumentStore.project.variables.globalVariables;
+        const globalVariables = DocumentStore.project.allGlobalVariables;
         const dataContext = DocumentStore.dataContext;
         for (const variable of globalVariables) {
             if (variable.persistent) {
@@ -994,8 +994,7 @@ class RuntimeSettings {
     }
 
     async savePersistentVariables() {
-        const globalVariables =
-            this.DocumentStore.project.variables.globalVariables;
+        const globalVariables = this.DocumentStore.project.allGlobalVariables;
         for (const variable of globalVariables) {
             if (variable.persistent) {
                 const value = this.DocumentStore.dataContext.get(variable.name);
@@ -1356,7 +1355,10 @@ export function propertyNotFoundMessage(
 ) {
     return new Message(
         type,
-        `"${humanizePropertyName(object, propertyName)}": not found.`,
+        `"${humanizePropertyName(object, propertyName)}": "${getProperty(
+            object,
+            propertyName
+        )}" not found.`,
         getChildOfObject(object, propertyName)
     );
 }
@@ -1676,6 +1678,7 @@ export class DocumentStoreClass {
                             this.mapExternalProjectToAbsolutePath.delete(
                                 project
                             );
+                            this.loadExternalProject(path);
                         });
                     }
                 });

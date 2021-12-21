@@ -39,7 +39,8 @@ import {
     Message,
     propertyNotSetMessage,
     hideInPropertyGridIfDashboard,
-    hideInPropertyGridIfNotDashboard
+    hideInPropertyGridIfNotDashboard,
+    updateObject
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/store";
 import {
@@ -92,6 +93,17 @@ import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/d
 import type { IActionComponentDefinition, LogItemType } from "eez-studio-types";
 
 const { MenuItem } = EEZStudio.remote || {};
+
+////////////////////////////////////////////////////////////////////////////////
+
+let positionAndSize:
+    | {
+          top: number;
+          left: number;
+          width: number;
+          height: number;
+      }
+    | undefined = undefined;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1663,6 +1675,45 @@ export class Widget extends Component {
                                 context.selectObject(layoutWidget);
                             }
                         }
+                    })
+                );
+            }
+
+            if (additionalMenuItems.length > 0) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Copy position and size",
+                        click: async () => {
+                            positionAndSize = {
+                                top: thisObject.top,
+                                left: thisObject.left,
+                                width: thisObject.width,
+                                height: thisObject.height
+                            };
+                        }
+                    })
+                );
+
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Paste position and size",
+                        click: async () => {
+                            if (positionAndSize) {
+                                updateObject(thisObject, {
+                                    top: positionAndSize.top,
+                                    left: positionAndSize.left,
+                                    width: positionAndSize.width,
+                                    height: positionAndSize.height
+                                });
+                            }
+                        },
+                        enabled: positionAndSize != undefined
                     })
                 );
             }

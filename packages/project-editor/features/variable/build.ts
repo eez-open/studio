@@ -68,25 +68,12 @@ export function build(
     return new Promise((resolve, reject) => {
         const result: any = {};
 
-        let projectVariables = project.variables.globalVariables.filter(
+        let projectVariables = project.allGlobalVariables.filter(
             variable =>
                 !buildConfiguration ||
                 !variable.usedIn ||
                 variable.usedIn.indexOf(buildConfiguration.name) !== -1
         );
-        for (const importDirective of project.settings.general.imports) {
-            if (importDirective.project) {
-                projectVariables.push(
-                    ...importDirective.project.variables.globalVariables.filter(
-                        variable =>
-                            !buildConfiguration ||
-                            !variable.usedIn ||
-                            variable.usedIn.indexOf(buildConfiguration.name) !==
-                                -1
-                    )
-                );
-            }
-        }
 
         if (project.isFirmwareWithFlowSupportProject) {
             // only native

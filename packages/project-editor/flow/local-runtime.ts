@@ -85,8 +85,7 @@ export class LocalRuntime extends RuntimeBase {
     };
 
     async constructObjectGlobalVariables() {
-        for (const variable of this.DocumentStore.project.variables
-            .globalVariables) {
+        for (const variable of this.DocumentStore.project.allGlobalVariables) {
             let value = this.DocumentStore.dataContext.get(variable.name);
             if (value == null) {
                 const objectVariableType = getObjectVariableTypeFromType(
@@ -114,8 +113,7 @@ export class LocalRuntime extends RuntimeBase {
     }
 
     async destroyObjectGlobalVariables() {
-        for (const variable of this.DocumentStore.project.variables
-            .globalVariables) {
+        for (const variable of this.DocumentStore.project.allGlobalVariables) {
             let value = this.DocumentStore.dataContext.get(variable.name);
             if (value) {
                 const objectVariableType = getObjectVariableTypeFromType(

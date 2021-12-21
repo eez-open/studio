@@ -169,7 +169,7 @@ class SelectItemDialog extends React.Component<{
     }
 
     @computed get globalVariables() {
-        return this.context.project.variables.globalVariables;
+        return this.context.project.allGlobalVariables;
     }
 
     getTypeChildren(type: string, prefix: string): ITreeNode<string>[] {

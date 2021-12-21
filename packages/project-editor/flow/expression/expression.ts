@@ -515,7 +515,7 @@ function findValueTypeInExpressionNode(
             }
         }
 
-        let globalVariable = project.variables.globalVariables.find(
+        let globalVariable = project.allGlobalVariables.find(
             globalVariable => globalVariable.name == node.name
         );
         if (globalVariable) {
@@ -811,10 +811,9 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 return;
             }
 
-            let globalVariableIndex =
-                project.variables.globalVariables.findIndex(
-                    globalVariable => globalVariable.name == node.name
-                );
+            let globalVariableIndex = project.allGlobalVariables.findIndex(
+                globalVariable => globalVariable.name == node.name
+            );
             if (globalVariableIndex != -1) {
                 return;
             }
@@ -982,10 +981,9 @@ function checkAssignableExpressionNode(
                 return;
             }
 
-            let globalVariableIndex =
-                project.variables.globalVariables.findIndex(
-                    globalVariable => globalVariable.name == node.name
-                );
+            let globalVariableIndex = project.allGlobalVariables.findIndex(
+                globalVariable => globalVariable.name == node.name
+            );
             if (globalVariableIndex != -1) {
                 return;
             }
@@ -1674,7 +1672,7 @@ function evalAssignableExpressionWithContext(
             }
 
             let globalVariable =
-                expressionContext.DocumentStore.project.variables.globalVariables.find(
+                expressionContext.DocumentStore.project.allGlobalVariables.find(
                     globalVariable => globalVariable.name == node.name
                 );
             if (globalVariable) {

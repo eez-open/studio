@@ -340,6 +340,12 @@ export class Variable extends EezObject {
                     !isGlobalVariable(variable)
             }
         ],
+        label: (variable: Variable) => {
+            if (variable.native) {
+                return "[NATIVE] " + variable.name;
+            }
+            return variable.name;
+        },
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
         },
@@ -488,7 +494,7 @@ export class DataContext implements IDataContext {
 
     initGlobalVariables() {
         if (this.project.variables) {
-            this.project.variables.globalVariables.forEach(variable => {
+            this.project.allGlobalVariables.forEach(variable => {
                 try {
                     const { value } = evalConstantExpression(
                         this.project,

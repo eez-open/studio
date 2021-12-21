@@ -151,15 +151,20 @@ export class Assets {
                 !asset.usedIn ||
                 asset.usedIn.indexOf(buildConfiguration.name) !== -1;
 
-            this.flows = this.getAssets<Page | Action>(
-                project => [
-                    ...project.pages,
-                    ...project.actions.filter(
-                        action => action.implementationType == "flow"
-                    )
-                ],
-                assetIncludePredicate
-            );
+            // first pages, than flow actions
+            this.flows = [
+                ...this.getAssets<Page | Action>(
+                    project => project.pages,
+                    assetIncludePredicate
+                ),
+                ...this.getAssets<Page | Action>(
+                    project =>
+                        project.actions.filter(
+                            action => action.implementationType == "flow"
+                        ),
+                    assetIncludePredicate
+                )
+            ];
 
             this.flows.forEach(flow => this.getFlowState(flow));
 
@@ -167,7 +172,7 @@ export class Assets {
                 // first non-native
                 ...this.getAssets<Variable>(
                     project =>
-                        project.variables.globalVariables.filter(
+                        project.allGlobalVariables.filter(
                             globalVariable => !globalVariable.native
                         ),
                     assetIncludePredicate
@@ -175,7 +180,7 @@ export class Assets {
                 // than native
                 ...this.getAssets<Variable>(
                     project =>
-                        project.variables.globalVariables.filter(
+                        project.allGlobalVariables.filter(
                             globalVariable => globalVariable.native
                         ),
                     assetIncludePredicate
@@ -699,13 +704,19 @@ export class Assets {
             }
 
             if (this.DocumentStore.project.isFirmwareWithFlowSupportProject) {
-                const actionIndex = this.actions.findIndex(
+                const action = this.actions.find(
                     action => action.name == actionName
                 );
-                if (actionIndex == -1) {
+                if (!action) {
                     return 0;
                 }
-                if (this.actions[actionIndex].implementationType === "native") {
+
+                if (action.implementationType === "native") {
+                    const actionIndex = this.actions
+                        .filter(
+                            action => action.implementationType === "native"
+                        )
+                        .findIndex(action => action.name == actionName);
                     return actionIndex + 1;
                 }
             }

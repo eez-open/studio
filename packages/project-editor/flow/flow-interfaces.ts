@@ -68,7 +68,10 @@ export interface IRuntime {
         sourceComponent: Component,
         message: string
     ): void;
+    selectedPage: IFlow;
 }
+
+export interface IFlow {}
 
 export interface IFlowState {
     getFlowStateByComponent(component: Component): IFlowState | undefined;
@@ -81,6 +84,7 @@ export interface IFlowState {
 
     dataContext: IDataContext;
     runtime: IRuntime;
+    flow: IFlow;
     DocumentStore: any;
 
     getVariable(component: Component, variableName: string): any;

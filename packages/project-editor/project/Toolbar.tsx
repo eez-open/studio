@@ -70,7 +70,7 @@ class GlobalVariableStatuses extends React.Component {
     render() {
         let globalVariablesStatus: React.ReactNode[] = [];
 
-        for (const variable of this.context.project.variables.globalVariables) {
+        for (const variable of this.context.project.allGlobalVariables) {
             const objectVariableType = getObjectVariableTypeFromType(
                 variable.type
             );

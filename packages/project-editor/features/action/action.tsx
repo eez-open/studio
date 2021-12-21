@@ -488,6 +488,12 @@ export class Action extends Flow {
                 hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
             }
         ],
+        label: (action: Action) => {
+            if (action.implementationType == "native") {
+                return "[NATIVE] " + action.name;
+            }
+            return action.name;
+        },
         beforeLoadHook: (action: Action, jsObject: any) => {
             if (jsObject.page) {
                 jsObject.components = jsObject.page.components;

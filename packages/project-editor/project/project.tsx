@@ -1203,6 +1203,19 @@ export class Project extends EezObject {
     }
 
     @computed({ keepAlive: true })
+    get allGlobalVariables() {
+        let allVariables = [...this.variables.globalVariables];
+        for (const importDirective of this.settings.general.imports) {
+            if (importDirective.project) {
+                allVariables.push(
+                    ...importDirective.project.variables.globalVariables
+                );
+            }
+        }
+        return allVariables;
+    }
+
+    @computed({ keepAlive: true })
     get pagesMap() {
         const map = new Map<String, Page>();
         if (this.pages) {
