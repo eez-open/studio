@@ -559,8 +559,10 @@ registerClass("ImportDirective", ImportDirective);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export type ProjectVersion = "v1" | "v2" | "v3";
+
 export class General extends EezObject {
-    @observable projectVersion: "v1" | "v2" | "v3" = "v3";
+    @observable projectVersion: ProjectVersion = "v3";
     @observable projectType: ProjectType;
     @observable scpiDocFolder?: string;
     @observable namespace: string;

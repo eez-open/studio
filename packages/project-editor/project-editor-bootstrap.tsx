@@ -72,6 +72,7 @@ import type {
     IObjectVariableType
 } from "eez-studio-types";
 import { findBitmap } from "project-editor/features/bitmap/bitmap";
+import { migrateProject } from "project-editor/project/migrate-project";
 
 let extensionsInitialized = false;
 
@@ -159,7 +160,8 @@ export async function initProjectEditor(homeTabs: Tabs) {
         getFlow,
         getNameProperty,
         getObjectVariableTypeFromType,
-        findBitmap
+        findBitmap,
+        migrateProject
     };
 
     Object.assign(ProjectEditor, projectEditor);

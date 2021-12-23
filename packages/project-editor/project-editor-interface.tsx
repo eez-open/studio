@@ -33,6 +33,7 @@ import type {
 } from "project-editor/features/scpi/scpi";
 import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 import type { findBitmap } from "project-editor/features/bitmap/bitmap";
+import type { migrateProject } from "project-editor/project/migrate-project";
 
 export interface IProjectEditor {
     homeTabs: Tabs;
@@ -65,6 +66,7 @@ export interface IProjectEditor {
     getNameProperty: typeof getNameProperty;
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
     findBitmap: typeof findBitmap;
+    migrateProject: typeof migrateProject;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

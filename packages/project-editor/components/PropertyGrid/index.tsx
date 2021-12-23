@@ -28,6 +28,7 @@ import { propertyCollapsedStore } from "./PropertyCollapsedStore";
 import { groupCollapsedStore } from "./GroupCollapsedStore";
 import { PropertyEnclosure } from "./PropertyEnclosure";
 import { GroupTitle } from "./GroupTitle";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,6 +74,19 @@ export class PropertyGrid extends React.Component<{
         const wasCombineCommands = this.context.undoManager.combineCommands;
         if (!wasCombineCommands) {
             this.context.undoManager.setCombineCommands(true);
+        }
+
+        if (
+            this.objects.length == 1 &&
+            (propertyValues as any).projectVersion != undefined
+        ) {
+            const project = ProjectEditor.getProject(this.objects[0]);
+            if (project.settings.general == this.objects[0]) {
+                ProjectEditor.migrateProject(
+                    project,
+                    (propertyValues as any).projectVersion
+                );
+            }
         }
 
         this.objects.forEach(object => {
