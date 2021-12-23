@@ -1002,7 +1002,7 @@ function checkAssignableExpressionNode(
             checkNode(node.object);
 
             if (node.computed) {
-                checkNode(node.property);
+                checkExpressionNode(component, node.property);
             }
 
             return;
