@@ -182,9 +182,9 @@ class StreamSnitch extends Writable {
             );
         }
 
-        if (this.regex.multiline) {
-            this._buffer = this._buffer.slice(this._buffer.lastIndexOf("\n"));
-        }
+        // if (this.regex.multiline) {
+        //     this._buffer = this._buffer.slice(this._buffer.lastIndexOf("\n"));
+        // }
 
         cb();
     }
