@@ -123,7 +123,8 @@ import {
     WIDGET_TYPE_PROGRESS,
     WIDGET_TYPE_CANVAS,
     WIDGET_TYPE_GAUGE,
-    WIDGET_TYPE_INPUT
+    WIDGET_TYPE_INPUT,
+    WIDGET_TYPE_ROLLER
 } from "./widget_types";
 import {
     evalConstantExpression,
@@ -5421,3 +5422,53 @@ export class CheckboxWidget extends Widget {
 }
 
 registerClass("CheckboxWidget", CheckboxWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class RollerWidget extends EmbeddedWidget {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_ROLLER,
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 64
+        },
+
+        icon: "../home/_images/widgets/Rectangle.png",
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
+    });
+
+    render(flowContext: IFlowContext) {
+        return (
+            <>
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                true
+                            );
+                        }}
+                    />
+                )}
+                {super.render(flowContext)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
+}
+
+registerClass("RollerWidget", RollerWidget);
