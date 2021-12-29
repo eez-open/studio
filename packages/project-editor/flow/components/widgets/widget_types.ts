@@ -23,3 +23,6 @@ export const WIDGET_TYPE_CANVAS = 22;
 export const WIDGET_TYPE_GAUGE = 23;
 export const WIDGET_TYPE_INPUT = 24;
 export const WIDGET_TYPE_ROLLER = 25;
+export const WIDGET_TYPE_SWITCH = 26;
+export const WIDGET_TYPE_SLIDER = 27;
+export const WIDGET_TYPE_DROP_DOWN_LIST = 28;

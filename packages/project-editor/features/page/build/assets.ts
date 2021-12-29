@@ -447,7 +447,14 @@ export class Assets {
                 return this.DocumentStore.masterProject ? -i : i;
             }
         }
-        const font = findFont(this.DocumentStore.project, fontName);
+
+        const project = getProject(object);
+
+        let font = findFont(project, fontName);
+        if (!font && project != this.DocumentStore.project) {
+            font = findFont(this.DocumentStore.project, fontName);
+        }
+
         if (font) {
             if (font.id != undefined) {
                 return font.id;

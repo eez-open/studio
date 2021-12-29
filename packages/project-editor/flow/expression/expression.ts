@@ -123,7 +123,15 @@ export function buildExpression(
         ];
     } else if (typeof expression == "number") {
         instructions = [
-            makePushConstantInstruction(assets, expression, "double")
+            makePushConstantInstruction(
+                assets,
+                expression,
+                Number.isInteger(expression) &&
+                    expression > -2147483648 &&
+                    expression < 2147483647
+                    ? "integer"
+                    : "double"
+            )
         ];
     } else {
         let rootNode;
@@ -773,6 +781,9 @@ function findValueTypeInExpressionNode(
                 assignable
             )
         );
+        node.valueType = `array:${
+            node.elements.length > 0 ? node.elements[0].valueType : "any"
+        }` as ValueType;
     } else if (node.type == "ObjectExpression") {
         node.properties.forEach(property =>
             findValueTypeInExpressionNode(
@@ -782,6 +793,7 @@ function findValueTypeInExpressionNode(
                 assignable
             )
         );
+        node.valueType = `struct:any`;
     } else {
         throw `Unknown expression node "${node.type}"`;
     }
@@ -1265,11 +1277,23 @@ function buildExpressionNode(
     }
 
     if (node.type == "ArrayExpression") {
-        console.log("TODO build ArrayExpression", node);
+        return [
+            makePushConstantInstruction(
+                assets,
+                evalConstantExpressionNode(assets.rootProject, node),
+                node.valueType
+            )
+        ];
     }
 
     if (node.type == "ObjectExpression") {
-        console.log("TODO build ObjectExpression", node);
+        return [
+            makePushConstantInstruction(
+                assets,
+                evalConstantExpressionNode(assets.rootProject, node),
+                node.valueType
+            )
+        ];
     }
 
     throw `Unknown expression node "${node.type}"`;

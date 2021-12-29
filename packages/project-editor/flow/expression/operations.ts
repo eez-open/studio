@@ -504,6 +504,69 @@ export const builtInFunctions: {
             return "double";
         }
     },
+    "Math.floor": {
+        arity: 1,
+        args: ["value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Math.floor(args[0]),
+        getValueType: (...args: ValueType[]) => {
+            if (
+                args[0] != "integer" &&
+                args[0] != "float" &&
+                args[0] != "double"
+            ) {
+                return "undefined";
+            }
+            if (args[0] == "float") {
+                return "float";
+            }
+            return "double";
+        }
+    },
+    "Math.ceil": {
+        arity: 1,
+        args: ["value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Math.ceil(args[0]),
+        getValueType: (...args: ValueType[]) => {
+            if (
+                args[0] != "integer" &&
+                args[0] != "float" &&
+                args[0] != "double"
+            ) {
+                return "undefined";
+            }
+            if (args[0] == "float") {
+                return "float";
+            }
+            return "double";
+        }
+    },
+    "Math.round": {
+        arity: 1,
+        args: ["value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Math.round(args[0]),
+        getValueType: (...args: ValueType[]) => {
+            if (
+                args[0] != "integer" &&
+                args[0] != "float" &&
+                args[0] != "double"
+            ) {
+                return "undefined";
+            }
+            if (args[0] == "float") {
+                return "float";
+            }
+            return "double";
+        }
+    },
 
     "String.find": {
         arity: 2,

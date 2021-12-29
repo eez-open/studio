@@ -2,7 +2,10 @@ import tinycolor from "tinycolor2";
 
 import { getColorRGB, to16bitsColor } from "eez-studio-shared/color";
 
-import type { Style } from "project-editor/features/style/style";
+import type {
+    BorderRadiusSpec,
+    Style
+} from "project-editor/features/style/style";
 import type { Font, IGlyphBitmap } from "project-editor/features/font/font";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -45,42 +48,53 @@ export function fillRoundedRect(
     x2: number,
     y2: number,
     lineWidth: number,
-    r: number
+    radius: BorderRadiusSpec | number
 ) {
-    const radius = {
-        tl: r,
-        tr: r,
-        bl: r,
-        br: r
-    };
-
     const x = x1 + lineWidth / 2;
     const y = y1 + lineWidth / 2;
     const width = x2 - x1 + 1 - lineWidth;
     const height = y2 - y1 + 1 - lineWidth;
 
+    let r: BorderRadiusSpec;
+    if (typeof radius == "number") {
+        r = {
+            topLeftX: radius,
+            topLeftY: radius,
+            topRightX: radius,
+            topRightY: radius,
+            bottomLeftX: radius,
+            bottomLeftY: radius,
+            bottomRightX: radius,
+            bottomRightY: radius
+        };
+    } else {
+        r = radius;
+    }
+
     ctx.beginPath();
-    ctx.moveTo(x + radius.tl, y);
-    ctx.lineTo(x + width - radius.tr, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
-    ctx.lineTo(x + width, y + height - radius.br);
+    ctx.moveTo(x + r.topLeftX, y);
+    ctx.lineTo(x + width - r.topRightX, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + r.topRightY);
+    ctx.lineTo(x + width, y + height - r.bottomRightY);
     ctx.quadraticCurveTo(
         x + width,
         y + height,
-        x + width - radius.br,
+        x + width - r.bottomRightX,
         y + height
     );
-    ctx.lineTo(x + radius.bl, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
-    ctx.lineTo(x, y + radius.tl);
-    ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+    ctx.lineTo(x + r.bottomLeftX, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - r.bottomLeftY);
+    ctx.lineTo(x, y + r.topLeftY);
+    ctx.quadraticCurveTo(x, y, x + r.topLeftX, y);
     ctx.closePath();
 
     ctx.fillStyle = bgColor;
     ctx.fill();
-    ctx.strokeStyle = fgColor;
-    ctx.lineWidth = lineWidth;
-    ctx.stroke();
+    if (lineWidth > 0) {
+        ctx.strokeStyle = fgColor;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+    }
 }
 
 export function drawHLine(
@@ -322,8 +336,17 @@ export function drawBackground(
         ) {
             setColor(style.borderColorProperty);
 
-            let borderRadius = styleGetBorderRadius(style) || 0;
-            if (borderRadius > 0) {
+            let borderRadius = style.borderRadiusSpec;
+            if (
+                borderRadius.topLeftX > 0 ||
+                borderRadius.topLeftY > 0 ||
+                borderRadius.topRightX > 0 ||
+                borderRadius.topRightY > 0 ||
+                borderRadius.bottomLeftX > 0 ||
+                borderRadius.bottomLeftY > 0 ||
+                borderRadius.bottomRightX > 0 ||
+                borderRadius.bottomRightY > 0
+            ) {
                 setBackColor(color);
 
                 let lineWidth = borderSize.top;
@@ -366,6 +389,31 @@ export function drawBackground(
             y1 += borderSize.top;
             x2 -= borderSize.right;
             y2 -= borderSize.bottom;
+        } else {
+            let borderRadius = style.borderRadiusSpec;
+            if (
+                borderRadius.topLeftX > 0 ||
+                borderRadius.topLeftY > 0 ||
+                borderRadius.topRightX > 0 ||
+                borderRadius.topRightY > 0 ||
+                borderRadius.bottomLeftX > 0 ||
+                borderRadius.bottomLeftY > 0 ||
+                borderRadius.bottomRightX > 0 ||
+                borderRadius.bottomRightY > 0
+            ) {
+                setBackColor(color);
+
+                fillRoundedRect(ctx, x1, y1, x2, y2, 0, borderRadius);
+
+                ctx.globalAlpha = savedGlobalAlpha;
+
+                return {
+                    x1: x1,
+                    y1: y1,
+                    x2: x2,
+                    y2: y2
+                };
+            }
         }
 
         setColor(color);
@@ -397,7 +445,8 @@ export function drawText(
     h: number,
     style: Style,
     inverse: boolean,
-    overrideBackgroundColor?: string
+    overrideBackgroundColor?: string,
+    boolSkipBackground: boolean = false
 ) {
     const styleColor = style.colorProperty;
     const styleBackgroundColor =
@@ -405,16 +454,18 @@ export function drawText(
             ? overrideBackgroundColor
             : style.backgroundColorProperty;
 
-    let { x1, y1, x2, y2 } = drawBackground(
-        ctx,
-        x,
-        y,
-        w,
-        h,
-        style,
-        false,
-        inverse ? styleColor : styleBackgroundColor
-    );
+    let { x1, y1, x2, y2 } = boolSkipBackground
+        ? { x1: x, y1: y, x2: x + w - 1, y2: y + h - 1 }
+        : drawBackground(
+              ctx,
+              x,
+              y,
+              w,
+              h,
+              style,
+              false,
+              inverse ? styleColor : styleBackgroundColor
+          );
 
     const font = styleGetFont(style);
     if (!font) {

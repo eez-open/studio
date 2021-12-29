@@ -109,13 +109,20 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(style.borderSizeRect.bottom);
         dataBuffer.writeUint8(style.borderSizeRect.left);
 
-        dataBuffer.writeUint16(style.borderRadiusProperty || 0);
-
         let borderColor = assets.getColorIndex(style, "borderColor");
         if (isNaN(borderColor)) {
             borderColor = 0;
         }
         dataBuffer.writeUint16(borderColor);
+
+        dataBuffer.writeUint8(style.borderRadiusSpec.topLeftX || 0);
+        dataBuffer.writeUint8(style.borderRadiusSpec.topLeftY || 0);
+        dataBuffer.writeUint8(style.borderRadiusSpec.topRightX || 0);
+        dataBuffer.writeUint8(style.borderRadiusSpec.topRightY || 0);
+        dataBuffer.writeUint8(style.borderRadiusSpec.bottomRightX || 0);
+        dataBuffer.writeUint8(style.borderRadiusSpec.bottomRightY || 0);
+        dataBuffer.writeUint8(style.borderRadiusSpec.bottomLeftX || 0);
+        dataBuffer.writeUint8(style.borderRadiusSpec.bottomLeftY || 0);
 
         // font
         let fontIndex = style.fontName

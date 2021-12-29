@@ -61,7 +61,8 @@ import {
 } from "project-editor/features/variable/defs";
 import {
     getEnumTypeNameFromVariable,
-    isEnumVariable
+    isEnumVariable,
+    ValueType
 } from "project-editor/features/variable/value-type";
 import {
     drawText,
@@ -124,7 +125,10 @@ import {
     WIDGET_TYPE_CANVAS,
     WIDGET_TYPE_GAUGE,
     WIDGET_TYPE_INPUT,
-    WIDGET_TYPE_ROLLER
+    WIDGET_TYPE_ROLLER,
+    WIDGET_TYPE_SWITCH,
+    WIDGET_TYPE_SLIDER,
+    WIDGET_TYPE_DROP_DOWN_LIST
 } from "./widget_types";
 import {
     evalConstantExpression,
@@ -148,6 +152,82 @@ const BAR_GRAPH_ORIENTATION_RIGHT_LEFT = 2;
 const BAR_GRAPH_ORIENTATION_TOP_BOTTOM = 3;
 const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
+
+////////////////////////////////////////////////////////////////////////////////
+
+function getBooleanValue(
+    flowContext: IFlowContext,
+    widget: Widget,
+    expr: string | undefined,
+    defaultValue: boolean
+) {
+    if (!expr) {
+        return defaultValue;
+    }
+
+    let value;
+    try {
+        value = evalExpression(flowContext, widget, expr);
+    } catch (err) {
+        // console.error(err);
+    }
+
+    if (typeof value === "boolean") {
+        return value;
+    }
+
+    if (typeof value === "number") {
+        return value != 0;
+    }
+
+    return defaultValue;
+}
+
+function getNumberValue(
+    flowContext: IFlowContext,
+    widget: Widget,
+    expr: string | undefined,
+    defaultValue: number
+) {
+    if (!expr) {
+        return defaultValue;
+    }
+
+    let value;
+    try {
+        value = evalExpression(flowContext, widget, expr);
+    } catch (err) {
+        // console.error(err);
+    }
+
+    if (typeof value === "number") {
+        return value;
+    }
+
+    return defaultValue;
+}
+
+function getAnyValue(
+    flowContext: IFlowContext,
+    widget: Widget,
+    expr: string | undefined,
+    defaultValue: any
+) {
+    if (!expr) {
+        return defaultValue;
+    }
+
+    let value;
+    try {
+        value = evalExpression(flowContext, widget, expr);
+    } catch (err) {
+        // console.error(err);
+    }
+
+    return value || defaultValue;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 function buildWidgetText(
     assets: Assets,
@@ -272,25 +352,12 @@ export class ContainerWidget extends EmbeddedWidget {
     });
 
     render(flowContext: IFlowContext) {
-        let visible = true;
-
-        if (flowContext.flowState) {
-            let value: any;
-            try {
-                value = this.visible
-                    ? evalExpression(flowContext, this, this.visible)
-                    : true;
-            } catch (err) {
-                console.error(err);
-            }
-            if (typeof value === "boolean") {
-                visible = value;
-            } else if (typeof value === "number") {
-                visible = value != 0;
-            } else {
-                visible = false;
-            }
-        }
+        let visible = getBooleanValue(
+            flowContext,
+            this,
+            this.visible,
+            flowContext.flowState ? !!this.visible : true
+        );
 
         return (
             <>
@@ -759,34 +826,38 @@ export class SelectWidget extends EmbeddedWidget {
             } else {
                 let variable = findVariable(getProject(object), object.data);
                 if (variable) {
-                    let enumItems: string[] = [];
-                    if (isEnumVariable(variable)) {
-                        const project = getProject(variable);
-                        const enumName = getEnumTypeNameFromVariable(variable);
-                        enumItems = enumName
-                            ? project.variables.enumsMap
-                                  .get(enumName)
-                                  ?.members.map(member => member.name) ?? []
-                            : [];
-                    } else if (variable.type == "boolean") {
-                        enumItems = ["0", "1"];
-                    }
-                    if (enumItems.length > object.widgets.length) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                "Some select children are missing",
-                                object
-                            )
-                        );
-                    } else if (enumItems.length < object.widgets.length) {
-                        messages.push(
-                            new Message(
-                                MessageType.ERROR,
-                                "Too many select children defined",
-                                object
-                            )
-                        );
+                    if (variable.type != "integer") {
+                        let enumItems: string[] = [];
+                        if (isEnumVariable(variable)) {
+                            const project = getProject(variable);
+                            const enumName =
+                                getEnumTypeNameFromVariable(variable);
+                            enumItems = enumName
+                                ? project.variables.enumsMap
+                                      .get(enumName)
+                                      ?.members.map(member => member.name) ?? []
+                                : [];
+                        } else if (variable.type == "boolean") {
+                            enumItems = ["0", "1"];
+                        }
+
+                        if (enumItems.length > object.widgets.length) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    "Some select children are missing",
+                                    object
+                                )
+                            );
+                        } else if (enumItems.length < object.widgets.length) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    "Too many select children defined",
+                                    object
+                                )
+                            );
+                        }
                     }
                 }
             }
@@ -935,6 +1006,22 @@ export class SelectWidget extends EmbeddedWidget {
 
         return (
             <>
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                true
+                            );
+                        }}
+                    />
+                )}
                 {selectedWidget && (
                     <ComponentsContainerEnclosure
                         components={[selectedWidget]}
@@ -1868,12 +1955,9 @@ export class TextWidget extends EmbeddedWidget {
                 }
 
                 try {
-                    const result = evalConstantExpression(
-                        ProjectEditor.getProject(this),
-                        this.data
-                    );
-                    if (typeof result.value === "string") {
-                        return result.value;
+                    const result = evalExpression(flowContext, this, this.data);
+                    if (typeof result === "string") {
+                        return result;
                     }
                 } catch (err) {}
 
@@ -2947,19 +3031,12 @@ export class ButtonWidget extends EmbeddedWidget {
             node = null;
         }
 
-        let buttonEnabled;
-        if (flowContext.flowState) {
-            try {
-                buttonEnabled = this.enabled
-                    ? evalExpression(flowContext, this, this.enabled)
-                    : true;
-            } catch (err) {
-                console.error(err);
-                buttonEnabled = true;
-            }
-        } else {
-            buttonEnabled = true;
-        }
+        let buttonEnabled = getBooleanValue(
+            flowContext,
+            this,
+            this.enabled,
+            true
+        );
 
         let style = buttonEnabled ? this.style : this.disabledStyle;
 
@@ -5426,10 +5503,22 @@ registerClass("CheckboxWidget", CheckboxWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RollerWidget extends EmbeddedWidget {
+    @observable min: string;
+    @observable max: string;
+    @observable text: string;
+    @observable selectedValueStyle: Style;
+    @observable unselectedValueStyle: Style;
+
     static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
         flowComponentId: WIDGET_TYPE_ROLLER,
 
-        properties: [],
+        properties: [
+            makeDataPropertyInfo("min"),
+            makeDataPropertyInfo("max"),
+            makeDataPropertyInfo("text"),
+            makeStylePropertyInfo("selectedValueStyle"),
+            makeStylePropertyInfo("unselectedValueStyle")
+        ],
 
         defaultValue: {
             left: 0,
@@ -5438,11 +5527,41 @@ export class RollerWidget extends EmbeddedWidget {
             height: 64
         },
 
-        icon: "../home/_images/widgets/Rectangle.png",
+        icon: (
+            <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M11 6h9"></path>
+                <path d="M11 12h9"></path>
+                <path d="M12 18h8"></path>
+                <path d="M4 16a2 2 0 1 1 4 0c0 .591 -.5 1 -1 1.5l-3 2.5h4"></path>
+                <path d="M6 10v-6l-2 2"></path>
+            </svg>
+        ),
 
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.DASHBOARD
     });
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "clear",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
 
     render(flowContext: IFlowContext) {
         return (
@@ -5460,6 +5579,28 @@ export class RollerWidget extends EmbeddedWidget {
                                 this.style,
                                 true
                             );
+
+                            const font = styleGetFont(this.selectedValueStyle);
+                            if (!font) {
+                                return;
+                            }
+
+                            const selectedValueHeight =
+                                this.selectedValueStyle.borderSizeRect.top +
+                                this.selectedValueStyle.paddingRect.top +
+                                font.height +
+                                this.selectedValueStyle.paddingRect.bottom +
+                                this.selectedValueStyle.borderSizeRect.bottom;
+
+                            draw.drawBackground(
+                                ctx,
+                                0,
+                                (this.height - selectedValueHeight) / 2,
+                                this.width,
+                                selectedValueHeight,
+                                this.selectedValueStyle,
+                                true
+                            );
                         }}
                     />
                 )}
@@ -5468,7 +5609,366 @@ export class RollerWidget extends EmbeddedWidget {
         );
     }
 
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "text"));
+
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "selectedValueStyle"));
+        dataBuffer.writeInt16(
+            assets.getStyleIndex(this, "unselectedValueStyle")
+        );
+
+        // component index
+        dataBuffer.writeUint16(assets.getComponentIndex(this));
+    }
 }
 
 registerClass("RollerWidget", RollerWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SwitchWidget extends EmbeddedWidget {
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_SWITCH,
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
+        },
+
+        icon: (
+            <svg
+                width="24"
+                height="24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <circle cx="8" cy="12" r="2" />
+                <rect x="2" y="6" width="20" height="12" rx="6" />
+            </svg>
+        ),
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
+    });
+
+    render(flowContext: IFlowContext) {
+        const enabled = getBooleanValue(flowContext, this, this.data, false);
+
+        return (
+            <>
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            let x = this.style.paddingRect.left;
+                            let y = this.style.paddingRect.top;
+                            let w =
+                                this.width -
+                                this.style.paddingRect.left -
+                                this.style.paddingRect.right;
+                            let h =
+                                this.height -
+                                this.style.paddingRect.top -
+                                this.style.paddingRect.bottom;
+
+                            draw.setColor(this.style.borderColorProperty);
+                            draw.setBackColor(
+                                enabled
+                                    ? this.style.activeBackgroundColorProperty
+                                    : this.style.backgroundColorProperty
+                            );
+                            draw.fillRoundedRect(
+                                ctx,
+                                x,
+                                y,
+                                x + w - 1,
+                                y + h - 1,
+                                this.style.borderSizeRect.left,
+                                h / 2
+                            );
+
+                            h -= 2 * (2 + this.style.borderSizeRect.left);
+                            y += 2 + this.style.borderSizeRect.left;
+
+                            if (enabled) {
+                                x +=
+                                    w -
+                                    h -
+                                    (1 + this.style.borderSizeRect.left);
+                            } else {
+                                x += 1 + this.style.borderSizeRect.left;
+                            }
+                            w = h;
+
+                            draw.setBackColor(this.style.colorProperty);
+                            draw.fillRoundedRect(
+                                ctx,
+                                x,
+                                y,
+                                x + w - 1,
+                                y + h - 1,
+                                1,
+                                h / 2 + 2
+                            );
+                        }}
+                    />
+                )}
+                {super.render(flowContext)}
+            </>
+        );
+    }
+}
+
+registerClass("SwitchWidget", SwitchWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SliderWidget extends EmbeddedWidget {
+    @observable min: string;
+    @observable max: string;
+
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_SLIDER,
+
+        properties: [makeDataPropertyInfo("min"), makeDataPropertyInfo("max")],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
+        },
+
+        icon: (
+            <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <circle cx="14" cy="6" r="2"></circle>
+                <line x1="4" y1="6" x2="12" y2="6"></line>
+                <line x1="16" y1="6" x2="20" y2="6"></line>
+                <circle cx="8" cy="12" r="2"></circle>
+                <line x1="4" y1="12" x2="6" y2="12"></line>
+                <line x1="10" y1="12" x2="20" y2="12"></line>
+                <circle cx="17" cy="18" r="2"></circle>
+                <line x1="4" y1="18" x2="15" y2="18"></line>
+                <line x1="19" y1="18" x2="20" y2="18"></line>
+            </svg>
+        ),
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
+    });
+
+    render(flowContext: IFlowContext) {
+        return (
+            <>
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            let x = this.style.paddingRect.left;
+                            let y = this.style.paddingRect.top;
+                            let w =
+                                this.width -
+                                this.style.paddingRect.left -
+                                this.style.paddingRect.right;
+                            let h =
+                                this.height -
+                                this.style.paddingRect.top -
+                                this.style.paddingRect.bottom;
+
+                            let knobH = h;
+                            let knobW = h;
+                            let knobY = y + (h - knobH) / 2;
+                            let knobBorderRadius = knobH / 2 + 2;
+
+                            let barH = (knobH * 8) / 20;
+                            let barW = w - (knobH - barH);
+                            let barX = x + (w - barW) / 2;
+                            let barY = y + (h - barH) / 2;
+                            let barBorderRadius = barH / 2;
+
+                            let value = getNumberValue(
+                                flowContext,
+                                this,
+                                this.data,
+                                0.5
+                            );
+                            let min = getNumberValue(
+                                flowContext,
+                                this,
+                                this.min,
+                                0
+                            );
+                            let max = getNumberValue(
+                                flowContext,
+                                this,
+                                this.max,
+                                1.0
+                            );
+                            let knobPosition = (value - min) / (max - min);
+                            if (knobPosition < 0) knobPosition = 0;
+                            if (knobPosition > 1.0) knobPosition = 1.0;
+
+                            let knobX =
+                                barX + knobPosition * (barW - 1) - knobW / 2;
+
+                            draw.setBackColor(
+                                this.style.backgroundColorProperty
+                            );
+                            draw.fillRoundedRect(
+                                ctx,
+                                barX,
+                                barY,
+                                barX + barW - 1,
+                                barY + barH - 1,
+                                0,
+                                barBorderRadius
+                            );
+
+                            draw.setBackColor(this.style.colorProperty);
+                            draw.fillRoundedRect(
+                                ctx,
+                                knobX,
+                                knobY,
+                                knobX + knobW - 1,
+                                knobY + knobH - 1,
+                                0,
+                                knobBorderRadius
+                            );
+                        }}
+                    />
+                )}
+                {super.render(flowContext)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+    }
+}
+
+registerClass("SliderWidget", SliderWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class DropDownListWidget extends EmbeddedWidget {
+    @observable options: string;
+
+    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
+
+        properties: [makeDataPropertyInfo("options")],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
+        },
+
+        icon: (
+            <svg viewBox="0 0 1000 1000">
+                <path d="M258.8 402.9v157.4H990V402.9H258.8zm685.5 111.7H304.5v-66h639.8v66zM258.8 743.1H990V585.7H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm-45.7 293.2H990V767.2H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm436.7-463.3h198V75.4H10v274.2h731.2zm0-228.5h152.3v182.8H741.2V121.1zM55.7 303.9V121.1h639.8v182.8H55.7zm714.7-113.5h100.1l-50 63.6-50.1-63.6z" />
+            </svg>
+        ),
+
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.DASHBOARD
+    });
+
+    render(flowContext: IFlowContext) {
+        return (
+            <>
+                {flowContext.DocumentStore.project.isDashboardProject ? null : (
+                    <ComponentCanvas
+                        component={this}
+                        draw={(ctx: CanvasRenderingContext2D) => {
+                            const { x1, y1, x2, y2 } = draw.drawBackground(
+                                ctx,
+                                0,
+                                0,
+                                this.width,
+                                this.height,
+                                this.style,
+                                true
+                            );
+
+                            const options = getAnyValue(
+                                flowContext,
+                                this,
+                                this.options,
+                                []
+                            );
+
+                            let x = x1;
+                            let y = y1;
+                            let w = x2 - x1 + 1;
+                            let h = y2 - y1 + 1;
+
+                            draw.drawText(
+                                ctx,
+                                options.length > 0 &&
+                                    typeof options[0] == "string"
+                                    ? options[0]
+                                    : "<no options>",
+                                x,
+                                y,
+                                w - h + (2 * h) / 6,
+                                h,
+                                this.style,
+                                false,
+                                undefined,
+                                true
+                            );
+
+                            x += w - h;
+                            w = h;
+
+                            x += (2 * h) / 6;
+                            y += (4 * h) / 10;
+                            w -= (2 * h) / 3;
+                            h -= (4 * h) / 5;
+
+                            ctx.beginPath();
+                            ctx.moveTo(x, y);
+                            ctx.lineTo(x + w / 2, y + h);
+                            ctx.lineTo(x + w, y);
+                            ctx.strokeStyle = this.style.colorProperty;
+                            ctx.lineWidth = h / 3;
+                            ctx.stroke();
+                        }}
+                    />
+                )}
+                {super.render(flowContext)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "options"));
+    }
+}
+
+registerClass("DropDownListWidget", DropDownListWidget);

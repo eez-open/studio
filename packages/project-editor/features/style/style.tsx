@@ -55,6 +55,17 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 const { MenuItem } = EEZStudio.remote || {};
 
+export type BorderRadiusSpec = {
+    topLeftX: number;
+    topLeftY: number;
+    topRightX: number;
+    topRightY: number;
+    bottomLeftX: number;
+    bottomLeftY: number;
+    bottomRightX: number;
+    bottomRightY: number;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function isWidgetParentOfStyle(object: IEezObject) {
@@ -538,8 +549,8 @@ const borderSizeProperty: PropertyInfo = {
 
 const borderRadiusProperty: PropertyInfo = {
     name: "borderRadius",
-    type: PropertyType.Number,
-    defaultValue: 0,
+    type: PropertyType.String,
+    defaultValue: "0",
     inheritable: true
 };
 
@@ -694,7 +705,7 @@ export class Style extends EezObject {
     @observable focusColor?: string;
     @observable focusBackgroundColor?: string;
     @observable borderSize?: string;
-    @observable borderRadius?: number;
+    @observable borderRadius?: string;
     @observable borderColor?: string;
     @observable padding?: string;
     @observable margin?: string;
@@ -805,10 +816,16 @@ export class Style extends EezObject {
                     );
                 }
 
-                let borderRadius = object.borderRadiusProperty;
-                if (borderRadius < 0) {
+                let borderRadiusError = Style.getRect(
+                    object.borderRadiusProperty
+                ).error;
+                if (borderRadiusError) {
                     messages.push(
-                        propertyInvalidValueMessage(object, "borderRadius")
+                        new Message(
+                            MessageType.ERROR,
+                            `"Border radius": ${borderRadiusError}.`,
+                            getChildOfObject(object, "borderRadius")
+                        )
                     );
                 }
 
@@ -951,7 +968,7 @@ export class Style extends EezObject {
                 if (!Number.isFinite(value)) {
                     error = `value is not a valid number`;
                 } else if (value < 0) {
-                    error = `value must be >= 0 && <= 25`;
+                    error = `value must be >= 0 && <= 255`;
                 } else if (value > 255) {
                     error = `value must be >= 0 && <= 255`;
                 } else {
@@ -1089,6 +1106,123 @@ export class Style extends EezObject {
         };
     }
 
+    static getRadiusSpec(value: string) {
+        let error;
+        let topLeftX = 0;
+        let topLeftY = 0;
+        let topRightX = 0;
+        let topRightY = 0;
+        let bottomLeftX = 0;
+        let bottomLeftY = 0;
+        let bottomRightX = 0;
+        let bottomRightY = 0;
+
+        if (value !== undefined) {
+            if (typeof value === "number") {
+                if (!Number.isFinite(value)) {
+                    error = `value is not a valid number`;
+                } else if (value < 0) {
+                    error = `value must be >= 0 && <= 255`;
+                } else if (value > 255) {
+                    error = `value must be >= 0 && <= 255`;
+                } else {
+                    topLeftX =
+                        topLeftY =
+                        topRightX =
+                        topRightY =
+                        bottomLeftX =
+                        bottomLeftY =
+                        bottomRightX =
+                        bottomRightY =
+                            value;
+                }
+            } else if (typeof value === "string") {
+                let parts = value.trim().split("/");
+                if (parts.length == 1) {
+                    parts.push(parts[0]);
+                }
+
+                if (parts.length == 2) {
+                    let x = parts[0]
+                        .trim()
+                        .split(/\W+/)
+                        .map(x => parseInt(x));
+                    if (x.length == 1) {
+                        x = [x[0], x[0], x[0], x[0]];
+                    } else if (x.length == 2) {
+                        x = [x[0], x[1], x[0], x[1]];
+                    } else if (x.length == 3) {
+                        x = [x[0], x[1], x[2], x[1]];
+                    }
+
+                    let y = parts[1]
+                        .trim()
+                        .split(/\W+/)
+                        .map(y => parseInt(y));
+                    if (y.length == 1) {
+                        y = [y[0], y[0], y[0], y[0]];
+                    } else if (y.length == 2) {
+                        y = [y[0], y[1], y[0], y[1]];
+                    } else if (y.length == 3) {
+                        y = [y[0], y[1], y[2], y[1]];
+                    }
+
+                    if (x.length == 4 && y.length == 4) {
+                        for (let i = 0; i < 4; i++) {
+                            if (!Number.isFinite(x[i])) {
+                                error = `value is not a valid number`;
+                            } else if (x[i] < 0) {
+                                error = `value must be >= 0 && <= 255`;
+                            } else if (x[i] > 255) {
+                                error = `value must be >= 0 && <= 255`;
+                            }
+                        }
+                        if (!error) {
+                            for (let i = 0; i < 4; i++) {
+                                if (!Number.isFinite(y[i])) {
+                                    error = `value is not a valid number`;
+                                } else if (y[i] < 0) {
+                                    error = `value must be >= 0 && <= 255`;
+                                } else if (y[i] > 255) {
+                                    error = `value must be >= 0 && <= 255`;
+                                }
+                            }
+
+                            topLeftX = x[0];
+                            topLeftY = y[0];
+                            topRightX = x[1];
+                            topRightY = y[1];
+                            bottomRightX = x[2];
+                            bottomRightY = y[2];
+                            bottomLeftX = x[3];
+                            bottomLeftY = y[3];
+                        }
+                    } else {
+                        error = `invalid value`;
+                    }
+                } else {
+                    error = `invalid value`;
+                }
+            } else {
+                error = "invalid value type";
+            }
+        }
+
+        return {
+            error,
+            spec: {
+                topLeftX,
+                topLeftY,
+                topRightX,
+                topRightY,
+                bottomLeftX,
+                bottomLeftY,
+                bottomRightX,
+                bottomRightY
+            }
+        };
+    }
+
     @computed({
         keepAlive: true
     })
@@ -1106,8 +1240,15 @@ export class Style extends EezObject {
     @computed({
         keepAlive: true
     })
-    get borderRadiusProperty(): number {
+    get borderRadiusProperty(): string {
         return getStyleProperty(this, "borderRadius");
+    }
+
+    @computed({
+        keepAlive: true
+    })
+    get borderRadiusSpec() {
+        return Style.getRadiusSpec(this.borderRadiusProperty).spec;
     }
 
     @computed({

@@ -21,6 +21,7 @@ import {
     getChildOfObject,
     getDocumentStore,
     Message,
+    propertyNotFoundMessage,
     propertyNotSetMessage,
     Section
 } from "project-editor/core/store";
@@ -2460,10 +2461,25 @@ export class ShowPageActionComponent extends ActionComponent {
         properties: [
             {
                 name: "page",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
+                type: PropertyType.ObjectReference,
+                propertyGridGroup: specificGroup,
+                referencedObjectCollectionPath: "pages"
             }
         ],
+        check: (object: ShowPageActionComponent) => {
+            let messages: Message[] = [];
+
+            if (!object.page) {
+                messages.push(propertyNotSetMessage(object, "page"));
+            } else {
+                let page = findPage(getProject(object), object.page);
+                if (!page) {
+                    messages.push(propertyNotFoundMessage(object, "page"));
+                }
+            }
+
+            return messages;
+        },
         icon: (
             <svg viewBox="0 0 36 36">
                 <path d="M0 20h16V0H0v20zm0 16h16V24H0v12zm20 0h16V16H20v20zm0-36v12h16V0H20z" />

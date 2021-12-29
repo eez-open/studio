@@ -758,7 +758,7 @@ function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer | null) {
         result.addField(new UInt8(style.borderSizeRect.bottom));
         result.addField(new UInt8(style.borderSizeRect.left));
 
-        result.addField(new UInt16(style.borderRadius || 0));
+        result.addField(new UInt16(style.borderRadiusSpec.topLeftX || 0));
 
         let borderColor = assets.getColorIndex(style, "borderColor");
         if (isNaN(borderColor)) {
