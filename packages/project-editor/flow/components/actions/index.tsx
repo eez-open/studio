@@ -2555,6 +2555,342 @@ registerClass("ShowPageActionComponent", ShowPageActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const MESSAGE_BOX_TYPE_INFO = 1;
+const MESSAGE_BOX_TYPE_ERROR = 2;
+
+export class ShowMessageBoxActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1021,
+        properties: [
+            {
+                name: "messageType",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: MESSAGE_BOX_TYPE_INFO, label: "Info" },
+                    { id: MESSAGE_BOX_TYPE_ERROR, label: "Error" }
+                ],
+                propertyGridGroup: specificGroup
+            },
+            makeExpressionProperty(
+                {
+                    name: "message",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
+        ],
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M4 21V8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H8l-4 4M8 9h8M8 13h6" />
+            </svg>
+        ),
+        componentHeaderColor: "#DEB887"
+    });
+
+    @observable messageType: number;
+    @observable message: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>
+                    {this.messageType == MESSAGE_BOX_TYPE_INFO
+                        ? "Info: "
+                        : this.messageType == MESSAGE_BOX_TYPE_ERROR
+                        ? "Error: "
+                        : ""}
+                    : {this.message}
+                </pre>
+            </div>
+        );
+    }
+
+    async execute(flowState: FlowState) {
+        // TODO
+        return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // type
+        dataBuffer.writeUint8(this.messageType);
+    }
+}
+
+registerClass("ShowMessageBoxActionComponent", ShowMessageBoxActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ShowKeyboardActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1022,
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "initalText",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "minChars",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "maxChars",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            {
+                name: "password",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            }
+        ],
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <path d="M6 10h0M10 10h0M14 10h0M18 10h0M6 14v.01M18 14v.01M10 14h4" />
+            </svg>
+        ),
+        componentHeaderColor: "#DEB887"
+    });
+
+    @observable label: string;
+    @observable initalText: string;
+    @observable minChars: string;
+    @observable maxChars: string;
+    @observable password: boolean;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "result",
+                type: "string" as ValueType,
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            },
+            {
+                name: "canceled",
+                type: "null" as ValueType,
+                isSequenceOutput: false,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>
+                    {this.label ? this.label + ": " : ""} {this.initalText}
+                </pre>
+            </div>
+        );
+    }
+
+    async execute(flowState: FlowState) {
+        // TODO
+        return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // type
+        dataBuffer.writeUint8(this.password ? 1 : 0);
+    }
+}
+
+registerClass("ShowKeyboardActionComponent", ShowKeyboardActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ShowKeypadActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1023,
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "initalValue",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "float"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "min",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "max",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "precision",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "float"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "unit",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
+        ],
+        icon: (
+            <svg viewBox="0 0 50 50">
+                <path d="M5 3c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2H5zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2h-8zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2h-8zM5 15c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2H5zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zM5 27c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2H5zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zM21 39c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8z" />
+            </svg>
+        ),
+        componentHeaderColor: "#DEB887"
+    });
+
+    @observable label: string;
+    @observable initalValue: string;
+    @observable min: string;
+    @observable max: string;
+    @observable precision: string;
+    @observable unit: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "result",
+                type: "string" as ValueType,
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            },
+            {
+                name: "canceled",
+                type: "null" as ValueType,
+                isSequenceOutput: false,
+                isOptionalOutput: true
+            }
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>
+                    {this.label ? this.label + ": " : ""} {this.initalValue}
+                </pre>
+            </div>
+        );
+    }
+
+    async execute(flowState: FlowState) {
+        // TODO
+        return undefined;
+    }
+}
+
+registerClass("ShowKeypadActionComponent", ShowKeypadActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const TrixEditor = observer(
     ({
         component,
