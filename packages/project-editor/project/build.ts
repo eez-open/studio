@@ -342,7 +342,6 @@ export async function build(
 
     const OutputSections = DocumentStore.outputSectionsStore;
 
-    OutputSections.setActiveSection(Section.OUTPUT);
     OutputSections.clear(Section.OUTPUT);
 
     if (!anythingToBuild(DocumentStore)) {
@@ -529,7 +528,6 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
 
     const OutputSections = DocumentStore.outputSectionsStore;
 
-    OutputSections.setActiveSection(Section.OUTPUT);
     OutputSections.clear(Section.OUTPUT);
 
     if (!extensionDefinitionAnythingToBuild(DocumentStore)) {

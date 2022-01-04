@@ -294,7 +294,7 @@ export class ComponentsPalette extends React.Component<{
         return (
             <Panel
                 id="widgets"
-                title="Components Palette"
+                title=""
                 buttons={[
                     <SearchInput
                         key="search-input"

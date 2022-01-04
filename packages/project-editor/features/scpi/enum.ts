@@ -24,8 +24,6 @@ import {
 } from "project-editor/core/store";
 import { DocumentStoreClass } from "project-editor/core/store";
 
-import { ScpiEnumsNavigation } from "project-editor/features/scpi/ScpiEnumsNavigation";
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiEnumMember extends EezObject {
@@ -127,9 +125,6 @@ export class ScpiEnum extends EezObject {
                 });
             });
         },
-        navigationComponent: ScpiEnumsNavigation,
-        navigationComponentId: "scpi-enums",
-        icon: "format_list_numbered",
         check: (object: ScpiEnum) => {
             const messages: Message[] = [];
 

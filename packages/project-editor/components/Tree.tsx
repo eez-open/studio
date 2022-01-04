@@ -657,6 +657,7 @@ export class Tree extends React.Component<TreeProps, {}> {
             this.props.treeAdapter.toggleSelected(item);
         } else {
             this.props.treeAdapter.selectItem(item);
+            this.props.treeAdapter.onClick(item);
         }
     };
 

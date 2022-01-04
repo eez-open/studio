@@ -1,6 +1,4 @@
 import { computed, observable, action } from "mobx";
-import React from "react";
-import { observer } from "mobx-react";
 
 import {
     ClassInfo,
@@ -8,13 +6,9 @@ import {
     EezObject,
     registerClass,
     PropertyType,
-    NavigationComponent,
     MessageType
 } from "project-editor/core/object";
 import { validators } from "eez-studio-shared/validation";
-
-import { ListNavigation } from "project-editor/components/ListNavigation";
-import { Splitter } from "eez-studio-ui/splitter";
 
 import { getDocumentStore, Message } from "project-editor/core/store";
 
@@ -23,84 +17,11 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 import { showGenericDialog } from "project-editor/core/util";
 
-import { ProjectContext } from "project-editor/project/context";
 import { RelativeFileInput } from "project-editor/components/RelativeFileInput";
-import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import type { Project } from "project-editor/project/project";
 
 import { metrics } from "project-editor/features/bitmap/metrics";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-class BitmapEditor extends React.Component<{ bitmap: Bitmap }> {
-    render() {
-        const bitmap = this.props.bitmap;
-
-        if (!bitmap.imageElement) {
-            return null;
-        }
-
-        return (
-            <div className="EezStudio_BitmapEditorContainer">
-                <img
-                    src={bitmap.image}
-                    style={{ backgroundColor: bitmap.backgroundColor }}
-                />
-                <h4>
-                    Dimension: {bitmap.imageElement.width} x{" "}
-                    {bitmap.imageElement.height}
-                </h4>
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class BitmapsNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed
-    get bitmap() {
-        if (this.context.navigationStore.selectedPanel) {
-            if (
-                this.context.navigationStore.selectedPanel
-                    .selectedObject instanceof Bitmap
-            ) {
-                return this.context.navigationStore.selectedPanel
-                    .selectedObject;
-            }
-        }
-
-        if (this.context.navigationStore.selectedObject instanceof Bitmap) {
-            return this.context.navigationStore.selectedObject;
-        }
-
-        return undefined;
-    }
-
-    render() {
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={"project-editor/bitmaps"}
-                sizes={"240px|100%|400px"}
-                childrenOverflow={"hidden|hidden|hidden"}
-            >
-                <ListNavigation
-                    id={this.props.id}
-                    navigationObject={this.props.navigationObject}
-                />
-                {this.bitmap ? <BitmapEditor bitmap={this.bitmap} /> : <div />}
-                <PropertiesPanel object={this.bitmap} />
-            </Splitter>
-        );
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -211,8 +132,6 @@ export class Bitmap extends EezObject {
                 });
             });
         },
-        navigationComponent: BitmapsNavigation,
-        navigationComponentId: "bitmaps",
         icon: "image"
     };
 

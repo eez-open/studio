@@ -9,7 +9,6 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    PropertyInfo,
     specificGroup,
     IEezObject,
     EezObject,
@@ -49,7 +48,6 @@ import {
 import { FlowState } from "project-editor/flow/runtime";
 import { findAction } from "project-editor/features/action/action";
 import { getFlow, getProject } from "project-editor/project/project";
-import { onSelectItem } from "project-editor/components/SelectItem";
 import { findPage } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
@@ -1648,16 +1646,7 @@ export class CallActionActionComponent extends ActionComponent {
                     name: "action",
                     type: PropertyType.ObjectReference,
                     referencedObjectCollectionPath: "actions",
-                    propertyGridGroup: specificGroup,
-                    onSelect: (
-                        object: IEezObject,
-                        propertyInfo: PropertyInfo
-                    ) =>
-                        onSelectItem(object, propertyInfo, {
-                            title: propertyInfo.onSelectTitle!,
-                            width: 800
-                        }),
-                    onSelectTitle: "Select Action"
+                    propertyGridGroup: specificGroup
                 },
                 "string"
             )

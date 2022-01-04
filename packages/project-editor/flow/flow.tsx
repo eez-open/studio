@@ -5,7 +5,6 @@ import {
     ClassInfo,
     EezObject,
     getParent,
-    IEditorState,
     IEezObject,
     isSubclassOf,
     MessageType,
@@ -46,6 +45,7 @@ import { ITreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
 import { cloneObject } from "project-editor/core/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { IEditorState } from "project-editor/project/EditorComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 

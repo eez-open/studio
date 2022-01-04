@@ -2,10 +2,8 @@ import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
-import { Panel } from "project-editor/components/Panel";
-import { action, computed, IObservableValue } from "mobx";
+import { action, computed } from "mobx";
 import { FlowState, RuntimeBase } from "project-editor/flow/runtime";
-import { MaximizeIcon } from "./Icons";
 import { getLabel } from "project-editor/core/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13,26 +11,9 @@ import { getLabel } from "project-editor/core/store";
 @observer
 export class ActiveFlowsPanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed?: IObservableValue<boolean>;
-    maximized: boolean;
-    onToggleMaximized: () => void;
 }> {
     render() {
-        return (
-            <Panel
-                id="project-editor/debugger/flows"
-                title="Active flows"
-                collapsed={this.props.collapsed}
-                buttons={[
-                    <MaximizeIcon
-                        key="toggle-maximize"
-                        maximized={this.props.maximized}
-                        onToggleMaximized={this.props.onToggleMaximized}
-                    />
-                ]}
-                body={<FlowsTree runtime={this.props.runtime} />}
-            />
-        );
+        return <FlowsTree runtime={this.props.runtime} />;
     }
 }
 

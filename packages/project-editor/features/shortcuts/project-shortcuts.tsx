@@ -22,8 +22,7 @@ import {
     ClassInfo,
     registerClass,
     EezObject,
-    PropertyType,
-    NavigationComponent
+    PropertyType
 } from "project-editor/core/object";
 import { objectToJS } from "project-editor/core/store";
 
@@ -34,21 +33,14 @@ import type { ExtensionDefinition } from "project-editor/features/extension-defi
 import { ProjectContext } from "project-editor/project/context";
 
 import { metrics } from "project-editor/features/shortcuts/metrics";
+import { EditorComponent } from "project-editor/project/EditorComponent";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ShortcutsNavigation extends NavigationComponent {
+export class ShortcutsEditor extends EditorComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed
-    get object() {
-        if (this.context.navigationStore.selectedPanel) {
-            return this.context.navigationStore.selectedPanel.selectedObject;
-        }
-        return this.context.navigationStore.selectedObject;
-    }
 
     @computed
     get shortcutsStore() {
@@ -103,7 +95,7 @@ export class ShortcutsNavigation extends NavigationComponent {
 
     render() {
         return (
-            <VerticalHeaderWithBody>
+            <VerticalHeaderWithBody className="EezStudio_ProjectEditor_Shortcuts">
                 <ToolbarHeader>
                     <ShortcutsToolbarButtons
                         shortcutsStore={this.shortcutsStore}
@@ -222,9 +214,7 @@ export class Shortcuts extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        navigationComponent: ShortcutsNavigation,
         hideInProperties: true,
-        navigationComponentId: "shortcuts",
         icon: "playlist_play"
     };
 }

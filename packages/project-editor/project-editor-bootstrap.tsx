@@ -73,6 +73,12 @@ import type {
 } from "eez-studio-types";
 import { findBitmap } from "project-editor/features/bitmap/bitmap";
 import { migrateProject } from "project-editor/project/migrate-project";
+import { getNavigationComponent } from "project-editor/project/NavigationComponentFactory";
+import {
+    createEditorState,
+    getEditorComponent
+} from "project-editor/project/EditorComponentFactory";
+import { browseGlyph } from "project-editor/features/font/FontEditor";
 
 let extensionsInitialized = false;
 
@@ -161,7 +167,11 @@ export async function initProjectEditor(homeTabs: Tabs) {
         getNameProperty,
         getObjectVariableTypeFromType,
         findBitmap,
-        migrateProject
+        migrateProject,
+        getNavigationComponent,
+        getEditorComponent,
+        createEditorState,
+        browseGlyph
     };
 
     Object.assign(ProjectEditor, projectEditor);

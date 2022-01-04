@@ -32,8 +32,6 @@ import type {
     IResponseTypeType
 } from "instrument/scpi";
 
-import { ScpiNavigation } from "project-editor/features/scpi/ScpiNavigation";
-import { ScpiSubsystemsNavigation } from "project-editor/features/scpi/ScpiSubsystemsNavigation";
 import { build } from "project-editor/features/scpi/build";
 import { metrics } from "project-editor/features/scpi/metrics";
 import {
@@ -796,10 +794,7 @@ export class ScpiSubsystem extends EezObject {
                     commands: []
                 });
             });
-        },
-        navigationComponent: ScpiSubsystemsNavigation,
-        navigationComponentId: "scpi-subsystems",
-        icon: "list"
+        }
     };
 }
 
@@ -827,9 +822,6 @@ export class Scpi extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        navigationComponent: ScpiNavigation,
-        navigationComponentId: "scpi",
-        defaultNavigationKey: "subsystems",
         icon: "navigate_next"
     };
 }

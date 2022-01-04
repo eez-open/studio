@@ -475,13 +475,11 @@ export function startSearch(
     matchCase: boolean,
     matchWholeWord: boolean
 ) {
-    DocumentStore.outputSectionsStore.setActiveSection(Section.SEARCH);
     startNewSearch(DocumentStore, pattern, matchCase, matchWholeWord);
 }
 
 export function findAllReferences(object: IEezObject) {
     const DocumentStore = getDocumentStore(object);
-    DocumentStore.outputSectionsStore.setActiveSection(Section.SEARCH);
     startNewSearch(DocumentStore, object, true, true);
 }
 

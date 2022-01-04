@@ -1,5 +1,5 @@
 import React from "react";
-import { action, computed, IObservableValue, observable } from "mobx";
+import { action, computed, observable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { FixedSizeList as List } from "react-window";
@@ -13,7 +13,6 @@ import { FlowTabState } from "project-editor/flow/flow";
 import { LogItem } from "project-editor/flow/debugger/logs";
 import { RuntimeBase } from "project-editor/flow/runtime";
 import { ProjectContext } from "project-editor/project/context";
-import { MaximizeIcon } from "./Icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,9 +23,6 @@ const logsPanelFilter = observable.box<Filter>("all");
 @observer
 export class LogsPanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed?: IObservableValue<boolean>;
-    maximized: boolean;
-    onToggleMaximized: () => void;
 }> {
     onChangeFilter = action((event: React.ChangeEvent<HTMLSelectElement>) => {
         logsPanelFilter.set(event.currentTarget.value as Filter);
@@ -36,8 +32,7 @@ export class LogsPanel extends React.Component<{
         return (
             <Panel
                 id="project-editor/runtime-info/logs"
-                title="Logs"
-                collapsed={this.props.collapsed}
+                title=""
                 buttons={[
                     <div key="filter">
                         <span style={{ marginRight: 5 }}>Filter:</span>
@@ -57,13 +52,7 @@ export class LogsPanel extends React.Component<{
                         iconSize={20}
                         title="Clear logs"
                         onClick={this.props.runtime.logs.clear}
-                    ></IconAction>,
-
-                    <MaximizeIcon
-                        key="toggle-maximize"
-                        maximized={this.props.maximized}
-                        onToggleMaximized={this.props.onToggleMaximized}
-                    />
+                    ></IconAction>
                 ]}
                 body={
                     <LogList

@@ -6,8 +6,9 @@ import type {
     BorderRadiusSpec,
     Style
 } from "project-editor/features/style/style";
-import type { Font, IGlyphBitmap } from "project-editor/features/font/font";
+import type { Font } from "project-editor/features/font/font";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getPixelByteIndex } from "project-editor/features/font/font-utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1066,12 +1067,4 @@ export function fillArcBar(
     a = Math.floor(a * 255);
 
     filledPolygonRGBA(imageBuffer, vx, vy, n, r, g, b, a);
-}
-
-export function getPixelByteIndex(
-    glyphBitmap: IGlyphBitmap,
-    x: number,
-    y: number
-): number {
-    return y * Math.floor((glyphBitmap.width + 7) / 8) + Math.floor(x / 8);
 }

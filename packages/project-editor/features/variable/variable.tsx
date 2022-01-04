@@ -12,7 +12,6 @@ import {
     IEezObject,
     EezObject,
     PropertyType,
-    NavigationComponent,
     MessageType,
     PropertyProps
 } from "project-editor/core/object";
@@ -26,10 +25,6 @@ import {
     propertyNotSetMessage
 } from "project-editor/core/store";
 import type { Project } from "project-editor/project/project";
-import {
-    ListNavigation,
-    ListNavigationWithProperties
-} from "project-editor/components/ListNavigation";
 import { build } from "project-editor/features/variable/build";
 import { metrics } from "project-editor/features/variable/metrics";
 import type {
@@ -38,9 +33,6 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import { getDocumentStore } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
-import { Splitter } from "eez-studio-ui/splitter";
-import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
-import { MenuNavigation } from "project-editor/components/MenuNavigation";
 import { humanize } from "eez-studio-shared/string";
 import { evalConstantExpression } from "project-editor/flow/expression/expression";
 import { _difference } from "eez-studio-shared/algorithm";
@@ -390,9 +382,6 @@ export class Variable extends EezObject {
                 });
             });
         },
-        navigationComponent: ListNavigationWithProperties,
-        navigationComponentId: "global-variables",
-        icon: VariableIcon,
         check: (variable: Variable) => {
             let messages: Message[] = [];
 
@@ -930,44 +919,6 @@ registerClass("StructureField", StructureField);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class StructureNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed
-    get object() {
-        if (this.context.navigationStore.selectedPanel) {
-            return this.context.navigationStore.selectedPanel.selectedObject;
-        }
-        return this.context.navigationStore.selectedObject;
-    }
-
-    render() {
-        let structures = this.context.project.variables.structures;
-
-        let selectedStructure =
-            this.context.navigationStore.getNavigationSelectedObject(
-                structures
-            ) as Structure;
-
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={`project-editor/navigation-${this.props.id}`}
-                sizes={`240px|100%`}
-                childrenOverflow="hidden"
-            >
-                <ListNavigation
-                    id={this.props.id}
-                    navigationObject={structures}
-                />
-                <PropertiesPanel object={selectedStructure} />
-            </Splitter>
-        );
-    }
-}
-
 export class Structure extends EezObject {
     @observable name: string;
     @observable fields: StructureField[];
@@ -1011,33 +962,7 @@ export class Structure extends EezObject {
                     name: result.values.name
                 });
             });
-        },
-        navigationComponent: StructureNavigation,
-        navigationComponentId: "project-variables-structures",
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="icon icon-tabler icon-tabler-columns"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <line x1="4" y1="6" x2="9.5" y2="6" />
-                <line x1="4" y1="10" x2="9.5" y2="10" />
-                <line x1="4" y1="14" x2="9.5" y2="14" />
-                <line x1="4" y1="18" x2="9.5" y2="18" />
-                <line x1="14.5" y1="6" x2="20" y2="6" />
-                <line x1="14.5" y1="10" x2="20" y2="10" />
-                <line x1="14.5" y1="14" x2="20" y2="14" />
-                <line x1="14.5" y1="18" x2="20" y2="18" />
-            </svg>
-        )
+        }
     };
 
     @computed({ keepAlive: true })
@@ -1111,41 +1036,6 @@ registerClass("EnumMember", EnumMember);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@observer
-export class EnumNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed
-    get object() {
-        if (this.context.navigationStore.selectedPanel) {
-            return this.context.navigationStore.selectedPanel.selectedObject;
-        }
-        return this.context.navigationStore.selectedObject;
-    }
-
-    render() {
-        let enums = this.context.project.variables.enums;
-
-        let selectedEnum =
-            this.context.navigationStore.getNavigationSelectedObject(
-                enums
-            ) as Enum;
-
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={`project-editor/navigation-${this.props.id}`}
-                sizes={`240px|100%`}
-                childrenOverflow="hidden"
-            >
-                <ListNavigation id={this.props.id} navigationObject={enums} />
-                <PropertiesPanel object={selectedEnum} />
-            </Splitter>
-        );
-    }
-}
-
 export class Enum extends EezObject {
     @observable name: string;
     @observable members: EnumMember[];
@@ -1189,10 +1079,7 @@ export class Enum extends EezObject {
                     name: result.values.name
                 });
             });
-        },
-        navigationComponent: EnumNavigation,
-        navigationComponentId: "project-variables-enums",
-        icon: "format_list_numbered"
+        }
     };
 
     @computed get membersMap() {
@@ -1205,23 +1092,6 @@ export class Enum extends EezObject {
 }
 
 registerClass("Enum", Enum);
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class ProjectVariablesNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    render() {
-        return (
-            <MenuNavigation
-                id={this.props.id}
-                navigationObject={this.context.project.variables}
-            />
-        );
-    }
-}
 
 export class ProjectVariables extends EezObject {
     @observable globalVariables: Variable[];
@@ -1250,9 +1120,6 @@ export class ProjectVariables extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
-        navigationComponent: ProjectVariablesNavigation,
-        navigationComponentId: "projectVariables",
-        defaultNavigationKey: "globalVariables",
         icon: VariableIcon,
         defaultValue: {
             globalVariables: [],

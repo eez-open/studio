@@ -215,6 +215,10 @@ class SettingsController {
             "goldenlayout-css"
         ) as HTMLLinkElement;
 
+        const flexlayoutLinkElement = document.getElementById(
+            "flexlayout-css"
+        ) as HTMLLinkElement;
+
         if (this.isDarkTheme) {
             bootstrapLinkElement.href =
                 "../../node_modules/bootstrap-dark-5/dist/css/bootstrap-night.min.css";
@@ -224,6 +228,9 @@ class SettingsController {
 
             goldenlayoutLinkElement.href =
                 "../../node_modules/golden-layout/src/css/goldenlayout-dark-theme.css";
+
+            flexlayoutLinkElement.href =
+                "../../node_modules/flexlayout-react/style/dark.css";
         } else {
             bootstrapLinkElement.href =
                 "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
@@ -232,6 +239,9 @@ class SettingsController {
 
             goldenlayoutLinkElement.href =
                 "../../node_modules/golden-layout/src/css/goldenlayout-light-theme.css";
+
+            flexlayoutLinkElement.href =
+                "../../node_modules/flexlayout-react/style/light.css";
         }
 
         setTimeout(() => {

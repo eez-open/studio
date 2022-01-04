@@ -34,6 +34,12 @@ import type {
 import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 import type { findBitmap } from "project-editor/features/bitmap/bitmap";
 import type { migrateProject } from "project-editor/project/migrate-project";
+import type { getNavigationComponent } from "project-editor/project/NavigationComponentFactory";
+import type {
+    createEditorState,
+    getEditorComponent
+} from "project-editor/project/EditorComponentFactory";
+import type { browseGlyph } from "./features/font/FontEditor";
 
 export interface IProjectEditor {
     homeTabs: Tabs;
@@ -67,6 +73,10 @@ export interface IProjectEditor {
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
     findBitmap: typeof findBitmap;
     migrateProject: typeof migrateProject;
+    getNavigationComponent: typeof getNavigationComponent;
+    getEditorComponent: typeof getEditorComponent;
+    createEditorState: typeof createEditorState;
+    browseGlyph: typeof browseGlyph;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

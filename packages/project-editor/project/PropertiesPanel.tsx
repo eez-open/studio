@@ -10,14 +10,11 @@ import {
     EezValueObject,
     isValue
 } from "project-editor/core/store";
-import { INavigationStore } from "project-editor/core/store";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
 import { Panel } from "project-editor/components/Panel";
 
 @observer
 export class PropertiesPanel extends React.Component<{
-    object: IEezObject | undefined;
-    navigationStore?: INavigationStore;
     buttons?: JSX.Element[];
     readOnly?: boolean;
 }> {
@@ -27,8 +24,7 @@ export class PropertiesPanel extends React.Component<{
     @computed get objects() {
         let objects: IEezObject[];
 
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
+        const navigationStore = this.context.navigationStore;
 
         if (
             navigationStore.selectedPanel &&
@@ -41,8 +37,6 @@ export class PropertiesPanel extends React.Component<{
             navigationStore.selectedPanel.selectedObject !== undefined
         ) {
             objects = [navigationStore.selectedPanel.selectedObject];
-        } else if (this.props.object) {
-            objects = [this.props.object];
         } else {
             objects = [];
         }
@@ -72,15 +66,15 @@ export class PropertiesPanel extends React.Component<{
         const objects = this.objects.filter(object => object != undefined);
 
         if (objects.length == 0) {
-            title = "Properties";
+            title = "";
         } else if (objects.length == 1) {
             let object = objects[0];
             if (object instanceof EezValueObject) {
                 object = getParent(object);
             }
-            title = `Properties (${getClass(object).name})`;
+            title = `${getClass(object).name}`;
         } else {
-            title = `Properties (multiple objects)`;
+            title = "[Multiple objects selected]";
         }
 
         return (

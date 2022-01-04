@@ -5,18 +5,13 @@ import { Panel } from "project-editor/components/Panel";
 import { action, computed, IObservableValue } from "mobx";
 import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
-import { MaximizeIcon } from "./Icons";
 import { ProjectContext } from "project-editor/project/context";
 import { IconAction } from "eez-studio-ui/action";
 import { getLabel } from "project-editor/core/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 @observer
-export class BreakpointsPanel extends React.Component<{
-    collapsed?: IObservableValue<boolean>;
-    maximized?: boolean;
-    onToggleMaximized?: () => void;
-}> {
+export class BreakpointsPanel extends React.Component<{}> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -111,21 +106,10 @@ export class BreakpointsPanel extends React.Component<{
             />
         ];
 
-        if (this.props.maximized && this.props.onToggleMaximized) {
-            buttons.push(
-                <MaximizeIcon
-                    key="toggle-maximize"
-                    maximized={this.props.maximized}
-                    onToggleMaximized={this.props.onToggleMaximized}
-                />
-            );
-        }
-
         return (
             <Panel
                 id="project-editor/debugger/breakpoints"
-                title="Breakpoints"
-                collapsed={this.props.collapsed}
+                title=""
                 buttons={buttons}
                 body={
                     <BreakpointsList

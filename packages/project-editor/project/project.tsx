@@ -42,10 +42,9 @@ import {
     propertyInvalidValueMessage,
     DocumentStoreClass,
     getDocumentStore,
-    hideInPropertyGridIfNotDashboard
+    hideInPropertyGridIfNotDashboard,
+    hideInPropertyGridIfNotV1
 } from "project-editor/core/store";
-
-import { SettingsNavigation } from "project-editor/project/SettingsNavigation";
 
 import type { Action } from "project-editor/features/action/action";
 import type {
@@ -75,7 +74,10 @@ import {
     LayoutViewWidget
 } from "project-editor/flow/components/widgets";
 import { Widget } from "project-editor/flow/component";
-import { PagesNavigation } from "project-editor/features/page/PagesNavigation";
+import {
+    PagesNavigation,
+    PageStructure
+} from "project-editor/features/page/PagesNavigation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export { ProjectType } from "project-editor/core/object";
@@ -117,7 +119,8 @@ export class BuildConfiguration extends EezObject {
                     {
                         id: "portrait"
                     }
-                ]
+                ],
+                hideInPropertyGrid: hideInPropertyGridIfNotV1
             }
         ],
         newItem: (parent: IEezObject) => {
@@ -125,7 +128,6 @@ export class BuildConfiguration extends EezObject {
                 name: "Configuration"
             });
         },
-        showInNavigation: true,
         check: (object: BuildConfiguration) => {
             let messages: Message[] = [];
 
@@ -178,8 +180,7 @@ export class BuildFile extends EezObject {
                 fileName: "file",
                 template: ""
             });
-        },
-        showInNavigation: true
+        }
     };
 }
 
@@ -223,8 +224,7 @@ export class Build extends EezObject {
                 name: "destinationFolder",
                 type: PropertyType.RelativeFolder
             }
-        ],
-        showInNavigation: true
+        ]
     };
 }
 
@@ -650,7 +650,6 @@ export class General extends EezObject {
                 }
             }
         ],
-        showInNavigation: true,
         check: (object: General) => {
             let messages: Message[] = [];
 
@@ -764,8 +763,6 @@ export class Settings extends EezObject {
             }
         ],
         hideInProperties: true,
-        navigationComponent: SettingsNavigation,
-        navigationComponentId: "settings",
         icon: "settings"
     };
 }
@@ -908,8 +905,7 @@ function getProjectClassInfo() {
                         delete theme.colors;
                     }
                 }
-            },
-            defaultNavigationKey: "settings"
+            }
         };
     }
 
@@ -1555,7 +1551,7 @@ export const commands = [
         const selectedPanel = DocumentStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
-            !(selectedPanel instanceof PagesNavigation)
+            !(selectedPanel instanceof PageStructure)
         ) {
             return;
         }
@@ -1622,7 +1618,7 @@ export const commands = [
         const selectedPanel = DocumentStore.navigationStore.selectedPanel;
         if (
             !(selectedPanel instanceof FlowEditor) &&
-            !(selectedPanel instanceof PagesNavigation)
+            !(selectedPanel instanceof PageStructure)
         ) {
             return;
         }

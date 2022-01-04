@@ -1,0 +1,231 @@
+import React from "react";
+import { computed, runInAction, observable } from "mobx";
+import { observer } from "mobx-react";
+import { IEezObject } from "project-editor/core/object";
+import {
+    ITreeObjectAdapter,
+    TreeAdapter,
+    TreeObjectAdapter,
+    TreeObjectAdapterChildren
+} from "project-editor/core/objectAdapter";
+import { IPanel } from "project-editor/core/store";
+import { FlowEditor } from "project-editor/flow/editor/editor";
+import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
+import { ProjectContext } from "project-editor/project/context";
+import { Page } from "project-editor/features/page/page";
+import { Flow, FlowTabState } from "project-editor/flow/flow";
+import { Transform } from "project-editor/flow/editor/transform";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { EditorComponent } from "project-editor/project/EditorComponent";
+
+////////////////////////////////////////////////////////////////////////////////
+
+@observer
+export class PageEditor extends EditorComponent implements IPanel {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    get pageTabState() {
+        return this.props.editor.state as PageTabState;
+    }
+
+    focusHandler = () => {
+        this.context.navigationStore.setSelectedPanel(this);
+    };
+
+    @computed
+    get treeAdapter() {
+        return new TreeAdapter(
+            this.pageTabState.widgetContainer,
+            undefined,
+            undefined,
+            true
+        );
+    }
+
+    @computed
+    get selectedObject() {
+        return this.pageTabState.selectedObject;
+    }
+
+    @computed
+    get selectedObjects() {
+        return this.pageTabState.selectedObjects;
+    }
+
+    cutSelection() {
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.cutSelection();
+        }
+    }
+
+    copySelection() {
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.copySelection();
+        }
+    }
+
+    pasteSelection() {
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.pasteSelection();
+        }
+    }
+
+    deleteSelection() {
+        if (!this.pageTabState.isRuntime) {
+            this.treeAdapter.deleteSelection();
+        }
+    }
+
+    render() {
+        return this.pageTabState.isRuntime ? (
+            <FlowViewer tabState={this.pageTabState} />
+        ) : (
+            <FlowEditor tabState={this.pageTabState} />
+        );
+    }
+}
+////////////////////////////////////////////////////////////////////////////////
+class PageTreeObjectAdapter extends TreeObjectAdapter {
+    constructor(private page: Page, private frontFace: boolean) {
+        super(page);
+    }
+
+    @computed
+    get children(): TreeObjectAdapterChildren {
+        if (this.frontFace) {
+            return this.page.components
+                .filter(
+                    component => component instanceof ProjectEditor.WidgetClass
+                )
+                .map(child => this.transformer(child));
+        }
+
+        return [
+            ...this.page.components.map(child => this.transformer(child)),
+            ...this.page.connectionLines.map(child => this.transformer(child))
+        ];
+    }
+}
+////////////////////////////////////////////////////////////////////////////////
+
+export class PageTabState extends FlowTabState {
+    widgetContainerFrontFace: ITreeObjectAdapter;
+    widgetContainerBackFace: ITreeObjectAdapter;
+
+    @observable _transform: Transform = new Transform({
+        translate: { x: 0, y: 0 },
+        scale: 1
+    });
+
+    constructor(object: IEezObject) {
+        super(object as Flow);
+
+        this.widgetContainerFrontFace = new PageTreeObjectAdapter(
+            this.page,
+            true
+        );
+
+        this.widgetContainerBackFace = new PageTreeObjectAdapter(
+            this.page,
+            false
+        );
+
+        this.resetTransform(this.transform);
+
+        this.loadState();
+    }
+
+    get page() {
+        return this.flow as Page;
+    }
+
+    @computed get frontFace() {
+        return this.isRuntime
+            ? this.DocumentStore.uiStateStore.pageRuntimeFrontFace
+            : this.DocumentStore.uiStateStore.pageEditorFrontFace;
+    }
+
+    set frontFace(frontFace: boolean) {
+        runInAction(() => {
+            if (this.isRuntime) {
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
+                    frontFace;
+            } else {
+                this.DocumentStore.uiStateStore.pageEditorFrontFace = frontFace;
+            }
+        });
+    }
+
+    get widgetContainer() {
+        if (this.frontFace) {
+            return this.widgetContainerFrontFace;
+        } else {
+            return this.widgetContainerBackFace;
+        }
+    }
+
+    get transform() {
+        return this._transform;
+    }
+
+    set transform(transform: Transform) {
+        runInAction(() => {
+            this._transform = transform;
+        });
+    }
+
+    loadState() {
+        if (this.isRuntime) {
+            return;
+        }
+
+        const state = this.DocumentStore.uiStateStore.getObjectUIState(
+            this.flow,
+            "flow-state"
+        );
+
+        if (!state) {
+            return;
+        }
+
+        if (state.selection) {
+            this.widgetContainer.loadState(state.selection);
+        }
+
+        if (state.transform && state.transform.translate) {
+            this._transform = new Transform({
+                translate: {
+                    x: state.transform.translate.x ?? 0,
+                    y: state.transform.translate.y ?? 0
+                },
+                scale: state.transform.scale ?? 1
+            });
+        }
+    }
+
+    saveState() {
+        if (this.isRuntime) {
+            return;
+        }
+
+        const state = {
+            selection: this.widgetContainer.saveState(),
+            transform: {
+                translate: {
+                    x: this._transform.translate.x,
+                    y: this._transform.translate.y
+                },
+                scale: this._transform.scale
+            }
+        };
+
+        this.DocumentStore.uiStateStore.updateObjectUIState(
+            this.flow,
+            "flow-state",
+            state
+        );
+
+        return undefined;
+    }
+}

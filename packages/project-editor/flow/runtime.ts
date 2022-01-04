@@ -115,9 +115,7 @@ export abstract class RuntimeBase {
             this.state == State.STARTING ||
             (this.isDebuggerActive && !this.isPaused)
         ) {
-            this.DocumentStore.navigationStore.setSelection([
-                this.selectedPage
-            ]);
+            this.DocumentStore.editorsStore.openEditor(this.selectedPage);
         }
     }
 

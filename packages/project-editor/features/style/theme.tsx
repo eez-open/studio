@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, computed, action } from "mobx";
 import { observer } from "mobx-react";
+import * as FlexLayout from "flexlayout-react";
 
 import { guid } from "eez-studio-shared/guid";
 import {
@@ -13,20 +14,17 @@ import {
 } from "project-editor/core/object";
 import {
     DocumentStoreClass,
-    INavigationStore,
-    SimpleNavigationStoreClass,
     IContextMenuContext,
-    getDocumentStore
+    getDocumentStore,
+    LayoutModel
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { Splitter } from "eez-studio-ui/splitter";
 
 import { ListNavigation } from "project-editor/components/ListNavigation";
 
-import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -58,17 +56,6 @@ function getProjectWithThemes(DocumentStore: DocumentStoreClass) {
     return DocumentStore.project;
 }
 
-let simpleNavigationStore: SimpleNavigationStoreClass;
-
-function getNavigationStore(DocumentStore: DocumentStoreClass) {
-    if (!simpleNavigationStore) {
-        simpleNavigationStore = new SimpleNavigationStoreClass(undefined);
-    }
-    return getProjectWithThemes(DocumentStore) != DocumentStore.project
-        ? simpleNavigationStore
-        : DocumentStore.navigationStore;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
@@ -94,9 +81,8 @@ class ColorItem extends React.Component<{
     get selectedTheme() {
         const project = getProjectWithThemes(this.context);
 
-        let selectedTheme = getNavigationStore(
-            this.context
-        ).getNavigationSelectedObject(project.themes) as Theme;
+        let selectedTheme =
+            this.context.navigationStore.selectedThemeObject.get() as Theme;
 
         if (!selectedTheme) {
             selectedTheme = project.themes[0];
@@ -158,11 +144,7 @@ function renderColorItem(itemId: string) {
 }
 
 @observer
-export class ThemesSideView extends React.Component<{
-    navigationStore?: INavigationStore;
-    dragAndDropManager?: DragAndDropManagerClass;
-    hasCloseButton?: boolean;
-}> {
+export class ThemesSideView extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -238,60 +220,103 @@ export class ThemesSideView extends React.Component<{
             });
     };
 
-    onClose = action(() => {
-        this.context.uiStateStore.viewOptions.themesVisible = false;
-    });
-
-    render() {
+    @computed get project() {
         if (this.context.masterProjectEnabled && !this.context.masterProject) {
             return null;
         }
 
-        const project = getProjectWithThemes(this.context);
+        return getProjectWithThemes(this.context);
+    }
 
-        const themes = (
-            <ListNavigation
-                id="themes"
-                navigationObject={project.themes}
-                onEditItem={this.onEditThemeName}
-                searchInput={false}
-                editable={!this.context.masterProject}
-                navigationStore={getNavigationStore(this.context)}
-                onClose={this.props.hasCloseButton ? this.onClose : undefined}
-            />
-        );
+    get model() {
+        return FlexLayout.Model.fromJson({
+            global: LayoutModel.GLOBAL_OPTIONS,
+            borders: [],
+            layout: {
+                type: "row",
+                children: [
+                    {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        component: "themes"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        component: "colors"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        });
+    }
 
-        let colors;
-        if (project.themes.length > 0) {
-            colors = (
+    factory = (node: FlexLayout.TabNode) => {
+        var component = node.getComponent();
+
+        if (component === "themes") {
+            return this.project ? (
+                <ListNavigation
+                    id="themes"
+                    navigationObject={this.project.themes}
+                    selectedObject={
+                        this.context.navigationStore.selectedThemeObject
+                    }
+                    onEditItem={this.onEditThemeName}
+                    searchInput={false}
+                    editable={!this.context.masterProject}
+                />
+            ) : null;
+        }
+
+        if (component === "colors") {
+            return this.project ? (
                 <ListNavigation
                     id="theme-colors"
-                    navigationObject={project.colors}
+                    navigationObject={this.project.colors}
+                    selectedObject={
+                        this.context.navigationStore.selectedThemeColorObject
+                    }
                     onEditItem={this.onEditColorName}
                     renderItem={renderColorItem}
                     editable={!this.context.masterProject}
-                    navigationStore={this.props.navigationStore}
-                    dragAndDropManager={this.props.dragAndDropManager}
                 />
-            );
-
-            if (this.props.navigationStore) {
-                return colors;
-            }
+            ) : null;
         }
 
-        return colors ? (
-            <Splitter
-                type="vertical"
-                persistId={`project-editor/themes`}
-                sizes={`240px|100%`}
-                childrenOverflow="hidden"
-            >
-                {themes}
-                {colors}
-            </Splitter>
-        ) : (
-            themes
+        return null;
+    };
+
+    render() {
+        return (
+            <FlexLayout.Layout
+                model={this.model}
+                factory={this.factory}
+                realtimeResize={true}
+                font={LayoutModel.FONT_SUB}
+            />
         );
     }
 }
@@ -389,9 +414,8 @@ export class Color extends EezObject implements IColor {
                             getDocumentStore(thisObject)
                         );
 
-                        const selectedTheme = getNavigationStore(
-                            DocumentStore
-                        ).getNavigationSelectedObject(project.themes) as Theme;
+                        const selectedTheme =
+                            DocumentStore.navigationStore.selectedThemeObject.get() as Theme;
 
                         const colorIndex = project.colors.indexOf(thisObject);
                         const color = project.getThemeColor(
@@ -501,9 +525,8 @@ function getThemedColorInProject(
     project: Project,
     colorValue: string
 ): string | undefined {
-    let selectedTheme = getNavigationStore(
-        project._DocumentStore
-    ).getNavigationSelectedObject(project.themes) as Theme;
+    let selectedTheme =
+        project._DocumentStore.navigationStore.selectedThemeObject.get() as Theme;
     if (!selectedTheme) {
         selectedTheme = project.themes[0];
     }

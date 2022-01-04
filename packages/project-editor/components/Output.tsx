@@ -1,19 +1,14 @@
-import {
-    observable,
-    action,
-    autorun,
-    runInAction,
-    IReactionDisposer
-} from "mobx";
-import { observer, disposeOnUnmount } from "mobx-react";
+import { observable, autorun, runInAction, IReactionDisposer } from "mobx";
+import { observer } from "mobx-react";
 import React from "react";
 import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
-import { TabsView } from "eez-studio-ui/tabs";
-import { IconAction } from "eez-studio-ui/action";
 
-import { Message as OutputMessage } from "project-editor/core/store";
+import {
+    Message as OutputMessage,
+    OutputSection
+} from "project-editor/core/store";
 
 import { ObjectPath } from "project-editor/components/ObjectPath";
 import { ProjectContext } from "project-editor/project/context";
@@ -77,7 +72,9 @@ class Message extends React.Component<
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-class Messages extends React.Component {
+export class Messages extends React.Component<{
+    section: OutputSection;
+}> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -87,7 +84,7 @@ class Messages extends React.Component {
     @observable rows: React.ReactNode[];
 
     onSelectMessage = (message: OutputMessage) => {
-        this.context.outputSectionsStore.activeSection.selectMessage(message);
+        this.props.section.selectMessage(message);
 
         const editorState =
             this.context.editorsStore.activeEditor &&
@@ -98,10 +95,7 @@ class Messages extends React.Component {
     };
 
     scrollToBottom() {
-        if (
-            this.divRef.current &&
-            this.context.outputSectionsStore.activeSection.scrollToBottom
-        ) {
+        if (this.divRef.current && this.props.section.scrollToBottom) {
             const div: HTMLDivElement = this.divRef.current;
             div.scrollTop = div.scrollHeight;
         }
@@ -113,16 +107,13 @@ class Messages extends React.Component {
         // component is not refreshed after every message push
         this.dispose = autorun(
             () => {
-                let rows =
-                    this.context.outputSectionsStore.activeSection.messages.map(
-                        message => (
-                            <Message
-                                key={message.id}
-                                message={message}
-                                onSelect={this.onSelectMessage}
-                            />
-                        )
-                    );
+                let rows = this.props.section.messages.map(message => (
+                    <Message
+                        key={message.id}
+                        message={message}
+                        onSelect={this.onSelectMessage}
+                    />
+                ));
 
                 runInAction(() => {
                     this.rows = rows;
@@ -148,65 +139,6 @@ class Messages extends React.Component {
                 <table>
                     <tbody>{this.rows}</tbody>
                 </table>
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class Output extends React.Component<{}, {}> {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @disposeOnUnmount
-    activeSectionChanged = autorun(() => {
-        this.context.navigationStore.setSelectedPanel(
-            this.context.outputSectionsStore.activeSection
-        );
-    });
-
-    onFocus = () => {
-        this.context.navigationStore.setSelectedPanel(
-            this.context.outputSectionsStore.activeSection
-        );
-    };
-
-    @action.bound
-    onKeyDown(event: any) {
-        if (event.keyCode == 27) {
-            // ESC KEY
-            this.context.uiStateStore.viewOptions.outputVisible =
-                !this.context.uiStateStore.viewOptions.outputVisible;
-        }
-    }
-
-    @action.bound onClose() {
-        this.context.uiStateStore.viewOptions.outputVisible =
-            !this.context.uiStateStore.viewOptions.outputVisible;
-    }
-
-    render() {
-        return (
-            <div
-                className="EezStudio_Output"
-                tabIndex={0}
-                onFocus={this.onFocus}
-                onKeyDown={this.onKeyDown}
-            >
-                <div className="EezStudio_TabsViewContainer">
-                    <TabsView
-                        tabs={this.context.outputSectionsStore.sections}
-                    />
-                    <IconAction
-                        icon="material:close"
-                        iconSize={16}
-                        onClick={this.onClose}
-                        title="Close output panel"
-                    ></IconAction>
-                </div>
-                <Messages />
             </div>
         );
     }

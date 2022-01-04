@@ -7,10 +7,8 @@ import { Rect } from "eez-studio-shared/geometry";
 
 import type {
     DocumentStoreClass,
-    IContextMenuContext,
-    INavigationStore
+    IContextMenuContext
 } from "project-editor/core/store";
-import type { DragAndDropManagerClass } from "project-editor/core/dd";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
@@ -198,41 +196,6 @@ export interface PropertyInfo {
     disableSpellcheck?: boolean;
 }
 
-export interface NavigationComponentProps {
-    id: string;
-    navigationObject: IEezObject;
-    navigationStore?: INavigationStore;
-    dragAndDropManager?: DragAndDropManagerClass;
-    onDoubleClickItem?: (item: IEezObject) => void;
-}
-
-export class NavigationComponent extends React.Component<
-    NavigationComponentProps,
-    {}
-> {}
-
-export interface IEditorState {
-    loadState(state: any): void;
-    saveState(): any;
-    selectObject(object: IEezObject): void;
-    selectObjects(objects: IEezObject[]): void;
-    ensureSelectionVisible(): void;
-}
-
-export interface IEditor {
-    object: IEezObject;
-    state: IEditorState | undefined;
-}
-
-export interface EditorComponentProps {
-    editor: IEditor;
-}
-
-export class EditorComponent extends React.Component<
-    EditorComponentProps,
-    {}
-> {}
-
 export type InheritedValue =
     | {
           value: any;
@@ -263,17 +226,9 @@ export interface ClassInfo {
     componentPaletteLabel?: string;
     enabledInComponentPalette?: (projectType: ProjectType) => boolean;
 
-    showInNavigation?: boolean;
     hideInProperties?: boolean;
     isPropertyMenuSupported?: boolean;
-    navigationComponent?: typeof NavigationComponent | null;
-    navigationComponentId?: string;
-    defaultNavigationKey?: string;
 
-    editorComponent?: typeof EditorComponent;
-    isEditorSupported?: (object: IEezObject) => boolean;
-
-    createEditorState?: (object: IEezObject) => IEditorState | undefined;
     newItem?: (object: IEezObject) => Promise<any>;
     getInheritedValue?: (
         object: IEezObject,

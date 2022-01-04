@@ -23,6 +23,7 @@ import {
 import { confirmSave } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
 import { guid } from "eez-studio-shared/guid";
+import * as FlexLayout from "flexlayout-react";
 
 import { Icon } from "eez-studio-ui/icon";
 import * as notification from "eez-studio-ui/notification";
@@ -34,13 +35,10 @@ import {
     IEezObject,
     PropertyInfo,
     PropertyType,
-    IEditorState,
-    IEditor,
     getProperty,
     isPropertyEnumerable,
     getParent,
     getKey,
-    getId,
     isEezObject,
     getRootObject,
     EezClass,
@@ -51,7 +49,6 @@ import {
     PropertyProps,
     PropertyValueSourceInfo,
     isPropertyHidden,
-    EditorComponent,
     getPropertyInfo,
     getAncestors,
     getObjectPropertyDisplayName,
@@ -65,7 +62,6 @@ import {
     getClassByName,
     SerializedData
 } from "project-editor/core/object";
-import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { CurrentSearch } from "project-editor/core/search";
 
 import type { DataContext } from "project-editor/features/variable/variable";
@@ -79,6 +75,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import type { IObjectVariableValue } from "project-editor/features/variable/value-type";
 import { IVariable } from "project-editor/flow/flow-interfaces";
+import { IEditor, IEditorState } from "project-editor/project/EditorComponent";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -93,210 +90,231 @@ export interface IPanel {
     deleteSelection(): void;
 }
 
-export interface INavigationStore {
-    selectedPanel?: IPanel;
-    selectedObject?: IEezObject;
-    getNavigationSelectedObject(
-        navigationObject: IEezObject
-    ): IEezObject | undefined;
-    setNavigationSelectedObject(
-        navigationObject: IEezObject,
-        navigationSelectedObject: IEezObject
-    ): void;
-    setSelectedPanel(selectedPanel: IPanel | undefined): void;
-    editable: boolean;
-}
-
-export class SimpleNavigationStoreClass implements INavigationStore {
-    @observable selectedObject: IEezObject | undefined;
-
-    constructor(
-        selectedObject: IEezObject | undefined,
-        public editable = true
-    ) {
-        this.selectedObject = selectedObject;
-    }
-
-    getNavigationSelectedObject(navigationObject: IEezObject) {
-        return this.selectedObject;
-    }
-
-    @action
-    setNavigationSelectedObject(
-        navigationObject: IEezObject,
-        navigationSelectedObject: IEezObject
-    ) {
-        this.selectedObject = navigationSelectedObject;
-    }
-
-    setSelectedPanel(selectedPanel: IPanel | undefined) {}
-}
-
-class NavigationStore implements INavigationStore {
-    @observable navigationMap = new Map<string, IEezObject>();
+class NavigationStore {
     @observable selectedPanel: IPanel | undefined;
+
+    selectedRootObject = observable.box<IEezObject>();
+
+    selectedPageObject = observable.box<IEezObject>();
+    selectedActionObject = observable.box<IEezObject>();
+    selectedGlobalVariableObject = observable.box<IEezObject>();
+    selectedStructureObject = observable.box<IEezObject>();
+    selectedEnumObject = observable.box<IEezObject>();
+    selectedStyleObject = observable.box<IEezObject>();
+    selectedThemeObject = observable.box<IEezObject>();
+    selectedThemeColorObject = observable.box<IEezObject>();
+    selectedFontObject = observable.box<IEezObject>();
+    selectedGlyphObject = observable.box<IEezObject>();
+    selectedBitmapObject = observable.box<IEezObject>();
+    selectedExtensionDefinitionObject = observable.box<IEezObject>();
+    selectedScpiSubsystemObject = observable.box<IEezObject>();
+    selectedScpiEnumObject = observable.box<IEezObject>();
 
     editable = true;
 
     constructor(public DocumentStore: DocumentStoreClass) {}
 
-    loadNavigationMap(map: { [stringPath: string]: string }) {
-        let navigationMap = new Map<string, IEezObject>();
+    loadState(state: any) {
+        let selectedRootObject;
+        if (state && state.selectedRootObject) {
+            selectedRootObject = getObjectFromStringPath(
+                this.DocumentStore.project,
+                state.selectedRootObject
+            );
+        }
+        if (!selectedRootObject) {
+            selectedRootObject = this.DocumentStore.project.settings;
+        }
+        this.selectedRootObject.set(selectedRootObject);
 
-        for (let stringPath in map) {
-            if (typeof stringPath != "string") {
-                continue;
+        if (state) {
+            if (state.selectedPageObject) {
+                this.selectedPageObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedPageObject
+                    )
+                );
             }
 
-            let navigationObject =
-                this.DocumentStore.getObjectFromStringPath(stringPath);
-            if (navigationObject) {
-                let navigationSubobjectStr = map[stringPath];
+            if (state.selectedActionObject) {
+                this.selectedActionObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedActionObject
+                    )
+                );
+            }
 
-                if (typeof navigationSubobjectStr != "string") {
-                    continue;
-                }
+            if (state.selectedGlobalVariableObject) {
+                this.selectedGlobalVariableObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedGlobalVariableObject
+                    )
+                );
+            }
 
-                if (navigationSubobjectStr === stringPath) {
-                    continue;
-                }
-                const navigationSubobject =
-                    this.DocumentStore.getObjectFromStringPath(
-                        navigationSubobjectStr
-                    );
+            if (state.selectedStructureObject) {
+                this.selectedStructureObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedStructureObject
+                    )
+                );
+            }
 
-                if (navigationSubobject) {
-                    navigationMap.set(
-                        getId(navigationObject),
-                        navigationSubobject
-                    );
-                }
+            if (state.selectedEnumObject) {
+                this.selectedEnumObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedEnumObject
+                    )
+                );
+            }
+
+            if (state.selectedStyleObject) {
+                this.selectedStyleObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedStyleObject
+                    )
+                );
+            }
+
+            if (state.selectedThemeObject) {
+                this.selectedThemeObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedThemeObject
+                    )
+                );
+            }
+
+            if (state.selectedThemeColorObject) {
+                this.selectedThemeColorObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedThemeColorObject
+                    )
+                );
+            }
+
+            if (state.selectedFontObject) {
+                this.selectedFontObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedFontObject
+                    )
+                );
+            }
+
+            if (state.selectedGlyphObject) {
+                this.selectedGlyphObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedGlyphObject
+                    )
+                );
+            }
+
+            if (state.selectedBitmapObject) {
+                this.selectedBitmapObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedBitmapObject
+                    )
+                );
+            }
+
+            if (state.selectedExtensionDefinitionObject) {
+                this.selectedExtensionDefinitionObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedExtensionDefinitionObject
+                    )
+                );
+            }
+
+            if (state.selectedScpiSubsystemObject) {
+                this.selectedScpiSubsystemObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedScpiSubsystemObject
+                    )
+                );
+            }
+
+            if (state.selectedScpiEnumObject) {
+                this.selectedScpiEnumObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedScpiEnumObject
+                    )
+                );
             }
         }
-
-        this.navigationMap = navigationMap;
     }
 
-    @computed
-    get navigationMapToJS() {
-        let map: any = {};
-        for (var [id, navigationSubobject] of this.navigationMap) {
-            let navigationObject = this.DocumentStore.getObjectFromObjectId(id);
-            if (navigationObject) {
-                let navigationObjectPath =
-                    getObjectPathAsString(navigationObject);
-                map[navigationObjectPath] =
-                    getObjectPathAsString(navigationSubobject);
-            }
-        }
-        return map;
+    saveState() {
+        return {
+            selectedRootObject: this.selectedRootObject.get()
+                ? getObjectPathAsString(this.selectedRootObject.get())
+                : undefined,
+            selectedPageObject: this.selectedPageObject.get()
+                ? getObjectPathAsString(this.selectedPageObject.get())
+                : undefined,
+            selectedActionObject: this.selectedActionObject.get()
+                ? getObjectPathAsString(this.selectedActionObject.get())
+                : undefined,
+            selectedGlobalVariableObject:
+                this.selectedGlobalVariableObject.get()
+                    ? getObjectPathAsString(
+                          this.selectedGlobalVariableObject.get()
+                      )
+                    : undefined,
+            selectedStructureObject: this.selectedStructureObject.get()
+                ? getObjectPathAsString(this.selectedStructureObject.get())
+                : undefined,
+            selectedEnumObject: this.selectedEnumObject.get()
+                ? getObjectPathAsString(this.selectedEnumObject.get())
+                : undefined,
+            selectedStyleObject: this.selectedStyleObject.get()
+                ? getObjectPathAsString(this.selectedStyleObject.get())
+                : undefined,
+            selectedThemeObject: this.selectedThemeObject.get()
+                ? getObjectPathAsString(this.selectedThemeObject.get())
+                : undefined,
+            selectedThemeColorObject: this.selectedThemeColorObject.get()
+                ? getObjectPathAsString(this.selectedThemeColorObject.get())
+                : undefined,
+            selectedFontObject: this.selectedFontObject.get()
+                ? getObjectPathAsString(this.selectedFontObject.get())
+                : undefined,
+            selectedGlyphObject: this.selectedGlyphObject.get()
+                ? getObjectPathAsString(this.selectedGlyphObject.get())
+                : undefined,
+            selectedBitmapObject: this.selectedBitmapObject.get()
+                ? getObjectPathAsString(this.selectedBitmapObject.get())
+                : undefined,
+            selectedExtensionDefinitionObject:
+                this.selectedExtensionDefinitionObject.get()
+                    ? getObjectPathAsString(
+                          this.selectedExtensionDefinitionObject.get()
+                      )
+                    : undefined,
+            selectedScpiSubsystemObject: this.selectedScpiSubsystemObject.get()
+                ? getObjectPathAsString(this.selectedScpiSubsystemObject.get())
+                : undefined,
+            selectedScpiEnumObject: this.selectedScpiEnumObject.get()
+                ? getObjectPathAsString(this.selectedScpiEnumObject.get())
+                : undefined
+        };
     }
 
     @action
     setSelectedPanel(selectedPanel: IPanel | undefined) {
         this.selectedPanel = selectedPanel;
-    }
-
-    @computed
-    get selectedObject(): IEezObject | undefined {
-        let object: IEezObject = this.DocumentStore.project;
-        if (!object) {
-            return undefined;
-        }
-
-        while (true) {
-            let child = this.getNavigationSelectedObject(object);
-            if (!child) {
-                return object;
-            }
-            object = child;
-        }
-    }
-
-    isSelected(object: IEezObject) {
-        let iterObject = object;
-        let parent = getParent(iterObject);
-        while (iterObject && parent) {
-            if (getClassInfo(parent).navigationComponent) {
-                let grandparent = getParent(parent);
-                if (!isArray(grandparent)) {
-                    let selectedObject =
-                        this.getNavigationSelectedObject(parent);
-                    if (selectedObject != iterObject) {
-                        return false;
-                    }
-                }
-            }
-            iterObject = parent;
-            parent = getParent(iterObject);
-        }
-
-        return true;
-    }
-
-    getNavigationSelectedObject(
-        navigationObject: IEezObject
-    ): IEezObject | undefined {
-        let item = this.navigationMap.get(getId(navigationObject));
-
-        if (!item) {
-            let defaultNavigationKey =
-                getClassInfo(navigationObject).defaultNavigationKey;
-            if (defaultNavigationKey) {
-                item = getProperty(navigationObject, defaultNavigationKey);
-            }
-        }
-
-        if (item && !isObjectExists(item)) {
-            item = undefined;
-        }
-        return item;
-    }
-
-    @action
-    setNavigationSelectedObject(
-        navigationObject: IEezObject,
-        navigationSelectedObject: IEezObject
-    ) {
-        this.navigationMap.set(
-            getId(navigationObject),
-            navigationSelectedObject
-        );
-
-        if (!isPartOfNavigation(navigationObject)) {
-            return;
-        }
-
-        let parent = getParent(navigationObject);
-        if (parent) {
-            this.setNavigationSelectedObject(parent, navigationObject);
-        }
-    }
-
-    getSelection(): IEezObject[] | undefined {
-        // TODO
-        return undefined;
-    }
-
-    @action
-    setSelection(selection: IEezObject[] | undefined) {
-        if (!selection || selection.length == 0) {
-            return;
-        }
-
-        let object = selection[0];
-
-        let iterObject = object;
-        let parent = getParent(iterObject);
-        while (iterObject && parent) {
-            let grandparent = getParent(parent);
-            if (!isArray(grandparent)) {
-                this.setNavigationSelectedObject(parent, iterObject);
-            }
-
-            iterObject = parent;
-            parent = getParent(iterObject);
-        }
     }
 
     showObject(
@@ -305,77 +323,16 @@ class NavigationStore implements INavigationStore {
             selectInEditor?: boolean;
         }
     ) {
-        this.setSelection([objectToShow]);
-
-        const selectInEditor = !options || (options.selectInEditor ?? true);
-        if (selectInEditor) {
-            for (
-                let object: IEezObject | undefined = objectToShow;
-                object;
-                object = getParent(object)
-            ) {
-                if (getEditorComponent(object)) {
-                    const editor =
-                        this.DocumentStore.editorsStore.openEditor(object);
-                    if (editor) {
-                        const editorState = editor.state;
-                        if (editorState) {
-                            setTimeout(() => {
-                                editorState.selectObject(
-                                    isValue(objectToShow)
-                                        ? getParent(objectToShow)
-                                        : objectToShow
-                                );
-                                setTimeout(() => {
-                                    editorState.ensureSelectionVisible();
-                                }, 50);
-                            }, 50);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
+        // TODO
     }
-
-    _settingsNavigationObjectAdapter: TreeObjectAdapter;
-
-    getSettingsNavigationObjectAdapter(construct: () => TreeObjectAdapter) {
-        if (!this._settingsNavigationObjectAdapter) {
-            if (this.DocumentStore.project) {
-                this._settingsNavigationObjectAdapter = construct();
-            }
-        }
-        return this._settingsNavigationObjectAdapter;
-    }
-
-    loadSettingsNavigationState(settingsNavigationState: any) {
-        if (settingsNavigationState) {
-            if (this._settingsNavigationObjectAdapter) {
-                this._settingsNavigationObjectAdapter.loadState(
-                    settingsNavigationState
-                );
-            }
-        }
-    }
-
-    @computed
-    get settingsNavigationStateToJS() {
-        if (this._settingsNavigationObjectAdapter) {
-            return this._settingsNavigationObjectAdapter.saveState();
-        }
-        return {};
-    }
-
-    unmount() {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Editor implements IEditor {
+    tabId: string;
     @observable object: IEezObject;
-    @observable active: boolean;
-    @observable permanent: boolean;
+    @observable subObject: IEezObject | undefined;
     @observable state: IEditorState | undefined;
 
     loading = false;
@@ -383,17 +340,7 @@ export class Editor implements IEditor {
     constructor(public DocumentStore: DocumentStoreClass) {}
 
     @computed
-    get id() {
-        return getId(this.object);
-    }
-
-    @computed
     get title() {
-        // if (isArrayElement(this.object)) {
-        //     return `${getClass(this.object).name}: ${objectToString(this.object)}`;
-        // } else {
-        //     return objectToString(this.object);
-        // }
         return objectToString(this.object);
     }
 
@@ -409,54 +356,20 @@ export class Editor implements IEditor {
     }
 
     @action
-    makePermanent() {
-        this.permanent = true;
-    }
-
-    close() {
-        this.DocumentStore.editorsStore.closeEditor(this);
-        if (this.state) {
-            this.state.saveState();
-        }
-    }
+    makePermanent() {}
 }
 
 class EditorsStore {
+    tabIdToEditorMap = new Map<string, Editor>();
+
     @observable editors: Editor[] = [];
+    @observable activeEditor: Editor | undefined = undefined;
 
     dispose1: mobx.IReactionDisposer;
-    dispose2: mobx.IReactionDisposer;
 
     constructor(public DocumentStore: DocumentStoreClass) {
-        // open editor when navigation selection has changed
-        this.dispose1 = autorun(() => {
-            let object = DocumentStore.navigationStore.selectedObject;
-            while (object) {
-                let selectedObject =
-                    DocumentStore.navigationStore.getNavigationSelectedObject(
-                        object
-                    );
-
-                while (selectedObject) {
-                    if (
-                        !isArray(selectedObject) &&
-                        getEditorComponent(selectedObject)
-                    ) {
-                        this.openEditor(selectedObject);
-                    }
-
-                    selectedObject =
-                        DocumentStore.navigationStore.getNavigationSelectedObject(
-                            selectedObject
-                        );
-                }
-
-                object = getParent(object);
-            }
-        });
-
         // close editor if editor object doesn't exists anymore
-        this.dispose2 = autorun(() => {
+        this.dispose1 = autorun(() => {
             this.editors.slice().forEach(editor => {
                 if (!isObjectExists(editor.object)) {
                     this.closeEditor(editor);
@@ -465,83 +378,88 @@ class EditorsStore {
         });
     }
 
-    unmount() {
-        this.dispose1();
-        this.dispose2();
+    get tabsModel() {
+        return (
+            this.DocumentStore.layoutModel.model
+                .getNodeById("EDITORS")
+                .getChildren()[0] as FlexLayout.TabNode
+        ).getExtraData().model as FlexLayout.Model;
     }
 
-    load(editors: any[]) {
-        if (editors) {
-            this.editors = editors
-                .map((editor: any) => {
-                    let object;
-                    if (_isArray(editor.object)) {
-                        object = this.DocumentStore.getObjectFromPath(
-                            editor.object
-                        );
-                    } else {
-                        object = this.DocumentStore.getObjectFromStringPath(
-                            editor.object
-                        );
-                    }
-                    if (object) {
-                        let newEditor = new Editor(this.DocumentStore);
-                        newEditor.object = object;
-                        newEditor.active = editor.active;
-                        newEditor.permanent = editor.permanent;
-                        const createEditorState =
-                            getClassInfo(object).createEditorState;
-                        if (createEditorState) {
-                            newEditor.state = createEditorState(object);
-                            if (editor.state && newEditor.state) {
-                                newEditor.state.loadState(editor.state);
-                            }
-                        }
-                        return newEditor;
-                    }
-                    return undefined;
-                })
-                .filter((editor: Editor | undefined) => !!editor) as Editor[];
-        } else {
-            this.editors = [];
-        }
+    get tabsSet() {
+        let tabsSet: FlexLayout.TabSetNode;
+
+        this.tabsModel.visitNodes(node => {
+            if (!tabsSet && node instanceof FlexLayout.TabSetNode) {
+                tabsSet = node;
+            }
+        });
+
+        return tabsSet!;
     }
 
-    @computed
-    get toJS() {
-        return this.editors.map(editor => ({
-            object: getObjectPathAsString(editor.object),
-            active: editor.active,
-            permanent: editor.permanent,
-            state: editor.state && editor.state.saveState()
-        }));
+    get tabs() {
+        const tabs: FlexLayout.TabNode[] = [];
+        this.tabsModel.visitNodes(node => {
+            if (node instanceof FlexLayout.TabNode) {
+                tabs.push(node);
+            }
+        });
+        return tabs;
     }
 
-    @computed
-    get activeEditor() {
-        for (let i = 0; i < this.editors.length; i++) {
-            let editor = this.editors[i];
-            if (editor.active) {
-                return editor;
+    refresh() {
+        const editors: Editor[] = [];
+        const tabIdToEditorMap = new Map<string, Editor>();
+
+        let activeEditor: Editor | undefined = undefined;
+
+        for (const tab of this.tabs) {
+            const tabId = tab.getId();
+            const tabConfig = tab.getConfig();
+            const object = getObjectFromStringPath(
+                this.DocumentStore.project,
+                tabConfig
+            );
+
+            if (!object) {
+                this.tabsModel.doAction(FlexLayout.Actions.deleteTab(tabId));
+                continue;
+            }
+
+            let editor = this.tabIdToEditorMap.get(tabId);
+            if (!editor) {
+                editor = new Editor(this.DocumentStore);
+
+                editor.tabId = tabId;
+                editor.object = object;
+                editor.state = ProjectEditor.createEditorState(object);
+            }
+
+            editors.push(editor);
+            tabIdToEditorMap.set(tabId, editor);
+
+            const parentNode = tab.getParent() as FlexLayout.TabSetNode;
+            if (parentNode.isActive()) {
+                if (parentNode.getSelectedNode() == tab) {
+                    activeEditor = editor;
+                }
             }
         }
-        return undefined;
+
+        this.tabIdToEditorMap = tabIdToEditorMap;
+
+        setTimeout(
+            action(() => {
+                this.editors = editors;
+                this.activeEditor = activeEditor;
+            })
+        );
     }
 
     @action
     activateEditor(editor: Editor) {
-        if (editor.active) {
-            return;
-        }
-
-        let activeEditor = this.activeEditor;
-        if (activeEditor) {
-            activeEditor.active = false;
-        }
-
-        editor.active = true;
-
-        this.DocumentStore.navigationStore.setSelection([editor.object]);
+        this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
 
         setTimeout(() => {
             const el = document.querySelector(
@@ -554,64 +472,52 @@ class EditorsStore {
     }
 
     @action
-    openEditor(object: IEezObject, openAsPermanentEditor: boolean = false) {
-        let nonPermanentEditor: Editor | undefined;
-
+    openEditor(object: IEezObject, subObject?: IEezObject) {
         let editorFound: Editor | undefined;
 
         for (let i = 0; i < this.editors.length; i++) {
             if (this.editors[i].object == object) {
-                this.editors[i].active = true;
                 editorFound = this.editors[i];
-            } else {
-                if (this.editors[i].active) {
-                    this.editors[i].active = false;
-                }
-                if (!openAsPermanentEditor && !this.editors[i].permanent) {
-                    nonPermanentEditor = this.editors[i];
-                }
             }
         }
 
         if (editorFound) {
+            editorFound.subObject = subObject;
+            this.tabsModel.doAction(
+                FlexLayout.Actions.selectTab(editorFound.tabId)
+            );
             return editorFound;
         }
 
-        if (!nonPermanentEditor) {
-            nonPermanentEditor = new Editor(this.DocumentStore);
-            this.editors.push(nonPermanentEditor);
-        }
-        nonPermanentEditor.permanent = openAsPermanentEditor;
-        nonPermanentEditor.object = object;
-        nonPermanentEditor.active = true;
+        let editor = new Editor(this.DocumentStore);
+        this.editors.push(editor);
 
-        if (nonPermanentEditor.state) {
-            nonPermanentEditor.state.saveState();
-        }
+        editor.object = object;
+        editor.subObject = subObject;
+        editor.state = ProjectEditor.createEditorState(object);
 
-        const createEditorState = getClassInfo(object).createEditorState;
-        if (createEditorState) {
-            nonPermanentEditor.state = createEditorState(object);
-        } else {
-            nonPermanentEditor.state = undefined;
-        }
+        const tabNode = this.tabsModel.doAction(
+            FlexLayout.Actions.addNode(
+                {
+                    type: "tab",
+                    name: editor.title,
+                    component: "editor",
+                    config: getObjectPathAsString(editor.object)
+                },
+                this.tabsSet.getId(),
+                FlexLayout.DockLocation.CENTER,
+                0,
+                true
+            )
+        ) as FlexLayout.TabNode;
 
-        return nonPermanentEditor;
-    }
+        editor.tabId = tabNode.getId();
 
-    @action
-    openPermanentEditor(object: IEezObject) {
-        this.openEditor(object, true);
-    }
+        this.tabIdToEditorMap.set(editor.tabId, editor);
 
-    @action
-    makeActiveEditorPermanent() {
-        for (let i = 0; i < this.editors.length; i++) {
-            if (this.editors[i].active) {
-                this.editors[i].permanent = true;
-                return;
-            }
-        }
+        this.tabsModel.doAction(FlexLayout.Actions.selectTab(editor.tabId));
+
+        return editor;
     }
 
     @action
@@ -619,44 +525,193 @@ class EditorsStore {
         let index = this.editors.indexOf(editor);
         if (index != -1) {
             this.editors.splice(index, 1);
-            if (editor.active) {
-                if (index < this.editors.length) {
-                    this.activateEditor(this.editors[index]);
-                } else if (this.editors.length > 0) {
-                    this.activateEditor(this.editors[this.editors.length - 1]);
-                }
-            }
+
+            this.tabsModel.doAction(FlexLayout.Actions.deleteTab(editor.tabId));
+
+            this.tabIdToEditorMap.delete(editor.tabId);
         }
+    }
+
+    unmount() {
+        this.dispose1();
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ViewOptions {
-    @observable outputVisible: boolean = true;
-    @observable themesVisible: boolean = true;
+export class LayoutModel {
+    static FONT = {
+        size: "small"
+    };
+    static FONT_SUB = {
+        size: "small"
+    };
+    static GLOBAL_OPTIONS = {
+        borderEnableAutoHide: true,
+        splitterSize: 4,
+        splitterExtra: 4,
+        legacyOverflowMenu: false,
+        tabEnableRename: false
+    };
+    static VERSION = 9;
 
-    @action
-    load(viewOptions: any) {
-        if (viewOptions) {
-            this.outputVisible = viewOptions.outputVisible;
-            this.themesVisible = viewOptions.themesVisible;
+    constructor(public DocumentStore: DocumentStoreClass) {}
+
+    @observable model: FlexLayout.Model;
+
+    load(layoutModel: any) {
+        if (layoutModel && layoutModel.version == LayoutModel.VERSION) {
+            this.model = FlexLayout.Model.fromJson(layoutModel.json);
         } else {
-            this.outputVisible = true;
-            this.themesVisible = true;
+            this.model = FlexLayout.Model.fromJson(this.json);
         }
+        // (window as any).model = this.model;
     }
 
-    @computed
-    get toJS() {
-        return toJS(this);
+    @computed get json(): FlexLayout.IJsonModel {
+        return {
+            global: LayoutModel.GLOBAL_OPTIONS,
+            borders: [
+                {
+                    type: "border",
+                    location: "top",
+                    children: []
+                },
+                {
+                    type: "border",
+                    location: "right",
+                    children: [
+                        {
+                            type: "tab",
+                            enableClose: false,
+                            name: "Themes",
+                            component: "themesSideView"
+                        }
+                    ]
+                },
+                {
+                    type: "border",
+                    location: "bottom",
+                    children: [
+                        {
+                            type: "tab",
+                            enableClose: false,
+                            name: "Checks",
+                            component: "checksMessages"
+                        },
+                        {
+                            type: "tab",
+                            enableClose: false,
+                            name: "Output",
+                            component: "outputMessages"
+                        },
+                        {
+                            type: "tab",
+                            enableClose: false,
+                            name: "Search Results",
+                            component: "searchResultsMessages"
+                        }
+                    ]
+                }
+            ],
+            layout: {
+                type: "row",
+                children: [
+                    {
+                        type: "tabset",
+                        weight: 25,
+                        enableTabStrip: false,
+                        enableDrag: false,
+                        enableDrop: false,
+                        enableClose: false,
+                        id: "NAVIGATION",
+                        children: [
+                            {
+                                type: "tab",
+                                enableClose: false,
+                                name: "Navigation",
+                                component: "navigation"
+                            }
+                        ]
+                    },
+
+                    {
+                        type: "row",
+                        weight: 50,
+                        children: [
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                id: "EDITORS",
+                                children: [
+                                    {
+                                        type: "tab",
+                                        component: "sub",
+                                        config: {
+                                            model: {
+                                                global: {
+                                                    ...LayoutModel.GLOBAL_OPTIONS,
+                                                    tabEnableClose: true
+                                                },
+                                                borders: [],
+                                                layout: {
+                                                    type: "row",
+                                                    children: [
+                                                        {
+                                                            type: "tabset",
+                                                            children: []
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        type: "tabset",
+                        weight: 25,
+                        id: "PROPERTIES_AND_COMPANY",
+                        children: [
+                            {
+                                type: "tab",
+                                enableClose: false,
+                                name: "Properties",
+                                component: "propertiesPanel"
+                            },
+                            {
+                                type: "tab",
+                                enableClose: false,
+                                name: "Components Palette",
+                                component: "componentsPalette"
+                            },
+                            {
+                                type: "tab",
+                                enableClose: false,
+                                name: "Breakpoints",
+                                component: "breakpointsPanel"
+                            },
+                            {
+                                type: "tab",
+                                enableClose: false,
+                                name: "Debugger",
+                                component: "debuggerPanel"
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class UIStateStore {
-    @observable viewOptions: ViewOptions = new ViewOptions();
     @observable selectedBuildConfiguration: string;
     @observable features: any;
     @observable savedState: any;
@@ -670,37 +725,9 @@ class UIStateStore {
 
     objectUIStates = new Map<string, any>();
 
-    dispose1: mobx.IReactionDisposer;
+    constructor(public DocumentStore: DocumentStoreClass) {}
 
-    constructor(public DocumentStore: DocumentStoreClass) {
-        // react when selected panel or selected message in output window has changed
-        this.dispose1 = reaction(
-            () => ({
-                message:
-                    this.DocumentStore.outputSectionsStore?.activeSection
-                        .selectedMessage,
-                panel: this.DocumentStore.navigationStore.selectedPanel
-            }),
-            arg => {
-                if (
-                    arg.panel instanceof OutputSection &&
-                    arg.message &&
-                    arg.message.object
-                ) {
-                    this.DocumentStore.navigationStore.showObject(
-                        arg.message.object
-                    );
-                }
-            },
-            {
-                delay: 100
-            }
-        );
-    }
-
-    unmount() {
-        this.dispose1();
-    }
+    unmount() {}
 
     loadObjects(objects: any) {
         this.objectUIStates.clear();
@@ -733,18 +760,10 @@ class UIStateStore {
         } catch (err) {}
 
         runInAction(() => {
-            this.viewOptions.load(uiState.viewOptions);
-
-            this.DocumentStore.navigationStore.loadNavigationMap(
-                uiState.navigationMap
-            );
-            this.DocumentStore.navigationStore.loadSettingsNavigationState(
-                uiState.settingsNavigationState
-            );
-
+            this.DocumentStore.navigationStore.loadState(uiState.navigation);
             this.loadObjects(uiState.objects);
 
-            this.DocumentStore.editorsStore.load(uiState.editors);
+            this.DocumentStore.layoutModel.load(uiState.layoutModel);
 
             this.selectedBuildConfiguration =
                 uiState.selectedBuildConfiguration || "Default";
@@ -800,11 +819,11 @@ class UIStateStore {
 
     get toJS() {
         const state = {
-            viewOptions: this.viewOptions.toJS,
-            navigationMap: this.DocumentStore.navigationStore.navigationMapToJS,
-            settingsNavigationState:
-                this.DocumentStore.navigationStore.settingsNavigationStateToJS,
-            editors: this.DocumentStore.editorsStore.toJS,
+            navigation: this.DocumentStore.navigationStore.saveState(),
+            layoutModel: {
+                version: LayoutModel.VERSION,
+                json: this.DocumentStore.layoutModel.model.toJson()
+            },
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
             objects: this.objectsJS,
@@ -1095,8 +1114,9 @@ export class UndoManager {
     @action
     pushToUndoStack() {
         if (this.commands.length > 0) {
-            let selectionAfter =
-                this.DocumentStore.navigationStore.getSelection();
+            // TODO set selectionAfter to current selection
+            const selectionAfter = undefined;
+
             this.undoStack.push({
                 commands: this.commands,
                 selectionBefore: this.selectionBeforeFirstCommand,
@@ -1104,8 +1124,9 @@ export class UndoManager {
             });
 
             this.commands = [];
-            this.selectionBeforeFirstCommand =
-                this.DocumentStore.navigationStore.getSelection();
+
+            // TODO set this.selectionBeforeFirstCommand to current selection
+            this.selectionBeforeFirstCommand = undefined;
         }
     }
 
@@ -1118,8 +1139,8 @@ export class UndoManager {
     @action
     executeCommand(command: ICommand) {
         if (this.commands.length == 0) {
-            this.selectionBeforeFirstCommand =
-                this.DocumentStore.navigationStore.getSelection();
+            // TODO set this.selectionBeforeFirstCommand to current selection
+            this.selectionBeforeFirstCommand = undefined;
         } else {
             if (!this.combineCommands) {
                 this.pushToUndoStack();
@@ -1167,9 +1188,7 @@ export class UndoManager {
                 undoItem.commands[i].undo();
             }
 
-            this.DocumentStore.navigationStore.setSelection(
-                undoItem.selectionBefore
-            );
+            // TODO select undoItem.selectionBefore
 
             this.redoStack.push(undoItem);
 
@@ -1202,9 +1221,7 @@ export class UndoManager {
                 redoItem.commands[i].execute();
             }
 
-            this.DocumentStore.navigationStore.setSelection(
-                redoItem.selectionAfter
-            );
+            // TODO select redoItem.selectionAfter
 
             this.undoStack.push(redoItem);
 
@@ -1500,10 +1517,6 @@ export class OutputSection implements IPanel {
             this.selectedMessage = message;
         }
     }
-
-    makeActive(): void {
-        this.DocumentStore.outputSectionsStore.setActiveSection(this.id);
-    }
 }
 
 export class OutputSections {
@@ -1536,22 +1549,8 @@ export class OutputSections {
         // );
     }
 
-    @computed get activeSection() {
-        return (
-            this.sections[
-                this.DocumentStore.uiStateStore.activeOutputSection
-            ] ?? this.sections[Section.CHECKS]
-        );
-    }
-
     getSection(sectionType: Section) {
         return this.sections[sectionType];
-    }
-
-    @action
-    setActiveSection(sectionType: Section) {
-        this.DocumentStore.uiStateStore.activeOutputSection = sectionType;
-        this.DocumentStore.uiStateStore.viewOptions.outputVisible = true;
     }
 
     @action
@@ -1588,6 +1587,7 @@ export class DocumentStoreClass {
     undoManager = new UndoManager(this);
     navigationStore = new NavigationStore(this);
     editorsStore = new EditorsStore(this);
+    layoutModel = new LayoutModel(this);
     uiStateStore = new UIStateStore(this);
     runtimeSettings = new RuntimeSettings(this);
     outputSectionsStore = new OutputSections(this);
@@ -1701,8 +1701,6 @@ export class DocumentStoreClass {
         if (this.dispose5) {
             this.dispose5();
         }
-
-        this.navigationStore.unmount();
     }
 
     async loadMasterProject() {
@@ -2352,7 +2350,7 @@ export class DocumentStoreClass {
             this.setRuntimeMode(true);
         } else {
             if (!this.runtime.isDebuggerActive) {
-                this.navigationStore.setSelection([this.runtime.selectedPage]);
+                this.editorsStore.openEditor(this.runtime.selectedPage);
                 this.runtime.toggleDebugger();
             }
         }
@@ -3168,16 +3166,6 @@ export function isObjectInstanceOf(
     baseClassInfo: ClassInfo
 ) {
     return isSubclassOf(getClassInfo(object), baseClassInfo);
-}
-
-export function getEditorComponent(
-    object: IEezObject
-): typeof EditorComponent | undefined {
-    const isEditorSupported = getClassInfo(object).isEditorSupported;
-    if (isEditorSupported && !isEditorSupported(object)) {
-        return undefined;
-    }
-    return getClassInfo(object).editorComponent;
 }
 
 export function getLabel(object: IEezObject): string {

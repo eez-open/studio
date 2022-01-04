@@ -42,11 +42,6 @@ import { AutoSize, Component, Widget } from "project-editor/flow/component";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
-import {
-    PageEditor,
-    PagesNavigation,
-    PageTabState
-} from "project-editor/features/page/PagesNavigation";
 import { Rect } from "eez-studio-shared/geometry";
 import { Flow } from "project-editor/flow/flow";
 import { metrics } from "project-editor/features/page/metrics";
@@ -308,12 +303,6 @@ export class Page extends Flow {
                 });
             });
         },
-        createEditorState: (page: Page) => {
-            return new PageTabState(page);
-        },
-        navigationComponentId: "pages",
-        editorComponent: PageEditor,
-        navigationComponent: PagesNavigation,
         icon: "filter",
         check: (object: Page) => {
             let messages: Message[] = [];

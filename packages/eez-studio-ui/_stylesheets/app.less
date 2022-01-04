@@ -2464,33 +2464,6 @@ button.EezStudio_Action {
     padding-left: 1.25rem;
 }
 
-.EezStudio_SortableTitle {
-    flex-grow: 1;
-    font-weight: 600;
-    color: @darkTextColor;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    background-repeat: no-repeat;
-    background-position: center left;
-    background-position-y: 2px;
-    padding-left: 20px;
-    cursor: pointer;
-
-    &.sort-asc {
-        background-image: url("../_images/col_sort_asc.png");
-    }
-
-    &.sort-desc {
-        background-image: url("../_images/col_sort_desc.png");
-    }
-
-    &.sort-none {
-        background-image: url("../_images/col_sort_enabled.png");
-    }
-}
-
 .EezStudio_ListWithSearchInputContainer {
     flex-grow: 1;
     display: flex;
@@ -2631,12 +2604,6 @@ button.EezStudio_Action {
         border: 1px solid @borderColor;
         margin: 2px 0;
         width: 150px;
-    }
-
-    &.collapsable {
-        .EezStudio_ProjectEditorPanelTitle {
-            cursor: pointer;
-        }
     }
 }
 
@@ -3227,12 +3194,10 @@ button.EezStudio_Action {
 
 .EezStudio_StyleEditorImg {
     display: block;
-    margin: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
+    padding: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .EezStudio_ColorItem {
@@ -4873,4 +4838,82 @@ button.EezStudio_Action {
             }
         }
     }
+}
+
+.EezStudio_Themes {
+    height: 100%;
+}
+
+.flexlayout__layout .EezStudio_PanelHeader {
+    background-color: @panelHeaderColorInsideFlexLayout;
+}
+
+.EezStudio_ProjectEditor_Shortcuts {
+    height: 100%;
+}
+
+.EezStudio_ProjectEditor_ListNavigation {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Title {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 2px 4px;
+    }
+
+    .EezStudio_SortControl {
+        font-weight: 600;
+        color: @darkTextColor;
+
+        width: 19px;
+
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-position-y: 2px;
+        padding-left: 20px;
+        cursor: pointer;
+
+        &.sort-asc {
+            background-image: url("../_images/col_sort_asc.png");
+        }
+
+        &.sort-desc {
+            background-image: url("../_images/col_sort_desc.png");
+        }
+
+        &.sort-none {
+            background-image: url("../_images/col_sort_enabled.png");
+        }
+    }
+
+    .EezStudio_SearchInput {
+        flex-grow: 1;
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    .btn-toolbar {
+        display: block;
+        flex-shrink: 0;
+        button {
+            margin-right: 4px !important;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}
+
+.flexlayout__tabset-selected {
+    background-image: none;
+}
+
+.flexlayout__tab {
+    background-color: @backgroundColor;
 }

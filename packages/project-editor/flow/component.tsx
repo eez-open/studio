@@ -60,8 +60,6 @@ import {
     resizingProperty
 } from "project-editor/flow/editor/resizing-widget-property";
 
-import { onSelectItem } from "project-editor/components/SelectItem";
-
 import type { Page } from "project-editor/features/page/page";
 import { Style } from "project-editor/features/style/style";
 import type {
@@ -142,10 +140,7 @@ export function makeDataPropertyInfo(
                             params
                         );
                     } else {
-                        return onSelectItem(object, propertyInfo, {
-                            title: "Select Data",
-                            width: 800
-                        });
+                        return new Promise(resolve => resolve("TODO"));
                     }
                 }
             },
@@ -164,13 +159,7 @@ export function makeActionPropertyInfo(
             name,
             type: PropertyType.ObjectReference,
             referencedObjectCollectionPath: "actions",
-            propertyGridGroup: specificGroup,
-            onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-                onSelectItem(object, propertyInfo, {
-                    title: propertyInfo.onSelectTitle!,
-                    width: 800
-                }),
-            onSelectTitle: "Select Action"
+            propertyGridGroup: specificGroup
         }),
         props
     );
@@ -201,27 +190,7 @@ export function makeTextPropertyInfo(
         {
             name,
             type: PropertyType.String,
-            propertyGridGroup: specificGroup,
-            onSelect: async (
-                object: IEezObject,
-                propertyInfo: PropertyInfo,
-                params?: IOnSelectParams
-            ) => {
-                if (ProjectEditor.getProject(object).isDashboardProject) {
-                    return undefined;
-                }
-
-                return await onSelectItem(
-                    object,
-                    propertyInfo,
-                    {
-                        title: propertyInfo.onSelectTitle!,
-                        width: 800
-                    },
-                    params
-                );
-            },
-            onSelectTitle: "Select Glyph"
+            propertyGridGroup: specificGroup
         },
         props
     );

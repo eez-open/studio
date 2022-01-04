@@ -19,15 +19,17 @@ import { strokeWidth } from "project-editor/flow/editor/ConnectionLineComponent"
 export class ComponentsContainerEnclosure extends React.Component<{
     components: Component[];
     flowContext: IFlowContext;
+    visibleComponent?: Component;
 }> {
     render() {
-        const { components, flowContext } = this.props;
+        const { components, flowContext, visibleComponent } = this.props;
 
         return components.map((component, i) => (
             <ComponentEnclosure
                 key={getId(component)}
                 component={component}
                 flowContext={flowContext}
+                visible={!visibleComponent || visibleComponent == component}
             />
         ));
     }
@@ -41,6 +43,7 @@ export class ComponentEnclosure extends React.Component<{
     flowContext: IFlowContext;
     left?: number;
     top?: number;
+    visible?: boolean;
 }> {
     elRef = React.createRef<HTMLDivElement>();
 
@@ -79,7 +82,7 @@ export class ComponentEnclosure extends React.Component<{
     }
 
     render() {
-        const { component, flowContext, left, top } = this.props;
+        const { component, flowContext, left, top, visible } = this.props;
 
         // data-eez-flow-object-id
         let dataFlowObjectId = getId(component);
@@ -129,6 +132,12 @@ export class ComponentEnclosure extends React.Component<{
                     runtime && !(runtime.isDebuggerActive && runtime.isPaused)
             }
         );
+
+        if (visible === false) {
+            style.opacity = "0.05";
+            style.pointerEvents = "none";
+            //style.display = "none";
+        }
 
         return (
             <div

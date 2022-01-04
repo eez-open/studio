@@ -4,7 +4,8 @@ import {
     computed,
     runInAction,
     autorun,
-    IReactionDisposer
+    IReactionDisposer,
+    IObservableValue
 } from "mobx";
 import { createTransformer } from "mobx-utils";
 
@@ -23,12 +24,12 @@ import {
     IEezObject,
     PropertyType,
     isAncestor,
-    IEditorState,
     isPropertyEnumerable,
     PropertyInfo,
     getParent,
     getId
 } from "project-editor/core/object";
+
 import {
     canDuplicate,
     canCut,
@@ -43,7 +44,6 @@ import {
     deleteItems,
     showContextMenu,
     canContainChildren,
-    INavigationStore,
     getDocumentStore,
     copyToClipboard,
     setClipboardData,
@@ -54,17 +54,16 @@ import {
     isShowOnlyChildrenInTree,
     isArrayElement,
     isObjectInstanceOf,
-    isPartOfNavigation,
     getClassInfo,
     getLabel,
-    objectToJson
+    objectToJson,
+    DocumentStoreClass
 } from "project-editor/core/store";
-import {
-    DragAndDropManagerClass,
-    DragAndDropManager
-} from "project-editor/core/dd";
+
+import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
+import { IEditorState } from "project-editor/project/EditorComponent";
 
 const { Menu, MenuItem } = EEZStudio.remote || {};
 
@@ -910,6 +909,7 @@ export interface ITreeAdapter {
     pasteSelection(): void;
     deleteSelection(): void;
 
+    onClick(item: ITreeItem): void;
     onDoubleClick(item: ITreeItem): void;
 
     collapsableAdapter: ICollapsableTreeAdapter | undefined;
@@ -933,11 +933,14 @@ export class TreeAdapter implements ITreeAdapter {
         private collapsable?: boolean,
         public sortDirection?: SortDirectionType,
         public maxLevel?: number,
+        onClick?: (object: IEezObject) => void,
         onDoubleClick?: (object: IEezObject) => void
     ) {
+        this.onClickCallback = onClick;
         this.onDoubleClickCallback = onDoubleClick;
     }
 
+    onClickCallback: ((object: IEezObject) => void) | undefined;
     onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
     get allRows() {
@@ -1099,6 +1102,12 @@ export class TreeAdapter implements ITreeAdapter {
 
     toggleExpanded(item: ITreeObjectAdapter): void {
         item.toggleExpanded();
+    }
+
+    onClick(item: ITreeObjectAdapter): void {
+        if (this.onClickCallback) {
+            this.onClickCallback(item.object);
+        }
     }
 
     onDoubleClick(item: ITreeObjectAdapter): void {
@@ -1321,28 +1330,24 @@ class ListItem {
 }
 
 export class ListAdapter implements ITreeAdapter {
-    navigationStore: INavigationStore;
-    dragAndDropManager: DragAndDropManagerClass;
-
+    DocumentStore: DocumentStoreClass;
     dispose: IReactionDisposer;
 
     constructor(
         protected object: IEezObject,
+        protected selectedObject: IObservableValue<IEezObject | undefined>,
         public sortDirection?: SortDirectionType,
+        onClick?: (object: IEezObject) => void,
         onDoubleClick?: (object: IEezObject) => void,
-        navigationStore?: INavigationStore,
-        dragAndDropManager?: DragAndDropManagerClass,
         protected searchText?: string,
         protected filter?: (object: IEezObject) => boolean
     ) {
         this.parentItem = new ListItem(this.object);
 
+        this.onClickCallback = onClick;
         this.onDoubleClickCallback = onDoubleClick;
 
-        const DocumentStore = getDocumentStore(this.object);
-
-        this.navigationStore = navigationStore || DocumentStore.navigationStore;
-        this.dragAndDropManager = dragAndDropManager || DragAndDropManager;
+        this.DocumentStore = getDocumentStore(this.object);
 
         this.dispose = autorun(() => {
             const selectedItem = this.selectedItem;
@@ -1364,6 +1369,7 @@ export class ListAdapter implements ITreeAdapter {
         this.dispose();
     }
 
+    onClickCallback: ((object: IEezObject) => void) | undefined;
     onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
     parentItem: ListItem;
@@ -1439,9 +1445,7 @@ export class ListAdapter implements ITreeAdapter {
 
     @computed
     get selectedItem(): ListItem | undefined {
-        const selectedObject = this.navigationStore.getNavigationSelectedObject(
-            this.object
-        );
+        const selectedObject = this.selectedObject.get();
 
         if (selectedObject) {
             return this.getItemFromId(getId(selectedObject));
@@ -1452,26 +1456,12 @@ export class ListAdapter implements ITreeAdapter {
 
     @action
     selectItem(item: ListItem): void {
-        if (
-            getParent(item.object) &&
-            !isPartOfNavigation(getParent(item.object))
-        ) {
-            this.navigationStore.setNavigationSelectedObject(
-                this.object,
-                item.object
-            );
-            return;
-        }
-
         let selectedItem = this.selectedItem;
         if (selectedItem) {
             selectedItem.selected = false;
         }
 
-        this.navigationStore.setNavigationSelectedObject(
-            this.object,
-            item.object
-        );
+        this.selectedObject.set(item.object);
 
         selectedItem = this.selectedItem;
         if (selectedItem) {
@@ -1542,6 +1532,12 @@ export class ListAdapter implements ITreeAdapter {
         }
     }
 
+    onClick(item: ListItem) {
+        if (this.onClickCallback) {
+            this.onClickCallback(item.object);
+        }
+    }
+
     onDoubleClick(item: ListItem) {
         if (this.onDoubleClickCallback) {
             this.onDoubleClickCallback(item.object);
@@ -1555,41 +1551,41 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     get isDragging() {
-        return !!this.dragAndDropManager.dragObject;
+        return !!DragAndDropManager.dragObject;
     }
 
     isDragSource(item: ListItem) {
-        return this.dragAndDropManager.dragObject === item.object;
+        return DragAndDropManager.dragObject === item.object;
     }
 
     onDragStart(item: ListItem, event: any) {
         event.dataTransfer.effectAllowed = "copyMove";
         setClipboardData(event, objectToClipboardData(item.object));
         event.dataTransfer.setDragImage(
-            this.dragAndDropManager.blankDragImage,
+            DragAndDropManager.blankDragImage,
             0,
             0
         );
         // postpone render, otherwise we can receive onDragEnd immediatelly
         const DocumentStore = getDocumentStore(this.object);
         setTimeout(() => {
-            this.dragAndDropManager.start(event, item.object, DocumentStore);
+            DragAndDropManager.start(event, item.object, DocumentStore);
         });
     }
 
     onDrag(event: any) {
-        this.dragAndDropManager.drag(event);
+        DragAndDropManager.drag(event);
     }
 
     onDragEnd(event: any) {
-        this.dragAndDropManager.end(event);
+        DragAndDropManager.end(event);
     }
 
     onDragOver(dropItem: ListItem | undefined, event: any) {
         if (dropItem) {
             event.preventDefault();
             event.stopPropagation();
-            this.dragAndDropManager.setDropEffect(event);
+            DragAndDropManager.setDropEffect(event);
         }
 
         if (this.dropItem !== dropItem) {
@@ -1607,12 +1603,12 @@ export class ListAdapter implements ITreeAdapter {
         event.stopPropagation();
         event.preventDefault();
 
-        this.dragAndDropManager.deleteDragItem();
+        DragAndDropManager.deleteDragItem();
 
-        if (this.dragAndDropManager.dragObject) {
-            let object = objectToJson(this.dragAndDropManager.dragObject);
+        if (DragAndDropManager.dragObject) {
+            let object = objectToJson(DragAndDropManager.dragObject);
 
-            let dropItem = this.dragAndDropManager.dropObject as ListItem;
+            let dropItem = DragAndDropManager.dropObject as ListItem;
 
             const DocumentStore = getDocumentStore(this.object);
 
@@ -1635,11 +1631,11 @@ export class ListAdapter implements ITreeAdapter {
             }
         }
 
-        this.dragAndDropManager.end(event);
+        DragAndDropManager.end(event);
     }
 
     isAncestorOfDragObject(dropItem: ListItem) {
-        return isAncestor(dropItem.object, this.dragAndDropManager.dragObject!);
+        return isAncestor(dropItem.object, DragAndDropManager.dragObject!);
     }
 
     canDrop(
@@ -1648,11 +1644,11 @@ export class ListAdapter implements ITreeAdapter {
         prevObjectId: string | undefined,
         nextObjectId: string | undefined
     ): boolean {
-        if (!this.navigationStore.editable) {
+        if (!this.DocumentStore.navigationStore.editable) {
             return false;
         }
 
-        const dragObject = this.dragAndDropManager.dragObject!;
+        const dragObject = DragAndDropManager.dragObject!;
         if (!dragObject) {
             return false;
         }
@@ -1689,14 +1685,14 @@ export class ListAdapter implements ITreeAdapter {
     }
 
     get dropItem(): ListItem | undefined {
-        return this.dragAndDropManager.dropObject as ListItem | undefined;
+        return DragAndDropManager.dropObject as ListItem | undefined;
     }
 
     set dropItem(value: ListItem | undefined) {
         if (value) {
-            this.dragAndDropManager.setDropObject(value);
+            DragAndDropManager.setDropObject(value);
         } else {
-            this.dragAndDropManager.unsetDropObject();
+            DragAndDropManager.unsetDropObject();
         }
     }
 }

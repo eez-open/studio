@@ -1194,12 +1194,6 @@ export class ImportScpiDocDialog extends React.Component<{
 
         this.context.undoManager.setCombineCommands(false);
 
-        // always stay in scpi subsystems list view
-        this.context.navigationStore.setNavigationSelectedObject(
-            scpi,
-            scpi.subsystems
-        );
-
         this.context.backgroundCheckEnabled = true;
     }
 

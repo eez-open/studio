@@ -5,7 +5,6 @@ import { observer } from "mobx-react";
 import {
     registerClass,
     PropertyType,
-    NavigationComponent,
     EezObject
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
@@ -14,6 +13,7 @@ import * as notification from "eez-studio-ui/notification";
 import { updateObject } from "project-editor/core/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
+import { EditorComponent } from "project-editor/project/EditorComponent";
 
 const ICON = (
     <svg
@@ -39,7 +39,7 @@ const ICON = (
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class MicroPythonNavigation extends NavigationComponent {
+export class MicroPythonEditor extends EditorComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -53,6 +53,7 @@ export class MicroPythonNavigation extends NavigationComponent {
                     });
                 }}
                 mode={"python"}
+                style={{ height: "100%" }}
             />
         );
     }
@@ -67,10 +68,10 @@ export class MicroPython extends EezObject {
         properties: [
             {
                 name: "code",
-                type: PropertyType.MultilineText
+                type: PropertyType.MultilineText,
+                hideInPropertyGrid: true
             }
         ],
-        navigationComponent: MicroPythonNavigation,
         navigationComponentId: "micropython",
         icon: ICON
     };

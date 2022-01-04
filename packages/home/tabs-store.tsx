@@ -451,6 +451,7 @@ export class ProjectEditorTab implements IHomeTab {
                 });
             }
         } catch (err) {
+            console.log(err);
             runInAction(() => {
                 this.error = "Failed to load file!";
             });
@@ -529,10 +530,6 @@ export class ProjectEditorTab implements IHomeTab {
             if (DocumentStore.navigationStore.selectedPanel)
                 DocumentStore.navigationStore.selectedPanel.deleteSelection();
         };
-        const toggleOutput = action(() => {
-            DocumentStore.uiStateStore.viewOptions.outputVisible =
-                !DocumentStore.uiStateStore.viewOptions.outputVisible;
-        });
         const showMetrics = () => DocumentStore.showMetrics();
 
         EEZStudio.electron.ipcRenderer.on("save", save);
@@ -546,7 +543,6 @@ export class ProjectEditorTab implements IHomeTab {
         EEZStudio.electron.ipcRenderer.on("copy", copy);
         EEZStudio.electron.ipcRenderer.on("paste", paste);
         EEZStudio.electron.ipcRenderer.on("delete", deleteSelection);
-        EEZStudio.electron.ipcRenderer.on("toggleOutput", toggleOutput);
         EEZStudio.electron.ipcRenderer.on("showProjectMetrics", showMetrics);
 
         this.removeListeners = () => {
@@ -566,10 +562,6 @@ export class ProjectEditorTab implements IHomeTab {
             EEZStudio.electron.ipcRenderer.removeListener(
                 "delete",
                 deleteSelection
-            );
-            EEZStudio.electron.ipcRenderer.removeListener(
-                "toggleOutput",
-                toggleOutput
             );
             EEZStudio.electron.ipcRenderer.removeListener(
                 "showProjectMetrics",

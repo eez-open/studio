@@ -10,7 +10,7 @@ import {
     getObjectVariableTypeFromType,
     IObjectVariableValue
 } from "project-editor/features/variable/value-type";
-import { PageTabState } from "project-editor/features/page/PagesNavigation";
+import { PageTabState } from "project-editor/features/page/PageEditor";
 import { objectToString } from "project-editor/core/store";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
 

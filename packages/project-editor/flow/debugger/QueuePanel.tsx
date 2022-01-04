@@ -2,10 +2,9 @@ import React from "react";
 import { observer } from "mobx-react";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Panel } from "project-editor/components/Panel";
-import { action, computed, IObservableValue } from "mobx";
+import { action, computed } from "mobx";
 import { QueueTask, RuntimeBase } from "project-editor/flow/runtime";
 import { IconAction } from "eez-studio-ui/action";
-import { MaximizeIcon } from "./Icons";
 import { getLabel } from "project-editor/core/store";
 import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
 
@@ -14,16 +13,12 @@ import { DebugInfoRuntime } from "project-editor/flow/debug-info-runtime";
 @observer
 export class QueuePanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed?: IObservableValue<boolean>;
-    maximized: boolean;
-    onToggleMaximized: () => void;
 }> {
     render() {
         return (
             <Panel
                 id="project-editor/debugger/queue"
-                title="Queue"
-                collapsed={this.props.collapsed}
+                title=""
                 buttons={
                     this.props.runtime instanceof DebugInfoRuntime
                         ? []
@@ -103,14 +98,6 @@ export class QueuePanel extends React.Component<{
                                           .onRestartRuntimeWithDebuggerActive
                                   }
                                   enabled={this.props.runtime.isPaused}
-                              />,
-
-                              <MaximizeIcon
-                                  key="toggle-maximize"
-                                  maximized={this.props.maximized}
-                                  onToggleMaximized={
-                                      this.props.onToggleMaximized
-                                  }
                               />
                           ]
                 }

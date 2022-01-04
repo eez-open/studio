@@ -356,7 +356,7 @@ export class ContainerWidget extends EmbeddedWidget {
             flowContext,
             this,
             this.visible,
-            flowContext.flowState ? !!this.visible : true
+            flowContext.flowState ? !this.visible : true
         );
 
         return (
@@ -1004,6 +1004,19 @@ export class SelectWidget extends EmbeddedWidget {
                 ? this.widgets[index]
                 : undefined;
 
+        let components: Widget[];
+        let visibleComponent: Widget | undefined;
+        if (flowContext.flowState) {
+            if (selectedWidget) {
+                components = [selectedWidget];
+            } else {
+                components = [];
+            }
+        } else {
+            components = this.widgets;
+            visibleComponent = selectedWidget;
+        }
+
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -1022,12 +1035,11 @@ export class SelectWidget extends EmbeddedWidget {
                         }}
                     />
                 )}
-                {selectedWidget && (
-                    <ComponentsContainerEnclosure
-                        components={[selectedWidget]}
-                        flowContext={flowContext}
-                    />
-                )}
+                <ComponentsContainerEnclosure
+                    components={components}
+                    flowContext={flowContext}
+                    visibleComponent={visibleComponent}
+                />
                 {super.render(flowContext)}
             </>
         );

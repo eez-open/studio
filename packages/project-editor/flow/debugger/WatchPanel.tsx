@@ -20,7 +20,6 @@ import {
 import { ConnectionLine, FlowTabState } from "project-editor/flow/flow";
 import type { ComponentState, RuntimeBase } from "project-editor/flow/runtime";
 import { getInputDisplayName } from "project-editor/flow/component";
-import { MaximizeIcon } from "./Icons";
 import { evalExpressionGetValueType } from "../expression/expression";
 import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -50,9 +49,6 @@ export function valueToString(value: any) {
 @observer
 export class WatchPanel extends React.Component<{
     runtime: RuntimeBase;
-    collapsed?: IObservableValue<boolean>;
-    maximized: boolean;
-    onToggleMaximized: () => void;
 }> {
     onAddExpression = async () => {
         const result = await showGenericDialog({
@@ -130,8 +126,7 @@ export class WatchPanel extends React.Component<{
         return (
             <Panel
                 id="project-editor/debugger/variables"
-                title="Watch"
-                collapsed={this.props.collapsed}
+                title=""
                 buttons={[
                     <IconAction
                         key="add"
@@ -155,11 +150,6 @@ export class WatchPanel extends React.Component<{
                         title="Delete Watch Expression"
                         onClick={this.onDeleteEpression}
                         enabled={this.selectedExpression.get() != -1}
-                    />,
-                    <MaximizeIcon
-                        key="toggle-maximize"
-                        maximized={this.props.maximized}
-                        onToggleMaximized={this.props.onToggleMaximized}
                     />
                 ]}
                 body={

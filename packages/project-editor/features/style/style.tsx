@@ -1,6 +1,4 @@
-import React from "react";
 import { observable, computed } from "mobx";
-import { observer } from "mobx-react";
 
 import { _map, _zipObject } from "eez-studio-shared/algorithm";
 import { strToColor16 } from "eez-studio-shared/color";
@@ -15,7 +13,6 @@ import {
     PropertyType,
     getProperty,
     MessageType,
-    NavigationComponent,
     PropertyProps,
     getParent
 } from "project-editor/core/object";
@@ -29,26 +26,13 @@ import {
     propertyNotUniqueMessage,
     updateObject
 } from "project-editor/core/store";
-import {
-    SimpleNavigationStoreClass,
-    getDocumentStore
-} from "project-editor/core/store";
+import { getDocumentStore } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
-import { ListNavigation } from "project-editor/components/ListNavigation";
-import { onSelectItem } from "project-editor/components/SelectItem";
-import { Splitter } from "eez-studio-ui/splitter";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
-import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
-
 import { findFont } from "project-editor/features/font/font";
-import { drawText } from "project-editor/flow/editor/draw";
-import {
-    getThemedColor,
-    ThemesSideView
-} from "project-editor/features/style/theme";
+import { getThemedColor } from "project-editor/features/style/theme";
 import type { Font } from "project-editor/features/font/font";
-import { ProjectContext } from "project-editor/project/context";
 import { metrics } from "project-editor/features/style/metrics";
 import type { Project } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -77,147 +61,6 @@ export function isWidgetParentOfStyle(object: IEezObject) {
             return false;
         }
         object = getParent(object);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class StyleEditor extends React.Component<{
-    width: number;
-    height: number;
-    text: string;
-    style: Style;
-}> {
-    render() {
-        const { width, height, text, style } = this.props;
-
-        let canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        drawStylePreview(canvas, style, text);
-
-        return (
-            <img
-                className="EezStudio_StyleEditorImg"
-                src={canvas.toDataURL()}
-            />
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class StylesNavigation extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed
-    get navigationObject() {
-        return this.props.navigationObject;
-    }
-
-    @computed
-    get style() {
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
-
-        if (navigationStore.selectedPanel) {
-            if (navigationStore.selectedPanel.selectedObject instanceof Style) {
-                return navigationStore.selectedPanel.selectedObject;
-            }
-        }
-
-        if (navigationStore.selectedObject instanceof Style) {
-            return navigationStore.selectedObject;
-        }
-
-        return undefined;
-    }
-
-    render() {
-        if (this.props.navigationStore) {
-            // used in select style dialog
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId="project-editor/styles-dialog"
-                    sizes="320px|100%|320px"
-                    childrenOverflow="hidden|hidden|hidden"
-                >
-                    <ListNavigation
-                        id={this.props.id}
-                        navigationObject={this.navigationObject}
-                        navigationStore={this.props.navigationStore}
-                        dragAndDropManager={this.props.dragAndDropManager}
-                        onDoubleClickItem={this.props.onDoubleClickItem}
-                        filter={(style: Style) =>
-                            this.context.project.masterProject ==
-                            ProjectEditor.getProject(style)
-                                ? style.id != undefined
-                                : true
-                        }
-                    />
-
-                    <Splitter
-                        type="vertical"
-                        persistId={`project-editor/styles-dialog-middle-splitter`}
-                        sizes={`160px|100%`}
-                        childrenOverflow="hidden|hidden"
-                    >
-                        {this.style ? (
-                            <StyleEditor
-                                style={this.style}
-                                width={Math.ceil(480 / 3)}
-                                height={Math.ceil(272 / 3)}
-                                text="A"
-                            />
-                        ) : (
-                            <div />
-                        )}
-                        <PropertiesPanel
-                            object={this.style}
-                            navigationStore={this.props.navigationStore}
-                        />
-                    </Splitter>
-
-                    <ThemesSideView
-                        navigationStore={
-                            new SimpleNavigationStoreClass(undefined)
-                        }
-                        dragAndDropManager={this.props.dragAndDropManager}
-                    />
-                </Splitter>
-            );
-        } else {
-            // used in global navigation
-            return (
-                <Splitter
-                    type="horizontal"
-                    persistId="project-editor/styles-dialog"
-                    sizes="240px|100%|400px|240px"
-                    childrenOverflow="hidden|hidden|hidden|hidden"
-                >
-                    <ListNavigation
-                        id={this.props.id}
-                        navigationObject={this.navigationObject}
-                    />
-                    {this.style ? (
-                        <StyleEditor
-                            style={this.style}
-                            width={480}
-                            height={272}
-                            text="Hello!"
-                        />
-                    ) : (
-                        <div />
-                    )}
-                    <PropertiesPanel object={this.style} />
-                    <ThemesSideView />
-                </Splitter>
-            );
-        }
     }
 }
 
@@ -286,12 +129,6 @@ const inheritFromProperty: PropertyInfo = {
     name: "inheritFrom",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "styles",
-    onSelect: (object: IEezObject, propertyInfo: PropertyInfo) =>
-        onSelectItem(object, propertyInfo, {
-            title: propertyInfo.onSelectTitle!,
-            width: 1200
-        }),
-    onSelectTitle: "Select Style",
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         const DocumentStore = getDocumentStore(props.objects[0]);
 
@@ -758,10 +595,6 @@ export class Style extends EezObject {
         },
         getInheritedValue: (styleObject: Style, propertyName: string) =>
             getInheritedValue(styleObject, propertyName, [], false),
-        navigationComponentId: "styles",
-        isEditorSupported: (object: IEezObject) =>
-            !isWidgetParentOfStyle(object),
-        navigationComponent: StylesNavigation,
         icon: "format_color_fill",
         defaultValue: {},
         check: (object: Style) => {
@@ -1464,61 +1297,6 @@ export function getStyleProperty(
     }
 
     return propertiesMap[propertyName].defaultValue;
-}
-
-export function drawStylePreview(
-    canvas: HTMLCanvasElement,
-    style: Style,
-    text: string
-) {
-    let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    if (ctx) {
-        ctx.save();
-        if (canvas.width > canvas.height) {
-            drawText(
-                ctx,
-                text,
-                0,
-                0,
-                canvas.width / 2 - 4,
-                canvas.height,
-                style,
-                false
-            );
-            drawText(
-                ctx,
-                text,
-                canvas.width / 2 + 4,
-                0,
-                canvas.width / 2 - 4,
-                canvas.height,
-                style,
-                true
-            );
-        } else {
-            drawText(
-                ctx,
-                text,
-                0,
-                0,
-                canvas.width,
-                canvas.height / 2 - 4,
-                style,
-                false
-            );
-            drawText(
-                ctx,
-                text,
-                0,
-                canvas.height / 2 + 4,
-                canvas.width,
-                canvas.height / 2 - 4,
-                style,
-                true
-            );
-        }
-        ctx.restore();
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4,46 +4,38 @@ import {
     observable,
     action,
     reaction,
-    IReactionDisposer
+    IReactionDisposer,
+    IObservableValue
 } from "mobx";
 import { disposeOnUnmount, observer } from "mobx-react";
 
 import { IconAction } from "eez-studio-ui/action";
-import { Splitter } from "eez-studio-ui/splitter";
 import { SearchInput } from "eez-studio-ui/search-input";
 
-import {
-    IEezObject,
-    NavigationComponentProps,
-    NavigationComponent
-} from "project-editor/core/object";
+import { IEezObject } from "project-editor/core/object";
 import {
     ListAdapter,
     SortDirectionType
 } from "project-editor/core/objectAdapter";
 import {
-    INavigationStore,
     addItem,
     deleteItem,
     canAdd,
     canDelete,
     IPanel,
-    objectToString,
     isPartOfNavigation
 } from "project-editor/core/store";
 import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { List } from "project-editor/components/List";
-import { Panel } from "project-editor/components/Panel";
 
-import { PropertiesPanel } from "project-editor/project/PropertiesPanel";
 import { ProjectContext } from "project-editor/project/context";
 import classNames from "classnames";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class SortableTitle extends React.Component<{
-    title: string;
+export class SortControl extends React.Component<{
     direction: SortDirectionType;
     onDirectionChanged: (direction: SortDirectionType) => void;
 }> {
@@ -58,18 +50,16 @@ export class SortableTitle extends React.Component<{
     };
 
     render() {
-        const { title, direction } = this.props;
+        const { direction } = this.props;
 
         return (
             <div
                 className={classNames(
-                    "EezStudio_SortableTitle",
+                    "EezStudio_SortControl",
                     "sort-" + direction
                 )}
                 onClick={this.onClicked}
-            >
-                {title}
-            </div>
+            ></div>
         );
     }
 }
@@ -81,11 +71,18 @@ class AddButton extends React.Component<{
     listAdapter: ListAdapter;
     navigationObject: IEezObject | undefined;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     async onAdd() {
         if (this.props.navigationObject) {
             const aNewItem = await addItem(this.props.navigationObject);
             if (aNewItem) {
                 this.props.listAdapter.selectObject(aNewItem);
+
+                if (ProjectEditor.getEditorComponent(aNewItem)) {
+                    this.context.editorsStore.openEditor(aNewItem);
+                }
             }
         }
     }
@@ -111,32 +108,20 @@ class AddButton extends React.Component<{
 @observer
 class DeleteButton extends React.Component<{
     navigationObject: IEezObject | undefined;
-    navigationStore?: INavigationStore;
+    selectedObject: IObservableValue<IEezObject | undefined>;
 }> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
     onDelete() {
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
-        let selectedItem =
-            this.props.navigationObject &&
-            navigationStore.getNavigationSelectedObject(
-                this.props.navigationObject
-            );
+        let selectedItem = this.props.selectedObject.get();
         if (selectedItem) {
             deleteItem(selectedItem);
         }
     }
 
     render() {
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
-        let selectedItem =
-            this.props.navigationObject &&
-            navigationStore.getNavigationSelectedObject(
-                this.props.navigationObject
-            );
+        let selectedItem = this.props.selectedObject.get();
 
         return (
             <IconAction
@@ -156,11 +141,12 @@ interface ListNavigationProps {
     id: string;
     title?: string;
     navigationObject: IEezObject;
+    selectedObject: IObservableValue<IEezObject | undefined>;
+    onClickItem?: (item: IEezObject) => void;
     onDoubleClickItem?: (item: IEezObject) => void;
     additionalButtons?: JSX.Element[];
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
-    navigationStore?: INavigationStore;
     dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
     editable?: boolean;
@@ -203,10 +189,21 @@ export class ListNavigation
 
     @computed
     get editable() {
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
+        const navigationStore = this.context.navigationStore;
         return this.props.editable != false && navigationStore.editable;
     }
+
+    onClickItem = (object: IEezObject) => {
+        if (this.props.onClickItem) {
+            this.props.onClickItem(object);
+            return;
+        }
+
+        if (ProjectEditor.getEditorComponent(object)) {
+            this.context.editorsStore.openEditor(object);
+            return;
+        }
+    };
 
     onDoubleClickItem = (object: IEezObject) => {
         if (this.props.onDoubleClickItem) {
@@ -221,15 +218,7 @@ export class ListNavigation
 
     @computed
     get selectedObject() {
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
-
-        const navigationSelectedObject =
-            navigationStore.getNavigationSelectedObject(
-                this.props.navigationObject
-            );
-
-        return navigationSelectedObject || navigationStore.selectedObject;
+        return this.props.selectedObject.get();
     }
 
     cutSelection() {
@@ -258,10 +247,10 @@ export class ListNavigation
     get listAdapter() {
         return new ListAdapter(
             this.props.navigationObject,
+            this.props.selectedObject,
             this.sortDirection,
+            this.onClickItem,
             this.onDoubleClickItem,
-            this.props.navigationStore,
-            this.props.dragAndDropManager,
             this.searchText,
             this.props.filter
         );
@@ -272,8 +261,7 @@ export class ListNavigation
     }
 
     onFocus() {
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
+        const navigationStore = this.context.navigationStore;
         if (isPartOfNavigation(this.props.navigationObject)) {
             navigationStore.setSelectedPanel(this);
         }
@@ -286,19 +274,6 @@ export class ListNavigation
 
     render() {
         const { onEditItem, renderItem } = this.props;
-        const title = (
-            <SortableTitle
-                title={
-                    this.props.title ||
-                    objectToString(this.props.navigationObject)
-                }
-                direction={this.sortDirection}
-                onDirectionChanged={action(
-                    (direction: SortDirectionType) =>
-                        (this.sortDirection = direction)
-                )}
-            />
-        );
 
         const buttons: JSX.Element[] = [];
 
@@ -319,7 +294,7 @@ export class ListNavigation
                 <DeleteButton
                     key="delete"
                     navigationObject={this.props.navigationObject}
-                    navigationStore={this.props.navigationStore}
+                    selectedObject={this.props.selectedObject}
                 />
             );
         }
@@ -336,124 +311,34 @@ export class ListNavigation
             );
         }
 
-        let body = (
-            <List
-                listAdapter={this.listAdapter}
-                tabIndex={0}
-                onFocus={this.onFocus.bind(this)}
-                onEditItem={this.editable ? onEditItem : undefined}
-                renderItem={renderItem}
-            />
-        );
-
-        if (this.props.searchInput == undefined || this.props.searchInput) {
-            body = (
-                <div className="EezStudio_ListWithSearchInputContainer">
-                    <SearchInput
-                        searchText={this.searchText}
-                        onChange={this.onSearchChange}
-                        onKeyDown={this.onSearchChange}
+        return (
+            <div className="EezStudio_ProjectEditor_ListNavigation">
+                <div className="EezStudio_Title">
+                    <SortControl
+                        direction={this.sortDirection}
+                        onDirectionChanged={action(
+                            (direction: SortDirectionType) =>
+                                (this.sortDirection = direction)
+                        )}
                     />
-                    {body}
+                    {(this.props.searchInput == undefined ||
+                        this.props.searchInput) && (
+                        <SearchInput
+                            searchText={this.searchText}
+                            onChange={this.onSearchChange}
+                            onKeyDown={this.onSearchChange}
+                        />
+                    )}
+                    <div className="btn-toolbar">{buttons}</div>
                 </div>
-            );
-        }
-
-        return (
-            <Panel
-                id="navigation"
-                title={title}
-                buttons={buttons}
-                body={body}
-            />
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface ListNavigationWithContentProps extends NavigationComponentProps {
-    content: React.ReactNode;
-    title?: string;
-    onDoubleClickItem?: (item: IEezObject) => void;
-    additionalButtons?: JSX.Element[];
-    orientation?: "horizontal" | "vertical";
-    onEditItem?: (itemId: string) => void;
-    renderItem?: (itemId: string) => React.ReactNode;
-    navigantionStore?: INavigationStore;
-}
-
-@observer
-export class ListNavigationWithContent extends React.Component<
-    ListNavigationWithContentProps,
-    {}
-> {
-    render() {
-        const { onEditItem, renderItem } = this.props;
-        return (
-            <Splitter
-                type={this.props.orientation || "horizontal"}
-                persistId={`project-editor/navigation-${this.props.id}`}
-                sizes={`240px|100%`}
-                childrenOverflow="hidden"
-            >
-                <ListNavigation
-                    id={this.props.id}
-                    title={this.props.title}
-                    navigationObject={this.props.navigationObject}
-                    onDoubleClickItem={this.props.onDoubleClickItem}
-                    additionalButtons={this.props.additionalButtons}
-                    onEditItem={onEditItem}
+                <List
+                    listAdapter={this.listAdapter}
+                    tabIndex={0}
+                    onFocus={this.onFocus.bind(this)}
+                    onEditItem={this.editable ? onEditItem : undefined}
                     renderItem={renderItem}
-                    navigationStore={this.props.navigationStore}
                 />
-                {this.props.content}
-            </Splitter>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class ListNavigationWithProperties extends NavigationComponent {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @computed
-    get object() {
-        const navigationStore =
-            this.props.navigationStore || this.context.navigationStore;
-        return (
-            (navigationStore.selectedPanel &&
-                navigationStore.selectedPanel.selectedObject) ||
-            navigationStore.selectedObject
-        );
-    }
-
-    render() {
-        return (
-            <Splitter
-                type="horizontal"
-                persistId={
-                    `project-editor/navigation-${this.props.id}` +
-                    (this.props.navigationStore ? "-dialog" : "")
-                }
-                sizes={`240px|100%`}
-                childrenOverflow="hidden"
-            >
-                <ListNavigation
-                    id={this.props.id}
-                    navigationObject={this.props.navigationObject}
-                    navigationStore={this.props.navigationStore}
-                    dragAndDropManager={this.props.dragAndDropManager}
-                    onDoubleClickItem={this.props.onDoubleClickItem}
-                />
-                <PropertiesPanel
-                    object={this.object}
-                    navigationStore={this.props.navigationStore}
-                />
-            </Splitter>
+            </div>
         );
     }
 }
