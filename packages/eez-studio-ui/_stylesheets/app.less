@@ -2597,6 +2597,11 @@ button.EezStudio_Action {
         margin: 2px 0;
         width: 150px;
     }
+
+    .EezStudio_PanelHeader {
+        min-height: auto;
+        padding: 2px 4px;
+    }
 }
 
 .EezStudio_PanelHeader {
@@ -3362,77 +3367,95 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_ComponentsPalette {
-    flex-grow: 1;
-    overflow: auto;
+.EezStudio_ComponentsPalette_Enclosure {
+    height: 100%;
 
-    .card {
-        border: none;
-        border-radius: 0;
+    display: flex;
+    flex-direction: column;
 
-        & > div:not(.card-header) {
-            padding-left: 10px;
-        }
-    }
-
-    .card:not(:last-child) {
-        margin-bottom: 10px;
-    }
-
-    .card-header {
-        padding: 2px 2px 2px 5px;
-        border: none;
-        background: none;
-    }
-
-    .card-body {
-        display: flex;
-        flex-wrap: wrap;
-        align-content: flex-start;
-        align-items: flex-start;
-        padding: 2px;
-    }
-
-    .eez-component-palette-item {
-        margin: 2px;
-        padding: 4px;
-        cursor: grab;
+    .EezStudio_Title {
+        flex-grow: 0;
         display: flex;
         flex-direction: row;
-        align-items: center;
-        & > img,
-        & > svg {
-            height: 20px;
-            object-fit: contain;
-            margin-right: 4px;
-        }
-        white-space: nowrap;
-        min-width: 120px;
-        background-color: #3fadb5;
-        color: #333;
-        border-radius: 3px;
+        border-bottom: 1px solid @borderColor;
 
-        &.selected {
-            background-color: @nonFocusedSelectionBackgroundColor;
-            color: @nonFocusedSelectionColor;
+        .EezStudio_SearchInput {
+            flex-grow: 1;
         }
     }
 
-    &:focus {
-        .eez-component-palette-item {
-            &:hover {
-                background-color: @hoverBackgroundColor;
-                color: @hoverColor;
+    .EezStudio_ComponentsPalette {
+        flex-grow: 1;
+        overflow: auto;
+
+        .card {
+            border: none;
+            border-radius: 0;
+
+            & > div:not(.card-header) {
+                padding-left: 10px;
             }
+        }
+
+        .card:not(:last-child) {
+            margin-bottom: 10px;
+        }
+
+        .card-header {
+            padding: 2px 2px 2px 5px;
+            border: none;
+            background: none;
+        }
+
+        .card-body {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            align-items: flex-start;
+            padding: 2px;
+        }
+
+        .eez-component-palette-item {
+            margin: 2px;
+            padding: 4px;
+            cursor: grab;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            & > img,
+            & > svg {
+                height: 20px;
+                object-fit: contain;
+                margin-right: 4px;
+            }
+            white-space: nowrap;
+            min-width: 120px;
+            background-color: #3fadb5;
+            color: #333;
+            border-radius: 3px;
 
             &.selected {
-                background-color: @selectionBackgroundColor;
-                color: @selectionColor;
+                background-color: @nonFocusedSelectionBackgroundColor;
+                color: @nonFocusedSelectionColor;
             }
+        }
 
-            &.dragging {
-                background-color: @dragSourceBackgroundColor;
-                color: @dragSourceColor;
+        &:focus {
+            .eez-component-palette-item {
+                &:hover {
+                    background-color: @hoverBackgroundColor;
+                    color: @hoverColor;
+                }
+
+                &.selected {
+                    background-color: @selectionBackgroundColor;
+                    color: @selectionColor;
+                }
+
+                &.dragging {
+                    background-color: @dragSourceBackgroundColor;
+                    color: @dragSourceColor;
+                }
             }
         }
     }
@@ -4909,4 +4932,14 @@ button.EezStudio_Action {
 
 .flexlayout__tab {
     background-color: @backgroundColor;
+}
+
+.EezStudio_PropertiesPanel {
+    height: 100%;
+
+    .header {
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 4px 11px;
+    }
 }

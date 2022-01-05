@@ -214,14 +214,12 @@ export function navigateTo(object: IEezObject) {
     ancestor = getAncestorOfType(object, Action.classInfo);
     if (ancestor) {
         DocumentStore.navigationStore.selectedRootObject.set(project.actions);
-        DocumentStore.navigationStore.selectedActionObject.set(ancestor);
         return;
     }
 
     ancestor = getAncestorOfType(object, Bitmap.classInfo);
     if (ancestor) {
         DocumentStore.navigationStore.selectedRootObject.set(project.bitmaps);
-        DocumentStore.navigationStore.selectedBitmapObject.set(ancestor);
         return;
     }
 
@@ -230,6 +228,78 @@ export function navigateTo(object: IEezObject) {
         DocumentStore.navigationStore.selectedRootObject.set(
             project.extensionDefinitions
         );
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Font.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.fonts);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Page.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.pages);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Scpi.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.scpi);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Style.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.styles);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Variable.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Structure.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Enum.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
+        return;
+    }
+
+    if (getAncestorOfType(object, Settings.classInfo)) {
+        // TODO
+        DocumentStore.navigationStore.selectedRootObject.set(project.settings);
+        return;
+    }
+}
+
+export function selectObject(object: IEezObject) {
+    const DocumentStore = getDocumentStore(object);
+    const project = DocumentStore.project;
+
+    let ancestor;
+
+    ancestor = getAncestorOfType(object, Action.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedActionObject.set(ancestor);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Bitmap.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedBitmapObject.set(ancestor);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, ExtensionDefinition.classInfo);
+    if (ancestor) {
         DocumentStore.navigationStore.selectedExtensionDefinitionObject.set(
             ancestor
         );
@@ -238,7 +308,6 @@ export function navigateTo(object: IEezObject) {
 
     ancestor = getAncestorOfType(object, Font.classInfo);
     if (ancestor) {
-        DocumentStore.navigationStore.selectedRootObject.set(project.fonts);
         DocumentStore.navigationStore.selectedFontObject.set(ancestor);
         ancestor = getAncestorOfType(object, Glyph.classInfo);
         if (ancestor) {
@@ -249,15 +318,12 @@ export function navigateTo(object: IEezObject) {
 
     ancestor = getAncestorOfType(object, Page.classInfo);
     if (ancestor) {
-        DocumentStore.navigationStore.selectedRootObject.set(project.pages);
         DocumentStore.navigationStore.selectedPageObject.set(ancestor);
         return;
     }
 
     ancestor = getAncestorOfType(object, Scpi.classInfo);
     if (ancestor) {
-        DocumentStore.navigationStore.selectedRootObject.set(project.scpi);
-
         ancestor = getAncestorOfType(object, ScpiEnum.classInfo);
         if (ancestor) {
             DocumentStore.navigationStore.selectedEnumObject.set(ancestor);
@@ -308,14 +374,12 @@ export function navigateTo(object: IEezObject) {
 
     ancestor = getAncestorOfType(object, Style.classInfo);
     if (ancestor) {
-        DocumentStore.navigationStore.selectedRootObject.set(project.styles);
         DocumentStore.navigationStore.selectedStyleObject.set(ancestor);
         return;
     }
 
     ancestor = getAncestorOfType(object, Variable.classInfo);
     if (ancestor) {
-        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
         DocumentStore.navigationStore.selectedGlobalVariableObject.set(
             ancestor
         );
@@ -328,7 +392,6 @@ export function navigateTo(object: IEezObject) {
 
     ancestor = getAncestorOfType(object, Structure.classInfo);
     if (ancestor) {
-        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
         DocumentStore.navigationStore.selectedStructureObject.set(ancestor);
         DocumentStore.layoutModels.selectTab(
             DocumentStore.layoutModels.variables,
@@ -339,18 +402,11 @@ export function navigateTo(object: IEezObject) {
 
     ancestor = getAncestorOfType(object, Enum.classInfo);
     if (ancestor) {
-        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
         DocumentStore.navigationStore.selectedEnumObject.set(ancestor);
         DocumentStore.layoutModels.selectTab(
             DocumentStore.layoutModels.variables,
             LayoutModels.ENUMS_TAB_ID
         );
-        return;
-    }
-
-    if (getAncestorOfType(object, Settings.classInfo)) {
-        // TODO
-        DocumentStore.navigationStore.selectedRootObject.set(project.settings);
         return;
     }
 }

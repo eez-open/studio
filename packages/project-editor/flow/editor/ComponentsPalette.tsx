@@ -17,7 +17,6 @@ import type { Component } from "project-editor/flow/component";
 
 import { ProjectContext } from "project-editor/project/context";
 import { SearchInput } from "eez-studio-ui/search-input";
-import { Panel } from "project-editor/components/Panel";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import {
@@ -305,33 +304,28 @@ export class ComponentsPalette extends React.Component {
 
     render() {
         return (
-            <Panel
-                id="widgets"
-                title=""
-                buttons={[
+            <div className="EezStudio_ComponentsPalette_Enclosure">
+                <div className="EezStudio_Title">
                     <SearchInput
                         key="search-input"
                         searchText={this.searchText}
                         onChange={this.onSearchChange}
                         onKeyDown={this.onSearchChange}
                     />
-                ]}
-                body={
-                    <div className="EezStudio_ComponentsPalette" tabIndex={0}>
-                        {[...this.groups.entries()].sort().map(entry => (
-                            <PaletteGroup
-                                key={entry[0]}
-                                name={entry[0]}
-                                componentClasses={entry[1]}
-                                selectedComponentClass={
-                                    this.selectedComponentClass
-                                }
-                                onSelect={this.onSelect}
-                            ></PaletteGroup>
-                        ))}
-                    </div>
-                }
-            />
+                </div>
+
+                <div className="EezStudio_ComponentsPalette" tabIndex={0}>
+                    {[...this.groups.entries()].sort().map(entry => (
+                        <PaletteGroup
+                            key={entry[0]}
+                            name={entry[0]}
+                            componentClasses={entry[1]}
+                            selectedComponentClass={this.selectedComponentClass}
+                            onSelect={this.onSelect}
+                        ></PaletteGroup>
+                    ))}
+                </div>
+            </div>
         );
     }
 }

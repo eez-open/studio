@@ -339,6 +339,7 @@ export abstract class RuntimeBase {
             this.DocumentStore.navigationStore.showObjects(
                 [flowState.flow],
                 true,
+                false,
                 false
             );
         }
@@ -348,6 +349,7 @@ export abstract class RuntimeBase {
         this.DocumentStore.navigationStore.showObjects(
             [component],
             true,
+            false,
             false
         );
     }
@@ -367,7 +369,12 @@ export abstract class RuntimeBase {
             objects.push(queueTask.component);
         }
 
-        this.DocumentStore.navigationStore.showObjects(objects, true, false);
+        this.DocumentStore.navigationStore.showObjects(
+            objects,
+            true,
+            false,
+            false
+        );
     }
 
     onBreakpointAdded(component: Component) {}

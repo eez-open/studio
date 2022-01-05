@@ -11,11 +11,9 @@ import {
     isValue
 } from "project-editor/core/store";
 import { PropertyGrid } from "project-editor/components/PropertyGrid";
-import { Panel } from "project-editor/components/Panel";
 
 @observer
 export class PropertiesPanel extends React.Component<{
-    buttons?: JSX.Element[];
     readOnly?: boolean;
 }> {
     static contextType = ProjectContext;
@@ -66,29 +64,30 @@ export class PropertiesPanel extends React.Component<{
         const objects = this.objects.filter(object => object != undefined);
 
         if (objects.length == 0) {
-            title = "";
+            title = "Nothing selected";
         } else if (objects.length == 1) {
             let object = objects[0];
             if (object instanceof EezValueObject) {
                 object = getParent(object);
             }
-            title = `${getClass(object).name}`;
+            const name = (object as any).name;
+            if (typeof name == "string") {
+                title = `${getClass(object).name}: ${name}`;
+            } else {
+                title = `${getClass(object).name}`;
+            }
         } else {
-            title = "[Multiple objects selected]";
+            title = "Multiple objects selected";
         }
 
         return (
-            <Panel
-                id="properties"
-                title={title}
-                body={
-                    <PropertyGrid
-                        objects={objects}
-                        readOnly={this.props.readOnly}
-                    />
-                }
-                buttons={this.props.buttons}
-            />
+            <div className="EezStudio_PropertiesPanel">
+                <div className="header">{title}</div>
+                <PropertyGrid
+                    objects={objects}
+                    readOnly={this.props.readOnly}
+                />
+            </div>
         );
     }
 }

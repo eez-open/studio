@@ -334,26 +334,35 @@ class NavigationStore {
     showObjects(
         objects: IEezObject[],
         openEditor: boolean,
-        showInNavigation: boolean
+        showInNavigation: boolean,
+        selectObject: boolean
     ) {
         objects = objects.map(object =>
             isValue(object) ? getParent(object) : object
         );
 
-        const result = ProjectEditor.getAncestorWithEditorComponent(objects[0]);
-        if (result) {
-            const editor = this.DocumentStore.editorsStore.openEditor(
-                result.object,
-                result.subObject
+        if (openEditor) {
+            const result = ProjectEditor.getAncestorWithEditorComponent(
+                objects[0]
             );
-            const editorState = editor.state;
-            if (editorState) {
-                editorState.selectObjectsAndEnsureVisible(objects);
+            if (result) {
+                const editor = this.DocumentStore.editorsStore.openEditor(
+                    result.object,
+                    result.subObject
+                );
+                const editorState = editor.state;
+                if (editorState) {
+                    editorState.selectObjectsAndEnsureVisible(objects);
+                }
             }
         }
 
         if (showInNavigation) {
             ProjectEditor.navigateTo(objects[0]);
+        }
+
+        if (selectObject) {
+            ProjectEditor.selectObject(objects[0]);
         }
     }
 }
@@ -501,6 +510,7 @@ class EditorsStore {
                 if (activeEditor) {
                     this.DocumentStore.navigationStore.showObjects(
                         [activeEditor.subObject ?? activeEditor.object],
+                        false,
                         false,
                         true
                     );
@@ -2065,6 +2075,7 @@ export class OutputSection implements IPanel {
             this.DocumentStore.navigationStore.showObjects(
                 [message.object],
                 true,
+                true,
                 true
             );
         }
@@ -2936,6 +2947,17 @@ export class DocumentStoreClass {
             this.layoutModels.root,
             LayoutModels.DEBUGGER_TAB_ID
         );
+
+        if (
+            this.navigationStore.selectedRootObject.get() !=
+                this.project.pages ||
+            this.navigationStore.selectedRootObject.get() !=
+                this.project.actions
+        ) {
+            runInAction(() => {
+                this.navigationStore.selectedRootObject.set(this.project.pages);
+            });
+        }
     };
 
     onRestart = () => {

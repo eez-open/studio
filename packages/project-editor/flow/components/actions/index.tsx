@@ -1828,6 +1828,7 @@ export class CallActionActionComponent extends ActionComponent {
             getDocumentStore(this).navigationStore.showObjects(
                 [action],
                 true,
+                false,
                 false
             );
         }

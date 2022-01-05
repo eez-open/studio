@@ -40,7 +40,8 @@ import type {
 import type {
     getNavigationComponent,
     getNavigationObject,
-    navigateTo
+    navigateTo,
+    selectObject
 } from "project-editor/project/NavigationComponentFactory";
 import type {
     createEditorState,
@@ -87,6 +88,7 @@ export interface IProjectEditor {
     getNavigationComponent: typeof getNavigationComponent;
     getNavigationObject: typeof getNavigationObject;
     navigateTo: typeof navigateTo;
+    selectObject: typeof selectObject;
     getEditorComponent: typeof getEditorComponent;
     getAncestorWithEditorComponent: typeof getAncestorWithEditorComponent;
     createEditorState: typeof createEditorState;

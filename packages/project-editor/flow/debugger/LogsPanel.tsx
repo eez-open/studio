@@ -144,11 +144,17 @@ class LogItemRow extends React.Component<{
         }
 
         if (objects.length > 0) {
-            this.context.navigationStore.showObjects(objects, true, false);
+            this.context.navigationStore.showObjects(
+                objects,
+                true,
+                false,
+                false
+            );
         } else if (logItem.flowState?.flow) {
             this.context.navigationStore.showObjects(
                 [logItem.flowState?.flow],
                 true,
+                false,
                 false
             );
         }

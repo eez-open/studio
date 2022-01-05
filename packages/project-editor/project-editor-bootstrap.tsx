@@ -79,7 +79,8 @@ import {
 import {
     getNavigationComponent,
     getNavigationObject,
-    navigateTo
+    navigateTo,
+    selectObject
 } from "project-editor/project/NavigationComponentFactory";
 import {
     createEditorState,
@@ -182,6 +183,7 @@ export async function initProjectEditor(homeTabs: Tabs) {
         getNavigationComponent,
         getNavigationObject,
         navigateTo,
+        selectObject,
         getEditorComponent,
         getAncestorWithEditorComponent,
         createEditorState,

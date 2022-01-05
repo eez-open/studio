@@ -1457,6 +1457,7 @@ export class LayoutViewWidget extends EmbeddedWidget {
             getDocumentStore(this).navigationStore.showObjects(
                 [this.layoutPage],
                 true,
+                false,
                 false
             );
         }
