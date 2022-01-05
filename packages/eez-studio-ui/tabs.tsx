@@ -22,7 +22,6 @@ export interface ITab {
     icon?: React.ReactNode;
     loading: boolean;
     makeActive(): void;
-    makePermanent?(): void;
     openInWindow?(): void;
     close?(): void;
 }
@@ -91,12 +90,6 @@ export const TabView: React.FC<TabViewProps> = observer(
             },
             [tab]
         );
-
-        const onDoubleClick = React.useCallback(() => {
-            if (tab.makePermanent) {
-                tab.makePermanent();
-            }
-        }, [tab]);
 
         const onClose = React.useCallback(
             (e: any) => {
@@ -239,7 +232,6 @@ export const TabView: React.FC<TabViewProps> = observer(
                 onMouseDown={onMouseDown}
                 onMouseUp={onMouseUp}
                 onContextMenu={onContextMenu}
-                onDoubleClick={onDoubleClick}
                 title={tab.tooltipTitle}
                 style={{ opacity }}
                 data-handler-id={handlerId}

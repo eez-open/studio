@@ -941,6 +941,7 @@ export class FlowEditor
                 this.props.tabState.flow instanceof ProjectEditor.ActionClass &&
                 dragComponent instanceof ProjectEditor.WidgetClass
             ) {
+                // prevent widget drop onto Action flow
                 event.dataTransfer.dropEffect = "none";
                 return;
             }
@@ -948,8 +949,9 @@ export class FlowEditor
             event.dataTransfer.dropEffect = "copy";
 
             const flow = this.props.tabState.widgetContainer.object as Flow;
-
             const component = DragAndDropManager.dragObject as Component;
+
+            let debounce;
 
             if (!this.flowContext.dragComponent) {
                 this.flowContext.dragComponent = component;
@@ -958,6 +960,10 @@ export class FlowEditor
                 this.flowContext.viewState.selectObjects([]);
 
                 dragSnapLines.start(this.flowContext);
+
+                debounce = false;
+            } else {
+                debounce = true;
             }
 
             dragSnapLines.snapLines!.enabled = !event.shiftKey;
@@ -965,47 +971,57 @@ export class FlowEditor
             this.dragClientX = event.nativeEvent.clientX;
             this.dragClientY = event.nativeEvent.clientY;
 
-            // debounce
             const DEBOUNCE_TIMEOUT = 16;
-            if (this.dragTimeoutId) {
-                return;
+            if (debounce) {
+                if (this.dragTimeoutId) {
+                    return;
+                }
+                this.dragTimeoutId = setTimeout(
+                    this.setDragPosition,
+                    DEBOUNCE_TIMEOUT
+                );
+            } else {
+                this.setDragPosition();
             }
-            this.dragTimeoutId = setTimeout(
-                action(() => {
-                    this.dragTimeoutId = undefined;
-
-                    const transform = this.flowContext.viewState.transform;
-
-                    const p = transform.clientToPagePoint({
-                        x:
-                            this.dragClientX -
-                            (component.width * transform.scale) / 2,
-                        y:
-                            this.dragClientY -
-                            (component.height * transform.scale) / 2
-                    });
-
-                    const { left, top } = dragSnapLines.snapLines
-                        ? dragSnapLines.snapLines.dragSnap(
-                              p.x,
-                              p.y,
-                              component.width,
-                              component.height
-                          )
-                        : { left: p.x, top: p.y };
-
-                    if (component instanceof ProjectEditor.WidgetClass) {
-                        component.left = Math.round(left - flow.pageRect.left);
-                        component.top = Math.round(top - flow.pageRect.top);
-                    } else {
-                        component.left = Math.round(left);
-                        component.top = Math.round(top);
-                    }
-                }),
-                DEBOUNCE_TIMEOUT
-            );
         }
     }
+
+    setDragPosition = action(() => {
+        this.dragTimeoutId = undefined;
+
+        const component = this.flowContext.dragComponent;
+        if (!component) {
+            return;
+        }
+
+        const flow = this.props.tabState.widgetContainer.object as Flow;
+
+        const transform = this.flowContext.viewState.transform;
+        const position = transform.clientToPagePoint({
+            x: this.dragClientX - (component.width * transform.scale) / 2,
+            y: this.dragClientY - (component.height * transform.scale) / 2
+        });
+
+        let left = position.x;
+        let top = position.y;
+
+        if (dragSnapLines.snapLines) {
+            ({ left, top } = dragSnapLines.snapLines.dragSnap(
+                left,
+                top,
+                component.width,
+                component.height
+            ));
+        }
+
+        if (component instanceof ProjectEditor.WidgetClass) {
+            component.left = Math.round(left - flow.pageRect.left);
+            component.top = Math.round(top - flow.pageRect.top);
+        } else {
+            component.left = Math.round(left);
+            component.top = Math.round(top);
+        }
+    });
 
     @action.bound
     onDrop(event: React.DragEvent) {

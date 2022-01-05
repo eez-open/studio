@@ -2932,7 +2932,7 @@ export class ButtonWidget extends EmbeddedWidget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 32,
+            width: 64,
             height: 32
         },
 

@@ -216,11 +216,6 @@ export class ListNavigation
     onDoubleClickItem = (object: IEezObject) => {
         if (this.props.onDoubleClickItem) {
             this.props.onDoubleClickItem(object);
-        } else if (
-            this.context.editorsStore.activeEditor &&
-            this.context.editorsStore.activeEditor.object == object
-        ) {
-            this.context.editorsStore.activeEditor.makePermanent();
         }
     };
 

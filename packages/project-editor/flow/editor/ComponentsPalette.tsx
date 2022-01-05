@@ -218,12 +218,10 @@ export class ComponentsPalette extends React.Component {
 
         let showOnlyActions;
 
-        if (activeEditor.object instanceof ProjectEditor.PageClass) {
-            showOnlyActions = false;
-        } else if (activeEditor.object instanceof ProjectEditor.ActionClass) {
+        if (activeEditor.object instanceof ProjectEditor.ActionClass) {
             showOnlyActions = true;
         } else {
-            return [];
+            showOnlyActions = false;
         }
 
         return getClassesDerivedFrom(

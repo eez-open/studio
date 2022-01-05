@@ -394,9 +394,6 @@ export class Editor implements IEditor {
             }
         }
     }
-
-    @action
-    makePermanent() {}
 }
 
 class EditorsStore {
@@ -504,8 +501,6 @@ class EditorsStore {
                 this.editors = editors;
                 this.activeEditor = activeEditor;
             });
-
-            console.log(this.activeEditor);
 
             if (showActiveEditor) {
                 const activeEditor = this.activeEditor;
