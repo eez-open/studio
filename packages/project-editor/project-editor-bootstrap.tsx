@@ -72,13 +72,22 @@ import type {
     IObjectVariableType
 } from "eez-studio-types";
 import { findBitmap } from "project-editor/features/bitmap/bitmap";
-import { migrateProject } from "project-editor/project/migrate-project";
-import { getNavigationComponent } from "project-editor/project/NavigationComponentFactory";
+import {
+    migrateProjectVersion,
+    migrateProjectType
+} from "project-editor/project/migrate-project";
+import {
+    getNavigationComponent,
+    getNavigationObject,
+    navigateTo
+} from "project-editor/project/NavigationComponentFactory";
 import {
     createEditorState,
-    getEditorComponent
+    getEditorComponent,
+    getAncestorWithEditorComponent
 } from "project-editor/project/EditorComponentFactory";
 import { browseGlyph } from "project-editor/features/font/FontEditor";
+import { Variable } from "project-editor/features/variable/variable";
 
 let extensionsInitialized = false;
 
@@ -159,6 +168,7 @@ export async function initProjectEditor(homeTabs: Tabs) {
         WidgetClass: Widget,
         EmbeddedWidgetClass: EmbeddedWidget,
         ConnectionLineClass: ConnectionLine,
+        VariableClass: Variable,
         GlyphClass: Glyph,
         ScpiCommandClass: ScpiCommand,
         ScpiSubsystemClass: ScpiSubsystem,
@@ -167,9 +177,13 @@ export async function initProjectEditor(homeTabs: Tabs) {
         getNameProperty,
         getObjectVariableTypeFromType,
         findBitmap,
-        migrateProject,
+        migrateProjectVersion,
+        migrateProjectType,
         getNavigationComponent,
+        getNavigationObject,
+        navigateTo,
         getEditorComponent,
+        getAncestorWithEditorComponent,
         createEditorState,
         browseGlyph
     };

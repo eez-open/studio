@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import { FlowEditor } from "project-editor/flow/editor/editor";
 import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
-import { IPanel } from "project-editor/core/store";
 import {
     ITreeObjectAdapter,
     TreeAdapter,
@@ -18,13 +17,9 @@ import { IEezObject } from "project-editor/core/object";
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ActionEditor extends EditorComponent implements IPanel {
+export class ActionEditor extends EditorComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
-
-    focusHandler = () => {
-        this.context.navigationStore.setSelectedPanel(this);
-    };
 
     @computed
     get treeAdapter() {
@@ -37,34 +32,6 @@ export class ActionEditor extends EditorComponent implements IPanel {
         );
     }
 
-    @computed
-    get selectedObject() {
-        let flowTabState = this.props.editor.state as ActionFlowTabState;
-        return flowTabState.selectedObject;
-    }
-
-    @computed
-    get selectedObjects() {
-        let flowTabState = this.props.editor.state as ActionFlowTabState;
-        return flowTabState.selectedObjects;
-    }
-
-    cutSelection() {
-        this.treeAdapter.cutSelection();
-    }
-
-    copySelection() {
-        this.treeAdapter.copySelection();
-    }
-
-    pasteSelection() {
-        this.treeAdapter.pasteSelection();
-    }
-
-    deleteSelection() {
-        this.treeAdapter.deleteSelection();
-    }
-
     render() {
         const tabState = this.props.editor.state as ActionFlowTabState;
 
@@ -73,7 +40,8 @@ export class ActionEditor extends EditorComponent implements IPanel {
                 <div
                     style={{
                         flexGrow: 1,
-                        position: "relative"
+                        position: "relative",
+                        height: "100%"
                     }}
                 >
                     <FlowViewer tabState={tabState} />

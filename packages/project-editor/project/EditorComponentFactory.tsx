@@ -1,4 +1,4 @@
-import { IEezObject, isAncestor } from "project-editor/core/object";
+import { getParent, IEezObject, isAncestor } from "project-editor/core/object";
 
 import { getProject } from "project-editor/project/project";
 
@@ -19,40 +19,70 @@ import { ShortcutsEditor } from "project-editor/features/shortcuts/project-short
 import { SettingsEditor } from "./SettingsNavigation";
 import { Page } from "project-editor/features/page/page";
 import { Font } from "project-editor/features/font/font";
+import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
+import { getAncestorOfType } from "project-editor/core/store";
 
-export function getEditorComponent(
-    object: IEezObject
-): typeof EditorComponent | undefined {
+export function getEditorComponent(object: IEezObject):
+    | {
+          object: IEezObject;
+          subObject?: IEezObject;
+          EditorComponent: typeof EditorComponent;
+      }
+    | undefined {
     const project = getProject(object);
 
     if (object instanceof Action) {
         if (object.implementationType === "flow") {
-            return ActionEditor;
+            return { object, EditorComponent: ActionEditor };
         }
     }
 
     if (object instanceof Font) {
-        return FontEditor;
+        return { object, EditorComponent: FontEditor };
     }
 
     if (object == project.micropython) {
-        return MicroPythonEditor;
+        return { object, EditorComponent: MicroPythonEditor };
     }
 
     if (object instanceof Page) {
-        return PageEditor;
+        return { object, EditorComponent: PageEditor };
     }
 
-    if (object == project.scpi) {
-        return ScpiHelpPreview;
+    if (isAncestor(object, project.scpi)) {
+        let subObject = getAncestorOfType(object, ScpiCommand.classInfo);
+        if (!subObject) {
+            subObject = getAncestorOfType(object, ScpiSubsystem.classInfo);
+        }
+        return {
+            object: project.scpi,
+            subObject: object,
+            EditorComponent: ScpiHelpPreview
+        };
     }
 
     if (object == project.shortcuts) {
-        return ShortcutsEditor;
+        return { object, EditorComponent: ShortcutsEditor };
     }
 
     if (isAncestor(object, project.settings)) {
-        return SettingsEditor;
+        return {
+            object: project.settings,
+            subObject: object,
+            EditorComponent: SettingsEditor
+        };
+    }
+
+    return undefined;
+}
+
+export function getAncestorWithEditorComponent(object: IEezObject) {
+    while (object) {
+        const result = getEditorComponent(object);
+        if (result) {
+            return result;
+        }
+        object = getParent(object);
     }
 
     return undefined;
@@ -61,16 +91,20 @@ export function getEditorComponent(
 export function createEditorState(object: IEezObject) {
     const project = getProject(object);
 
+    let state;
+
     if (isAncestor(object, project.actions)) {
         const action = object as Action;
         if (action.implementationType === "flow") {
-            return new ActionFlowTabState(action);
+            state = new ActionFlowTabState(action);
         }
+    } else if (isAncestor(object, project.pages)) {
+        state = new PageTabState(object as Page);
     }
 
-    if (isAncestor(object, project.pages)) {
-        return new PageTabState(object as Page);
+    if (state) {
+        state.loadState();
     }
 
-    return undefined;
+    return state;
 }

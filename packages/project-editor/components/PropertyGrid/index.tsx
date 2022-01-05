@@ -82,9 +82,24 @@ export class PropertyGrid extends React.Component<{
         ) {
             const project = ProjectEditor.getProject(this.objects[0]);
             if (project.settings.general == this.objects[0]) {
-                ProjectEditor.migrateProject(
+                ProjectEditor.migrateProjectVersion(
                     project,
                     (propertyValues as any).projectVersion
+                );
+            }
+        }
+
+        if (
+            this.objects.length == 1 &&
+            ((propertyValues as any).projectType != undefined ||
+                (propertyValues as any).flowSupport != undefined)
+        ) {
+            const project = ProjectEditor.getProject(this.objects[0]);
+            if (project.settings.general == this.objects[0]) {
+                ProjectEditor.migrateProjectType(
+                    project,
+                    (propertyValues as any).projectType,
+                    (propertyValues as any).flowSupport
                 );
             }
         }
@@ -266,11 +281,16 @@ export class PropertyGrid extends React.Component<{
         let maxPosition = 0;
 
         groupPropertiesArray.forEach(groupProperties => {
-            if (
-                groupProperties.group.position != undefined &&
-                groupProperties.group.position > maxPosition
-            ) {
-                maxPosition = groupProperties.group.position;
+            if (groupProperties.group.position != undefined) {
+                let position;
+                if (typeof groupProperties.group.position == "number") {
+                    position = groupProperties.group.position;
+                } else {
+                    position = groupProperties.group.position(objects[0]);
+                }
+                if (position > maxPosition) {
+                    maxPosition = position;
+                }
             }
         });
 
@@ -278,12 +298,18 @@ export class PropertyGrid extends React.Component<{
             (a: IGroupProperties, b: IGroupProperties) => {
                 const aPosition =
                     a.group.position !== undefined
-                        ? a.group.position
+                        ? typeof a.group.position == "number"
+                            ? a.group.position
+                            : a.group.position(objects[0])
                         : maxPosition + 1;
+
                 const bPosition =
                     b.group.position !== undefined
-                        ? b.group.position
+                        ? typeof b.group.position == "number"
+                            ? b.group.position
+                            : b.group.position(objects[0])
                         : maxPosition + 1;
+
                 return aPosition - bPosition;
             }
         );

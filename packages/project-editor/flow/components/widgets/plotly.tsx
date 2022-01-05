@@ -5,12 +5,11 @@ import {
     registerClass,
     makeDerivedClassInfo,
     PropertyType,
-    specificGroup,
     RectObject,
     ProjectType
 } from "project-editor/core/object";
 
-import { Widget } from "project-editor/flow/component";
+import { Widget, specificGroup } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 

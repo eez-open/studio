@@ -6,7 +6,7 @@ import { getProperty, getParent, IEezObject } from "project-editor/core/object";
 import {
     addItem,
     canAdd,
-    LayoutModel,
+    LayoutModels,
     loadObject
 } from "project-editor/core/store";
 
@@ -183,7 +183,7 @@ export class SettingsEditor extends EditorComponent {
 
     get model() {
         return FlexLayout.Model.fromJson({
-            global: LayoutModel.GLOBAL_OPTIONS,
+            global: LayoutModels.GLOBAL_OPTIONS,
             borders: [],
             layout: {
                 type: "row",
@@ -263,7 +263,7 @@ export class SettingsEditor extends EditorComponent {
                         model={this.model}
                         factory={this.factory}
                         realtimeResize={true}
-                        font={LayoutModel.FONT_SUB}
+                        font={LayoutModels.FONT_SUB}
                     />
                 );
             } else {

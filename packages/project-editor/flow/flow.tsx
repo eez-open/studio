@@ -807,25 +807,81 @@ export abstract class FlowTabState implements IEditorState {
         this.widgetContainer.selectItems(items);
     }
 
-    ensureSelectionVisible = () => {
+    static ensureSelectionVisibleState:
+        | {
+              startTime: number;
+              intervalId: NodeJS.Timer;
+              el: HTMLElement | null;
+              flowTabState: FlowTabState;
+              objects: IEezObject[];
+          }
+        | undefined;
+
+    selectObjectsAndEnsureVisible = (objects: IEezObject[]) => {
         if (this.frontFace) {
             this.frontFace = false;
         }
 
-        setTimeout(() => {
-            const el = document.getElementById(this.containerId);
-            if (el) {
-                const event = new Event("ensure-selection-visible");
-                el.dispatchEvent(event);
+        let state = FlowTabState.ensureSelectionVisibleState;
+        if (state) {
+            clearInterval(state.intervalId);
+            FlowTabState.ensureSelectionVisibleState = undefined;
+        }
 
-                setTimeout(() => {
-                    const el = document.getElementById(this.containerId);
-                    if (el) {
-                        const event = new Event("ensure-selection-visible");
-                        el.dispatchEvent(event);
-                    }
-                }, 50);
+        const intervalId = setInterval(() => {
+            const state = FlowTabState.ensureSelectionVisibleState;
+            if (!state) {
+                return;
             }
-        }, 50);
+
+            let objectsAreSelected: boolean = true;
+            if (this.selectedObjects.length != state.objects.length) {
+                objectsAreSelected = false;
+            } else {
+                for (let i = 0; i < state.objects.length; i++) {
+                    if (state.objects[i] != this.selectedObjects[i]) {
+                        objectsAreSelected = false;
+                        break;
+                    }
+                }
+            }
+
+            if (objectsAreSelected) {
+                if (state.el == null) {
+                    state.el = document.getElementById(this.containerId);
+                }
+
+                if (state.el != null) {
+                    const event = new Event("ensure-selection-visible");
+                    state.el.dispatchEvent(event);
+                }
+            } else {
+                this.selectObjects(state.objects);
+            }
+
+            const TIMEOUT = 100;
+            if (Date.now() - state.startTime >= TIMEOUT) {
+                clearInterval(state.intervalId);
+                FlowTabState.ensureSelectionVisibleState = undefined;
+            }
+        }, 5);
+
+        FlowTabState.ensureSelectionVisibleState = state = {
+            startTime: Date.now(),
+            intervalId,
+            el: null,
+            flowTabState: this,
+            objects
+        };
+
+        this.selectObjects(objects);
     };
+
+    onEnsureSelectionVisibleIsDone() {
+        let state = FlowTabState.ensureSelectionVisibleState;
+        if (state && state.flowTabState == this) {
+            clearInterval(state.intervalId);
+            FlowTabState.ensureSelectionVisibleState = undefined;
+        }
+    }
 }

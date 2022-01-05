@@ -877,36 +877,33 @@ export class FlowEditor
                     selectionEl.style.display = "block";
                 }, 200);
             }
+
+            this.props.tabState.onEnsureSelectionVisibleIsDone();
         }
     };
 
+    // interface IPanel implementation
     @computed
     get selectedObject() {
         return this.props.tabState.widgetContainer.selectedObjects[0];
     }
-
     @computed
     get selectedObjects() {
         return this.props.tabState.widgetContainer.selectedObjects;
     }
-
     cutSelection() {
         this.props.tabState.widgetContainer.cutSelection();
     }
-
     copySelection() {
         this.props.tabState.widgetContainer.copySelection();
     }
-
     pasteSelection() {
         this.flowContext.document.pasteSelection();
     }
-
     deleteSelection() {
         this.props.tabState.widgetContainer.deleteSelection();
     }
-
-    focusHander = () => {
+    onFocus = () => {
         this.context.navigationStore.setSelectedPanel(this);
     };
 
@@ -1081,8 +1078,8 @@ export class FlowEditor
                 className="EezStudio_FlowEditorCanvasContainer"
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
+                onFocus={this.onFocus}
                 tabIndex={0}
-                onFocus={this.focusHander}
                 onDragOver={this.onDragOver}
                 onDrop={this.onDrop}
                 onDragLeave={this.onDragLeave}

@@ -10,8 +10,6 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    generalGroup,
-    specificGroup,
     IPropertyGridGroupDefinition,
     isAncestor,
     getParent,
@@ -87,7 +85,9 @@ import {
     ComponentInput,
     ComponentOutput,
     makeExpressionProperty,
-    makeActionPropertyInfo
+    makeActionPropertyInfo,
+    generalGroup,
+    specificGroup
 } from "project-editor/flow/component";
 
 import {
@@ -1454,7 +1454,11 @@ export class LayoutViewWidget extends EmbeddedWidget {
 
     open() {
         if (this.layoutPage) {
-            getDocumentStore(this).navigationStore.showObject(this.layoutPage);
+            getDocumentStore(this).navigationStore.showObjects(
+                [this.layoutPage],
+                true,
+                false
+            );
         }
     }
 

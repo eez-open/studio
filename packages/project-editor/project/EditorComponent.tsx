@@ -7,7 +7,7 @@ export interface IEditorState {
     saveState(): any;
     selectObject(object: IEezObject): void;
     selectObjects(objects: IEezObject[]): void;
-    ensureSelectionVisible(): void;
+    selectObjectsAndEnsureVisible(objects: IEezObject[]): void;
 }
 
 export interface IEditor {

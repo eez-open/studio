@@ -4,13 +4,7 @@ import { observer } from "mobx-react";
 
 import { Rect } from "eez-studio-shared/geometry";
 
-import {
-    PropertyType,
-    PropertyInfo,
-    getProperty,
-    PropertyProps,
-    geometryGroup
-} from "project-editor/core/object";
+import { getProperty, PropertyProps } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -954,12 +948,3 @@ export class ResizingProperty extends React.Component<PropertyProps> {
         );
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const resizingProperty: PropertyInfo = {
-    name: "resizing",
-    type: PropertyType.Any,
-    propertyGridGroup: geometryGroup,
-    propertyGridRowComponent: ResizingProperty
-};

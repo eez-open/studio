@@ -9,7 +9,6 @@ import { IconAction } from "eez-studio-ui/action";
 
 import { IEezObject } from "project-editor/core/object";
 import { Panel } from "project-editor/components/Panel";
-import { FlowTabState } from "project-editor/flow/flow";
 import { LogItem } from "project-editor/flow/debugger/logs";
 import { RuntimeBase } from "project-editor/flow/runtime";
 import { ProjectContext } from "project-editor/project/context";
@@ -145,25 +144,13 @@ class LogItemRow extends React.Component<{
         }
 
         if (objects.length > 0) {
-            // navigate to the first object,
-            // just to make sure that proper editor is opened
-            this.context.navigationStore.showObject(objects[0], {
-                selectInEditor: false
-            });
-
-            setTimeout(() => {
-                const editorState =
-                    this.context.editorsStore.activeEditor?.state;
-                if (editorState instanceof FlowTabState) {
-                    // select other object in the same editor
-                    editorState.selectObjects(objects);
-
-                    // ensure objects are visible on the screen
-                    editorState.ensureSelectionVisible();
-                }
-            }, 50);
+            this.context.navigationStore.showObjects(objects, true, false);
         } else if (logItem.flowState?.flow) {
-            this.context.navigationStore.showObject(logItem.flowState?.flow);
+            this.context.navigationStore.showObjects(
+                [logItem.flowState?.flow],
+                true,
+                false
+            );
         }
     }
 

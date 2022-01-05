@@ -132,7 +132,7 @@ class ScpiParameterTable extends React.Component {
     render() {
         return (
             <div className="EezStudio_ScpiParameterTable">
-                {this.props.children}
+                <table>{this.props.children}</table>
             </div>
         );
     }

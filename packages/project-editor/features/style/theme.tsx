@@ -16,7 +16,7 @@ import {
     DocumentStoreClass,
     IContextMenuContext,
     getDocumentStore,
-    LayoutModel
+    LayoutModels
 } from "project-editor/core/store";
 import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
@@ -228,51 +228,6 @@ export class ThemesSideView extends React.Component {
         return getProjectWithThemes(this.context);
     }
 
-    get model() {
-        return FlexLayout.Model.fromJson({
-            global: LayoutModel.GLOBAL_OPTIONS,
-            borders: [],
-            layout: {
-                type: "row",
-                children: [
-                    {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        component: "themes"
-                                    }
-                                ]
-                            },
-                            {
-                                type: "tabset",
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        component: "colors"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
-    }
-
     factory = (node: FlexLayout.TabNode) => {
         var component = node.getComponent();
 
@@ -312,10 +267,10 @@ export class ThemesSideView extends React.Component {
     render() {
         return (
             <FlexLayout.Layout
-                model={this.model}
+                model={this.context.layoutModels.themes}
                 factory={this.factory}
                 realtimeResize={true}
-                font={LayoutModel.FONT_SUB}
+                font={LayoutModels.FONT_SUB}
             />
         );
     }

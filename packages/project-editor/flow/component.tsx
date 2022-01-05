@@ -14,9 +14,6 @@ import {
     PropertyInfo,
     PropertyType,
     findClass,
-    geometryGroup,
-    styleGroup,
-    specificGroup,
     areAllChildrenOfTheSameParent,
     IOnSelectParams,
     getParent,
@@ -25,9 +22,9 @@ import {
     PropertyProps,
     isPropertyHidden,
     getProperty,
-    flowGroup,
     MessageType,
-    registerClass
+    registerClass,
+    IPropertyGridGroupDefinition
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -57,7 +54,7 @@ import type {
 import { ComponentGeometry } from "project-editor/flow/editor/render";
 import {
     IResizing,
-    resizingProperty
+    ResizingProperty
 } from "project-editor/flow/editor/resizing-widget-property";
 
 import type { Page } from "project-editor/features/page/page";
@@ -102,6 +99,52 @@ let positionAndSize:
           height: number;
       }
     | undefined = undefined;
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const generalGroup: IPropertyGridGroupDefinition = {
+    id: "general",
+    title: "General",
+    position: (object: IEezObject) =>
+        object instanceof ActionComponent ? 0 : 2
+};
+
+export const specificGroup: IPropertyGridGroupDefinition = {
+    id: "specific",
+    title: "Specific",
+    position: (object: IEezObject) =>
+        object instanceof ActionComponent ? 1 : 3
+};
+
+export const flowGroup: IPropertyGridGroupDefinition = {
+    id: "flow",
+    title: "Flow",
+    position: (object: IEezObject) =>
+        object instanceof ActionComponent ? 2 : 4
+};
+
+export const geometryGroup: IPropertyGridGroupDefinition = {
+    id: "geometry",
+    title: "Position and size",
+    position: (object: IEezObject) =>
+        object instanceof ActionComponent ? 3 : 0
+};
+
+export const styleGroup: IPropertyGridGroupDefinition = {
+    id: "style",
+    title: "Style",
+    position: (object: IEezObject) =>
+        object instanceof ActionComponent ? 4 : 1
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+const resizingProperty: PropertyInfo = {
+    name: "resizing",
+    type: PropertyType.Any,
+    propertyGridGroup: geometryGroup,
+    propertyGridRowComponent: ResizingProperty
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 

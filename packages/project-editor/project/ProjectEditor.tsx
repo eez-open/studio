@@ -19,7 +19,7 @@ import { LineMarkers } from "project-editor/flow/editor/ConnectionLineComponent"
 import {
     getChildren,
     getClassInfo,
-    LayoutModel,
+    LayoutModels,
     objectToString,
     Section
 } from "project-editor/core/store";
@@ -33,6 +33,7 @@ import {
     getNavigationComponentId
 } from "project-editor/project/NavigationComponentFactory";
 import { getEditorComponent } from "project-editor/project/EditorComponentFactory";
+import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +93,7 @@ class Content extends React.Component {
 
                 // save submodel on save event
                 node.setEventListener("save", (p: any) => {
-                    this.context.layoutModel.model.doAction(
+                    this.context.layoutModels.root.doAction(
                         FlexLayout.Actions.updateNodeAttributes(node.getId(), {
                             config: {
                                 model: node.getExtraData().model.toJson()
@@ -101,7 +102,7 @@ class Content extends React.Component {
                     );
                 });
 
-                this.context.editorsStore.refresh();
+                this.context.editorsStore.refresh(false);
             }
 
             return (
@@ -109,7 +110,7 @@ class Content extends React.Component {
                     model={model}
                     factory={this.factory}
                     realtimeResize={true}
-                    font={LayoutModel.FONT_SUB}
+                    font={LayoutModels.FONT_SUB}
                     onAuxMouseClick={this.onAuxMouseClick}
                 />
             );
@@ -117,20 +118,20 @@ class Content extends React.Component {
 
         if (component === "editor") {
             node.setEventListener("visibility", (p: any) => {
-                this.context.editorsStore.refresh();
+                this.context.editorsStore.refresh(true);
             });
 
             node.setEventListener("close", (p: any) => {
-                this.context.editorsStore.refresh();
+                this.context.editorsStore.refresh(true);
             });
 
             const editor = this.context.editorsStore.tabIdToEditorMap.get(
                 node.getId()
             );
             if (editor) {
-                let EditorComponent = getEditorComponent(editor.object);
-                if (EditorComponent) {
-                    return <EditorComponent editor={editor} />;
+                let result = getEditorComponent(editor.object);
+                if (result) {
+                    return <result.EditorComponent editor={editor} />;
                 }
             }
 
@@ -150,7 +151,7 @@ class Content extends React.Component {
         }
 
         if (component === "componentsPalette") {
-            return <ComponentsPalette showOnlyActions={false} />;
+            return <ComponentsPalette />;
         }
 
         if (component === "breakpointsPanel") {
@@ -207,7 +208,30 @@ class Content extends React.Component {
                 node.getModel().doAction(
                     FlexLayout.Actions.deleteTab(node.getId())
                 );
-                this.context.editorsStore.refresh();
+            }
+        }
+    };
+
+    onRenderTab = (
+        node: FlexLayout.TabNode,
+        renderValues: FlexLayout.ITabRenderValues
+    ) => {
+        if (node.getId() == LayoutModels.CHECKS_TAB_ID) {
+            const section = this.context.outputSectionsStore.getSection(
+                Section.CHECKS
+            );
+            if (section.numErrors > 0) {
+                renderValues.leading = (
+                    <Icon icon="material:error" className="error" />
+                );
+            } else if (section.numWarnings > 0) {
+                renderValues.leading = (
+                    <Icon icon="material:warning" className="warning" />
+                );
+            } else {
+                renderValues.leading = (
+                    <Icon icon="material:check" className="info" />
+                );
             }
         }
     };
@@ -246,10 +270,11 @@ class Content extends React.Component {
                     }}
                 >
                     <FlexLayout.Layout
-                        model={this.context.layoutModel.model}
+                        model={this.context.layoutModels.root}
                         factory={this.factory}
                         realtimeResize={true}
-                        font={LayoutModel.FONT}
+                        font={LayoutModels.FONT}
+                        onRenderTab={this.onRenderTab}
                     />
                 </div>
             </div>
@@ -363,8 +388,30 @@ class NavigationMenuObject extends React.Component<{
 
     onClick = action(() => {
         this.props.selectedObject.set(this.props.object);
-        if (getEditorComponent(this.props.object)) {
-            this.context.editorsStore.openEditor(this.props.object);
+        const result = getEditorComponent(this.props.object);
+        if (result) {
+            this.context.editorsStore.openEditor(
+                result.object,
+                result.subObject
+            );
+        }
+
+        if (this.props.object != this.context.project.settings) {
+            this.context.editorsStore.closeEditorForObject(
+                this.context.project.settings
+            );
+        }
+
+        if (this.props.object != this.context.project.shortcuts) {
+            this.context.editorsStore.closeEditorForObject(
+                this.context.project.shortcuts
+            );
+        }
+
+        if (this.props.object != this.context.project.scpi) {
+            this.context.editorsStore.closeEditorForObject(
+                this.context.project.scpi
+            );
         }
     });
 

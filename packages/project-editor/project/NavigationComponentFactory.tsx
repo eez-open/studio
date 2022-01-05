@@ -1,10 +1,13 @@
 import { IEezObject } from "project-editor/core/object";
 
-import { getProject } from "project-editor/project/project";
+import { getProject, Settings } from "project-editor/project/project";
 
 import { ActionsNavigation } from "project-editor/features/action/ActionsNavigation";
 import { BitmapsNavigation } from "project-editor/features/bitmap/BitmapsNavigation";
-import { ExtensionDefinitionNavigation } from "project-editor/features/extension-definitions/extension-definitions";
+import {
+    ExtensionDefinition,
+    ExtensionDefinitionNavigation
+} from "project-editor/features/extension-definitions/extension-definitions";
 import { FontsNavigation } from "project-editor/features/font/FontsNavigation";
 import { PagesNavigation } from "project-editor/features/page/PagesNavigation";
 import { ScpiNavigation } from "project-editor/features/scpi/ScpiNavigation";
@@ -13,6 +16,29 @@ import { ProjectVariablesNavigation } from "project-editor/features/variable/Var
 import { SettingsNavigation } from "./SettingsNavigation";
 
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
+import { Action } from "project-editor/features/action/action";
+import {
+    getAncestorOfType,
+    getDocumentStore,
+    LayoutModels
+} from "project-editor/core/store";
+import { Bitmap } from "project-editor/features/bitmap/bitmap";
+import { Font, Glyph } from "project-editor/features/font/font";
+import { Page } from "project-editor/features/page/page";
+import {
+    Scpi,
+    ScpiCommand,
+    ScpiSubsystem
+} from "project-editor/features/scpi/scpi";
+import { Style } from "project-editor/features/style/style";
+import {
+    Structure,
+    Variable,
+    Enum
+} from "project-editor/features/variable/variable";
+import { Component } from "project-editor/flow/component";
+import { ScpiEnum } from "project-editor/features/scpi/enum";
+import { ConnectionLine } from "project-editor/flow/flow";
 
 export function getNavigationComponentId(object: IEezObject) {
     const project = getProject(object);
@@ -84,4 +110,247 @@ export function getNavigationComponent(
     }
 
     return undefined;
+}
+
+export function getNavigationObject(
+    object: IEezObject
+): IEezObject | undefined {
+    let ancestor;
+
+    ancestor = getAncestorOfType(object, Component.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, ConnectionLine.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Action.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Bitmap.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, ExtensionDefinition.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Glyph.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Font.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Page.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, ScpiSubsystem.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, ScpiCommand.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, ScpiEnum.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Scpi.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Style.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Variable.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Structure.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Enum.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    ancestor = getAncestorOfType(object, Settings.classInfo);
+    if (ancestor) {
+        return ancestor;
+    }
+
+    return undefined;
+}
+
+export function navigateTo(object: IEezObject) {
+    const DocumentStore = getDocumentStore(object);
+    const project = DocumentStore.project;
+
+    let ancestor;
+
+    ancestor = getAncestorOfType(object, Action.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.actions);
+        DocumentStore.navigationStore.selectedActionObject.set(ancestor);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Bitmap.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.bitmaps);
+        DocumentStore.navigationStore.selectedBitmapObject.set(ancestor);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, ExtensionDefinition.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(
+            project.extensionDefinitions
+        );
+        DocumentStore.navigationStore.selectedExtensionDefinitionObject.set(
+            ancestor
+        );
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Font.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.fonts);
+        DocumentStore.navigationStore.selectedFontObject.set(ancestor);
+        ancestor = getAncestorOfType(object, Glyph.classInfo);
+        if (ancestor) {
+            DocumentStore.navigationStore.selectedGlyphObject.set(ancestor);
+        }
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Page.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.pages);
+        DocumentStore.navigationStore.selectedPageObject.set(ancestor);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Scpi.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.scpi);
+
+        ancestor = getAncestorOfType(object, ScpiEnum.classInfo);
+        if (ancestor) {
+            DocumentStore.navigationStore.selectedEnumObject.set(ancestor);
+            DocumentStore.layoutModels.selectTab(
+                DocumentStore.layoutModels.scpi,
+                LayoutModels.SCPI_ENUMS_TAB_ID
+            );
+            return;
+        }
+
+        ancestor = getAncestorOfType(object, ScpiSubsystem.classInfo);
+        if (ancestor) {
+            DocumentStore.navigationStore.selectedScpiSubsystemObject.set(
+                ancestor
+            );
+
+            DocumentStore.layoutModels.selectTab(
+                DocumentStore.layoutModels.scpi,
+                LayoutModels.SCPI_SUBSYSTEMS_TAB_ID
+            );
+
+            const ancestorCommand = getAncestorOfType(
+                object,
+                ScpiCommand.classInfo
+            );
+
+            if (ancestorCommand) {
+                DocumentStore.navigationStore.selectedScpiCommandObject.set(
+                    ancestorCommand
+                );
+
+                DocumentStore.layoutModels.selectTab(
+                    DocumentStore.layoutModels.scpi,
+                    LayoutModels.SCPI_COMMANDS_TAB_ID
+                );
+
+                DocumentStore.editorsStore.openEditor(
+                    project.scpi,
+                    ancestorCommand
+                );
+            } else {
+                DocumentStore.editorsStore.openEditor(project.scpi, ancestor);
+            }
+        }
+
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Style.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.styles);
+        DocumentStore.navigationStore.selectedStyleObject.set(ancestor);
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Variable.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
+        DocumentStore.navigationStore.selectedGlobalVariableObject.set(
+            ancestor
+        );
+        DocumentStore.layoutModels.selectTab(
+            DocumentStore.layoutModels.variables,
+            LayoutModels.GLOBAL_VARS_TAB_ID
+        );
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Structure.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
+        DocumentStore.navigationStore.selectedStructureObject.set(ancestor);
+        DocumentStore.layoutModels.selectTab(
+            DocumentStore.layoutModels.variables,
+            LayoutModels.STRUCTS_TAB_ID
+        );
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, Enum.classInfo);
+    if (ancestor) {
+        DocumentStore.navigationStore.selectedRootObject.set(project.variables);
+        DocumentStore.navigationStore.selectedEnumObject.set(ancestor);
+        DocumentStore.layoutModels.selectTab(
+            DocumentStore.layoutModels.variables,
+            LayoutModels.ENUMS_TAB_ID
+        );
+        return;
+    }
+
+    if (getAncestorOfType(object, Settings.classInfo)) {
+        // TODO
+        DocumentStore.navigationStore.selectedRootObject.set(project.settings);
+        return;
+    }
 }

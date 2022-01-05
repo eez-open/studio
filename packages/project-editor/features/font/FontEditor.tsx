@@ -7,7 +7,7 @@ import * as notification from "eez-studio-ui/notification";
 import { getParent } from "project-editor/core/object";
 import {
     IPanel,
-    LayoutModel,
+    LayoutModels,
     cloneObject,
     loadObject,
     objectToJS,
@@ -69,6 +69,7 @@ export class FontEditor extends EditorComponent implements IPanel {
         }
     };
 
+    // interface IPanel implementation
     get selectedObject() {
         if (
             this.selectedGlyph &&
@@ -79,28 +80,27 @@ export class FontEditor extends EditorComponent implements IPanel {
             return this.font;
         }
     }
-
     cutSelection() {
         // TODO
     }
-
     copySelection() {
         const glyph = this.selectedGlyph;
         if (glyph) {
             glyph.copyToClipboard();
         }
     }
-
     pasteSelection() {
         const glyph = this.selectedGlyph;
         if (glyph) {
             glyph.pasteFromClipboard();
         }
     }
-
     deleteSelection() {
         // TODO
     }
+    onFocus = () => {
+        this.context.navigationStore.setSelectedPanel(this);
+    };
 
     @action.bound
     async onRebuildGlyphs() {
@@ -307,10 +307,6 @@ export class FontEditor extends EditorComponent implements IPanel {
         }
     };
 
-    onFocus = () => {
-        this.context.navigationStore.setSelectedPanel(this);
-    };
-
     onKeyDown = (event: any) => {
         if (event.ctrlKey) {
             if (event.keyCode == "C".charCodeAt(0)) {
@@ -320,46 +316,6 @@ export class FontEditor extends EditorComponent implements IPanel {
             }
         }
     };
-
-    get model() {
-        return FlexLayout.Model.fromJson({
-            global: LayoutModel.GLOBAL_OPTIONS,
-            borders: [],
-            layout: {
-                type: "row",
-                children: [
-                    {
-                        type: "tabset",
-                        enableTabStrip: false,
-                        enableDrag: false,
-                        enableDrop: false,
-                        enableClose: false,
-                        children: [
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                component: "glyphs"
-                            }
-                        ]
-                    },
-                    {
-                        type: "tabset",
-                        enableTabStrip: false,
-                        enableDrag: false,
-                        enableDrop: false,
-                        enableClose: false,
-                        children: [
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                component: "editor"
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
-    }
 
     factory = (node: FlexLayout.TabNode) => {
         var component = node.getComponent();
@@ -406,12 +362,14 @@ export class FontEditor extends EditorComponent implements IPanel {
 
     render() {
         return (
-            <FlexLayout.Layout
-                model={this.model}
-                factory={this.factory}
-                realtimeResize={true}
-                font={LayoutModel.FONT_SUB}
-            />
+            <div onFocus={this.onFocus} tabIndex={0}>
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.fonts}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
+                />
+            </div>
         );
     }
 }

@@ -40,26 +40,10 @@ export class ActionsNavigation extends NavigationComponent {
         );
     }
 
-    cutSelection() {
-        this.treeAdapter!.cutSelection();
-    }
-
-    copySelection() {
-        this.treeAdapter!.copySelection();
-    }
-
-    pasteSelection() {
-        this.treeAdapter!.pasteSelection();
-    }
-
-    deleteSelection() {
-        this.treeAdapter!.deleteSelection();
-    }
-
+    // interface IPanel implementation
     get selectedObject() {
         return this.selectedObjects[0];
     }
-
     get selectedObjects() {
         const selectedObjects =
             this.flowContainerDisplayItem &&
@@ -78,22 +62,35 @@ export class ActionsNavigation extends NavigationComponent {
 
         return [];
     }
-
+    cutSelection() {
+        this.treeAdapter!.cutSelection();
+    }
+    copySelection() {
+        this.treeAdapter!.copySelection();
+    }
+    pasteSelection() {
+        this.treeAdapter!.pasteSelection();
+    }
+    deleteSelection() {
+        this.treeAdapter!.deleteSelection();
+    }
     onFocus = () => {
         this.context.navigationStore.setSelectedPanel(this);
     };
 
     render() {
         return (
-            <ListNavigation
-                id={this.props.id}
-                navigationObject={this.props.navigationObject}
-                selectedObject={
-                    this.context.navigationStore.selectedActionObject
-                }
-                editable={!this.context.runtime}
-                onDoubleClickItem={this.props.onDoubleClickItem}
-            />
+            <div onFocus={this.onFocus} tabIndex={0} style={{ height: "100%" }}>
+                <ListNavigation
+                    id={this.props.id}
+                    navigationObject={this.props.navigationObject}
+                    selectedObject={
+                        this.context.navigationStore.selectedActionObject
+                    }
+                    editable={!this.context.runtime}
+                    onDoubleClickItem={this.props.onDoubleClickItem}
+                />
+            </div>
         );
     }
 }

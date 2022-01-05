@@ -2,6 +2,7 @@ import React from "react";
 import { observable, computed, runInAction, action } from "mobx";
 import { observer } from "mobx-react";
 import css from "css";
+import * as FlexLayout from "flexlayout-react";
 
 import {
     fileExistsSync,
@@ -43,7 +44,8 @@ import {
     DocumentStoreClass,
     getDocumentStore,
     hideInPropertyGridIfNotDashboard,
-    hideInPropertyGridIfNotV1
+    hideInPropertyGridIfNotV1,
+    LayoutModels
 } from "project-editor/core/store";
 
 import type { Action } from "project-editor/features/action/action";
@@ -1028,6 +1030,21 @@ export class Project extends EezObject {
         return this.settings.general.projectType === ProjectType.RESOURCE;
     }
 
+    static supportsDebugger(projectType: ProjectType, flowSupport: boolean) {
+        return (
+            projectType == ProjectType.DASHBOARD ||
+            projectType == ProjectType.APPLET
+        );
+    }
+
+    static supportsFlow(projectType: ProjectType, flowSupport: boolean) {
+        return (
+            projectType == ProjectType.DASHBOARD ||
+            projectType == ProjectType.APPLET ||
+            flowSupport
+        );
+    }
+
     @computed
     get importDirective() {
         return this._DocumentStore.project.settings.general.imports.find(
@@ -1300,6 +1317,82 @@ export class Project extends EezObject {
         const map = new Map<String, Color>();
         this.colors.forEach((color, i) => map.set(color.name, color));
         return map;
+    }
+
+    enableTabs(projectType?: ProjectType, flowSupport?: boolean) {
+        function enableTab(
+            layoutModel: FlexLayout.Model,
+            tabId: string,
+            tabJson: FlexLayout.IJsonTabNode,
+            addNextToTabId: string,
+            enabled: boolean
+        ) {
+            if (enabled) {
+                if (!layoutModel.getNodeById(tabId)) {
+                    const addNexToTab = layoutModel.getNodeById(
+                        addNextToTabId
+                    ) as FlexLayout.TabNode;
+
+                    layoutModel.doAction(
+                        FlexLayout.Actions.addNode(
+                            tabJson,
+                            addNexToTab.getParent()!.getId(),
+                            FlexLayout.DockLocation.CENTER,
+                            -1,
+                            false
+                        )
+                    );
+                }
+            } else {
+                layoutModel.doAction(FlexLayout.Actions.deleteTab(tabId));
+            }
+        }
+
+        if (projectType == undefined) {
+            projectType = this.settings.general.projectType;
+        }
+
+        if (flowSupport == undefined) {
+            flowSupport = this.settings.general.flowSupport;
+        }
+
+        const supportsDebugger = Project.supportsDebugger(
+            projectType,
+            flowSupport
+        );
+        const supportsFlow = Project.supportsFlow(projectType, flowSupport);
+
+        enableTab(
+            this._DocumentStore.layoutModels.root,
+            LayoutModels.DEBUGGER_TAB_ID,
+            LayoutModels.DEBUGGER_TAB,
+            LayoutModels.COMPONENTS_PALETTE_TAB_ID,
+            supportsDebugger
+        );
+
+        enableTab(
+            this._DocumentStore.layoutModels.root,
+            LayoutModels.BREAKPOINTS_TAB_ID,
+            LayoutModels.BREAKPOINTS_TAB,
+            LayoutModels.COMPONENTS_PALETTE_TAB_ID,
+            supportsDebugger
+        );
+
+        enableTab(
+            this._DocumentStore.layoutModels.variables,
+            LayoutModels.LOCAL_VARS_TAB_ID,
+            LayoutModels.LOCAL_VARS_TAB,
+            LayoutModels.GLOBAL_VARS_TAB_ID,
+            supportsFlow
+        );
+
+        enableTab(
+            this._DocumentStore.layoutModels.variables,
+            LayoutModels.STRUCTS_TAB_ID,
+            LayoutModels.STRUCTS_TAB,
+            LayoutModels.GLOBAL_VARS_TAB_ID,
+            supportsFlow
+        );
     }
 }
 

@@ -33,13 +33,22 @@ import type {
 } from "project-editor/features/scpi/scpi";
 import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 import type { findBitmap } from "project-editor/features/bitmap/bitmap";
-import type { migrateProject } from "project-editor/project/migrate-project";
-import type { getNavigationComponent } from "project-editor/project/NavigationComponentFactory";
+import type {
+    migrateProjectVersion,
+    migrateProjectType
+} from "project-editor/project/migrate-project";
+import type {
+    getNavigationComponent,
+    getNavigationObject,
+    navigateTo
+} from "project-editor/project/NavigationComponentFactory";
 import type {
     createEditorState,
-    getEditorComponent
+    getEditorComponent,
+    getAncestorWithEditorComponent
 } from "project-editor/project/EditorComponentFactory";
-import type { browseGlyph } from "./features/font/FontEditor";
+import type { browseGlyph } from "project-editor/features/font/FontEditor";
+import type { Variable } from "project-editor/features/variable/variable";
 
 export interface IProjectEditor {
     homeTabs: Tabs;
@@ -64,6 +73,7 @@ export interface IProjectEditor {
     WidgetClass: typeof Widget;
     EmbeddedWidgetClass: typeof EmbeddedWidget;
     ConnectionLineClass: typeof ConnectionLine;
+    VariableClass: typeof Variable;
     GlyphClass: typeof Glyph;
     ScpiCommandClass: typeof ScpiCommand;
     ScpiSubsystemClass: typeof ScpiSubsystem;
@@ -72,9 +82,13 @@ export interface IProjectEditor {
     getNameProperty: typeof getNameProperty;
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
     findBitmap: typeof findBitmap;
-    migrateProject: typeof migrateProject;
+    migrateProjectVersion: typeof migrateProjectVersion;
+    migrateProjectType: typeof migrateProjectType;
     getNavigationComponent: typeof getNavigationComponent;
+    getNavigationObject: typeof getNavigationObject;
+    navigateTo: typeof navigateTo;
     getEditorComponent: typeof getEditorComponent;
+    getAncestorWithEditorComponent: typeof getAncestorWithEditorComponent;
     createEditorState: typeof createEditorState;
     browseGlyph: typeof browseGlyph;
 }

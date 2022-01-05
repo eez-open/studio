@@ -82,7 +82,7 @@ export class Selection extends React.Component<
         const viewState = this.props.context.viewState;
         return this.selectedObjects
             .map(selectedObject => getObjectBoundingRect(selectedObject))
-            .map(rect => viewState.transform.pageToOffsetRect(rect));
+            .map(rect => viewState.transform.pageToOffsetRect(rect!));
     }
 
     @computed get selectedObjectsParentRect() {
@@ -113,9 +113,10 @@ export class Selection extends React.Component<
                     i === selectedObjects.length &&
                     parent.showSelectedObjectsParent
                 ) {
-                    return viewState.transform.pageToOffsetRect(
-                        getObjectBoundingRect(parent)
-                    );
+                    const parentRect = getObjectBoundingRect(parent);
+                    if (parentRect) {
+                        return viewState.transform.pageToOffsetRect(parentRect);
+                    }
                 }
             }
         }

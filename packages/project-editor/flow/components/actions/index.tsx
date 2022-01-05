@@ -9,7 +9,6 @@ import {
     registerClass,
     PropertyType,
     makeDerivedClassInfo,
-    specificGroup,
     IEezObject,
     EezObject,
     ClassInfo,
@@ -42,7 +41,8 @@ import {
     CustomInput,
     makeAssignableExpressionProperty,
     makeExpressionProperty,
-    outputIsOptionalIfAtLeastOneOutputExists
+    outputIsOptionalIfAtLeastOneOutputExists,
+    specificGroup
 } from "project-editor/flow/component";
 
 import { FlowState } from "project-editor/flow/runtime";
@@ -1825,7 +1825,11 @@ export class CallActionActionComponent extends ActionComponent {
     open() {
         const action = findAction(getProject(this), this.action);
         if (action) {
-            getDocumentStore(this).navigationStore.showObject(action);
+            getDocumentStore(this).navigationStore.showObjects(
+                [action],
+                true,
+                false
+            );
         }
     }
 

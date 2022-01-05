@@ -7,8 +7,7 @@ import { _find, _range } from "eez-studio-shared/algorithm";
 import {
     registerClass,
     PropertyType,
-    makeDerivedClassInfo,
-    specificGroup
+    makeDerivedClassInfo
 } from "project-editor/core/object";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
@@ -21,7 +20,8 @@ import { InstrumentObject, instruments } from "instrument/instrument-object";
 import {
     ActionComponent,
     ComponentOutput,
-    makeExpressionProperty
+    makeExpressionProperty,
+    specificGroup
 } from "project-editor/flow/component";
 import { FlowState } from "project-editor/flow//runtime";
 import type { IFlowContext } from "project-editor/flow//flow-interfaces";

@@ -8,7 +8,6 @@ import {
     TreeObjectAdapter,
     TreeObjectAdapterChildren
 } from "project-editor/core/objectAdapter";
-import { IPanel } from "project-editor/core/store";
 import { FlowEditor } from "project-editor/flow/editor/editor";
 import { FlowViewer } from "project-editor/flow/runtime-viewer/viewer";
 import { ProjectContext } from "project-editor/project/context";
@@ -21,17 +20,13 @@ import { EditorComponent } from "project-editor/project/EditorComponent";
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class PageEditor extends EditorComponent implements IPanel {
+export class PageEditor extends EditorComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
     get pageTabState() {
         return this.props.editor.state as PageTabState;
     }
-
-    focusHandler = () => {
-        this.context.navigationStore.setSelectedPanel(this);
-    };
 
     @computed
     get treeAdapter() {
@@ -41,40 +36,6 @@ export class PageEditor extends EditorComponent implements IPanel {
             undefined,
             true
         );
-    }
-
-    @computed
-    get selectedObject() {
-        return this.pageTabState.selectedObject;
-    }
-
-    @computed
-    get selectedObjects() {
-        return this.pageTabState.selectedObjects;
-    }
-
-    cutSelection() {
-        if (!this.pageTabState.isRuntime) {
-            this.treeAdapter.cutSelection();
-        }
-    }
-
-    copySelection() {
-        if (!this.pageTabState.isRuntime) {
-            this.treeAdapter.copySelection();
-        }
-    }
-
-    pasteSelection() {
-        if (!this.pageTabState.isRuntime) {
-            this.treeAdapter.pasteSelection();
-        }
-    }
-
-    deleteSelection() {
-        if (!this.pageTabState.isRuntime) {
-            this.treeAdapter.deleteSelection();
-        }
     }
 
     render() {

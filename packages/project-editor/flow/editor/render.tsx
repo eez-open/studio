@@ -61,6 +61,18 @@ export class ComponentEnclosure extends React.Component<{
 
     updateComponentGeometry() {
         if (this.elRef.current && this.listIndex == 0) {
+            const el = this.elRef.current.closest(".LayoutViewWidget");
+            if (el && el != this.elRef.current) {
+                // do not calculate geometry if component is inside LayoutViewWidget
+                return;
+            }
+
+            if (this.elRef.current.offsetParent == null) {
+                // do not calculate geometry if element is not visible
+                console.log("offsetParent == null");
+                return;
+            }
+
             const geometry = calcComponentGeometry(
                 this.props.component,
                 this.elRef.current,

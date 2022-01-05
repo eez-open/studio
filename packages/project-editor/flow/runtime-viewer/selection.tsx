@@ -73,7 +73,7 @@ export class Selection extends React.Component<
         const viewState = this.props.context.viewState;
         return this.selectedObjects
             .map(selectedObject => getObjectBoundingRect(selectedObject))
-            .map(rect => viewState.transform.pageToOffsetRect(rect));
+            .map(rect => viewState.transform.pageToOffsetRect(rect!));
     }
 
     @computed get connectionLine() {

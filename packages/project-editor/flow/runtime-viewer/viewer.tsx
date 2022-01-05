@@ -532,9 +532,12 @@ export class FlowViewer
                     selectionEl.style.display = "block";
                 }, 200);
             }
+
+            this.props.tabState.onEnsureSelectionVisibleIsDone();
         }
     };
 
+    // interface IPanel implementation
     @computed
     get selectedObject() {
         return this.props.tabState.widgetContainer.selectedObjects[0];
@@ -544,16 +547,11 @@ export class FlowViewer
     get selectedObjects() {
         return this.props.tabState.widgetContainer.selectedObjects;
     }
-
     cutSelection() {}
-
     copySelection() {}
-
     pasteSelection() {}
-
     deleteSelection() {}
-
-    focusHander = () => {
+    onFocus = () => {
         this.context.navigationStore.setSelectedPanel(this);
     };
 
@@ -583,7 +581,8 @@ export class FlowViewer
                 })}
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
-                onFocus={this.focusHander}
+                onFocus={this.onFocus}
+                tabIndex={0}
                 onDoubleClick={this.onDoubleClick}
             >
                 <Canvas flowContext={this.flowContext}>

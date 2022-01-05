@@ -12,6 +12,7 @@ import {
     runInAction
 } from "mobx";
 import type { FSWatcher } from "chokidar";
+import * as FlexLayout from "flexlayout-react";
 
 import {
     _each,
@@ -23,7 +24,6 @@ import {
 import { confirmSave } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
 import { guid } from "eez-studio-shared/guid";
-import * as FlexLayout from "flexlayout-react";
 
 import { Icon } from "eez-studio-ui/icon";
 import * as notification from "eez-studio-ui/notification";
@@ -108,6 +108,7 @@ class NavigationStore {
     selectedBitmapObject = observable.box<IEezObject>();
     selectedExtensionDefinitionObject = observable.box<IEezObject>();
     selectedScpiSubsystemObject = observable.box<IEezObject>();
+    selectedScpiCommandObject = observable.box<IEezObject>();
     selectedScpiEnumObject = observable.box<IEezObject>();
 
     editable = true;
@@ -245,6 +246,15 @@ class NavigationStore {
                 );
             }
 
+            if (state.selectedScpiCommandObject) {
+                this.selectedScpiCommandObject.set(
+                    getObjectFromStringPath(
+                        this.DocumentStore.project,
+                        state.selectedScpiCommandObject
+                    )
+                );
+            }
+
             if (state.selectedScpiEnumObject) {
                 this.selectedScpiEnumObject.set(
                     getObjectFromStringPath(
@@ -306,6 +316,9 @@ class NavigationStore {
             selectedScpiSubsystemObject: this.selectedScpiSubsystemObject.get()
                 ? getObjectPathAsString(this.selectedScpiSubsystemObject.get())
                 : undefined,
+            selectedScpiCommandObject: this.selectedScpiCommandObject.get()
+                ? getObjectPathAsString(this.selectedScpiCommandObject.get())
+                : undefined,
             selectedScpiEnumObject: this.selectedScpiEnumObject.get()
                 ? getObjectPathAsString(this.selectedScpiEnumObject.get())
                 : undefined
@@ -317,13 +330,31 @@ class NavigationStore {
         this.selectedPanel = selectedPanel;
     }
 
-    showObject(
-        objectToShow: IEezObject,
-        options?: {
-            selectInEditor?: boolean;
-        }
+    @action
+    showObjects(
+        objects: IEezObject[],
+        openEditor: boolean,
+        showInNavigation: boolean
     ) {
-        // TODO
+        objects = objects.map(object =>
+            isValue(object) ? getParent(object) : object
+        );
+
+        const result = ProjectEditor.getAncestorWithEditorComponent(objects[0]);
+        if (result) {
+            const editor = this.DocumentStore.editorsStore.openEditor(
+                result.object,
+                result.subObject
+            );
+            const editorState = editor.state;
+            if (editorState) {
+                editorState.selectObjectsAndEnsureVisible(objects);
+            }
+        }
+
+        if (showInNavigation) {
+            ProjectEditor.navigateTo(objects[0]);
+        }
     }
 }
 
@@ -378,10 +409,18 @@ class EditorsStore {
         });
     }
 
+    saveState() {
+        for (const editor of this.editors) {
+            if (editor.state) {
+                editor.state.saveState();
+            }
+        }
+    }
+
     get tabsModel() {
         return (
-            this.DocumentStore.layoutModel.model
-                .getNodeById("EDITORS")
+            this.DocumentStore.layoutModels.root
+                .getNodeById(LayoutModels.EDITORS_TABSET_ID)
                 .getChildren()[0] as FlexLayout.TabNode
         ).getExtraData().model as FlexLayout.Model;
     }
@@ -408,7 +447,7 @@ class EditorsStore {
         return tabs;
     }
 
-    refresh() {
+    refresh(showActiveEditor: boolean) {
         const editors: Editor[] = [];
         const tabIdToEditorMap = new Map<string, Editor>();
 
@@ -449,12 +488,25 @@ class EditorsStore {
 
         this.tabIdToEditorMap = tabIdToEditorMap;
 
-        setTimeout(
-            action(() => {
+        this.saveState();
+
+        setTimeout(() => {
+            runInAction(() => {
                 this.editors = editors;
                 this.activeEditor = activeEditor;
-            })
-        );
+            });
+
+            if (showActiveEditor) {
+                const activeEditor = this.activeEditor;
+                if (activeEditor) {
+                    this.DocumentStore.navigationStore.showObjects(
+                        [activeEditor.subObject ?? activeEditor.object],
+                        false,
+                        true
+                    );
+                }
+            }
+        });
     }
 
     @action
@@ -532,6 +584,13 @@ class EditorsStore {
         }
     }
 
+    closeEditorForObject(object: IEezObject) {
+        let editor = this.editors.find(editor => editor.object == object);
+        if (editor) {
+            this.closeEditor(editor);
+        }
+    }
+
     unmount() {
         this.dispose1();
     }
@@ -539,13 +598,15 @@ class EditorsStore {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LayoutModel {
+export class LayoutModels {
     static FONT = {
         size: "small"
     };
+
     static FONT_SUB = {
         size: "small"
     };
+
     static GLOBAL_OPTIONS = {
         borderEnableAutoHide: true,
         splitterSize: 4,
@@ -553,159 +614,638 @@ export class LayoutModel {
         legacyOverflowMenu: false,
         tabEnableRename: false
     };
-    static VERSION = 9;
 
-    constructor(public DocumentStore: DocumentStoreClass) {}
+    static CHECKS_TAB_ID = "CHECKS";
+    static OUTPUT_TAB_ID = "OUTPUT";
+    static SEARCH_RESULTS_TAB_ID = "SEARCH_RESULTS";
+    static NAVIGATION_TABSET_ID = "NAVIGATION";
+    static EDITORS_TABSET_ID = "EDITORS";
+    static PROPERTIES_TAB_ID = "PROPERTIES";
+    static COMPONENTS_PALETTE_TAB_ID = "COMPONENTS_PALETTE";
+    static BREAKPOINTS_TAB_ID = "BREAKPOINTS_PALETTE";
+    static DEBUGGER_TAB_ID = "DEBUGGER";
 
-    @observable model: FlexLayout.Model;
+    static LOCAL_VARS_TAB_ID = "LOCAL_VARS";
+    static GLOBAL_VARS_TAB_ID = "GLOBAL_VARS";
+    static STRUCTS_TAB_ID = "STRUCTS";
+    static ENUMS_TAB_ID = "ENUMS";
 
-    load(layoutModel: any) {
-        if (layoutModel && layoutModel.version == LayoutModel.VERSION) {
-            this.model = FlexLayout.Model.fromJson(layoutModel.json);
-        } else {
-            this.model = FlexLayout.Model.fromJson(this.json);
-        }
-        // (window as any).model = this.model;
-    }
+    static SCPI_SUBSYSTEMS_TAB_ID = "SCPI_SUBSYSTEMS";
+    static SCPI_ENUMS_TAB_ID = "SCPI_ENUMS";
+    static SCPI_COMMANDS_TAB_ID = "SCPI_COMMANDS";
 
-    @computed get json(): FlexLayout.IJsonModel {
-        return {
-            global: LayoutModel.GLOBAL_OPTIONS,
-            borders: [
-                {
-                    type: "border",
-                    location: "top",
-                    children: []
-                },
-                {
-                    type: "border",
-                    location: "right",
-                    children: [
+    static DEBUGGER_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Debugger",
+        id: LayoutModels.DEBUGGER_TAB_ID,
+        component: "debuggerPanel"
+    };
+
+    static BREAKPOINTS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Breakpoints",
+        id: LayoutModels.BREAKPOINTS_TAB_ID,
+        component: "breakpointsPanel"
+    };
+
+    static LOCAL_VARS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Local vars",
+        id: LayoutModels.LOCAL_VARS_TAB_ID,
+        component: "locals"
+    };
+
+    static STRUCTS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Structs",
+        id: LayoutModels.STRUCTS_TAB_ID,
+        component: "structs"
+    };
+
+    models: {
+        name: string;
+        version: number;
+        json: FlexLayout.IJsonModel;
+        get: () => FlexLayout.Model;
+        set: (model: FlexLayout.Model) => void;
+    }[];
+
+    @observable root: FlexLayout.Model;
+    @observable variables: FlexLayout.Model;
+    @observable bitmaps: FlexLayout.Model;
+    @observable fonts: FlexLayout.Model;
+    @observable pages: FlexLayout.Model;
+    @observable scpi: FlexLayout.Model;
+    @observable styles: FlexLayout.Model;
+    @observable themes: FlexLayout.Model;
+    @observable debugger: FlexLayout.Model;
+
+    constructor(public DocumentStore: DocumentStoreClass) {
+        this.models = [
+            {
+                name: "root",
+                version: 13,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [
                         {
-                            type: "tab",
-                            enableClose: false,
-                            name: "Themes",
-                            component: "themesSideView"
-                        }
-                    ]
-                },
-                {
-                    type: "border",
-                    location: "bottom",
-                    children: [
-                        {
-                            type: "tab",
-                            enableClose: false,
-                            name: "Checks",
-                            component: "checksMessages"
+                            type: "border",
+                            location: "top",
+                            children: []
                         },
                         {
-                            type: "tab",
-                            enableClose: false,
-                            name: "Output",
-                            component: "outputMessages"
+                            type: "border",
+                            location: "right",
+                            children: [
+                                {
+                                    type: "tab",
+                                    enableClose: false,
+                                    name: "Themes",
+                                    component: "themesSideView"
+                                }
+                            ]
                         },
                         {
-                            type: "tab",
-                            enableClose: false,
-                            name: "Search Results",
-                            component: "searchResultsMessages"
+                            type: "border",
+                            location: "bottom",
+                            children: [
+                                {
+                                    type: "tab",
+                                    enableClose: false,
+                                    name: "Checks",
+                                    id: LayoutModels.CHECKS_TAB_ID,
+                                    component: "checksMessages"
+                                },
+                                {
+                                    type: "tab",
+                                    enableClose: false,
+                                    name: "Output",
+                                    id: LayoutModels.OUTPUT_TAB_ID,
+                                    component: "outputMessages"
+                                },
+                                {
+                                    type: "tab",
+                                    enableClose: false,
+                                    name: "Search Results",
+                                    id: LayoutModels.SEARCH_RESULTS_TAB_ID,
+                                    component: "searchResultsMessages"
+                                }
+                            ]
                         }
-                    ]
-                }
-            ],
-            layout: {
-                type: "row",
-                children: [
-                    {
-                        type: "tabset",
-                        weight: 25,
-                        enableTabStrip: false,
-                        enableDrag: false,
-                        enableDrop: false,
-                        enableClose: false,
-                        id: "NAVIGATION",
+                    ],
+                    layout: {
+                        type: "row",
                         children: [
                             {
-                                type: "tab",
+                                type: "tabset",
+                                weight: 25,
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
                                 enableClose: false,
-                                name: "Navigation",
-                                component: "navigation"
+                                id: LayoutModels.NAVIGATION_TABSET_ID,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Navigation",
+                                        component: "navigation"
+                                    }
+                                ]
+                            },
+
+                            {
+                                type: "row",
+                                weight: 50,
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: false,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        id: LayoutModels.EDITORS_TABSET_ID,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                component: "sub",
+                                                config: {
+                                                    model: {
+                                                        global: {
+                                                            ...LayoutModels.GLOBAL_OPTIONS,
+                                                            tabEnableClose: true
+                                                        },
+                                                        borders: [],
+                                                        layout: {
+                                                            type: "row",
+                                                            children: [
+                                                                {
+                                                                    type: "tabset",
+                                                                    children: []
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                weight: 25,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Properties",
+                                        id: LayoutModels.PROPERTIES_TAB_ID,
+                                        component: "propertiesPanel"
+                                    },
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Components Palette",
+                                        id: LayoutModels.COMPONENTS_PALETTE_TAB_ID,
+                                        component: "componentsPalette"
+                                    },
+                                    LayoutModels.BREAKPOINTS_TAB,
+                                    LayoutModels.DEBUGGER_TAB
+                                ]
                             }
                         ]
-                    },
-
-                    {
+                    }
+                },
+                get: () => this.root,
+                set: model => (this.root = model)
+            },
+            {
+                name: "variables",
+                version: 2,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
                         type: "row",
-                        weight: 50,
+                        children: [
+                            {
+                                type: "tabset",
+                                children: [
+                                    LayoutModels.LOCAL_VARS_TAB,
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Global vars",
+                                        id: LayoutModels.GLOBAL_VARS_TAB_ID,
+                                        component: "globals"
+                                    },
+                                    LayoutModels.STRUCTS_TAB,
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Enums",
+                                        id: LayoutModels.ENUMS_TAB_ID,
+                                        component: "enums"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.variables,
+                set: model => (this.variables = model)
+            },
+            {
+                name: "bitmaps",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 75,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Bitmaps",
+                                                component: "bitmaps"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 25,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Preview",
+                                                component: "preview"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.bitmaps,
+                set: model => (this.bitmaps = model)
+            },
+            {
+                name: "fonts",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
                         children: [
                             {
                                 type: "tabset",
                                 enableTabStrip: false,
                                 enableDrag: false,
                                 enableDrop: false,
-                                id: "EDITORS",
+                                enableClose: false,
                                 children: [
                                     {
                                         type: "tab",
-                                        component: "sub",
-                                        config: {
-                                            model: {
-                                                global: {
-                                                    ...LayoutModel.GLOBAL_OPTIONS,
-                                                    tabEnableClose: true
-                                                },
-                                                borders: [],
-                                                layout: {
-                                                    type: "row",
-                                                    children: [
-                                                        {
-                                                            type: "tabset",
-                                                            children: []
-                                                        }
-                                                    ]
-                                                }
-                                            }
-                                        }
+                                        enableClose: false,
+                                        component: "glyphs"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        component: "editor"
                                     }
                                 ]
                             }
                         ]
-                    },
-                    {
-                        type: "tabset",
-                        weight: 25,
-                        id: "PROPERTIES_AND_COMPANY",
+                    }
+                },
+                get: () => this.fonts,
+                set: model => (this.fonts = model)
+            },
+            {
+                name: "pages",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
                         children: [
                             {
-                                type: "tab",
-                                enableClose: false,
-                                name: "Properties",
-                                component: "propertiesPanel"
-                            },
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                name: "Components Palette",
-                                component: "componentsPalette"
-                            },
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                name: "Breakpoints",
-                                component: "breakpointsPanel"
-                            },
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                name: "Debugger",
-                                component: "debuggerPanel"
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Pages",
+                                                component: "pages"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Page Structure",
+                                                component: "page-structure"
+                                            },
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Local vars",
+                                                component: "local-vars"
+                                            }
+                                        ]
+                                    }
+                                ]
                             }
                         ]
                     }
-                ]
+                },
+                get: () => this.pages,
+                set: model => (this.pages = model)
+            },
+            {
+                name: "scpi",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Subsystems",
+                                                id: LayoutModels.SCPI_SUBSYSTEMS_TAB_ID,
+                                                component: "subsystems"
+                                            },
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Enums",
+                                                id: LayoutModels.SCPI_ENUMS_TAB_ID,
+                                                component: "enums"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Commands",
+                                                id: LayoutModels.SCPI_COMMANDS_TAB_ID,
+                                                component: "commands"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.scpi,
+                set: model => (this.scpi = model)
+            },
+            {
+                name: "styles",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 75,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Styles",
+                                                component: "styles"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 25,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Preview",
+                                                component: "preview"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.styles,
+                set: model => (this.styles = model)
+            },
+            {
+                name: "themes",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: false,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                component: "themes"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: false,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                component: "colors"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.themes,
+                set: model => (this.themes = model)
+            },
+            {
+                name: "debugger",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 25,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Queue",
+                                                component: "queue"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 75,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Watch",
+                                                component: "watch"
+                                            },
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Active Flows",
+                                                component: "active-flows"
+                                            },
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Logs",
+                                                component: "logs"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.debugger,
+                set: model => (this.debugger = model)
             }
-        };
+        ];
+    }
+
+    load(layoutModels: any) {
+        for (const model of this.models) {
+            const savedModel = layoutModels && layoutModels[model.name];
+            if (savedModel && savedModel.version == model.version) {
+                model.set(FlexLayout.Model.fromJson(savedModel.json));
+            } else {
+                model.set(FlexLayout.Model.fromJson(model.json));
+            }
+        }
+
+        this.DocumentStore.project.enableTabs();
+    }
+
+    save() {
+        const layoutModels: any = {};
+
+        for (const model of this.models) {
+            layoutModels[model.name] = {
+                version: model.version,
+                json: model.get().toJson()
+            };
+        }
+
+        return layoutModels;
+    }
+
+    selectTab(model: FlexLayout.Model, tabId: string) {
+        const node = model.getNodeById(tabId);
+        if (node) {
+            const parentNode = node.getParent();
+            let isSelected = false;
+
+            if (parentNode instanceof FlexLayout.TabSetNode) {
+                isSelected = parentNode.getSelectedNode() == node;
+            } else if (parentNode instanceof FlexLayout.BorderNode) {
+                isSelected = parentNode.getSelectedNode() == node;
+            }
+
+            if (!isSelected) {
+                model.doAction(FlexLayout.Actions.selectTab(tabId));
+            }
+        }
+    }
+
+    updateTabTitle(model: FlexLayout.Model, tabId: string, title: string) {
+        model.doAction(
+            FlexLayout.Actions.updateNodeAttributes(tabId, {
+                name: title
+            })
+        );
     }
 }
 
@@ -761,16 +1301,21 @@ class UIStateStore {
 
         runInAction(() => {
             this.DocumentStore.navigationStore.loadState(uiState.navigation);
+
             this.loadObjects(uiState.objects);
 
-            this.DocumentStore.layoutModel.load(uiState.layoutModel);
+            this.DocumentStore.layoutModels.load(uiState.layoutModel);
 
             this.selectedBuildConfiguration =
                 uiState.selectedBuildConfiguration || "Default";
+
             this.features = observable(uiState.features || {});
+
             this.activeOutputSection =
                 uiState.activeOutputSection ?? Section.CHECKS;
+
             this.pageEditorFrontFace = uiState.pageEditorFrontFace;
+
             this.pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
 
             if (uiState.breakpoints) {
@@ -801,6 +1346,8 @@ class UIStateStore {
     }
 
     get objectsJS() {
+        this.DocumentStore.editorsStore.saveState();
+
         let map: any = {};
         for (let [key, value] of this.objectUIStates) {
             const i = key.indexOf("[");
@@ -820,10 +1367,8 @@ class UIStateStore {
     get toJS() {
         const state = {
             navigation: this.DocumentStore.navigationStore.saveState(),
-            layoutModel: {
-                version: LayoutModel.VERSION,
-                json: this.DocumentStore.layoutModel.model.toJson()
-            },
+            editors: this.DocumentStore.editorsStore.saveState(),
+            layoutModel: this.DocumentStore.layoutModels.save(),
             selectedBuildConfiguration: this.selectedBuildConfiguration,
             features: this.featuresJS,
             objects: this.objectsJS,
@@ -839,8 +1384,6 @@ class UIStateStore {
             ),
             watchExpressions: toJS(this.watchExpressions)
         };
-
-        state.objects = this.objectsJS;
 
         return state;
     }
@@ -1404,7 +1947,8 @@ export class OutputSection implements IPanel {
         public DocumentStore: DocumentStoreClass,
         public id: number,
         public name: string,
-        public scrollToBottom: boolean
+        public scrollToBottom: boolean,
+        public tabId: string
     ) {}
 
     @computed get active() {
@@ -1516,6 +2060,14 @@ export class OutputSection implements IPanel {
             message.selected = true;
             this.selectedMessage = message;
         }
+
+        if (message.object) {
+            this.DocumentStore.navigationStore.showObjects(
+                [message.object],
+                true,
+                true
+            );
+        }
     }
 }
 
@@ -1527,26 +2079,23 @@ export class OutputSections {
             DocumentStore,
             Section.CHECKS,
             "Checks",
-            false
+            false,
+            "CHECKS"
         );
         this.sections[Section.OUTPUT] = new OutputSection(
             DocumentStore,
             Section.OUTPUT,
             "Output",
-            true
+            true,
+            "OUTPUT"
         );
         this.sections[Section.SEARCH] = new OutputSection(
             DocumentStore,
             Section.SEARCH,
             "Search results",
-            false
+            false,
+            "SEARCH_RESULTS"
         );
-        // this.sections[Section.DEBUG] = new OutputSection(
-        //     DocumentStore,
-        //     Section.DEBUG,
-        //     "Debug",
-        //     false
-        // );
     }
 
     getSection(sectionType: Section) {
@@ -1560,7 +2109,21 @@ export class OutputSections {
 
     @action
     clear(sectionType: Section) {
-        this.sections[sectionType].clear();
+        const section = this.sections[sectionType];
+        section.clear();
+        this.updateTitle(section);
+    }
+
+    updateTitle(section: OutputSection) {
+        this.DocumentStore.layoutModels.updateTabTitle(
+            this.DocumentStore.layoutModels.root,
+            section.tabId,
+            `${section.name} ${
+                section.messages.length > 0
+                    ? ` (${section.messages.length})`
+                    : ""
+            }`
+        );
     }
 
     @action
@@ -1572,12 +2135,14 @@ export class OutputSections {
     ) {
         let section = this.sections[sectionType];
         section.messages.push(new Message(type, text, object));
+        this.updateTitle(section);
     }
 
     @action
     setMessages(sectionType: Section, messages: IMessage[]) {
         let section = this.sections[sectionType];
         section.messages = messages as Message[];
+        this.updateTitle(section);
     }
 }
 
@@ -1587,7 +2152,7 @@ export class DocumentStoreClass {
     undoManager = new UndoManager(this);
     navigationStore = new NavigationStore(this);
     editorsStore = new EditorsStore(this);
-    layoutModel = new LayoutModel(this);
+    layoutModels = new LayoutModels(this);
     uiStateStore = new UIStateStore(this);
     runtimeSettings = new RuntimeSettings(this);
     outputSectionsStore = new OutputSections(this);
@@ -1973,10 +2538,18 @@ export class DocumentStoreClass {
     }
 
     check() {
+        this.layoutModels.selectTab(
+            this.layoutModels.root,
+            LayoutModels.CHECKS_TAB_ID
+        );
         ProjectEditor.build.buildProject(this, { onlyCheck: true });
     }
 
     async build() {
+        this.layoutModels.selectTab(
+            this.layoutModels.root,
+            LayoutModels.OUTPUT_TAB_ID
+        );
         return await ProjectEditor.build.buildProject(this, {
             onlyCheck: false
         });
@@ -2333,6 +2906,10 @@ export class DocumentStoreClass {
     @action
     onSetEditorMode = () => {
         this.setEditorMode();
+        this.layoutModels.selectTab(
+            this.layoutModels.root,
+            LayoutModels.PROPERTIES_TAB_ID
+        );
     };
 
     onSetRuntimeMode = async () => {
@@ -2354,6 +2931,11 @@ export class DocumentStoreClass {
                 this.runtime.toggleDebugger();
             }
         }
+
+        this.layoutModels.selectTab(
+            this.layoutModels.root,
+            LayoutModels.DEBUGGER_TAB_ID
+        );
     };
 
     onRestart = () => {
@@ -3227,7 +3809,7 @@ export function humanizePropertyName(object: IEezObject, propertyName: string) {
     return humanize(propertyName);
 }
 
-export function getAncestorOfType<T>(
+export function getAncestorOfType<T = IEezObject>(
     object: IEezObject,
     classInfo: ClassInfo
 ): T | undefined {

@@ -200,9 +200,7 @@ class PaletteGroup extends React.Component<{
 ////////////////////////////////////////////////////////////////////////////////
 
 @observer
-export class ComponentsPalette extends React.Component<{
-    showOnlyActions?: boolean;
-}> {
+export class ComponentsPalette extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
@@ -214,8 +212,23 @@ export class ComponentsPalette extends React.Component<{
     }
 
     @computed get allComponentClasses() {
+        const activeEditor = this.context.editorsStore.activeEditor;
+        if (!activeEditor) {
+            return [];
+        }
+
+        let showOnlyActions;
+
+        if (activeEditor.object instanceof ProjectEditor.PageClass) {
+            showOnlyActions = false;
+        } else if (activeEditor.object instanceof ProjectEditor.ActionClass) {
+            showOnlyActions = true;
+        } else {
+            return [];
+        }
+
         return getClassesDerivedFrom(
-            this.props.showOnlyActions
+            showOnlyActions
                 ? ProjectEditor.ActionComponentClass
                 : ProjectEditor.ComponentClass
         ).filter(objectClassInfo =>

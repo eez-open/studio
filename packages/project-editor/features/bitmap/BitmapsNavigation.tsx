@@ -3,7 +3,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import { ListNavigation } from "project-editor/components/ListNavigation";
-import { LayoutModel } from "project-editor/core/store";
+import { LayoutModels } from "project-editor/core/store";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
 import { Bitmap } from "./bitmap";
@@ -28,47 +28,6 @@ export class BitmapsNavigation extends NavigationComponent {
         }
 
         return this.context.navigationStore.selectedBitmapObject.get() as Bitmap;
-    }
-
-    get model() {
-        return FlexLayout.Model.fromJson({
-            global: LayoutModel.GLOBAL_OPTIONS,
-            borders: [],
-            layout: {
-                type: "row",
-                children: [
-                    {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                weight: 75,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Bitmaps",
-                                        component: "bitmaps"
-                                    }
-                                ]
-                            },
-                            {
-                                type: "tabset",
-                                weight: 25,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Preview",
-                                        component: "preview"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
     }
 
     factory = (node: FlexLayout.TabNode) => {
@@ -96,10 +55,10 @@ export class BitmapsNavigation extends NavigationComponent {
     render() {
         return (
             <FlexLayout.Layout
-                model={this.model}
+                model={this.context.layoutModels.bitmaps}
                 factory={this.factory}
                 realtimeResize={true}
-                font={LayoutModel.FONT_SUB}
+                font={LayoutModels.FONT_SUB}
             />
         );
     }

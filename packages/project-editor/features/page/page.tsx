@@ -10,10 +10,6 @@ import {
     ClassInfo,
     registerClass,
     PropertyType,
-    generalGroup,
-    geometryGroup,
-    styleGroup,
-    specificGroup,
     getParent,
     getId,
     makeDerivedClassInfo
@@ -38,7 +34,15 @@ import {
 
 import type { Project } from "project-editor/project/project";
 
-import { AutoSize, Component, Widget } from "project-editor/flow/component";
+import {
+    AutoSize,
+    Component,
+    generalGroup,
+    styleGroup,
+    specificGroup,
+    geometryGroup,
+    Widget
+} from "project-editor/flow/component";
 
 import { findStyle } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";

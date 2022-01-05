@@ -4,11 +4,14 @@ import {
     registerClass,
     makeDerivedClassInfo,
     ProjectType,
-    PropertyType,
-    specificGroup
+    PropertyType
 } from "project-editor/core/object";
 
-import { makeDataPropertyInfo, Widget } from "project-editor/flow/component";
+import {
+    makeDataPropertyInfo,
+    Widget,
+    specificGroup
+} from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     evalConstantExpression,

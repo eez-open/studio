@@ -75,13 +75,7 @@ export class Glyphs
         }, 100);
     }
 
-    onFocus = () => {
-        if (!this.props.dialog) {
-            this.context.navigationStore.setSelectedPanel(this);
-        }
-    };
-
-    // interface IPanel
+    // interface IPanel implementation
     get selectedObject() {
         return this.props.selectedGlyph.get();
     }
@@ -89,6 +83,11 @@ export class Glyphs
     copySelection() {}
     pasteSelection() {}
     deleteSelection() {}
+    onFocus = () => {
+        if (!this.props.dialog) {
+            this.context.navigationStore.setSelectedPanel(this);
+        }
+    };
 
     render() {
         const glyphs: JSX.Element[] = this.props.glyphs.map(glyph => (

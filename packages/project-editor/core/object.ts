@@ -71,38 +71,8 @@ export interface IMessage {
 export interface IPropertyGridGroupDefinition {
     id: string;
     title: string;
-    position?: number;
+    position?: number | ((object: IEezObject) => number);
 }
-
-export const generalGroup: IPropertyGridGroupDefinition = {
-    id: "general",
-    title: "General",
-    position: 0
-};
-
-export const specificGroup: IPropertyGridGroupDefinition = {
-    id: "specific",
-    title: "Specific",
-    position: 1
-};
-
-export const flowGroup: IPropertyGridGroupDefinition = {
-    id: "flow",
-    title: "Flow",
-    position: 2
-};
-
-export const styleGroup: IPropertyGridGroupDefinition = {
-    id: "style",
-    title: "Style",
-    position: 3
-};
-
-export const geometryGroup: IPropertyGridGroupDefinition = {
-    id: "geometry",
-    title: "Position and size",
-    position: 4
-};
 
 export interface PropertyProps {
     propertyInfo: PropertyInfo;

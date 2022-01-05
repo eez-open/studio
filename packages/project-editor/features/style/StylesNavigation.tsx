@@ -2,7 +2,7 @@ import React from "react";
 import { computed, IObservableValue } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
-import { LayoutModel } from "project-editor/core/store";
+import { LayoutModels } from "project-editor/core/store";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
 import { NavigationComponent } from "project-editor/project/NavigationComponent";
@@ -32,47 +32,6 @@ export class StylesNavigation extends NavigationComponent {
         }
 
         return navigationStore.selectedStyleObject.get() as Style;
-    }
-
-    get model() {
-        return FlexLayout.Model.fromJson({
-            global: LayoutModel.GLOBAL_OPTIONS,
-            borders: [],
-            layout: {
-                type: "row",
-                children: [
-                    {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                weight: 75,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Styles",
-                                        component: "styles"
-                                    }
-                                ]
-                            },
-                            {
-                                type: "tabset",
-                                weight: 25,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Preview",
-                                        component: "preview"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
     }
 
     factory = (node: FlexLayout.TabNode) => {
@@ -114,10 +73,10 @@ export class StylesNavigation extends NavigationComponent {
     render() {
         return (
             <FlexLayout.Layout
-                model={this.model}
+                model={this.context.layoutModels.styles}
                 factory={this.factory}
                 realtimeResize={true}
-                font={LayoutModel.FONT_SUB}
+                font={LayoutModels.FONT_SUB}
             />
         );
     }

@@ -151,7 +151,11 @@ class BreakpointsList extends React.Component<{
             if (this.context.runtime) {
                 this.context.runtime.showComponent(component);
             } else {
-                this.context.navigationStore.showObject(component);
+                this.context.navigationStore.showObjects(
+                    [component],
+                    true,
+                    false
+                );
             }
         }
     }

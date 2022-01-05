@@ -1,5 +1,4 @@
 import React from "react";
-import { observable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
@@ -7,7 +6,7 @@ import { IconAction } from "eez-studio-ui/action";
 
 import { IEezObject } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { LayoutModel } from "project-editor/core/store";
+import { LayoutModels } from "project-editor/core/store";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
@@ -22,95 +21,8 @@ export class ScpiNavigation extends NavigationComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    get model() {
-        return FlexLayout.Model.fromJson({
-            global: LayoutModel.GLOBAL_OPTIONS,
-            borders: [],
-            layout: {
-                type: "row",
-                children: [
-                    {
-                        type: "tabset",
-                        children: [
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                name: "Commands",
-                                component: "subsystems-and-commands"
-                            },
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                name: "Enums",
-                                component: "enums"
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
-    }
-
-    get commandsModel() {
-        return FlexLayout.Model.fromJson({
-            global: LayoutModel.GLOBAL_OPTIONS,
-            borders: [],
-            layout: {
-                type: "row",
-                children: [
-                    {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Subsystems",
-                                        component: "subsystems"
-                                    }
-                                ]
-                            },
-                            {
-                                type: "tabset",
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Commands",
-                                        component: "commands"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
-    }
-
     factory = (node: FlexLayout.TabNode) => {
         var component = node.getComponent();
-
-        if (component === "subsystems-and-commands") {
-            return (
-                <FlexLayout.Layout
-                    model={this.commandsModel}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModel.FONT_SUB}
-                />
-            );
-        }
 
         if (component === "subsystems") {
             return <SubsystemsList />;
@@ -138,10 +50,10 @@ export class ScpiNavigation extends NavigationComponent {
     render() {
         return (
             <FlexLayout.Layout
-                model={this.model}
+                model={this.context.layoutModels.scpi}
                 factory={this.factory}
                 realtimeResize={true}
-                font={LayoutModel.FONT_SUB}
+                font={LayoutModels.FONT_SUB}
             />
         );
     }
@@ -197,8 +109,6 @@ export class CommandsList extends React.Component {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    selectedScpiCommandObject = observable.box<ScpiCommand | undefined>();
-
     @computed get selectedScpiSubsystem() {
         return this.context.navigationStore.selectedScpiSubsystemObject.get() as ScpiSubsystem;
     }
@@ -212,7 +122,9 @@ export class CommandsList extends React.Component {
             <ListNavigation
                 id="scpi-subsystem-commands"
                 navigationObject={this.selectedScpiSubsystem.commands}
-                selectedObject={this.selectedScpiCommandObject}
+                selectedObject={
+                    this.context.navigationStore.selectedScpiCommandObject
+                }
                 onClickItem={this.onClickItem}
             />
         ) : null;
@@ -227,10 +139,19 @@ export class ScpiHelpPreview extends EditorComponent {
     declare context: React.ContextType<typeof ProjectContext>;
 
     render() {
-        const object = this.props.editor.subObject as
+        let object = this.props.editor.subObject as
             | ScpiSubsystem
             | ScpiCommand
             | undefined;
+
+        if (!object) {
+            object =
+                this.context.navigationStore.selectedScpiCommandObject.get() as ScpiCommand;
+            if (!object) {
+                object =
+                    this.context.navigationStore.selectedScpiSubsystemObject.get() as ScpiSubsystem;
+            }
+        }
 
         if (
             object &&

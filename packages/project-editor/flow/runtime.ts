@@ -336,24 +336,20 @@ export abstract class RuntimeBase {
     showSelectedFlowState() {
         const flowState = this.selectedFlowState;
         if (flowState) {
-            this.DocumentStore.navigationStore.showObject(flowState.flow, {
-                selectInEditor: false
-            });
+            this.DocumentStore.navigationStore.showObjects(
+                [flowState.flow],
+                true,
+                false
+            );
         }
     }
 
     showComponent(component: Component) {
-        this.DocumentStore.navigationStore.showObject(component, {
-            selectInEditor: false
-        });
-
-        setTimeout(() => {
-            const editorState =
-                this.DocumentStore.editorsStore.activeEditor?.state;
-            if (editorState instanceof FlowTabState) {
-                editorState.ensureSelectionVisible();
-            }
-        }, 50);
+        this.DocumentStore.navigationStore.showObjects(
+            [component],
+            true,
+            false
+        );
     }
 
     showQueueTask(queueTask: QueueTask) {
@@ -371,23 +367,7 @@ export abstract class RuntimeBase {
             objects.push(queueTask.component);
         }
 
-        // navigate to the first object,
-        // just to make sure that proper editor is opened
-        this.DocumentStore.navigationStore.showObject(objects[0], {
-            selectInEditor: false
-        });
-
-        setTimeout(() => {
-            const editorState =
-                this.DocumentStore.editorsStore.activeEditor?.state;
-            if (editorState instanceof FlowTabState) {
-                // select other object in the same editor
-                editorState.selectObjects(objects);
-
-                // ensure objects are visible on the screen
-                editorState.ensureSelectionVisible();
-            }
-        }, 50);
+        this.DocumentStore.navigationStore.showObjects(objects, true, false);
     }
 
     onBreakpointAdded(component: Component) {}

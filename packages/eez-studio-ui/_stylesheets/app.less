@@ -2524,46 +2524,38 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_MessageRow {
-    cursor: pointer;
-
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    &.selected {
-        background-color: @nonFocusedSelectionBackgroundColor;
-        color: @nonFocusedSelectionColor;
-    }
-
-    td:first-child {
-        display: flex;
-        align-items: center;
-    }
-}
-
 .EezStudio_Messages {
     flex-grow: 1;
     overflow: auto;
     height: 100%;
-    table {
-        width: 100%;
 
-        td:nth-child(2) {
-            padding-left: 20px;
-            width: 100%;
+    table {
+        tr {
+            cursor: pointer;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+            &.selected {
+                background-color: @nonFocusedSelectionBackgroundColor;
+                color: @nonFocusedSelectionColor;
+            }
+
+            td:nth-child(1) {
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+            }
+
+            td:nth-child(2) {
+                padding-left: 20px;
+            }
         }
     }
-}
-
-.EezStudio_Output {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
 
     &:focus {
-        .message-item {
+        tr {
             &:hover {
                 background-color: @hoverBackgroundColor;
                 color: @hoverColor;
@@ -3718,6 +3710,7 @@ button.EezStudio_Action {
 
     &.enabled-breakpoint::before,
     &.disabled-breakpoint::before {
+        z-index: 1;
         content: "BREAKPOINT";
         font-size: 80%;
         position: absolute;

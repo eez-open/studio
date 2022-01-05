@@ -848,7 +848,7 @@ export class TreeObjectAdapter implements ITreeObjectAdapter {
         }
     }
 
-    ensureSelectionVisible() {}
+    selectObjectsAndEnsureVisible(objects: IEezObject[]) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

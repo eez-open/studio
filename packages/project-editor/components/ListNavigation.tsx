@@ -80,8 +80,12 @@ class AddButton extends React.Component<{
             if (aNewItem) {
                 this.props.listAdapter.selectObject(aNewItem);
 
-                if (ProjectEditor.getEditorComponent(aNewItem)) {
-                    this.context.editorsStore.openEditor(aNewItem);
+                const result = ProjectEditor.getEditorComponent(aNewItem);
+                if (result) {
+                    this.context.editorsStore.openEditor(
+                        result.object,
+                        result.subObject
+                    );
                 }
             }
         }
@@ -199,8 +203,12 @@ export class ListNavigation
             return;
         }
 
-        if (ProjectEditor.getEditorComponent(object)) {
-            this.context.editorsStore.openEditor(object);
+        const result = ProjectEditor.getEditorComponent(object);
+        if (result) {
+            this.context.editorsStore.openEditor(
+                result.object,
+                result.subObject
+            );
             return;
         }
     };
@@ -216,30 +224,33 @@ export class ListNavigation
         }
     };
 
+    // interface IPanel implementation
     @computed
     get selectedObject() {
         return this.props.selectedObject.get();
     }
-
     cutSelection() {
         if (this.editable) {
             this.listAdapter.cutSelection();
         }
     }
-
     copySelection() {
         this.listAdapter.copySelection();
     }
-
     pasteSelection() {
         if (this.editable) {
             this.listAdapter.pasteSelection();
         }
     }
-
     deleteSelection() {
         if (this.editable) {
             this.listAdapter.deleteSelection();
+        }
+    }
+    onFocus() {
+        const navigationStore = this.context.navigationStore;
+        if (isPartOfNavigation(this.props.navigationObject)) {
+            navigationStore.setSelectedPanel(this);
         }
     }
 
@@ -258,13 +269,6 @@ export class ListNavigation
 
     componentWillUnmount() {
         this.listAdapter.unmount();
-    }
-
-    onFocus() {
-        const navigationStore = this.context.navigationStore;
-        if (isPartOfNavigation(this.props.navigationObject)) {
-            navigationStore.setSelectedPanel(this);
-        }
     }
 
     @action.bound

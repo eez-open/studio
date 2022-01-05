@@ -1,9 +1,15 @@
 import { visitObjects } from "project-editor/core/search";
 import { updateObject } from "project-editor/core/store";
 import { RectangleWidget } from "project-editor/flow/components/widgets";
-import { Project, ProjectVersion } from "project-editor/project/project";
+import {
+    Project,
+    ProjectType,
+    ProjectVersion
+} from "project-editor/project/project";
 
-export function migrateProject(
+////////////////////////////////////////////////////////////////////////////////
+
+export function migrateProjectVersion(
     project: Project,
     newProjectVersion: ProjectVersion
 ) {
@@ -84,4 +90,14 @@ function migrateRectangleWidgetToV2(project: Project) {
             invertColors: true
         });
     });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function migrateProjectType(
+    project: Project,
+    newProjectType: ProjectType,
+    newFlowSupport: boolean
+) {
+    project.enableTabs(newProjectType, newFlowSupport);
 }

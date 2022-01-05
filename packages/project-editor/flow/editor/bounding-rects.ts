@@ -37,7 +37,10 @@ export function getObjectBoundingRect(objectAdapter: ITreeObjectAdapter) {
     ) {
         return object.pageRect;
     } else {
-        console.warn("Unexpected!");
+        if (!(object instanceof ProjectEditor.VariableClass)) {
+            console.warn("Unexpected!");
+        }
+
         return {
             left: 0,
             top: 0,

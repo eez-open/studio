@@ -4,14 +4,14 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { startSearch } from "project-editor/core/search";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
-import { BuildConfiguration } from "project-editor/project/project";
+import { BuildConfiguration, Project } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import {
     getObjectVariableTypeFromType,
     IObjectVariableValue
 } from "project-editor/features/variable/value-type";
 import { PageTabState } from "project-editor/features/page/PageEditor";
-import { objectToString } from "project-editor/core/store";
+import { LayoutModels, objectToString } from "project-editor/core/store";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
 
 const RUN_ICON = (
@@ -49,8 +49,10 @@ export class Toolbar extends React.Component {
                 )}
 
                 {!this.context.project._isDashboardBuild &&
-                (this.context.project.isDashboardProject ||
-                    this.context.project.isAppletProject) ? (
+                Project.supportsDebugger(
+                    this.context.project.settings.general.projectType,
+                    this.context.project.settings.general.flowSupport
+                ) ? (
                     <RunEditSwitchControls />
                 ) : (
                     <div />
@@ -366,6 +368,11 @@ class Search extends React.Component {
     declare context: React.ContextType<typeof ProjectContext>;
 
     startSearch() {
+        this.context.layoutModels.selectTab(
+            this.context.layoutModels.root,
+            LayoutModels.SEARCH_RESULTS_TAB_ID
+        );
+
         startSearch(
             this.context,
             this.context.uiStateStore.searchPattern,
