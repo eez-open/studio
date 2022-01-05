@@ -12,6 +12,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Component } from "project-editor/flow/component";
 import { strokeWidth } from "project-editor/flow/editor/ConnectionLineComponent";
+import { DragAndDropManager } from "project-editor/core/dd";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -341,7 +342,14 @@ export const Svg: React.FunctionComponent<{
             }}
         >
             {defs && <defs>{defs}</defs>}
-            <g transform={gTransform} style={{ pointerEvents: "auto" }}>
+            <g
+                transform={gTransform}
+                style={{
+                    pointerEvents: !!DragAndDropManager.dragObject
+                        ? "none"
+                        : "auto"
+                }}
+            >
                 {children}
             </g>
         </svg>

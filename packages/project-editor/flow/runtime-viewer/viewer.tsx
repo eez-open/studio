@@ -228,6 +228,10 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onDragStart(event: PointerEvent) {
+        this.props.flowContext.DocumentStore.editorsStore.selectEditorTabForObject(
+            this.props.flowContext.document.flow
+        );
+
         this.buttonsAtDown = event.buttons;
 
         if (this.mouseHandler) {

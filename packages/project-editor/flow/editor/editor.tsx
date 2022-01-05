@@ -518,6 +518,10 @@ export class Canvas extends React.Component<{
 
     @action.bound
     onDragStart(event: PointerEvent) {
+        this.props.flowContext.DocumentStore.editorsStore.selectEditorTabForObject(
+            this.props.flowContext.flow
+        );
+
         this.buttonsAtDown = event.buttons;
 
         if (this.mouseHandler) {
@@ -708,6 +712,10 @@ export class Canvas extends React.Component<{
             style.visibility = "hidden";
         }
 
+        if (this.props.dragAndDropActive) {
+            style.pointerEvents = "none";
+        }
+
         return (
             <div
                 ref={(ref: any) => (this.div = ref!)}
@@ -719,10 +727,7 @@ export class Canvas extends React.Component<{
                     className="eez-canvas"
                     style={{
                         position: "absolute",
-                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`,
-                        pointerEvents: this.props.dragAndDropActive
-                            ? "none"
-                            : "auto"
+                        transform: `translate(${xt}px, ${yt}px) scale(${transform.scale})`
                     }}
                 >
                     {this.props.flowContext.editorOptions &&
@@ -921,12 +926,25 @@ export class FlowEditor
         return undefined;
     }
 
+    dragTimeoutId: any;
+    dragClientX: number;
+    dragClientY: number;
+
     @action.bound
     onDragOver(event: React.DragEvent) {
         const dragComponent = this.getDragComponent(event);
         if (dragComponent) {
             event.preventDefault();
             event.stopPropagation();
+
+            if (
+                this.props.tabState.flow instanceof ProjectEditor.ActionClass &&
+                dragComponent instanceof ProjectEditor.WidgetClass
+            ) {
+                event.dataTransfer.dropEffect = "none";
+                return;
+            }
+
             event.dataTransfer.dropEffect = "copy";
 
             const flow = this.props.tabState.widgetContainer.object as Flow;
@@ -944,31 +962,48 @@ export class FlowEditor
 
             dragSnapLines.snapLines!.enabled = !event.shiftKey;
 
-            const transform = this.flowContext.viewState.transform;
+            this.dragClientX = event.nativeEvent.clientX;
+            this.dragClientY = event.nativeEvent.clientY;
 
-            const p = transform.clientToPagePoint({
-                x:
-                    event.nativeEvent.clientX -
-                    (component.width * transform.scale) / 2,
-                y:
-                    event.nativeEvent.clientY -
-                    (component.height * transform.scale) / 2
-            });
-
-            const { left, top } = dragSnapLines.snapLines!.dragSnap(
-                p.x,
-                p.y,
-                component.width,
-                component.height
-            );
-
-            if (component instanceof ProjectEditor.WidgetClass) {
-                component.left = Math.round(left - flow.pageRect.left);
-                component.top = Math.round(top - flow.pageRect.top);
-            } else {
-                component.left = Math.round(left);
-                component.top = Math.round(top);
+            // debounce
+            const DEBOUNCE_TIMEOUT = 16;
+            if (this.dragTimeoutId) {
+                return;
             }
+            this.dragTimeoutId = setTimeout(
+                action(() => {
+                    this.dragTimeoutId = undefined;
+
+                    const transform = this.flowContext.viewState.transform;
+
+                    const p = transform.clientToPagePoint({
+                        x:
+                            this.dragClientX -
+                            (component.width * transform.scale) / 2,
+                        y:
+                            this.dragClientY -
+                            (component.height * transform.scale) / 2
+                    });
+
+                    const { left, top } = dragSnapLines.snapLines
+                        ? dragSnapLines.snapLines.dragSnap(
+                              p.x,
+                              p.y,
+                              component.width,
+                              component.height
+                          )
+                        : { left: p.x, top: p.y };
+
+                    if (component instanceof ProjectEditor.WidgetClass) {
+                        component.left = Math.round(left - flow.pageRect.left);
+                        component.top = Math.round(top - flow.pageRect.top);
+                    } else {
+                        component.left = Math.round(left);
+                        component.top = Math.round(top);
+                    }
+                }),
+                DEBOUNCE_TIMEOUT
+            );
         }
     }
 

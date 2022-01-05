@@ -505,6 +505,8 @@ class EditorsStore {
                 this.activeEditor = activeEditor;
             });
 
+            console.log(this.activeEditor);
+
             if (showActiveEditor) {
                 const activeEditor = this.activeEditor;
                 if (activeEditor) {
@@ -598,6 +600,30 @@ class EditorsStore {
         let editor = this.editors.find(editor => editor.object == object);
         if (editor) {
             this.closeEditor(editor);
+        }
+    }
+
+    selectEditorTabForObject(object: IEezObject) {
+        let editor = this.editors.find(editor => editor.object == object);
+        if (editor) {
+            runInAction(() => {
+                this.activeEditor = editor;
+            });
+
+            this.DocumentStore.layoutModels.selectTab(
+                this.tabsModel,
+                editor.tabId
+            );
+
+            const editorTab = this.tabsModel.getNodeById(editor.tabId);
+            if (editorTab) {
+                const node = editorTab.getParent();
+                if (node) {
+                    this.tabsModel.doAction(
+                        FlexLayout.Actions.setActiveTabset(node.getId())
+                    );
+                }
+            }
         }
     }
 
