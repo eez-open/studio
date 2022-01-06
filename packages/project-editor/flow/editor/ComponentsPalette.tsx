@@ -28,6 +28,236 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Groups sort order:
+//  !1 -> "Common Widgets"
+//  !2 -> "Common Actions"
+//  !3 -> Built-in groups
+//  !4 -> "Other components"
+//  !5 -> Extensions
+//  !6 -> "User Widgets"
+//  !7 -> "User Actions"
+
+@observer
+export class ComponentsPalette extends React.Component {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    @observable selectedComponentClass: IObjectClassInfo | undefined;
+
+    @action.bound
+    onSelect(widgetClass: IObjectClassInfo | undefined) {
+        this.selectedComponentClass = widgetClass;
+    }
+
+    @computed get allComponentClasses() {
+        const activeEditor = this.context.editorsStore.activeEditor;
+
+        let showOnlyActions;
+
+        if (
+            activeEditor &&
+            activeEditor.object instanceof ProjectEditor.ActionClass
+        ) {
+            showOnlyActions = true;
+        } else {
+            showOnlyActions = false;
+        }
+
+        const stockComponents = getClassesDerivedFrom(
+            showOnlyActions
+                ? ProjectEditor.ActionComponentClass
+                : ProjectEditor.ComponentClass
+        ).filter(objectClassInfo =>
+            this.context.project.isAppletProject ||
+            this.context.project.isFirmwareWithFlowSupportProject
+                ? objectClassInfo.objectClass.classInfo.flowComponentId !=
+                  undefined
+                : true
+        );
+
+        const userWidgets: IObjectClassInfo[] = [];
+        if (!showOnlyActions) {
+            for (const page of this.context.project.pages) {
+                if (page.isUsedAsCustomWidget) {
+                    userWidgets.push({
+                        id: `LayoutViewWidget<${page.name}>`,
+                        name: "LayoutViewWidget",
+                        objectClass: ProjectEditor.LayoutViewWidgetClass,
+                        displayName: page.name,
+                        componentPaletteGroupName: "!6User Widgets",
+                        props: {
+                            layout: page.name,
+                            width: page.width,
+                            height: page.height
+                        }
+                    });
+                }
+            }
+        }
+
+        const userActions: IObjectClassInfo[] = [];
+        if (
+            this.context.project.isDashboardProject ||
+            this.context.project.isAppletProject ||
+            this.context.project.settings.general.flowSupport
+        ) {
+            for (const action of this.context.project.actions) {
+                userActions.push({
+                    id: `CallActionActionComponent<${action.name}>`,
+                    name: "CallActionActionComponent",
+                    objectClass: ProjectEditor.CallActionActionComponentClass,
+                    displayName: action.name,
+                    componentPaletteGroupName: "!7User Actions",
+                    props: {
+                        action: action.name
+                    }
+                });
+            }
+        }
+
+        return [...stockComponents, ...userWidgets, ...userActions];
+    }
+
+    @computed get groups() {
+        const groups = new Map<string, IObjectClassInfo[]>();
+        const searchText = this.searchText && this.searchText.toLowerCase();
+        this.allComponentClasses.forEach(componentClass => {
+            if (
+                searchText &&
+                componentClass.name.toLowerCase().indexOf(searchText) == -1
+            ) {
+                return;
+            }
+
+            if (
+                componentClass.objectClass.classInfo.enabledInComponentPalette
+            ) {
+                if (
+                    !componentClass.objectClass.classInfo.enabledInComponentPalette(
+                        this.context.project.settings.general.projectType
+                    )
+                ) {
+                    return;
+                }
+            }
+
+            const parts = componentClass.name.split("/");
+            let groupName;
+            if (parts.length == 1) {
+                groupName =
+                    componentClass.componentPaletteGroupName != undefined
+                        ? componentClass.componentPaletteGroupName
+                        : componentClass.objectClass.classInfo
+                              .componentPaletteGroupName;
+                if (groupName) {
+                    if (!groupName.startsWith("!")) {
+                        groupName = "!3" + groupName;
+                    }
+                } else {
+                    if (componentClass.name.endsWith("Widget")) {
+                        groupName = "!1Common Widgets";
+                    } else if (
+                        componentClass.name.endsWith("ActionComponent")
+                    ) {
+                        groupName = "!2Common Actions";
+                    } else {
+                        groupName = "!4Other components";
+                    }
+                }
+            } else if (parts.length == 2) {
+                groupName = "!5" + parts[0];
+            }
+
+            if (groupName) {
+                let componentClasses = groups.get(groupName);
+                if (!componentClasses) {
+                    componentClasses = [];
+                    groups.set(groupName, componentClasses);
+                }
+                componentClasses.push(componentClass);
+            }
+        });
+        return groups;
+    }
+
+    @observable searchText = "";
+
+    @action.bound
+    onSearchChange(event: any) {
+        this.searchText = ($(event.target).val() as string).trim();
+    }
+
+    render() {
+        return (
+            <div className="EezStudio_ComponentsPalette_Enclosure">
+                <div className="EezStudio_Title">
+                    <SearchInput
+                        key="search-input"
+                        searchText={this.searchText}
+                        onChange={this.onSearchChange}
+                        onKeyDown={this.onSearchChange}
+                    />
+                </div>
+
+                <div className="EezStudio_ComponentsPalette" tabIndex={0}>
+                    {[...this.groups.entries()].sort().map(entry => (
+                        <PaletteGroup
+                            key={entry[0]}
+                            name={entry[0]}
+                            componentClasses={entry[1]}
+                            selectedComponentClass={this.selectedComponentClass}
+                            onSelect={this.onSelect}
+                        ></PaletteGroup>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class PaletteGroup extends React.Component<{
+    name: string;
+    componentClasses: IObjectClassInfo[];
+    selectedComponentClass: IObjectClassInfo | undefined;
+    onSelect: (componentClass: IObjectClassInfo | undefined) => void;
+}> {
+    render() {
+        let name = this.props.name;
+        if (name.startsWith("!")) {
+            name = name.substring(2);
+        }
+        const target = `eez-component-palette-group-${name
+            .replace(/(^-\d-|^\d|^-\d|^--)/, "a$1")
+            .replace(/[\W]/g, "-")}`;
+        return (
+            <div className="card">
+                <div className="card-header">{name}</div>
+                <div id={target} className="collapse show">
+                    <div className="card-body">
+                        {this.props.componentClasses.map(componentClass => {
+                            return (
+                                <PaletteItem
+                                    key={componentClass.id}
+                                    componentClass={componentClass}
+                                    onSelect={this.props.onSelect}
+                                    selected={
+                                        componentClass ===
+                                        this.props.selectedComponentClass
+                                    }
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function getComponentName(componentClassName: string) {
     const parts = componentClassName.split("/");
     let name;
@@ -47,8 +277,6 @@ export function getComponentName(componentClassName: string) {
 
     return humanize(name);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 @observer
 class PaletteItem extends React.Component<{
@@ -71,6 +299,8 @@ class PaletteItem extends React.Component<{
         );
 
         defaultValue.type = this.props.componentClass.name;
+
+        Object.assign(defaultValue, this.props.componentClass.props);
 
         let object = loadObject(
             this.context,
@@ -128,9 +358,10 @@ class PaletteItem extends React.Component<{
 
         const classInfo = this.props.componentClass.objectClass.classInfo;
         let icon = classInfo.icon;
-        let label =
-            classInfo.componentPaletteLabel ||
-            getComponentName(this.props.componentClass.name);
+        let label = this.props.componentClass.displayName
+            ? this.props.componentClass.displayName
+            : classInfo.componentPaletteLabel ||
+              getComponentName(this.props.componentClass.name);
 
         let titleStyle: React.CSSProperties | undefined;
         if (classInfo.componentHeaderColor) {
@@ -150,179 +381,6 @@ class PaletteItem extends React.Component<{
             >
                 {typeof icon === "string" ? <img src={icon} /> : icon}
                 {label}
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class PaletteGroup extends React.Component<{
-    name: string;
-    componentClasses: IObjectClassInfo[];
-    selectedComponentClass: IObjectClassInfo | undefined;
-    onSelect: (componentClass: IObjectClassInfo | undefined) => void;
-}> {
-    render() {
-        let name = this.props.name;
-        if (name.startsWith("!")) {
-            name = name.substr(2);
-        }
-        const target = `eez-component-palette-group-${name
-            .replace(/(^-\d-|^\d|^-\d|^--)/, "a$1")
-            .replace(/[\W]/g, "-")}`;
-        return (
-            <div className="card">
-                <div className="card-header">{name}</div>
-                <div id={target} className="collapse show">
-                    <div className="card-body">
-                        {this.props.componentClasses.map(componentClass => {
-                            return (
-                                <PaletteItem
-                                    key={componentClass.name}
-                                    componentClass={componentClass}
-                                    onSelect={this.props.onSelect}
-                                    selected={
-                                        componentClass ===
-                                        this.props.selectedComponentClass
-                                    }
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-@observer
-export class ComponentsPalette extends React.Component {
-    static contextType = ProjectContext;
-    declare context: React.ContextType<typeof ProjectContext>;
-
-    @observable selectedComponentClass: IObjectClassInfo | undefined;
-
-    @action.bound
-    onSelect(widgetClass: IObjectClassInfo | undefined) {
-        this.selectedComponentClass = widgetClass;
-    }
-
-    @computed get allComponentClasses() {
-        const activeEditor = this.context.editorsStore.activeEditor;
-        if (!activeEditor) {
-            return [];
-        }
-
-        let showOnlyActions;
-
-        if (activeEditor.object instanceof ProjectEditor.ActionClass) {
-            showOnlyActions = true;
-        } else {
-            showOnlyActions = false;
-        }
-
-        return getClassesDerivedFrom(
-            showOnlyActions
-                ? ProjectEditor.ActionComponentClass
-                : ProjectEditor.ComponentClass
-        ).filter(objectClassInfo =>
-            this.context.project.isAppletProject ||
-            this.context.project.isFirmwareWithFlowSupportProject
-                ? objectClassInfo.objectClass.classInfo.flowComponentId !=
-                  undefined
-                : true
-        );
-    }
-
-    @computed get groups() {
-        const groups = new Map<string, IObjectClassInfo[]>();
-        const searchText = this.searchText && this.searchText.toLowerCase();
-        this.allComponentClasses.forEach(componentClass => {
-            if (
-                searchText &&
-                componentClass.name.toLowerCase().indexOf(searchText) == -1
-            ) {
-                return;
-            }
-
-            if (
-                componentClass.objectClass.classInfo.enabledInComponentPalette
-            ) {
-                if (
-                    !componentClass.objectClass.classInfo.enabledInComponentPalette(
-                        this.context.project.settings.general.projectType
-                    )
-                ) {
-                    return;
-                }
-            }
-
-            const parts = componentClass.name.split("/");
-            let groupName;
-            if (parts.length == 1) {
-                groupName =
-                    componentClass.objectClass.classInfo
-                        .componentPaletteGroupName;
-                if (!groupName) {
-                    if (componentClass.name.endsWith("Widget")) {
-                        groupName = "!1Common Widgets";
-                    } else if (
-                        componentClass.name.endsWith("ActionComponent")
-                    ) {
-                        groupName = "!2Common Actions";
-                    } else {
-                        groupName = "Other components";
-                    }
-                }
-            } else if (parts.length == 2) {
-                groupName = parts[0];
-            }
-
-            if (groupName) {
-                let componentClasses = groups.get(groupName);
-                if (!componentClasses) {
-                    componentClasses = [];
-                    groups.set(groupName, componentClasses);
-                }
-                componentClasses.push(componentClass);
-            }
-        });
-        return groups;
-    }
-
-    @observable searchText = "";
-
-    @action.bound
-    onSearchChange(event: any) {
-        this.searchText = ($(event.target).val() as string).trim();
-    }
-
-    render() {
-        return (
-            <div className="EezStudio_ComponentsPalette_Enclosure">
-                <div className="EezStudio_Title">
-                    <SearchInput
-                        key="search-input"
-                        searchText={this.searchText}
-                        onChange={this.onSearchChange}
-                        onKeyDown={this.onSearchChange}
-                    />
-                </div>
-
-                <div className="EezStudio_ComponentsPalette" tabIndex={0}>
-                    {[...this.groups.entries()].sort().map(entry => (
-                        <PaletteGroup
-                            key={entry[0]}
-                            name={entry[0]}
-                            componentClasses={entry[1]}
-                            selectedComponentClass={this.selectedComponentClass}
-                            onSelect={this.onSelect}
-                        ></PaletteGroup>
-                    ))}
-                </div>
             </div>
         );
     }

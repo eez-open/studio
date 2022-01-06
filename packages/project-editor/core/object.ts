@@ -393,8 +393,12 @@ export function findClass(className: string) {
 }
 
 export interface IObjectClassInfo {
+    id: string;
     name: string;
     objectClass: EezClass;
+    displayName?: string;
+    componentPaletteGroupName?: string;
+    props?: any;
 }
 
 export function getClassesDerivedFrom(parentClass: EezClass) {
@@ -404,6 +408,7 @@ export function getClassesDerivedFrom(parentClass: EezClass) {
         const objectClass = classes.get(className)!;
         if (isProperSubclassOf(objectClass.classInfo, parentClass.classInfo)) {
             derivedClasses.push({
+                id: className,
                 name: className,
                 objectClass
             });
