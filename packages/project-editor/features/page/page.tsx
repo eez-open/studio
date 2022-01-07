@@ -39,7 +39,6 @@ import {
     Component,
     generalGroup,
     styleGroup,
-    specificGroup,
     geometryGroup,
     Widget
 } from "project-editor/flow/component";
@@ -218,12 +217,6 @@ export class Page extends Flow {
                 hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
-                name: "closePageIfTouchedOutside",
-                type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: hideInPropertyGridIfDashboard
-            },
-            {
                 name: "portrait",
                 type: PropertyType.Object,
                 typeClass: PageOrientation,
@@ -235,6 +228,12 @@ export class Page extends Flow {
                 name: "isUsedAsCustomWidget",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup
+            },
+            {
+                name: "closePageIfTouchedOutside",
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: hideInPropertyGridIfDashboard
             },
             {
                 name: "css",
