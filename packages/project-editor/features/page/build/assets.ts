@@ -1172,20 +1172,26 @@ export class DummyDataBuffer {
 
 function buildHeaderData(
     assets: Assets,
-    uncompressedSize: number,
+    decompressedSize: number,
     dataBuffer: DataBuffer
 ) {
+    // tag
+    // HEADER_TAG = 0x7A65657E
     const tag = new TextEncoder().encode("~eez");
-
     dataBuffer.writeUint8Array(tag);
 
-    dataBuffer.writeUint16(3); // PROJECT VERSION: 3
+    // projectMajorVersion
+    dataBuffer.writeUint8(3); // PROJECT MAJOR VERSION: 3
+    // projectMinorVersion
+    dataBuffer.writeUint8(0); // PROJECT MINOR VERSION: 0
 
+    // assetsType
     dataBuffer.writeUint16(
         assets.DocumentStore.project.settings.general.getProjectTypeAsNumber()
     );
 
-    dataBuffer.writeUint32(uncompressedSize);
+    // decompressedSize
+    dataBuffer.writeUint32(decompressedSize);
 
     dataBuffer.finalize();
 }
@@ -1204,12 +1210,12 @@ export async function buildGuiAssetsData(assets: Assets) {
 
     dataBuffer.finalize();
 
-    const uncompressedSize = dataBuffer.size;
+    const decompressedSize = dataBuffer.size;
 
     const { compressedBuffer, compressedSize } = dataBuffer.compress();
 
     const headerBuffer = new DataBuffer();
-    buildHeaderData(assets, uncompressedSize, headerBuffer);
+    buildHeaderData(assets, decompressedSize, headerBuffer);
 
     const allData = Buffer.alloc(headerBuffer.size + compressedSize);
     headerBuffer.buffer.copy(allData, 0, 0, headerBuffer.size);
@@ -1218,7 +1224,7 @@ export async function buildGuiAssetsData(assets: Assets) {
     assets.DocumentStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
-        "Uncompressed size: " + uncompressedSize
+        "Uncompressed size: " + decompressedSize
     );
 
     assets.DocumentStore.outputSectionsStore.write(
