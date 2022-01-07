@@ -2278,7 +2278,7 @@ class MultilineTextRender {
 export const indentationGroup: IPropertyGridGroupDefinition = {
     id: "indentation",
     title: "Indentation",
-    position: 5
+    position: 3
 };
 
 export class MultilineTextWidget extends EmbeddedWidget {
