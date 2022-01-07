@@ -61,19 +61,21 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
 
         dataBuffer.writeUint16(flags);
 
-        // colors
+        // backgroundColor
         let backgroundColor = assets.getColorIndex(style, "backgroundColor");
         if (isNaN(backgroundColor)) {
             backgroundColor = 0;
         }
         dataBuffer.writeUint16(backgroundColor);
 
+        // color
         let color = assets.getColorIndex(style, "color");
         if (isNaN(color)) {
             color = 0;
         }
         dataBuffer.writeUint16(color);
 
+        // activeBackgroundColor
         let activeBackgroundColor = assets.getColorIndex(
             style,
             "activeBackgroundColor"
@@ -83,12 +85,14 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         }
         dataBuffer.writeUint16(activeBackgroundColor);
 
+        // activeColor
         let activeColor = assets.getColorIndex(style, "activeColor");
         if (isNaN(activeColor)) {
             activeColor = 0;
         }
         dataBuffer.writeUint16(activeColor);
 
+        // focusBackgroundColor
         let focusBackgroundColor = assets.getColorIndex(
             style,
             "focusBackgroundColor"
@@ -98,23 +102,27 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         }
         dataBuffer.writeUint16(focusBackgroundColor);
 
+        // focusColor
         let focusColor = assets.getColorIndex(style, "focusColor");
         if (isNaN(focusColor)) {
             focusColor = 0;
         }
         dataBuffer.writeUint16(focusColor);
 
+        // borderSize
         dataBuffer.writeUint8(style.borderSizeRect.top);
         dataBuffer.writeUint8(style.borderSizeRect.right);
         dataBuffer.writeUint8(style.borderSizeRect.bottom);
         dataBuffer.writeUint8(style.borderSizeRect.left);
 
+        // borderColor
         let borderColor = assets.getColorIndex(style, "borderColor");
         if (isNaN(borderColor)) {
             borderColor = 0;
         }
         dataBuffer.writeUint16(borderColor);
 
+        // borderRadius
         dataBuffer.writeUint8(style.borderRadiusSpec.topLeftX || 0);
         dataBuffer.writeUint8(style.borderRadiusSpec.topLeftY || 0);
         dataBuffer.writeUint8(style.borderRadiusSpec.topRightX || 0);
