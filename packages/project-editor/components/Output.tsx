@@ -181,13 +181,18 @@ export class ObjectPath extends React.Component<
 
         let ancestors = getAncestors(this.props.object);
         for (let i = 1; i < ancestors.length; i++) {
-            let pathPart = objectToString(ancestors[i]).toString();
-            if (pathPart.length > MAX_OUTPUT_PATH_PART_TEXT_SIZE) {
-                pathPart =
-                    pathPart.substring(0, MAX_OUTPUT_PATH_PART_TEXT_SIZE) +
+            let pathPartStr: string;
+            try {
+                pathPartStr = objectToString(ancestors[i]).toString();
+            } catch (err) {
+                pathPartStr = "undefined";
+            }
+            if (pathPartStr.length > MAX_OUTPUT_PATH_PART_TEXT_SIZE) {
+                pathPartStr =
+                    pathPartStr.substring(0, MAX_OUTPUT_PATH_PART_TEXT_SIZE) +
                     "...";
             }
-            pathComponents.push(<span key={i}>{pathPart}</span>);
+            pathComponents.push(<span key={i}>{pathPartStr}</span>);
         }
 
         return (
