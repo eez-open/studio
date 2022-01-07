@@ -2885,6 +2885,79 @@ registerClass("ShowKeypadActionComponent", ShowKeypadActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class NoopActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1024,
+
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            }
+        ],
+        check: (inputActionComponent: InputActionComponent) => {
+            let messages: Message[] = [];
+            if (!inputActionComponent.name) {
+                messages.push(
+                    propertyNotSetMessage(inputActionComponent, "name")
+                );
+            }
+            return messages;
+        },
+        label: (component: InputActionComponent) => {
+            if (!component.name) {
+                return NOT_NAMED_LABEL;
+            }
+            return component.name;
+        },
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+            </svg>
+        ),
+        componentHeaderColor: "#fff5c2"
+    });
+
+    @observable name: string;
+
+    getInputs() {
+        return [
+            ...super.getInputs(),
+            {
+                name: "@seqin",
+                type: "null" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            }
+        ];
+    }
+
+    getOutputs() {
+        return [
+            ...super.getOutputs(),
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            }
+        ];
+    }
+}
+
+registerClass("NoopActionComponent", NoopActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const TrixEditor = observer(
     ({
         component,
@@ -2967,6 +3040,8 @@ const TrixEditor = observer(
 
 export class CommentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: 1025,
+
         label: () => "",
 
         properties: [
