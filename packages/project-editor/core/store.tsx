@@ -684,7 +684,7 @@ export class LayoutModels {
     static LOCAL_VARS_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
-        name: "Local vars",
+        name: "Local Vars",
         id: LayoutModels.LOCAL_VARS_TAB_ID,
         component: "locals"
     };
@@ -856,7 +856,7 @@ export class LayoutModels {
             },
             {
                 name: "variables",
-                version: 2,
+                version: 4,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -866,14 +866,14 @@ export class LayoutModels {
                             {
                                 type: "tabset",
                                 children: [
-                                    LayoutModels.LOCAL_VARS_TAB,
                                     {
                                         type: "tab",
                                         enableClose: false,
-                                        name: "Global vars",
+                                        name: "Global Vars",
                                         id: LayoutModels.GLOBAL_VARS_TAB_ID,
                                         component: "globals"
                                     },
+                                    LayoutModels.LOCAL_VARS_TAB,
                                     LayoutModels.STRUCTS_TAB,
                                     {
                                         type: "tab",
@@ -979,7 +979,7 @@ export class LayoutModels {
             },
             {
                 name: "pages",
-                version: 1,
+                version: 2,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: [],
@@ -1012,7 +1012,7 @@ export class LayoutModels {
                                             {
                                                 type: "tab",
                                                 enableClose: false,
-                                                name: "Local vars",
+                                                name: "Local Vars",
                                                 component: "local-vars"
                                             }
                                         ]
@@ -1238,6 +1238,16 @@ export class LayoutModels {
         }
 
         this.DocumentStore.project.enableTabs();
+
+        this.DocumentStore.outputSectionsStore.updateTitle(
+            this.DocumentStore.outputSectionsStore.sections[Section.CHECKS]
+        );
+        this.DocumentStore.outputSectionsStore.updateTitle(
+            this.DocumentStore.outputSectionsStore.sections[Section.OUTPUT]
+        );
+        this.DocumentStore.outputSectionsStore.updateTitle(
+            this.DocumentStore.outputSectionsStore.sections[Section.SEARCH]
+        );
     }
 
     save() {
