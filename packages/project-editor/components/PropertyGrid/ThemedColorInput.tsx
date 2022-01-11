@@ -1,7 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
+import { SketchPicker } from "react-color";
 
-import { isDark } from "eez-studio-shared/color";
+import { isDark, isValid } from "eez-studio-shared/color";
 
 import { getProperty } from "project-editor/core/object";
 import { getEezStudioDataFromDragEvent } from "project-editor/core/store";
@@ -53,34 +54,75 @@ export class ThemedColorInput extends React.Component<{
         this.props.onChange(color);
     };
 
+    combine: boolean = false;
+
+    onChangeColor = (color: string, completed: boolean) => {
+        if (!this.combine) {
+            this.context.undoManager.setCombineCommands(true);
+            this.combine = true;
+        }
+
+        this.props.onChange(color);
+
+        if (completed) {
+            this.context.undoManager.setCombineCommands(false);
+            this.combine = false;
+        }
+    };
+
     render() {
         const { value, readOnly } = this.props;
 
-        const color =
+        let color: string | undefined =
             value == "transparent"
                 ? settingsController.isDarkTheme
                     ? "black"
                     : "white"
                 : getThemedColor(this.context, value);
 
+        if (!isValid(color)) {
+            color = undefined;
+        }
+
         return (
-            <label
-                className="EezStudio_ColorInputLabel form-label"
-                style={{
-                    color: isDark(color) ? "#fff" : undefined,
-                    backgroundColor: color
-                }}
-                onDrop={this.onDrop}
-                onDragOver={this.onDragOver}
-            >
+            <div className="input-group">
                 <input
-                    type="color"
+                    className="form-control"
+                    style={{
+                        color: color && isDark(color) ? "#fff" : undefined,
+                        backgroundColor: color
+                    }}
+                    type="text"
                     value={value}
                     onChange={this.onChange}
                     readOnly={readOnly}
+                    onDrop={this.onDrop}
+                    onDragOver={this.onDragOver}
                 />
-                {value}
-            </label>
+                {!readOnly && (
+                    <>
+                        <button
+                            className="btn btn-outline-secondary dropdown-toggle EezStudio_ThemedColorInput_DropdownButton"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                        />
+                        <div className="dropdown-menu dropdown-menu-end EezStudio_ThemedColorInput_DropdownContent">
+                            <SketchPicker
+                                width="260px"
+                                color={color}
+                                disableAlpha={true}
+                                presetColors={[]}
+                                onChange={color =>
+                                    this.onChangeColor(color.hex, false)
+                                }
+                                onChangeComplete={color =>
+                                    this.onChangeColor(color.hex, true)
+                                }
+                            />
+                        </div>
+                    </>
+                )}
+            </div>
         );
     }
 }

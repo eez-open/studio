@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, computed, runInAction, reaction } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
@@ -18,9 +19,9 @@ import {
     getId
 } from "project-editor/core/object";
 import {
-    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject,
-    hideInPropertyGridIfNotV1,
-    hideInPropertyGridIfV3OrNewer,
+    isDashboardOrAppletOrFirmwareWithFlowSupportProject,
+    isNotV1Project,
+    isV3OrNewerProject,
     loadObject,
     Message,
     objectToJS,
@@ -255,46 +256,14 @@ function buildWidgetText(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EmbeddedWidget extends Widget {
-    @observable style: Style;
-
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        properties: [makeStylePropertyInfo("style", "Normal style")],
-
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            migrateStyleProperty(jsObject, "style");
-
-            if (jsObject.style && typeof jsObject.style.padding === "number") {
-                delete jsObject.style.padding;
-            }
-
-            delete jsObject.activeStyle;
-        }
-    });
-
-    @computed
-    get styleObject() {
-        return this.style;
-    }
-
-    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        // if (!flowContext.DocumentStore.project.isDashboardProject) {
-        //     const backgroundColor = this.style.backgroundColorProperty;
-        //     style.backgroundColor = to16bitsColor(backgroundColor);
-        // }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class ContainerWidget extends EmbeddedWidget {
+export class ContainerWidget extends Widget {
     @observable name?: string;
     @observable widgets: Widget[];
     @observable overlay?: string;
     @observable shadow?: boolean;
     @observable visible?: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_CONTAINER,
 
         label: (widget: ContainerWidget) => {
@@ -428,12 +397,12 @@ registerClass("ContainerWidget", ContainerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ListWidget extends EmbeddedWidget {
+export class ListWidget extends Widget {
     @observable itemWidget?: Widget;
     @observable listType?: string;
     @observable gap?: number;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_LIST,
 
         properties: [
@@ -613,11 +582,11 @@ class ListWidgetItem extends React.Component<{
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GridWidget extends EmbeddedWidget {
+export class GridWidget extends Widget {
     @observable itemWidget?: Widget;
     @observable gridFlow?: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_GRID,
 
         properties: [
@@ -762,12 +731,12 @@ export function htmlEncode(value: string) {
     return el.innerHTML;
 }
 
-export class SelectWidget extends EmbeddedWidget {
+export class SelectWidget extends Widget {
     @observable widgets: Widget[];
 
     _lastSelectedIndexInSelectWidget: number | undefined;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_SELECT,
 
         properties: [
@@ -1081,12 +1050,12 @@ class LayoutViewPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LayoutViewWidget extends EmbeddedWidget {
+export class LayoutViewWidget extends Widget {
     @observable layout: string;
     @observable context?: string;
     @observable visible?: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_LAYOUT_VIEW,
 
         properties: [
@@ -1556,17 +1525,17 @@ enum DisplayOption {
     IntegerAndFraction = 5
 }
 
-export class DisplayDataWidget extends EmbeddedWidget {
+export class DisplayDataWidget extends Widget {
     @observable focusStyle: Style;
     @observable displayOption: DisplayOption;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
 
         properties: [
             Object.assign(
                 makeStylePropertyInfo("focusStyle"),
-                { hideInPropertyGrid: hideInPropertyGridIfNotV1 },
+                { hideInPropertyGrid: isNotV1Project },
                 {
                     isOptional: true
                 }
@@ -1814,13 +1783,13 @@ registerClass("DisplayDataWidget", DisplayDataWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class TextWidget extends EmbeddedWidget {
+export class TextWidget extends Widget {
     @observable name: string;
     @observable text?: string;
     @observable ignoreLuminocity: boolean;
     @observable focusStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_TEXT,
 
         label: (widget: TextWidget) => {
@@ -1868,7 +1837,7 @@ export class TextWidget extends EmbeddedWidget {
             }),
             makeTextPropertyInfo("text", {
                 hideInPropertyGrid:
-                    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject
+                    isDashboardOrAppletOrFirmwareWithFlowSupportProject
             }),
             {
                 name: "ignoreLuminocity",
@@ -1878,7 +1847,7 @@ export class TextWidget extends EmbeddedWidget {
             },
             Object.assign(
                 makeStylePropertyInfo("focusStyle"),
-                { hideInPropertyGrid: hideInPropertyGridIfNotV1 },
+                { hideInPropertyGrid: isNotV1Project },
                 {
                     isOptional: true
                 }
@@ -2014,6 +1983,10 @@ export class TextWidget extends EmbeddedWidget {
         return "<no text>";
     }
 
+    getClassName() {
+        return classNames("eez-widget-component", this.type);
+    }
+
     render(flowContext: IFlowContext) {
         const result = this.getText(flowContext);
         let text: string;
@@ -2029,7 +2002,9 @@ export class TextWidget extends EmbeddedWidget {
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
-                    node || text
+                    <span className={classNames(this.style.classNames)}>
+                        {node || text}
+                    </span>
                 ) : (
                     <ComponentCanvas
                         component={this}
@@ -2281,13 +2256,13 @@ export const indentationGroup: IPropertyGridGroupDefinition = {
     position: 3
 };
 
-export class MultilineTextWidget extends EmbeddedWidget {
+export class MultilineTextWidget extends Widget {
     @observable name: string;
     @observable text?: string;
     @observable firstLineIndent: number;
     @observable hangingIndent: number;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_MULTILINE_TEXT,
 
         label: (widget: TextWidget) => {
@@ -2335,7 +2310,7 @@ export class MultilineTextWidget extends EmbeddedWidget {
             }),
             makeTextPropertyInfo("text", {
                 hideInPropertyGrid:
-                    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject
+                    isDashboardOrAppletOrFirmwareWithFlowSupportProject
             }),
             {
                 name: "firstLineIndent",
@@ -2545,11 +2520,11 @@ registerClass("MultilineTextWidget", MultilineTextWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class RectangleWidget extends EmbeddedWidget {
+export class RectangleWidget extends Widget {
     @observable ignoreLuminocity: boolean;
     @observable invertColors: boolean;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_RECTANGLE,
 
         properties: [
@@ -2558,7 +2533,7 @@ export class RectangleWidget extends EmbeddedWidget {
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 defaultValue: false,
-                hideInPropertyGrid: hideInPropertyGridIfV3OrNewer
+                hideInPropertyGrid: isV3OrNewerProject
             },
             {
                 name: "ignoreLuminocity",
@@ -2592,7 +2567,7 @@ export class RectangleWidget extends EmbeddedWidget {
     });
 
     render(flowContext: IFlowContext) {
-        const invertColors = hideInPropertyGridIfV3OrNewer(this)
+        const invertColors = isV3OrNewerProject(this)
             ? true
             : this.invertColors;
 
@@ -2624,7 +2599,7 @@ export class RectangleWidget extends EmbeddedWidget {
         let flags: number = 0;
 
         // invertColors
-        if (hideInPropertyGridIfV3OrNewer(this) || this.invertColors) {
+        if (isV3OrNewerProject(this) || this.invertColors) {
             flags |= 1 << 0;
         }
 
@@ -2690,14 +2665,14 @@ class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BitmapWidget extends EmbeddedWidget {
+export class BitmapWidget extends Widget {
     @observable bitmap?: string;
 
     get label() {
         return this.bitmap ? `${this.type}: ${this.bitmap}` : this.type;
     }
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_BITMAP,
 
         properties: [
@@ -2881,12 +2856,12 @@ registerClass("BitmapWidget", BitmapWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ButtonWidget extends EmbeddedWidget {
+export class ButtonWidget extends Widget {
     @observable text?: string;
     @observable enabled?: string;
     @observable disabledStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_BUTTON,
 
         properties: [
@@ -2905,7 +2880,7 @@ export class ButtonWidget extends EmbeddedWidget {
             }),
             makeTextPropertyInfo("text", {
                 hideInPropertyGrid:
-                    hideInPropertyGridIfDashboardOrAppletOrFirmwareWithFlowSupportProject
+                    isDashboardOrAppletOrFirmwareWithFlowSupportProject
             }),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
@@ -3036,6 +3011,10 @@ export class ButtonWidget extends EmbeddedWidget {
         return "<no text>";
     }
 
+    getClassName() {
+        return classNames("eez-widget-component", this.type);
+    }
+
     render(flowContext: IFlowContext) {
         const result = this.getText(flowContext);
         let text: string;
@@ -3061,7 +3040,7 @@ export class ButtonWidget extends EmbeddedWidget {
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
                     <button
-                        className="btn btn-secondary"
+                        className={classNames(style.classNames)}
                         disabled={!buttonEnabled}
                         onClick={event => {
                             event.preventDefault();
@@ -3115,11 +3094,11 @@ registerClass("ButtonWidget", ButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ToggleButtonWidget extends EmbeddedWidget {
+export class ToggleButtonWidget extends Widget {
     @observable text1?: string;
     @observable text2?: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_TOGGLE_BUTTON,
 
         properties: [
@@ -3204,10 +3183,10 @@ registerClass("ToggleButtonWidget", ToggleButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ButtonGroupWidget extends EmbeddedWidget {
+export class ButtonGroupWidget extends Widget {
     @observable selectedStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_BUTTON_GROUP,
 
         properties: [makeStylePropertyInfo("selectedStyle")],
@@ -3359,7 +3338,7 @@ registerClass("ButtonGroupWidget", ButtonGroupWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class BarGraphWidget extends EmbeddedWidget {
+export class BarGraphWidget extends Widget {
     @observable orientation?: string;
     @observable displayValue: boolean;
     @observable textStyle: Style;
@@ -3368,7 +3347,7 @@ export class BarGraphWidget extends EmbeddedWidget {
     @observable line2Data?: string;
     @observable line2Style: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_BAR_GRAPH,
 
         properties: [
@@ -3744,23 +3723,23 @@ registerClass("BarGraphWidget", BarGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class YTGraphWidget extends EmbeddedWidget {
+export class YTGraphWidget extends Widget {
     @observable y1Style: Style;
     @observable y2Data?: string;
     @observable y2Style: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_YT_GRAPH,
 
         properties: [
             Object.assign(makeStylePropertyInfo("y1Style"), {
-                hideInPropertyGrid: hideInPropertyGridIfNotV1
+                hideInPropertyGrid: isNotV1Project
             }),
             Object.assign(makeStylePropertyInfo("y2Style"), {
-                hideInPropertyGrid: hideInPropertyGridIfNotV1
+                hideInPropertyGrid: isNotV1Project
             }),
             Object.assign(makeDataPropertyInfo("y2Data"), {
-                hideInPropertyGrid: hideInPropertyGridIfNotV1
+                hideInPropertyGrid: isNotV1Project
             })
         ],
 
@@ -3837,12 +3816,12 @@ registerClass("YTGraphWidget", YTGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class UpDownWidget extends EmbeddedWidget {
+export class UpDownWidget extends Widget {
     @observable buttonsStyle: Style;
     @observable downButtonText?: string;
     @observable upButtonText?: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_UP_DOWN,
 
         properties: [
@@ -3965,7 +3944,7 @@ registerClass("UpDownWidget", UpDownWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ListGraphWidget extends EmbeddedWidget {
+export class ListGraphWidget extends Widget {
     @observable dwellData?: string;
     @observable y1Data?: string;
     @observable y1Style: Style;
@@ -3974,7 +3953,7 @@ export class ListGraphWidget extends EmbeddedWidget {
     @observable cursorData?: string;
     @observable cursorStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_LIST_GRAPH,
 
         properties: [
@@ -4100,10 +4079,10 @@ registerClass("ListGraphWidget", ListGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class AppViewWidget extends EmbeddedWidget {
+export class AppViewWidget extends Widget {
     @observable page: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_APP_VIEW,
 
         defaultValue: {
@@ -4154,13 +4133,13 @@ registerClass("AppViewWidget", AppViewWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ScrollBarWidget extends EmbeddedWidget {
+export class ScrollBarWidget extends Widget {
     @observable thumbStyle: Style;
     @observable buttonsStyle: Style;
     @observable leftButtonText?: string;
     @observable rightButtonText?: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_SCROLL_BAR,
 
         properties: [
@@ -4340,8 +4319,8 @@ registerClass("ScrollBarWidget", ScrollBarWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ProgressWidget extends EmbeddedWidget {
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+export class ProgressWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_PROGRESS,
 
         defaultValue: {
@@ -4474,8 +4453,8 @@ registerClass("ProgressWidget", ProgressWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class CanvasWidget extends EmbeddedWidget {
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+export class CanvasWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_CANVAS,
 
         defaultValue: {
@@ -4531,7 +4510,7 @@ registerClass("CanvasWidget", CanvasWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GaugeEmbeddedWidget extends EmbeddedWidget {
+export class GaugeEmbeddedWidget extends Widget {
     @observable min: string;
     @observable max: string;
     @observable threshold: string;
@@ -4541,7 +4520,7 @@ export class GaugeEmbeddedWidget extends EmbeddedWidget {
     @observable ticksStyle: Style;
     @observable thresholdStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_GAUGE,
 
         properties: [
@@ -4966,7 +4945,7 @@ registerClass("GaugeEmbeddedWidget", GaugeEmbeddedWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class InputEmbeddedWidget extends EmbeddedWidget {
+export class InputEmbeddedWidget extends Widget {
     @observable inputType: "text" | "number";
 
     @observable password: boolean;
@@ -4977,7 +4956,7 @@ export class InputEmbeddedWidget extends EmbeddedWidget {
     @observable precision: string;
     @observable unit: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_INPUT,
 
         properties: [
@@ -5455,6 +5434,10 @@ export class CheckboxWidget extends Widget {
         return "<no label>";
     }
 
+    getClassName() {
+        return classNames("eez-widget-component", this.type);
+    }
+
     render(flowContext: IFlowContext): React.ReactNode {
         let checked = this.getChecked(flowContext);
 
@@ -5472,7 +5455,9 @@ export class CheckboxWidget extends Widget {
 
         return (
             <>
-                <div className="form-check">
+                <div
+                    className={classNames("form-check", this.style.classNames)}
+                >
                     <input
                         type="checkbox"
                         checked={checked}
@@ -5516,14 +5501,14 @@ registerClass("CheckboxWidget", CheckboxWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class RollerWidget extends EmbeddedWidget {
+export class RollerWidget extends Widget {
     @observable min: string;
     @observable max: string;
     @observable text: string;
     @observable selectedValueStyle: Style;
     @observable unselectedValueStyle: Style;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_ROLLER,
 
         properties: [
@@ -5643,8 +5628,8 @@ registerClass("RollerWidget", RollerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class SwitchWidget extends EmbeddedWidget {
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+export class SwitchWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_SWITCH,
 
         properties: [],
@@ -5748,11 +5733,11 @@ registerClass("SwitchWidget", SwitchWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class SliderWidget extends EmbeddedWidget {
+export class SliderWidget extends Widget {
     @observable min: string;
     @observable max: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_SLIDER,
 
         properties: [makeDataPropertyInfo("min"), makeDataPropertyInfo("max")],
@@ -5887,10 +5872,10 @@ registerClass("SliderWidget", SliderWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DropDownListWidget extends EmbeddedWidget {
+export class DropDownListWidget extends Widget {
     @observable options: string;
 
-    static classInfo = makeDerivedClassInfo(EmbeddedWidget.classInfo, {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
 
         properties: [makeDataPropertyInfo("options")],

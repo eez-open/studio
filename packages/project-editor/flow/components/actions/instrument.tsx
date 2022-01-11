@@ -28,7 +28,7 @@ import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
     getDocumentStore,
-    hideInPropertyGridIfAppletOrFirmwareWithFlowSupportProject
+    isAppletOrFirmwareWithFlowSupportProject
 } from "project-editor/core/store";
 import {
     buildExpression,
@@ -65,8 +65,7 @@ export class SCPIActionComponent extends ActionComponent {
                     name: "instrument",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid:
-                        hideInPropertyGridIfAppletOrFirmwareWithFlowSupportProject
+                    hideInPropertyGrid: isAppletOrFirmwareWithFlowSupportProject
                 },
                 "object:Instrument"
             ),
@@ -279,7 +278,7 @@ export class SCPIActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <div className="body EezStudio_Scpi">
+            <div className="body EezStudio_ScpiBody">
                 <pre>{this.scpi}</pre>
             </div>
         );

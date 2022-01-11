@@ -10,7 +10,6 @@ import {
     Rect,
     rectContains
 } from "eez-studio-shared/geometry";
-import { attachCssToElement } from "eez-studio-shared/dom";
 
 import { Draggable } from "eez-studio-ui/draggable";
 
@@ -459,16 +458,7 @@ export class FlowViewer
         return flowContext;
     }
 
-    disposeCSS: (() => void) | undefined;
-
     componentDidMount() {
-        if (this.divRef.current) {
-            this.disposeCSS = attachCssToElement(
-                this.divRef.current,
-                this.context.project.settings.general.css
-            );
-        }
-
         this.divRef.current?.addEventListener(
             "ensure-selection-visible",
             this.ensureSelectionVisible
@@ -484,10 +474,6 @@ export class FlowViewer
             "ensure-selection-visible",
             this.ensureSelectionVisible
         );
-
-        if (this.disposeCSS) {
-            this.disposeCSS();
-        }
     }
 
     ensureSelectionVisible = () => {
@@ -580,9 +566,12 @@ export class FlowViewer
 
         return (
             <div
-                className={classNames("EezStudio_FlowViewerCanvasContainer", {
-                    runMode
-                })}
+                className={classNames(
+                    "EezStudio_FlowCanvasContainer EezStudio_FlowViewerCanvasContainer",
+                    {
+                        runMode
+                    }
+                )}
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
                 onFocus={this.onFocus}

@@ -10,9 +10,9 @@ import {
     MessageType
 } from "project-editor/core/object";
 import {
-    hideInPropertyGridIfDashboardOrApplet,
-    hideInPropertyGridIfNotFirmwareWithFlowSupportProject,
-    hideInPropertyGridIfNotV1,
+    isDashboardOrApplet,
+    isNotFirmwareWithFlowSupportProject,
+    isNotV1Project,
     Message
 } from "project-editor/core/store";
 import type { Project } from "project-editor/project/project";
@@ -58,21 +58,19 @@ export class Action extends Flow {
                     }
                 ],
                 hideInPropertyGrid: (action: Action) =>
-                    hideInPropertyGridIfNotV1(action) &&
-                    hideInPropertyGridIfNotFirmwareWithFlowSupportProject(
-                        action
-                    )
+                    isNotV1Project(action) &&
+                    isNotFirmwareWithFlowSupportProject(action)
             },
             {
                 name: "implementation",
                 type: PropertyType.CPP,
-                hideInPropertyGrid: hideInPropertyGridIfNotV1
+                hideInPropertyGrid: isNotV1Project
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
+                hideInPropertyGrid: isDashboardOrApplet
             }
         ],
         label: (action: Action) => {

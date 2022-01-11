@@ -103,6 +103,7 @@ export interface PropertyInfo {
         propertyInfo: PropertyInfo,
         params?: IOnSelectParams
     ) => Promise<any>;
+    isOnSelectAvailable?: (object: IEezObject) => boolean;
     onSelectTitle?: string;
     hideInPropertyGrid?:
         | boolean
@@ -164,6 +165,8 @@ export interface PropertyInfo {
 
     monospaceFont?: boolean;
     disableSpellcheck?: boolean;
+
+    cssAttributeName?: string;
 }
 
 export type InheritedValue =

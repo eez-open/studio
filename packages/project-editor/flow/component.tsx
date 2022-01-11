@@ -35,8 +35,6 @@ import {
     getAncestorOfType,
     Message,
     propertyNotSetMessage,
-    hideInPropertyGridIfDashboard,
-    hideInPropertyGridIfNotDashboard,
     updateObject
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/store";
@@ -164,27 +162,25 @@ export function makeDataPropertyInfo(
                     propertyInfo: PropertyInfo,
                     params: IOnSelectParams
                 ) => {
-                    const DocumentStore = getDocumentStore(object);
-                    if (
-                        DocumentStore.project.isAppletProject ||
-                        DocumentStore.project
-                            .isFirmwareWithFlowSupportProject ||
-                        DocumentStore.project.isDashboardProject
-                    ) {
-                        return expressionBuilder(
-                            object,
-                            propertyInfo,
-                            {
-                                assignableExpression: false,
-                                title: "Expression Builder",
-                                width: 400,
-                                height: 600
-                            },
-                            params
-                        );
-                    } else {
-                        return new Promise(resolve => resolve("TODO"));
-                    }
+                    return expressionBuilder(
+                        object,
+                        propertyInfo,
+                        {
+                            assignableExpression: false,
+                            title: "Expression Builder",
+                            width: 400,
+                            height: 600
+                        },
+                        params
+                    );
+                },
+                isOnSelectAvailable: (component: Component) => {
+                    const project = ProjectEditor.getProject(component);
+                    return (
+                        project.isAppletProject ||
+                        project.isFirmwareWithFlowSupportProject ||
+                        project.isDashboardProject
+                    );
                 }
             },
             "any"
@@ -220,8 +216,7 @@ export function makeStylePropertyInfo(
         propertyGridGroup: styleGroup,
         propertyGridCollapsable: true,
         propertyGridCollapsableDefaultPropertyName: "inheritFrom",
-        enumerable: false,
-        hideInPropertyGrid: hideInPropertyGridIfDashboard
+        enumerable: false
     };
 }
 
@@ -1344,17 +1339,6 @@ export class Component extends EezObject {
                         }
                     }
                 }
-            } else {
-                ProjectEditor.documentSearch.checkObjectReference(
-                    component,
-                    "data",
-                    messages
-                );
-                ProjectEditor.documentSearch.checkObjectReference(
-                    component,
-                    "action",
-                    messages
-                );
             }
 
             return messages;
@@ -1564,7 +1548,12 @@ export class Component extends EezObject {
         return "";
     }
 
-    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {}
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        // if (!flowContext.DocumentStore.project.isDashboardProject) {
+        //     const backgroundColor = this.style.backgroundColorProperty;
+        //     style.backgroundColor = to16bitsColor(backgroundColor);
+        // }
+    }
 
     // return false if you don't want to propagete through "@seqout" output
     async execute(
@@ -1583,7 +1572,7 @@ export class Widget extends Component {
     @observable data?: string;
     @observable action?: string;
     @observable resizing: IResizing;
-    @observable className: string;
+    @observable style: Style;
 
     @observable allowOutside: boolean;
 
@@ -1592,12 +1581,7 @@ export class Widget extends Component {
             resizingProperty,
             makeDataPropertyInfo("data"),
             makeActionPropertyInfo("action"),
-            {
-                name: "className",
-                type: PropertyType.String,
-                propertyGridGroup: styleGroup,
-                hideInPropertyGrid: hideInPropertyGridIfNotDashboard
-            },
+            makeStylePropertyInfo("style", "Normal style"),
             {
                 name: "allowOutside",
                 displayName: `Hide "Widget is outside of its parent" warning`,
@@ -1610,6 +1594,21 @@ export class Widget extends Component {
             if (jsObject.type.startsWith("Local.")) {
                 jsObject.layout = jsObject.type.substring("Local.".length);
                 jsObject.type = "LayoutView";
+            }
+
+            migrateStyleProperty(jsObject, "style");
+
+            if (jsObject.style && typeof jsObject.style.padding === "number") {
+                delete jsObject.style.padding;
+            }
+
+            delete jsObject.activeStyle;
+
+            if (jsObject.className) {
+                jsObject.style = {
+                    inheritFrom: jsObject.className
+                };
+                delete jsObject.className;
             }
         },
 
@@ -1822,6 +1821,11 @@ export class Widget extends Component {
         },
         componentHeaderColor: "#ddd"
     });
+
+    @computed
+    get styleObject() {
+        return this.style;
+    }
 
     putInSelect() {
         let thisWidgetJsObject = objectToJS(this);
@@ -2134,7 +2138,11 @@ export class Widget extends Component {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type, this.className);
+        return classNames(
+            "eez-widget-component",
+            this.type,
+            this.style.classNames
+        );
     }
 
     render(flowContext: IFlowContext): React.ReactNode {

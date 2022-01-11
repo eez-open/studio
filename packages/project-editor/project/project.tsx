@@ -43,8 +43,7 @@ import {
     propertyInvalidValueMessage,
     DocumentStoreClass,
     getDocumentStore,
-    hideInPropertyGridIfNotDashboard,
-    hideInPropertyGridIfNotV1,
+    isNotV1Project,
     LayoutModels
 } from "project-editor/core/store";
 
@@ -122,7 +121,7 @@ export class BuildConfiguration extends EezObject {
                         id: "portrait"
                     }
                 ],
-                hideInPropertyGrid: hideInPropertyGridIfNotV1
+                hideInPropertyGrid: isNotV1Project
             }
         ],
         newItem: (parent: IEezObject) => {
@@ -570,7 +569,6 @@ export class General extends EezObject {
     @observable namespace: string;
     @observable masterProject: string;
     @observable imports: ImportDirective[];
-    @observable css: string;
     @observable flowSupport: boolean;
 
     static classInfo: ClassInfo = {
@@ -637,11 +635,6 @@ export class General extends EezObject {
                 }
             },
             {
-                name: "css",
-                type: PropertyType.CSS,
-                hideInPropertyGrid: hideInPropertyGridIfNotDashboard
-            },
-            {
                 name: "flowSupport",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (general: General) => {
@@ -667,20 +660,6 @@ export class General extends EezObject {
                             MessageType.ERROR,
                             "File doesn't exists",
                             getChildOfObject(object, "masterProject")
-                        )
-                    );
-                }
-            }
-
-            if (object.css) {
-                try {
-                    css.parse(object.css);
-                } catch (err) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `CSS parse error: ${err}`,
-                            getChildOfObject(object, "css")
                         )
                     );
                 }
@@ -906,6 +885,96 @@ function getProjectClassInfo() {
                         }
                         delete theme.colors;
                     }
+                }
+
+                if (projectJs.settings.general.css) {
+                    let ast;
+
+                    try {
+                        ast = css.parse(projectJs.settings.general.css);
+
+                        if (ast.stylesheet) {
+                            const rules = [];
+                            for (const stylesheetRule of ast.stylesheet.rules) {
+                                if (stylesheetRule.type == "rule") {
+                                    const rule = stylesheetRule as css.Rule;
+                                    if (rule.selectors) {
+                                        let declarations = "";
+                                        rule.declarations?.forEach(
+                                            declarationOrComment => {
+                                                if (
+                                                    declarationOrComment.type ==
+                                                    "declaration"
+                                                ) {
+                                                    const declaration =
+                                                        declarationOrComment as css.Declaration;
+                                                    declarations += `${declaration.property}: ${declaration.value};\n`;
+                                                }
+                                            }
+                                        );
+
+                                        if (!projectJs.styles) {
+                                            projectJs.styles = [
+                                                {
+                                                    name: "default"
+                                                }
+                                            ];
+                                        }
+
+                                        for (const selector of rule.selectors) {
+                                            const parts = selector.split(/\s+/);
+
+                                            let styleName = parts[0];
+                                            if (styleName.startsWith(".")) {
+                                                styleName = styleName.slice(1);
+                                            }
+
+                                            const style = projectJs.styles.find(
+                                                (style: any) =>
+                                                    style.name == styleName
+                                            );
+
+                                            let css;
+                                            if (parts.length > 1) {
+                                                css = `${parts
+                                                    .slice(1)
+                                                    .join(
+                                                        ""
+                                                    )} { ${declarations} }`;
+                                            } else {
+                                                css = declarations;
+                                            }
+
+                                            if (style) {
+                                                if (style.css) {
+                                                    style.css += "\n" + css;
+                                                } else {
+                                                    style.css += css;
+                                                }
+                                            } else {
+                                                projectJs.styles.push({
+                                                    name: styleName,
+                                                    css: declarations,
+                                                    inheritFrom: ""
+                                                });
+                                            }
+                                        }
+                                        continue;
+                                    }
+                                }
+
+                                rules.push(stylesheetRule);
+                            }
+                            ast.stylesheet.rules = rules;
+                        }
+
+                        //console.log(ast);
+                        projectJs.settings.general.css = css.stringify(ast);
+                    } catch (err) {
+                        console.error(err);
+                    }
+
+                    delete projectJs.settings.general.css;
                 }
             }
         };

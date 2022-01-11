@@ -3,8 +3,7 @@
     "general": {
       "projectVersion": "v3",
       "projectType": "dashboard",
-      "imports": [],
-      "css": ".page {\n    background-color: #e0e0e0;\n}"
+      "imports": []
     },
     "build": {
       "configurations": [
@@ -42,13 +41,35 @@
       "connectionLines": [],
       "localVariables": [],
       "name": "Main",
+      "style": "page",
       "left": 0,
       "top": 0,
       "width": 800,
-      "height": 450,
-      "css": "page"
+      "height": 450
     }
   ],
-  "colors": [],
-  "themes": []
+  "styles": [
+    {
+      "name": "default"
+    },
+    {
+      "name": "page",
+      "inheritFrom": "",
+      "backgroundColor": "page_color",
+      "css": "\n"
+    }
+  ],
+  "colors": [
+    {
+      "name": "page_color"
+    }
+  ],
+  "themes": [
+    {
+      "name": "default",
+      "colors": [
+        "#f0f0f0"
+      ]
+    }
+  ]
 }

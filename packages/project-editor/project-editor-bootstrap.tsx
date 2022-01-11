@@ -47,7 +47,6 @@ import {
 import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { Glyph } from "project-editor/features/font/font";
-import { EmbeddedWidget } from "project-editor/flow/components/widgets";
 import { ConnectionLine, Flow } from "project-editor/flow/flow";
 import { Action } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
@@ -169,7 +168,6 @@ export async function initProjectEditor(homeTabs: Tabs) {
         ComponentClass: Component,
         ActionComponentClass: ActionComponent,
         WidgetClass: Widget,
-        EmbeddedWidgetClass: EmbeddedWidget,
         ConnectionLineClass: ConnectionLine,
         LayoutViewWidgetClass: LayoutViewWidget,
         CallActionActionComponentClass: CallActionActionComponent,

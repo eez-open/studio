@@ -17,9 +17,9 @@ import {
 } from "project-editor/core/object";
 import {
     getChildOfObject,
-    hideInPropertyGridIfDashboard,
-    hideInPropertyGridIfDashboardOrApplet,
-    hideInPropertyGridIfNotFirmwareWithFlowSupportProject,
+    isDashboardProject,
+    isDashboardOrApplet,
+    isNotFirmwareWithFlowSupportProject,
     Message,
     propertyInvalidValueMessage,
     propertyNotSetMessage
@@ -282,9 +282,8 @@ export class Variable extends EezObject {
                 name: "native",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
-                    hideInPropertyGridIfNotFirmwareWithFlowSupportProject(
-                        variable
-                    ) || !isGlobalVariable(variable)
+                    isNotFirmwareWithFlowSupportProject(variable) ||
+                    !isGlobalVariable(variable)
             },
             {
                 name: "defaultValue",
@@ -295,25 +294,25 @@ export class Variable extends EezObject {
             {
                 name: "defaultValueList",
                 type: PropertyType.MultilineText,
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet,
+                hideInPropertyGrid: isDashboardOrApplet,
                 monospaceFont: true,
                 disableSpellcheck: true
             },
             {
                 name: "defaultMinValue",
                 type: PropertyType.Number,
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
+                hideInPropertyGrid: isDashboardOrApplet
             },
             {
                 name: "defaultMaxValue",
                 type: PropertyType.Number,
-                hideInPropertyGrid: hideInPropertyGridIfDashboardOrApplet
+                hideInPropertyGrid: isDashboardOrApplet
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: hideInPropertyGridIfDashboard
+                hideInPropertyGrid: isDashboardProject
             },
             {
                 name: "persistent",

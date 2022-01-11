@@ -27,14 +27,14 @@ export class PropertyMenu extends React.Component<PropertyProps> {
 
         if (this.sourceInfo.source === "modified") {
             if (menuItems.length > 0) {
-                menuItems.push(
+                menuItems.unshift(
                     new MenuItem({
                         type: "separator"
                     })
                 );
             }
 
-            menuItems.push(
+            menuItems.unshift(
                 new MenuItem({
                     label: "Reset",
                     click: () => {

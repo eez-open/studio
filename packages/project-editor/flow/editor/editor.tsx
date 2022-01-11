@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, computed, action, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
@@ -11,11 +12,7 @@ import {
     Rect,
     rectContains
 } from "eez-studio-shared/geometry";
-import {
-    attachCssToElement,
-    closestByClass,
-    closestBySelector
-} from "eez-studio-shared/dom";
+import { closestByClass, closestBySelector } from "eez-studio-shared/dom";
 
 import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
 import { EditorFlowContext } from "project-editor/flow/editor/context";
@@ -805,16 +802,7 @@ export class FlowEditor
         return false;
     };
 
-    disposeCSS: (() => void) | undefined;
-
     componentDidMount() {
-        if (this.divRef.current) {
-            this.disposeCSS = attachCssToElement(
-                this.divRef.current,
-                this.context.project.settings.general.css
-            );
-        }
-
         this.divRef.current?.addEventListener(
             "ensure-selection-visible",
             this.ensureSelectionVisible
@@ -830,10 +818,6 @@ export class FlowEditor
             "ensure-selection-visible",
             this.ensureSelectionVisible
         );
-
-        if (this.disposeCSS) {
-            this.disposeCSS();
-        }
     }
 
     ensureSelectionVisible = () => {
@@ -1126,7 +1110,9 @@ export class FlowEditor
 
         return (
             <div
-                className="EezStudio_FlowEditorCanvasContainer"
+                className={classNames(
+                    "EezStudio_FlowCanvasContainer EezStudio_FlowEditorCanvasContainer"
+                )}
                 ref={this.divRef}
                 id={this.flowContext.viewState.containerId}
                 onFocus={this.onFocus}

@@ -3297,76 +3297,6 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_CommentActionComponent {
-    background-color: #fff5c2 !important;
-    border: 0 !important;
-
-    .title-enclosure {
-        overflow: hidden;
-
-        svg {
-            fill-opacity: 30%;
-        }
-    }
-
-    & > .content {
-        width: 100%;
-        height: 100%;
-        padding: 0 !important;
-    }
-
-    .EezStudio_TrixEditor {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        background-color: #fff5c2;
-        color: @textColor;
-        border-bottom-left-radius: 3px;
-        border-bottom-right-radius: 3px;
-
-        .trix-button-group {
-            border: none !important;
-            margin-bottom: 5px;
-        }
-
-        .trix-button {
-            border: none !important;
-            font-size: 80%;
-        }
-
-        trix-editor {
-            border: none;
-            border-top: 1px solid #e0e0e0;
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-            min-height: 2rem;
-            color: #333;
-        }
-
-        trix-toolbar .trix-button-group:not(:first-child) {
-            margin-left: 5px;
-        }
-
-        trix-toolbar {
-            visibility: hidden;
-            position: absolute;
-            top: -55px;
-            left: 0px;
-            background-color: @panelHeaderColor;
-            border: 1px solid @borderColor;
-            padding-top: 3px;
-        }
-    }
-}
-
-.EezStudio_Scpi {
-    padding-top: 0 !important;
-    & > div:first-child {
-        white-space: nowrap;
-        border-bottom: 1px solid @borderColor;
-    }
-}
-
 .EezStudio_ComponentsPalette_Enclosure {
     height: 100%;
 
@@ -3458,382 +3388,6 @@ button.EezStudio_Action {
                 }
             }
         }
-    }
-}
-
-.EezStudio_FlowEditorCanvasContainer {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: @backgroundColor;
-
-    cursor: default;
-
-    & > * {
-        user-select: none;
-    }
-
-    & > div {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    .EezStudio_FlowEditorSelection_SelectedObject {
-        pointer-events: none;
-        border: 1px solid @selectionBackgroundColor;
-    }
-
-    .EezStudio_FlowEditorSelection_BoundingRect {
-        border: 2px solid @selectionBackgroundColor;
-        box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
-    }
-
-    .EezStudio_FlowEditorSelection_ResizeHandle {
-        position: absolute;
-        background-color: white;
-        border: 1px solid @selectionBackgroundColor;
-    }
-
-    .EezStudio_FlowEditorSelection_SelectedObjectsParent {
-        pointer-events: none;
-        border: 2px dotted magenta;
-    }
-
-    .connection-line-path {
-        stroke: @connectionLineColor;
-        marker-start: url(#lineStart);
-        marker-end: url(#lineEnd);
-
-        &.seq {
-            stroke: @seqConnectionLineColor;
-            marker-start: url(#seqLineStart);
-            marker-end: url(#seqLineEnd);
-        }
-
-        &.selected {
-            stroke: @selectedConnectionLineColor;
-            marker-start: url(#selectedLineStart);
-            marker-end: url(#selectedLineEnd);
-        }
-    }
-
-    .connection-line:hover .connection-line-path {
-        stroke: @selectedConnectionLineColor !important;
-        marker-start: url(#selectedLineStart) !important;
-        marker-end: url(#selectedLineEnd) !important;
-        fill: none;
-    }
-}
-
-.EezStudio_ComponentEnclosure {
-    display: block;
-    position: absolute;
-
-    &.eez-action-component {
-        display: flex;
-        flex-direction: column;
-
-        background-color: @componentBackgroundColor;
-        border-radius: 4px;
-
-        box-shadow: @componentShadow;
-
-        overflow: hidden;
-
-        .title-enclosure {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            position: relative;
-
-            .title {
-                flex-grow: 1;
-                padding: 4px 0;
-                background-color: #3fadb5;
-                color: #333;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                white-space: nowrap;
-                border-top-left-radius: 3px;
-                border-top-right-radius: 3px;
-
-                &.empty-content {
-                    border-bottom-left-radius: 3px;
-                    border-bottom-right-radius: 3px;
-                }
-
-                span {
-                    padding-left: 6px;
-                }
-
-                span:last-child {
-                    padding-right: 6px;
-                }
-
-                .title-image {
-                    display: flex;
-
-                    svg {
-                        vertical-align: baseline;
-                        height: 16px;
-                    }
-
-                    img {
-                        height: 16px;
-                        object-fit: contain;
-                    }
-                }
-
-                .title-text {
-                    flex-grow: 1;
-                    white-space: nowrap;
-                }
-            }
-        }
-
-        .content {
-            display: flex;
-            flex-direction: row;
-
-            &:not(.empty) {
-                padding: 3px;
-            }
-
-            .inputs,
-            .outputs {
-                padding: 2px;
-                font-size: 90%;
-                flex-grow: 1;
-            }
-
-            .inputs {
-                text-align: left;
-            }
-
-            .outputs {
-                text-align: right;
-            }
-
-            .body {
-                > * {
-                    user-select: text;
-                }
-
-                box-shadow: @componentBodyShadow;
-                border-radius: 4px;
-
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                flex-wrap: nowrap;
-
-                margin: 2px;
-                border: 1px solid @borderColor;
-                background-color: @componentBody;
-
-                pre {
-                    padding: 2px 5px 1px 5px;
-                    display: flex;
-                    flex-wrap: nowrap;
-                }
-
-                pre:not(:last-child) {
-                    border-bottom: 1px dotted @borderColor;
-                }
-            }
-
-            pre {
-                margin-bottom: 0;
-            }
-        }
-    }
-
-    &.eez-widget-component {
-        --size: 6px;
-
-        .inputs,
-        .outputs {
-            z-index: 1;
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            top: 0;
-            width: var(--width);
-            height: 100%;
-        }
-
-        .inputs {
-            left: 0;
-        }
-
-        .outputs {
-            right: 0;
-        }
-    }
-
-    &.Button button,
-    &.ButtonWidget button {
-        width: 100%;
-        height: 100%;
-
-        span.expression {
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            font-family: var(--bs-font-monospace);
-            font-size: 0.875em;
-            max-width: 100%;
-            display: inline-block;
-        }
-    }
-
-    &.Text button,
-    &.TextWidget {
-        display: flex;
-        align-items: center;
-        & > span.expression {
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            font-family: var(--bs-font-monospace);
-            font-size: 0.875em;
-        }
-    }
-
-    &.ListWidget {
-        overflow: hidden !important;
-    }
-
-    &.TextInputWidget {
-        input {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-    }
-
-    &.ProgressWidget {
-        .progress {
-            height: 100%;
-        }
-    }
-
-    &.CheckboxWidget {
-        .form-check {
-            padding-left: 0;
-            label {
-                padding-left: 4px;
-            }
-        }
-    }
-
-    &.enabled-breakpoint::before,
-    &.disabled-breakpoint::before {
-        z-index: 1;
-        content: "BREAKPOINT";
-        font-size: 80%;
-        position: absolute;
-        top: -24px;
-        padding: 0 8px;
-        border-radius: 2px;
-    }
-
-    &.enabled-breakpoint::before {
-        border: 2px solid blue;
-        background-color: blue;
-        color: white;
-    }
-
-    &.disabled-breakpoint::before {
-        border: 2px solid blue;
-    }
-}
-
-.EezStudio_FlowEditorSelection {
-    position: absolute;
-    cursor: move;
-}
-
-.EezStudio_FlowRuntimeSelection {
-    position: absolute;
-    * {
-        user-select: none !important;
-    }
-}
-
-.EezStudio_FlowViewerCanvasContainer {
-    font-size: 0.8rem;
-
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background-color: @backgroundColor;
-
-    & > * {
-        user-select: none;
-    }
-
-    & > div {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    .EezStudio_FlowRuntimeSelection_SelectedObject {
-        border: 3px dashed @selectionBackgroundColor;
-        border-radius: 6px;
-    }
-
-    .EezStudio_FlowRuntimeSelection_SelectedObject.source {
-        border: 1px dashed @selectionBackgroundColor;
-        border-radius: 6px;
-    }
-
-    .connection-line-path {
-        stroke: @connectionLineColor;
-        marker-start: url(#lineStart);
-        marker-end: url(#lineEnd);
-
-        &.seq {
-            stroke: @seqConnectionLineColor;
-            marker-start: url(#seqLineStart);
-            marker-end: url(#seqLineEnd);
-        }
-
-        &.selected {
-            stroke: @selectionBackgroundColor;
-            marker-start: url(#selectedLineStartInViewer);
-            marker-end: url(#selectedLineEndInViewer);
-            stroke-width: 1px !important;
-            stroke-dasharray: 4px 6px;
-            stroke-linecap: square !important;
-        }
-
-        &.active {
-            stroke: @activeConnectionLineColor;
-            stroke-dasharray: 10;
-            animation: dash 100000s linear infinite;
-            marker-start: url(#activeLineStart);
-            marker-end: url(#activeLineEnd);
-        }
-    }
-
-    @keyframes dash {
-        to {
-            stroke-dashoffset: -12000000;
-        }
-    }
-}
-
-.EezStudio_Plotly {
-    position: relative;
-    :not(.interactive) * {
-        pointer-events: none !important;
     }
 }
 
@@ -4232,26 +3786,6 @@ button.EezStudio_Action {
     }
 }
 
-.EezStudio_ColorInputLabel {
-    text-align: center;
-    cursor: pointer;
-    overflow: hidden;
-    width: 100%;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid @borderColor;
-    position: relative;
-    border-radius: 0.25rem;
-
-    input {
-        visibility: hidden;
-        position: absolute;
-        margin-left: -100%;
-    }
-}
-
 .EezStudio_TreeTable {
     cursor: default;
 
@@ -4469,276 +4003,6 @@ button.EezStudio_Action {
     cursor: default;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-.eez-action-component {
-    .seq-connection,
-    .data-connection {
-        @d: 6px;
-
-        &.input,
-        &.output {
-            position: absolute;
-            width: 29px;
-            height: 100%;
-
-            &:before {
-                content: "";
-                position: absolute;
-                display: block;
-                top: calc(50% - @d / 2);
-                width: @d;
-                height: @d;
-                //border-radius: @d / 2;
-            }
-        }
-
-        &.input {
-            &:before {
-                left: -@d / 2;
-            }
-        }
-
-        &.output {
-            &:before {
-                right: -@d / 2;
-            }
-        }
-    }
-
-    .seq-connection {
-        &.input.optional,
-        &.output.optional {
-            &:before {
-                border: 1px solid @seqConnectionLineColor;
-            }
-        }
-
-        &.input:not(.optional),
-        &.output:not(.optional) {
-            &:before {
-                background-color: @seqConnectionLineColor;
-            }
-        }
-
-        &.input {
-            left: 0;
-        }
-
-        &.output {
-            right: 0;
-        }
-    }
-
-    .data-connection {
-        &.input.optional,
-        &.output.optional {
-            &:before {
-                border: 1px solid @connectionLineColor;
-            }
-        }
-
-        &.input:not(.optional),
-        &.output:not(.optional) {
-            &:before {
-                background-color: @connectionLineColor;
-            }
-        }
-
-        &.input {
-            left: -2px;
-        }
-
-        &.output {
-            right: -2px;
-        }
-    }
-
-    .connection-input-label,
-    .connection-output-label {
-        .output {
-            width: 100%;
-        }
-
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-
-        padding: 2px 5px;
-
-        white-space: nowrap;
-
-        position: relative;
-    }
-
-    .connection-input-label {
-        .input {
-            width: 100%;
-        }
-    }
-
-    .connection-output-label {
-        &.output {
-            width: 100%;
-        }
-        justify-content: flex-end;
-    }
-
-    [data-connection-output-id].error {
-        color: @errorColor;
-    }
-
-    .title-enclosure {
-        min-width: 87px;
-    }
-}
-
-.eez-widget-component {
-    [data-connection-input-id],
-    [data-connection-output-id] {
-        position: relative;
-
-        &:before {
-            content: "";
-            position: absolute;
-            top: -4px;
-            left: -6px;
-            width: 20px;
-            height: 18px;
-        }
-
-        background-color: #999;
-
-        margin-bottom: var(--size);
-
-        width: var(--size);
-        height: calc(var(--size) * 2);
-    }
-
-    [data-connection-input-id] {
-        margin-left: calc(var(--size) / -1);
-    }
-
-    [data-connection-output-id] {
-        margin-right: calc(var(--size) / -1);
-    }
-
-    [data-connection-input-id] {
-        border-bottom-left-radius: calc(var(--size) * 2 - 2px);
-        border-top-left-radius: calc(var(--size) * 2 - 2px);
-        border-bottom-right-radius: 2px;
-        border-top-right-radius: 2px;
-    }
-
-    [data-connection-output-id] {
-        border-bottom-left-radius: 2px;
-        border-top-left-radius: 2px;
-        border-bottom-right-radius: calc(var(--size) * 2 - 2px);
-        border-top-right-radius: calc(var(--size) * 2 - 2px);
-    }
-
-    [data-connection-input-id]:last-child,
-    [data-connection-output-id]:last-child {
-        margin-bottom: 0;
-    }
-
-    [data-connection-input-id].seq,
-    [data-connection-output-id].seq {
-        background-color: @seqConnectionLineColor;
-    }
-}
-
-.EezStudio_FlowEditorCanvasContainer {
-    [data-connection-input-id]:hover {
-        color: @selectionColor!important;
-        background-color: @selectionBackgroundColor!important;
-        opacity: 0.5;
-        cursor: crosshair;
-    }
-
-    [data-connection-output-id]:hover {
-        color: @selectionColor!important;
-        background-color: @selectionBackgroundColor!important;
-        opacity: 0.5;
-        cursor: crosshair;
-    }
-
-    .title [data-connection-output-id]:hover {
-        color: @lightSelectionColor!important;
-        background-color: @lightSelectionBackgroundColor!important;
-    }
-
-    .EezStudio_ComponentEnclosure {
-        overflow: visible;
-
-        &.ButtonWidget {
-            button {
-                cursor: default !important;
-            }
-        }
-
-        &.TextInputWidget {
-            input {
-                cursor: default !important;
-            }
-        }
-
-        &.TerminalWidget {
-            .xterm {
-                overflow: hidden !important;
-                cursor: default !important;
-                .xterm-viewport {
-                    overflow-y: auto;
-                }
-            }
-        }
-    }
-}
-
-.EezStudio_FlowViewerCanvasContainer {
-    .EezStudio_ComponentEnclosure {
-        overflow: visible;
-
-        &.TerminalWidget {
-            .xterm {
-                .xterm-viewport {
-                    overflow-y: auto;
-                }
-            }
-        }
-    }
-
-    /* Some CSS layout tricks to support page scrolling in run mode
-       when page doesn't fit in available space. */
-    &.runMode {
-        & > div {
-            overflow: auto;
-            & > .eez-canvas {
-                & > div {
-                    position: relative !important;
-                    & > .EezStudio_Page {
-                        position: relative !important;
-                    }
-                }
-            }
-        }
-    }
-}
-
-.EezStudio_ComponentEnclosure {
-    &.ButtonWidget {
-        button {
-            padding: 0;
-            line-height: 0;
-            display: block;
-        }
-    }
-
-    &.MarkdownWidget {
-        overflow: auto;
-    }
-}
-
 .EezStudio_ListHeader {
     justify-content: start;
 }
@@ -4941,5 +4205,793 @@ button.EezStudio_Action {
         background-color: @panelHeaderColorInsideFlexLayout;
         border-bottom: 1px solid @borderColor;
         padding: 4px 11px;
+    }
+}
+
+.EezStudio_StylePreviewContainer {
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+
+    .EezStudio_StylePreview {
+        display: flex;
+        flex-grow: 1;
+        margin-right: 10px;
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+.EezStudio_FlowCanvasContainer {
+    all: initial;
+
+    box-sizing: border-box;
+
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji",
+        "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 0.8rem;
+
+    .EezStudio_ComponentEnclosure {
+        display: block;
+        position: absolute;
+
+        &.eez-action-component {
+            display: flex;
+            flex-direction: column;
+
+            background-color: @componentBackgroundColor;
+            border-radius: 4px;
+
+            box-shadow: @componentShadow;
+
+            overflow: hidden;
+
+            .title-enclosure {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                position: relative;
+
+                .title {
+                    flex-grow: 1;
+                    padding: 4px 0;
+                    background-color: #3fadb5;
+                    color: #333;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    white-space: nowrap;
+                    border-top-left-radius: 3px;
+                    border-top-right-radius: 3px;
+
+                    &.empty-content {
+                        border-bottom-left-radius: 3px;
+                        border-bottom-right-radius: 3px;
+                    }
+
+                    span {
+                        padding-left: 6px;
+                    }
+
+                    span:last-child {
+                        padding-right: 6px;
+                    }
+
+                    .title-image {
+                        display: flex;
+
+                        svg {
+                            vertical-align: baseline;
+                            height: 16px;
+                        }
+
+                        img {
+                            height: 16px;
+                            object-fit: contain;
+                        }
+                    }
+
+                    .title-text {
+                        flex-grow: 1;
+                        white-space: nowrap;
+                    }
+                }
+            }
+
+            .content {
+                display: flex;
+                flex-direction: row;
+
+                &:not(.empty) {
+                    padding: 3px;
+                }
+
+                .inputs,
+                .outputs {
+                    padding: 2px;
+                    font-size: 90%;
+                    flex-grow: 1;
+                }
+
+                .inputs {
+                    text-align: left;
+                }
+
+                .outputs {
+                    text-align: right;
+                }
+
+                .body {
+                    > * {
+                        user-select: text;
+                    }
+
+                    box-shadow: @componentBodyShadow;
+                    border-radius: 4px;
+
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    flex-wrap: nowrap;
+
+                    margin: 2px;
+                    border: 1px solid @borderColor;
+                    background-color: @componentBody;
+
+                    pre {
+                        padding: 2px 5px 1px 5px;
+                        display: flex;
+                        flex-wrap: nowrap;
+                    }
+
+                    pre:not(:last-child) {
+                        border-bottom: 1px dotted @borderColor;
+                    }
+                }
+
+                pre {
+                    margin-bottom: 0;
+                }
+            }
+        }
+
+        &.eez-widget-component {
+            --size: 6px;
+
+            .inputs,
+            .outputs {
+                z-index: 1;
+                position: absolute;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                top: 0;
+                width: var(--width);
+                height: 100%;
+            }
+
+            .inputs {
+                left: 0;
+            }
+
+            .outputs {
+                right: 0;
+            }
+        }
+
+        &.Button,
+        &.ButtonWidget {
+            > button {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                line-height: 0;
+                display: block;
+                > span.expression {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    font-family: var(--bs-font-monospace);
+                    font-size: 0.875em;
+                    max-width: 100%;
+                    display: inline-block;
+                }
+            }
+        }
+
+        &.Text,
+        &.TextWidget {
+            > span {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                & > span.expression {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    font-family: var(--bs-font-monospace);
+                    font-size: 0.875em;
+                }
+            }
+        }
+
+        &.ListWidget {
+            overflow: hidden !important;
+        }
+
+        &.TextInputWidget {
+            input {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        &.ProgressWidget {
+            .progress {
+                height: 100%;
+            }
+        }
+
+        &.CheckboxWidget {
+            .form-check {
+                height: 100%;
+                padding-left: 0;
+                label {
+                    padding-left: 4px;
+                }
+            }
+        }
+
+        &.MarkdownWidget {
+            overflow: auto !important;
+        }
+
+        &.enabled-breakpoint::before,
+        &.disabled-breakpoint::before {
+            z-index: 1;
+            content: "BREAKPOINT";
+            font-size: 80%;
+            position: absolute;
+            top: -24px;
+            padding: 0 8px;
+            border-radius: 2px;
+        }
+
+        &.enabled-breakpoint::before {
+            border: 2px solid blue;
+            background-color: blue;
+            color: white;
+        }
+
+        &.disabled-breakpoint::before {
+            border: 2px solid blue;
+        }
+
+        .EezStudio_ScpiBody {
+            padding-top: 0 !important;
+            & > div:first-child {
+                white-space: nowrap;
+                border-bottom: 1px solid @borderColor;
+            }
+        }
+    }
+
+    &.EezStudio_FlowEditorCanvasContainer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: @backgroundColor;
+
+        cursor: default;
+
+        & > * {
+            user-select: none;
+        }
+
+        & > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .EezStudio_FlowEditorSelection_SelectedObject {
+            pointer-events: none;
+            border: 1px solid @selectionBackgroundColor;
+        }
+
+        .EezStudio_FlowEditorSelection_BoundingRect {
+            border: 2px solid @selectionBackgroundColor;
+            box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
+        }
+
+        .EezStudio_FlowEditorSelection_ResizeHandle {
+            position: absolute;
+            background-color: white;
+            border: 1px solid @selectionBackgroundColor;
+        }
+
+        .EezStudio_FlowEditorSelection_SelectedObjectsParent {
+            pointer-events: none;
+            border: 2px dotted magenta;
+        }
+
+        .connection-line-path {
+            stroke: @connectionLineColor;
+            marker-start: url(#lineStart);
+            marker-end: url(#lineEnd);
+
+            &.seq {
+                stroke: @seqConnectionLineColor;
+                marker-start: url(#seqLineStart);
+                marker-end: url(#seqLineEnd);
+            }
+
+            &.selected {
+                stroke: @selectedConnectionLineColor;
+                marker-start: url(#selectedLineStart);
+                marker-end: url(#selectedLineEnd);
+            }
+        }
+
+        .connection-line:hover .connection-line-path {
+            stroke: @selectedConnectionLineColor !important;
+            marker-start: url(#selectedLineStart) !important;
+            marker-end: url(#selectedLineEnd) !important;
+            fill: none;
+        }
+
+        [data-connection-input-id]:hover {
+            color: @selectionColor!important;
+            background-color: @selectionBackgroundColor!important;
+            opacity: 0.5;
+            cursor: crosshair;
+        }
+
+        [data-connection-output-id]:hover {
+            color: @selectionColor!important;
+            background-color: @selectionBackgroundColor!important;
+            opacity: 0.5;
+            cursor: crosshair;
+        }
+
+        .title [data-connection-output-id]:hover {
+            color: @lightSelectionColor!important;
+            background-color: @lightSelectionBackgroundColor!important;
+        }
+
+        .EezStudio_ComponentEnclosure {
+            overflow: visible;
+
+            &.ButtonWidget {
+                button {
+                    cursor: default !important;
+                }
+            }
+
+            &.TextInputWidget {
+                input {
+                    cursor: default !important;
+                }
+            }
+
+            &.TerminalWidget {
+                .xterm {
+                    overflow: hidden !important;
+                    cursor: default !important;
+                    .xterm-viewport {
+                        overflow-y: auto;
+                    }
+                }
+            }
+        }
+    }
+
+    &.EezStudio_FlowViewerCanvasContainer {
+        font-size: 0.8rem;
+
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background-color: @backgroundColor;
+
+        & > * {
+            user-select: none;
+        }
+
+        & > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .EezStudio_FlowRuntimeSelection_SelectedObject {
+            border: 3px dashed @selectionBackgroundColor;
+            border-radius: 6px;
+        }
+
+        .EezStudio_FlowRuntimeSelection_SelectedObject.source {
+            border: 1px dashed @selectionBackgroundColor;
+            border-radius: 6px;
+        }
+
+        .connection-line-path {
+            stroke: @connectionLineColor;
+            marker-start: url(#lineStart);
+            marker-end: url(#lineEnd);
+
+            &.seq {
+                stroke: @seqConnectionLineColor;
+                marker-start: url(#seqLineStart);
+                marker-end: url(#seqLineEnd);
+            }
+
+            &.selected {
+                stroke: @selectionBackgroundColor;
+                marker-start: url(#selectedLineStartInViewer);
+                marker-end: url(#selectedLineEndInViewer);
+                stroke-width: 1px !important;
+                stroke-dasharray: 4px 6px;
+                stroke-linecap: square !important;
+            }
+
+            &.active {
+                stroke: @activeConnectionLineColor;
+                stroke-dasharray: 10;
+                animation: dash 100000s linear infinite;
+                marker-start: url(#activeLineStart);
+                marker-end: url(#activeLineEnd);
+            }
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -12000000;
+            }
+        }
+
+        .EezStudio_ComponentEnclosure {
+            overflow: visible;
+
+            &.TerminalWidget {
+                .xterm {
+                    .xterm-viewport {
+                        overflow-y: auto;
+                    }
+                }
+            }
+        }
+
+        /* Some CSS layout tricks to support page scrolling in run mode
+        when page doesn't fit in available space. */
+        &.runMode {
+            & > div {
+                overflow: auto;
+                & > .eez-canvas {
+                    & > div {
+                        position: relative !important;
+                        & > .EezStudio_Page {
+                            position: relative !important;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .eez-action-component {
+        .seq-connection,
+        .data-connection {
+            @d: 6px;
+
+            &.input,
+            &.output {
+                position: absolute;
+                width: 29px;
+                height: 100%;
+
+                &:before {
+                    content: "";
+                    position: absolute;
+                    display: block;
+                    top: calc(50% - @d / 2);
+                    width: @d;
+                    height: @d;
+                    //border-radius: @d / 2;
+                }
+            }
+
+            &.input {
+                &:before {
+                    left: -@d / 2;
+                }
+            }
+
+            &.output {
+                &:before {
+                    right: -@d / 2;
+                }
+            }
+        }
+
+        .seq-connection {
+            &.input.optional,
+            &.output.optional {
+                &:before {
+                    border: 1px solid @seqConnectionLineColor;
+                }
+            }
+
+            &.input:not(.optional),
+            &.output:not(.optional) {
+                &:before {
+                    background-color: @seqConnectionLineColor;
+                }
+            }
+
+            &.input {
+                left: 0;
+            }
+
+            &.output {
+                right: 0;
+            }
+        }
+
+        .data-connection {
+            &.input.optional,
+            &.output.optional {
+                &:before {
+                    border: 1px solid @connectionLineColor;
+                }
+            }
+
+            &.input:not(.optional),
+            &.output:not(.optional) {
+                &:before {
+                    background-color: @connectionLineColor;
+                }
+            }
+
+            &.input {
+                left: -2px;
+            }
+
+            &.output {
+                right: -2px;
+            }
+        }
+
+        .connection-input-label,
+        .connection-output-label {
+            .output {
+                width: 100%;
+            }
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            padding: 2px 5px;
+
+            white-space: nowrap;
+
+            position: relative;
+        }
+
+        .connection-input-label {
+            .input {
+                width: 100%;
+            }
+        }
+
+        .connection-output-label {
+            &.output {
+                width: 100%;
+            }
+            justify-content: flex-end;
+        }
+
+        [data-connection-output-id].error {
+            color: @errorColor;
+        }
+
+        .title-enclosure {
+            min-width: 87px;
+        }
+    }
+
+    .eez-widget-component {
+        [data-connection-input-id],
+        [data-connection-output-id] {
+            position: relative;
+
+            &:before {
+                content: "";
+                position: absolute;
+                top: -4px;
+                left: -6px;
+                width: 20px;
+                height: 18px;
+            }
+
+            background-color: #999;
+
+            margin-bottom: var(--size);
+
+            width: var(--size);
+            height: calc(var(--size) * 2);
+        }
+
+        [data-connection-input-id] {
+            margin-left: calc(var(--size) / -1);
+        }
+
+        [data-connection-output-id] {
+            margin-right: calc(var(--size) / -1);
+        }
+
+        [data-connection-input-id] {
+            border-bottom-left-radius: calc(var(--size) * 2 - 2px);
+            border-top-left-radius: calc(var(--size) * 2 - 2px);
+            border-bottom-right-radius: 2px;
+            border-top-right-radius: 2px;
+        }
+
+        [data-connection-output-id] {
+            border-bottom-left-radius: 2px;
+            border-top-left-radius: 2px;
+            border-bottom-right-radius: calc(var(--size) * 2 - 2px);
+            border-top-right-radius: calc(var(--size) * 2 - 2px);
+        }
+
+        [data-connection-input-id]:last-child,
+        [data-connection-output-id]:last-child {
+            margin-bottom: 0;
+        }
+
+        [data-connection-input-id].seq,
+        [data-connection-output-id].seq {
+            background-color: @seqConnectionLineColor;
+        }
+    }
+
+    .EezStudio_FlowEditorSelection {
+        position: absolute;
+        cursor: move;
+    }
+
+    .EezStudio_FlowRuntimeSelection {
+        position: absolute;
+        * {
+            user-select: none !important;
+        }
+    }
+
+    .EezStudio_Plotly {
+        position: relative;
+        :not(.interactive) * {
+            pointer-events: none !important;
+        }
+    }
+
+    .EezStudio_CommentActionComponent {
+        background-color: #fff5c2 !important;
+        border: 0 !important;
+
+        .title-enclosure {
+            overflow: hidden;
+
+            svg {
+                fill-opacity: 30%;
+            }
+        }
+
+        & > .content {
+            width: 100%;
+            height: 100%;
+            padding: 0 !important;
+        }
+
+        .EezStudio_TrixEditor {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #fff5c2;
+            color: @textColor;
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+
+            .trix-button-group {
+                border: none !important;
+                margin-bottom: 5px;
+            }
+
+            .trix-button {
+                border: none !important;
+                font-size: 80%;
+            }
+
+            trix-editor {
+                border: none;
+                border-top: 1px solid #e0e0e0;
+                border-top-left-radius: 0;
+                border-top-right-radius: 0;
+                min-height: 2rem;
+                color: #333;
+            }
+
+            trix-toolbar .trix-button-group:not(:first-child) {
+                margin-left: 5px;
+            }
+
+            trix-toolbar {
+                visibility: hidden;
+                position: absolute;
+                top: -55px;
+                left: 0px;
+                background-color: @panelHeaderColor;
+                border: 1px solid @borderColor;
+                padding-top: 3px;
+            }
+        }
+    }
+}
+
+.EezStudio_ThemedColorInput_DropdownButton {
+    border-color: @formControlBorderColor;
+    font-size: 18px;
+}
+
+.EezStudio_ThemedColorInput_DropdownContent {
+    padding: none;
+    margin: none;
+    border: none;
+}
+
+.EezStudio_ObjectReferenceInput_DropdownButton {
+    border-color: @formControlBorderColor;
+    font-size: 18px;
+}
+
+.EezStudio_ObjectReferenceInput_DropdownContent {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+
+    div:nth-child(1) {
+        .EezStudio_SearchInput {
+            border-bottom: 1px solid @borderColor;
+        }
+    }
+
+    div:nth-child(2) {
+        height: 240px;
+        overflow: auto;
+        ul {
+            margin: 0;
+            padding: 5px;
+
+            li {
+                list-style: none;
+                cursor: pointer;
+                &:hover {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                }
+            }
+        }
     }
 }

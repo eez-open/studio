@@ -1,5 +1,3 @@
-import css from "css";
-
 export function closest(element: any, predicate: (element: any) => boolean) {
     while (element) {
         if (predicate(element)) {
@@ -61,60 +59,4 @@ export function scrollIntoViewIfNeeded(el: HTMLElement) {
     } else {
         el.scrollIntoView();
     }
-}
-
-// this is used to scope css to the given element
-export function attachCssToElement(el: HTMLDivElement, cssStr: string) {
-    if (!cssStr) {
-        return undefined;
-    }
-
-    // generate random class name, eight 'a' - 'z' characters
-    function generateRandomClassName() {
-        let className = "";
-        for (let i = 0; i < 8; i++) {
-            className += String.fromCodePoint(
-                "a".charCodeAt(0) + Math.round(Math.random() * 25)
-            );
-        }
-        return className;
-    }
-    const className = generateRandomClassName();
-
-    // add class name to the element
-    el.classList.add(className);
-
-    // prefix each CSS selector in given css string (cssStr) with the generated class name
-    let ast;
-    try {
-        ast = css.parse(cssStr);
-    } catch (err) {
-        console.error(err);
-        return () => {};
-    }
-
-    if (ast.stylesheet) {
-        for (const stylesheetRule of ast.stylesheet.rules) {
-            if (stylesheetRule.type == "rule") {
-                const rule = stylesheetRule as css.Rule;
-                if (rule.selectors) {
-                    rule.selectors = rule.selectors.map(
-                        selector => `.${className} ${selector}`
-                    );
-                }
-            }
-        }
-    }
-
-    const prefixedCssStr = css.stringify(ast);
-
-    // create style element
-    const style = document.createElement("style");
-    style.appendChild(document.createTextNode(prefixedCssStr));
-    document.head.appendChild(style);
-
-    return () => {
-        // dispose
-        style.remove();
-    };
 }

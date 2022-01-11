@@ -4,16 +4,14 @@ import { observer, disposeOnUnmount } from "mobx-react";
 import classNames from "classnames";
 
 import { guid } from "eez-studio-shared/guid";
-import { humanize, stringCompare } from "eez-studio-shared/string";
+import { humanize } from "eez-studio-shared/string";
 import { validators, filterNumber } from "eez-studio-shared/validation";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Icon } from "eez-studio-ui/icon";
 
 import {
-    IEezObject,
     PropertyType,
-    getProperty,
     PropertyProps,
     getParent,
     getObjectPropertyDisplayName
@@ -23,7 +21,6 @@ import { replaceObjectReference } from "project-editor/core/search";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/components/ConfigurationReferencesPropertyValue";
 
-import { getNameProperty } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { parseIdentifier } from "project-editor/flow/expression/expression";
 import {
@@ -36,7 +33,7 @@ import { CodeEditorProperty } from "./CodeEditorProperty";
 import { ThemedColorInput } from "./ThemedColorInput";
 import { ArrayProperty } from "./ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "./EmbeddedPropertyGrid";
-import { objectToString } from "project-editor/core/store";
+import { ObjectReferenceInput } from "./ObjectReferenceInput";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -338,7 +335,7 @@ export class Property extends React.Component<PropertyProps> {
     render() {
         const { propertyInfo, readOnly } = this.props;
 
-        if (readOnly) {
+        if (readOnly && propertyInfo.type != PropertyType.CSS) {
             const getPropertyValueAsStringResult = getPropertyValueAsString(
                 this.props.objects,
                 propertyInfo
@@ -355,6 +352,19 @@ export class Property extends React.Component<PropertyProps> {
                     readOnly
                 />
             );
+        }
+
+        let isOnSelectAvailable;
+        if (propertyInfo.onSelect) {
+            if (propertyInfo.isOnSelectAvailable) {
+                isOnSelectAvailable = propertyInfo.isOnSelectAvailable(
+                    this.props.objects[0]
+                );
+            } else {
+                isOnSelectAvailable = true;
+            }
+        } else {
+            isOnSelectAvailable = false;
         }
 
         if (propertyInfo.propertyGridRowComponent) {
@@ -384,7 +394,7 @@ export class Property extends React.Component<PropertyProps> {
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.MultilineText) {
-            if (!readOnly && this.props.propertyInfo.onSelect) {
+            if (!readOnly && isOnSelectAvailable) {
                 return (
                     <div className="input-group" title={this._value || ""}>
                         <textarea
@@ -442,6 +452,7 @@ export class Property extends React.Component<PropertyProps> {
                     {...this.props}
                     mode="css"
                     showLabel={false}
+                    readOnly={readOnly || !!propertyInfo.computed}
                 />
             );
         } else if (propertyInfo.type === PropertyType.CPP) {
@@ -454,10 +465,9 @@ export class Property extends React.Component<PropertyProps> {
             );
         } else if (
             propertyInfo.type === PropertyType.Object ||
-            (propertyInfo.type === PropertyType.Array &&
-                this.props.propertyInfo.onSelect)
+            (propertyInfo.type === PropertyType.Array && isOnSelectAvailable)
         ) {
-            if (this.props.propertyInfo.onSelect) {
+            if (isOnSelectAvailable) {
                 const getPropertyValueAsStringResult = getPropertyValueAsString(
                     this.props.objects,
                     propertyInfo
@@ -548,7 +558,7 @@ export class Property extends React.Component<PropertyProps> {
                     />
                 );
             } else {
-                if (this.props.propertyInfo.onSelect) {
+                if (isOnSelectAvailable) {
                     return (
                         <div className="input-group" title={this._value || ""}>
                             <textarea
@@ -578,63 +588,13 @@ export class Property extends React.Component<PropertyProps> {
                         </div>
                     );
                 } else {
-                    let objects: IEezObject[] =
-                        this.context.project.getAllObjectsOfType(
-                            propertyInfo.referencedObjectCollectionPath!
-                        );
-
-                    let options = objects
-                        .slice()
-                        .sort((a, b) =>
-                            stringCompare(
-                                getNameProperty(a),
-                                getNameProperty(b)
-                            )
-                        )
-                        .map(object => {
-                            let name = getNameProperty(object);
-                            return (
-                                <option key={name} value={name}>
-                                    {name}
-                                </option>
-                            );
-                        });
-
-                    options.unshift(<option key="__empty" value="" />);
-
-                    if (
-                        this._value &&
-                        !objects.find(
-                            object => getProperty(object, "name") == this._value
-                        )
-                    ) {
-                        if (typeof this._value == "object") {
-                            options.unshift(
-                                <option
-                                    key="__not_found"
-                                    value={getProperty(this._value, "name")}
-                                >
-                                    {objectToString(this._value)}
-                                </option>
-                            );
-                        } else {
-                            options.unshift(
-                                <option key="__not_found" value={this._value}>
-                                    {this._value}
-                                </option>
-                            );
-                        }
-                    }
-
                     return (
-                        <select
-                            ref={(ref: any) => (this.select = ref)}
-                            className="form-select"
+                        <ObjectReferenceInput
+                            propertyInfo={propertyInfo}
                             value={this._value || ""}
-                            onChange={this.onChange}
-                        >
-                            {options}
-                        </select>
+                            onChange={this.changeValue}
+                            readOnly={readOnly}
+                        />
                     );
                 }
             }
@@ -681,7 +641,7 @@ export class Property extends React.Component<PropertyProps> {
                 </div>
             );
         } else if (propertyInfo.type === PropertyType.String) {
-            if (!readOnly && this.props.propertyInfo.onSelect) {
+            if (!readOnly && isOnSelectAvailable) {
                 return (
                     <div className="input-group" title={this._value || ""}>
                         <input

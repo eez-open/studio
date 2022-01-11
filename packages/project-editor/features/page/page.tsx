@@ -16,9 +16,10 @@ import {
 } from "project-editor/core/object";
 import {
     getDocumentStore,
-    hideInPropertyGridIfDashboard,
+    isDashboardProject,
     Message,
-    propertyInvalidValueMessage
+    propertyInvalidValueMessage,
+    propertyNotFoundMessage
 } from "project-editor/core/store";
 
 import type {
@@ -159,8 +160,6 @@ export class Page extends Flow {
 
     @observable dataContextOverrides: string;
 
-    @observable css: string;
-
     @observable _geometry: ComponentGeometry;
 
     static classInfo = makeDerivedClassInfo(Flow.classInfo, {
@@ -206,15 +205,14 @@ export class Page extends Flow {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "styles",
-                propertyGridGroup: styleGroup,
-                hideInPropertyGrid: hideInPropertyGridIfDashboard
+                propertyGridGroup: styleGroup
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: hideInPropertyGridIfDashboard
+                hideInPropertyGrid: isDashboardProject
             },
             {
                 name: "portrait",
@@ -233,14 +231,7 @@ export class Page extends Flow {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: hideInPropertyGridIfDashboard
-            },
-            {
-                name: "css",
-                type: PropertyType.String,
-                propertyGridGroup: styleGroup,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    !getDocumentStore(object).project.isDashboardProject
+                hideInPropertyGrid: isDashboardProject
             }
         ],
         label: (page: Page) => {
@@ -272,6 +263,11 @@ export class Page extends Flow {
 
             if (!jsObject.connectionLines) {
                 jsObject.connectionLines = [];
+            }
+
+            if (jsObject.css) {
+                jsObject.style = jsObject.css;
+                delete jsObject.css;
             }
         },
         isPropertyMenuSupported: true,
@@ -307,20 +303,25 @@ export class Page extends Flow {
             });
         },
         icon: "filter",
-        check: (object: Page) => {
+        check: (page: Page) => {
             let messages: Message[] = [];
 
-            if (object.dataContextOverrides) {
+            if (page.dataContextOverrides) {
                 try {
-                    JSON.parse(object.dataContextOverrides);
+                    JSON.parse(page.dataContextOverrides);
                 } catch {
                     messages.push(
                         propertyInvalidValueMessage(
-                            object,
+                            page,
                             "dataContextOverrides"
                         )
                     );
                 }
+            }
+
+            const DocumentStore = getDocumentStore(page);
+            if (page.style && !findStyle(DocumentStore.project, page.style)) {
+                messages.push(propertyNotFoundMessage(page, "style"));
             }
 
             return messages;
@@ -497,9 +498,8 @@ export class Page extends Flow {
     }
 
     getClassName() {
-        return classNames("EezStudio_Page", {
-            [this.css]: getDocumentStore(this).project.isDashboardProject
-        });
+        const style = findStyle(ProjectEditor.getProject(this), this.style);
+        return classNames("EezStudio_Page", style?.classNames);
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {

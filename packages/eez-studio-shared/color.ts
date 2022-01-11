@@ -71,3 +71,7 @@ export function compareColors(color1: string, color2: string) {
 export function isDark(color: string) {
     return tinycolor(color).isDark();
 }
+
+export function isValid(color: string) {
+    return tinycolor(color).isValid();
+}

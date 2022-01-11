@@ -1,4 +1,5 @@
 import { observable, computed } from "mobx";
+import { css } from "@emotion/css";
 
 import { _map, _zipObject } from "eez-studio-shared/algorithm";
 import { strToColor16 } from "eez-studio-shared/color";
@@ -18,7 +19,10 @@ import {
 } from "project-editor/core/object";
 import {
     getChildOfObject,
-    hideInPropertyGridIfV1,
+    isDashboardProject,
+    isNotDashboardProject,
+    isV1Project,
+    isV3OrNewerProject,
     isAnyPropertyModified,
     Message,
     propertyInvalidValueMessage,
@@ -66,6 +70,35 @@ export function isWidgetParentOfStyle(object: IEezObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function openCssHelpPage(cssAttributeName: string) {
+    const { shell } = require("electron");
+    shell.openExternal(
+        `https://developer.mozilla.org/en-US/docs/Web/CSS/${
+            cssAttributeName != "css" ? cssAttributeName : ""
+        }`
+    );
+}
+
+const propertyMenu = (props: PropertyProps): Electron.MenuItem[] => {
+    let menuItems: Electron.MenuItem[] = [];
+
+    if (isDashboardProject(props.objects[0])) {
+        const cssAttributeName = props.propertyInfo.cssAttributeName;
+        if (cssAttributeName) {
+            menuItems.push(
+                new MenuItem({
+                    label: "Help",
+                    click: () => {
+                        openCssHelpPage(cssAttributeName);
+                    }
+                })
+            );
+        }
+    }
+
+    return menuItems;
+};
+
 const backgroundColorPropertyMenu = (
     props: PropertyProps
 ): Electron.MenuItem[] => {
@@ -75,27 +108,25 @@ const backgroundColorPropertyMenu = (
         new MenuItem({
             label: "Transparent",
             click: () => {
-                const DocumentStore = getDocumentStore(props.objects[0]);
-
-                const propertyValues: any = {};
-                properties.forEach(propertyInfo => {
-                    if (propertyInfo.inheritable) {
-                        propertyValues[propertyInfo.name] = undefined;
-                    }
-                });
-
-                DocumentStore.undoManager.setCombineCommands(true);
-
                 props.objects.forEach(object =>
                     updateObject(object, {
                         [props.propertyInfo.name]: "transparent"
                     })
                 );
-
-                DocumentStore.undoManager.setCombineCommands(false);
             }
         })
     );
+
+    if (isDashboardProject(props.objects[0])) {
+        menuItems.push(
+            new MenuItem({
+                label: "Help",
+                click: () => {
+                    openCssHelpPage("background-color");
+                }
+            })
+        );
+    }
 
     return menuItems;
 };
@@ -108,7 +139,8 @@ const idProperty: PropertyInfo = {
     inheritable: false,
     isOptional: true,
     unique: true,
-    hideInPropertyGrid: isWidgetParentOfStyle,
+    hideInPropertyGrid: style =>
+        isWidgetParentOfStyle(style) || isDashboardProject(style),
     defaultValue: undefined
 };
 
@@ -276,7 +308,100 @@ const fontProperty: PropertyInfo = {
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "fonts",
     defaultValue: undefined,
-    inheritable: true
+    inheritable: true,
+    hideInPropertyGrid: isDashboardProject
+};
+
+const fontFamilyProperty: PropertyInfo = {
+    name: "fontFamily",
+    type: PropertyType.String,
+    defaultValue: undefined,
+    inheritable: true,
+    hideInPropertyGrid: isNotDashboardProject,
+    cssAttributeName: "font-family",
+    propertyMenu
+};
+
+const fontSizeProperty: PropertyInfo = {
+    name: "fontSize",
+    type: PropertyType.String,
+    defaultValue: undefined,
+    inheritable: true,
+    hideInPropertyGrid: isNotDashboardProject,
+    cssAttributeName: "font-size",
+    propertyMenu
+};
+
+const fontWeightProperty: PropertyInfo = {
+    name: "fontWeight",
+    type: PropertyType.Enum,
+    enumItems: [
+        {
+            id: "normal"
+        },
+        {
+            id: "bold"
+        },
+        {
+            id: "lighter"
+        },
+        {
+            id: "bolder"
+        },
+        {
+            id: "100"
+        },
+        {
+            id: "200"
+        },
+        {
+            id: "300"
+        },
+        {
+            id: "400"
+        },
+        {
+            id: "500"
+        },
+        {
+            id: "600"
+        },
+        {
+            id: "700"
+        },
+        {
+            id: "800"
+        },
+        {
+            id: "900"
+        }
+    ],
+    defaultValue: undefined,
+    inheritable: true,
+    hideInPropertyGrid: isNotDashboardProject,
+    cssAttributeName: "font-weight",
+    propertyMenu
+};
+
+const fontStyleProperty: PropertyInfo = {
+    name: "fontStyle",
+    type: PropertyType.Enum,
+    enumItems: [
+        {
+            id: "normal"
+        },
+        {
+            id: "italic"
+        },
+        {
+            id: "oblique"
+        }
+    ],
+    defaultValue: undefined,
+    inheritable: true,
+    hideInPropertyGrid: isNotDashboardProject,
+    cssAttributeName: "font-style",
+    propertyMenu
 };
 
 const alignHorizontalProperty: PropertyInfo = {
@@ -293,7 +418,7 @@ const alignHorizontalProperty: PropertyInfo = {
             id: "right"
         }
     ],
-    defaultValue: "center",
+    defaultValue: undefined,
     inheritable: true
 };
 
@@ -311,7 +436,7 @@ const alignVerticalProperty: PropertyInfo = {
             id: "bottom"
         }
     ],
-    defaultValue: "center",
+    defaultValue: undefined,
     inheritable: true
 };
 
@@ -319,16 +444,19 @@ const colorProperty: PropertyInfo = {
     name: "color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: "#000000",
-    inheritable: true
+    defaultValue: undefined,
+    inheritable: true,
+    cssAttributeName: "color",
+    propertyMenu
 };
 
 const backgroundColorProperty: PropertyInfo = {
     name: "backgroundColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: "#ffffff",
+    defaultValue: undefined,
     inheritable: true,
+    cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu
 };
 
@@ -336,25 +464,29 @@ const backgroundImageProperty: PropertyInfo = {
     name: "backgroundImage",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "bitmaps",
-    inheritable: true
+    inheritable: true,
+    propertyMenu
 };
 
 const activeColorProperty: PropertyInfo = {
     name: "activeColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: "#ffffff",
+    defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: hideInPropertyGridIfV1
+    cssAttributeName: "color",
+    propertyMenu,
+    hideInPropertyGrid: isV1Project
 };
 
 const activeBackgroundColorProperty: PropertyInfo = {
     name: "activeBackgroundColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: "#000000",
+    defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: hideInPropertyGridIfV1,
+    hideInPropertyGrid: isV1Project,
+    cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu
 };
 
@@ -362,62 +494,128 @@ const focusColorProperty: PropertyInfo = {
     name: "focusColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: "#ffffff",
+    defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: hideInPropertyGridIfV1
+    cssAttributeName: "color",
+    propertyMenu,
+    hideInPropertyGrid: isV1Project
 };
 
 const focusBackgroundColorProperty: PropertyInfo = {
     name: "focusBackgroundColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: "#000000",
+    defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: hideInPropertyGridIfV1,
-    propertyMenu: backgroundColorPropertyMenu
+    cssAttributeName: "background-color",
+    propertyMenu: backgroundColorPropertyMenu,
+    hideInPropertyGrid: isV1Project
 };
 
 const borderSizeProperty: PropertyInfo = {
     name: "borderSize",
     type: PropertyType.String,
-    defaultValue: "0",
-    inheritable: true
+    defaultValue: undefined,
+    inheritable: true,
+    cssAttributeName: "border-width",
+    propertyMenu
 };
 
 const borderRadiusProperty: PropertyInfo = {
     name: "borderRadius",
     type: PropertyType.String,
-    defaultValue: "0",
-    inheritable: true
+    defaultValue: undefined,
+    inheritable: true,
+    cssAttributeName: "border-radius",
+    propertyMenu
 };
 
 const borderColorProperty: PropertyInfo = {
     name: "borderColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: "#000000",
-    inheritable: true
+    defaultValue: undefined,
+    inheritable: true,
+    cssAttributeName: "border-color",
+    propertyMenu
+};
+
+const borderStyleProperty: PropertyInfo = {
+    name: "borderStyle",
+    type: PropertyType.Enum,
+    enumItems: [
+        {
+            id: "dotted"
+        },
+        {
+            id: "dashed"
+        },
+        {
+            id: "solid"
+        },
+        {
+            id: "double"
+        },
+        {
+            id: "groove"
+        },
+        {
+            id: "ridge"
+        },
+        {
+            id: "inset"
+        },
+        {
+            id: "outset"
+        },
+        {
+            id: "none"
+        },
+        {
+            id: "hidden"
+        }
+    ],
+    defaultValue: undefined,
+    inheritable: true,
+    cssAttributeName: "border-style",
+    propertyMenu,
+    hideInPropertyGrid: isNotDashboardProject
 };
 
 const paddingProperty: PropertyInfo = {
     name: "padding",
     type: PropertyType.String,
-    defaultValue: "0",
+    defaultValue: undefined,
+    cssAttributeName: "padding",
+    propertyMenu,
     inheritable: true
 };
 
 const marginProperty: PropertyInfo = {
     name: "margin",
     type: PropertyType.String,
-    defaultValue: "0",
-    inheritable: true
+    defaultValue: undefined,
+    inheritable: true,
+    hideInPropertyGrid: isV3OrNewerProject
 };
 
 const opacityProperty: PropertyInfo = {
     name: "opacity",
     type: PropertyType.Number,
-    defaultValue: 255,
+    defaultValue: undefined,
+    cssAttributeName: "opacity",
+    propertyMenu,
     inheritable: true
+};
+
+const boxShadowProperty: PropertyInfo = {
+    name: "boxShadow",
+    type: PropertyType.String,
+    defaultValue: undefined,
+    inheritable: true,
+    cssAttributeName: "box-shadow",
+    propertyMenu,
+    hideInPropertyGrid: isNotDashboardProject
 };
 
 const blinkProperty: PropertyInfo = {
@@ -427,12 +625,31 @@ const blinkProperty: PropertyInfo = {
     inheritable: true
 };
 
+const cssProperty: PropertyInfo = {
+    name: "css",
+    displayName: "Additional CSS",
+    type: PropertyType.CSS,
+    cssAttributeName: "css",
+    propertyMenu,
+    hideInPropertyGrid: isNotDashboardProject
+};
+
+const cssPreviewProperty: PropertyInfo = {
+    name: "cssPreview",
+    displayName: "CSS preview",
+    type: PropertyType.CSS,
+    hideInPropertyGrid: isNotDashboardProject,
+    readOnlyInPropertyGrid: true,
+    computed: true
+};
+
 const alwaysBuildProperty: PropertyInfo = {
     name: "alwaysBuild",
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: false,
-    hideInPropertyGrid: isWidgetParentOfStyle
+    hideInPropertyGrid: (style: Style) =>
+        isWidgetParentOfStyle(style) || isDashboardProject(style)
 };
 
 const properties = [
@@ -441,6 +658,10 @@ const properties = [
     descriptionProperty,
     inheritFromProperty,
     fontProperty,
+    fontFamilyProperty,
+    fontSizeProperty,
+    fontWeightProperty,
+    fontStyleProperty,
     alignHorizontalProperty,
     alignVerticalProperty,
     colorProperty,
@@ -453,10 +674,14 @@ const properties = [
     borderSizeProperty,
     borderRadiusProperty,
     borderColorProperty,
+    borderStyleProperty,
     paddingProperty,
     marginProperty,
     opacityProperty,
+    boxShadowProperty,
     blinkProperty,
+    cssProperty,
+    cssPreviewProperty,
     alwaysBuildProperty
 ];
 
@@ -533,6 +758,10 @@ export class Style extends EezObject {
     @observable alwaysBuild: boolean;
 
     @observable font?: string;
+    @observable fontFamily?: string;
+    @observable fontSize?: string;
+    @observable fontWeight?: string;
+    @observable fontStyle?: string;
     @observable alignHorizontal?: string;
     @observable alignVertical?: string;
     @observable color?: string;
@@ -544,10 +773,14 @@ export class Style extends EezObject {
     @observable borderSize?: string;
     @observable borderRadius?: string;
     @observable borderColor?: string;
+    @observable borderStyle?: string;
     @observable padding?: string;
     @observable margin?: string;
     @observable opacity: number;
+    @observable boxShadow?: string;
     @observable blink?: boolean;
+
+    @observable css?: string;
 
     static classInfo: ClassInfo = {
         properties,
@@ -597,164 +830,196 @@ export class Style extends EezObject {
             getInheritedValue(styleObject, propertyName, [], false),
         icon: "format_color_fill",
         defaultValue: {},
-        check: (object: Style) => {
+        check: (style: Style) => {
             let messages: Message[] = [];
 
-            const DocumentStore = getDocumentStore(object);
+            const DocumentStore = getDocumentStore(style);
 
             if (DocumentStore.project.isDashboardProject) {
-                return messages;
-            }
-
-            if (object.id != undefined) {
-                if (!(object.id > 0 || object.id < 32768)) {
+                if (
+                    style.inheritFrom &&
+                    !findStyle(DocumentStore.project, style.inheritFrom)
+                ) {
                     messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `"Id": invalid value, should be greater then 0 and less then 32768.`,
-                            getChildOfObject(object, "id")
-                        )
+                        propertyNotFoundMessage(style, "inheritFrom")
+                    );
+                }
+
+                // TODO
+            } else {
+                if (style.id != undefined) {
+                    if (!(style.id > 0 || style.id < 32768)) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"Id": invalid value, should be greater then 0 and less then 32768.`,
+                                getChildOfObject(style, "id")
+                            )
+                        );
+                    } else {
+                        if (
+                            DocumentStore.project.allStyleIdToStyleMap.get(
+                                style.id
+                            )!.length > 1
+                        ) {
+                            messages.push(
+                                propertyNotUniqueMessage(style, "id")
+                            );
+                        }
+                    }
+                }
+
+                if (
+                    style.inheritFrom &&
+                    !findStyle(DocumentStore.project, style.inheritFrom)
+                ) {
+                    messages.push(
+                        propertyNotFoundMessage(style, "inheritFrom")
                     );
                 } else {
+                    // if (!object.fontName) {
+                    //     messages.push(output.propertyNotFoundMessage(object, "font"));
+                    // }
+
+                    let borderSizeError = Style.getRect(
+                        style.borderSizeProperty
+                    ).error;
+                    if (borderSizeError) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"Border size": ${borderSizeError}.`,
+                                getChildOfObject(style, "borderSize")
+                            )
+                        );
+                    }
+
+                    let borderRadiusError = Style.getRect(
+                        style.borderRadiusProperty
+                    ).error;
+                    if (borderRadiusError) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"Border radius": ${borderRadiusError}.`,
+                                getChildOfObject(style, "borderRadius")
+                            )
+                        );
+                    }
+
+                    let alignHorizontal = style.alignHorizontalProperty;
                     if (
-                        DocumentStore.project.allStyleIdToStyleMap.get(
-                            object.id
-                        )!.length > 1
+                        alignHorizontal &&
+                        alignHorizontal != "left" &&
+                        alignHorizontal != "center" &&
+                        alignHorizontal != "right"
                     ) {
-                        messages.push(propertyNotUniqueMessage(object, "id"));
-                    }
-                }
-            }
-
-            if (
-                object.inheritFrom &&
-                !findStyle(DocumentStore.project, object.inheritFrom)
-            ) {
-                messages.push(propertyNotFoundMessage(object, "inheritFrom"));
-            } else {
-                // if (!object.fontName) {
-                //     messages.push(output.propertyNotFoundMessage(object, "font"));
-                // }
-
-                let borderSizeError = Style.getRect(
-                    object.borderSizeProperty
-                ).error;
-                if (borderSizeError) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `"Border size": ${borderSizeError}.`,
-                            getChildOfObject(object, "borderSize")
-                        )
-                    );
-                }
-
-                let borderRadiusError = Style.getRect(
-                    object.borderRadiusProperty
-                ).error;
-                if (borderRadiusError) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `"Border radius": ${borderRadiusError}.`,
-                            getChildOfObject(object, "borderRadius")
-                        )
-                    );
-                }
-
-                let alignHorizontal = object.alignHorizontalProperty;
-                if (
-                    alignHorizontal != "left" &&
-                    alignHorizontal != "center" &&
-                    alignHorizontal != "right"
-                ) {
-                    messages.push(
-                        propertyInvalidValueMessage(object, "alignHorizontal")
-                    );
-                }
-
-                let alignVertical = object.alignVerticalProperty;
-                if (
-                    alignVertical != "top" &&
-                    alignVertical != "center" &&
-                    alignVertical != "bottom"
-                ) {
-                    messages.push(
-                        propertyInvalidValueMessage(object, "alignVertical")
-                    );
-                }
-
-                if (isNaN(object.color16)) {
-                    messages.push(propertyInvalidValueMessage(object, "color"));
-                }
-
-                if (isNaN(object.backgroundColor16)) {
-                    messages.push(
-                        propertyInvalidValueMessage(object, "backgroundColor")
-                    );
-                }
-
-                if (
-                    DocumentStore.project.settings.general.projectVersion !==
-                    "v1"
-                ) {
-                    if (isNaN(object.activeColor16)) {
-                        messages.push(
-                            propertyInvalidValueMessage(object, "activeColor")
-                        );
-                    }
-
-                    if (isNaN(object.activeBackgroundColor16)) {
                         messages.push(
                             propertyInvalidValueMessage(
-                                object,
-                                "activeBackgroundColor"
+                                style,
+                                "alignHorizontal"
                             )
                         );
                     }
 
-                    if (isNaN(object.focusColor16)) {
+                    let alignVertical = style.alignVerticalProperty;
+                    if (
+                        alignVertical &&
+                        alignVertical != "top" &&
+                        alignVertical != "center" &&
+                        alignVertical != "bottom"
+                    ) {
                         messages.push(
-                            propertyInvalidValueMessage(object, "focusColor")
+                            propertyInvalidValueMessage(style, "alignVertical")
                         );
                     }
 
-                    if (isNaN(object.focusBackgroundColor16)) {
+                    if (isNaN(style.color16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(style, "color")
+                        );
+                    }
+
+                    if (isNaN(style.backgroundColor16)) {
                         messages.push(
                             propertyInvalidValueMessage(
-                                object,
-                                "focusBackgroundColor"
+                                style,
+                                "backgroundColor"
                             )
                         );
                     }
-                }
 
-                if (isNaN(object.borderColor16)) {
-                    messages.push(
-                        propertyInvalidValueMessage(object, "borderColor")
-                    );
-                }
+                    if (
+                        DocumentStore.project.settings.general
+                            .projectVersion !== "v1"
+                    ) {
+                        if (isNaN(style.activeColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(
+                                    style,
+                                    "activeColor"
+                                )
+                            );
+                        }
 
-                let paddingError = Style.getRect(object.paddingProperty).error;
-                if (paddingError) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `"Padding": ${paddingError}.`,
-                            getChildOfObject(object, "padding")
-                        )
-                    );
-                }
+                        if (isNaN(style.activeBackgroundColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(
+                                    style,
+                                    "activeBackgroundColor"
+                                )
+                            );
+                        }
 
-                let marginError = Style.getRect(object.marginProperty).error;
-                if (marginError) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `"Margin": ${marginError}.`,
-                            getChildOfObject(object, "margin")
-                        )
-                    );
+                        if (isNaN(style.focusColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(style, "focusColor")
+                            );
+                        }
+
+                        if (isNaN(style.focusBackgroundColor16)) {
+                            messages.push(
+                                propertyInvalidValueMessage(
+                                    style,
+                                    "focusBackgroundColor"
+                                )
+                            );
+                        }
+                    }
+
+                    if (isNaN(style.borderColor16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(style, "borderColor")
+                        );
+                    }
+
+                    let paddingError = Style.getRect(
+                        style.paddingProperty
+                    ).error;
+                    if (paddingError) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"Padding": ${paddingError}.`,
+                                getChildOfObject(style, "padding")
+                            )
+                        );
+                    }
+
+                    if (!isV3OrNewerProject(style)) {
+                        let marginError = Style.getRect(
+                            style.marginProperty
+                        ).error;
+                        if (marginError) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `"Margin": ${marginError}.`,
+                                    getChildOfObject(style, "margin")
+                                )
+                            );
+                        }
+                    }
                 }
             }
 
@@ -787,6 +1052,26 @@ export class Style extends EezObject {
         }
 
         return undefined;
+    }
+
+    @computed
+    get fontFamilyProperty(): string {
+        return getStyleProperty(this, "fontFamily");
+    }
+
+    @computed
+    get fontSizeProperty(): string {
+        return getStyleProperty(this, "fontSize");
+    }
+
+    @computed
+    get fontWeightProperty(): string {
+        return getStyleProperty(this, "fontWeight");
+    }
+
+    @computed
+    get fontStyleProperty(): string {
+        return getStyleProperty(this, "fontStyle");
     }
 
     static getRect(value: string) {
@@ -1206,6 +1491,13 @@ export class Style extends EezObject {
     @computed({
         keepAlive: true
     })
+    get borderStyleProperty(): string {
+        return getStyleProperty(this, "borderStyle");
+    }
+
+    @computed({
+        keepAlive: true
+    })
     get paddingProperty(): string {
         return getStyleProperty(this, "padding");
     }
@@ -1245,6 +1537,13 @@ export class Style extends EezObject {
     @computed({
         keepAlive: true
     })
+    get boxShadowProperty(): number {
+        return getStyleProperty(this, "boxShadow");
+    }
+
+    @computed({
+        keepAlive: true
+    })
     get blinkProperty(): number {
         return getStyleProperty(this, "blink");
     }
@@ -1252,6 +1551,10 @@ export class Style extends EezObject {
     compareTo(otherStyle: Style): boolean {
         return (
             this.fontName === otherStyle.fontName &&
+            this.fontFamilyProperty === otherStyle.fontFamilyProperty &&
+            this.fontSizeProperty === otherStyle.fontSizeProperty &&
+            this.fontWeightProperty === otherStyle.fontWeightProperty &&
+            this.fontStyleProperty === otherStyle.fontStyleProperty &&
             this.alignHorizontalProperty ===
                 otherStyle.alignHorizontalProperty &&
             this.alignVerticalProperty === otherStyle.alignVerticalProperty &&
@@ -1269,11 +1572,262 @@ export class Style extends EezObject {
             this.borderSizeProperty === otherStyle.borderSizeProperty &&
             this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
             this.borderColorProperty === otherStyle.borderColorProperty &&
+            this.borderStyleProperty === otherStyle.borderStyleProperty &&
             this.paddingProperty === otherStyle.paddingProperty &&
             this.marginProperty === otherStyle.marginProperty &&
             this.opacityProperty === otherStyle.opacityProperty &&
+            this.boxShadowProperty === otherStyle.boxShadowProperty &&
             this.blinkProperty === otherStyle.blinkProperty
         );
+    }
+
+    @computed get cssDeclarations() {
+        const DocumentStore = getDocumentStore(this);
+
+        let spec = [
+            {
+                selector: "",
+                attrs: [
+                    ["font-family", this.fontFamily],
+                    ["font-weight", this.fontWeight],
+                    ["font-style", this.fontStyle],
+                    [
+                        "color",
+                        this.color && getThemedColor(DocumentStore, this.color)
+                    ],
+                    [
+                        "background-color",
+                        this.backgroundColor &&
+                            getThemedColor(DocumentStore, this.backgroundColor)
+                    ],
+                    [
+                        "border-color",
+                        this.borderColor &&
+                            getThemedColor(DocumentStore, this.borderColor)
+                    ],
+                    ["border-style", this.borderStyle],
+                    ["box-shadow", this.boxShadow]
+                ]
+            },
+            {
+                selector: ":active",
+                attrs: [
+                    [
+                        "color",
+                        this.activeColor &&
+                            getThemedColor(DocumentStore, this.activeColor)
+                    ],
+                    [
+                        "background-color",
+                        this.activeBackgroundColor &&
+                            getThemedColor(
+                                DocumentStore,
+                                this.activeBackgroundColor
+                            )
+                    ]
+                ]
+            },
+            {
+                selector: ":focus",
+                attrs: [
+                    [
+                        "color",
+                        this.focusColor &&
+                            getThemedColor(DocumentStore, this.focusColor)
+                    ],
+                    [
+                        "background-color",
+                        this.focusBackgroundColor &&
+                            getThemedColor(
+                                DocumentStore,
+                                this.focusBackgroundColor
+                            )
+                    ]
+                ]
+            }
+        ];
+
+        function appendPx(value: string | undefined) {
+            if (!value) {
+                return undefined;
+            }
+
+            let result: number | string = Number.parseInt(value);
+            if (isNaN(result)) {
+                result = value;
+            } else {
+                if (result.toString() == value) {
+                    result = value + "px";
+                } else {
+                    result = value;
+                }
+            }
+
+            return result;
+        }
+
+        function addNumberStyle(attr: string, value: string | undefined) {
+            const modValue = appendPx(value);
+            if (modValue != undefined) {
+                spec[0].attrs.push([attr, modValue]);
+            }
+        }
+
+        addNumberStyle("font-size", this.fontSize);
+        addNumberStyle("border-width", this.borderSize);
+
+        if (this.borderRadius) {
+            const value = this.borderRadius
+                .split("/")
+                .map(part =>
+                    part
+                        .split(/\s+/)
+                        .map(value => appendPx(value))
+                        .join(" ")
+                )
+                .join(" / ");
+
+            spec[0].attrs.push(["border-radius", value]);
+        }
+
+        if (this.padding) {
+            const values = this.padding
+                .split(/\s+/)
+                .map(value => appendPx(value))
+                .join(" ");
+
+            spec[0].attrs.push(["padding", values]);
+        }
+
+        if (
+            this.alignHorizontal != undefined ||
+            this.alignVertical != undefined
+        ) {
+            spec[0].attrs.push(["display", "flex"]);
+
+            if (this.alignHorizontal != undefined) {
+                spec[0].attrs.push([
+                    "justify-content",
+                    this.alignHorizontal == "left"
+                        ? "flex-start"
+                        : this.alignHorizontal == "right"
+                        ? "flex-end"
+                        : "center"
+                ]);
+            }
+
+            if (this.alignVertical != undefined) {
+                spec[0].attrs.push([
+                    "align-items",
+                    this.alignVertical == "top"
+                        ? "flex-start"
+                        : this.alignVertical == "bottom"
+                        ? "flex-end"
+                        : "center"
+                ]);
+            }
+        }
+
+        if (this.opacity) {
+            spec[0].attrs.push(["opacity", this.opacity.toString()]);
+        }
+
+        if (this.blink) {
+            spec[0].attrs.push(["animation", "blinker 1s linear infinite"]);
+        }
+
+        spec.forEach(value => {
+            value.attrs = value.attrs.filter(attr => !!attr[1]);
+        });
+
+        spec = spec.filter(value => value.attrs.length > 0);
+
+        let declarations = "";
+
+        spec.forEach(value => {
+            const attrs = value.attrs.map(attr => `${attr[0]}: ${attr[1]};`);
+
+            if (declarations) {
+                declarations += "\n";
+            }
+
+            if (value.selector) {
+                declarations += `&${value.selector} {\n\t${attrs.join(
+                    "\n\t"
+                )}\n}`;
+            } else {
+                declarations += attrs.join("\n");
+            }
+        });
+
+        if (this.blink) {
+            declarations +=
+                "\n@keyframes blinker {\n\t50% {\n\t\topacity: 0;\n\t}\n}";
+        }
+
+        if (this.css) {
+            if (declarations) {
+                declarations += "\n";
+            }
+            declarations += this.css;
+        }
+
+        return declarations;
+    }
+
+    @computed get cssPreview() {
+        let cssPreview = "";
+
+        if (this.inheritFrom) {
+            const inheritFromStyle = findStyle(
+                ProjectEditor.getProject(this),
+                this.inheritFrom
+            );
+            if (inheritFromStyle && inheritFromStyle.cssPreview) {
+                if (cssPreview) {
+                    cssPreview += "\n";
+                }
+                cssPreview += inheritFromStyle.cssPreview;
+            }
+        }
+
+        if (this.cssDeclarations) {
+            if (cssPreview) {
+                cssPreview += "\n";
+            }
+            if (this.name) {
+                cssPreview += `/* ${this.name} */\n`;
+            } else {
+                cssPreview += `/* inline style */\n`;
+            }
+            cssPreview += this.cssDeclarations;
+        }
+
+        return cssPreview;
+    }
+
+    @computed get classNames(): string[] {
+        const classNames = [];
+
+        if (isDashboardProject(this)) {
+            if (this.inheritFrom) {
+                const inheritFromStyle = findStyle(
+                    ProjectEditor.getProject(this),
+                    this.inheritFrom
+                );
+                if (inheritFromStyle) {
+                    classNames.push(...inheritFromStyle.classNames);
+                }
+            }
+
+            if (this.cssDeclarations) {
+                classNames.push(css`
+                    ${this.cssDeclarations}
+                `);
+            }
+        }
+
+        return classNames;
     }
 }
 

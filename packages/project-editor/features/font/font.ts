@@ -25,7 +25,7 @@ import {
     getLabel,
     getDocumentStore,
     Message,
-    hideInPropertyGridIfNotV1
+    isNotV1Project
 } from "project-editor/core/store";
 import type { Project } from "project-editor/project/project";
 
@@ -915,7 +915,7 @@ export class Font extends EezObject {
                         id: "landscape"
                     }
                 ],
-                hideInPropertyGrid: hideInPropertyGridIfNotV1
+                hideInPropertyGrid: isNotV1Project
             },
             {
                 name: "alwaysBuild",

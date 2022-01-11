@@ -147,12 +147,6 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(style.paddingRect.bottom);
         dataBuffer.writeUint8(style.paddingRect.left);
 
-        // margin
-        dataBuffer.writeUint8(style.marginRect.top);
-        dataBuffer.writeUint8(style.marginRect.right);
-        dataBuffer.writeUint8(style.marginRect.bottom);
-        dataBuffer.writeUint8(style.marginRect.left);
-
         // backgroundImage
         let backgroundImage: number = 0;
         if (style.backgroundImageProperty) {

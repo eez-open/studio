@@ -1,7 +1,9 @@
 import React from "react";
 import { computed, IObservableValue } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 import * as FlexLayout from "flexlayout-react";
+
 import { LayoutModels } from "project-editor/core/store";
 import { ListNavigation } from "project-editor/components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
@@ -148,6 +150,9 @@ class StyleEditor extends React.Component<{
     text: string;
     style: IObservableValue<Style | undefined>;
 }> {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
     render() {
         const { width, height, text } = this.props;
 
@@ -156,16 +161,31 @@ class StyleEditor extends React.Component<{
             return null;
         }
 
-        let canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        drawStylePreview(canvas, style, text);
+        if (this.context.project.isDashboardProject) {
+            return (
+                <div className="EezStudio_StylePreviewContainer">
+                    <div
+                        className={classNames(
+                            "EezStudio_StylePreview",
+                            style.classNames
+                        )}
+                    >
+                        {text}
+                    </div>
+                </div>
+            );
+        } else {
+            let canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            drawStylePreview(canvas, style, text);
 
-        return (
-            <img
-                className="EezStudio_StyleEditorImg"
-                src={canvas.toDataURL()}
-            />
-        );
+            return (
+                <img
+                    className="EezStudio_StyleEditorImg"
+                    src={canvas.toDataURL()}
+                />
+            );
+        }
     }
 }
