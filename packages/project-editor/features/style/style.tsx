@@ -481,6 +481,7 @@ const activeColorProperty: PropertyInfo = {
 
 const activeBackgroundColorProperty: PropertyInfo = {
     name: "activeBackgroundColor",
+    displayName: "Active back. color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: undefined,
@@ -503,6 +504,7 @@ const focusColorProperty: PropertyInfo = {
 
 const focusBackgroundColorProperty: PropertyInfo = {
     name: "focusBackgroundColor",
+    displayName: "Focus back. color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: undefined,
