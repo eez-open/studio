@@ -18,6 +18,18 @@ const writeIcon: any = (
     </svg>
 );
 
+const fileSaveDialogIcon: any = (
+    <svg viewBox="0 0 512 512">
+        <path d="M362.7 64h-256C83 64 64 83.2 64 106.7v298.7c0 23.5 19 42.7 42.7 42.7h298.7c23.5 0 42.7-19.2 42.7-42.7v-256L362.7 64zM256 405.3c-35.4 0-64-28.6-64-64s28.6-64 64-64 64 28.6 64 64-28.6 64-64 64zM320 192H106.7v-85.3H320V192z" />
+    </svg>
+);
+
+const showFileInFolderIcon: any = (
+    <svg viewBox="0 0 32 32">
+        <path d="M6 3v26h10.813l2-2H8V5h10v6h6v5.406c.6-.2 1.3-.406 2-.406V9.594L19.406 3H6zm14 3.406L22.594 9H20V6.406zM26.5 18c-3.026 0-5.5 2.474-5.5 5.5 0 1.159.35 2.236.969 3.125l-3.688 3.656 1.438 1.438 3.656-3.688c.89.618 1.966.969 3.125.969 3.026 0 5.5-2.474 5.5-5.5S29.526 18 26.5 18zm0 2c1.945 0 3.5 1.555 3.5 3.5S28.445 27 26.5 27a3.485 3.485 0 0 1-3.5-3.5c0-1.945 1.555-3.5 3.5-3.5z" />
+    </svg>
+);
+
 const componentHeaderColor = "#f1ffc4";
 
 registerActionComponents("File", [
@@ -150,6 +162,67 @@ registerActionComponents("File", [
                 contentValue,
                 encodingValue as any
             );
+
+            return undefined;
+        }
+    },
+    {
+        name: "FileSaveDialog",
+        icon: fileSaveDialogIcon,
+        componentHeaderColor,
+        inputs: [],
+        outputs: [
+            {
+                name: "file_path",
+                type: "string",
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            }
+        ],
+        properties: [
+            {
+                name: "fileName",
+                type: "expression",
+                valueType: "string"
+            }
+        ],
+        execute: async (flowState, ...[fileName]) => {
+            const fileNameValue = flowState.evalExpression(fileName);
+            if (fileNameValue && typeof fileNameValue != "string") {
+                throw `"${fileName}" is not a string`;
+            }
+
+            const result = await EEZStudio.remote.dialog.showSaveDialog({
+                defaultPath: fileNameValue
+            });
+
+            if (!result.canceled) {
+                flowState.propagateValue("file_path", result.filePath);
+            }
+
+            return undefined;
+        }
+    },
+    {
+        name: "ShowFileInFolder",
+        icon: showFileInFolderIcon,
+        componentHeaderColor,
+        inputs: [],
+        outputs: [],
+        properties: [
+            {
+                name: "filePath",
+                type: "expression",
+                valueType: "string"
+            }
+        ],
+        execute: async (flowState, ...[filePath]) => {
+            const filePathValue = flowState.evalExpression(filePath);
+            if (typeof filePathValue != "string") {
+                throw `"${filePathValue}" is not a string`;
+            }
+
+            EEZStudio.electron.shell.showItemInFolder(filePathValue);
 
             return undefined;
         }

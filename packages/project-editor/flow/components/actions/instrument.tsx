@@ -53,6 +53,7 @@ import {
     SCPI_PART_STRING
 } from "eez-studio-shared/scpi-parser";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { FileHistoryItem } from "instrument/window/history/items/file";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -231,21 +232,40 @@ export class SCPIActionComponent extends ActionComponent {
                     );
                     let result = await connection.query(command);
                     command = "";
-                    flowState.logScpi(
-                        `SCPI QUERY RESULT [${instrument.name}]: ${
-                            result != undefined ? JSON.stringify(result) : ""
-                        }`,
-                        this
-                    );
+
+                    if (result instanceof FileHistoryItem) {
+                        flowState.logScpi(
+                            `SCPI QUERY RESULT [${instrument.name}]: file, size: ${result.fileLength})`,
+                            this
+                        );
+                        result = result.data;
+                    } else {
+                        let resultStr;
+                        try {
+                            resultStr =
+                                result != undefined
+                                    ? JSON.stringify(result)
+                                    : "";
+                        } catch (err) {
+                            resultStr = "unknown";
+                        }
+
+                        flowState.logScpi(
+                            `SCPI QUERY RESULT [${instrument.name}]: ${resultStr}`,
+                            this
+                        );
+                    }
 
                     if (typeof result === "object" && result.error) {
                         throw result.error;
                     }
 
                     if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
-                        const resultStr = parseScpiString(result);
-                        if (resultStr) {
-                            result = resultStr;
+                        if (typeof result == "string") {
+                            const resultStr = parseScpiString(result);
+                            if (resultStr) {
+                                result = resultStr;
+                            }
                         }
 
                         const assignableExpression =

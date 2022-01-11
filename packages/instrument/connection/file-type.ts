@@ -16,14 +16,14 @@ export const MIME_EEZ_LIST = "application/eez-list";
 export const MIME_CSV = "text/csv";
 
 export function detectFileType(
-    data: string | Buffer,
+    data: string | Buffer | Uint8Array,
     fileName?: string
 ): {
     ext?: string;
     mime: string;
     comment?: string;
 } {
-    const dataSample = getUint8Array(data);
+    const dataSample = data instanceof Uint8Array ? data : getUint8Array(data);
 
     let type = isDlog(dataSample);
     if (type) {
@@ -36,7 +36,9 @@ export function detectFileType(
         return type;
     }
 
-    const csvMime = detectCSV(data);
+    const csvMime = detectCSV(
+        data instanceof Uint8Array ? Buffer.from(data) : data
+    );
     if (csvMime) {
         return {
             ext: "csv",

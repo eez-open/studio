@@ -1,0 +1,266 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "dashboard",
+      "imports": []
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [
+      {
+        "name": "instrument",
+        "type": "object:Instrument",
+        "defaultValue": "null",
+        "persistent": true
+      }
+    ],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "pages": [
+    {
+      "components": [
+        {
+          "type": "SCPIActionComponent",
+          "left": 291,
+          "top": -83,
+          "width": 245,
+          "height": 54,
+          "wireID": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "customInputs": [],
+          "customOutputs": [
+            {
+              "name": "screenshot",
+              "type": "any"
+            }
+          ],
+          "instrument": "instrument",
+          "scpi": "{screenshot} = disp:data?"
+        },
+        {
+          "type": "BitmapWidget",
+          "left": 157,
+          "top": 86,
+          "width": 486,
+          "height": 278,
+          "wireID": "b0ae2d75-d653-4ed8-bb99-36f0fe7e4ee2",
+          "customInputs": [
+            {
+              "name": "data",
+              "type": "any"
+            }
+          ],
+          "customOutputs": [],
+          "data": "data",
+          "style": {
+            "inheritFrom": "default",
+            "borderSize": "1",
+            "borderColor": "#ccc",
+            "borderStyle": "solid",
+            "padding": "2"
+          }
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 10,
+          "top": 10,
+          "width": 122,
+          "height": 32,
+          "wireID": "9d190c25-cedc-45a4-871e-a86e1b33795e",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Take screenshot\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "FileWrite",
+          "left": 1005,
+          "top": -54,
+          "width": 146,
+          "height": 73,
+          "wireID": "c3db390c-86c7-4129-802f-e54874023365",
+          "customInputs": [
+            {
+              "name": "file_path",
+              "type": "string"
+            },
+            {
+              "name": "screenshot",
+              "type": "any"
+            }
+          ],
+          "customOutputs": [],
+          "filePath": "file_path",
+          "content": "screenshot",
+          "encoding": "\"binary\""
+        },
+        {
+          "type": "ButtonWidget",
+          "left": 668,
+          "top": 10,
+          "width": 122,
+          "height": 32,
+          "wireID": "f4ef23ee-b5c1-4165-bf4b-07f721664204",
+          "customInputs": [],
+          "customOutputs": [],
+          "asOutputProperties": [
+            "action"
+          ],
+          "data": "\"Save...\"",
+          "style": {
+            "inheritFrom": "default"
+          },
+          "enabled": "save_enabled",
+          "disabledStyle": {
+            "inheritFrom": "default"
+          }
+        },
+        {
+          "type": "SetVariableActionComponent",
+          "left": 668,
+          "top": -112,
+          "width": 157,
+          "height": 58,
+          "wireID": "cc495e8a-66b7-47d3-9ea8-900972ad746f",
+          "customInputs": [],
+          "customOutputs": [],
+          "variable": "save_enabled",
+          "value": "true"
+        },
+        {
+          "type": "FileSaveDialog",
+          "left": 829,
+          "top": 10,
+          "width": 116,
+          "height": 54,
+          "wireID": "926238d5-6828-4a7b-e769-0ee455b903b1",
+          "customInputs": [],
+          "customOutputs": [],
+          "fileName": "\"screenshot.jpg\""
+        },
+        {
+          "type": "ShowFileInFolder",
+          "left": 1206,
+          "top": 10,
+          "width": 130,
+          "height": 54,
+          "wireID": "101307a5-4dca-489a-8976-473c98bf68a5",
+          "customInputs": [
+            {
+              "name": "filePath",
+              "type": "string"
+            }
+          ],
+          "customOutputs": [],
+          "filePath": "filePath"
+        }
+      ],
+      "connectionLines": [
+        {
+          "source": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "output": "screenshot",
+          "target": "b0ae2d75-d653-4ed8-bb99-36f0fe7e4ee2",
+          "input": "data"
+        },
+        {
+          "source": "9d190c25-cedc-45a4-871e-a86e1b33795e",
+          "output": "action",
+          "target": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "input": "@seqin"
+        },
+        {
+          "source": "f4ef23ee-b5c1-4165-bf4b-07f721664204",
+          "output": "action",
+          "target": "926238d5-6828-4a7b-e769-0ee455b903b1",
+          "input": "@seqin"
+        },
+        {
+          "source": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "output": "screenshot",
+          "target": "c3db390c-86c7-4129-802f-e54874023365",
+          "input": "screenshot"
+        },
+        {
+          "source": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "output": "@seqout",
+          "target": "cc495e8a-66b7-47d3-9ea8-900972ad746f",
+          "input": "@seqin"
+        },
+        {
+          "source": "926238d5-6828-4a7b-e769-0ee455b903b1",
+          "output": "file_path",
+          "target": "c3db390c-86c7-4129-802f-e54874023365",
+          "input": "file_path"
+        },
+        {
+          "source": "c3db390c-86c7-4129-802f-e54874023365",
+          "output": "@seqout",
+          "target": "101307a5-4dca-489a-8976-473c98bf68a5",
+          "input": "@seqin"
+        },
+        {
+          "source": "926238d5-6828-4a7b-e769-0ee455b903b1",
+          "output": "file_path",
+          "target": "101307a5-4dca-489a-8976-473c98bf68a5",
+          "input": "filePath"
+        }
+      ],
+      "localVariables": [
+        {
+          "name": "save_enabled",
+          "type": "boolean",
+          "defaultValue": "false",
+          "persistent": false
+        }
+      ],
+      "name": "Main",
+      "style": "page",
+      "left": 0,
+      "top": 0,
+      "width": 800,
+      "height": 450
+    }
+  ],
+  "styles": [
+    {
+      "name": "default"
+    },
+    {
+      "name": "page",
+      "inheritFrom": "",
+      "backgroundColor": "page_color",
+      "css": "\n"
+    }
+  ],
+  "colors": [
+    {
+      "name": "page_color"
+    }
+  ],
+  "themes": [
+    {
+      "name": "default",
+      "colors": [
+        "#f0f0f0"
+      ]
+    }
+  ]
+}

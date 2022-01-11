@@ -24,16 +24,8 @@
           },
           {
             "type": "border",
-            "selected": 0,
             "location": "right",
             "children": [
-              {
-                "type": "tab",
-                "id": "COMPONENTS_PALETTE",
-                "name": "Components Palette",
-                "component": "componentsPalette",
-                "enableClose": false
-              },
               {
                 "type": "tab",
                 "id": "#7bb99a6a-52ac-44dd-87c7-b6ca4538abb1",
@@ -46,13 +38,6 @@
                 "id": "BREAKPOINTS_PALETTE",
                 "name": "Breakpoints",
                 "component": "breakpointsPanel",
-                "enableClose": false
-              },
-              {
-                "type": "tab",
-                "id": "DEBUGGER",
-                "name": "Debugger",
-                "component": "debuggerPanel",
                 "enableClose": false
               }
             ]
@@ -92,7 +77,7 @@
             {
               "type": "tabset",
               "id": "NAVIGATION",
-              "weight": 16.177685950413224,
+              "weight": 13.518680770722524,
               "enableDrop": false,
               "enableDrag": false,
               "enableClose": false,
@@ -110,7 +95,7 @@
             {
               "type": "tabset",
               "id": "EDITORS",
-              "weight": 58.89881534549365,
+              "weight": 46.94399036866284,
               "enableDrop": false,
               "enableDrag": false,
               "enableTabStrip": false,
@@ -156,13 +141,34 @@
             {
               "type": "tabset",
               "id": "#ff888cc1-6450-4b49-909b-fe24c7cbc394",
-              "weight": 24.923498704093106,
+              "weight": 20.656419265997066,
               "children": [
                 {
                   "type": "tab",
                   "id": "PROPERTIES",
                   "name": "Properties",
                   "component": "propertiesPanel",
+                  "enableClose": false
+                },
+                {
+                  "type": "tab",
+                  "id": "DEBUGGER",
+                  "name": "Debugger",
+                  "component": "debuggerPanel",
+                  "enableClose": false
+                }
+              ]
+            },
+            {
+              "type": "tabset",
+              "id": "#7a4e3e8a-1fb7-4a4d-aa21-cc8c9d01ed5f",
+              "weight": 8.734626401248304,
+              "children": [
+                {
+                  "type": "tab",
+                  "id": "COMPONENTS_PALETTE",
+                  "name": "Components Palette",
+                  "component": "componentsPalette",
                   "enableClose": false
                 }
               ],

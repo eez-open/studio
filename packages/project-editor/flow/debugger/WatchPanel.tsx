@@ -192,13 +192,15 @@ class WatchTable extends React.Component<{
 
     getValueChildren = computedFn(
         (value: any, type: string | null): (() => ITreeNode[]) | undefined => {
+            const MAX_CHILDREN = 1000;
+
             if (Array.isArray(value)) {
                 return () => {
                     const elementType = type
                         ? getArrayElementTypeFromType(type)
                         : undefined;
 
-                    return value.map((element, i) => {
+                    return value.slice(0, MAX_CHILDREN).map((element, i) => {
                         const elementValue = value[i];
                         const name = `[${i}]`;
                         const type = elementType ?? typeof elementValue;
@@ -231,6 +233,8 @@ class WatchTable extends React.Component<{
                             type
                         );
                     }
+
+                    let numChildren = 0;
 
                     const children: ITreeNode[] = [];
                     for (const name in value) {
@@ -266,6 +270,10 @@ class WatchTable extends React.Component<{
                                 expanded: false
                             })
                         );
+
+                        if (++numChildren == MAX_CHILDREN) {
+                            break;
+                        }
                     }
                     return children;
                 };

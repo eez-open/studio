@@ -51,7 +51,7 @@ import {
 } from "project-editor/flow/editor/render";
 
 import { Page, findPage } from "project-editor/features/page/page";
-import { findBitmap } from "project-editor/features/bitmap/bitmap";
+import { Bitmap, findBitmap } from "project-editor/features/bitmap/bitmap";
 import { Style } from "project-editor/features/style/style";
 import { findVariable } from "project-editor/features/variable/variable";
 import {
@@ -139,6 +139,7 @@ import {
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { detectFileType } from "instrument/connection/file-type";
 
 const { MenuItem } = EEZStudio.remote || {};
 
@@ -2749,14 +2750,53 @@ export class BitmapWidget extends Widget {
             : undefined;
     }
 
+    getBitmap(flowContext: IFlowContext) {
+        if (this.bitmap) {
+            return findBitmap(getProject(this), this.bitmap);
+        }
+
+        if (this.data) {
+            let data;
+
+            if (flowContext.flowState) {
+                data = evalExpression(flowContext, this, this.data);
+            } else {
+                data = flowContext.dataContext.get(this.data);
+            }
+
+            if (typeof data === "string") {
+                const bitmap = findBitmap(getProject(this), data as string);
+                if (bitmap) {
+                    return bitmap;
+                }
+                return undefined;
+            }
+
+            if (data instanceof Uint8Array) {
+                const fileType = detectFileType(data);
+                return URL.createObjectURL(
+                    new Blob([data], { type: fileType.mime } /* (1) */)
+                );
+            }
+
+            return data;
+        }
+
+        return undefined;
+    }
+
     render(flowContext: IFlowContext) {
-        const bitmap = this.getBitmapObject(flowContext.dataContext);
+        const bitmap = this.getBitmap(flowContext);
 
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? (
                     bitmap ? (
-                        <img src={bitmap.image} />
+                        bitmap instanceof Bitmap ? (
+                            <img src={bitmap.image} />
+                        ) : (
+                            <img src={bitmap} />
+                        )
                     ) : null
                 ) : (
                     <ComponentCanvas
