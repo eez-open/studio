@@ -23,13 +23,12 @@ export class ObjectReferenceInput extends React.Component<{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    @observable dropdownOpen = false;
-    @observable dropdownLeft = 0;
-    @observable dropdownTop = 0;
-    @observable dropdownWidth = 0;
-
     buttonRef = React.createRef<HTMLButtonElement>();
     dropDownRef = React.createRef<HTMLDivElement>();
+    @observable dropDownOpen: boolean | undefined = false;
+    @observable dropDownLeft = 0;
+    @observable dropDownTop = 0;
+    @observable dropDownWidth = 0;
 
     @observable sortDirection: SortDirectionType = "none";
     @observable searchText: string = "";
@@ -62,6 +61,27 @@ export class ObjectReferenceInput extends React.Component<{
         this.searchText = ($(event.target).val() as string).trim();
     });
 
+    @action
+    setDropDownOpen(open: boolean) {
+        if (this.dropDownOpen === false) {
+            document.removeEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown,
+                true
+            );
+        }
+
+        this.dropDownOpen = open;
+
+        if (this.dropDownOpen) {
+            document.addEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown,
+                true
+            );
+        }
+    }
+
     openDropdown = action(() => {
         const buttonEl = this.buttonRef.current;
         if (!buttonEl) {
@@ -73,28 +93,29 @@ export class ObjectReferenceInput extends React.Component<{
             return;
         }
 
-        this.dropdownOpen = !this.dropdownOpen;
-        if (this.dropdownOpen) {
+        this.setDropDownOpen(!this.dropDownOpen);
+
+        if (this.dropDownOpen) {
             const rectInputGroup =
                 buttonEl.parentElement!.getBoundingClientRect();
 
-            this.dropdownLeft = rectInputGroup.left;
-            this.dropdownTop = rectInputGroup.bottom;
-            this.dropdownWidth = rectInputGroup.width;
+            this.dropDownLeft = rectInputGroup.left;
+            this.dropDownTop = rectInputGroup.bottom;
+            this.dropDownWidth = rectInputGroup.width;
 
-            if (this.dropdownLeft + this.dropdownWidth > window.innerWidth) {
-                this.dropdownLeft = window.innerWidth - this.dropdownWidth;
+            if (this.dropDownLeft + this.dropDownWidth > window.innerWidth) {
+                this.dropDownLeft = window.innerWidth - this.dropDownWidth;
             }
 
             const DROP_DOWN_HEIGHT = 270;
-            if (this.dropdownTop + DROP_DOWN_HEIGHT + 20 > window.innerHeight) {
-                this.dropdownTop = window.innerHeight - (DROP_DOWN_HEIGHT + 20);
+            if (this.dropDownTop + DROP_DOWN_HEIGHT + 20 > window.innerHeight) {
+                this.dropDownTop = window.innerHeight - (DROP_DOWN_HEIGHT + 20);
             }
         }
     });
 
-    onDocumentClick = action((event: MouseEvent) => {
-        if (this.dropdownOpen) {
+    onDocumentPointerDown = action((event: MouseEvent) => {
+        if (this.dropDownOpen) {
             if (
                 !closest(
                     event.target,
@@ -103,18 +124,12 @@ export class ObjectReferenceInput extends React.Component<{
                         this.dropDownRef.current == el
                 )
             ) {
-                this.dropdownOpen = false;
+                event.preventDefault();
+                event.stopPropagation();
+                this.setDropDownOpen(false);
             }
         }
     });
-
-    componentDidMount() {
-        document.addEventListener("click", this.onDocumentClick, true);
-    }
-
-    componentWillUnmount() {
-        document.removeEventListener("click", this.onDocumentClick, true);
-    }
 
     render() {
         const { value, readOnly } = this.props;
@@ -143,12 +158,12 @@ export class ObjectReferenceInput extends React.Component<{
                                 ref={this.dropDownRef}
                                 className="dropdown-menu dropdown-menu-end EezStudio_ObjectReferenceInput_DropdownContent shadow rounded"
                                 style={{
-                                    display: this.dropdownOpen
+                                    display: this.dropDownOpen
                                         ? "block"
                                         : "none",
-                                    left: this.dropdownLeft,
-                                    top: this.dropdownTop,
-                                    width: this.dropdownWidth
+                                    left: this.dropDownLeft,
+                                    top: this.dropDownTop,
+                                    width: this.dropDownWidth
                                 }}
                             >
                                 <div>
@@ -167,7 +182,7 @@ export class ObjectReferenceInput extends React.Component<{
                                                     this.props.onChange(
                                                         objectName
                                                     );
-                                                    this.dropdownOpen = false;
+                                                    this.setDropDownOpen(false);
                                                 })}
                                             >
                                                 {objectName}

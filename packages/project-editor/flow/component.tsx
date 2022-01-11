@@ -35,7 +35,9 @@ import {
     getAncestorOfType,
     Message,
     propertyNotSetMessage,
-    updateObject
+    updateObject,
+    isDashboardOrAppletOrFirmwareWithFlowSupportProject,
+    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
 } from "project-editor/core/store";
 import { loadObject, objectToJS } from "project-editor/core/store";
 import {
@@ -175,11 +177,8 @@ export function makeDataPropertyInfo(
                     );
                 },
                 isOnSelectAvailable: (component: Component) => {
-                    const project = ProjectEditor.getProject(component);
-                    return (
-                        project.isAppletProject ||
-                        project.isFirmwareWithFlowSupportProject ||
-                        project.isDashboardProject
+                    return isDashboardOrAppletOrFirmwareWithFlowSupportProject(
+                        component
                     );
                 }
             },
@@ -1065,7 +1064,9 @@ export class Component extends EezObject {
                 propertyGridGroup: flowGroup,
                 partOfNavigation: false,
                 enumerable: false,
-                defaultValue: []
+                defaultValue: [],
+                hideInPropertyGrid:
+                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
             },
             {
                 name: "customOutputs",
@@ -1075,12 +1076,16 @@ export class Component extends EezObject {
                 propertyGridGroup: flowGroup,
                 partOfNavigation: false,
                 enumerable: false,
-                defaultValue: []
+                defaultValue: [],
+                hideInPropertyGrid:
+                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
             },
             {
                 name: "catchError",
                 type: PropertyType.Boolean,
-                propertyGridGroup: flowGroup
+                propertyGridGroup: flowGroup,
+                hideInPropertyGrid:
+                    isNotDashboardOrAppletOrFirmwareWithFlowSupportProject
             },
             {
                 name: "asOutputProperties",

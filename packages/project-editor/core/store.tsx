@@ -4703,6 +4703,12 @@ export function isDashboardOrAppletOrFirmwareWithFlowSupportProject(
     );
 }
 
+export function isNotDashboardOrAppletOrFirmwareWithFlowSupportProject(
+    object: IEezObject
+) {
+    return !isDashboardOrAppletOrFirmwareWithFlowSupportProject(object);
+}
+
 export function isV1Project(object: IEezObject) {
     const documentStore = getDocumentStore(object);
     return documentStore.project.settings.general.projectVersion === "v1";

@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
 import { SketchPicker } from "react-color";
 
@@ -11,6 +12,8 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 import { ProjectContext } from "project-editor/project/context";
 import { settingsController } from "home/settings";
+import { action, observable } from "mobx";
+import { closest } from "eez-studio-shared/dom";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +25,12 @@ export class ThemedColorInput extends React.Component<{
 }> {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
+
+    buttonRef = React.createRef<HTMLButtonElement>();
+    dropDownRef = React.createRef<HTMLDivElement>();
+    @observable dropDownOpen: boolean | undefined = undefined;
+    @observable dropDownLeft = 0;
+    @observable dropDownTop = 0;
 
     onDragOver = (event: React.DragEvent) => {
         event.preventDefault();
@@ -70,6 +79,67 @@ export class ThemedColorInput extends React.Component<{
         }
     };
 
+    @action
+    setDropDownOpen(open: boolean) {
+        if (this.dropDownOpen === false) {
+            document.removeEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown,
+                true
+            );
+        }
+
+        this.dropDownOpen = open;
+
+        if (this.dropDownOpen) {
+            document.addEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown,
+                true
+            );
+        }
+    }
+
+    openDropdown = action(() => {
+        const buttonEl = this.buttonRef.current;
+        if (!buttonEl) {
+            return;
+        }
+
+        const dropDownEl = this.dropDownRef.current;
+        if (!dropDownEl) {
+            return;
+        }
+
+        this.setDropDownOpen(!this.dropDownOpen);
+
+        if (this.dropDownOpen) {
+            const rectButton = buttonEl.getBoundingClientRect();
+
+            const DROP_DOWN_WIDTH = 280;
+
+            this.dropDownLeft = rectButton.right - DROP_DOWN_WIDTH;
+            this.dropDownTop = rectButton.bottom;
+        }
+    });
+
+    onDocumentPointerDown = action((event: MouseEvent) => {
+        if (this.dropDownOpen) {
+            if (
+                !closest(
+                    event.target,
+                    el =>
+                        this.buttonRef.current == el ||
+                        this.dropDownRef.current == el
+                )
+            ) {
+                event.preventDefault();
+                event.stopPropagation();
+                this.setDropDownOpen(false);
+            }
+        }
+    });
+
     render() {
         const { value, readOnly } = this.props;
 
@@ -102,24 +172,38 @@ export class ThemedColorInput extends React.Component<{
                 {!readOnly && (
                     <>
                         <button
+                            ref={this.buttonRef}
                             className="btn btn-outline-secondary dropdown-toggle EezStudio_ThemedColorInput_DropdownButton"
                             type="button"
-                            data-bs-toggle="dropdown"
+                            onClick={this.openDropdown}
                         />
-                        <div className="dropdown-menu dropdown-menu-end EezStudio_ThemedColorInput_DropdownContent">
-                            <SketchPicker
-                                width="260px"
-                                color={color}
-                                disableAlpha={true}
-                                presetColors={[]}
-                                onChange={color =>
-                                    this.onChangeColor(color.hex, false)
-                                }
-                                onChangeComplete={color =>
-                                    this.onChangeColor(color.hex, true)
-                                }
-                            />
-                        </div>
+                        {ReactDOM.createPortal(
+                            <div
+                                ref={this.dropDownRef}
+                                className="dropdown-menu dropdown-menu-end EezStudio_ThemedColorInput_DropdownContent shadow rounded"
+                                style={{
+                                    display: this.dropDownOpen
+                                        ? "block"
+                                        : "none",
+                                    left: this.dropDownLeft,
+                                    top: this.dropDownTop
+                                }}
+                            >
+                                <SketchPicker
+                                    width="260px"
+                                    color={color}
+                                    disableAlpha={true}
+                                    presetColors={[]}
+                                    onChange={color =>
+                                        this.onChangeColor(color.hex, false)
+                                    }
+                                    onChangeComplete={color => {
+                                        this.onChangeColor(color.hex, true);
+                                    }}
+                                />
+                            </div>,
+                            document.body
+                        )}
                     </>
                 )}
             </div>
