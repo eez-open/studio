@@ -174,15 +174,7 @@ function getBooleanValue(
         // console.error(err);
     }
 
-    if (typeof value === "boolean") {
-        return value;
-    }
-
-    if (typeof value === "number") {
-        return value != 0;
-    }
-
-    return defaultValue;
+    return !!value;
 }
 
 function getNumberValue(
@@ -3071,7 +3063,7 @@ export class ButtonWidget extends Widget {
             flowContext,
             this,
             this.enabled,
-            true
+            flowContext.flowState ? !this.enabled : true
         );
 
         let style = buttonEnabled ? this.style : this.disabledStyle;

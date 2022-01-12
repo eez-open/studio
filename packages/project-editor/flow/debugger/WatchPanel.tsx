@@ -194,13 +194,19 @@ class WatchTable extends React.Component<{
         (value: any, type: string | null): (() => ITreeNode[]) | undefined => {
             const MAX_CHILDREN = 1000;
 
-            if (Array.isArray(value)) {
+            if (Array.isArray(value) || value instanceof Uint8Array) {
                 return () => {
                     const elementType = type
                         ? getArrayElementTypeFromType(type)
                         : undefined;
 
-                    return value.slice(0, MAX_CHILDREN).map((element, i) => {
+                    const children: ITreeNode[] = [];
+
+                    for (
+                        let i = 0;
+                        i < Math.min(value.length, MAX_CHILDREN);
+                        i++
+                    ) {
                         const elementValue = value[i];
                         const name = `[${i}]`;
                         const type = elementType ?? typeof elementValue;
@@ -209,18 +215,26 @@ class WatchTable extends React.Component<{
                             elementValue,
                             type
                         );
-                        return observable({
-                            id: name,
-                            name,
-                            value: valueLabel,
-                            valueTitle: valueLabel,
-                            type: type,
 
-                            children: this.getValueChildren(elementValue, type),
-                            selected: false,
-                            expanded: false
-                        });
-                    }) as ITreeNode[];
+                        children.push(
+                            observable({
+                                id: name,
+                                name,
+                                value: valueLabel,
+                                valueTitle: valueLabel,
+                                type: type,
+
+                                children: this.getValueChildren(
+                                    elementValue,
+                                    type
+                                ),
+                                selected: false,
+                                expanded: false
+                            })
+                        );
+                    }
+
+                    return children;
                 };
             }
 

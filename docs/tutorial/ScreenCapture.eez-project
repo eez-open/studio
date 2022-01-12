@@ -32,8 +32,8 @@
       "components": [
         {
           "type": "SCPIActionComponent",
-          "left": 291,
-          "top": -83,
+          "left": 310,
+          "top": -156,
           "width": 245,
           "height": 54,
           "wireID": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
@@ -92,8 +92,8 @@
         },
         {
           "type": "FileWrite",
-          "left": 1005,
-          "top": -54,
+          "left": 1006,
+          "top": -175,
           "width": 146,
           "height": 73,
           "wireID": "c3db390c-86c7-4129-802f-e54874023365",
@@ -119,7 +119,12 @@
           "width": 122,
           "height": 32,
           "wireID": "f4ef23ee-b5c1-4165-bf4b-07f721664204",
-          "customInputs": [],
+          "customInputs": [
+            {
+              "name": "enabled",
+              "type": "any"
+            }
+          ],
           "customOutputs": [],
           "asOutputProperties": [
             "action"
@@ -128,27 +133,15 @@
           "style": {
             "inheritFrom": "default"
           },
-          "enabled": "save_enabled",
+          "enabled": "enabled",
           "disabledStyle": {
             "inheritFrom": "default"
           }
         },
         {
-          "type": "SetVariableActionComponent",
-          "left": 668,
-          "top": -112,
-          "width": 157,
-          "height": 58,
-          "wireID": "cc495e8a-66b7-47d3-9ea8-900972ad746f",
-          "customInputs": [],
-          "customOutputs": [],
-          "variable": "save_enabled",
-          "value": "true"
-        },
-        {
           "type": "FileSaveDialog",
-          "left": 829,
-          "top": 10,
+          "left": 851,
+          "top": -83,
           "width": 116,
           "height": 54,
           "wireID": "926238d5-6828-4a7b-e769-0ee455b903b1",
@@ -158,8 +151,8 @@
         },
         {
           "type": "ShowFileInFolder",
-          "left": 1206,
-          "top": 10,
+          "left": 1200,
+          "top": -83,
           "width": 130,
           "height": 54,
           "wireID": "101307a5-4dca-489a-8976-473c98bf68a5",
@@ -199,12 +192,6 @@
           "input": "screenshot"
         },
         {
-          "source": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
-          "output": "@seqout",
-          "target": "cc495e8a-66b7-47d3-9ea8-900972ad746f",
-          "input": "@seqin"
-        },
-        {
           "source": "926238d5-6828-4a7b-e769-0ee455b903b1",
           "output": "file_path",
           "target": "c3db390c-86c7-4129-802f-e54874023365",
@@ -221,16 +208,15 @@
           "output": "file_path",
           "target": "101307a5-4dca-489a-8976-473c98bf68a5",
           "input": "filePath"
-        }
-      ],
-      "localVariables": [
+        },
         {
-          "name": "save_enabled",
-          "type": "boolean",
-          "defaultValue": "false",
-          "persistent": false
+          "source": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "output": "screenshot",
+          "target": "f4ef23ee-b5c1-4165-bf4b-07f721664204",
+          "input": "enabled"
         }
       ],
+      "localVariables": [],
       "name": "Main",
       "style": "page",
       "left": 0,
