@@ -21,7 +21,10 @@ import type { Flow, FlowTabState } from "project-editor/flow/flow";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { RuntimeFlowContext } from "project-editor/flow/runtime-viewer/context";
 
-import { Svg } from "project-editor/flow/editor/render";
+import {
+    renderComponentDescriptions,
+    Svg
+} from "project-editor/flow/editor/render";
 import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import {
@@ -593,6 +596,20 @@ export class FlowViewer
                                     flowContext={this.flowContext}
                                 />
                             )}
+                            {this.context.uiStateStore
+                                .showComponentDescriptions &&
+                                this.context.runtime &&
+                                this.context.runtime.isDebuggerActive && (
+                                    <div
+                                        style={{
+                                            position: "absolute"
+                                        }}
+                                    >
+                                        {renderComponentDescriptions(
+                                            this.flowContext
+                                        )}
+                                    </div>
+                                )}
                         </>
                     )}
                 </Canvas>

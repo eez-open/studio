@@ -2414,8 +2414,16 @@ function renderActionComponent(
 
 export class ActionComponent extends Component {
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
-        properties: []
+        properties: [
+            {
+                name: "description",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup
+            }
+        ]
     });
+
+    @observable description: string;
 
     get autoSize(): AutoSize {
         return "both";

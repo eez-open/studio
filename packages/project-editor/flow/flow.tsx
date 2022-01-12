@@ -21,6 +21,7 @@ import {
     Message
 } from "project-editor/core/store";
 import {
+    ActionComponent,
     Component,
     getInputDisplayName,
     getOutputDisplayName,
@@ -447,6 +448,24 @@ export abstract class Flow extends EezObject {
             if (visitResult.value instanceof Component) {
                 const component = visitResult.value;
                 components.set(component.wireID, component);
+            }
+        }
+
+        return components;
+    }
+
+    @computed get actionComponents() {
+        const components = [];
+
+        const v = visitObjects(this.components);
+        while (true) {
+            let visitResult = v.next();
+            if (visitResult.done) {
+                break;
+            }
+            if (visitResult.value instanceof ActionComponent) {
+                const component = visitResult.value;
+                components.push(component);
             }
         }
 

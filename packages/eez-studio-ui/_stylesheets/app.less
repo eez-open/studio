@@ -336,7 +336,7 @@ input::-webkitcalendar-picker-indicator {
     background: transparent;
     border: 1px solid transparent;
 
-    padding: 0;
+    padding: 2px;
 }
 
 .EezStudio_TextAction {
@@ -4224,6 +4224,62 @@ button.EezStudio_Action {
     }
 }
 
+.EezStudio_ThemedColorInput_DropdownButton {
+    border-color: @formControlBorderColor;
+    font-size: 18px;
+    padding: 1px 6px;
+}
+
+.EezStudio_ThemedColorInput_DropdownContent {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.EezStudio_ObjectReferenceInput_DropdownButton {
+    border-color: @formControlBorderColor;
+    font-size: 18px;
+    padding: 1px 6px;
+}
+
+.EezStudio_ObjectReferenceInput_DropdownContent {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+
+    div:nth-child(1) {
+        .EezStudio_SearchInput {
+            border-bottom: 1px solid @borderColor;
+        }
+    }
+
+    div:nth-child(2) {
+        height: 240px;
+        overflow: auto;
+        ul {
+            margin: 0;
+            padding: 5px;
+
+            li {
+                list-style: none;
+                cursor: pointer;
+                &:hover {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                }
+            }
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 .EezStudio_FlowCanvasContainer {
@@ -4943,60 +4999,11 @@ button.EezStudio_Action {
             }
         }
     }
-}
 
-.EezStudio_ThemedColorInput_DropdownButton {
-    border-color: @formControlBorderColor;
-    font-size: 18px;
-    padding: 1px 6px;
-}
-
-.EezStudio_ThemedColorInput_DropdownContent {
-    font-size: 0.8rem;
-
-    padding: 0;
-    margin: 0;
-
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.EezStudio_ObjectReferenceInput_DropdownButton {
-    border-color: @formControlBorderColor;
-    font-size: 18px;
-    padding: 1px 6px;
-}
-
-.EezStudio_ObjectReferenceInput_DropdownContent {
-    font-size: 0.8rem;
-
-    padding: 0;
-    margin: 0;
-
-    border-radius: 4px;
-    overflow: hidden;
-
-    div:nth-child(1) {
-        .EezStudio_SearchInput {
-            border-bottom: 1px solid @borderColor;
-        }
-    }
-
-    div:nth-child(2) {
-        height: 240px;
-        overflow: auto;
-        ul {
-            margin: 0;
-            padding: 5px;
-
-            li {
-                list-style: none;
-                cursor: pointer;
-                &:hover {
-                    color: @selectionColor;
-                    background-color: @selectionBackgroundColor;
-                }
-            }
-        }
+    .EezStudio_ActionComponentDescription {
+        background-color: #fff5c2 !important;
+        padding: 5px;
+        border-radius: 4px;
+        box-shadow: @componentShadow;
     }
 }

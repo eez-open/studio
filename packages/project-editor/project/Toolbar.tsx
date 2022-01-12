@@ -268,26 +268,46 @@ class Controls extends React.Component {
                 {(this.context.project.isAppletProject ||
                     this.context.project.isFirmwareWithFlowSupportProject ||
                     this.context.project.isDashboardProject) && (
-                    <div className="btn-group" role="group">
-                        {this.pageTabState && (
+                    <>
+                        <div className="btn-group" role="group">
+                            {this.pageTabState && (
+                                <IconAction
+                                    title="Show front face"
+                                    icon="material:flip_to_front"
+                                    iconSize={20}
+                                    onClick={() => this.setFrontFace(true)}
+                                    selected={this.pageTabState.frontFace}
+                                />
+                            )}
+                            {this.pageTabState && (
+                                <IconAction
+                                    title="Show back face"
+                                    icon="material:flip_to_back"
+                                    iconSize={20}
+                                    onClick={() => this.setFrontFace(false)}
+                                    selected={!this.pageTabState.frontFace}
+                                />
+                            )}
+                        </div>
+
+                        {this.pageTabState && !this.pageTabState.frontFace && (
                             <IconAction
-                                title="Show front face"
-                                icon="material:flip_to_front"
+                                title="Show component descriptions"
+                                icon="material:comment"
                                 iconSize={20}
-                                onClick={() => this.setFrontFace(true)}
-                                selected={this.pageTabState.frontFace}
+                                onClick={action(
+                                    () =>
+                                        (this.context.uiStateStore.showComponentDescriptions =
+                                            !this.context.uiStateStore
+                                                .showComponentDescriptions)
+                                )}
+                                selected={
+                                    this.context.uiStateStore
+                                        .showComponentDescriptions
+                                }
                             />
                         )}
-                        {this.pageTabState && (
-                            <IconAction
-                                title="Show back face"
-                                icon="material:flip_to_back"
-                                iconSize={20}
-                                onClick={() => this.setFrontFace(false)}
-                                selected={!this.pageTabState.frontFace}
-                            />
-                        )}
-                    </div>
+                    </>
                 )}
             </div>
         );

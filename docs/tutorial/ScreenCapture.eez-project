@@ -32,8 +32,8 @@
       "components": [
         {
           "type": "SCPIActionComponent",
-          "left": 310,
-          "top": -156,
+          "left": 280,
+          "top": -184,
           "width": 245,
           "height": 54,
           "wireID": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
@@ -44,6 +44,7 @@
               "type": "any"
             }
           ],
+          "description": "Execute SCPI command to capture screenshot",
           "instrument": "instrument",
           "scpi": "{screenshot} = disp:data?"
         },

@@ -35,7 +35,11 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { Flow, FlowTabState } from "project-editor/flow/flow";
 import type { Component } from "project-editor/flow/component";
-import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
+import {
+    Svg,
+    ComponentEnclosure,
+    renderComponentDescriptions
+} from "project-editor/flow/editor/render";
 import { ProjectContext } from "project-editor/project/context";
 import { ConnectionLines } from "project-editor/flow/editor/ConnectionLineComponent";
 import { Draggable } from "eez-studio-ui/draggable";
@@ -1144,6 +1148,18 @@ export class FlowEditor
                                 flow={flow}
                                 flowContext={this.flowContext}
                             />
+                            {this.context.uiStateStore
+                                .showComponentDescriptions && (
+                                <div
+                                    style={{
+                                        position: "absolute"
+                                    }}
+                                >
+                                    {renderComponentDescriptions(
+                                        this.flowContext
+                                    )}
+                                </div>
+                            )}
                         </>
                     )}
                 </Canvas>

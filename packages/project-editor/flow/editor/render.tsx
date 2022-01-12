@@ -13,6 +13,7 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Component } from "project-editor/flow/component";
 import { strokeWidth } from "project-editor/flow/editor/ConnectionLineComponent";
 import { DragAndDropManager } from "project-editor/core/dd";
+import type { Flow } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -355,3 +356,40 @@ export const Svg: React.FunctionComponent<{
         </svg>
     );
 });
+
+export function renderComponentDescriptions(flowContext: IFlowContext) {
+    const dx = flowContext.viewState.dxMouseDrag ?? 0;
+    const dy = flowContext.viewState.dyMouseDrag ?? 0;
+
+    const flow = flowContext.document.flow.object as Flow;
+    return flow.actionComponents
+        .filter(component => !!component.description && component._geometry)
+        .map(component => {
+            const id = getId(component);
+
+            let left = component.left;
+            let top = component.top + component.height + 6;
+
+            if (flowContext.viewState.isObjectIdSelected(id)) {
+                left += dx;
+                top += dy;
+            }
+
+            const style: React.CSSProperties = {
+                position: "absolute",
+                left,
+                top,
+                width: component.width
+            };
+
+            return (
+                <div
+                    key={id}
+                    className="EezStudio_ActionComponentDescription"
+                    style={style}
+                >
+                    {component.description}
+                </div>
+            );
+        });
+}

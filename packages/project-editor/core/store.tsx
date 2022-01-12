@@ -1303,6 +1303,7 @@ class UIStateStore {
     @observable pageEditorFrontFace: boolean = false;
     @observable pageRuntimeFrontFace: boolean = true;
     @observable showCommandPalette: boolean = false;
+    @observable showComponentDescriptions: boolean = true;
 
     objectUIStates = new Map<string, any>();
 
@@ -1379,6 +1380,11 @@ class UIStateStore {
             } else {
                 this.watchExpressions = [];
             }
+
+            if (uiState.showComponentDescriptions != undefined) {
+                this.showComponentDescriptions =
+                    uiState.showComponentDescriptions;
+            }
         });
     }
 
@@ -1423,7 +1429,8 @@ class UIStateStore {
                     }),
                 {}
             ),
-            watchExpressions: toJS(this.watchExpressions)
+            watchExpressions: toJS(this.watchExpressions),
+            showComponentDescriptions: this.showComponentDescriptions
         };
 
         return state;
