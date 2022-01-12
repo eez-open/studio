@@ -1279,7 +1279,7 @@ export class Component extends EezObject {
                                         value
                                     );
                                 } else {
-                                    checkExpression(component, value, false);
+                                    checkExpression(component, value);
                                 }
                             } catch (err) {
                                 messages.push(
@@ -1314,11 +1314,7 @@ export class Component extends EezObject {
                         const value = getProperty(component, propertyInfo.name);
                         if (value != undefined && value !== "") {
                             try {
-                                checkAssignableExpression(
-                                    component,
-                                    value,
-                                    false
-                                );
+                                checkAssignableExpression(component, value);
                             } catch (err) {
                                 messages.push(
                                     new Message(

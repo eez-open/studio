@@ -7,7 +7,8 @@ import { _find, _range } from "eez-studio-shared/algorithm";
 import {
     registerClass,
     PropertyType,
-    makeDerivedClassInfo
+    makeDerivedClassInfo,
+    MessageType
 } from "project-editor/core/object";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
@@ -27,12 +28,16 @@ import { FlowState } from "project-editor/flow//runtime";
 import type { IFlowContext } from "project-editor/flow//flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/features/page/build/assets";
 import {
+    getChildOfObject,
     getDocumentStore,
-    isAppletOrFirmwareWithFlowSupportProject
+    isAppletOrFirmwareWithFlowSupportProject,
+    Message
 } from "project-editor/core/store";
 import {
     buildExpression,
-    buildAssignableExpression
+    buildAssignableExpression,
+    checkExpression,
+    checkAssignableExpression
 } from "project-editor/flow/expression/expression";
 import {
     ConstructorParams,
@@ -127,6 +132,51 @@ export class SCPIActionComponent extends ActionComponent {
             ) {
                 jsObject.instrument = undefined;
             }
+        },
+        check: (component: SCPIActionComponent) => {
+            let messages: Message[] = [];
+
+            const parts = parseScpi(component.scpi);
+            for (const part of parts) {
+                const tag = part.tag;
+                const str = part.value!;
+
+                if (tag == SCPI_PART_EXPR) {
+                    try {
+                        const expr = str.substring(1, str.length - 1);
+                        checkExpression(component, expr);
+                    } catch (err) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Invalid expression: ${err}`,
+                                getChildOfObject(component, "scpi")
+                            )
+                        );
+                    }
+                } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
+                    try {
+                        const assignableExpression =
+                            str[0] == "{"
+                                ? str.substring(1, str.length - 1)
+                                : str;
+                        checkAssignableExpression(
+                            component,
+                            assignableExpression
+                        );
+                    } catch (err) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Invalid assignable expression: ${err}`,
+                                getChildOfObject(component, "scpi")
+                            )
+                        );
+                    }
+                }
+            }
+
+            return messages;
         },
         label: (component: SCPIActionComponent) => {
             const project = getDocumentStore(component).project;

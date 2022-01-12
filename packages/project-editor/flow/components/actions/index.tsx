@@ -819,8 +819,7 @@ class SwitchTest extends EezObject {
             try {
                 checkExpression(
                     getParent(getParent(switchTest)!)! as Component,
-                    switchTest.condition,
-                    false
+                    switchTest.condition
                 );
             } catch (err) {
                 messages.push(

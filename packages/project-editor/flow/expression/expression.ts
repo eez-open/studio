@@ -47,10 +47,33 @@ export { operationIndexes } from "./operations";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function checkExpression(
+export function checkExpression(component: Component, expression: string) {
+    if (typeof expression == "string") {
+        expression = expression.trim();
+    }
+
+    if (expression == undefined) {
+    } else if (typeof expression == "number") {
+    } else {
+        let rootNode;
+        try {
+            rootNode = expressionParser.parse(expression);
+        } catch (err) {
+            throw `Expression error: ${err}`;
+        }
+        findValueTypeInExpressionNode(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            false
+        );
+        checkExpressionNode(component, rootNode);
+    }
+}
+
+export function checkAssignableExpression(
     component: Component,
-    expression: string,
-    assignable: boolean
+    expression: string
 ) {
     if (typeof expression == "string") {
         expression = expression.trim();
@@ -69,35 +92,7 @@ export function checkExpression(
             ProjectEditor.getProject(component),
             component,
             rootNode,
-            assignable
-        );
-        checkExpressionNode(component, rootNode);
-    }
-}
-
-export function checkAssignableExpression(
-    component: Component,
-    expression: string,
-    assignableExpression: boolean
-) {
-    if (typeof expression == "string") {
-        expression = expression.trim();
-    }
-
-    if (assignableExpression == undefined) {
-    } else if (typeof assignableExpression == "number") {
-    } else {
-        let rootNode;
-        try {
-            rootNode = expressionParser.parse(expression);
-        } catch (err) {
-            throw `Expression error: ${err}`;
-        }
-        findValueTypeInExpressionNode(
-            ProjectEditor.getProject(component),
-            component,
-            rootNode,
-            assignableExpression
+            true
         );
         checkAssignableExpressionNode(component, rootNode);
     }
