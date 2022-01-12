@@ -32,8 +32,8 @@
       "components": [
         {
           "type": "SCPIActionComponent",
-          "left": 280,
-          "top": -184,
+          "left": 276,
+          "top": -186,
           "width": 245,
           "height": 54,
           "wireID": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
@@ -165,6 +165,17 @@
           ],
           "customOutputs": [],
           "filePath": "filePath"
+        },
+        {
+          "type": "StartActionComponent",
+          "left": 87,
+          "top": -292,
+          "width": 87,
+          "height": 25,
+          "wireID": "67d16612-110b-49ea-edeb-2c22f9724dc8",
+          "customInputs": [],
+          "customOutputs": [],
+          "description": "Start execution of the flow"
         }
       ],
       "connectionLines": [
@@ -215,6 +226,12 @@
           "output": "screenshot",
           "target": "f4ef23ee-b5c1-4165-bf4b-07f721664204",
           "input": "enabled"
+        },
+        {
+          "source": "67d16612-110b-49ea-edeb-2c22f9724dc8",
+          "output": "@seqout",
+          "target": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
+          "input": "@seqin"
         }
       ],
       "localVariables": [],

@@ -375,11 +375,13 @@ export function renderComponentDescriptions(flowContext: IFlowContext) {
                 top += dy;
             }
 
+            const width = Math.max(component.width, 200);
+
             const style: React.CSSProperties = {
                 position: "absolute",
                 left,
                 top,
-                width: component.width
+                width
             };
 
             return (
