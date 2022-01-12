@@ -1707,27 +1707,23 @@ export class Style extends EezObject {
         ) {
             spec[0].attrs.push(["display", "flex"]);
 
-            if (this.alignHorizontal != undefined) {
-                spec[0].attrs.push([
-                    "justify-content",
-                    this.alignHorizontal == "left"
-                        ? "flex-start"
-                        : this.alignHorizontal == "right"
-                        ? "flex-end"
-                        : "center"
-                ]);
-            }
+            spec[0].attrs.push([
+                "justify-content",
+                this.alignHorizontal == "left"
+                    ? "flex-start"
+                    : this.alignHorizontal == "right"
+                    ? "flex-end"
+                    : "center"
+            ]);
 
-            if (this.alignVertical != undefined) {
-                spec[0].attrs.push([
-                    "align-items",
-                    this.alignVertical == "top"
-                        ? "flex-start"
-                        : this.alignVertical == "bottom"
-                        ? "flex-end"
-                        : "center"
-                ]);
-            }
+            spec[0].attrs.push([
+                "align-items",
+                this.alignVertical == "top"
+                    ? "flex-start"
+                    : this.alignVertical == "bottom"
+                    ? "flex-end"
+                    : "center"
+            ]);
         }
 
         if (this.opacity) {
@@ -1823,9 +1819,9 @@ export class Style extends EezObject {
             }
 
             if (this.cssDeclarations) {
-                classNames.push(css`
-                    ${this.cssDeclarations}
-                `);
+                // use &&&& to increase specificity, so this style overrides for example:
+                // .EezStudio_FlowCanvasContainer.EezStudio_FlowEditorCanvasContainer .EezStudio_ComponentEnclosure.ButtonWidget button
+                classNames.push(css(`&&&& { ${this.cssDeclarations} }`));
             }
         }
 
