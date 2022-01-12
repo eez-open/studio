@@ -34,7 +34,7 @@
           "type": "SCPIActionComponent",
           "left": 310,
           "top": -156,
-          "width": 251,
+          "width": 245,
           "height": 54,
           "wireID": "d3c0110f-782e-459a-d87e-d8ad6c48c108",
           "customInputs": [],
@@ -45,7 +45,7 @@
             }
           ],
           "instrument": "instrument",
-          "scpi": "{screenshot1} = disp:data?"
+          "scpi": "{screenshot} = disp:data?"
         },
         {
           "type": "BitmapWidget",
@@ -164,17 +164,6 @@
           ],
           "customOutputs": [],
           "filePath": "filePath"
-        },
-        {
-          "type": "SCPIActionComponent",
-          "left": 143,
-          "top": -197,
-          "width": 87,
-          "height": 53,
-          "wireID": "7730187c-8e72-4115-966b-3b83dc7e7273",
-          "customInputs": [],
-          "customOutputs": [],
-          "scpi": "trt? {1+a}"
         }
       ],
       "connectionLines": [
