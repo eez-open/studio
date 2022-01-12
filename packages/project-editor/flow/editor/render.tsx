@@ -363,7 +363,7 @@ export function renderComponentDescriptions(flowContext: IFlowContext) {
 
     const flow = flowContext.document.flow.object as Flow;
     return flow.actionComponents
-        .filter(component => !!component.description && component._geometry)
+        .filter(component => !!component.description)
         .map(component => {
             const id = getId(component);
 

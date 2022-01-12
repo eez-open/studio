@@ -629,11 +629,7 @@
   "features": {},
   "objects": {
     "/pages/0[flow-state]": {
-      "selection": {
-        "0": {
-          "$selected": true
-        }
-      },
+      "selection": {},
       "transform": {
         "translate": {
           "x": -400,
@@ -645,5 +641,6 @@
   },
   "activeOutputSection": 0,
   "breakpoints": {},
-  "watchExpressions": []
+  "watchExpressions": [],
+  "showComponentDescriptions": true
 }
