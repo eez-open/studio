@@ -123,6 +123,12 @@ export function* visitObjects(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function testMatchWholeWord(value: string, pattern: string) {
+    return new RegExp("\\b" + pattern + "\\b").test(value);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 type SearchResult = EezValueObject | null;
 
 export function* searchForPattern(
@@ -165,11 +171,11 @@ export function* searchForPattern(
 
                 if (matchWholeWord) {
                     if (
-                        value == pattern ||
+                        testMatchWholeWord(value, pattern) ||
                         (namePattern &&
                             valuePattern &&
                             name === namePattern &&
-                            value === valuePattern)
+                            testMatchWholeWord(value, valuePattern))
                     ) {
                         yield valueObject;
                     }
