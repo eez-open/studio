@@ -2,7 +2,7 @@ import { observable, computed } from "mobx";
 import { css } from "@emotion/css";
 
 import { _map, _zipObject } from "eez-studio-shared/algorithm";
-import { strToColor16 } from "eez-studio-shared/color";
+import { isValid, strToColor16 } from "eez-studio-shared/color";
 
 import {
     ClassInfo,
@@ -804,6 +804,10 @@ export class Style extends EezObject {
                     jsObject.padding = paddingHorizontal;
                 }
             }
+
+            if (typeof jsObject.borderRadius == "number") {
+                jsObject.borderRadius = jsObject.borderRadius.toString();
+            }
         },
         isPropertyMenuSupported: true,
         newItem: (parent: IEezObject) => {
@@ -836,6 +840,30 @@ export class Style extends EezObject {
             let messages: Message[] = [];
 
             const DocumentStore = getDocumentStore(style);
+
+            function checkColor(propertyName: string) {
+                const color = (style as any)[propertyName];
+                if (color) {
+                    const colorValue = getThemedColor(DocumentStore, color);
+                    if (!isValid(colorValue)) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `invalid color`,
+                                getChildOfObject(style, propertyName)
+                            )
+                        );
+                    }
+                }
+            }
+
+            checkColor("color");
+            checkColor("backgroundColor");
+            checkColor("activeColor");
+            checkColor("activeBackgroundColor");
+            checkColor("focusColor");
+            checkColor("focusBackgroundColor");
+            checkColor("borderColor");
 
             if (DocumentStore.project.isDashboardProject) {
                 if (
