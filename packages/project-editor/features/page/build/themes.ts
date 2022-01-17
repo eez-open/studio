@@ -34,11 +34,11 @@ export function buildGuiColorsEnum(assets: Assets) {
 
         ...assets.colors.map(
             (color, i) =>
-                `${projectBuild.TAB}${projectBuild.getName(
-                    "COLOR_ID_CUSTOM_",
-                    color.slice(1),
-                    projectBuild.NamingConvention.UnderscoreUpperCase
-                )} = ${assets.rootProject.colors.length + i}`
+                `\tCOLOR_ID_CUSTOM_${
+                    color == undefined
+                        ? "UNDEFINED"
+                        : color.slice(1).toUpperCase()
+                } = ${assets.rootProject.colors.length + i}`
         )
     ];
 
