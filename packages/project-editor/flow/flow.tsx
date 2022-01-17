@@ -51,6 +51,7 @@ import { IEditorState } from "project-editor/project/EditorComponent";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ConnectionLine extends EezObject {
+    @observable description: string;
     @observable source: string;
     @observable output: string;
     @observable target: string;
@@ -88,6 +89,10 @@ export class ConnectionLine extends EezObject {
         },
 
         properties: [
+            {
+                name: "description",
+                type: PropertyType.String
+            },
             {
                 name: "source",
                 type: PropertyType.String,

@@ -107,7 +107,10 @@ const ConnectionLineShape = observer(
         selected: boolean;
     }) => {
         const connectionLine = connectionLineAdapter.object as ConnectionLine;
-        const lineShape = getConnectionLineShape(context, connectionLine);
+        const { lineShape, center } = getConnectionLineShape(
+            context,
+            connectionLine
+        );
 
         if (!lineShape) {
             return null;
@@ -161,6 +164,19 @@ const ConnectionLineShape = observer(
                     id={connectionLineAdapter.id}
                     targetInput={targetInput}
                 />
+                {context.DocumentStore.uiStateStore.showComponentDescriptions &&
+                    connectionLine.description && (
+                        <SvgLabel
+                            text={connectionLine.description}
+                            x={center.x}
+                            y={center.y}
+                            horizontalAlignment="center"
+                            verticalAlignment="center"
+                            backgroundColor="#fff5c2"
+                            textColor={"#212529"}
+                            border={{ color: "#fff5c2" }}
+                        />
+                    )}
             </g>
         );
     }
@@ -218,7 +234,7 @@ const DebugValue = observer(
                 text={valueStr}
                 x={connectionLine.targetPosition!.x - 15}
                 y={connectionLine.targetPosition!.y}
-                horizontalAlignement="right"
+                horizontalAlignment="right"
                 verticalAlignment="center"
                 border={{ size: 1, color: "#fff740", radius: 4 }}
                 padding={{ left: 4, top: 2, right: 4, bottom: 0 }}

@@ -8,14 +8,8 @@ export class SvgLabel extends React.Component<
         text: string;
         x: number;
         y: number;
-        horizontalAlignement?: "left" | "center" | "right";
+        horizontalAlignment?: "left" | "center" | "right";
         verticalAlignment?: "top" | "center" | "bottom";
-        margin?: {
-            left?: number;
-            top?: number;
-            right?: number;
-            bottom?: number;
-        };
         border?: {
             size?: number;
             color?: string;
@@ -39,15 +33,6 @@ export class SvgLabel extends React.Component<
 
     @observable contentWidth: number = 0;
     @observable contentHeight: number = 0;
-
-    get margin() {
-        return {
-            left: (this.props.margin && this.props.margin.left) || 0,
-            top: (this.props.margin && this.props.margin.top) || 0,
-            right: (this.props.margin && this.props.margin.right) || 0,
-            bottom: (this.props.margin && this.props.margin.bottom) || 0
-        };
-    }
 
     get border() {
         return {
@@ -111,27 +96,28 @@ export class SvgLabel extends React.Component<
     }
 
     render() {
-        let { text, x, y, horizontalAlignement, verticalAlignment } =
-            this.props;
+        let {
+            text,
+            x,
+            y,
+            horizontalAlignment: horizontalAlignment,
+            verticalAlignment
+        } = this.props;
 
-        let totalWidth =
-            this.margin.left + this.contentWidth + this.margin.right;
-        if (horizontalAlignement === "center") {
-            x -= totalWidth / 2;
-        } else if (horizontalAlignement === "right") {
-            x -= totalWidth;
+        if (horizontalAlignment === "center") {
+            x -= this.contentWidth / 2;
+        } else if (horizontalAlignment === "right") {
+            x -= this.contentWidth;
         }
 
-        let totalHeight =
-            this.margin.top + this.contentHeight + this.margin.bottom;
         if (verticalAlignment === "center") {
-            y -= totalHeight / 2;
+            y -= this.contentHeight / 2;
         } else if (verticalAlignment === "bottom") {
-            y -= totalHeight;
+            y -= this.contentHeight;
         }
 
-        x = Math.round(x + this.margin.left) + 0.5;
-        y = Math.round(y + this.margin.top) + 0.5;
+        x = Math.round(x) + 0.5;
+        y = Math.round(y) + 0.5;
 
         return (
             <g>

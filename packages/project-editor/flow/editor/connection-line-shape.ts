@@ -86,25 +86,28 @@ export function generateNodeRedLinkPath(
                         NODE_WIDTH
                 );
     }
+
     if (dx * sc > 0) {
-        return (
-            "M " +
-            origX +
-            " " +
-            origY +
-            " C " +
-            (origX + sc * (NODE_WIDTH * scale)) +
-            " " +
-            (origY + scaleY * nodeHeight) +
-            " " +
-            (destX - sc * scale * NODE_WIDTH) +
-            " " +
-            (destY - scaleY * nodeHeight) +
-            " " +
-            destX +
-            " " +
-            destY
-        );
+        return {
+            lineShape:
+                "M " +
+                origX +
+                " " +
+                origY +
+                " C " +
+                (origX + sc * (NODE_WIDTH * scale)) +
+                " " +
+                (origY + scaleY * nodeHeight) +
+                " " +
+                (destX - sc * scale * NODE_WIDTH) +
+                " " +
+                (destY - scaleY * nodeHeight) +
+                " " +
+                destX +
+                " " +
+                destY,
+            center: { x: (origX + destX) / 2, y: (origY + destY) / 2 }
+        };
     } else {
         var midX = Math.floor(destX - dx / 2);
         var midY = Math.floor(destY - dy / 2);
@@ -162,47 +165,49 @@ export function generateNodeRedLinkPath(
             }
             cp[2][0] = topX;
         }
-        return (
-            "M " +
-            origX +
-            " " +
-            origY +
-            " C " +
-            cp[0][0] +
-            " " +
-            cp[0][1] +
-            " " +
-            cp[1][0] +
-            " " +
-            cp[1][1] +
-            " " +
-            topX +
-            " " +
-            topY +
-            " S " +
-            cp[2][0] +
-            " " +
-            cp[2][1] +
-            " " +
-            midX +
-            " " +
-            midY +
-            " S " +
-            cp[3][0] +
-            " " +
-            cp[3][1] +
-            " " +
-            bottomX +
-            " " +
-            bottomY +
-            " S " +
-            cp[4][0] +
-            " " +
-            cp[4][1] +
-            " " +
-            destX +
-            " " +
-            destY
-        );
+        return {
+            lineShape:
+                "M " +
+                origX +
+                " " +
+                origY +
+                " C " +
+                cp[0][0] +
+                " " +
+                cp[0][1] +
+                " " +
+                cp[1][0] +
+                " " +
+                cp[1][1] +
+                " " +
+                topX +
+                " " +
+                topY +
+                " S " +
+                cp[2][0] +
+                " " +
+                cp[2][1] +
+                " " +
+                midX +
+                " " +
+                midY +
+                " S " +
+                cp[3][0] +
+                " " +
+                cp[3][1] +
+                " " +
+                bottomX +
+                " " +
+                bottomY +
+                " S " +
+                cp[4][0] +
+                " " +
+                cp[4][1] +
+                " " +
+                destX +
+                " " +
+                destY,
+            center: { x: midX, y: midY }
+        };
     }
 }

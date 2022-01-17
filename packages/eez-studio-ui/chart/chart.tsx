@@ -1608,7 +1608,7 @@ class ZoomToRectMouseHandler implements MouseHandler {
                         text={this.xLabel}
                         x={chartsController.chartLeft + x + width / 2}
                         y={chartsController.chartBottom - y + height / 2}
-                        horizontalAlignement="center"
+                        horizontalAlignment="center"
                         verticalAlignment="center"
                     ></SvgLabel>
                 )}
@@ -1617,7 +1617,7 @@ class ZoomToRectMouseHandler implements MouseHandler {
                         text={this.yLabel}
                         x={chartsController.chartLeft + x + width / 2}
                         y={chartsController.chartBottom - y + height / 2}
-                        horizontalAlignement="center"
+                        horizontalAlignment="center"
                         verticalAlignment="center"
                     ></SvgLabel>
                 )}
@@ -1632,7 +1632,7 @@ class ZoomToRectMouseHandler implements MouseHandler {
                                 height / 2 -
                                 2
                             }
-                            horizontalAlignement="center"
+                            horizontalAlignment="center"
                             verticalAlignment="bottom"
                         ></SvgLabel>
                         <SvgLabel
@@ -1644,7 +1644,7 @@ class ZoomToRectMouseHandler implements MouseHandler {
                                 height / 2 +
                                 2
                             }
-                            horizontalAlignement="center"
+                            horizontalAlignment="center"
                             verticalAlignment="top"
                         ></SvgLabel>
                     </>

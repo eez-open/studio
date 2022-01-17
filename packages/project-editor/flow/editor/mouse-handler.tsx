@@ -967,7 +967,7 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
             this.targetNodeHeight
         );
 
-        const lineShape = generateNodeRedLinkPath(
+        const { lineShape } = generateNodeRedLinkPath(
             this.startPoint.x,
             this.startPoint.y,
             this.startPoint.y == this.endPoint.y
@@ -1162,7 +1162,7 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
             this.targetNodeHeight
         );
 
-        const lineShape = generateNodeRedLinkPath(
+        const { lineShape } = generateNodeRedLinkPath(
             this.startPoint.x,
             this.startPoint.y,
             this.startPoint.y == this.endPoint.y
@@ -1422,7 +1422,7 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
                         this.sourceNodeHeight
                     );
 
-                    const lineShape = generateNodeRedLinkPath(
+                    const { lineShape } = generateNodeRedLinkPath(
                         startPoint.x,
                         startPoint.y,
                         startPoint.y == endPoint.y
@@ -1667,7 +1667,7 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
                         this.targetNodeHeight
                     );
 
-                    const lineShape = generateNodeRedLinkPath(
+                    const { lineShape } = generateNodeRedLinkPath(
                         startPoint.x,
                         startPoint.y,
                         startPoint.y == endPoint.y

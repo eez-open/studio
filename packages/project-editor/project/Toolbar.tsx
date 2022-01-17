@@ -13,6 +13,7 @@ import {
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import { LayoutModels, objectToString } from "project-editor/core/store";
 import { RenderVariableStatus } from "project-editor/features/variable/variable";
+import { FlowTabState } from "project-editor/flow/flow";
 
 const RUN_ICON = (
     <svg
@@ -133,6 +134,14 @@ class Controls extends React.Component {
         const editorState = this.context.editorsStore.activeEditor?.state;
         if (editorState instanceof PageTabState) {
             return editorState as PageTabState;
+        }
+        return undefined;
+    }
+
+    get flowTabState() {
+        const editorState = this.context.editorsStore.activeEditor?.state;
+        if (editorState instanceof FlowTabState) {
+            return editorState as FlowTabState;
         }
         return undefined;
     }
@@ -269,8 +278,8 @@ class Controls extends React.Component {
                     this.context.project.isFirmwareWithFlowSupportProject ||
                     this.context.project.isDashboardProject) && (
                     <>
-                        <div className="btn-group" role="group">
-                            {this.pageTabState && (
+                        {this.pageTabState && (
+                            <div className="btn-group" role="group">
                                 <IconAction
                                     title="Show front face"
                                     icon="material:flip_to_front"
@@ -278,8 +287,6 @@ class Controls extends React.Component {
                                     onClick={() => this.setFrontFace(true)}
                                     selected={this.pageTabState.frontFace}
                                 />
-                            )}
-                            {this.pageTabState && (
                                 <IconAction
                                     title="Show back face"
                                     icon="material:flip_to_back"
@@ -287,10 +294,12 @@ class Controls extends React.Component {
                                     onClick={() => this.setFrontFace(false)}
                                     selected={!this.pageTabState.frontFace}
                                 />
-                            )}
-                        </div>
+                            </div>
+                        )}
 
-                        {this.pageTabState && !this.pageTabState.frontFace && (
+                        {(this.flowTabState ||
+                            (this.pageTabState &&
+                                !this.pageTabState.frontFace)) && (
                             <IconAction
                                 title="Show component descriptions"
                                 icon="material:comment"
