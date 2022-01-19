@@ -2868,7 +2868,8 @@ export class ShowKeypadActionComponent extends ActionComponent {
         return (
             <div className="body">
                 <pre>
-                    {this.label ? this.label + ": " : ""} {this.initalValue}
+                    {this.label && this.label != '""' ? this.label + ": " : ""}{" "}
+                    {this.initalValue}
                 </pre>
             </div>
         );

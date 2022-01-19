@@ -362,7 +362,7 @@ export class FontEditor extends EditorComponent implements IPanel {
 
     render() {
         return (
-            <div onFocus={this.onFocus} tabIndex={0}>
+            <div onFocus={this.onFocus} tabIndex={0} onKeyDown={this.onKeyDown}>
                 <FlexLayout.Layout
                     model={this.context.layoutModels.fonts}
                     factory={this.factory}
