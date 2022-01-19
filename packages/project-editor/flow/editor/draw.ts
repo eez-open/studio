@@ -320,7 +320,7 @@ export function drawBackground(
 
     if (width > 0 && height > 0) {
         const savedGlobalAlpha = ctx.globalAlpha;
-        ctx.globalAlpha = style.opacity / 255;
+        ctx.globalAlpha = style.opacityProperty / 255;
 
         if (color == undefined) {
             color = inverse
