@@ -314,8 +314,12 @@ export class RemoteRuntime extends RuntimeBase {
 
     toggleDebugger() {
         if (this.isDebuggerActive) {
-            this.transitionToRunningMode = true;
-            this.resume();
+            if (this.isPaused) {
+                this.transitionToRunningMode = true;
+                this.resume();
+            } else {
+                this.transition(StateMachineAction.RUN);
+            }
         } else {
             this.pause();
         }
@@ -746,6 +750,7 @@ class DebuggerConnection {
 
                         if (state == DEBUGGER_STATE_RESUMED) {
                             if (runtime.transitionToRunningMode) {
+                                runtime.transitionToRunningMode = false;
                                 runtime.transition(StateMachineAction.RUN);
                             } else {
                                 runtime.transition(StateMachineAction.RESUME);
