@@ -1664,11 +1664,12 @@ export class Widget extends Component {
 
                 additionalMenuItems.push(
                     new MenuItem({
-                        label: "Create Layout",
+                        label: "Create Custom Widget",
                         click: async () => {
-                            const layoutWidget = await Widget.createLayout(
-                                objects as Component[]
-                            );
+                            const layoutWidget =
+                                await Widget.createCustomWidget(
+                                    objects as Component[]
+                                );
                             if (layoutWidget) {
                                 context.selectObject(layoutWidget);
                             }
@@ -1678,11 +1679,12 @@ export class Widget extends Component {
 
                 additionalMenuItems.push(
                     new MenuItem({
-                        label: "Replace with Layout",
+                        label: "Replace with Custom Widget",
                         click: async () => {
-                            const layoutWidget = await Widget.replaceWithLayout(
-                                objects as Component[]
-                            );
+                            const layoutWidget =
+                                await Widget.replaceWithCustomWidget(
+                                    objects as Component[]
+                                );
                             if (layoutWidget) {
                                 context.selectObject(layoutWidget);
                             }
@@ -1982,21 +1984,21 @@ export class Widget extends Component {
         );
     }
 
-    static async createLayout(fromWidgets: Component[]) {
+    static async createCustomWidget(fromWidgets: Component[]) {
         const DocumentStore = getDocumentStore(fromWidgets[0]);
-        const layouts = DocumentStore.project.pages;
+        const customWidgets = DocumentStore.project.pages;
 
         try {
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: "Layout name",
+                    title: "Custom widget name",
                     fields: [
                         {
                             name: "name",
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.unique({}, layouts)
+                                validators.unique({}, customWidgets)
                             ]
                         }
                     ]
@@ -2006,22 +2008,23 @@ export class Widget extends Component {
                 }
             });
 
-            const layoutName = result.values.name;
+            const customWidgetName = result.values.name;
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
             DocumentStore.addObject(
-                layouts,
+                customWidgets,
                 loadObject(
                     DocumentStore,
                     undefined,
                     {
-                        name: layoutName,
+                        name: customWidgetName,
                         left: 0,
                         top: 0,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        widgets: createWidgetsResult.widgets
+                        widgets: createWidgetsResult.widgets,
+                        isUsedAsCustomWidget: true
                     },
                     findClass("Page")!
                 )
@@ -2038,7 +2041,7 @@ export class Widget extends Component {
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        layout: layoutName
+                        layout: customWidgetName
                     },
                     Component
                 )
@@ -2049,11 +2052,11 @@ export class Widget extends Component {
         }
     }
 
-    static async replaceWithLayout(fromWidgets: Component[]) {
+    static async replaceWithCustomWidget(fromWidgets: Component[]) {
         try {
             const result = await showGenericDialog({
                 dialogDefinition: {
-                    title: "Layout name",
+                    title: "Custom widget name",
                     fields: [
                         {
                             name: "name",
@@ -2067,7 +2070,7 @@ export class Widget extends Component {
                 }
             });
 
-            const layoutName = result.values.name;
+            const customWidgetName = result.values.name;
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
@@ -2082,7 +2085,7 @@ export class Widget extends Component {
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        layout: layoutName
+                        layout: customWidgetName
                     },
                     Component
                 )
