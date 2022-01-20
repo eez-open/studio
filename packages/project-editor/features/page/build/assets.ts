@@ -834,15 +834,12 @@ export class DataBuffer {
         padding: number;
     }[] = [];
 
-    futureValueList: {
-        currentOffset: number;
-        callback: () => void;
-    }[] = [];
-
     futureArrayList: {
         currentOffset: number;
         callback: () => void;
     }[] = [];
+
+    relocationTable: number[] = [];
 
     writeInt8(value: number) {
         this.buffer.writeInt8(value, this.currentOffset);
@@ -917,12 +914,6 @@ export class DataBuffer {
         }
         this.buffer.writeDoubleLE(value, this.currentOffset);
         this.currentOffset += 8;
-    }
-
-    writeFutureValue(writeZero: () => void, callback: () => void) {
-        const currentOffset = this.currentOffset;
-        writeZero();
-        this.futureValueList.push({ currentOffset, callback });
     }
 
     writeUint8Array(array: Uint8Array | number[]) {
@@ -1046,31 +1037,51 @@ export class DataBuffer {
             }
 
             this.buffer.writeUInt32LE(currentOffset, writeLater.currentOffset);
+            this.relocationTable.push(writeLater.currentOffset);
         }
 
         this.writeLaterObjectList = [];
     }
 
-    finalize() {
+    finalize(writeReallocationTable: boolean) {
         this.addPadding();
 
-        this.finalizeObjectList();
+        if (writeReallocationTable) {
+            const relocationTableOffset = this.currentOffset;
+            this.writeUint32(0);
+            this.writeUint32(0);
 
-        let currentOffset = this.currentOffset;
+            this.relocationTable = [];
 
-        for (let i = 0; i < this.futureValueList.length; i++) {
-            this.currentOffset = this.futureValueList[i].currentOffset;
-            this.futureValueList[i].callback();
+            this.finalizeObjectList();
+
+            let currentOffset = this.currentOffset;
+
+            for (let i = 0; i < this.futureArrayList.length; i++) {
+                this.currentOffset = this.futureArrayList[i].currentOffset;
+                this.futureArrayList[i].callback();
+            }
+
+            this.currentOffset = currentOffset;
+
+            this.finalizeObjectList();
+
+            this.buffer.writeUInt32LE(
+                this.relocationTable.length,
+                relocationTableOffset
+            );
+
+            this.addPadding();
+
+            this.buffer.writeUInt32LE(
+                this.currentOffset,
+                relocationTableOffset + 4
+            );
+
+            for (let i = 0; i < this.relocationTable.length; i++) {
+                this.writeUint32(this.relocationTable[i]);
+            }
         }
-
-        for (let i = 0; i < this.futureArrayList.length; i++) {
-            this.currentOffset = this.futureArrayList[i].currentOffset;
-            this.futureArrayList[i].callback();
-        }
-
-        this.currentOffset = currentOffset;
-
-        this.finalizeObjectList();
 
         const buffer = Buffer.alloc(this.size);
         this.buffer.copy(buffer, 0, 0, this.size);
@@ -1097,15 +1108,12 @@ export class DummyDataBuffer {
         padding: number;
     }[] = [];
 
-    futureValueList: {
-        currentOffset: number;
-        callback: () => void;
-    }[] = [];
-
     futureArrayList: {
         currentOffset: number;
         callback: () => void;
     }[] = [];
+
+    relocationTable: number[] = [];
 
     writeInt8(value: number) {}
 
@@ -1126,8 +1134,6 @@ export class DummyDataBuffer {
     writeFloat(value: number) {}
 
     writeDouble(value: number) {}
-
-    writeFutureValue(callback: () => void) {}
 
     writeUint8Array(array: Uint8Array | number[]) {}
 
@@ -1163,7 +1169,7 @@ export class DummyDataBuffer {
 
     finalizeObjectList() {}
 
-    finalize() {}
+    finalize(writeReallocationTable: boolean) {}
 
     compress() {
         return { compressedBuffer: this.buffer, compressedSize: 0 };
@@ -1193,7 +1199,7 @@ function buildHeaderData(
     // decompressedSize
     dataBuffer.writeUint32(decompressedSize);
 
-    dataBuffer.finalize();
+    dataBuffer.finalize(false);
 }
 
 export async function buildGuiAssetsData(assets: Assets) {
@@ -1208,7 +1214,7 @@ export async function buildGuiAssetsData(assets: Assets) {
     buildVariableNames(assets, dataBuffer);
     buildFlowData(assets, dataBuffer);
 
-    dataBuffer.finalize();
+    dataBuffer.finalize(true);
 
     const decompressedSize = dataBuffer.size;
 

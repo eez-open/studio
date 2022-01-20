@@ -271,20 +271,24 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 
     const flowState = assets.getFlowState(flow);
 
+    // componentInputs
     dataBuffer.writeFutureArray(() =>
-        dataBuffer.writeArray(flowState.commponentInputs, componentInput => {
-            const COMPONENT_INPUT_FLAG_IS_SEQ_INPUT = 1 << 0;
-            const COMPONENT_INPUT_FLAG_IS_OPTIONAL = 1 << 1;
+        dataBuffer.writeNumberArray(
+            flowState.commponentInputs,
+            componentInput => {
+                const COMPONENT_INPUT_FLAG_IS_SEQ_INPUT = 1 << 0;
+                const COMPONENT_INPUT_FLAG_IS_OPTIONAL = 1 << 1;
 
-            dataBuffer.writeUint8(
-                (componentInput.isSequenceInput
-                    ? COMPONENT_INPUT_FLAG_IS_SEQ_INPUT
-                    : 0) |
-                    (componentInput.isOptionalInput
-                        ? COMPONENT_INPUT_FLAG_IS_OPTIONAL
-                        : 0)
-            );
-        })
+                dataBuffer.writeUint8(
+                    (componentInput.isSequenceInput
+                        ? COMPONENT_INPUT_FLAG_IS_SEQ_INPUT
+                        : 0) |
+                        (componentInput.isOptionalInput
+                            ? COMPONENT_INPUT_FLAG_IS_OPTIONAL
+                            : 0)
+                );
+            }
+        )
     );
 
     // widgetDataItems
