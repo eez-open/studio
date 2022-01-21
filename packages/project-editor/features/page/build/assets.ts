@@ -839,8 +839,6 @@ export class DataBuffer {
         callback: () => void;
     }[] = [];
 
-    relocationTable: number[] = [];
-
     writeInt8(value: number) {
         this.buffer.writeInt8(value, this.currentOffset);
         this.currentOffset += 1;
@@ -1037,51 +1035,26 @@ export class DataBuffer {
             }
 
             this.buffer.writeUInt32LE(currentOffset, writeLater.currentOffset);
-            this.relocationTable.push(writeLater.currentOffset);
         }
 
         this.writeLaterObjectList = [];
     }
 
-    finalize(writeReallocationTable: boolean) {
+    finalize() {
         this.addPadding();
 
-        if (writeReallocationTable) {
-            const relocationTableOffset = this.currentOffset;
-            this.writeUint32(0);
-            this.writeUint32(0);
+        this.finalizeObjectList();
 
-            this.relocationTable = [];
+        let currentOffset = this.currentOffset;
 
-            this.finalizeObjectList();
-
-            let currentOffset = this.currentOffset;
-
-            for (let i = 0; i < this.futureArrayList.length; i++) {
-                this.currentOffset = this.futureArrayList[i].currentOffset;
-                this.futureArrayList[i].callback();
-            }
-
-            this.currentOffset = currentOffset;
-
-            this.finalizeObjectList();
-
-            this.buffer.writeUInt32LE(
-                this.relocationTable.length,
-                relocationTableOffset
-            );
-
-            this.addPadding();
-
-            this.buffer.writeUInt32LE(
-                this.currentOffset,
-                relocationTableOffset + 4
-            );
-
-            for (let i = 0; i < this.relocationTable.length; i++) {
-                this.writeUint32(this.relocationTable[i]);
-            }
+        for (let i = 0; i < this.futureArrayList.length; i++) {
+            this.currentOffset = this.futureArrayList[i].currentOffset;
+            this.futureArrayList[i].callback();
         }
+
+        this.currentOffset = currentOffset;
+
+        this.finalizeObjectList();
 
         const buffer = Buffer.alloc(this.size);
         this.buffer.copy(buffer, 0, 0, this.size);
@@ -1113,8 +1086,6 @@ export class DummyDataBuffer {
         callback: () => void;
     }[] = [];
 
-    relocationTable: number[] = [];
-
     writeInt8(value: number) {}
 
     writeUint8(value: number) {}
@@ -1134,6 +1105,8 @@ export class DummyDataBuffer {
     writeFloat(value: number) {}
 
     writeDouble(value: number) {}
+
+    writeFutureValue(callback: () => void) {}
 
     writeUint8Array(array: Uint8Array | number[]) {}
 
@@ -1169,7 +1142,7 @@ export class DummyDataBuffer {
 
     finalizeObjectList() {}
 
-    finalize(writeReallocationTable: boolean) {}
+    finalize() {}
 
     compress() {
         return { compressedBuffer: this.buffer, compressedSize: 0 };
@@ -1199,7 +1172,7 @@ function buildHeaderData(
     // decompressedSize
     dataBuffer.writeUint32(decompressedSize);
 
-    dataBuffer.finalize(false);
+    dataBuffer.finalize();
 }
 
 export async function buildGuiAssetsData(assets: Assets) {
@@ -1214,7 +1187,7 @@ export async function buildGuiAssetsData(assets: Assets) {
     buildVariableNames(assets, dataBuffer);
     buildFlowData(assets, dataBuffer);
 
-    dataBuffer.finalize(true);
+    dataBuffer.finalize();
 
     const decompressedSize = dataBuffer.size;
 
