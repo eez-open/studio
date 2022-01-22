@@ -144,19 +144,13 @@ async function getBuildResults(
 
     let buildResults: BuildResult[] = [];
 
-    let projectFeatures = ProjectEditor.extensions;
-    for (let projectFeature of projectFeatures) {
-        if (
-            projectFeature.eezStudioExtension.implementation.projectFeature
-                .build &&
-            getProperty(
-                project,
-                projectFeature.eezStudioExtension.implementation.projectFeature
-                    .key
-            )
-        ) {
+    let projectExtensions = ProjectEditor.extensions;
+    for (let projectExtension of projectExtensions) {
+        const projectFeature =
+            projectExtension.eezStudioExtension.implementation.projectFeature;
+        if (projectFeature.build && getProperty(project, projectFeature.key)) {
             buildResults.push(
-                await projectFeature.eezStudioExtension.implementation.projectFeature.build(
+                await projectFeature.build(
                     project,
                     sectionNames,
                     buildConfiguration
@@ -168,7 +162,7 @@ async function getBuildResults(
     return buildResults;
 }
 
-const sectionNamesRegexp = /\/\/\$\{eez-studio (.*)\}/g;
+const sectionNamesRegexp = /\/\/\$\{eez-studio (\w*)\s*(\w*)\}/g;
 
 function getSectionNames(DocumentStore: DocumentStoreClass): string[] {
     if (DocumentStore.masterProject) {
@@ -193,25 +187,43 @@ function getSectionNames(DocumentStore: DocumentStoreClass): string[] {
 
 async function generateFile(
     DocumentStore: DocumentStoreClass,
-    buildResults: BuildResult[],
+    configurationBuildResults: {
+        [configurationName: string]: BuildResult[];
+    },
+    defaultConfigurationName: string,
     template: string | undefined,
     filePath: string
-) {
-    let parts: any = {};
-    for (const buildResult of buildResults) {
-        parts = Object.assign(parts, buildResult);
-    }
+): Promise<any> {
+    let parts: any;
 
     if (template) {
         let buildFileContent = template.replace(
             sectionNamesRegexp,
-            (_1, part) => {
+            (_1, part, configurationName) => {
+                const buildResults =
+                    configurationBuildResults[
+                        configurationName || defaultConfigurationName
+                    ];
+
+                parts = {};
+                for (const buildResult of buildResults) {
+                    parts = Object.assign(parts, buildResult);
+                }
+
                 return parts[part];
             }
         );
 
         await writeTextFile(filePath, buildFileContent);
     } else {
+        const buildResults =
+            configurationBuildResults[defaultConfigurationName];
+
+        parts = {};
+        for (const buildResult of buildResults) {
+            parts = Object.assign(parts, buildResult);
+        }
+
         await writeBinaryData(filePath, parts["GUI_ASSETS_DATA"]);
         if (parts["GUI_ASSETS_DATA_MAP"]) {
             await writeBinaryData(
@@ -247,35 +259,33 @@ async function generateFiles(
 
     let parts: any = undefined;
 
+    const project = DocumentStore.project;
+
     if (DocumentStore.masterProject) {
         parts = generateFile(
             DocumentStore,
-            configurationBuildResults[
-                DocumentStore.selectedBuildConfiguration
-                    ? DocumentStore.selectedBuildConfiguration.name
-                    : "default"
-            ],
+            configurationBuildResults,
+            DocumentStore.selectedBuildConfiguration
+                ? DocumentStore.selectedBuildConfiguration.name
+                : "default",
             undefined,
             destinationFolderPath +
                 "/" +
                 path.basename(DocumentStore.filePath, ".eez-project") +
-                (DocumentStore.project.isAppletProject ? ".app" : ".res")
+                (project.isAppletProject ? ".app" : ".res")
         );
 
-        if (
-            DocumentStore.project.isResourceProject &&
-            DocumentStore.project.micropython
-        ) {
+        if (project.isResourceProject && project.micropython) {
             await writeTextFile(
                 destinationFolderPath +
                     "/" +
                     path.basename(DocumentStore.filePath, ".eez-project") +
                     ".py",
-                DocumentStore.project.micropython.code
+                project.micropython.code
             );
         }
     } else {
-        const build = DocumentStore.project.settings.build;
+        const build = project.settings.build;
 
         for (const buildFile of build.files) {
             if (buildFile.fileName.indexOf("<configuration>") !== -1) {
@@ -283,7 +293,8 @@ async function generateFiles(
                     try {
                         parts = await generateFile(
                             DocumentStore,
-                            configurationBuildResults[configuration.name],
+                            configurationBuildResults,
+                            configuration.name,
                             buildFile.template,
                             destinationFolderPath +
                                 "/" +
@@ -297,7 +308,8 @@ async function generateFiles(
 
                         parts = await generateFile(
                             DocumentStore,
-                            configurationBuildResults[configuration.name],
+                            configurationBuildResults,
+                            configuration.name,
                             buildFile.template,
                             destinationFolderPath +
                                 "/" +
@@ -311,11 +323,10 @@ async function generateFiles(
             } else {
                 parts = generateFile(
                     DocumentStore,
-                    configurationBuildResults[
-                        DocumentStore.selectedBuildConfiguration
-                            ? DocumentStore.selectedBuildConfiguration.name
-                            : "default"
-                    ],
+                    configurationBuildResults,
+                    DocumentStore.selectedBuildConfiguration
+                        ? DocumentStore.selectedBuildConfiguration.name
+                        : "default",
                     buildFile.template,
                     destinationFolderPath + "/" + buildFile.fileName
                 );
@@ -327,10 +338,11 @@ async function generateFiles(
 }
 
 function anythingToBuild(DocumentStore: DocumentStoreClass) {
+    const project = DocumentStore.project;
     return (
-        DocumentStore.project.settings.build.files.length > 0 ||
+        project.settings.build.files.length > 0 ||
         DocumentStore.masterProject ||
-        DocumentStore.project.isDashboardProject
+        project.isDashboardProject
     );
 }
 
@@ -360,20 +372,23 @@ export async function build(
 
     let parts: any = undefined;
 
+    const project = DocumentStore.project;
+
     try {
         let sectionNames: string[] | undefined = undefined;
 
         let destinationFolderPath;
         if (!onlyCheck) {
             destinationFolderPath = DocumentStore.getAbsoluteFilePath(
-                DocumentStore.project.settings.build.destinationFolder || "."
+                project.settings.build.destinationFolder || "."
             );
+
             const fs = EEZStudio.remote.require("fs");
             if (!fs.existsSync(destinationFolderPath)) {
                 throw new BuildException("Cannot find destination folder.");
             }
 
-            if (!DocumentStore.project.isDashboardProject) {
+            if (!project.isDashboardProject) {
                 sectionNames = getSectionNames(DocumentStore);
             }
         }
@@ -382,15 +397,13 @@ export async function build(
             [configurationName: string]: BuildResult[];
         } = {};
 
-        if (!DocumentStore.project.isDashboardProject) {
+        if (!project.isDashboardProject) {
             if (
-                DocumentStore.project.settings.general.projectVersion !==
-                    "v1" &&
-                DocumentStore.project.settings.build.configurations.length >
-                    0 &&
+                project.settings.general.projectVersion !== "v1" &&
+                project.settings.build.configurations.length > 0 &&
                 !DocumentStore.masterProject
             ) {
-                for (const configuration of DocumentStore.project.settings.build
+                for (const configuration of project.settings.build
                     .configurations) {
                     OutputSections.write(
                         Section.OUTPUT,
@@ -407,7 +420,7 @@ export async function build(
             } else {
                 const selectedBuildConfiguration =
                     DocumentStore.selectedBuildConfiguration ||
-                    DocumentStore.project.settings.build.configurations[0];
+                    project.settings.build.configurations[0];
                 if (selectedBuildConfiguration) {
                     OutputSections.write(
                         Section.OUTPUT,
@@ -436,7 +449,7 @@ export async function build(
             return undefined;
         }
 
-        if (!DocumentStore.project.isDashboardProject) {
+        if (!project.isDashboardProject) {
             parts = await generateFiles(
                 DocumentStore,
                 destinationFolderPath,
@@ -544,9 +557,11 @@ export async function buildExtensions(DocumentStore: DocumentStoreClass) {
     // give some time for loader to start
     await new Promise(resolve => setTimeout(resolve, 50));
 
+    const project = DocumentStore.project;
+
     try {
         let destinationFolderPath = DocumentStore.getAbsoluteFilePath(
-            DocumentStore.project.settings.build.destinationFolder || "."
+            project.settings.build.destinationFolder || "."
         );
         const fs = EEZStudio.remote.require("fs");
         if (!fs.existsSync(destinationFolderPath)) {
