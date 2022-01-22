@@ -10,10 +10,7 @@ import {
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { IMouseHandler } from "project-editor/flow/editor/mouse-handler";
-import {
-    RubberBandSelectionMouseHandler,
-    isSelectionMoveable
-} from "project-editor/flow/editor/mouse-handler";
+import { isSelectionMoveable } from "project-editor/flow/editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -231,12 +228,7 @@ export class Selection extends React.Component<
             }
 
             // build resizeHandlersElement
-            const isActiveRubberBendSelection =
-                this.props.mouseHandler &&
-                this.props.mouseHandler instanceof
-                    RubberBandSelectionMouseHandler &&
-                this.props.mouseHandler.rubberBendRect;
-            if (!isActiveRubberBendSelection!) {
+            if (!this.props.mouseHandler) {
                 resizeHandlersElement = this.getResizeHandlers(
                     this.selectedObjectsBoundingRect
                 );
