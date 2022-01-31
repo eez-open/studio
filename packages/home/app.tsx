@@ -164,19 +164,6 @@ class WebSimulatorPanel extends React.Component<{
         const connection = instrument.getConnectionProperty();
         const webSimulatorPage = connection?.webSimulator!.src;
 
-        const webSimulatorWidth = connection?.webSimulator!.width ?? 640;
-        const webSimulatorHeight = connection?.webSimulator!.height ?? 480;
-
-        let panelWidth = Math.min(
-            Math.round(window.innerWidth * 0.5),
-            webSimulatorWidth
-        );
-        let panelHeight = (panelWidth * webSimulatorHeight) / webSimulatorWidth;
-        if (panelHeight > Math.round(window.innerWidth * 0.5)) {
-            panelHeight = Math.round(window.innerWidth * 0.5);
-            panelWidth = (panelHeight * webSimulatorWidth) / webSimulatorHeight;
-        }
-
         const installationFolderPath =
             instrument.extension?.installationFolderPath;
 
@@ -198,29 +185,88 @@ class WebSimulatorPanel extends React.Component<{
 
         const jsPanel: any = (window as any).jsPanel;
 
+        const localStorageItemKey =
+            "WebSimulatorPanel6:" + this.props.instrument.id;
+        let panelDataStr = window.localStorage.getItem(localStorageItemKey);
+        let panelData;
+        if (panelDataStr) {
+            panelData = JSON.parse(panelDataStr);
+        }
+
+        const webSimulatorWidth = connection?.webSimulator!.width ?? 640;
+        const webSimulatorHeight = connection?.webSimulator!.height ?? 480;
+
+        const panelMaxWidth = webSimulatorWidth;
+        const panelMaxHeight = webSimulatorHeight + 34;
+        const panelMinWidth = webSimulatorWidth / 8;
+        const panelMinHeight = webSimulatorHeight / 8 + 34;
+
+        let panelLeft;
+        let panelTop;
+        let panelWidth;
+        let panelHeight;
+        if (panelData) {
+            panelLeft = panelData.left;
+            panelTop = panelData.top;
+            panelWidth = panelData.width;
+            panelHeight = panelData.height;
+        } else {
+            panelWidth = Math.min(
+                Math.round(window.innerWidth * 0.5),
+                panelMaxWidth
+            );
+            panelHeight = (panelWidth * webSimulatorHeight) / webSimulatorWidth;
+            if (panelHeight > Math.round(window.innerWidth * 0.5)) {
+                panelHeight = Math.round(window.innerWidth * 0.5);
+                panelWidth =
+                    (panelHeight * webSimulatorWidth) / webSimulatorHeight;
+            }
+            panelHeight += 34;
+
+            panelLeft = (window.innerWidth - panelWidth) / 2;
+            panelTop = (window.innerHeight - panelHeight) / 2;
+        }
+
         this.dialog = jsPanel.create({
             container: "#EezStudio_Content",
             theme: "primary",
             headerTitle: instrument.name,
             panelSize: {
                 width: panelWidth,
-                height: panelHeight + 34
+                height: panelHeight
             },
             position: {
                 my: "top-left",
-                offsetX: "100px",
-                offsetY: "100px"
+                offsetX: panelLeft + "px",
+                offsetY: panelTop + "px"
             },
             content: element,
             headerControls: {
                 maximize: "remove",
                 smallify: "remove"
             },
-            dragit: {},
+            dragit: {
+                drag: (panel: any, panelData: any) => {
+                    window.localStorage.setItem(
+                        localStorageItemKey,
+                        JSON.stringify(panelData)
+                    );
+                },
+                containment: [0]
+            },
             resizeit: {
                 aspectRatio: "content",
-                maxWidth: webSimulatorWidth,
-                maxHeight: webSimulatorHeight
+                maxWidth: panelMaxWidth,
+                maxHeight: panelMaxHeight,
+                minWidth: panelMinWidth,
+                minHeight: panelMinHeight,
+                resize: (panel: any, panelData: any) => {
+                    window.localStorage.setItem(
+                        localStorageItemKey,
+                        JSON.stringify(panelData)
+                    );
+                },
+                containment: [0]
             },
             closeOnBackdrop: false,
             closeOnEscape: false,
