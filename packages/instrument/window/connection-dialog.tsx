@@ -17,6 +17,7 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
 import type { ConnectionParameters } from "instrument/connection/interface";
 import type * as UsbTmcModule from "instrument/connection/interfaces/usbtmc";
+import { guid } from "eez-studio-shared/guid";
 
 function openLink(url: string) {
     const { shell } = require("electron");
@@ -28,7 +29,13 @@ interface ConnectionPropertiesProps {
     onConnectionParametersChanged: (
         connectionParameters: ConnectionParameters
     ) => void;
-    availableConnections: ("ethernet" | "serial" | "usbtmc" | "visa")[];
+    availableConnections: (
+        | "ethernet"
+        | "serial"
+        | "usbtmc"
+        | "visa"
+        | "web-simulator"
+    )[];
     serialBaudRates: number[];
 }
 
@@ -154,6 +161,9 @@ export class ConnectionProperties extends React.Component<
                     .selectedUsbDeviceIndex
                     ? this.idProduct
                     : 0;
+            } else if (this.iface === "web-simulator") {
+                connectionParameters.type = "web-simulator";
+                connectionParameters.webSimulatorParameters.id = guid();
             } else {
                 connectionParameters.type = "visa";
                 connectionParameters.visaParameters.resource =
@@ -416,6 +426,8 @@ export class ConnectionProperties extends React.Component<
                     })()}
                 </SelectProperty>
             ];
+        } else if (this.iface === "web-simulator") {
+            options = [];
         } else {
             options = this.visaResources
                 ? [
@@ -500,6 +512,11 @@ export class ConnectionProperties extends React.Component<
                         -1 && <option value="serial">Serial</option>}
                     {this.props.availableConnections.indexOf("usbtmc") !==
                         -1 && <option value="usbtmc">USBTMC</option>}
+                    {this.props.availableConnections.indexOf(
+                        "web-simulator"
+                    ) !== -1 && (
+                        <option value="web-simulator">WebSimulator</option>
+                    )}
                     <option value="visa">VISA</option>
                 </SelectProperty>
                 {options}
@@ -513,7 +530,12 @@ class ConnectionDialog extends React.Component<
     {
         connectionParameters: ConnectionParameters;
         connect: (connectionParameters: ConnectionParameters) => void;
-        availableConnections: ("ethernet" | "serial" | "usbtmc")[];
+        availableConnections: (
+            | "ethernet"
+            | "serial"
+            | "usbtmc"
+            | "web-simulator"
+        )[];
         serialBaudRates: number[];
     },
     {}
@@ -545,6 +567,9 @@ class ConnectionDialog extends React.Component<
                 this.connectionParameters.usbtmcParameters?.idVendor != 0 &&
                 this.connectionParameters.usbtmcParameters?.idProduct != 0
             );
+        }
+        if (this.connectionParameters.type == "web-simulator") {
+            return true;
         }
         if (this.connectionParameters.type == "visa") {
             return (
@@ -582,7 +607,12 @@ class ConnectionDialog extends React.Component<
 export function showConnectionDialog(
     connectionParameters: ConnectionParameters,
     connect: (connectionParameters: ConnectionParameters) => void,
-    availableConnections: ("ethernet" | "serial" | "usbtmc")[],
+    availableConnections: (
+        | "ethernet"
+        | "serial"
+        | "usbtmc"
+        | "web-simulator"
+    )[],
     serialBaudRates: number[]
 ) {
     showDialog(

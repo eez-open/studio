@@ -30,6 +30,7 @@ import net from "net";
 import { getObjectFromStringPath } from "project-editor/core/store";
 import { ConnectionBase } from "instrument/connection/connection-base";
 import { IExpressionContext } from "./expression/expression";
+import { webSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -79,7 +80,7 @@ const LOG_ITEM_TYPE_DEBUG = 5;
 
 export class RemoteRuntime extends RuntimeBase {
     connection: ConnectionBase | undefined;
-    debuggerConnection: DebuggerConnection | undefined;
+    debuggerConnection: DebuggerConnectionBase | undefined;
     instrument: InstrumentObject | undefined;
     assetsMap: AssetsMap;
     debuggerValues = new Map<number, DebuggerValue>();
@@ -300,8 +301,15 @@ export class RemoteRuntime extends RuntimeBase {
             this.instrument &&
             this.instrument.lastConnection
         ) {
-            this.debuggerConnection = new DebuggerConnection(this);
-            this.debuggerConnection.start(this.instrument.lastConnection);
+            if (this.instrument.lastConnection.type == "web-simulator") {
+                this.debuggerConnection = new WebSimulatorDebuggerConnection(
+                    this
+                );
+                this.debuggerConnection.start(this.instrument.lastConnection);
+            } else {
+                this.debuggerConnection = new SocketDebuggerConnection(this);
+                this.debuggerConnection.start(this.instrument.lastConnection);
+            }
         }
     }
 
@@ -320,6 +328,11 @@ export class RemoteRuntime extends RuntimeBase {
             } else {
                 this.transition(StateMachineAction.RUN);
             }
+
+            runInAction(() => {
+                this.isDebuggerActive = false;
+                this.DocumentStore.uiStateStore.pageRuntimeFrontFace = true;
+            });
         } else {
             this.pause();
         }
@@ -338,11 +351,12 @@ export class RemoteRuntime extends RuntimeBase {
             this.debuggerConnection.sendMessageFromDebugger(
                 `${MessagesFromDebugger.MESSAGE_FROM_DEBUGGER_PAUSE}\n`
             );
-        } else {
-            runInAction(() => {
-                this.isDebuggerActive = true;
-            });
         }
+
+        runInAction(() => {
+            this.isDebuggerActive = true;
+            this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
+        });
     }
 
     runSingleStep() {
@@ -479,105 +493,18 @@ export class RemoteRuntime extends RuntimeBase {
     destroyObjectLocalVariables(flowState: FlowState): void {}
 }
 
-class DebuggerConnection {
-    socket: Socket | undefined;
+////////////////////////////////////////////////////////////////////////////////
+
+abstract class DebuggerConnectionBase {
     dataAccumulated: string = "";
 
     timeoutTimerId: any;
 
-    constructor(private runtime: RemoteRuntime) {}
+    constructor(public runtime: RemoteRuntime) {}
 
-    async start(connectionParameters: ConnectionParameters) {
-        this.socket = new net.Socket();
-
-        this.socket.setEncoding("binary");
-
-        this.socket.on("data", (data: string) => {
-            this.onMessageToDebugger(data);
-        });
-
-        this.socket.on("error", (err: any) => {
-            if (err.code === "ECONNRESET") {
-                console.error(
-                    "A connection was forcibly closed by an instrument."
-                );
-            } else if (err.code === "ECONNREFUSED") {
-                console.error(
-                    "No connection could be made because the target instrument actively refused it."
-                );
-            } else {
-                console.error(err.toString());
-            }
-            this.destroy();
-        });
-
-        this.socket.on("close", (e: any) => {
-            this.stop();
-        });
-
-        this.socket.on("end", (e: any) => {
-            this.stop();
-        });
-
-        this.socket.on("timeout", (e: any) => {
-            this.stop();
-        });
-
-        this.socket.on("destroyed", (e: any) => {
-            this.stop();
-        });
-
-        try {
-            this.socket.connect(
-                DEBUGGER_TCP_PORT,
-                connectionParameters.ethernetParameters.address,
-                () => {
-                    if (!this.runtime.isDebuggerActive) {
-                        this.runtime.resume();
-                    }
-                }
-            );
-        } catch (err) {
-            console.error(err);
-            this.destroy();
-        }
-    }
-
-    async stop() {
-        const os = require("os");
-
-        if (os.platform() == "win32") {
-            this.destroy();
-        } else {
-            if (this.socket) {
-                if (this.socket.connecting) {
-                    this.destroy();
-                } else {
-                    this.socket.end();
-                    this.destroy();
-                }
-            }
-        }
-    }
-
-    destroy() {
-        if (this.socket) {
-            this.socket.destroy();
-            this.socket.unref();
-            this.socket.removeAllListeners();
-            this.socket = undefined;
-        }
-    }
-
-    sendMessageFromDebugger(data: string) {
-        if (this.socket) {
-            this.socket.write(data, "binary");
-        } else if (this.runtime.isDebuggerActive) {
-            this.runtime.stopRuntimeWithError(
-                "Connection with debugger is closed"
-            );
-        }
-    }
+    abstract start(connectionParameters: ConnectionParameters): void;
+    abstract stop(): void;
+    abstract sendMessageFromDebugger(data: string): void;
 
     parseStringDebuggerValue(str: string) {
         let parsedStr = "";
@@ -1360,6 +1287,142 @@ class DebuggerConnection {
                     }
                     break;
             }
+        }
+    }
+}
+
+class SocketDebuggerConnection extends DebuggerConnectionBase {
+    socket: Socket | undefined;
+
+    constructor(runtime: RemoteRuntime) {
+        super(runtime);
+    }
+
+    async start(connectionParameters: ConnectionParameters) {
+        this.socket = new net.Socket();
+
+        this.socket.setEncoding("binary");
+
+        this.socket.on("data", (data: string) => {
+            this.onMessageToDebugger(data);
+        });
+
+        this.socket.on("error", (err: any) => {
+            if (err.code === "ECONNRESET") {
+                console.error(
+                    "A connection was forcibly closed by an instrument."
+                );
+            } else if (err.code === "ECONNREFUSED") {
+                console.error(
+                    "No connection could be made because the target instrument actively refused it."
+                );
+            } else {
+                console.error(err.toString());
+            }
+            this.destroy();
+        });
+
+        this.socket.on("close", (e: any) => {
+            this.stop();
+        });
+
+        this.socket.on("end", (e: any) => {
+            this.stop();
+        });
+
+        this.socket.on("timeout", (e: any) => {
+            this.stop();
+        });
+
+        this.socket.on("destroyed", (e: any) => {
+            this.stop();
+        });
+
+        try {
+            this.socket.connect(
+                DEBUGGER_TCP_PORT,
+                connectionParameters.ethernetParameters.address,
+                () => {
+                    if (!this.runtime.isDebuggerActive) {
+                        this.runtime.resume();
+                    }
+                }
+            );
+        } catch (err) {
+            console.error(err);
+            this.destroy();
+        }
+    }
+
+    async stop() {
+        const os = require("os");
+
+        if (os.platform() == "win32") {
+            this.destroy();
+        } else {
+            if (this.socket) {
+                if (this.socket.connecting) {
+                    this.destroy();
+                } else {
+                    this.socket.end();
+                    this.destroy();
+                }
+            }
+        }
+    }
+
+    destroy() {
+        if (this.socket) {
+            this.socket.destroy();
+            this.socket.unref();
+            this.socket.removeAllListeners();
+            this.socket = undefined;
+        }
+    }
+
+    sendMessageFromDebugger(data: string) {
+        if (this.socket) {
+            this.socket.write(data, "binary");
+        } else if (this.runtime.isDebuggerActive) {
+            this.runtime.stopRuntimeWithError(
+                "Connection with debugger is closed"
+            );
+        }
+    }
+}
+
+class WebSimulatorDebuggerConnection extends DebuggerConnectionBase {
+    simulatorID: string;
+    connected: boolean;
+
+    constructor(runtime: RemoteRuntime) {
+        super(runtime);
+    }
+
+    async start(connectionParameters: ConnectionParameters) {
+        this.simulatorID = connectionParameters.webSimulatorParameters.id;
+        webSimulatorMessageDispatcher.connectDebugger(this.simulatorID, this);
+        this.connected = true;
+        if (!this.runtime.isDebuggerActive) {
+            this.runtime.resume();
+        }
+    }
+
+    async stop() {
+        webSimulatorMessageDispatcher.disconnectDebugger(this.simulatorID);
+        this.connected = false;
+    }
+
+    sendMessageFromDebugger(data: string) {
+        if (this.connected) {
+            webSimulatorMessageDispatcher.sendMessageFromDebugger(
+                this.simulatorID,
+                data
+            );
+        } else if (this.runtime.isDebuggerActive) {
+            this.runtime.stopRuntimeWithError(
+                "Connection with debugger is closed"
+            );
         }
     }
 }

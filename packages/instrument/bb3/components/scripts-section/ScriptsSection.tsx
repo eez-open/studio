@@ -10,32 +10,42 @@ import { Section } from "instrument/bb3/components/Section";
 import { ScriptsSectionGlobalActions } from "instrument/bb3/components/scripts-section/ScriptsSectionGlobalActions";
 import { ScriptsSectionList } from "instrument/bb3/components/scripts-section/ScriptsSectionList";
 
-export const ScriptsSection = observer(({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
-    return (
-        <Section
-            title="MicroPython Scripts"
-            titleControls={
-                bb3Instrument.refreshInProgress ? null : (
-                    <>
-                        {/*<ScriptsSectionSelectView bb3Instrument={bb3Instrument} />*/}
-                        <ScriptsSectionGlobalActions bb3Instrument={bb3Instrument} />
-                    </>
-                )
-            }
-            body={
-                bb3Instrument.refreshInProgress ? (
-                    <Loader />
-                ) : (
-                    <>
-                        {bb3Instrument.scriptsOnInstrumentFetchError && (
-                            <div className="alert alert-danger" role="alert">
-                                Failed to get info about scripts on the instruments!
-                            </div>
-                        )}
-                        <ScriptsSectionList scripts={bb3Instrument.allScriptsCollection} />
-                    </>
-                )
-            }
-        />
-    );
-});
+export const ScriptsSection = observer(
+    ({ bb3Instrument }: { bb3Instrument: BB3Instrument }) => {
+        return (
+            <Section
+                title="MicroPython Scripts"
+                titleControls={
+                    bb3Instrument.refreshInProgress ? null : (
+                        <>
+                            {/*<ScriptsSectionSelectView bb3Instrument={bb3Instrument} />*/}
+                            <ScriptsSectionGlobalActions
+                                bb3Instrument={bb3Instrument}
+                            />
+                        </>
+                    )
+                }
+                body={
+                    bb3Instrument.refreshInProgress ? (
+                        <Loader />
+                    ) : (
+                        <>
+                            {bb3Instrument.scriptsOnInstrumentFetchError && (
+                                <div
+                                    className="alert alert-danger"
+                                    role="alert"
+                                >
+                                    Failed to get info about scripts on the
+                                    instruments!
+                                </div>
+                            )}
+                            <ScriptsSectionList
+                                scripts={bb3Instrument.allScriptsCollection}
+                            />
+                        </>
+                    )
+                }
+            />
+        );
+    }
+);

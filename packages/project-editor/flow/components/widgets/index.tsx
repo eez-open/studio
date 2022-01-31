@@ -483,7 +483,7 @@ export class ListWidget extends Widget {
                 try {
                     dataValue = evalExpression(flowContext, this, this.data);
                 } catch (err) {
-                    console.error(err);
+                    //console.error(err);
                 }
             } else {
                 dataValue = flowContext.dataContext.get(this.data);
@@ -909,7 +909,7 @@ export class SelectWidget extends Widget {
 
                 return index;
             } catch (err) {
-                console.error(err);
+                //console.error(err);
                 return -1;
             }
         } else {
@@ -946,7 +946,7 @@ export class SelectWidget extends Widget {
 
                 return index;
             } catch (err) {
-                console.error(err);
+                //console.error(err);
             }
 
             if (this.widgets.length > 0) {
@@ -1281,7 +1281,7 @@ export class LayoutViewWidget extends Widget {
                     ? evalExpression(flowContext, this, this.visible)
                     : true;
             } catch (err) {
-                console.error(err);
+                //console.error(err);
             }
             if (typeof value === "boolean") {
                 visible = value;
@@ -1623,7 +1623,7 @@ export class DisplayDataWidget extends Widget {
                         }
                         return "";
                     } catch (err) {
-                        console.error(err);
+                        //console.error(err);
                         return "";
                     }
                 }
@@ -1920,7 +1920,7 @@ export class TextWidget extends Widget {
                         }
                         return "";
                     } catch (err) {
-                        console.error(err);
+                        //console.error(err);
                         return "";
                     }
                 }
@@ -2398,7 +2398,7 @@ export class MultilineTextWidget extends Widget {
                         }
                         return "";
                     } catch (err) {
-                        console.error(err);
+                        //console.error(err);
                         return "";
                     }
                 }
@@ -2996,7 +2996,7 @@ export class ButtonWidget extends Widget {
                         }
                         return "";
                     } catch (err) {
-                        console.error(err);
+                        //console.error(err);
                         return "";
                     }
                 }
@@ -4384,7 +4384,7 @@ export class ProgressWidget extends Widget {
                             return value;
                         }
                     } catch (err) {
-                        console.error(err);
+                        //console.error(err);
                     }
                     return 0;
                 }
@@ -4713,7 +4713,7 @@ export class GaugeEmbeddedWidget extends Widget {
                 unit =
                     this.data && evalExpression(flowContext, this, this.unit);
             } catch (err) {
-                console.error(err);
+                //console.error(err);
             }
 
             if (
@@ -5116,7 +5116,7 @@ export class InputEmbeddedWidget extends Widget {
                                             this.data
                                         );
                                     } catch (err) {
-                                        console.error(err);
+                                        //console.error(err);
                                         text = "";
                                     }
                                 } else {
@@ -5137,7 +5137,7 @@ export class InputEmbeddedWidget extends Widget {
                                             this.unit
                                         );
                                     } catch (err) {
-                                        console.error(err);
+                                        //console.error(err);
                                         unit = "";
                                     }
                                 } else {
@@ -5414,7 +5414,7 @@ export class CheckboxWidget extends Widget {
                 try {
                     return !!evalExpression(flowContext, this, this.data);
                 } catch (err) {
-                    console.error(err);
+                    //console.error(err);
                 }
             }
 
@@ -5443,7 +5443,7 @@ export class CheckboxWidget extends Widget {
                     }
                     return "";
                 } catch (err) {
-                    console.error(err);
+                    //console.error(err);
                     return "";
                 }
             }

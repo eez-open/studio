@@ -2,17 +2,23 @@ import React from "react";
 import { computed } from "mobx";
 import { observer } from "mobx-react";
 
+import {
+    HorizontalHeaderWithBody,
+    VerticalHeaderWithBody,
+    Header,
+    Body
+} from "eez-studio-ui/header-with-body";
+import { Navigation } from "instrument/window/navigation";
+
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
-import { AppRootComponent } from "eez-studio-ui/app";
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Loader } from "eez-studio-ui/loader";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
-import { Header } from "eez-studio-ui/header-with-body";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
-import type { IInstrumentWindowNavigationItem } from "instrument/window/navigation-store";
+import type { INavigationItem } from "instrument/window/navigation";
 import type { InstrumentObject } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +56,7 @@ function EditInstrumentLabelDialog({
 export class AppBar extends React.Component<
     {
         appStore: InstrumentAppStore;
-        selectedItem: IInstrumentWindowNavigationItem;
+        selectedItem: INavigationItem;
     },
     {}
 > {
@@ -190,7 +196,21 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
         super(props);
     }
 
-    onSelectionChange = (item: IInstrumentWindowNavigationItem) => {
+    renderedItems = new Set<string>();
+
+    renderContent(item: INavigationItem) {
+        this.renderedItems.add(item.id);
+        return item.renderContent();
+    }
+
+    renderContentIfRenderedBefore(item: INavigationItem) {
+        if (!this.renderedItems.has(item.id)) {
+            return null;
+        }
+        return item.renderContent();
+    }
+
+    onSelectionChange = (item: INavigationItem) => {
         this.props.appStore.navigationStore.changeMainNavigationSelectedItem(
             item
         );
@@ -227,18 +247,41 @@ export class App extends React.Component<{ appStore: InstrumentAppStore }> {
     }
 
     render() {
+        const navigationItems =
+            this.props.appStore.navigationStore.navigationItems;
+        const selectedItem =
+            this.props.appStore.navigationStore.mainNavigationSelectedItem;
+        const appBar = this.appBar;
+
         return (
-            <AppRootComponent
-                navigationItems={
-                    this.props.appStore.navigationStore.navigationItems
-                }
-                appBar={this.appBar}
-                selectedItem={
-                    this.props.appStore.navigationStore
-                        .mainNavigationSelectedItem
-                }
-                onSelectionChange={this.onSelectionChange}
-            />
+            <div className={"EezStudio_App"}>
+                <VerticalHeaderWithBody>
+                    <Header>{appBar}</Header>
+                    <Body>
+                        <HorizontalHeaderWithBody>
+                            <Header>
+                                <Navigation
+                                    items={navigationItems}
+                                    selectedItem={selectedItem}
+                                    selectItem={this.onSelectionChange}
+                                />
+                            </Header>
+                            {navigationItems.map(item => (
+                                <Body
+                                    visible={item === selectedItem}
+                                    key={item.id}
+                                >
+                                    {item === selectedItem
+                                        ? this.renderContent(item)
+                                        : this.renderContentIfRenderedBefore(
+                                              item
+                                          )}
+                                </Body>
+                            ))}
+                        </HorizontalHeaderWithBody>
+                    </Body>
+                </VerticalHeaderWithBody>
+            </div>
         );
     }
 }

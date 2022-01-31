@@ -1,8 +1,6 @@
 import React from "react";
 import { observable, computed, action, runInAction, autorun } from "mobx";
 
-import type { IRootNavigationItem } from "eez-studio-ui/app";
-
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import type * as ScriptsModule from "instrument/window/scripts";
 import type * as ShortcutsModule from "instrument/window/shortcuts";
@@ -17,25 +15,21 @@ import {
 
 import type * as ListsModule from "instrument/window/lists/lists";
 
+import type { INavigationItem } from "instrument/window/navigation";
+
 import type * as Bb3Module from "instrument/bb3";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface IInstrumentWindowNavigationItem extends IRootNavigationItem {
-    renderToolbarButtons: () => JSX.Element;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class NavigationStore {
-    terminalNavigationItem: IInstrumentWindowNavigationItem;
-    deletedHistoryItemsNavigationItem: IInstrumentWindowNavigationItem;
-    scriptsNavigationItem: IInstrumentWindowNavigationItem;
-    shortcutsAndGroupsNavigationItem: IInstrumentWindowNavigationItem;
-    listsNavigationItem: IInstrumentWindowNavigationItem;
+    terminalNavigationItem: INavigationItem;
+    deletedHistoryItemsNavigationItem: INavigationItem;
+    scriptsNavigationItem: INavigationItem;
+    shortcutsAndGroupsNavigationItem: INavigationItem;
+    listsNavigationItem: INavigationItem;
 
     @observable.ref
-    private _mainNavigationSelectedItem: IInstrumentWindowNavigationItem;
+    private _mainNavigationSelectedItem: INavigationItem;
 
     mainHistoryView: HistoryView | undefined;
 
@@ -172,7 +166,7 @@ export class NavigationStore {
 
     @computed
     get navigationItems() {
-        let navigationItems: IInstrumentWindowNavigationItem[] = [];
+        let navigationItems: INavigationItem[] = [];
 
         if (this.startPageNavigationItem) {
             navigationItems.push(this.startPageNavigationItem);
@@ -206,9 +200,7 @@ export class NavigationStore {
         return this.terminalNavigationItem;
     }
 
-    async changeMainNavigationSelectedItem(
-        value: IInstrumentWindowNavigationItem
-    ) {
+    async changeMainNavigationSelectedItem(value: INavigationItem) {
         if (await this.appStore.undoManager.confirmSave()) {
             runInAction(() => {
                 this._mainNavigationSelectedItem = value;

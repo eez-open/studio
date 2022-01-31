@@ -99,7 +99,7 @@ function openEditor(
     }
 }
 
-window.onmessage = (message: any) => {
+window.addEventListener("message", (message: any) => {
     for (let key of instruments.keys()) {
         const instrument = instruments.get(key);
         if (instrument && instrument.id === message.data.instrumentId) {
@@ -113,7 +113,7 @@ window.onmessage = (message: any) => {
             return;
         }
     }
-};
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 

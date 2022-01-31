@@ -12,6 +12,7 @@ import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
 import { SerialInterface } from "instrument/connection/interfaces/serial";
 import { UsbTmcInterface } from "instrument/connection/interfaces/usbtmc";
 import { VisaInterface } from "instrument/connection/interfaces/visa";
+import { WebSimulatorInterface } from "instrument/connection/interfaces/web-simulator";
 import type {
     CommunicationInterface,
     CommunicationInterfaceHost,
@@ -163,6 +164,8 @@ export class Connection
             this.communicationInterface = new SerialInterface(this);
         } else if (this.connectionParameters.type === "usbtmc") {
             this.communicationInterface = new UsbTmcInterface(this);
+        } else if (this.connectionParameters.type === "web-simulator") {
+            this.communicationInterface = new WebSimulatorInterface(this);
         } else {
             this.communicationInterface = new VisaInterface(this);
         }

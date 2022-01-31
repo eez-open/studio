@@ -746,8 +746,6 @@ export class Tabs {
 
     constructor() {
         loadPreinstalledExtension("instrument").then(async () => {
-            await this.openTabById("home", true);
-
             if (!firstTime.get()) {
                 if (location.search) {
                     const instrumentId = location.search.substring(1);
@@ -774,6 +772,8 @@ export class Tabs {
                         }
                     }
                 }
+            } else {
+                await this.openTabById("home", true);
             }
 
             reaction(

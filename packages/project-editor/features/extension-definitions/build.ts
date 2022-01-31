@@ -157,6 +157,8 @@ export async function extensionDefinitionBuild(
                         DocumentStore.project.settings.general.scpiDocFolder
                     ),
 
+                DocumentStore.getAbsoluteFilePath("."),
+
                 properties
             );
 

@@ -71,7 +71,6 @@ export class ComponentEnclosure extends React.Component<{
 
             if (this.elRef.current.offsetParent == null) {
                 // do not calculate geometry if element is not visible
-                console.log("offsetParent == null");
                 return;
             }
 

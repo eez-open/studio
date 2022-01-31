@@ -1,4 +1,8 @@
-import { ScpiCommand, ScpiCommandTreeNode, addCommandToTree } from "instrument/commands-tree";
+import {
+    ScpiCommand,
+    ScpiCommandTreeNode,
+    addCommandToTree
+} from "instrument/commands-tree";
 import {
     IEnum,
     ISubsystem,
@@ -28,6 +32,11 @@ export interface IInstrumentProperties {
         usbtmc?: {
             idVendor: number | string | undefined;
             idProduct: number | string | undefined;
+        };
+        webSimulator?: {
+            src: string;
+            width: number;
+            height: number;
         };
     };
     channels?: {
@@ -146,7 +155,8 @@ function buildEnumDefinitions(enums: IEnum[]) {
                 `<Enum name="${enumeration.name}">
                     ${enumeration.members
                         .map(
-                            member => `<Member mnemonic="${member.name}" value="${member.value}" />`
+                            member =>
+                                `<Member mnemonic="${member.name}" value="${member.value}" />`
                         )
                         .join("")}
                 </Enum>`
@@ -165,13 +175,21 @@ function buildParameters(parameters: IParameter[]) {
                     parameter => `
                         <Parameter
                             name="${quoteAttr(parameter.name)}"
-                            optional="${parameter.isOptional ? "true" : "false"}"
-                            semanticType="${getSdlSemanticTypeForParameter(parameter)}"
-                            description="${quoteAttr(parameter.description || "")}"
+                            optional="${
+                                parameter.isOptional ? "true" : "false"
+                            }"
+                            semanticType="${getSdlSemanticTypeForParameter(
+                                parameter
+                            )}"
+                            description="${quoteAttr(
+                                parameter.description || ""
+                            )}"
                         >
                             <ParameterType>
                                 ${parameter.type
-                                    .map(parameterType => getSdlParameterType(parameterType))
+                                    .map(parameterType =>
+                                        getSdlParameterType(parameterType)
+                                    )
                                     .join("")}
                             </ParameterType>
                         </Parameter>
@@ -188,7 +206,9 @@ function buildResponse(response: IResponse) {
                 description="${quoteAttr(response.description || "")}"
             >
             <ResponseType>
-                ${response.type.map(responseType => getSdlResponseType(responseType)).join("")}
+                ${response.type
+                    .map(responseType => getSdlResponseType(responseType))
+                    .join("")}
             </ResponseType>
         </Response>`;
 }
@@ -224,16 +244,18 @@ function buildCommand(command: ScpiCommand) {
             if (helpLinks) {
                 helpLinks += "\n";
             }
-            helpLinks += `<HelpLink name="${quoteAttr(command.querySyntax.name)}" url="${quoteAttr(
-                command.querySyntax.url
-            )}" />`;
+            helpLinks += `<HelpLink name="${quoteAttr(
+                command.querySyntax.name
+            )}" url="${quoteAttr(command.querySyntax.url)}" />`;
         }
 
         querySyntaxes = `
             <QuerySyntaxes>
                 <QuerySyntax>
                     ${buildParameters(command.querySyntax.parameters)}
-                    <Responses>${buildResponse(command.querySyntax.response)}</Responses>
+                    <Responses>${buildResponse(
+                        command.querySyntax.response
+                    )}</Responses>
                 </QuerySyntax>
             </QuerySyntaxes>
             `;
@@ -250,7 +272,9 @@ function buildCommonCommand(command: ScpiCommand) {
 
 function filterSubsystemCommands(idf: IdfProperties, subsystem: ISubsystem) {
     return subsystem.commands.filter(
-        command => !command.usedIn || command.usedIn.indexOf(idf.buildConfiguration) !== -1
+        command =>
+            !command.usedIn ||
+            command.usedIn.indexOf(idf.buildConfiguration) !== -1
     );
 }
 
@@ -322,7 +346,9 @@ function buildNode(node: ScpiCommandTreeNode) {
     let result = "";
 
     if (node.command) {
-        result += `<SubsystemCommand>${buildCommand(node.command)}</SubsystemCommand>`;
+        result += `<SubsystemCommand>${buildCommand(
+            node.command
+        )}</SubsystemCommand>`;
     }
 
     if (node.nodes) {
@@ -335,8 +361,12 @@ function buildNode(node: ScpiCommandTreeNode) {
             let mnemonic = quoteAttr(node.mnemonic);
             let content = buildNode(node);
 
-            result += `<${tagName} aliases="${aliases}"${node.optional ? ' default="true"' : ""}${
-                node.numericSuffix ? ` numericSuffix="${node.numericSuffix}"` : ""
+            result += `<${tagName} aliases="${aliases}"${
+                node.optional ? ' default="true"' : ""
+            }${
+                node.numericSuffix
+                    ? ` numericSuffix="${node.numericSuffix}"`
+                    : ""
             } mnemonic="${mnemonic}">${content}</${tagName}>`;
         });
     }
@@ -360,7 +390,11 @@ function buildSubsystemCommands(idf: IdfProperties, subsystems: ISubsystem[]) {
     return buildNode(tree);
 }
 
-function buildSdl(idf: IdfProperties, enums: IEnum[], subsystems: ISubsystem[]) {
+function buildSdl(
+    idf: IdfProperties,
+    enums: IEnum[],
+    subsystems: ISubsystem[]
+) {
     const friendlyName = quoteAttr(idf.sdlFriendlyName);
     const enumDefinitions = buildEnumDefinitions(enums);
     const commonCommands = buildCommonCommands(idf, subsystems);
@@ -394,6 +428,7 @@ export function buildInstrumentExtension(
     moduleFilePath: string | undefined,
     imageFilePath: string | undefined,
     scpiHelpFolderPath: string | undefined,
+    projectFilePath: string,
     properties: any
 ) {
     return new Promise<void>((resolve, reject) => {
@@ -424,6 +459,13 @@ export function buildInstrumentExtension(
 
         archive.pipe(output);
 
+        let webSimulatorFiles;
+        const webSimulator = properties?.properties?.connection?.webSimulator;
+        if (webSimulator) {
+            webSimulatorFiles = webSimulator.files;
+            delete webSimulator.files;
+        }
+
         const packageJson = buildPackageJson(idf, properties);
         archive.append(packageJson, { name: "package.json" });
 
@@ -439,6 +481,15 @@ export function buildInstrumentExtension(
 
         if (scpiHelpFolderPath) {
             archive.directory(scpiHelpFolderPath, MODULE_DOCS_FOLDER);
+        }
+
+        if (webSimulatorFiles) {
+            for (const file of webSimulatorFiles) {
+                const srcFilePath = projectFilePath + "/" + file[0];
+                archive.file(srcFilePath, {
+                    name: file[1]
+                });
+            }
         }
 
         archive.finalize();

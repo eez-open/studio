@@ -217,9 +217,21 @@ export const ModuleItem = observer(({ module }: { module: Module }) => {
     return (
         <tr>
             <td>{module.slotIndex}</td>
-            <td>{module.moduleType}</td>
-            <td>{module.moduleRevision}</td>
-            <td>{module.firmwareVersion}</td>
+            <td>
+                {typeof module.moduleType == "string"
+                    ? module.moduleType
+                    : JSON.stringify(module.moduleType)}
+            </td>
+            <td>
+                {typeof module.moduleRevision == "string"
+                    ? module.moduleRevision
+                    : JSON.stringify(module.moduleRevision)}
+            </td>
+            <td>
+                {typeof module.firmwareVersion == "string"
+                    ? module.firmwareVersion
+                    : JSON.stringify(module.firmwareVersion)}
+            </td>
             <td>{updateInfo}</td>
         </tr>
     );

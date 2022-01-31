@@ -408,12 +408,25 @@ export class InstrumentObject {
             },
             visaParameters: {
                 resource: ""
+            },
+            webSimulatorParameters: {
+                id: ""
             }
         };
     }
 
-    get availableConnections(): ("ethernet" | "serial" | "usbtmc")[] {
-        let availableConnections: ("ethernet" | "serial" | "usbtmc")[] = [];
+    get availableConnections(): (
+        | "ethernet"
+        | "serial"
+        | "usbtmc"
+        | "web-simulator"
+    )[] {
+        let availableConnections: (
+            | "ethernet"
+            | "serial"
+            | "usbtmc"
+            | "web-simulator"
+        )[] = [];
 
         const connection = this.getConnectionProperty();
         if (connection) {
@@ -425,6 +438,11 @@ export class InstrumentObject {
             }
             if (connection.usbtmc) {
                 availableConnections.push("usbtmc");
+            }
+
+            // EEZ BB3 Simulator
+            if (connection.webSimulator) {
+                availableConnections.push("web-simulator");
             }
         }
 

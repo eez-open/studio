@@ -132,6 +132,12 @@ export abstract class RuntimeBase {
             this.transition(StateMachineAction.START_WITHOUT_DEBUGGER);
         }
 
+        runInAction(() => {
+            this.isDebuggerActive = isDebuggerActive;
+            this.DocumentStore.uiStateStore.pageRuntimeFrontFace =
+                !isDebuggerActive;
+        });
+
         this.doStartRuntime(isDebuggerActive);
     }
 
@@ -152,29 +158,7 @@ export abstract class RuntimeBase {
     }
 
     @action private setState(state: State) {
-        let wasDebuggerActive = this.state;
-
         this.state = state;
-
-        if (
-            this.state == State.STARTING_WITH_DEBUGGER ||
-            this.state == State.PAUSED ||
-            this.state == State.RESUMED ||
-            this.state == State.SINGLE_STEP
-        ) {
-            this.isDebuggerActive = true;
-        } else if (
-            this.state == State.STARTING_WITHOUT_DEBUGGER ||
-            this.state == State.RUNNING
-        ) {
-            this.isDebuggerActive = false;
-        }
-
-        if (!wasDebuggerActive && this.isDebuggerActive) {
-            this.DocumentStore.uiStateStore.pageRuntimeFrontFace = false;
-        } else if (wasDebuggerActive && !this.isDebuggerActive) {
-            this.DocumentStore.uiStateStore.pageRuntimeFrontFace = true;
-        }
 
         if (this.state == State.PAUSED) {
             this.showNextQueueTask();

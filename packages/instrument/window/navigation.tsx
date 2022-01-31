@@ -10,6 +10,9 @@ export interface INavigationItem {
     title: string;
     position?: "hidden";
     attention?: boolean;
+    renderContent: () => JSX.Element;
+    selectItem?: (itemId: string) => void;
+    renderToolbarButtons: () => JSX.Element;
 }
 
 @observer

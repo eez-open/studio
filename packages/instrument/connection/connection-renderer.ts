@@ -1,4 +1,5 @@
 import { observable, toJS, runInAction } from "mobx";
+import { ipcRenderer } from "electron";
 
 import { watch } from "eez-studio-shared/notify";
 
@@ -407,10 +408,158 @@ export function getConnectionParametersInfo(
         return `${connectionParameters.serialParameters.port}:${connectionParameters.serialParameters.baudRate}`;
     } else if (connectionParameters.type === "usbtmc") {
         return `USBTMC`;
+    } else if (connectionParameters.type === "web-simulator") {
+        return `WebSimulator`;
     } else {
         return "VISA";
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface IWebSimulatorDebugger {
+    onMessageToDebugger(data: string): void;
+    stop(): void;
+}
+
+class WebSimulatorMessageDispatcher {
+    iframes = new Map<string, MessageEventSource>();
+    writeMessages = new Map<string, string[]>();
+    webSimulatorDebuggers = new Map<string, IWebSimulatorDebugger>();
+
+    constructor() {
+        ipcRenderer.on(
+            "web-simulator-connection-write",
+            (event: any, simulatorID: string, data: string) => {
+                const iframeWindow = this.iframes.get(simulatorID);
+                if (iframeWindow) {
+                    try {
+                        iframeWindow.postMessage({
+                            msgId: "web-simulator-connection-scpi-write",
+                            data
+                        });
+                    } catch (err) {
+                        this.iframes.delete(simulatorID);
+                    }
+                } else {
+                    const messages = this.writeMessages.get(simulatorID) ?? [];
+                    messages.push(data);
+                    this.writeMessages.set(simulatorID, messages);
+                }
+            }
+        );
+
+        window.addEventListener("message", e => {
+            const source = e.source;
+            const data = e.data;
+            if (source) {
+                if (data.msgId == "web-simulator-loaded") {
+                    const simulatorID = data.simulatorID;
+                    if (simulatorID) {
+                        this.iframes.set(data.simulatorID, source);
+
+                        const messages = this.writeMessages.get(
+                            data.simulatorID
+                        );
+                        if (messages) {
+                            messages.forEach(data =>
+                                source.postMessage({
+                                    msgId: "web-simulator-connection-scpi-write",
+                                    data
+                                })
+                            );
+                        }
+                    }
+                } else if (data.msgId == "web-simulator-write-scpi-buffer") {
+                    EEZStudio.electron.ipcRenderer.send(
+                        "web-simulator-connection-on-data",
+                        data.simulatorID,
+                        data.scpiOutputBuffer
+                    );
+                } else if (
+                    data.msgId == "web-simulator-write-debugger-buffer"
+                ) {
+                    const webSimulatorDebugger = this.webSimulatorDebuggers.get(
+                        data.simulatorID
+                    );
+                    if (webSimulatorDebugger) {
+                        function stringToBinary(data: string) {
+                            let binaryStr = "";
+                            for (let i = 0; i < data.length; i += 2) {
+                                binaryStr += String.fromCharCode(
+                                    parseInt(data.substring(i, i + 2), 16)
+                                );
+                            }
+                            return binaryStr;
+                        }
+                        webSimulatorDebugger.onMessageToDebugger(
+                            stringToBinary(data.debuggerOutputBuffer)
+                        );
+                    }
+                }
+            }
+        });
+    }
+
+    connectDebugger(
+        simulatorID: string,
+        webSimulatorDebugger: IWebSimulatorDebugger
+    ) {
+        const currentWebSimulatorDebugger =
+            this.webSimulatorDebuggers.get(simulatorID);
+        if (currentWebSimulatorDebugger) {
+            currentWebSimulatorDebugger.stop();
+        }
+        this.webSimulatorDebuggers.set(simulatorID, webSimulatorDebugger);
+
+        const iframeWindow = this.iframes.get(simulatorID);
+        if (iframeWindow) {
+            iframeWindow.postMessage({
+                msgId: "web-simulator-connection-debugger-client-connected"
+            });
+        }
+    }
+
+    disconnectDebugger(simulatorID: string) {
+        const iframeWindow = this.iframes.get(simulatorID);
+        if (iframeWindow) {
+            iframeWindow.postMessage({
+                msgId: "web-simulator-connection-debugger-client-disconnected"
+            });
+        }
+        this.webSimulatorDebuggers.delete(simulatorID);
+    }
+
+    sendMessageFromDebugger(simulatorID: string, data: string) {
+        const iframeWindow = this.iframes.get(simulatorID);
+        if (iframeWindow) {
+            try {
+                function binaryToString(data: string) {
+                    const arr = Buffer.from(data, "binary");
+                    let str = "";
+                    for (let i = 0; i < arr.length; i++) {
+                        let x = arr[i].toString(16);
+                        if (x.length == 1) {
+                            x = "0" + x;
+                        }
+                        str += x;
+                    }
+                    return str;
+                }
+
+                iframeWindow.postMessage({
+                    msgId: "web-simulator-connection-debugger-write",
+                    data: binaryToString(data)
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+}
+
+export const webSimulatorMessageDispatcher =
+    new WebSimulatorMessageDispatcher();
 
 ////////////////////////////////////////////////////////////////////////////////
 

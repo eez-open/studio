@@ -19,12 +19,17 @@ export interface VisaConnectionParameters {
     resource: string;
 }
 
+export interface WebSimulatorParameters {
+    id: string;
+}
+
 export interface ConnectionParameters {
-    type: "ethernet" | "serial" | "usbtmc" | "visa";
+    type: "ethernet" | "serial" | "usbtmc" | "visa" | "web-simulator";
     ethernetParameters: EthernetConnectionParameters;
     serialParameters: SerialConnectionParameters;
     usbtmcParameters: UsbtmcConnectionParameters;
     visaParameters: VisaConnectionParameters;
+    webSimulatorParameters: WebSimulatorParameters;
 }
 
 export interface CommunicationInterfaceHost {

@@ -177,6 +177,12 @@ class ConnectionParametersDetails extends React.Component<{
                         />
                     </PropertyList>
                 );
+            } else if (instrument.lastConnection.type === "web-simulator") {
+                return (
+                    <PropertyList>
+                        <StaticProperty name="Interface" value="WebSimulator" />
+                    </PropertyList>
+                );
             } else if (instrument.lastConnection.type === "visa") {
                 return (
                     <PropertyList>
