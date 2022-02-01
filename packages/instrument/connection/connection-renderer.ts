@@ -424,13 +424,13 @@ interface IWebSimulatorDebugger {
 
 class WebSimulatorMessageDispatcher {
     iframes = new Map<string, MessageEventSource>();
-    writeMessages = new Map<string, string[]>();
+    writeMessages = new Map<string, ArrayBuffer[]>();
     webSimulatorDebuggers = new Map<string, IWebSimulatorDebugger>();
 
     constructor() {
         ipcRenderer.on(
             "web-simulator-connection-write",
-            (event: any, simulatorID: string, data: string) => {
+            (event: any, simulatorID: string, data: ArrayBuffer) => {
                 const iframeWindow = this.iframes.get(simulatorID);
                 if (iframeWindow) {
                     try {
@@ -483,17 +483,12 @@ class WebSimulatorMessageDispatcher {
                         data.simulatorID
                     );
                     if (webSimulatorDebugger) {
-                        function stringToBinary(data: string) {
-                            let binaryStr = "";
-                            for (let i = 0; i < data.length; i += 2) {
-                                binaryStr += String.fromCharCode(
-                                    parseInt(data.substring(i, i + 2), 16)
-                                );
-                            }
-                            return binaryStr;
+                        function arrayBufferToBinaryString(data: ArrayBuffer) {
+                            const buffer = Buffer.from(data);
+                            return buffer.toString("binary");
                         }
                         webSimulatorDebugger.onMessageToDebugger(
-                            stringToBinary(data.debuggerOutputBuffer)
+                            arrayBufferToBinaryString(data.debuggerOutputBuffer)
                         );
                     }
                 }
@@ -534,22 +529,17 @@ class WebSimulatorMessageDispatcher {
         const iframeWindow = this.iframes.get(simulatorID);
         if (iframeWindow) {
             try {
-                function binaryToString(data: string) {
-                    const arr = Buffer.from(data, "binary");
-                    let str = "";
-                    for (let i = 0; i < arr.length; i++) {
-                        let x = arr[i].toString(16);
-                        if (x.length == 1) {
-                            x = "0" + x;
-                        }
-                        str += x;
-                    }
-                    return str;
+                function binaryStringToArrayBuffer(data: string) {
+                    const buffer = Buffer.from(data, "binary");
+                    return buffer.buffer.slice(
+                        buffer.byteOffset,
+                        buffer.byteOffset + buffer.byteLength
+                    );
                 }
 
                 iframeWindow.postMessage({
                     msgId: "web-simulator-connection-debugger-write",
-                    data: binaryToString(data)
+                    data: binaryStringToArrayBuffer(data)
                 });
             } catch (err) {
                 console.error(err);

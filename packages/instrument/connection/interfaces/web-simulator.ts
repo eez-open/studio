@@ -4,25 +4,17 @@ import {
     CommunicationInterfaceHost
 } from "instrument/connection/interface";
 
-function binaryToString(data: string) {
-    const arr = Buffer.from(data, "binary");
-    let str = "";
-    for (let i = 0; i < arr.length; i++) {
-        let x = arr[i].toString(16);
-        if (x.length == 1) {
-            x = "0" + x;
-        }
-        str += x;
-    }
-    return str;
+function binaryStringToArrayBuffer(data: string) {
+    const buffer = Buffer.from(data, "binary");
+    return buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength
+    );
 }
 
-function stringToBinary(data: string) {
-    const arr = Buffer.alloc(data.length / 2);
-    for (let i = 0; i < data.length; i += 2) {
-        arr[i / 2] = parseInt(data.substring(i, i + 2), 16);
-    }
-    return arr.toString("binary");
+function arrayBufferToBinaryString(data: ArrayBuffer) {
+    const buffer = Buffer.from(data);
+    return buffer.toString("binary");
 }
 
 export class WebSimulatorInterface implements CommunicationInterface {
@@ -52,7 +44,7 @@ export class WebSimulatorInterface implements CommunicationInterface {
             window.webContents.send(
                 "web-simulator-connection-write",
                 this.host.connectionParameters.webSimulatorParameters.id,
-                binaryToString(dataStr)
+                binaryStringToArrayBuffer(dataStr)
             )
         );
     }
@@ -67,10 +59,10 @@ export class WebSimulatorInterface implements CommunicationInterface {
         });
     }
 
-    static onData(simulatorID: string, scpiOutputBuffer: string) {
+    static onData(simulatorID: string, scpiOutputBuffer: ArrayBuffer) {
         const connection = WebSimulatorInterface.connections.get(simulatorID);
         if (connection) {
-            const data = stringToBinary(scpiOutputBuffer);
+            const data = arrayBufferToBinaryString(scpiOutputBuffer);
             connection.host.onData(data);
         }
     }
