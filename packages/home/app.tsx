@@ -196,10 +196,12 @@ class WebSimulatorPanel extends React.Component<{
         const webSimulatorWidth = connection?.webSimulator!.width ?? 640;
         const webSimulatorHeight = connection?.webSimulator!.height ?? 480;
 
+        const TITLE_HEIGHT = 34;
+
         const panelMaxWidth = webSimulatorWidth;
-        const panelMaxHeight = webSimulatorHeight + 34;
+        const panelMaxHeight = webSimulatorHeight + TITLE_HEIGHT;
         const panelMinWidth = webSimulatorWidth / 8;
-        const panelMinHeight = webSimulatorHeight / 8 + 34;
+        const panelMinHeight = webSimulatorHeight / 8 + TITLE_HEIGHT;
 
         let panelLeft;
         let panelTop;
@@ -209,7 +211,9 @@ class WebSimulatorPanel extends React.Component<{
             panelLeft = panelData.left;
             panelTop = panelData.top;
             panelWidth = panelData.width;
-            panelHeight = panelData.height;
+            panelHeight =
+                (panelWidth * webSimulatorHeight) / webSimulatorWidth +
+                TITLE_HEIGHT;
         } else {
             panelWidth = Math.min(
                 Math.round(window.innerWidth * 0.5),
@@ -221,11 +225,14 @@ class WebSimulatorPanel extends React.Component<{
                 panelWidth =
                     (panelHeight * webSimulatorWidth) / webSimulatorHeight;
             }
-            panelHeight += 34;
+            panelHeight += TITLE_HEIGHT;
 
             panelLeft = (window.innerWidth - panelWidth) / 2;
             panelTop = (window.innerHeight - panelHeight) / 2;
         }
+
+        panelWidth = Math.ceil(panelWidth);
+        panelHeight = Math.ceil(panelHeight);
 
         this.dialog = jsPanel.create({
             container: "#EezStudio_Content",
