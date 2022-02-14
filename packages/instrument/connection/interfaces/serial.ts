@@ -26,7 +26,7 @@ export class SerialInterface implements CommunicationInterface {
                     baudRate:
                         this.host.connectionParameters.serialParameters
                             .baudRate,
-                    rtscts: true
+                    rtscts: false
                 },
                 (err: any) => {
                     if (err) {
