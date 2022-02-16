@@ -2987,9 +2987,11 @@ const TrixEditor = observer(
                     flowContext
                 );
 
-                runInAction(() => {
-                    component.geometry = geometry;
-                });
+                if (geometry) {
+                    runInAction(() => {
+                        component.geometry = geometry;
+                    });
+                }
             };
             const onFocus = () => {
                 const trixToolbar =
