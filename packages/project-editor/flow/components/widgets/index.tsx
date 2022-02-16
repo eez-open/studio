@@ -966,19 +966,6 @@ export class SelectWidget extends Widget {
                 ? this.widgets[index]
                 : undefined;
 
-        let components: Widget[];
-        let visibleComponent: Widget | undefined;
-        if (flowContext.flowState) {
-            if (selectedWidget) {
-                components = [selectedWidget];
-            } else {
-                components = [];
-            }
-        } else {
-            components = this.widgets;
-            visibleComponent = selectedWidget;
-        }
-
         return (
             <>
                 {flowContext.DocumentStore.project.isDashboardProject ? null : (
@@ -998,9 +985,9 @@ export class SelectWidget extends Widget {
                     />
                 )}
                 <ComponentsContainerEnclosure
-                    components={components}
+                    components={this.widgets}
                     flowContext={flowContext}
-                    visibleComponent={visibleComponent}
+                    visibleComponent={selectedWidget}
                 />
                 {super.render(flowContext)}
             </>

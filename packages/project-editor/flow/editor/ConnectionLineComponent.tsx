@@ -11,6 +11,7 @@ import { OutputActionComponent } from "project-editor/flow/components/actions";
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import { getValueLabel } from "project-editor/features/variable/value-type";
 import type { ComponentInput } from "project-editor/flow/component";
+import { registerPath, unregisterPath } from "./real-time-traffic-visualizer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,50 +52,52 @@ export const ConnectionLines = observer(
     }
 );
 
-const VisiblePath = observer(
-    ({
-        lineShape,
-        selected,
-        connectionLine,
-        context,
-        targetInput
-    }: {
-        lineShape: string;
-        selected: boolean;
-        connectionLine: ConnectionLine;
-        context: IFlowContext;
-        targetInput: ComponentInput | undefined;
-    }) => {
+class VisiblePath extends React.Component<{
+    lineShape: string;
+    selected: boolean;
+    connectionLine: ConnectionLine;
+    context: IFlowContext;
+    targetInput: ComponentInput | undefined;
+}> {
+    ref = React.createRef<SVGPathElement>();
+
+    componentDidMount() {
+        if (this.ref.current) {
+            registerPath(this.props.connectionLine, this.ref.current);
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.ref.current) {
+            unregisterPath(this.props.connectionLine, this.ref.current);
+        }
+    }
+
+    render() {
+        const { lineShape, selected, connectionLine, targetInput } = this.props;
+
         const seq =
             targetInput?.isSequenceInput &&
             !(connectionLine.targetComponent instanceof OutputActionComponent);
 
-        const active =
-            connectionLine.active && context.document.DocumentStore.runtime;
-
         return (
             <path
+                ref={this.ref}
                 d={lineShape}
                 style={{
                     fill: "none",
                     strokeWidth: seq ? seqStrokeWidth : strokeWidth,
-                    strokeLinecap: "round",
-                    strokeDashoffset: active
-                        ? Math.ceil(
-                              ((performance.now() / 1000) * 120) % 12000000
-                          ) * -1
-                        : undefined
+                    strokeLinecap: "round"
                 }}
                 className={classNames("connection-line-path", {
                     selected,
-                    seq,
-                    active
+                    seq
                 })}
                 vectorEffect={selected ? "non-scaling-stroke" : "none"}
             ></path>
         );
     }
-);
+}
 
 const ConnectionLineShape = observer(
     ({

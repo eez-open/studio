@@ -79,10 +79,11 @@ export class ComponentEnclosure extends React.Component<{
                 this.elRef.current,
                 this.props.flowContext
             );
-
-            runInAction(() => {
-                this.props.component.geometry = geometry;
-            });
+            if (geometry) {
+                runInAction(() => {
+                    this.props.component.geometry = geometry;
+                });
+            }
         }
     }
 
@@ -147,9 +148,12 @@ export class ComponentEnclosure extends React.Component<{
         );
 
         if (visible === false) {
-            style.opacity = "0.05";
+            if (this.props.flowContext.flowState) {
+                style.visibility = "hidden";
+            } else {
+                style.opacity = "0.05";
+            }
             style.pointerEvents = "none";
-            //style.display = "none";
         }
 
         return (
@@ -238,7 +242,7 @@ export function calcComponentGeometry(
     component: Component | Page,
     el: HTMLElement,
     flowContext: IFlowContext
-): ComponentGeometry {
+): ComponentGeometry | undefined {
     const dInput = component instanceof ProjectEditor.WidgetClass ? 2 : 6;
     const dOutput = component instanceof ProjectEditor.WidgetClass ? 0 : 6;
 
@@ -305,6 +309,14 @@ export function calcComponentGeometry(
                 };
             }
         );
+
+        if (Object.keys(inputs).length != component.inputs.length) {
+            return undefined;
+        }
+
+        if (Object.keys(outputs).length != component.outputs.length) {
+            return undefined;
+        }
     }
 
     return {

@@ -226,7 +226,7 @@ export class LocalRuntime extends RuntimeBase {
                         break;
                     }
 
-                    const { flowState, component, connectionLine } = task;
+                    const { flowState, component } = task;
 
                     const componentState =
                         flowState.getComponentState(component);
@@ -254,10 +254,6 @@ export class LocalRuntime extends RuntimeBase {
                         this._lastBreakpointTaks = undefined;
 
                         await this.run(componentState);
-
-                        if (connectionLine) {
-                            connectionLine.setActive();
-                        }
                     }
 
                     if (singleStep) {

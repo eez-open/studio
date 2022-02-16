@@ -72,15 +72,10 @@
           "type": "SCPIActionComponent",
           "left": -100,
           "top": 681,
-          "width": 238,
-          "height": 79,
+          "width": 197,
+          "height": 73,
           "wireID": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
-          "customInputs": [
-            {
-              "name": "delay",
-              "type": "integer"
-            }
-          ],
+          "customInputs": [],
           "customOutputs": [
             {
               "name": "voltage",
@@ -92,7 +87,7 @@
             }
           ],
           "instrument": "instrument",
-          "scpi": "syst:delay {delay}\nvoltage = meas:volt?\ncurrent = meas:curr?"
+          "scpi": "voltage = meas:volt?\ncurrent = meas:curr?"
         },
         {
           "type": "Button",
@@ -178,17 +173,6 @@
           }
         },
         {
-          "type": "ConstantActionComponent",
-          "left": -298,
-          "top": 681,
-          "width": 87,
-          "height": 54,
-          "wireID": "dacb4d9d-04e2-47d6-876d-44be32382828",
-          "customInputs": [],
-          "customOutputs": [],
-          "value": "50"
-        },
-        {
           "type": "Gauge",
           "left": 217,
           "top": 257,
@@ -247,8 +231,8 @@
         },
         {
           "type": "IsTrueActionComponent",
-          "left": 12,
-          "top": 884,
+          "left": 80,
+          "top": 865,
           "width": 87,
           "height": 73,
           "wireID": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
@@ -263,8 +247,8 @@
         },
         {
           "type": "WatchVariableActionComponent",
-          "left": -184,
-          "top": 884,
+          "left": -116,
+          "top": 865,
           "width": 129,
           "height": 54,
           "wireID": "3e958be7-9ce1-4645-844c-d3b0380dbcfb",
@@ -317,6 +301,17 @@
           "customInputs": [],
           "customOutputs": [],
           "variable": "continue"
+        },
+        {
+          "type": "DelayActionComponent",
+          "left": 236,
+          "top": 681,
+          "width": 87,
+          "height": 53,
+          "wireID": "69bdc907-a931-4d1d-81ef-2d7a5f939bf7",
+          "customInputs": [],
+          "customOutputs": [],
+          "milliseconds": "2000"
         }
       ],
       "connectionLines": [
@@ -343,24 +338,6 @@
           "output": "voltage",
           "target": "e09a754c-f52c-41c3-e5cb-091fc475b670",
           "input": "data"
-        },
-        {
-          "source": "dacb4d9d-04e2-47d6-876d-44be32382828",
-          "output": "value",
-          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
-          "input": "delay"
-        },
-        {
-          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
-          "output": "voltage",
-          "target": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
-          "input": "@seqin"
-        },
-        {
-          "source": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
-          "output": "True",
-          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
-          "input": "@seqin"
         },
         {
           "source": "3e958be7-9ce1-4645-844c-d3b0380dbcfb",
@@ -397,6 +374,24 @@
           "output": "variable",
           "target": "17a56676-cba2-425f-cb12-87e07fe927ac",
           "input": "enabled"
+        },
+        {
+          "source": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "output": "@seqout",
+          "target": "69bdc907-a931-4d1d-81ef-2d7a5f939bf7",
+          "input": "@seqin"
+        },
+        {
+          "source": "69bdc907-a931-4d1d-81ef-2d7a5f939bf7",
+          "output": "@seqout",
+          "target": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
+          "input": "@seqin"
+        },
+        {
+          "source": "ef5a90e6-4958-4606-8bf1-f932c3f964c0",
+          "output": "True",
+          "target": "ee98fc74-22fe-48f8-e3bf-d15e2054806b",
+          "input": "@seqin"
         }
       ],
       "localVariables": [

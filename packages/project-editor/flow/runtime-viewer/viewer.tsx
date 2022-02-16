@@ -599,7 +599,8 @@ export class FlowViewer
                             {this.context.uiStateStore
                                 .showComponentDescriptions &&
                                 this.context.runtime &&
-                                this.context.runtime.isDebuggerActive && (
+                                this.context.runtime.isDebuggerActive &&
+                                !this.props.tabState.frontFace && (
                                     <div
                                         style={{
                                             position: "absolute"

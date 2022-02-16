@@ -74,7 +74,7 @@ class AddButton extends React.Component<{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    async onAdd() {
+    onAdd = async () => {
         if (this.props.navigationObject) {
             const aNewItem = await addItem(this.props.navigationObject);
             if (aNewItem) {
@@ -89,7 +89,7 @@ class AddButton extends React.Component<{
                 }
             }
         }
-    }
+    };
 
     render() {
         return (
@@ -97,7 +97,7 @@ class AddButton extends React.Component<{
                 title="Add Item"
                 icon="material:add"
                 iconSize={16}
-                onClick={this.onAdd.bind(this)}
+                onClick={this.onAdd}
                 enabled={
                     this.props.navigationObject &&
                     canAdd(this.props.navigationObject)
@@ -117,12 +117,12 @@ class DeleteButton extends React.Component<{
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    onDelete() {
+    onDelete = () => {
         let selectedItem = this.props.selectedObject.get();
         if (selectedItem) {
             deleteItem(selectedItem);
         }
-    }
+    };
 
     render() {
         let selectedItem = this.props.selectedObject.get();
@@ -132,7 +132,7 @@ class DeleteButton extends React.Component<{
                 title="Delete Selected Item"
                 icon="material:delete"
                 iconSize={16}
-                onClick={this.onDelete.bind(this)}
+                onClick={this.onDelete}
                 enabled={selectedItem != undefined && canDelete(selectedItem)}
             />
         );
@@ -154,8 +154,6 @@ interface ListNavigationProps {
     dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
     editable?: boolean;
-    filter?: (object: IEezObject) => boolean;
-    onClose?: () => void;
 }
 
 @observer
@@ -257,8 +255,7 @@ export class ListNavigation
             this.sortDirection,
             this.onClickItem,
             this.onDoubleClickItem,
-            this.searchText,
-            this.props.filter
+            this.searchText
         );
     }
 
@@ -295,18 +292,6 @@ export class ListNavigation
                     navigationObject={this.props.navigationObject}
                     selectedObject={this.props.selectedObject}
                 />
-            );
-        }
-
-        if (this.props.onClose) {
-            buttons.push(
-                <IconAction
-                    key="close"
-                    icon="material:close"
-                    iconSize={16}
-                    onClick={this.props.onClose}
-                    title="Close themes panel"
-                ></IconAction>
             );
         }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { guid } from "eez-studio-shared/guid";
-import { action, computed, observable, runInAction } from "mobx";
+import { action, computed, observable } from "mobx";
 import {
     ClassInfo,
     EezObject,
@@ -47,6 +47,7 @@ import { Transform } from "project-editor/flow/editor/transform";
 import { cloneObject } from "project-editor/core/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IEditorState } from "project-editor/project/EditorComponent";
+import { activateConnectionLine } from "project-editor/flow/editor/real-time-traffic-visualizer";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -239,24 +240,8 @@ export class ConnectionLine extends EezObject {
         return this.targetComponent._geometry;
     }
 
-    get active() {
-        return this._active;
-    }
-
-    _setActiveTimeoutId: any;
-
-    @action
     setActive() {
-        this._active = true;
-
-        if (this._setActiveTimeoutId) {
-            clearTimeout(this._setActiveTimeoutId);
-        }
-
-        this._setActiveTimeoutId = setTimeout(() => {
-            this._setActiveTimeoutId = undefined;
-            runInAction(() => (this._active = false));
-        }, 100);
+        activateConnectionLine(this);
     }
 }
 

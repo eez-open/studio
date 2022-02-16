@@ -2301,6 +2301,15 @@ export class DocumentStoreClass {
     }
 
     unmount() {
+        this.project.settings.general.imports.forEach(importDirective => {
+            if (importDirective.project) {
+                importDirective.project._DocumentStore.unmount();
+            }
+        });
+
+        this.editorsStore.unmount();
+        this.uiStateStore.unmount();
+
         this.dispose1();
         this.dispose2();
         if (this.dispose3) {
@@ -2550,12 +2559,12 @@ export class DocumentStoreClass {
     }
 
     async newProject() {
-        await this.changeProject(undefined, this.getNewProject());
+        await this.setProject(this.getNewProject(), undefined);
     }
 
     async openFile(filePath: string) {
         const project = await load(this, filePath);
-        await this.changeProject(filePath, project);
+        await this.setProject(project, filePath);
     }
 
     async saveModified() {
@@ -2715,42 +2724,18 @@ export class DocumentStoreClass {
     }
 
     @action
-    async changeProject(
-        projectFilePath: string | undefined,
-        project?: Project
-    ) {
-        if (!project) {
-            this.project.settings.general.imports.forEach(importDirective => {
-                if (importDirective.project) {
-                    importDirective.project._DocumentStore.unmount();
-                }
-            });
-        }
-
+    async setProject(project: Project, projectFilePath: string | undefined) {
+        this._project = project;
         this.filePath = projectFilePath;
 
-        if (project) {
-            project._DocumentStore = this;
-            this.dataContext = new ProjectEditor.DataContextClass(project);
-        } else {
-            this.dataContext = undefined as any;
-        }
+        project._DocumentStore = this;
 
-        this._project = project;
-        if (!project) {
-            this.objects.clear();
-            this.lastChildId = 0;
-        }
+        this.dataContext = new ProjectEditor.DataContextClass(project);
+
         this.undoManager.clear();
 
-        if (project) {
-            await this.uiStateStore.load();
-            await this.runtimeSettings.load();
-        } else {
-            this.editorsStore.unmount();
-            this.uiStateStore.unmount();
-            this.unmount();
-        }
+        await this.uiStateStore.load();
+        await this.runtimeSettings.load();
     }
 
     canSave() {

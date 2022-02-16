@@ -646,7 +646,7 @@ export class ProjectEditorTab implements IHomeTab {
         if (this.DocumentStore) {
             if (await this.DocumentStore.closeWindow()) {
                 this.tabs.removeTab(this);
-                await this.DocumentStore.changeProject(undefined);
+                this.DocumentStore.unmount();
             }
             this.DocumentStore = undefined;
         } else {
