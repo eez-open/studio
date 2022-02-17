@@ -191,6 +191,8 @@ let files = [
     "!**/*.ilk",
     "!**/*.lib",
     "!node_modules/better-sqlite3/build/Release/obj",
+    "!node_modules/better-sqlite3/build/Release/*.iobj",
+    "!node_modules/better-sqlite3/build/Release/*.ipdb",
     "!node_modules/better-sqlite3/deps",
     "!node_modules/better-sqlite3/src",
     "!node_modules/better-sqlite3/docs",
